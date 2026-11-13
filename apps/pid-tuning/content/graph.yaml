@@ -2,6 +2,7 @@ maps:
   - id: chain
     title: The tuning question chain
     caption: Read top to bottom. Each box is the question the previous one leaves open; tap a box for the short answer and what it adds to the cart, tap a line for the question that leads on. The bottom row is the 14-card gallery of failures with the knob that fixes each.
+    seriesNames: ["Why feedback", "What P, I, D do", "Tuning", "Failure cards A1–A14"]
     nodes:
       - id: root
         label: How do I choose Kp, Ki, Kd so the output tracks, rejects and ignores?
@@ -312,7 +313,6 @@ maps:
         label: limits
         question: What if the actuator saturates?
         idea: The integrator keeps charging; anti-windup stops it.
-        dashed: true
       - from: derivative
         to: tuning
         label: how good?

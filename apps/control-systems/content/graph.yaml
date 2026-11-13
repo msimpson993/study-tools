@@ -2,6 +2,7 @@ maps:
   - id: chain
     title: The question chain
     caption: Read top to bottom. Each box is the question the previous box leaves open; tap a box for its short answer and what it does for the cart, tap a line for the question that leads on. "Open the guide" shows the full interactive section.
+    seriesNames: ["Modeling and transfer functions", "Feedback and control", "State space", "Time response and review"]
     nodes:
       - id: root
         label: How do we make an approximately-known system do what we command?
@@ -185,7 +186,7 @@ maps:
       - { from: model, to: splane, label: "poles?", question: "What do the roots of G(s) mean?", idea: "Each pole is a natural mode e^(pt) and each zero a transmission null. Plotting them on the s-plane makes behaviour visible." }
       - { from: model, to: tf, label: "read G(s)", question: "What do I read off G(s) before simulating?", idea: "Order, DC gain and time constants are enough to sketch the step response." }
       - { from: model, to: ss, label: "inside?", question: "What if I also need the internal states and initial conditions?", idea: "State space tracks the energy-storage variables themselves; G(s) is its input-output summary." }
-      - { from: model, to: circuits, label: "hardware", question: "How do I get G(s) for a circuit or op-amp stage?", idea: "Impedances turn circuits into algebra; the same second-order equation appears as mass-spring-damper and as RLC.", dashed: true }
+      - { from: model, to: circuits, label: "hardware", question: "How do I get G(s) for a circuit or op-amp stage?", idea: "Impedances turn circuits into algebra; the same second-order equation appears as mass-spring-damper and as RLC." }
       - { from: tf, to: order, label: "why order?", question: "Why is the order what it is?", idea: "One state per independent energy store; dampers and resistors only dissipate." }
       - { from: tf, to: blocks, label: "close the loop", question: "How does G(s) sit in a loop with a controller and a disturbance?", idea: "Block-diagram algebra: series, parallel and feedback give CG/(1 + CG) and G/(1 + CG)." }
       - { from: tf, to: first, label: "simplest plant", question: "How does the simplest plant respond, as a yardstick?", idea: "First order is an exponential with time constant τ; other plants are compared to it." }
@@ -202,6 +203,7 @@ maps:
   - id: splane
     title: The s-plane as a map
     caption: Section 1½ of the guide, as its own chain of questions. Start from "what is a point?" and follow what each idea lets you read from the plane.
+    seriesNames: ["Poles and zeros", "Reading the plane", "Closing the loop"]
     nodes:
       - id: root
         label: What does a point on the s-plane mean?
@@ -232,7 +234,7 @@ maps:
         label: How do I read a location on the plane?
         dive: sp3
         detail: left or right, near or far, up or down
-        series: 0
+        series: 1
         short: "Left of the imaginary axis decays, right grows. Farther left is faster. Higher up is faster oscillation. The angle from the negative real axis is cos⁻¹ ζ and the distance from the origin is ωₙ."
         eq: "ζ = cos θ, ωₙ = |p|"
         addsToExample: "The cart's poles sit on the negative real axis (θ = 0, ζ ≈ 1.06): they are far left and non-oscillating; K = 7 moves them to −1.5 ± j2.6 (θ = 60°)."
