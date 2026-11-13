@@ -17,11 +17,11 @@ maps:
         link: { href: "../linear-systems/#/dive/lti", label: "Linear systems: Convolution, LTI & eigenfunctions" }
       - id: eigenfn
         label: Eigenfunctions of LTI
-        detail: e^{st} and zⁿ
+        detail: e^(st) and zⁿ
         series: 0
-        short: Feed e^{st} into an LTI system and the output is the same exponential times a number, H(s). Feed in zⁿ and you
+        short: Feed e^(st) into an LTI system and the output is the same exponential times a number, H(s). Feed in zⁿ and you
           get H(z) zⁿ. Because the exponential keeps its shape, convolution turns into a plain multiply.
-        eq: H{e^{st}} = H(s) e^{st},   H{zⁿ} = H(z) zⁿ
+        eq: H{e^(st)} = H(s) e^(st),   H{zⁿ} = H(z) zⁿ
         live: board:lap?preset=under
       - id: expand
         label: Expand x in them
@@ -30,14 +30,14 @@ maps:
         short: A transform is the recipe for finding how much of each exponential is in x (analysis) and the recipe for adding
           them back up (synthesis). Which exponentials you allow, and whether time is continuous, discrete, periodic or
           finite, produces the different transforms.
-        eq: x = Σ cₖ e^{sₖt},   cₖ = ⟨x, e^{sₖt}⟩
+        eq: x = Σ cₖ e^(sₖt),   cₖ = ⟨x, e^(sₖt)⟩
       - id: laplace
         label: Laplace transform
         detail: Any s = σ + jω
         series: 1
-        short: Allow every exponential e^{st} with s complex. The Laplace transform also handles growing signals, because the
+        short: Allow every exponential e^(st) with s complex. The Laplace transform also handles growing signals, because the
           region of convergence tells you which real part σ works. Poles of X(s) are the modes of the system.
-        eq: X(s) = ∫ x(t) e^{−st} dt
+        eq: X(s) = ∫ x(t) e^(−st) dt
         live: board:lap?preset=over
       - id: ft
         label: Fourier transform
@@ -46,7 +46,7 @@ maps:
         short: Restrict to the imaginary axis s = jω and you get the Fourier transform, the signal's spectrum. It exists only
           when the jω axis is inside the region of convergence, which for a causal signal means the poles are in the left
           half-plane.
-        eq: X(jω) = ∫ x(t) e^{−jωt} dt
+        eq: X(jω) = ∫ x(t) e^(−jωt) dt
         live: board:ft?preset=heavy
       - id: fs
         label: Fourier series
@@ -54,7 +54,7 @@ maps:
         series: 1
         short: If x repeats with period T₀, only the harmonics k ω₀ are needed, so the spectrum becomes a line spectrum
           indexed by integers. Periodic in time means discrete in frequency.
-        eq: x(t) = Σ cₖ e^{jkω₀t}
+        eq: x(t) = Σ cₖ e^(jkω₀t)
         live: board:fs?preset=fsview
       - id: sampling
         label: What if we sample?
@@ -80,31 +80,31 @@ maps:
         short: To get a continuous signal back you convolve the samples with a kernel. A zero-order hold is a staircase with sinc
           droop and a half-sample delay; first-order hold is straight chords; the ideal sinc is a brick wall at fs/2 but is
           non-causal.
-        eq: H_ZOH(f) = T sinc(fT) e^{−jπfT}
+        eq: H_ZOH(f) = T sinc(fT) e^(−jπfT)
         live: board:samp?preset=zohsinc
       - id: dtft
         label: DTFT
         detail: Discrete time, continuous Ω
         series: 2
-        short: For a sampled signal the exponentials are e^{jΩn}, and Ω is only defined modulo 2π, so the spectrum is periodic.
+        short: For a sampled signal the exponentials are e^(jΩn), and Ω is only defined modulo 2π, so the spectrum is periodic.
           The DTFT is the sum of the shifted copies of the analog spectrum, scaled by 1/T.
-        eq: X(e^{jΩ}) = Σ x[n] e^{−jΩn}
+        eq: X(e^(jΩ)) = Σ x[n] e^(−jΩn)
         live: board:dtft?preset=heavy
       - id: zt
         label: Z-transform
-        detail: Any z = r e^{jΩ}
+        detail: Any z = r e^(jΩ)
         series: 2
         short: Allow every exponential zⁿ. The Z-transform is to discrete time what Laplace is to continuous time; poles
           inside the unit circle are decaying modes, and the unit circle is where the DTFT lives.
         eq: X(z) = Σ x[n] z^{−n}
         live: board:zt?preset=crit
       - id: map
-        label: z = e^{sT}
+        label: z = e^(sT)
         detail: s-plane to z-plane
         series: 2
-        short: Sampling maps each s-pole p to a z-pole e^{pT}. The left half-plane lands inside the unit circle, the jω axis on
+        short: Sampling maps each s-pole p to a z-pole e^(pT). The left half-plane lands inside the unit circle, the jω axis on
           the circle, and s-values that differ by j2π/T land on the same z, which is aliasing seen in the pole picture.
-        eq: z = e^{sT},   r = e^{σT},   Ω = ωT
+        eq: z = e^(sT),   r = e^(σT),   Ω = ωT
         live: board:map?preset=oversamp
       - id: stable
         label: Poles and stability
@@ -120,7 +120,7 @@ maps:
         series: 3
         short: In practice you have a finite record. The DFT samples the DTFT at N equally spaced frequencies, and quietly treats
           the record as one period of a periodic signal.
-        eq: X[k] = Σ x[n] e^{−j2πkn/N}
+        eq: X[k] = Σ x[n] e^(−j2πkn/N)
         live: board:dft?preset=onbin
       - id: leak
         label: Leakage and scalloping
@@ -161,7 +161,7 @@ maps:
         to: "laplace"
         label: "all of s"
         question: "Which exponentials, if we allow any complex s?"
-        idea: "All e^{st}. This gives the Laplace transform, which works for growing signals too."
+        idea: "All e^(st). This gives the Laplace transform, which works for growing signals too."
       - from: "laplace"
         to: "ft"
         label: "s = jω"
@@ -196,18 +196,18 @@ maps:
         to: "zt"
         label: "discrete s"
         question: "What replaces Laplace for samples?"
-        idea: "The Z-transform, with z standing in for e^{sT}."
+        idea: "The Z-transform, with z standing in for e^(sT)."
       - from: "dtft"
         to: "zt"
         dashed: true
-        label: "z = e^{jΩ}"
+        label: "z = e^(jΩ)"
         question: "How is the DTFT related to the Z-transform?"
         idea: "The DTFT is the Z-transform evaluated on the unit circle."
       - from: "zt"
         to: "map"
         label: "relate planes"
         question: "How do the s-plane and z-plane relate?"
-        idea: "Pole by pole through z = e^{sT}; every s-pole has one z-pole, but a z-pole has infinitely many s-poles."
+        idea: "Pole by pole through z = e^(sT); every s-pole has one z-pole, but a z-pole has infinitely many s-poles."
       - from: "map"
         to: "stable"
         label: "stability"
