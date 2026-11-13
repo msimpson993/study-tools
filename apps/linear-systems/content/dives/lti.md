@@ -18,6 +18,11 @@ matlab: y = lsim(sys, u, t)    % or y = conv(h, x)
 
 A system is linear and time-invariant if and only if it is convolution with a fixed impulse response h. The signals that pass through a convolution unchanged in shape are the eternal exponentials e^{st} (or z^n in discrete time): they are eigenfunctions, and the eigenvalue is the transfer function H(s) (or H(z)). Expanding an input in that basis is what the Laplace, Z, and Fourier transforms do, and it diagonalizes convolution — that is the convolution theorem.
 
+**Picture it first.** Convolution is a flip-and-slide: flip the cart's impulse response, slide it along the input, and take the area of the overlap.
+
+```figure:lti
+```
+
 ```eq
 y = h ∗ x,    Y(s) = H(s) X(s)
 ```

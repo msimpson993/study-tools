@@ -18,6 +18,11 @@ matlab: X = fourier(x, t, w)    % Symbolic Math Toolbox; or fft of a sampled rec
 
 The Fourier transform is the analysis formula for a continuous aperiodic time signal against the basis {e^{jω t}}. The transform is a function of a continuous frequency ω, and (unlike the DTFT) it is not periodic in ω, because a continuous-time exponential e^{jω t} does not repeat when you add 2π to ω. Convention here: radian frequency ω in rad/s, with the 1/2π factor on the inverse.
 
+**Picture it first.** Wind the signal around a circle at some rate. If the signal has a component at that rate, its bumps pile up on one side; otherwise they cancel. The pile's size, as a function of the winding rate, is the Fourier transform.
+
+```figure:ft
+```
+
 $$X(j\omega)=\int_{-\infty}^{\infty} x(t)\,e^{-j\omega t}\,dt$$
 
 $$x(t)=\frac{1}{2\pi}\int_{-\infty}^{\infty} X(j\omega)\,e^{j\omega t}\,d\omega$$

@@ -18,6 +18,11 @@ matlab: c = fft(x) / N    % x = one period, N samples; this is a DFS / sampled-p
 
 A period-T signal is already a discrete superposition of harmonics e^{j k ω₀ t} with ω₀ = 2π / T. The coefficients are inner products over one period. Periodicity in time is what makes frequency discrete; the spectrum is a train of lines, and it is not periodic in k. Convention here: analysis carries the 1/T, synthesis is the unweighted sum.
 
+**Picture it first.** Any periodic signal is a chain of rotating arrows. Add arrows of the right lengths, spinning at multiples of the base frequency, and the tip draws the waveform.
+
+```figure:fs
+```
+
 $$c_k=\frac{1}{T}\int_{\text{one period }T} x(t)\,e^{-jk\omega_0 t}\,dt,\qquad \omega_0=\frac{2\pi}{T}$$
 
 $$x(t)=\sum_{k=-\infty}^{\infty} c_k\,e^{jk\omega_0 t}$$

@@ -258,3 +258,163 @@
     - { id: cart, label: "The cart: 2 modes, both CO", set: { m1: co, m2: co, m3: n, m4: n }, about: "Only the two cart modes exist: minimal realization, G(s) has both poles." }
     - { id: hidden, label: "Two extra, hidden modes", set: { m1: co, m2: co, m3: c, m4: o }, about: "Modes 3 and 4 are in the state but cancel out of G(s)." }
     - { id: full, label: "Everything controllable and observable", set: { m1: co, m2: co, m3: co, m4: co }, about: "All four modes appear in G(s), including the unstable one." }
+
+- id: tf
+  title: "Poles and zeros are distances: reading G(jω) off the s-plane"
+  x: Re s or ω (rad/s)
+  y: Im s or |G(jω)|
+  legend:
+    - { label: "pole of the cart (×)", color: "var(--bad)" }
+    - { label: "distance from a pole to jω", color: "var(--org)", dash: true }
+    - { label: "zero (○) and its distance", color: "var(--grn)" }
+    - { label: "the test point jω", color: "var(--yel)" }
+    - { label: "|G(jω)|", color: "var(--cyan)" }
+  howToRead: "Left: the s-plane. The yellow dot is jω, a point on the imaginary axis (the frequency you are probing with a sine). Dashed lines run from every pole to it; |G(jω)| is the gain K divided by the product of those pole distances (and multiplied by the distance to a zero, if there is one). Right: |G(jω)| for every ω. Press Play to slide the probe up the axis and watch the response trace itself."
+  lookFor: "A pole close to the imaginary axis makes one distance small, so the response peaks when jω passes it (try Lightly damped). A zero does the opposite: it pulls the response down when the probe passes it."
+  animate: { control: w, speed: 0.7, loop: true }
+  controls:
+    - { id: a1, label: "a₁: G(s) = a₀ / (s² + a₁s + a₀)", type: range, min: 0, max: 6, step: 0.05, default: 3, group: primary }
+    - { id: a0, label: "a₀", type: range, min: 0.5, max: 8, step: 0.05, default: 2, group: primary }
+    - { id: w, label: "probe frequency ω", type: range, min: 0, max: 5, step: 0.02, default: 1, group: primary, unit: rad/s }
+    - { id: hasZero, label: "add a zero", type: toggle, default: false, group: more }
+    - { id: zr, label: "zero position", type: range, min: -5, max: 5, step: 0.1, default: -3, group: more }
+  presets:
+    - { id: cart, label: "Running cart: poles −1, −2", set: { a1: 3, a0: 2, w: 1, hasZero: false, zr: -3 }, about: "G(s) = 2/((s+1)(s+2)): a smooth low-pass, no resonance." }
+    - { id: ring, label: "Lightly damped", set: { a1: 0.4, a0: 4, w: 1, hasZero: false, zr: -3 }, about: "Poles −0.2 ± 2j sit near the axis: a resonance near ω = 2." }
+    - { id: zero, label: "Cart with a zero at −3", set: { a1: 3, a0: 2, w: 1, hasZero: true, zr: -3 }, about: "A left-half-plane zero lifts the high-frequency end." }
+
+- id: lti
+  title: "Convolution as flip-and-slide: the cart's output from its impulse response"
+  x: τ (s) or time t (s)
+  y: signals and y(t)
+  legend:
+    - { label: "input force x(τ)", color: "var(--cyan)" }
+    - { label: "flipped impulse response h(t − τ) (×2)", color: "var(--org)" }
+    - { label: "their product", color: "var(--grn)" }
+  howToRead: "Top: the input x(τ) (blue) and the impulse response of the cart h flipped around and slid so that its start sits at τ = t (orange, drawn ×2 for visibility). The green shape is their product at each τ; its area is exactly y(t) = ∫ x(τ) h(t − τ) dτ. Bottom: y(t) built up as the slide advances. Why flip? Because a push at τ has been 'ringing down' for t − τ seconds by the time t."
+  lookFor: "Press Play. When the orange kernel overlaps the input, the green area grows; once the input is over, the kernel slides off it and the area shrinks back toward zero: the cart returns to rest."
+  animate: { control: t, speed: 0.9, loop: true }
+  controls:
+    - { id: input, label: "input force", type: seg, default: pulse, group: primary, options: [{ value: pulse, label: "pulse" }, { value: step, label: "step" }, { value: two, label: "up-down" }, { value: sine, label: "sine" }] }
+    - { id: sys, label: "system", type: seg, default: cart, group: primary, options: [{ value: cart, label: "running cart" }, { value: ring, label: "underdamped" }] }
+    - { id: t, label: "output time t", type: range, min: 0, max: 9, step: 0.02, default: 2, group: primary, unit: s }
+  presets:
+    - { id: pulse, label: "Cart, 1.5 s push", set: { input: pulse, sys: cart, t: 2 }, about: "h(t) = e^{−t} − e^{−2t}: a smooth bump, so the response to a pulse is a smoothed bump." }
+    - { id: step, label: "Cart, step", set: { input: step, sys: cart, t: 2 }, about: "The step response is the running integral of h." }
+    - { id: ring, label: "Underdamped, pulse", set: { input: pulse, sys: ring, t: 2 }, about: "A ringing kernel: the output rings after the push." }
+
+- id: ft
+  title: "The Fourier transform as winding a signal around a circle"
+  x: Re or frequency f (Hz)
+  y: Im or |X(f)|
+  legend:
+    - { label: "x(t) e^{−j2πft}, the wound-up signal", color: "var(--accent)" }
+    - { label: "centre of mass of the wound-up signal", color: "var(--yel)" }
+  howToRead: "Pick a winding frequency f. Left: the signal x(t) is multiplied by e^{−j2πft}, which wraps it around the origin f times per second. If the signal has a component at f, its bumps line up on one side and the centre of mass (yellow) moves away from the origin; otherwise they cancel. Right: the distance of the centre of mass from the origin, as a function of f, is |X(f)|, the Fourier transform. Switch to the cart's impulse response to see the transform of the running example: at f = 0 it sums to G(0)."
+  lookFor: "Press Play and sweep f. For the two-tone signal the centre of mass lights up at exactly 1 Hz and 2.5 Hz and stays near zero elsewhere. For the cart it is largest at f = 0 and shrinks smoothly: a low-pass system."
+  animate: { control: f, speed: 0.25, loop: true }
+  controls:
+    - { id: sig, label: "signal", type: seg, default: tones, group: primary, options: [{ value: tones, label: "two tones (1 and 2.5 Hz)" }, { value: cart, label: "cart's h(t)" }] }
+    - { id: f, label: "winding frequency f", type: range, min: 0, max: 4, step: 0.02, default: 1, group: primary, unit: Hz }
+  presets:
+    - { id: tones, label: "Two tones", set: { sig: tones, f: 1 }, about: "Peaks at 1 Hz and 2.5 Hz." }
+    - { id: cart, label: "The cart's response", set: { sig: cart, f: 0.3 }, about: "X(f) = G(j2πf): a low-pass shape." }
+
+- id: fs
+  title: "Fourier series: a periodic signal as a chain of rotating phasors"
+  x: Re or phase θ (rad)
+  y: Im or x(θ)
+  legend:
+    - { label: "fundamental phasor", color: "var(--cyan)" }
+    - { label: "higher harmonics", color: "var(--grn)" }
+    - { label: "the partial sum", color: "var(--yel)" }
+    - { label: "the exact waveform", color: "var(--muted)", dash: true }
+  howToRead: "Each harmonic k is an arrow of length |b_k| turning k times per period. They are chained tip to tail; the height of the last tip is the partial sum Σ b_k sin(kθ). Left: the chain at the current phase θ. Right: the waveform that height traces as θ goes round once. Dashed is the exact waveform; the bold yellow is what the first N harmonics make. Press Play to watch the circles turn."
+  lookFor: "With a square wave, add harmonics one at a time: the corners sharpen, but an overshoot (Gibbs) stays near each jump. For a triangle wave the harmonics shrink like 1/k², so three of them already look right."
+  animate: { control: th, speed: 1.3, loop: true }
+  controls:
+    - { id: wave, label: "waveform", type: seg, default: square, group: primary, options: [{ value: square, label: "square" }, { value: saw, label: "sawtooth" }, { value: tri, label: "triangle" }] }
+    - { id: N, label: "harmonics included", type: range, min: 1, max: 25, step: 1, default: 3, group: primary }
+    - { id: th, label: "phase θ", type: range, min: 0, max: 6.2832, step: 0.01, default: 0.8, group: primary, unit: rad }
+  presets:
+    - { id: square3, label: "Square wave, 3 terms", set: { wave: square, N: 3, th: 0.8 }, about: "A periodic push force from the running example." }
+    - { id: square25, label: "Square wave, 25 terms", set: { wave: square, N: 25, th: 0.8 }, about: "Sharper edges, but a Gibbs overshoot stays." }
+    - { id: tri, label: "Triangle wave", set: { wave: tri, N: 3, th: 0.8 }, about: "Harmonics fall like 1/k²: converges fast." }
+
+- id: dtft
+  title: "The DTFT: the spectrum of samples repeats every 2π"
+  x: sample index n or ω (rad/sample)
+  y: x[n] or |X(e^{jω})|
+  legend:
+    - { label: "samples x[n] = h(nT) of the cart's impulse response", color: "var(--cyan)" }
+    - { label: "|X(e^{jω})|, the DTFT", color: "var(--cyan)" }
+    - { label: "unsampled |G(jΩ)|/T", color: "var(--muted)", dash: true }
+  howToRead: "Left: the cart's impulse response h(t) sampled every T seconds. Right: the DTFT of those samples. Frequency here is in radians per sample, so everything repeats every 2π: the shaded band [−π, π] is one full copy. The dashed curve is the spectrum of the unsampled cart (frequency scaled by T). The DTFT is the sum of all its shifted copies, so when T is large the copies overlap and add: aliasing."
+  lookFor: "Press Play to slide the probe frequency across the periodic spectrum. Then increase T (sample more slowly): the DTFT no longer matches the dashed curve, because neighbouring copies leak into the band."
+  animate: { control: w, speed: 1.2, loop: true }
+  controls:
+    - { id: T, label: "sample period T", type: range, min: 0.1, max: 1.5, step: 0.05, default: 0.5, group: primary, unit: s }
+    - { id: w, label: "probe frequency ω", type: range, min: -6.2832, max: 6.2832, step: 0.02, default: 1, group: primary, unit: rad/sample }
+  presets:
+    - { id: fast, label: "Fast sampling (T = 0.2)", set: { T: 0.2, w: 1 }, about: "Copies are far apart: the DTFT matches the continuous spectrum in [−π, π]." }
+    - { id: medium, label: "T = 0.5", set: { T: 0.5, w: 1 }, about: "Visible mismatch near ±π." }
+    - { id: slow, label: "Slow sampling (T = 1.4)", set: { T: 1.4, w: 1 }, about: "Strong overlap of the copies: aliasing." }
+
+- id: dft
+  title: "The DFT: N equally spaced samples of the DTFT circle"
+  x: Re z or ω (rad/sample)
+  y: Im z or |X|
+  legend:
+    - { label: "the DTFT around the unit circle", color: "var(--accent)", dash: true }
+    - { label: "DFT bins X[k]", color: "var(--yel)" }
+  howToRead: "A record of L samples (a cosine of f₀ cycles per sample) has a DTFT that is defined on the whole unit circle. Left: the unit circle, brighter where the DTFT is larger, with N yellow dots where the DFT looks, at ω_k = 2πk/N. Right: the same thing unrolled: the dashed curve is the DTFT and the stems are the DFT bins, which are just samples of that curve. If the tone falls exactly on a bin there is one clean spike; between bins the energy appears to leak."
+  lookFor: "Press Play to slide the tone's frequency. At exact bins the stems collapse to a single spike; in between, they spread over many bins. Then increase N (zero padding): no new information appears, the stems just fill in the same curve."
+  animate: { control: f0, speed: 0.03, loop: true }
+  controls:
+    - { id: f0, label: "tone frequency f₀", type: range, min: 0.05, max: 0.45, step: 0.005, default: 0.25, group: primary, unit: cycles/sample }
+    - { id: L, label: "record length L", type: range, min: 8, max: 32, step: 1, default: 16, group: primary }
+    - { id: N, label: "DFT size N (zero padding)", type: seg, default: "16", group: primary, options: [{ value: "8", label: "8" }, { value: "16", label: "16" }, { value: "32", label: "32" }, { value: "128", label: "128" }] }
+  presets:
+    - { id: onbin, label: "On a bin", set: { f0: 0.25, L: 16, N: "16" }, about: "L = N = 16 and f₀ = 4/16: exactly bin 4, one spike." }
+    - { id: leak, label: "Between bins", set: { f0: 0.27, L: 16, N: "16" }, about: "f₀·L = 4.32: not an integer, so the energy leaks." }
+    - { id: padded, label: "Zero-padded", set: { f0: 0.27, L: 16, N: "128" }, about: "Same record, 128-point DFT: the stems trace the DTFT curve." }
+
+- id: laplace
+  title: "The Laplace transform: weighting the signal by e^{−st} and adding it up"
+  x: time t (s) or σ = Re s
+  y: integrand or ω = Im s
+  legend:
+    - { label: "integrand x(t) e^{−σt} cos ωt", color: "var(--grn)" }
+    - { label: "the signal x(t)", color: "var(--muted)", dash: true }
+    - { label: "weight e^{−σt}", color: "var(--org)", dash: true }
+    - { label: "region of convergence boundary", color: "var(--yel)", dash: true }
+  howToRead: "Pick a point s = σ + jω. Left: multiply the signal x(t) by the weight e^{−σt} (it shrinks the late part when σ > 0) and by cos ωt, and add up the area. That area is the real part of X(s). Right: |X(s)| at every s as a heat map, with the cart's poles as ×. The integral only converges for σ to the right of the dashed line, the region of convergence; to its left the area runs off to infinity, even though the formula still gives a number."
+  lookFor: "Slide σ left across the dashed line for the cart: the green area stops settling and blows up. The pole is exactly where the integral starts to fail. Sweep ω with Play to see the integrand oscillate faster."
+  animate: { control: omega, speed: 0.6, loop: true }
+  controls:
+    - { id: sig, label: "signal", type: seg, default: cart, group: primary, options: [{ value: cart, label: "cart's h(t)" }, { value: grow, label: "growing e^{0.5t}" }] }
+    - { id: sigma, label: "σ = Re s", type: range, min: -3, max: 2, step: 0.05, default: 0, group: primary }
+    - { id: omega, label: "ω = Im s", type: range, min: 0, max: 6, step: 0.05, default: 1.5, group: primary }
+  presets:
+    - { id: cart, label: "Cart, inside the ROC", set: { sig: cart, sigma: 0, omega: 1.5 }, about: "σ = 0 > −1: converges. X(jω) = G(jω)." }
+    - { id: edge, label: "Cart, outside the ROC", set: { sig: cart, sigma: -1.6, omega: 0.5 }, about: "σ < −1: e^{−σt}e^{−t} grows, the integral diverges." }
+    - { id: grow, label: "Growing signal", set: { sig: grow, sigma: 1, omega: 1.5 }, about: "x = e^{0.5t} has abscissa 0.5: it has no Fourier transform but does have a Laplace transform for σ > 0.5." }
+
+- id: sampling
+  title: "Aliasing: two tones the samples cannot tell apart"
+  x: time t (s) or frequency (Hz)
+  y: amplitude
+  legend:
+    - { label: "the true tone", color: "var(--cyan)" }
+    - { label: "its alias, same samples", color: "var(--org)", dash: true }
+    - { label: "samples", color: "var(--yel)" }
+  howToRead: "Top: a tone of f Hz (blue) sampled at fs Hz (yellow dots). The orange dashed tone passes through the very same dots: it is the alias. Bottom: the spectrum of the sampled signal is the tone's spectrum copied at every multiple of fs. The green band (±fs/2) is all the samples can represent; whichever copy lands inside it (orange) is what you will 'see'. When f is above fs/2, a copy from outside folds into the band at the alias frequency."
+  lookFor: "Press Play to sweep f upward at fs = 8 Hz. Up to 4 Hz the blue line sits in the band. Past 4 Hz an orange copy walks down inside the band while the tone keeps climbing: 6.5 Hz looks exactly like 1.5 Hz."
+  animate: { control: f, speed: 1.2, loop: true }
+  controls:
+    - { id: f, label: "tone frequency f", type: range, min: 0.2, max: 14, step: 0.1, default: 3, group: primary, unit: Hz }
+    - { id: fs, label: "sampling rate fs", type: range, min: 4, max: 20, step: 0.5, default: 8, group: primary, unit: Hz }
+  presets:
+    - { id: ok, label: "Safe: 3 Hz at 8 Hz", set: { f: 3, fs: 8 }, about: "Below Nyquist (4 Hz): the samples identify the tone." }
+    - { id: edge, label: "At Nyquist: 4 Hz", set: { f: 4, fs: 8 }, about: "Exactly fs/2: the borderline case." }
+    - { id: alias, label: "Aliased: 6.5 Hz at 8 Hz", set: { f: 6.5, fs: 8 }, about: "Looks like 1.5 Hz in the samples." }

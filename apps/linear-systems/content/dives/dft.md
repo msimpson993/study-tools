@@ -18,6 +18,11 @@ matlab: "X = fft(x, N)    % inverse: x = ifft(X)"
 
 The N-point DFT is the discrete Fourier series of a length-N sequence viewed as one period of a periodic signal. Equivalently, it is the DTFT of that finite record, sampled at Ω = 2π k / N. Frequency is now discrete and periodic with period N. This is the one you actually compute, via the FFT. Convention here, and in MATLAB: the forward transform is the unnormalized sum, and the inverse carries 1/N.
 
+**Picture it first.** The DTFT lives on the whole unit circle. The DFT is what you get by looking at N equally spaced points of it.
+
+```figure:dft
+```
+
 $$X[k]=\sum_{n=0}^{N-1} x[n]\,e^{-j2\pi kn/N}$$
 
 $$x[n]=\frac{1}{N}\sum_{k=0}^{N-1} X[k]\,e^{j2\pi kn/N}$$

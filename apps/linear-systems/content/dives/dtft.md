@@ -19,6 +19,11 @@ matlab: "[H, w] = freqz(b, a)    % or fft(x, Nfft) as samples of the DTFT of a f
 
 The DTFT is the analysis of a discrete-time, typically aperiodic, sequence against e^{j Ω n}. Sampling in time periodizes frequency: e^{j(Ω + 2π) n} = e^{j Ω n}, so X(e^{jΩ}) is always 2π-periodic in the radian frequency Ω (radians per sample). The inverse still has a 1/2π, now integrating over any 2π interval. The DTFT of an LTI system's impulse response is its frequency response.
 
+**Picture it first.** Sample a signal and its spectrum copies itself every 2π. The DTFT is that periodic spectrum, the sum of all the copies.
+
+```figure:dtft
+```
+
 $$X(e^{j\Omega})=\sum_{n=-\infty}^{\infty} x[n]\,e^{-j\Omega n}$$
 
 $$x[n]=\frac{1}{2\pi}\int_{\text{any }2\pi\text{ interval}} X(e^{j\Omega})\,e^{j\Omega n}\,d\Omega$$

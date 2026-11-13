@@ -18,6 +18,11 @@ matlab: "X = laplace(x)    % or ztrans(x);  for systems: tf(sys), tf(sysd)"
 
 Laplace (continuous time) and Z (discrete time) are the natural transforms for control and for transient analysis. They use the full eigenfunctions e^{st} and z^n, not just the eternal phasors e^{jω t} and e^{jΩ n}. The ROC is part of the transform: the same formal expression 1/(s+a) can belong to a causal decaying exponential or to an anti-causal growing one. When the ROC contains the jω axis (or the unit circle), restricting the transform recovers the FT (or DTFT). Transfer functions live in these planes, and their poles are the system modes.
 
+**Picture it first.** Weight the signal by a decaying (or growing) exponential before adding it up, and you can tame signals that Fourier cannot. The region where that sum converges is the ROC.
+
+```figure:laplace
+```
+
 $$X(s)=\int_{0^-}^{\infty} x(t)\,e^{-st}\,dt\quad\text{(unilateral)}$$
 
 $$X(z)=\sum_{n=0}^{\infty} x[n]\,z^{-n},\qquad z=e^{sT}$$

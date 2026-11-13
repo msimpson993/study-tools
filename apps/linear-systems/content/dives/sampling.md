@@ -18,6 +18,11 @@ matlab: sysd = c2d(sys, T, 'zoh')    % poles of sysd satisfy z = exp(s*T)
 
 Sampling a mode e^{s t} at t = n T produces (e^{s T})^n = z^n, so the planes are related by z = e^{s T}. This map is many-to-one: s and s + j 2π k / T land on the same z, which is aliasing. Equivalently, sampling in time periodizes the spectrum with period 2π / T (or f\_s). The left half-plane maps to the interior of the unit circle because |z| = e^{σ T}, not because someone chose to draw it that way. Pole mapping of a continuous system under exact discretization is z = e^{s T}; a ZOH equivalent also inserts the hold's dynamics, so G\_d(z) is not simply G(s) evaluated at s = (ln z)/T.
 
+**Picture it first.** Two different tones can pass through exactly the same samples. Sampling copies the spectrum at multiples of the rate, and whichever copy falls in the band is what you see.
+
+```figure:sampling
+```
+
 ```eq
 x[n] = x(n T),    z = e^{s T},    |z| = e^{σ T}
 ```
