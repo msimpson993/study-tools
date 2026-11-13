@@ -150,6 +150,7 @@ export function loadApp(appDir: string): { content: AppContent; warnings: string
     id: q.id, tags: q.tags, kind: q.kind,
     q: inline(q.q, `quiz ${q.id}`), choices: q.choices?.map((c: string) => inline(c, `quiz ${q.id}`)), answer: q.answer,
     a: q.a ? block(q.a, `quiz ${q.id}`) : undefined, why: q.why ? block(q.why, `quiz ${q.id}`) : undefined,
+    figure: q.figure,
   }));
   const qids = new Set<string>();
   for (const q of quizRaw) {
@@ -250,6 +251,8 @@ export function loadApp(appDir: string): { content: AppContent; warnings: string
       }
     }
   }
+  // quiz figures: when the subject lists its renderers, every figure.id must be one of them (otherwise ids are checked at runtime, with a visible fallback)
+  for (const q of quiz) if (q.figure && subject.quizFigures && !subject.quizFigures.includes(q.figure.id)) problems.push(`quiz.yaml ${q.id}: figure "${q.figure.id}" is not in subject.yaml quizFigures [${subject.quizFigures.join(', ')}]`);
   for (const q of quiz) {
     for (const t of q.tags) if (!tags.has(t) && !diveIds.has(t)) problems.push(`quiz.yaml ${q.id}: tag "${t}" matches no node/dive`);
   }

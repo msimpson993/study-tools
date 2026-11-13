@@ -11,7 +11,16 @@
       "choices": { "type": "array", "minItems": 2, "maxItems": 6, "items": { "type": "string", "minLength": 1 } },
       "answer": { "type": "integer", "minimum": 0 },
       "a": { "type": "string" },
-      "why": { "type": "string" }
+      "why": { "type": "string" },
+      "figure": {
+        "type": "object", "required": ["id", "alt"], "additionalProperties": false,
+        "properties": {
+          "id": { "type": "string", "pattern": "^[A-Za-z0-9_-]+$" },
+          "params": { "type": "object", "additionalProperties": { "type": ["number", "string", "boolean"] } },
+          "alt": { "type": "string", "minLength": 8 },
+          "caption": { "type": "string" }
+        }
+      }
     },
     "allOf": [
       { "if": { "properties": { "kind": { "const": "recall" } } },

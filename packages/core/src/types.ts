@@ -69,6 +69,8 @@ export interface Dive {
 }
 
 export type QuestionKind = 'recall' | 'recognize' | 'action' | 'compute' | 'trap';
+/** A small non-interactive plot shown under the question text. `id` names a renderer registered by the app (`quizFigures` hook); `params` are FIXED inputs for it. */
+export interface QuizFigureRef { id: string; params?: Record<string, number | string | boolean>; /** accessible description (required): what the plot shows */ alt: string; caption?: string }
 export interface Question {
   id: string;
   tags: string[];
@@ -78,6 +80,7 @@ export interface Question {
   answer?: number;    // index into choices (mcq)
   a?: string;         // HTML (recall)
   why?: string;       // HTML
+  figure?: QuizFigureRef;
 }
 
 export interface Term { term: string; meaning: string; units?: string; section?: string }
@@ -118,6 +121,8 @@ export interface Subject {
   categories?: { id: string; label: string }[];
   sections: SectionDef[];
   hub?: { order?: number };
+  /** ids of the quiz-figure renderers this app registers; when present, `figure.id` in quiz.yaml is validated against it */
+  quizFigures?: string[];
   runningExample?: { title: string; summary: string; details?: string };
   board?: { pairs: string[] };
 }

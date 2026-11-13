@@ -27,6 +27,11 @@
       "type": "string",
       "minLength": 10
     },
+    "quizFigures": {
+      "type": "array",
+      "items": { "type": "string", "pattern": "^[A-Za-z0-9_-]+$" },
+      "uniqueItems": true
+    },
     "archetype": {
       "enum": [
         "guide",
