@@ -31,9 +31,10 @@ export function mountConceptMap(host: HTMLElement, content: AppContent, progress
   const top = h('div', { class: 'cm-top' });
   const reviewBar = h('div', { class: 'cm-top', dataset: { testid: 'review-bar' } });
   const caption = h('div');
+  const legend = h('div', { class: 'cm-legend', role: 'group', 'aria-label': 'How to read the lines and boxes', dataset: { testid: 'map-legend' } });
   root.append(
     h('div', { class: 'cm-q', dataset: { testid: 'central-question' } }, content.subject.centralQuestion, h('small', null, 'Central question. Tap any box or line to open it.')),
-    top, reviewBar, caption,
+    top, reviewBar, caption, legend,
     h('div', { class: 'cm-wrap' }, scroll, panel),
     h('div', { class: 'cm-pad' }),
   );
@@ -89,6 +90,31 @@ export function mountConceptMap(host: HTMLElement, content: AppContent, progress
       h('button', { class: 'tbtn', disabled: !missedTags.length, title: missedTags.length ? '' : 'Nothing missed yet', onclick: () => nav.openQuiz(missedTags, 'Missed boxes on this map') }, `Quiz missed (${missed.length})`),
       h('button', { class: 'tbtn', disabled: !sel, title: sel ? '' : 'Select a box first', dataset: { testid: 'quiz-branch' }, onclick: () => { if (sel) nav.openQuiz(subtree(m, sel.id).map((id) => quizTagOf(m.nodes.find((n) => n.id === id)!)), `Branch from “${sel.label}”`); } }, 'Quiz this branch'),
       h('button', { class: 'tbtn', dataset: { testid: 'reset-progress' }, onclick: () => { if (confirm('Reset all progress for this page?')) { progress.reset(); } } }, 'Reset progress'),
+    );
+  }
+
+  /** One-row key to the map's drawing language. Only lists what the current map actually uses. */
+  function renderLegend() {
+    clear(legend);
+    const m = map();
+    const kinds = new Set(m.nodes.map((n) => n.kind ?? 'box'));
+    const hasDashed = m.edges.some((e) => e.dashed);
+    const line = (dashed: boolean) => {
+      const sw = s('svg', { class: 'lg-sw', width: 34, height: 12, viewBox: '0 0 34 12', 'aria-hidden': 'true' });
+      sw.append(s('path', { class: `lg-line${dashed ? ' dashed' : ''}`, d: 'M 1 6 H 27' }), s('path', { class: 'lg-head', d: 'M 23 2.5 L 28 6 L 23 9.5' }));
+      return sw;
+    };
+    const shape = (k: string) => {
+      const sw = s('svg', { class: 'lg-sw', width: 24, height: 14, viewBox: '0 0 24 14', 'aria-hidden': 'true' });
+      sw.append(k === 'decision' ? s('path', { class: 'lg-shape', d: 'M 5 1 L 19 1 L 23 7 L 19 13 L 5 13 L 1 7 Z' }) : s('rect', { class: 'lg-shape', x: 1, y: 1, width: 22, height: 12, rx: k === 'terminal' ? 6 : 3 }));
+      return sw;
+    };
+    const item = (key: string, icon: Element, text: string) => h('span', { class: 'lg-item', dataset: { legend: key } }, icon as unknown as Node, h('span', null, text));
+    legend.append(
+      item('solid', line(false), 'next question'),
+      ...(hasDashed ? [item('dashed', line(true), 'same idea, other view')] : []),
+      ...(kinds.has('decision') ? [item('decision', shape('decision'), 'a fork: the answer picks the way')] : []),
+      ...(kinds.has('terminal') ? [item('terminal', shape('terminal'), 'where the map starts')] : []),
     );
   }
 
@@ -226,7 +252,7 @@ export function mountConceptMap(host: HTMLElement, content: AppContent, progress
     }
   }
 
-  function renderAll() { renderTop(); renderReview(); renderSvg(); renderPanel(); }
+  function renderAll() { renderTop(); renderLegend(); renderReview(); renderSvg(); renderPanel(); }
   renderAll();
   const off = progress.onChange(() => { renderReview(); renderSvg(); renderPanel(); });
   const onKey = (ev: KeyboardEvent) => { if (ev.key === 'Escape' && st.pick && !document.querySelector('.fig-overlay:not([hidden])')) setPick(null); };
