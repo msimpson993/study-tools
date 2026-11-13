@@ -14,7 +14,7 @@ neighbors:
 ---
 **What can P, I and D each do about it?**
 
-**Picture it first.** Add one term at a time to the cart: P is fast but leaves an offset, I removes it and slows things down, D calms the ringing. The closed-loop poles are in the second plot.
+**Picture it first.** Add one term at a time to the cart: P is fast but leaves an offset, I removes it and slows things down, D calms the ringing. The closed-loop poles are in the third plot.
 
 ```figure:pidcart
 ```

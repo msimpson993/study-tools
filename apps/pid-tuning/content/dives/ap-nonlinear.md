@@ -12,7 +12,7 @@ neighbors:
 ---
 **A12 · Nonlinearity / operating-point change**
 
-**Picture it first.** Gains tuned at r = 1 are three times too hot at r = 9: divide them, or gain-schedule.
+**Picture it first.** Solid is the problem, dashed is a fixed version of the same loop. Watch what goes wrong first, then drag the sliders toward the dashed curve.
 
 ```figure:fail-nonlinear
 ```
@@ -38,11 +38,10 @@ The plant's gain depends on where it is operating, so one set of gains is right 
 ````
 
 ````callout:predict Predict
-Before you touch a slider, predict what it will do. Gains tuned at r = 1 are three times too hot at r = 9: divide them, or gain-schedule.
+Before you drag anything, guess which slider turns the solid curve into the dashed one, then try it. The dashed trace shows what the fix looks like; the notes below say why.
 ````
 
 ````callout:note Symbols used here
-- **r**: the reference (set-point), here a unit step r = 1
 - **Kp**: proportional gain: u from the present error
 - **Ki**: integral gain (1/s): u from the accumulated error
 ````

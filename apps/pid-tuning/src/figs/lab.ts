@@ -83,7 +83,7 @@ export const makeLab = (opt: LabOptions = {}) => figureOf((c) => {
       },
     },
     {
-      id: 'read', title: 'Readouts', x: '', y: '',
+      id: 'read', title: 'Readouts', x: 'quantity', y: 'value',
       draw(g, w, h, v) {
         wipe(g, w, h);
         const r = run(v), m = r.m, good = !m.unstable && m.settled, v2 = verdict(r), dom = r.poles.slice().sort((a, b) => b.re - a.re)[0];

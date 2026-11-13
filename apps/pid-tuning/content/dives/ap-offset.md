@@ -12,7 +12,7 @@ neighbors:
 ---
 **A2 · Steady-state offset**
 
-**Picture it first.** Raise Kp: the offset shrinks but never vanishes. Add Ki: it is gone.
+**Picture it first.** Solid is the problem, dashed is a fixed version of the same loop. Watch what goes wrong first, then drag the sliders toward the dashed curve.
 
 ```figure:fail-offset
 ```
@@ -38,7 +38,7 @@ It settles calmly, but not at the target.
 ````
 
 ````callout:predict Predict
-Before you touch a slider, predict what it will do. Raise Kp: the offset shrinks but never vanishes. Add Ki: it is gone.
+Before you drag anything, guess which slider turns the solid curve into the dashed one, then try it. The dashed trace shows what the fix looks like; the notes below say why.
 ````
 
 ````callout:note Symbols used here

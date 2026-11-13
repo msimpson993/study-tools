@@ -12,7 +12,7 @@ neighbors:
 ---
 **A4 · Sustained oscillation / instability**
 
-**Picture it first.** Kp = 8 rings forever, 12 grows, 2 is calm: back the gain off.
+**Picture it first.** Solid is the problem, dashed is a fixed version of the same loop. Watch what goes wrong first, then drag the sliders toward the dashed curve.
 
 ```figure:fail-oscillation
 ```
@@ -39,7 +39,7 @@ The loop rings forever or the amplitude grows.
 ````
 
 ````callout:predict Predict
-Before you touch a slider, predict what it will do. Kp = 8 rings forever, 12 grows, 2 is calm: back the gain off.
+Before you drag anything, guess which slider turns the solid curve into the dashed one, then try it. The dashed trace shows what the fix looks like; the notes below say why.
 ````
 
 ````callout:note Symbols used here

@@ -12,7 +12,7 @@ neighbors:
 ---
 **A13 · Set-point vs disturbance trade-off (2-DOF)**
 
-**Picture it first.** Add a set-point filter: the overshoot goes, the disturbance response is untouched.
+**Picture it first.** Solid is the problem, dashed is a fixed version of the same loop. Watch what goes wrong first, then drag the sliders toward the dashed curve.
 
 ```figure:fail-twodof
 ```
@@ -37,7 +37,7 @@ Gains tuned to reject disturbances fast make the set-point step overshoot.
 ````
 
 ````callout:predict Predict
-Before you touch a slider, predict what it will do. Add a set-point filter: the overshoot goes, the disturbance response is untouched.
+Before you drag anything, guess which slider turns the solid curve into the dashed one, then try it. The dashed trace shows what the fix looks like; the notes below say why.
 ````
 
 ````callout:note Symbols used here

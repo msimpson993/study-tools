@@ -12,7 +12,7 @@ neighbors:
 ---
 **A6 · Noisy / jittery actuator**
 
-**Picture it first.** The output looks fine; the control does not. Lower N.
+**Picture it first.** Solid is the problem, dashed is a fixed version of the same loop. Watch what goes wrong first, then drag the sliders toward the dashed curve.
 
 ```figure:fail-noise
 ```
@@ -38,7 +38,7 @@ Measurement noise is amplified into a chattering control signal.
 ````
 
 ````callout:predict Predict
-Before you touch a slider, predict what it will do. The output looks fine; the control does not. Lower N.
+Before you drag anything, guess which slider turns the solid curve into the dashed one, then try it. The dashed trace shows what the fix looks like; the notes below say why.
 ````
 
 ````callout:note Symbols used here

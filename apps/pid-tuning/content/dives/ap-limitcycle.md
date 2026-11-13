@@ -12,7 +12,7 @@ neighbors:
 ---
 **A14 · Limit cycle from dead zone / backlash**
 
-**Picture it first.** The integral drives u across the dead zone again and again: lower Ki or shrink the dead zone.
+**Picture it first.** Solid is the problem, dashed is a fixed version of the same loop. Watch what goes wrong first, then drag the sliders toward the dashed curve.
 
 ```figure:fail-limitcycle
 ```
@@ -38,7 +38,7 @@ Integral action plus a sticky actuator makes the loop hunt forever around the ta
 ````
 
 ````callout:predict Predict
-Before you touch a slider, predict what it will do. The integral drives u across the dead zone again and again: lower Ki or shrink the dead zone.
+Before you drag anything, guess which slider turns the solid curve into the dashed one, then try it. The dashed trace shows what the fix looks like; the notes below say why.
 ````
 
 ````callout:note Symbols used here

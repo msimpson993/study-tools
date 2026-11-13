@@ -12,7 +12,7 @@ neighbors:
 ---
 **A7 · Integrator windup (actuator saturation)**
 
-**Picture it first.** Switch on clamping: the overshoot after saturation disappears.
+**Picture it first.** Solid is the problem, dashed is a fixed version of the same loop. Watch what goes wrong first, then drag the sliders toward the dashed curve.
 
 ```figure:fail-windup
 ```
@@ -38,7 +38,7 @@ The integrator keeps charging while the actuator is pinned at its limit.
 ````
 
 ````callout:predict Predict
-Before you touch a slider, predict what it will do. Switch on clamping: the overshoot after saturation disappears.
+Before you drag anything, guess which slider turns the solid curve into the dashed one, then try it. The dashed trace shows what the fix looks like; the notes below say why.
 ````
 
 ````callout:note Symbols used here

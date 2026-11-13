@@ -12,7 +12,7 @@ neighbors:
 ---
 **A8 · Derivative kick**
 
-**Picture it first.** Put D on the measurement: the spike in u at t = 0 vanishes.
+**Picture it first.** Solid is the problem, dashed is a fixed version of the same loop. Watch what goes wrong first, then drag the sliders toward the dashed curve.
 
 ```figure:fail-kick
 ```
@@ -38,7 +38,7 @@ A set-point step makes D produce a huge one-sample spike in <i>u</i>.
 ````
 
 ````callout:predict Predict
-Before you touch a slider, predict what it will do. Put D on the measurement: the spike in u at t = 0 vanishes.
+Before you drag anything, guess which slider turns the solid curve into the dashed one, then try it. The dashed trace shows what the fix looks like; the notes below say why.
 ````
 
 ````callout:note Symbols used here

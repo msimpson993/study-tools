@@ -12,7 +12,7 @@ neighbors:
 ---
 **A10 · Time delay (dead time)**
 
-**Picture it first.** The gains that were fine without delay oscillate with it: lower them, or shrink the delay.
+**Picture it first.** Solid is the problem, dashed is a fixed version of the same loop. Watch what goes wrong first, then drag the sliders toward the dashed curve.
 
 ```figure:fail-delay
 ```
@@ -37,7 +37,7 @@ Nothing happens for a while after <i>u</i> changes, so feedback acts on old news
 ````
 
 ````callout:predict Predict
-Before you touch a slider, predict what it will do. The gains that were fine without delay oscillate with it: lower them, or shrink the delay.
+Before you drag anything, guess which slider turns the solid curve into the dashed one, then try it. The dashed trace shows what the fix looks like; the notes below say why.
 ````
 
 ````callout:note Symbols used here

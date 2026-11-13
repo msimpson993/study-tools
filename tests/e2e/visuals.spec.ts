@@ -34,7 +34,7 @@ for (const app of APPS) {
       test.setTimeout(240_000);
       const errs = trackErrors(page);
       const figs = (await figuresOf(page, app)).filter((f) => f.id !== 'expm');
-      expect(figs.length).toBeGreaterThanOrEqual(app === 'linear-systems' ? 18 : app === 'transforms' ? 5 : 0);
+      expect(figs.length).toBeGreaterThanOrEqual(app === 'linear-systems' ? 18 : app === 'transforms' ? 5 : app === 'control-systems' ? 16 : app === 'pid-tuning' ? 23 : 0);
       for (const f of figs) {
         await page.goto(`/${app}/index.html#/figure/${f.id}`);
         await page.reload();
@@ -70,7 +70,7 @@ for (const app of APPS) {
     test('with prefers-reduced-motion there is no autoplay and a Step button advances the figure', async ({ page }) => {
       await page.emulateMedia({ reducedMotion: 'reduce' });
       const figs = (await figuresOf(page, app)).filter((f) => f.animate);
-      expect(figs.length).toBeGreaterThanOrEqual(['linear-systems', 'transforms'].includes(app) ? 4 : 0);
+      expect(figs.length).toBeGreaterThanOrEqual(['linear-systems', 'transforms'].includes(app) ? 4 : app === 'control-systems' ? 1 : 0);
       for (const f of figs.slice(0, 5)) {
         await page.goto(`/${app}/index.html#/figure/${f.id}`); await page.reload();
         const btn = page.getByTestId('play');
