@@ -58,7 +58,7 @@ for (const app of APPS) {
 
     test('review mode tracks per-node progress and survives a reload', async ({ page }) => {
       await open(page, app);
-      await page.getByRole('button', { name: 'Review' }).click();
+      await page.getByRole('button', { name: 'Review', exact: true }).click();
       const nodes = page.locator('[data-testid=map-node]');
       expect(await nodes.evaluateAll((els) => els.every((e) => e.getAttribute('data-status') === 'unseen'))).toBe(true);
       const id = await nodes.nth(1).getAttribute('data-node');
@@ -66,7 +66,7 @@ for (const app of APPS) {
       await expect(page.locator(`[data-testid=map-node][data-node="${id}"]`)).toHaveAttribute('data-status', 'seen');
       await page.reload();
       await page.waitForFunction(() => !!(window as any).__study);
-      await page.getByRole('button', { name: 'Review' }).click();
+      await page.getByRole('button', { name: 'Review', exact: true }).click();
       await expect(page.locator(`[data-testid=map-node][data-node="${id}"]`)).toHaveAttribute('data-status', 'seen');
       page.once('dialog', (d) => d.accept());
       await page.getByTestId('reset-progress').click();

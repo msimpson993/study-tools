@@ -37,7 +37,7 @@ for (const v of VIEWS) {
         const node = page.locator('[data-testid=map-node]').nth(2);
         await node.dispatchEvent('click'); await snap(page, `${app}-map-popup-${tag}`);
         // review mode
-        await page.getByRole('button', { name: 'Review' }).click();
+        await page.getByRole('button', { name: 'Review', exact: true }).click();
         for (let i = 0; i < 4; i++) await page.locator('[data-testid=map-node]').nth(i).dispatchEvent('click');
         await snap(page, `${app}-map-review-${tag}`);
         await page.evaluate(() => { localStorage.clear(); });
