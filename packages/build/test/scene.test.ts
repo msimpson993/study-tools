@@ -55,3 +55,26 @@ describe('example scene content field', () => {
     }
   });
 });
+
+describe('closed-loop params (cart)', () => {
+  const cart = () => {
+    const dir = copyApp('linear-systems'); const f = fs.readdirSync(path.join(dir, 'content/dives'))[0];
+    return { dir, file: path.join(dir, 'content/dives', f), id: f.replace(/\.md$/, '') };
+  };
+  it('accepts overlays + params on a dive, a map node and the hero, and passes them through', () => {
+    const { dir, file, id } = cart();
+    front(file, (fm) => { fm.exampleScene = { overlays: ['pid'], params: { K: 8, Ki: 4 } }; });
+    edit(path.join(dir, 'subject.yaml'), (y) => { y.runningExample.scene = { id: 'cart', overlays: ['loop'], params: { K: 3 } }; });
+    const { content } = loadApp(dir);
+    expect(content.dives.find((d) => d.id === id)?.exampleScene).toEqual({ overlays: ['pid'], params: { K: 8, Ki: 4 } });
+    expect(content.subject.runningExample?.scene?.params).toEqual({ K: 3 });
+  });
+  it.each([
+    ['unknown param', { overlays: ['loop'], params: { Q: 1 } }, /unknown param "Q"/],
+    ['out of range', { overlays: ['loop'], params: { K: 1000 } }, /outside \[/],
+    ['not a number', { overlays: ['loop'], params: { K: 'big' } }, /number/],
+    ['params without a loop overlay', { overlays: ['forces'], params: { K: 3 } }, /only apply to the closed-loop/],
+    ['open-loop + closed-loop overlay', { overlays: ['push', 'pid'] }, /cannot be combined/],
+    ['three panels via implied overlays', { overlays: ['limit', 'poles'] }, /at most 2/],
+  ])('rejects %s', (_n, ex, re) => { const { dir, file } = cart(); front(file, (fm) => { fm.exampleScene = ex; }); expect(msg(dir)).toMatch(re); });
+});

@@ -75,6 +75,13 @@
         "caption": {
           "type": "string",
           "description": "One line under the picture."
+        },
+        "params": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "number"
+          },
+          "description": "Closed-loop cart parameters (numbers): K, Ki, Kd, r, umax, d, td, noise, seed, delay, lag. Only valid with a closed-loop overlay (loop, pid, disturb, noise, limit, delay, lag); ranges are in docs/example-scenes.md and checked at build time."
         }
       }
     }

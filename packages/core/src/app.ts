@@ -190,7 +190,7 @@ export function mountApp(content: AppContent, hooks: AppHooks = {}): void {
       const sc = content.subject.runningExample.scene;
       const row = h('div', { class: `ex-row${sc ? ' has-scene' : ''}`, dataset: { testid: 'dive-example-row' } }, callout);
       art.append(row);
-      if (sc) sceneStop = mountScene(row, { scene: sc.id, overlays: d.exampleScene?.overlays, caption: d.exampleScene?.caption }).destroy;
+      if (sc) sceneStop = mountScene(row, { scene: sc.id, overlays: d.exampleScene?.overlays, caption: d.exampleScene?.caption, params: d.exampleScene?.params ?? sc.params }).destroy;
     }
     const body = h('div', { html: d.html });
     art.append(body);

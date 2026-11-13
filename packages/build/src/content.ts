@@ -232,10 +232,10 @@ export function loadApp(appDir: string): { content: AppContent; warnings: string
   }
   // Example scenes: scene id and overlay names are checked against core's catalogue (packages/core/src/scenedefs.ts).
   const sceneId = re?.scene?.id;
-  if (re?.scene) problems.push(...sceneProblems(re.scene.id, re.scene.overlays, 'subject.yaml runningExample.scene'));
-  for (const m of maps) for (const n of m.nodes) if (n.exampleScene) { if (!sceneId) warnings.push(`graph.yaml ${m.id}/${n.id}: exampleScene is ignored: subject.yaml has no runningExample.scene`); else problems.push(...sceneProblems(sceneId, n.exampleScene.overlays, `graph.yaml ${m.id}/${n.id} exampleScene`)); }
+  if (re?.scene) problems.push(...sceneProblems(re.scene.id, re.scene.overlays, 'subject.yaml runningExample.scene', re.scene.params));
+  for (const m of maps) for (const n of m.nodes) if (n.exampleScene) { if (!sceneId) warnings.push(`graph.yaml ${m.id}/${n.id}: exampleScene is ignored: subject.yaml has no runningExample.scene`); else problems.push(...sceneProblems(sceneId, n.exampleScene.overlays, `graph.yaml ${m.id}/${n.id} exampleScene`, n.exampleScene.params)); }
   for (const d of dives) {
-    if (d.exampleScene) { if (!sceneId) warnings.push(`dives/${d.id}: exampleScene is ignored: subject.yaml has no runningExample.scene`); else problems.push(...sceneProblems(sceneId, d.exampleScene.overlays, `dives/${d.id} exampleScene`)); }
+    if (d.exampleScene) { if (!sceneId) warnings.push(`dives/${d.id}: exampleScene is ignored: subject.yaml has no runningExample.scene`); else problems.push(...sceneProblems(sceneId, d.exampleScene.overlays, `dives/${d.id} exampleScene`, d.exampleScene.params)); }
     else if (sceneId) warnings.push(`dives/${d.id}: no exampleScene; the scene's default overlays are shown`);
   }
   for (const ref of mathErrors.figureRefs) if (!figures.some((f) => f.id === ref.id)) problems.push(`${ref.where}: figure:${ref.id} is not in figures.yaml`);
