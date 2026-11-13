@@ -18,6 +18,11 @@ matlab: sys_min = minreal(ss(A, B, C, D))    % or ctrbf / obsvf for the split
 
 A change of basis (the Kalman decomposition) splits the state into four invariant pieces: controllable and observable (CO), controllable but unobservable, uncontrollable but observable, and neither. The transfer function depends only on the CO part. A realization is minimal when it is both controllable and observable; then dim(A) equals the degree of G(s), and the poles of G are exactly the eigenvalues of A.
 
+**Picture it first.** Wire every mode between the input and the output. A mode that is not wired at both ends is invisible to the transfer function.
+
+```figure:kalman
+```
+
 ```eq
 G(s) depends only on the CO subsystem
 ```

@@ -19,6 +19,11 @@ matlab: "rank(obsv(A, C)) == size(A, 1)    % PBH: rank([lam*eye(n)-A; C]) == n"
 
 The system (A, C) is observable when the initial state can be recovered from a finite record of the output (and the known input). Equivalently, the observability matrix O has trivial null space: if y is identically zero with u = 0, then x(0) = 0. In the eigenbasis this is: does every mode appear in y? PBH: no right eigenvector of A may lie in the kernel of C. Observability is dual to controllability: (A, C) is observable iff (Aᵀ, Cᵀ) is controllable.
 
+**Picture it first.** A sensor sees only one *shadow* of the state. Observability asks whether two different states can ever cast the same shadow for all time.
+
+```figure:obs
+```
+
 ```eq
 O = [C;  CA;  CA²;  …;  CA^{n−1}],    rank(O) = n
 ```

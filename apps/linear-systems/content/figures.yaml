@@ -117,3 +117,144 @@
   presets:
     - { id: perp, label: "Perpendicular, m ≠ n", set: { alpha: 90, m: 1, n: 2 }, about: "No shadow; the two sinusoids have zero inner product." }
     - { id: same, label: "Parallel, m = n", set: { alpha: 0, m: 2, n: 2 }, about: "Full shadow; a sinusoid is not orthogonal to itself (area π)." }
+
+- id: ss
+  title: "The running example in motion: force in, state and sensor out"
+  x: time t (s)
+  y: position, velocity, force
+  legend:
+    - { label: "x = position (what the sensor reads)", color: "var(--cyan)" }
+    - { label: "ẋ = velocity", color: "var(--org)" }
+    - { label: "u = the applied force", color: "var(--muted)", dash: true }
+  howToRead: "Top: the cart on its spring and damper, with the force arrow while you push. Bottom: the two states over time (bold up to now, faint for the future) and the force. The state is exactly the pair (position, velocity), because those two numbers are all you need to predict the future given the force. Change the spring k or damper c and the matrix A = [[0, 1], [−k, −c]] changes with them."
+  lookFor: "Press Play with a step force: the cart overshoots or creeps to x = 1/k, depending on the damper. Then switch to Pulse and see the free motion after you let go: that is the state evolving by A alone."
+  animate: { control: t, speed: 1.2, loop: true }
+  height: 260
+  controls:
+    - { id: input, label: "force u(t)", type: seg, default: step, group: primary, options: [{ value: none, label: "none" }, { value: step, label: "step" }, { value: pulse, label: "pulse" }, { value: sine, label: "sine" }] }
+    - { id: amp, label: "force amplitude", type: range, min: 0, max: 2, step: 0.05, default: 1, group: primary, unit: N }
+    - { id: cd, label: "damper c", type: range, min: 0, max: 6, step: 0.05, default: 3, group: primary }
+    - { id: k, label: "spring k", type: range, min: 0.5, max: 6, step: 0.05, default: 2, group: primary }
+    - { id: t, label: "time t", type: range, min: 0, max: 10, step: 0.02, default: 0, group: primary, unit: s }
+    - { id: x0, label: "initial position x(0)", type: range, min: -1, max: 1, step: 0.05, default: 0, group: more }
+  presets:
+    - { id: step, label: "Step push (running cart)", set: { input: step, amp: 1, cd: 3, k: 2, t: 0, x0: 0 }, about: "Overdamped (poles −1, −2): the position creeps to 1/k = 0.5 m without overshoot." }
+    - { id: pulse, label: "Push then release", set: { input: pulse, amp: 1, cd: 3, k: 2, t: 0, x0: 0 }, about: "After the pulse ends the force is zero: the state decays by A alone." }
+    - { id: bouncy, label: "Underdamped", set: { input: step, amp: 1, cd: 0.6, k: 4, t: 0, x0: 0 }, about: "Complex poles: the cart rings (oscillates) while it settles." }
+    - { id: free, label: "Released from x = 1", set: { input: none, amp: 0, cd: 3, k: 2, t: 0, x0: 1 }, about: "No force: the free response x(t) = e^{At}x(0)." }
+
+- id: flow
+  title: "e^{At} as a movie: the whole plane flows toward the origin"
+  x: x₁ = position or time (s)
+  y: x₂ = velocity or state
+  legend:
+    - { label: "the ring of starting states, and where e^{At} has taken them", color: "var(--accent)" }
+    - { label: "one chosen trajectory x(t) = e^{At}x(0)", color: "var(--yel)" }
+    - { label: "eigen-direction 1", color: "var(--grn)", dash: true }
+    - { label: "eigen-direction 2", color: "var(--org)", dash: true }
+    - { label: "x₁ = position", color: "var(--cyan)" }
+    - { label: "x₂ = velocity", color: "var(--org)" }
+  howToRead: "Left: the phase plane (position across, velocity up). Little arrows show Ax, the direction the state is pushed everywhere. The blue ring is a set of starting states; at time t, e^{At} has carried each of them along its path, so the ring becomes the blue ellipse. The yellow curve follows one particular start. Right: the same yellow motion unrolled against time. Press Play and watch e^{At} squash the plane."
+  lookFor: "The ring is squashed fastest along the fast eigen-direction (−2, orange) and slowest along the slow one (−1, green), so late in the movie everything lines up on the slow direction."
+  animate: { control: t, speed: 0.8, loop: true }
+  controls:
+    - { id: a1, label: "a₁ (damping term, A = [[0, 1], [−a₀, −a₁]])", type: range, min: -1, max: 6, step: 0.05, default: 3, group: primary }
+    - { id: a0, label: "a₀ (stiffness term)", type: range, min: 0, max: 8, step: 0.05, default: 2, group: primary }
+    - { id: x1, label: "x₁(0)", type: range, min: -2, max: 2, step: 0.05, default: 1, group: primary }
+    - { id: x2, label: "x₂(0)", type: range, min: -2, max: 2, step: 0.05, default: 0.5, group: primary }
+    - { id: t, label: "time t", type: range, min: 0, max: 8, step: 0.02, default: 0, group: primary, unit: s }
+  presets:
+    - { id: cart, label: "Running cart (−1, −2)", set: { a1: 3, a0: 2, x1: 1, x2: 0.5, t: 0 }, about: "Two real decaying modes: the plane collapses onto the slow direction." }
+    - { id: spiral, label: "Underdamped spiral", set: { a1: 0.6, a0: 4, x1: 1, x2: 0.5, t: 0 }, about: "Complex eigenvalues −0.3 ± 1.95j: the plane spirals inward, no eigen-directions." }
+    - { id: unstable, label: "Unstable", set: { a1: -0.5, a0: 2, x1: 0.5, x2: 0, t: 0 }, about: "Right half-plane eigenvalues: the plane spirals outward." }
+
+- id: stab
+  title: "Stability is a place on the plane of eigenvalues"
+  x: Re of the pole
+  y: Im of the pole
+  legend:
+    - { label: "stable pole (and decaying mode)", color: "var(--grn)" }
+    - { label: "unstable pole (and growing mode)", color: "var(--bad)" }
+    - { label: "samples of the mode", color: "var(--yel)" }
+  howToRead: "Left: the pole plane with its stable region shaded green: the left half of the s-plane, or the inside of the unit circle in the z-plane. The × marks the mode's pole(s). Right: what that mode does in time, e^{σt}cos ωt with its envelope. A pole in the green area gives a shrinking envelope. Switch to the z-plane to see the same mode sampled every T = 0.4 s: the pole moves to z = e^{sT}, and the left half-plane becomes the unit disc."
+  lookFor: "Slide σ across zero: the pole crosses the imaginary axis, and the envelope flips from shrinking to growing. In the z-plane the same thing happens as the pole crosses the unit circle."
+  controls:
+    - { id: dom, label: "plane", type: seg, default: s, group: primary, options: [{ value: s, label: "s-plane (continuous)" }, { value: z, label: "z-plane (sampled)" }] }
+    - { id: sigma, label: "σ = Re s", type: range, min: -2, max: 1, step: 0.02, default: -1, group: primary }
+    - { id: omega, label: "ω = Im s", type: range, min: 0, max: 4, step: 0.02, default: 0, group: primary }
+  presets:
+    - { id: slow, label: "Cart's slow mode (−1)", set: { dom: s, sigma: -1, omega: 0 }, about: "The cart's slow pole: e^{−t}." }
+    - { id: fast, label: "Cart's fast mode (−2)", set: { dom: s, sigma: -2, omega: 0 }, about: "The cart's fast pole: e^{−2t}." }
+    - { id: ring, label: "Underdamped ringing", set: { dom: s, sigma: -0.3, omega: 2, } , about: "A complex pair: a decaying oscillation." }
+    - { id: marginal, label: "Marginal (σ = 0)", set: { dom: s, sigma: 0, omega: 2 }, about: "On the imaginary axis: oscillates forever, neither decays nor grows." }
+    - { id: unstable, label: "Unstable", set: { dom: s, sigma: 0.4, omega: 1.5 }, about: "Right half-plane: grows without bound." }
+    - { id: sampled, label: "Same mode, sampled", set: { dom: z, sigma: -0.3, omega: 2 }, about: "The same ringing mode as a z-plane pole z = e^{sT} inside the unit circle." }
+
+- id: ctrl
+  title: "Controllability: the set of states the input can reach"
+  x: x₁ = position
+  y: x₂ = velocity
+  legend:
+    - { label: "reachable set in time T", color: "var(--cyan)" }
+    - { label: "B (where the input pushes)", color: "var(--yel)" }
+    - { label: "AB (how A bends that push)", color: "var(--vio)" }
+    - { label: "eigen-direction 1", color: "var(--grn)", dash: true }
+    - { label: "eigen-direction 2", color: "var(--org)", dash: true }
+  howToRead: "Left: the blue region is every state reachable from rest within time T with an input of size |u| ≤ 1. Yellow is B, the direction of a quick push. Purple is AB, B after A has bent it. Right: the parallelogram of B and AB. When it has area, B and AB span the plane and the reachable set is a full 2-D region. When B lies along an eigenvector, AB is parallel to B, the area is zero, and the reachable set collapses to a line: that mode is the only one you can touch."
+  lookFor: "Slowly turn B (angle). When B lines up with a dashed eigen-direction, the blue region flattens to a line and the parallelogram collapses. Press Play to let time T grow and watch the region swell."
+  animate: { control: T, speed: 0.6, loop: true }
+  controls:
+    - { id: beta, label: "direction of B", type: range, min: -180, max: 180, step: 1, default: 90, group: primary, unit: "°" }
+    - { id: T, label: "time horizon T", type: range, min: 0.1, max: 6, step: 0.05, default: 2, group: primary, unit: s }
+    - { id: a1, label: "a₁", type: range, min: 0, max: 6, step: 0.05, default: 3, group: more }
+    - { id: a0, label: "a₀", type: range, min: 0.5, max: 8, step: 0.05, default: 2, group: more }
+  presets:
+    - { id: cart, label: "Running cart: force on the mass", set: { beta: 90, T: 2, a1: 3, a0: 2 }, about: "B = (0, 1): the force changes velocity. B and AB are independent: fully controllable." }
+    - { id: slow, label: "B along the slow mode", set: { beta: -45, T: 2, a1: 3, a0: 2 }, about: "B ∥ (1, −1), the −1 eigenvector: the input can only excite that mode." }
+    - { id: fast, label: "B along the fast mode", set: { beta: -63, T: 2, a1: 3, a0: 2 }, about: "B nearly ∥ (1, −2): almost only the −2 mode is excited." }
+
+- id: obs
+  title: "Observability: which differences between states the output can see"
+  x: x₁ = position or time (s)
+  y: x₂ = velocity or output y
+  legend:
+    - { label: "state P and its output", color: "var(--cyan)" }
+    - { label: "state Q and its output", color: "var(--org)", dash: true }
+    - { label: "C: the sensor's direction", color: "var(--vio)" }
+    - { label: "difference of the outputs", color: "var(--yel)" }
+    - { label: "eigen-direction 1", color: "var(--grn)", dash: true }
+    - { label: "eigen-direction 2", color: "var(--org)", dash: true }
+  howToRead: "Left: the state plane. The sensor reads y = Cx, the component of the state along C (grey lines are states with the same reading). P and Q are two starting states that differ by a push along an eigenvector. Right: the output the sensor records from P and from Q. If the sensor is blind to the mode that separates them (C · v = 0), the two records coincide forever and you can never tell P from Q. That mode is unobservable."
+  lookFor: "Set the sensor angle so that C is perpendicular to the dashed direction P and Q differ along: the two curves land exactly on top of each other. A position-only sensor on the running cart (angle 0) never has this problem."
+  controls:
+    - { id: gamma, label: "sensor direction C", type: range, min: -90, max: 90, step: 1, default: 0, group: primary, unit: "°" }
+    - { id: s, label: "offset of Q from P", type: range, min: -1.5, max: 1.5, step: 0.05, default: 1, group: primary }
+    - { id: along, label: "offset runs along", type: seg, default: "1", group: primary, options: [{ value: "1", label: "mode −1" }, { value: "2", label: "mode −2" }] }
+  presets:
+    - { id: pos, label: "Position sensor (running cart)", set: { gamma: 0, s: 1, along: "1" }, about: "C = (1, 0): sees both modes, so any difference shows up." }
+    - { id: vel, label: "Velocity sensor", set: { gamma: 90, s: 1, along: "1" }, about: "C = (0, 1): also sees both modes (the cart is observable from velocity too)." }
+    - { id: blind1, label: "Blind to the −1 mode", set: { gamma: 45, s: 1, along: "1" }, about: "C = (1, 1)/√2 is perpendicular to (1, −1): the slow mode is invisible." }
+    - { id: blind2, label: "Blind to the −2 mode", set: { gamma: 27, s: 1, along: "2" }, about: "C ∝ (2, 1) is perpendicular to (1, −2): the fast mode is invisible." }
+
+- id: kalman
+  title: "Kalman decomposition: only controllable-and-observable modes reach the transfer function"
+  x: signal flow or time (s)
+  y: modes or impulse response
+  legend:
+    - { label: "mode 1 (λ = −1)", color: "var(--cyan)" }
+    - { label: "mode 2 (λ = −2)", color: "var(--org)" }
+    - { label: "mode 3 (λ = −3)", color: "var(--grn)" }
+    - { label: "mode 4 (λ = 0.5)", color: "var(--vio)" }
+    - { label: "actual output h(t)", color: "var(--text)" }
+  howToRead: "Left: four modes wired between the force u and the sensor y. A yellow wire means the input reaches that mode (controllable) or the sensor sees it (observable); a ✕ means that wire is cut. Only a mode with both wires survives to the transfer function G(s). Right: the impulse response from rest. The thick curve is what the cart actually does; thin dashed curves are modes that exist inside the state but never make it to the output."
+  lookFor: "Cut one wire of mode 3 (make it controllable-only or observable-only) and its curve drops out of the thick line even though the mode is still there. The pole list under the diagram shrinks with it."
+  height: 300
+  controls:
+    - { id: m1, label: "mode 1 (the cart's −1)", type: select, default: co, group: primary, options: [{ value: co, label: "controllable + observable" }, { value: c, label: "controllable only" }, { value: o, label: "observable only" }, { value: n, label: "neither" }] }
+    - { id: m2, label: "mode 2 (the cart's −2)", type: select, default: co, group: primary, options: [{ value: co, label: "controllable + observable" }, { value: c, label: "controllable only" }, { value: o, label: "observable only" }, { value: n, label: "neither" }] }
+    - { id: m3, label: "mode 3 (extra λ = −3)", type: select, default: c, group: primary, options: [{ value: co, label: "controllable + observable" }, { value: c, label: "controllable only" }, { value: o, label: "observable only" }, { value: n, label: "neither" }] }
+    - { id: m4, label: "mode 4 (extra λ = 0.5)", type: select, default: o, group: primary, options: [{ value: co, label: "controllable + observable" }, { value: c, label: "controllable only" }, { value: o, label: "observable only" }, { value: n, label: "neither" }] }
+  presets:
+    - { id: cart, label: "The cart: 2 modes, both CO", set: { m1: co, m2: co, m3: n, m4: n }, about: "Only the two cart modes exist: minimal realization, G(s) has both poles." }
+    - { id: hidden, label: "Two extra, hidden modes", set: { m1: co, m2: co, m3: c, m4: o }, about: "Modes 3 and 4 are in the state but cancel out of G(s)." }
+    - { id: full, label: "Everything controllable and observable", set: { m1: co, m2: co, m3: co, m4: co }, about: "All four modes appear in G(s), including the unstable one." }

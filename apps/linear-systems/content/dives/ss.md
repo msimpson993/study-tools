@@ -18,6 +18,11 @@ matlab: sys = ss(A, B, C, D)
 
 The state is a finite list of numbers that, together with the future input, determines the future output. A first-order vector ODE (or recurrence) makes the operator over time into a matrix A, so everything about bases and modes applies directly. Different state coordinates are just a change of basis: they do not change the input-output map.
 
+**Picture it first.** Here is the running cart, moving. The two numbers we track (position and velocity) are exactly the *state*; push it with a force and watch both.
+
+```figure:ss
+```
+
 ```eq
 ẋ = Ax + Bu,    y = Cx + Du
 ```

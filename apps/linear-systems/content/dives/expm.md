@@ -20,6 +20,11 @@ matlab: Phi = expm(A * t)
 
 The unique solution of x′ = Ax is x(t) = e^{At} x(0), where e^{At} is the matrix exponential (not the elementwise one). If A = V Λ V⁻¹, then e^{At} = V e^{Λt} V⁻¹ and e^{Λt} is diagonal with entries e^{λ\_i t}. That is the payoff of the best-basis question for dynamics. In discrete time the same role is played by A^k = V Λ^k V⁻¹.
 
+**Picture it first.** e^{At} is a movie of the whole plane: every possible state flows along by the same rule, and the movie is the matrix exponential.
+
+```figure:flow
+```
+
 ```eq
 x(t) = e^{At} x(0),    e^{At} = Σ (At)^k / k!
 ```
