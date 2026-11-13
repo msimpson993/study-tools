@@ -70,7 +70,7 @@ for (const app of APPS) {
     test('with prefers-reduced-motion there is no autoplay and a Step button advances the figure', async ({ page }) => {
       await page.emulateMedia({ reducedMotion: 'reduce' });
       const figs = (await figuresOf(page, app)).filter((f) => f.animate);
-      expect(figs.length).toBeGreaterThanOrEqual(app === 'control-systems' || app === 'pid-tuning' ? 0 : 4);
+      expect(figs.length).toBeGreaterThanOrEqual(['linear-systems', 'transforms'].includes(app) ? 4 : 0);
       for (const f of figs.slice(0, 5)) {
         await page.goto(`/${app}/index.html#/figure/${f.id}`); await page.reload();
         const btn = page.getByTestId('play');
