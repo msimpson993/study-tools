@@ -179,7 +179,15 @@ export function mountApp(content: AppContent, hooks: AppHooks = {}): void {
     const art = h('article', { class: 'prose', dataset: { testid: 'dive' } }, h('h2', null, d.title));
     art.append(h('details', { class: 'fold', open: true }, h('summary', null, 'Where are we? The chain of questions that leads here'),
       h('ol', { class: 'chain' }, ...d.chain.map((s) => h('li', null, s.title, s.detail ? h('small', null, s.detail) : null)))));
-    art.append(h('div', { html: d.html }));
+    if (content.subject.runningExample && d.addsToExample) {
+      art.append(h('aside', { class: 'callout c-example', dataset: { testid: 'dive-example' } }, h('b', { class: 'lead' }, `Running example: ${content.subject.runningExample.title}`),
+        h('div', { class: 'cb', html: `<p><b>What this adds:</b> ${d.addsToExample}</p>${d.accountsFor ? `<p><b>What it lets us account for:</b> ${d.accountsFor}</p>` : ''}` })));
+    }
+    const body = h('div', { html: d.html });
+    art.append(body);
+    const stops = embedFigures(body);
+    const prevCleanup = cleanup;
+    cleanup = () => { prevCleanup?.(); stops.forEach((f) => f()); };
     if (d.matlab) art.append(h('details', { class: 'fold' }, h('summary', null, 'MATLAB'), h('div', null, h('pre', null, h('code', null, d.matlab)))));
     if (d.neighbors.length) art.append(h('div', null, h('b', { class: 'ui' }, 'Neighbors'), h('div', { class: 'chips' }, ...d.neighbors.map((n) => h('a', { class: 'chip', href: `#/dive/${n}` }, content.dives.find((x) => x.id === n)?.title ?? n)))));
     const qs = progress.questionsFor([d.id]);
@@ -187,6 +195,22 @@ export function mountApp(content: AppContent, hooks: AppHooks = {}): void {
       h('a', { class: 'tbtn on', href: '#/' }, '← Back to the map'),
       qs.length ? h('a', { class: 'tbtn', dataset: { testid: 'quiz-me' }, href: `#/quiz?tags=${encodeURIComponent(d.id)}&title=${encodeURIComponent(d.title)}` }, `Quiz me (${qs.length})`) : null));
     main.append(art);
+  }
+
+  /** Mount every ```figure:<id>``` slot of a rendered dive/section (no URL sync; each gets its own ControlSet). */
+  function embedFigures(root: HTMLElement): (() => void)[] {
+    const stops: (() => void)[] = [];
+    root.querySelectorAll<HTMLElement>('.viz-slot[data-figure]').forEach((slot) => {
+      const id = slot.dataset.figure!;
+      const def = content.figures.find((f) => f.id === id);
+      const mounter = hooks.figures?.[id];
+      if (!def || !mounter) { slot.append(h('p', { class: 'st-hint' }, `(figure ${id} is not available)`)); return; }
+      slot.classList.add('viz-embed');
+      slot.dataset.testid = 'viz';
+      const stop = mounter(slot, def, new ControlSet(def.controls, def.presets));
+      if (typeof stop === 'function') stops.push(stop);
+    });
+    return stops;
   }
 
   function renderFigure(id: string, q: URLSearchParams) {

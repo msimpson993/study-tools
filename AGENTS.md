@@ -24,6 +24,7 @@ npm run check          # everything above in order
 ```
 
 ## Rules that matter
+0. **Visual-first and one running example.** Each subject declares `runningExample`; every non-root node has `addsToExample` (+ `accountsFor`); every deep dive has at least one manipulable figure (`figure:<id>` fence) in the 3Blue1Brown / MATLAB Tech Talk spirit: picture first, formula second. See `docs/design-principles.md` #0b/#0c.
 1. **Map first.** A new page starts with `content/graph.yaml` (central question → chain of questions). Do not build a page without the map. Every node/edge needs a non-empty popup; the build fails otherwise.
 2. **Content, not code.** Add topics as YAML/Markdown. Touch `packages/core` only for behaviour every page should share.
 3. **Never regress a ported page.** Pages carry an `expect:` guard in `subject.yaml` (counts of nodes/edges/dives/examples); update it deliberately.

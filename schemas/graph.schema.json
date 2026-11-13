@@ -1,48 +1,166 @@
 {
   "$id": "graph.schema.json",
   "type": "object",
-  "required": ["maps"],
+  "required": [
+    "maps"
+  ],
   "additionalProperties": false,
   "properties": {
     "maps": {
-      "type": "array", "minItems": 1,
+      "type": "array",
+      "minItems": 1,
       "items": {
-        "type": "object", "required": ["id", "title", "nodes", "edges"], "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "id",
+          "title",
+          "nodes",
+          "edges"
+        ],
+        "additionalProperties": false,
         "properties": {
-          "id": { "type": "string", "pattern": "^[a-z0-9-]+$" },
-          "title": { "type": "string", "minLength": 1 },
-          "caption": { "type": "string" },
+          "id": {
+            "type": "string",
+            "pattern": "^[a-z0-9-]+$"
+          },
+          "title": {
+            "type": "string",
+            "minLength": 1
+          },
+          "caption": {
+            "type": "string"
+          },
           "nodes": {
-            "type": "array", "minItems": 2,
+            "type": "array",
+            "minItems": 2,
             "items": {
-              "type": "object", "required": ["id", "label", "short"], "additionalProperties": false,
+              "type": "object",
+              "required": [
+                "id",
+                "label",
+                "short"
+              ],
+              "additionalProperties": false,
               "properties": {
-                "id": { "type": "string", "pattern": "^[A-Za-z0-9_-]+$" },
-                "label": { "type": "string", "minLength": 1 },
-                "detail": { "type": "string" },
-                "kind": { "enum": ["box", "decision", "terminal"] },
-                "series": { "type": "integer", "minimum": 0, "maximum": 3 },
-                "short": { "type": "string", "minLength": 20 },
-                "eq": { "type": "string" },
-                "eqTex": { "type": "string" },
-                "why": { "type": "string" }, "recognize": { "type": "string" }, "trap": { "type": "string" }, "predict": { "type": "string" },
-                "dive": { "type": "string" },
-                "live": { "type": "string", "pattern": "^(figure|board):[A-Za-z0-9_-]+(\\?.*)?$" },
-                "quizTag": { "type": "string" },
-                "link": { "type": "object", "required": ["href", "label"], "properties": { "href": { "type": "string" }, "label": { "type": "string" } }, "additionalProperties": false }
+                "id": {
+                  "type": "string",
+                  "pattern": "^[A-Za-z0-9_-]+$"
+                },
+                "label": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "detail": {
+                  "type": "string"
+                },
+                "kind": {
+                  "enum": [
+                    "box",
+                    "decision",
+                    "terminal"
+                  ]
+                },
+                "series": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 3
+                },
+                "short": {
+                  "type": "string",
+                  "minLength": 20
+                },
+                "eq": {
+                  "type": "string"
+                },
+                "eqTex": {
+                  "type": "string"
+                },
+                "why": {
+                  "type": "string"
+                },
+                "recognize": {
+                  "type": "string"
+                },
+                "trap": {
+                  "type": "string"
+                },
+                "predict": {
+                  "type": "string"
+                },
+                "dive": {
+                  "type": "string"
+                },
+                "live": {
+                  "type": "string",
+                  "pattern": "^(figure|board):[A-Za-z0-9_-]+(\\?.*)?$"
+                },
+                "quizTag": {
+                  "type": "string"
+                },
+                "link": {
+                  "type": "object",
+                  "required": [
+                    "href",
+                    "label"
+                  ],
+                  "properties": {
+                    "href": {
+                      "type": "string"
+                    },
+                    "label": {
+                      "type": "string"
+                    }
+                  },
+                  "additionalProperties": false
+                },
+                "addsToExample": {
+                  "type": "string",
+                  "minLength": 15,
+                  "description": "What this box adds to the subject's running example."
+                },
+                "accountsFor": {
+                  "type": "string",
+                  "minLength": 10,
+                  "description": "What this box lets us account for (a behaviour of the example we could not explain before)."
+                }
               }
             }
           },
           "edges": {
             "type": "array",
             "items": {
-              "type": "object", "required": ["from", "to", "question", "idea"], "additionalProperties": false,
+              "type": "object",
+              "required": [
+                "from",
+                "to",
+                "question",
+                "idea"
+              ],
+              "additionalProperties": false,
               "properties": {
-                "from": { "type": "string" }, "to": { "type": "string" },
-                "label": { "type": "string" }, "dashed": { "type": "boolean" },
-                "question": { "type": "string", "minLength": 8 },
-                "idea": { "type": "string", "minLength": 20 },
-                "eq": { "type": "string" }
+                "from": {
+                  "type": "string"
+                },
+                "to": {
+                  "type": "string"
+                },
+                "label": {
+                  "type": "string"
+                },
+                "dashed": {
+                  "type": "boolean"
+                },
+                "question": {
+                  "type": "string",
+                  "minLength": 8
+                },
+                "idea": {
+                  "type": "string",
+                  "minLength": 20
+                },
+                "eq": {
+                  "type": "string"
+                }
               }
             }
           }

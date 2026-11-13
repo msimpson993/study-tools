@@ -110,6 +110,8 @@ export function loadApp(appDir: string): { content: AppContent; warnings: string
           recognize: n.recognize ? inline(n.recognize, `${m.id}/${n.id}`) : undefined,
           trap: n.trap ? inline(n.trap, `${m.id}/${n.id}`) : undefined,
           predict: n.predict ? inline(n.predict, `${m.id}/${n.id}`) : undefined,
+          addsToExample: n.addsToExample ? inline(n.addsToExample, `${m.id}/${n.id}`) : undefined,
+          accountsFor: n.accountsFor ? inline(n.accountsFor, `${m.id}/${n.id}`) : undefined,
           dive: n.dive, live: n.live, quizTag: n.quizTag, link: n.link,
         })),
         edges: (m.edges ?? []).map((e: any) => ({
@@ -134,7 +136,7 @@ export function loadApp(appDir: string): { content: AppContent; warnings: string
         const d = fm as any;
         if (d.id !== f.replace(/\.md$/, '')) problems.push(`dives/${f}: id "${d.id}" must equal the file name`);
         if (body.trim().length < 80) problems.push(`dives/${f}: body is empty`);
-        dives.push({ id: d.id, order: d.order, title: d.title, category: d.category, chain: d.chain, neighbors: d.neighbors ?? [], matlab: d.matlab, html: block(body, `dives/${f}`) });
+        dives.push({ id: d.id, order: d.order, title: d.title, category: d.category, chain: d.chain, neighbors: d.neighbors ?? [], matlab: d.matlab, addsToExample: d.addsToExample ? inline(d.addsToExample, `dives/${f}`) : undefined, accountsFor: d.accountsFor ? inline(d.accountsFor, `dives/${f}`) : undefined, html: block(body, `dives/${f}`) });
       } catch (e) { problems.push(`dives/${f}: ${(e as Error).message}`); }
     }
   }
@@ -198,6 +200,25 @@ export function loadApp(appDir: string): { content: AppContent; warnings: string
   });
   if (subject.sections && subject.sections[0] && subject.sections[0].kind !== 'map') problems.push('subject.yaml: the first section must be the map (map-first rule)');
 
+  // ---------- running example ----------
+  // Policy: if subject.yaml declares `runningExample`, every non-root map node MUST carry `addsToExample` and every dive must have
+  // one (own front matter, or inherited from a node that links to it): the build FAILS. If it declares none, we only WARN per map.
+  const re = subject.runningExample;
+  for (const m of maps) {
+    const missing = m.nodes.filter((n) => n.id !== 'root' && !n.addsToExample).map((n) => n.id);
+    if (!missing.length) continue;
+    if (re) problems.push(`graph.yaml ${m.id}: nodes without addsToExample (running example "${re.title}"): ${missing.join(', ')}`);
+    else warnings.push(`graph.yaml ${m.id}: no runningExample in subject.yaml; ${missing.length} nodes have no addsToExample`);
+  }
+  for (const d of dives) {
+    if (!d.addsToExample) {
+      const n = maps.flatMap((m) => m.nodes).find((x) => x.dive === d.id && x.addsToExample);
+      if (n) { d.addsToExample = n.addsToExample; d.accountsFor ??= n.accountsFor; }
+    }
+    if (re && !d.addsToExample) problems.push(`dives/${d.id}: no addsToExample (front matter, or a map node with dive: ${d.id} that has one)`);
+  }
+  for (const ref of mathErrors.figureRefs) if (!figures.some((f) => f.id === ref.id)) problems.push(`${ref.where}: figure:${ref.id} is not in figures.yaml`);
+
   // ---------- cross checks ----------
   const diveIds = new Set(dives.map((d) => d.id));
   const cats = new Set((subject.categories ?? []).map((c) => c.id));
@@ -247,7 +268,7 @@ export function loadApp(appDir: string): { content: AppContent; warnings: string
   if (problems.length) throw new ContentError(problems, appName);
 
   const content: AppContent = {
-    subject: { ...subject, sections: sectionsR as any },
+    subject: { ...subject, sections: sectionsR as any, runningExample: re ? { title: re.title, summary: inline(re.summary, 'runningExample'), details: re.details ? block(re.details, 'runningExample.details') : undefined } : undefined },
     maps, dives, quiz, glossary: glossaryR as Term[], figures: figuresR as FigureDef[], extra,
   };
   return { content, warnings };

@@ -7,6 +7,8 @@ Look at it (screenshots, `npm run shots`, then open `shots/*.png`):
 - [ ] Map: no overlapping boxes/labels at 390 px and 1400 px (tests assert 0 overlaps; also eyeball).
 - [ ] Tap a box → popup with short answer, equation, buttons. Tap a line (or its dot) → question + idea. Esc closes.
 - [ ] Path-to-root highlights; Review mode shows unseen/seen/correct/missed; quiz this branch works.
+- [ ] Running example: the map has the "Running example" fold; every node popup answers "adds to the running example" / "lets us account for".
+- [ ] Every deep dive has at least one manipulable figure that opens with a picture, says what to look for, responds to its controls, and (if animated) has play/pause + scrub and a reduced-motion fallback. Look at the screenshot, not just the test.
 - [ ] Dark is true black (`rgb(0,0,0)`); light toggle works and persists.
 - [ ] 390 px: no horizontal scroll on map, dive, quiz, figure, board.
 - [ ] Explanations collapsed on load; "More controls" collapsed; no auto-expanding boxes.

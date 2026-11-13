@@ -50,6 +50,14 @@
     },
     "order": {
       "type": "integer"
+    },
+    "addsToExample": {
+      "type": "string",
+      "minLength": 15
+    },
+    "accountsFor": {
+      "type": "string",
+      "minLength": 10
     }
   }
 }

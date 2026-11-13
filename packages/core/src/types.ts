@@ -19,6 +19,10 @@ export interface MapNode {
   recognize?: string;
   trap?: string;
   predict?: string;
+  /** what this box adds to the subject's running example (HTML) */
+  addsToExample?: string;
+  /** what it lets us account for (HTML) */
+  accountsFor?: string;
   /** id of a deep dive in dives/ */
   dive?: string;
   /** live entry, "figure:<id>[?k=v]" or "board:<pair>[?preset=<id>]" */
@@ -58,6 +62,9 @@ export interface Dive {
   chain: DiveStep[];
   neighbors: string[];
   matlab?: string;
+  /** from front matter, else inherited from the first map node that links here (HTML) */
+  addsToExample?: string;
+  accountsFor?: string;
   html: string;
 }
 
@@ -96,6 +103,9 @@ export interface FigureDef {
   controls: ControlDef[];
   presets: PresetDef[];
   pair?: { forward: string; inverse: string; forwardName: string; inverseName: string; strip?: string };
+  lookFor?: string;
+  animate?: { control: string; speed: number; loop?: boolean };
+  height?: number;
 }
 
 export interface SectionDef { id: string; title: string; kind: 'map' | 'dives' | 'md' | 'quiz' | 'board' | 'glossary' | 'figures'; html?: string }
@@ -108,6 +118,7 @@ export interface Subject {
   categories?: { id: string; label: string }[];
   sections: SectionDef[];
   hub?: { order?: number };
+  runningExample?: { title: string; summary: string; details?: string };
   board?: { pairs: string[] };
 }
 

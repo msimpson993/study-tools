@@ -7,7 +7,7 @@ const LEADS: Record<string, string> = {
   short: 'Short answer', why: 'Why it matters', recognize: 'Recognize', trap: 'Trap', predict: 'Predict', note: 'Note',
 };
 
-export class MathErrors { list: string[] = [] }
+export class MathErrors { list: string[] = []; figureRefs: { id: string; where: string }[] = [] }
 
 /** Create a renderer. KaTeX errors are collected (not swallowed) so the build can fail on them. */
 export function createMarkdown(errors: MathErrors, where: () => string) {
@@ -30,6 +30,11 @@ export function createMarkdown(errors: MathErrors, where: () => string) {
     const info = t.info.trim();
     if (info === 'eq') {
       return `<div class="st-eq">${esc(t.content.trimEnd())}</div>\n`;
+    }
+    if (info.startsWith('figure:')) {
+      const id = info.slice('figure:'.length).trim();
+      errors.figureRefs.push({ id, where: where() });
+      return `<div class="viz-slot" data-figure="${esc(id)}"></div>\n`;
     }
     if (info.startsWith('callout:')) {
       const [head, ...rest] = info.slice('callout:'.length).split(/\s+/);

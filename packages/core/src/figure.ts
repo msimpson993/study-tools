@@ -6,6 +6,8 @@ import { fitCanvas } from './plot';
 export interface FigurePanel {
   id: string;
   title: string;
+  /** inline canvas height in px (default from CSS) */
+  height?: number;
   /** x / y axis names with units (shown as a caption; the draw callback should also label its axes) */
   x: string; y: string;
   draw(g: CanvasRenderingContext2D, w: number, h: number, v: Record<string, number | string | boolean>): void;
@@ -17,9 +19,26 @@ export interface FigurePanel {
  */
 export function mountFigure(host: HTMLElement, def: FigureDef, panels: FigurePanel[], controls: ControlSet): { redraw(): void; open(ids: string[]): void; close(): void; destroy(): void } {
   const stage = h('div', { class: 'fig-stage', dataset: { testid: 'fig-stage' } });
-  const inline = h('div', { class: 'pair2' });
+  const inline = h('div', { class: `pair2${panels.length === 1 ? ' one' : ''}` });
   const overlay = h('div', { class: 'fig-overlay', hidden: true, dataset: { testid: 'fig-overlay' } });
-  stage.append(h('h4', { style: 'margin:.1rem .2rem .4rem' }, def.title), inline, overlay);
+  stage.append(h('h4', { style: 'margin:.1rem .2rem .4rem' }, def.title), inline);
+  if (def.lookFor) stage.append(h('p', { class: 'fig-look', dataset: { testid: 'look-for' }, html: `<b>Look for:</b> ${def.lookFor}` }));
+  // animation: play/pause drives one control (its own slider is the scrubber); reduced motion => explicit step button, no autoplay loop
+  let stopAnim = () => {};
+  if (def.animate) {
+    const a = def.animate, cd = controls.defs.find((c) => c.id === a.control)!;
+    const reduce = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
+    let raf = 0, last = 0, playing = false;
+    const btn = h('button', { class: 'tbtn on', dataset: { testid: 'play' }, 'aria-pressed': 'false' }, reduce ? 'Step ▶' : '▶ Play');
+    const span = (cd.max ?? 1) - (cd.min ?? 0);
+    const advance = (dv: number) => { let v = (controls.values[a.control] as number) + dv; if (v > (cd.max ?? 1)) v = a.loop === false ? (cd.max ?? 1) : (cd.min ?? 0); controls.set(a.control, v); return v < (cd.max ?? 1); };
+    const tick = (t: number) => { if (!playing) return; const dt = Math.min(0.05, (t - last) / 1000); last = t; if (!advance(a.speed * dt)) { if (a.loop === false) { setPlaying(false); return; } } raf = requestAnimationFrame(tick); };
+    const setPlaying = (on: boolean) => { playing = on; btn.textContent = on ? '⏸ Pause' : (reduce ? 'Step ▶' : '▶ Play'); btn.setAttribute('aria-pressed', String(on)); if (on) { last = performance.now(); raf = requestAnimationFrame(tick); } else cancelAnimationFrame(raf); };
+    btn.onclick = () => { if (reduce) advance(span / 20); else setPlaying(!playing); };
+    stopAnim = () => { playing = false; cancelAnimationFrame(raf); };
+    stage.append(h('div', { class: 'fig-anim' }, btn, h('span', null, reduce ? 'Reduced motion: stepping instead of animating. ' : '', `Scrub with the “${cd.label}” slider.`)));
+  }
+  stage.append(overlay);
   const rail = controls.render('Controls');
   host.append(h('div', { class: 'fig-layout' }, stage, rail));
 
@@ -31,6 +50,7 @@ export function mountFigure(host: HTMLElement, def: FigureDef, panels: FigurePan
 
   for (const p of panels) {
     const cv = h('canvas', { 'aria-label': `${p.title}. Tap to expand.`, dataset: { fig: p.id } });
+    const ph = p.height ?? def.height; if (ph) cv.style.height = `${ph}px`;
     canvases.set(p.id, cv);
     const open = () => api.open([p.id]);
     cv.addEventListener('click', open);
@@ -84,7 +104,7 @@ export function mountFigure(host: HTMLElement, def: FigureDef, panels: FigurePan
     redraw,
     open(ids: string[]) { openIds = ids; legendOpen = [false, false]; renderOverlay(); },
     close() { openIds = []; renderOverlay(); },
-    destroy() { ro.disconnect(); window.removeEventListener('study-theme', onTheme); document.removeEventListener('keydown', onKey, true); },
+    destroy() { stopAnim(); ro.disconnect(); window.removeEventListener('study-theme', onTheme); document.removeEventListener('keydown', onKey, true); },
   };
   requestAnimationFrame(redraw);
   return api;

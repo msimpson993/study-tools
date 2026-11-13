@@ -70,6 +70,8 @@ export function mountConceptMap(host: HTMLElement, content: AppContent, progress
     const m = map();
     clear(caption);
     if (m.caption) caption.append(h('details', { class: 'fold' }, h('summary', null, 'How to read this map'), h('div', { html: `<p>${m.caption}</p>` })));
+    const re = content.subject.runningExample;
+    if (re) caption.append(h('details', { class: 'fold', dataset: { testid: 'running-example' } }, h('summary', null, `Running example: ${re.title}`), h('div', { html: `<p>${re.summary}</p>${re.details ?? ''}` })));
   }
 
   function renderReview() {
@@ -194,6 +196,8 @@ export function mountConceptMap(host: HTMLElement, content: AppContent, progress
       if (!n) return;
       panel.append(close, h('h3', null, n.label), ...(n.detail ? [h('div', { class: 'st-hint' }, n.detail)] : []), h('div', { html: `<p>${n.short}</p>` }));
       if (n.eqHtml) panel.append(h('div', { class: 'st-eq', html: n.eqHtml })); else if (n.eq) panel.append(h('div', { class: 'st-eq' }, n.eq));
+      if (n.addsToExample) panel.append(h('aside', { class: 'callout c-example', dataset: { testid: 'adds-to-example' } }, h('b', { class: 'lead' }, 'Adds to the running example'), h('div', { class: 'cb', html: `<p>${n.addsToExample}</p>` })));
+      if (n.accountsFor) panel.append(h('aside', { class: 'callout c-account', dataset: { testid: 'accounts-for' } }, h('b', { class: 'lead' }, 'Lets us account for'), h('div', { class: 'cb', html: `<p>${n.accountsFor}</p>` })));
       for (const [k, lead] of [['why', 'Why it matters'], ['recognize', 'Recognize'], ['trap', 'Trap'], ['predict', 'Predict']] as const) {
         const v = n[k];
         if (v) panel.append(h('aside', { class: `callout c-${k}` }, h('b', { class: 'lead' }, lead), h('div', { class: 'cb', html: `<p>${v}</p>` })));
