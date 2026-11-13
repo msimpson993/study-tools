@@ -78,7 +78,7 @@ for (const v of VIEWS) {
 }
 
 // New visuals: every live figure (desktop figure card + a phone dive page) plus the running-example popup. Run: npm run shots
-for (const app of ['linear-systems', 'transforms']) {
+for (const app of ['linear-systems', 'transforms', 'control-systems', 'pid-tuning']) {
   test(`shots visuals ${app}`, async ({ browser }) => {
     test.setTimeout(240_000);
     const dir = path.join(OUT, 'viz'); fs.mkdirSync(dir, { recursive: true });
@@ -101,4 +101,32 @@ for (const app of ['linear-systems', 'transforms']) {
     for (const id of dives.slice(0, 3)) { await open(mp, app, `#/dive/${id}`); await mp.waitForTimeout(500); await mp.screenshot({ path: path.join(dir, `${app}-dive-${id}-phone.png`) }); }
     await m.close();
   });
+}
+
+// control-systems and pid-tuning: the map, the guide board, dives with their figures and the quiz (with a quiz figure), desktop and phone, dark and light.
+const GUIDE_APPS: Record<string, { dives: string[]; fig: string; quizTags: string }> = {
+  'control-systems': { dives: ['sp8', 'fb', 'ctrl'], fig: 'cart', quizTags: 'sse' },
+  'pid-tuning': { dives: ['lab', 'zn', 'ap-overshoot'], fig: 'lab', quizTags: 'ap-overshoot' },
+};
+for (const [app, cfg] of Object.entries(GUIDE_APPS)) {
+  for (const v of VIEWS) {
+    for (const theme of ['dark', 'light'] as const) {
+      test(`shots ${app} ${v.name} ${theme}`, async ({ browser }) => {
+        test.setTimeout(120_000);
+        const ctx = await browser.newContext({ viewport: v.viewport, isMobile: v.mobile, hasTouch: v.mobile, deviceScaleFactor: v.mobile ? 2 : 1 });
+        const page = await ctx.newPage(); const tag = `${v.name}-${theme}`;
+        await open(page, app); await setTheme(page, theme);
+        await snap(page, `${app}-map-${tag}`);
+        await page.locator('[data-testid=map-node]').nth(2).dispatchEvent('click'); await snap(page, `${app}-map-popup-${tag}`);
+        for (const d of cfg.dives) { await open(page, app, `#/dive/${d}`); await setTheme(page, theme); await page.waitForTimeout(400); await snap(page, `${app}-dive-${d}-${tag}`, v.mobile); }
+        await open(page, app, `#/figure/${cfg.fig}`); await setTheme(page, theme); await page.waitForTimeout(400);
+        await snap(page, `${app}-figure-${cfg.fig}-${tag}`, v.mobile);
+        await open(page, app, `#/quiz?tags=${cfg.quizTags}&title=Quiz`); await setTheme(page, theme);
+        await snap(page, `${app}-quiz-${tag}`, v.mobile);
+        await open(page, app, '#/board'); await setTheme(page, theme); await page.waitForTimeout(400);
+        await snap(page, `${app}-board-${tag}`);
+        await ctx.close();
+      });
+    }
+  }
 }
