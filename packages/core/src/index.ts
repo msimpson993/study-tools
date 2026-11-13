@@ -13,3 +13,5 @@ export * from './figure';
 export * from './app';
 export * from './viz';
 export * from './ctrlviz';
+export * from './scenedefs';
+export * from './scene';

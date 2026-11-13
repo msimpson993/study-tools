@@ -4,7 +4,7 @@
  * Built to dist/_gallery/index.html by scripts/build-gallery.ts; exercised by tests/e2e/ctrlviz.spec.ts.
  * It is also the copy-paste reference for the Tutor's figures: each figure is figureOf-style panels + a FigureDef.
  */
-import { initTheme, toggleTheme, currentTheme, ControlSet, mountFigure, mountQuiz, Progress, scopeFigure, h, drawStepResponse, drawSPlane, drawRootLocus, drawBode, drawHeightMap, drawJwSlice, splaneDrag, locusDrag, wnZeta, poleFromWnZeta, suggestKMax, type FigureDef, type FigurePanel, type AppContent, type Question } from '../src';
+import { initTheme, toggleTheme, currentTheme, ControlSet, mountFigure, mountQuiz, Progress, scopeFigure, mountScene, h, drawStepResponse, drawSPlane, drawRootLocus, drawBode, drawHeightMap, drawJwSlice, splaneDrag, locusDrag, wnZeta, poleFromWnZeta, suggestKMax, type FigureDef, type FigurePanel, type AppContent, type Question } from '../src';
 import { simulatePid, C, tf, tfFeedback, step, rlocus, polyMul, timeGrid, isStable, type TF } from '../src/dsp';
 
 initTheme();
@@ -149,3 +149,15 @@ for (const { def, build } of gal) {
 }
 (window as unknown as { __gallery: unknown }).__gallery = { figures: api };
 void suggestKMax;
+
+/* ─── example scenes: the animated running examples, one per overlay set ─── */
+{
+  const sec = h('section', { dataset: { testid: 'scenes' } }, h('h2', { style: 'font-size:1.05rem;margin:2rem 0 .3rem' }, 'Example scenes'), h('p', { style: 'color:var(--muted);margin:0 0 .8rem;font-size:.9rem' }, 'mountScene(host, { scene, overlays }): the cart and the plucked tine, animated from the real simulation. Each overlay is one thing a node adds.'));
+  const grid = h('div', { style: 'display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,360px),1fr));gap:.8rem' });
+  const sets: [string, string[]][] = [
+    ['cart', ['forces', 'phase']], ['cart', ['modes', 'trace']], ['cart', ['hammer', 'trace']], ['cart', ['shaker', 'poles']], ['cart', ['clock', 'trace']], ['cart', ['sensor', 'observe']], ['cart', ['push', 'reach']], ['cart', ['critical', 'flow']],
+    ['tine', ['envelope', 'poles']], ['tine', ['sampler', 'spectrum']], ['tine', ['window', 'sampler']], ['tine', ['poles', 'zpoles']],
+  ];
+  for (const [scene, overlays] of sets) { const cell = h('div', { dataset: { sceneSet: `${scene}:${overlays.join('+')}` } }); grid.append(cell); mountScene(cell, { scene, overlays }); }
+  sec.append(grid); root.append(sec);
+}

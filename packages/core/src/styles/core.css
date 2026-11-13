@@ -210,3 +210,17 @@ details.st-more .st-badge{display:inline-block;margin-left:.35rem;padding:0 .4re
 .qm-label.l-path rect{stroke:var(--s0);stroke-width:1.5}
 .qm-label text{fill:var(--muted);font-size:11px;font-weight:500}.qm-label.l-path text{fill:var(--text)}
 .qm-accent{opacity:.95}
+
+/* example scenes (scene.ts) */
+.scene{margin:0;padding:.35rem;border:1px solid var(--border);border-radius:12px;background:var(--board);min-width:0}
+.scene-cv{display:block;width:100%;max-width:100%}
+.scene-cap{font:.74rem/1.35 system-ui,sans-serif;color:var(--muted);margin:.25rem .1rem 0}.scene-cap b{color:var(--text)}
+.scene-ov{display:flex;flex-wrap:wrap;gap:.25rem;margin-top:.25rem}
+.scene-chip{padding:.05rem .45rem;border:1px solid var(--border);border-radius:999px;font-size:.7rem;color:var(--muted);background:var(--panel)}
+.scene.compact{padding:.25rem}.scene.compact .scene-cap{display:none}
+.scene-miss{padding:.6rem;color:var(--muted);font:.85rem system-ui,sans-serif}
+.ex-row{display:grid;grid-template-columns:minmax(0,1fr);gap:.7rem;align-items:start;margin:.6rem 0}
+.ex-row>.callout{margin:0}
+@media (min-width:900px){.ex-row.has-scene{grid-template-columns:minmax(0,1fr) minmax(300px,430px)}}
+.cm-hero{display:grid;grid-template-columns:minmax(0,1fr);gap:.5rem;align-items:center}
+@media (min-width:760px){.cm-hero.has-scene{grid-template-columns:minmax(0,1fr) 300px}}
