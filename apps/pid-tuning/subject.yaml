@@ -34,5 +34,5 @@ expect:
   maps: 1
   nodes: 30
   edges: 30
-  dives: 0
+  dives: 29
   quiz: 46

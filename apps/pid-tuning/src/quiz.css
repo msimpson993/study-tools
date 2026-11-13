@@ -11,3 +11,5 @@
 svg.scope{display:block;width:100%;max-width:440px;margin:.1rem auto .8rem;background:var(--panel2);border:1px solid var(--border);border-radius:10px}
 svg.scope .tk{fill:var(--muted);font:9.5px system-ui,sans-serif}svg.scope .lb{fill:var(--muted);font:600 10px system-ui,sans-serif}
 a.rev{display:inline-block;margin-top:.2rem;font:600 .8rem system-ui,sans-serif}
+/* Equation boxes and tables inside the dives (ported verbatim from the original guide text). */
+.eqbox{margin:.5rem 0 .8rem;padding:.55rem .8rem;border:1px solid var(--border);border-radius:10px;background:var(--panel2);line-height:2.1;overflow-x:auto}
