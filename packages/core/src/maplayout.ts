@@ -319,3 +319,36 @@ export function overlapReport(geom: Geometry, labels: Label[]): { nodeNode: numb
   for (let i = 0; i < labels.length; i++) for (let j = i + 1; j < labels.length; j++) if (overlaps(labels[i], labels[j])) labelLabel++;
   return { nodeNode, labelNode, labelLabel };
 }
+
+export interface MapHighlight {
+  /** the tapped box (node pick only) */ selected: string | null;
+  /** boxes on the chain back to the root (node pick only) */ path: Set<string>;
+  /** direct neighbours of the tapped box (node pick only) */ neigh: Set<string>;
+  /** the two endpoint boxes of the tapped line (edge pick only) */ ends: Set<string>;
+  /** keys of the lines drawn as active (the chain for a node pick; ONLY the tapped line for an edge pick) */ edges: Set<string>;
+  /** line key to place its label first (edge pick) or the chain's labels (node pick) */ priority: string[];
+}
+/**
+ * What the map highlights for a selection.
+ *  - node pick: the box, the chain of questions back to the root, its neighbours (unchanged behaviour).
+ *  - edge pick: ONLY that line (with its arrowhead and label) and its two endpoint boxes, in a lighter "endpoint" style.
+ *    It never walks the ancestor chain: the line explains one step, the bubble beyond it explains another.
+ *  - no pick: nothing is highlighted and nothing is dimmed (the caller checks `pick !== null` for dimming).
+ */
+export function mapHighlight(pick: { kind: 'node' | 'edge'; id: string } | null, edges: { from: string; to: string }[]): MapHighlight {
+  const out: MapHighlight = { selected: null, path: new Set(), neigh: new Set(), ends: new Set(), edges: new Set(), priority: [] };
+  if (!pick) return out;
+  if (pick.kind === 'edge') {
+    const e = edges.find((x) => edgeKey(x.from, x.to) === pick.id);
+    if (!e) return out;
+    out.ends = new Set([e.from, e.to]); out.edges = new Set([pick.id]); out.priority = [pick.id];
+    return out;
+  }
+  out.selected = pick.id;
+  const path = pathToRoot(pick.id, edges);
+  out.path = new Set(path);
+  out.neigh = new Set(neighborIds(pick.id, edges).filter((n) => !out.path.has(n)));
+  out.edges = pathEdgeKeys(path, edges);
+  out.priority = [...out.edges];
+  return out;
+}

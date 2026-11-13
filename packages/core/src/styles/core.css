@@ -184,6 +184,7 @@ details.st-more .st-badge{display:inline-block;margin-left:.35rem;padding:0 .4re
 .qm-node .shape{fill:var(--elev);stroke:var(--border-strong);stroke-width:1.25}
 .qm-node.n-path .shape{fill:var(--node-path);stroke:var(--s0);stroke-width:2}
 .qm-node.n-neigh .shape{fill:var(--node-neigh);stroke:var(--border-strong);stroke-width:1.75}
+.qm-node.n-end .shape{fill:var(--node-neigh);stroke:var(--s0);stroke-width:1.9}
 .qm-node.n-dim .shape{fill:var(--node-dim);stroke:var(--border)}
 .qm-node.n-sel .shape{fill:var(--node-sel);stroke:var(--accent);stroke-width:2.6}
 .qm-node text{fill:var(--text)}.qm-node text.det{fill:var(--muted)}

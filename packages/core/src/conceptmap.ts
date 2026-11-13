@@ -1,6 +1,6 @@
 import { h, s, clear } from './dom';
 import type { AppContent, MapDef, MapNode, MapEdge } from './types';
-import { computeGeometry, placeLabels, roundedPath, arrowHead, edgeKey, pathToRoot, neighborIds, pathEdgeKeys, type Geometry, type Label } from './maplayout';
+import { computeGeometry, placeLabels, roundedPath, arrowHead, edgeKey, pathToRoot, mapHighlight, type Geometry, type Label } from './maplayout';
 import { Progress, quizTagOf, subtree } from './progress';
 
 export interface MapState {
@@ -99,18 +99,10 @@ export function mountConceptMap(host: HTMLElement, content: AppContent, progress
     const byId: Record<string, MapNode> = Object.fromEntries(m.nodes.map((n) => [n.id, n]));
     geom = computeGeometry(m.nodes, m.edges, width);
     const pick = st.pick;
-    const selNode = pick?.kind === 'node' ? pick.id : null;
-    const selEdgeKey = pick?.kind === 'edge' ? pick.id : null;
-    const selEdge = selEdgeKey ? m.edges.find((e) => edgeKey(e.from, e.to) === selEdgeKey) : undefined;
-    const focus = selNode ?? selEdge?.from ?? null;
-    const path = focus ? pathToRoot(focus, m.edges) : [];
-    const pathSet = new Set(path);
-    if (selEdge) pathSet.add(selEdge.to);
-    const neigh = new Set(focus ? neighborIds(focus, m.edges) : []);
-    const pathKeys = pathEdgeKeys(selEdge ? [...path, selEdge.to] : path, m.edges);
-    if (selEdgeKey) pathKeys.add(selEdgeKey);
-    const priority = selEdgeKey ? [selEdgeKey, ...[...pathKeys].filter((k) => k !== selEdgeKey)] : [...pathKeys];
-    labels = placeLabels(geom, m.edges, priority);
+    const hl = mapHighlight(pick, m.edges);
+    const selNode = hl.selected, selEdgeKey = pick?.kind === 'edge' && hl.edges.size ? pick.id : null;
+    const pathSet = hl.path, neigh = hl.neigh, ends = hl.ends, pathKeys = hl.edges;
+    labels = placeLabels(geom, m.edges, hl.priority);
     const recallHide = (id: string) => st.mode === 'review' && st.recall && !st.revealed.has(`${st.mapId}/${id}`);
 
     const svg = s('svg', { width: geom.width, height: geom.height, viewBox: `0 0 ${geom.width} ${geom.height}`, role: 'group', 'aria-label': 'Question-chain map. Tap a box, a line, or a line’s dot for more.', 'data-testid': 'map-svg' });
@@ -144,11 +136,11 @@ export function mountConceptMap(host: HTMLElement, content: AppContent, progress
     }
     for (const id of geom.order) {
       const b = geom.boxes[id], n = byId[id];
-      const selected = selNode === id, onPath = pathSet.has(id), isNeigh = neigh.has(id) && !onPath;
-      const dim = pick !== null && !selected && !onPath && !isNeigh;
+      const selected = selNode === id, onPath = pathSet.has(id), isNeigh = neigh.has(id) && !onPath, isEnd = ends.has(id);
+      const dim = pick !== null && !selected && !onPath && !isNeigh && !isEnd;
       const status = st.mode === 'review' ? progress.status(m.id, n) : null;
       const hide = recallHide(id);
-      const cls = ['qm-node', selected ? 'n-sel' : onPath ? 'n-path' : isNeigh ? 'n-neigh' : dim ? 'n-dim' : '', status ? `st-${status}` : '', hide ? 'recall-hidden' : ''].filter(Boolean).join(' ');
+      const cls = ['qm-node', selected ? 'n-sel' : isEnd ? 'n-end' : onPath ? 'n-path' : isNeigh ? 'n-neigh' : dim ? 'n-dim' : '', status ? `st-${status}` : '', hide ? 'recall-hidden' : ''].filter(Boolean).join(' ');
       const act = () => toggleNode(id);
       const grp = s('g', {
         class: cls, role: 'button', tabindex: 0, 'aria-label': hide ? `Hidden box ${m.nodes.indexOf(n)}. Tap to reveal.` : `${n.label}${n.detail ? `. ${n.detail}` : ''}. Tap for more.`,
