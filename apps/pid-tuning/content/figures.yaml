@@ -1,0 +1,40 @@
+- id: lab
+  title: "PID Lab: drag the gains yourself"
+  x: time (s)
+  y: output y and control u
+  legend:
+    - { label: "output y", color: "var(--cyan)" }
+    - { label: "reference r = 1", color: "var(--muted)", dash: true }
+    - { label: "previous run (ghost)", color: "var(--muted)", dash: true }
+    - { label: "control u", color: "var(--org)" }
+    - { label: "closed-loop poles ×", color: "var(--org)" }
+  howToRead: "Top left: the output against the reference r = 1 (green band = ±2 % of the final value, dashed grey = the previous setting, orange line = the load step). Bottom left: the control the actuator applies. Right: where the closed-loop poles sit, and the numbers a spec would ask for. Everything is the same simulator as the Tuner: change a gain and the ghost keeps the run you just left."
+  lookFor: "Start from PID on the third-order lag, then raise Kp: the poles slide toward the jω axis, overshoot grows and the phase margin falls. Kp = 8 with Ki = Kd = 0 sits exactly on the axis (Ku)."
+  controls:
+    - { id: plant, label: "Plant", type: select, options: [{ value: p3, label: "1/(s+1)³ (third-order lag)" }, { value: p2, label: "1/((s+1)(0.5s+1)) (second-order)" }, { value: p1, label: "1/(s+1) (first-order)" }], default: p3, group: primary }
+    - { id: Kp, label: "Kp", type: range, min: 0, max: 10, step: 0.05, default: 2, group: primary }
+    - { id: Ki, label: "Ki", type: range, min: 0, max: 5, step: 0.02, default: 0.8, group: primary }
+    - { id: Kd, label: "Kd", type: range, min: 0, max: 4, step: 0.02, default: 1.6, group: primary }
+    - { id: N, label: "Derivative filter N", type: range, min: 1, max: 100, step: 1, default: 20, group: more, unit: rad/s }
+    - { id: T, label: "Time window", type: range, min: 5, max: 60, step: 1, default: 30, group: more, unit: s }
+    - { id: dist, label: "Load disturbance d = −0.5 at mid-window", type: toggle, default: false, group: more }
+    - { id: noise, label: "Sensor noise (σ = 0.01)", type: toggle, default: false, group: more }
+    - { id: sat, label: "Actuator limit |u| ≤ 1.2", type: toggle, default: false, group: more }
+    - { id: aw, label: "Anti-windup", type: select, options: [{ value: none, label: "off" }, { value: clamp, label: "clamping (original page)" }, { value: backcalc, label: "back-calculation" }], default: none, group: more }
+    - { id: dm, label: "D on measurement (no kick)", type: toggle, default: false, group: more }
+    - { id: ghost, label: "Keep previous run as ghost", type: toggle, default: true, group: more }
+  presets:
+    - { id: p3-p, label: "3rd-order lag · P", set: { plant: p3, Kp: 2, Ki: 0, Kd: 0, T: 30 }, about: "P alone leaves a steady-state offset: y settles short of r." }
+    - { id: p3-pi, label: "3rd-order lag · PI", set: { plant: p3, Kp: 1, Ki: 0.4, Kd: 0, T: 30 }, about: "The integral removes the offset; Ki trades speed for overshoot." }
+    - { id: p3-pid, label: "3rd-order lag · PID", set: { plant: p3, Kp: 2, Ki: 0.8, Kd: 1.6, T: 30 }, about: "D adds damping, so a larger Kp is affordable." }
+    - { id: p3-i, label: "3rd-order lag · I", set: { plant: p3, Kp: 0, Ki: 0.3, Kd: 0, T: 60 }, about: "Integral only: slow, and it overshoots as soon as Ki is large." }
+    - { id: p3-ku, label: "3rd-order lag · Ku", set: { plant: p3, Kp: 8, Ki: 0, Kd: 0, T: 30 }, about: "The ultimate gain: poles on the jω axis, sustained oscillation." }
+    - { id: p3-zn, label: "3rd-order lag · ZN", set: { plant: p3, Kp: 4.8, Ki: 2.65, Kd: 2.18, T: 30 }, about: "Ziegler–Nichols PID from Ku = 8 and Tu = 2π/√3 ≈ 3.63 s." }
+    - { id: p2-p, label: "2nd-order lag · P", set: { plant: p2, Kp: 4, Ki: 0, Kd: 0, T: 10 }, about: "P alone leaves a steady-state offset: y settles short of r." }
+    - { id: p2-pi, label: "2nd-order lag · PI", set: { plant: p2, Kp: 2, Ki: 2, Kd: 0, T: 10 }, about: "The integral removes the offset; Ki trades speed for overshoot." }
+    - { id: p2-pid, label: "2nd-order lag · PID", set: { plant: p2, Kp: 4, Ki: 4, Kd: 0.8, T: 10 }, about: "D adds damping, so a larger Kp is affordable." }
+    - { id: p2-i, label: "2nd-order lag · I", set: { plant: p2, Kp: 0, Ki: 0.5, Kd: 0, T: 20 }, about: "Integral only: slow, and it overshoots as soon as Ki is large." }
+    - { id: p1-p, label: "1st-order lag · P", set: { plant: p1, Kp: 3, Ki: 0, Kd: 0, T: 10 }, about: "P alone leaves a steady-state offset: y settles short of r." }
+    - { id: p1-pi, label: "1st-order lag · PI", set: { plant: p1, Kp: 2, Ki: 4, Kd: 0, T: 10 }, about: "The integral removes the offset; Ki trades speed for overshoot." }
+    - { id: p1-pid, label: "1st-order lag · PID", set: { plant: p1, Kp: 3, Ki: 5, Kd: 0.2, T: 10 }, about: "D adds damping, so a larger Kp is affordable." }
+    - { id: p1-i, label: "1st-order lag · I", set: { plant: p1, Kp: 0, Ki: 0.25, Kd: 0, T: 20 }, about: "Integral only: slow, and it overshoots as soon as Ki is large." }
