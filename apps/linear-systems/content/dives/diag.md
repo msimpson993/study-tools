@@ -17,6 +17,7 @@ neighbors:
   - ortho
   - expm
 matlab: "D = inv(V) * A * V    % equivalent: A = V * D * inv(V)"
+exampleScene: { overlays: [modes, flow], caption: "In the eigenbasis the cart is two independent scalar decays, one per mode." }
 ---
 
 If the eigenvectors form a basis, stack them as the columns of V and write x = V ξ. In the ξ-coordinates A does nothing but scale each axis: Λ = V⁻¹ A V is diagonal. Solving, iterating, and exponentiating A all become scalar operations on those coordinates.

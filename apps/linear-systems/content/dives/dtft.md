@@ -17,6 +17,7 @@ neighbors:
   - laplace
   - sampling
 matlab: "[H, w] = freqz(b, a)    % or fft(x, Nfft) as samples of the DTFT of a finite x"
+exampleScene: { overlays: [clock, shaker, poles], caption: "Read the shaken cart every 0.5 s: the sequence of samples is what the DTFT sees." }
 ---
 
 The DTFT is the analysis of a discrete-time, typically aperiodic, sequence against e^{j Ω n}. Sampling in time periodizes frequency: e^{j(Ω + 2π) n} = e^{j Ω n}, so X(e^{jΩ}) is always 2π-periodic in the radian frequency Ω (radians per sample). The inverse still has a 1/2π, now integrating over any 2π interval. The DTFT of an LTI system's impulse response is its frequency response.

@@ -16,6 +16,7 @@ neighbors:
   - ctrl
   - diag
 matlab: sys = ss(A, B, C, D)
+exampleScene: { overlays: [forces, sensor, phase], caption: "The state (x, ẋ) is one point; A turns the forces into where it goes next; the sensor reads only x." }
 ---
 
 The state is a finite list of numbers that, together with the future input, determines the future output. A first-order vector ODE (or recurrence) makes the operator over time into a matrix A, so everything about bases and modes applies directly. Different state coordinates are just a change of basis: they do not change the input-output map.

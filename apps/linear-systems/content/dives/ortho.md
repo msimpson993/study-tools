@@ -16,6 +16,7 @@ neighbors:
   - dft
   - lti
 matlab: W = dftmtx(N);  W' * W    % equals N * eye(N)
+exampleScene: { overlays: [modes], caption: "The two eigenvectors of A are not at right angles, so the split into modes is not an orthogonal projection." }
 ---
 
 Once you have a basis, coordinates are the expansion coefficients. If the basis is orthogonal, each coefficient is an inner product — no matrix inverse needed. Fourier series, the FT, the DTFT, and the DFT are all 'compute inner products against complex exponentials.' For a general (non-normal) matrix A, eigenvectors need not be orthogonal, which is why V can be ill-conditioned even when A is diagonalizable.

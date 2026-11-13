@@ -17,6 +17,7 @@ neighbors:
   - ctrl
   - obs
 matlab: "[V, D] = eig(A)"
+exampleScene: { overlays: [modes, trace], caption: "Released from x = 1, the state splits into two eigen-directions, and each fades on its own." }
 ---
 
 An eigenvector is a line that A leaves invariant: the output is a scalar multiple of the input. That scalar is the eigenvalue, and it is the whole story of A along that line. In a linear system those lines are the modes.

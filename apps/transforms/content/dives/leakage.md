@@ -13,6 +13,7 @@ neighbors:
   - sampled
   - zmap
 matlab: "X = fft(x .* hann(M, 'periodic'), Nfft);   % window and zero-pad"
+exampleScene: { overlays: [window, sampler, spectrum], caption: "Only M = 16 samples are kept; the window decides how the line smears." }
 ---
 
 A finite record is the infinite signal multiplied by a window (a rectangle if you do nothing). Multiplying in time is convolving in frequency, so the true spectral line is smeared by the window's own spectrum: a main lobe and a ladder of sidelobes. The DFT then looks at that smeared curve only at M points.

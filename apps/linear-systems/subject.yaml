@@ -17,6 +17,7 @@ sections:
   - { id: quiz, title: Self-check, kind: quiz }
   - { id: glossary, title: Variables & terms, kind: glossary }
 runningExample:
+  scene: { id: cart, overlays: [forces] }
   title: A mass on a spring with a damper
   summary: "A 1 kg cart on a spring (k = 2 N/m) and a damper (c = 3 N·s/m). You push it with a force u(t) and a sensor reads only its position y(t). With state x = (position, velocity) it is ẋ = Ax + Bu, y = Cx, where A = [[0, 1], [−2, −3]] is the matrix that runs through every deep dive."
   details: |

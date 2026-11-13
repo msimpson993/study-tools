@@ -16,6 +16,7 @@ neighbors:
   - laplace
   - lti
 matlab: X = fourier(x, t, w)    % Symbolic Math Toolbox; or fft of a sampled record as an approximation
+exampleScene: { overlays: [shaker, trace], caption: "Shake at one frequency and the cart answers at that frequency, scaled and delayed." }
 ---
 
 The Fourier transform is the analysis formula for a continuous aperiodic time signal against the basis {e^{jω t}}. The transform is a function of a continuous frequency ω, and (unlike the DTFT) it is not periodic in ω, because a continuous-time exponential e^{jω t} does not repeat when you add 2π to ω. Convention here: radian frequency ω in rad/s, with the 1/2π factor on the inverse.

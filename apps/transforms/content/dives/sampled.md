@@ -13,6 +13,7 @@ neighbors:
   - spectrum
   - zmap
 matlab: "[Xd, w] = freqz(x, 1, 1024, fs);   % periodic spectrum"
+exampleScene: { overlays: [sampler, spectrum], caption: "Sampling at fs = 8 Hz copies the spectrum every 8 Hz." }
 ---
 
 Sampling multiplies the signal by a train of impulses. In frequency, that becomes *adding up shifted copies of the spectrum*, one every fs. As long as the copies do not reach each other (fs larger than twice the highest frequency present), a low-pass filter can pick out the original. When they overlap, no filter can undo it.

@@ -16,6 +16,7 @@ neighbors:
   - dft
   - stab
 matlab: sysd = c2d(sys, T, 'zoh')    % poles of sysd satisfy z = exp(s*T)
+exampleScene: { overlays: [clock, trace], caption: "A clock reads x every 0.5 s and holds it: the stems are the samples, the staircase is what is kept." }
 ---
 
 Sampling a mode e^{s t} at t = n T produces (e^{s T})^n = z^n, so the planes are related by z = e^{s T}. This map is many-to-one: s and s + j 2π k / T land on the same z, which is aliasing. Equivalently, sampling in time periodizes the spectrum with period 2π / T (or f\_s). The left half-plane maps to the interior of the unit circle because |z| = e^{σ T}, not because someone chose to draw it that way. Pole mapping of a continuous system under exact discretization is z = e^{s T}; a ZOH equivalent also inserts the hold's dynamics, so G\_d(z) is not simply G(s) evaluated at s = (ln z)/T.

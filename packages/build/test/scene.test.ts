@@ -15,7 +15,12 @@ const edit = (file: string, f: (y: any) => void) => { const y = YAML.parse(fs.re
 const front = (file: string, f: (fm: any) => void) => { const raw = fs.readFileSync(file, 'utf8'), m = /^---\n([\s\S]*?)\n---\n/.exec(raw)!; const fm = YAML.parse(m[1]); f(fm); fs.writeFileSync(file, `---\n${YAML.stringify(fm)}---\n${raw.slice(m[0].length)}`); };
 const msg = (dir: string) => { try { loadApp(dir); return ''; } catch (e) { expect(e).toBeInstanceOf(ContentError); return (e as Error).message; } };
 const APP = 'transforms';
-const withScene = (overlays?: string[]) => { const dir = copyApp(APP); edit(path.join(dir, 'subject.yaml'), (y) => { y.runningExample.scene = { id: 'tine', ...(overlays ? { overlays } : {}) }; }); return dir; };
+/** transforms ships with scenes on every dive; strip them so each test states exactly what it adds */
+const withScene = (overlays?: string[]) => {
+  const dir = copyApp(APP); edit(path.join(dir, 'subject.yaml'), (y) => { y.runningExample.scene = { id: 'tine', ...(overlays ? { overlays } : {}) }; });
+  for (const f of fs.readdirSync(path.join(dir, 'content/dives'))) front(path.join(dir, 'content/dives', f), (fm) => { delete fm.exampleScene; });
+  return dir;
+};
 
 describe('example scene content field', () => {
   it('subject scene + dive overlays pass through to the built content', () => {
@@ -37,8 +42,16 @@ describe('example scene content field', () => {
     ['unknown key', (dir: string) => front(path.join(dir, 'content/dives/ring.md'), (fm) => { fm.exampleScene = { overlays: ['poles'], speed: 2 }; }), /additional|speed/i],
     ['bad overlay on a map node', (dir: string) => edit(path.join(dir, 'content/graph.yaml'), (y) => { y.maps[0].nodes[1].exampleScene = { overlays: ['nope'] }; }), /unknown overlay "nope"/],
   ])('rejects %s', (_n, mut, re) => { const dir = withScene(); mut(dir); expect(msg(dir)).toMatch(re); });
-  it('exampleScene without a runningExample.scene is an error', () => {
-    const dir = copyApp(APP); front(path.join(dir, 'content/dives/ring.md'), (fm) => { fm.exampleScene = { overlays: ['poles'] }; });
-    expect(msg(dir)).toMatch(/exampleScene needs runningExample\.scene/);
+  it('exampleScene without a runningExample.scene is ignored with a warning', () => {
+    const dir = copyApp(APP); edit(path.join(dir, 'subject.yaml'), (y) => { delete y.runningExample.scene; });
+    expect(msg(dir)).toBe(''); expect(loadApp(dir).warnings.join('\n')).toMatch(/dives\/ring: exampleScene is ignored/);
+  });
+  it('shipped: linear-systems and transforms give every dive an exampleScene that validates', () => {
+    for (const [app, scene] of [['linear-systems', 'cart'], ['transforms', 'tine']] as const) {
+      const { content, warnings } = loadApp(path.join(repoRoot, 'apps', app));
+      expect(content.subject.runningExample?.scene?.id).toBe(scene);
+      for (const d of content.dives) expect(d.exampleScene?.overlays?.length, `${app}/${d.id}`).toBeGreaterThan(0);
+      expect(warnings.filter((w) => /exampleScene/.test(w))).toEqual([]);
+    }
   });
 });

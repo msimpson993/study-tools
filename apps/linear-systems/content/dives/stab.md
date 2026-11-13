@@ -16,6 +16,7 @@ neighbors:
   - laplace
   - sampling
 matlab: "max(real(eig(A)))    % discrete: max(abs(eig(A)))"
+exampleScene: { overlays: [forces, poles, flow], caption: "Both poles are left of the axis, so every path slides into the origin." }
 ---
 
 Asymptotic (internal) stability of x′ = Ax is equivalent to every eigenvalue of A sitting in the open left half-plane. In discrete time, every eigenvalue of A must sit inside the open unit disk. The same geometry appears in Laplace and Z: decaying natural responses are left-half-plane poles, or poles inside the unit circle. BIBO stability is a statement about G(s) (or G(z)), and can hide an unstable mode that cancelled.

@@ -16,6 +16,7 @@ neighbors:
   - tf
   - diag
 matlab: y = lsim(sys, u, t)    % or y = conv(h, x)
+exampleScene: { overlays: [hammer, trace], caption: "One hammer blow gives the impulse response; any input is a stream of such blows." }
 ---
 
 A system is linear and time-invariant if and only if it is convolution with a fixed impulse response h. The signals that pass through a convolution unchanged in shape are the eternal exponentials e^{st} (or z^n in discrete time): they are eigenfunctions, and the eigenvalue is the transfer function H(s) (or H(z)). Expanding an input in that basis is what the Laplace, Z, and Fourier transforms do, and it diagonalizes convolution — that is the convolution theorem.

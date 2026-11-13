@@ -16,6 +16,7 @@ neighbors:
   - tf
   - eig
 matlab: "rank(ctrb(A, B)) == size(A, 1)    % PBH: rank([lam*eye(n)-A, B]) == n"
+exampleScene: { overlays: [push, reach], caption: "The push acts on the velocity (B); the spring turns velocity into position (AB). Together they reach the whole plane." }
 ---
 
 The system (A, B) is controllable when the input can move the state from any x(0) to any x(T) in finite time (or, discretely, in at most n steps). Equivalently, the range of the controllability matrix Ctrb = [B AB … A^{n−1} B] is the whole state space. In the eigenbasis this is: can u write into every mode? The PBH test makes that literal: no left eigenvector of A may be orthogonal to the columns of B.

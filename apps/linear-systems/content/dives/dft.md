@@ -16,6 +16,7 @@ neighbors:
   - ortho
   - sampling
 matlab: "X = fft(x, N)    % inverse: x = ifft(X)"
+exampleScene: { overlays: [clock, shaker, trace], caption: "Keep a finite stretch of those samples: that stretch is all the DFT sees." }
 ---
 
 The N-point DFT is the discrete Fourier series of a length-N sequence viewed as one period of a periodic signal. Equivalently, it is the DTFT of that finite record, sampled at Ω = 2π k / N. Frequency is now discrete and periodic with period N. This is the one you actually compute, via the FFT. Convention here, and in MATLAB: the forward transform is the unnormalized sum, and the inverse carries 1/N.

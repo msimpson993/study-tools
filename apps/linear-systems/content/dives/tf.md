@@ -16,6 +16,7 @@ neighbors:
   - kalman
   - laplace
 matlab: G = tf(ss(A, B, C, D))    % or [b, a] = ss2tf(A, B, C, D)
+exampleScene: { overlays: [push, poles], caption: "A 1 N push gives the step response; G(s) = 1/(s² + 3s + 2) has its poles at −1 and −2." }
 ---
 
 Taking the (zero-state) Laplace transform of the state equations and eliminating X(s) produces G(s). This is the same object as the Laplace transform of the impulse response. In the best-basis language, each mode contributes a term r / (s − λ), unless that mode is uncontrollable or unobservable, in which case its residue is zero and the pole cancels.

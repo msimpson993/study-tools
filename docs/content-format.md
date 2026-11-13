@@ -5,7 +5,7 @@ An app is `apps/<id>/subject.yaml` + `apps/<id>/content/*`. `npm run validate` (
 ## subject.yaml
 `id, title, centralQuestion, blurb, archetype (guide|overview), categories[], sections[], hub.order, board.pairs[], expect{}`.
 - `sections` order = sidebar order. **The first section must be `kind: map`.** Kinds: `map | dives | md | quiz | board | glossary | figures` (`md` reads `content/sections/<id>.md`).
-- `runningExample: {title, summary, details?}` is the one concrete system threaded through the subject (see below). `expect` is the porting guard: `maps, nodes, edges, dives, quiz, examples`. Build fails if counts drift.
+- `runningExample: {title, summary, details?, scene?: {id, overlays?}}` is the one concrete system threaded through the subject (see below). `scene` picks a core example scene (`cart`, `tine`) drawn in every dive and as the map hero: see [example-scenes.md](example-scenes.md). `expect` is the porting guard: `maps, nodes, edges, dives, quiz, examples`. Build fails if counts drift.
 
 ## graph.yaml (the map)
 ```yaml
@@ -36,7 +36,7 @@ Rules enforced: unique ids per map, no dangling or duplicate edges, graph is a D
 YAML gotchas: quote any scalar containing `: `, `{`, `|`, `#` (labels like `Finite record: DFT` break).
 
 ## dives/<id>.md
-Front matter: `id, order, title, category, chain[{title,detail?}], neighbors[ids], matlab?, addsToExample?, accountsFor?` (the last two default to the linking node's). Body is Markdown with:
+Front matter: `id, order, title, category, chain[{title,detail?}], neighbors[ids], matlab?, addsToExample?, accountsFor?, exampleScene?: {overlays[], caption?}` (the last three default to the linking node's; `exampleScene` also goes on graph.yaml nodes; overlays are validated, see [example-scenes.md](example-scenes.md)). Body is Markdown with:
 - `$…$` / `$$…$$` KaTeX (build-time; a KaTeX error fails the build);
 - ```` ```eq ```` fence for plain Unicode equation lines;
 - ```` ```figure:<figure id> ```` embeds a figure from `figures.yaml` inline (its own controls, no URL sync). The id must exist (build fails otherwise). Put it right after the sentence that sets up what to watch.

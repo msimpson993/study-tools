@@ -13,6 +13,7 @@ neighbors:
   - ring
   - sampled
 matlab: "sysd = c2d(sysc, T);   pole(sysd)   % = exp(pole(sysc)*T)"
+exampleScene: { overlays: [poles, zpoles], caption: "z = e^(pT) carries each pole from the s-plane to the z-plane." }
 ---
 
 A sampled ring is still a sum of exponentials, now in n instead of t: zⁿ with z = e^(pT). So each s-plane pole is carried to the z-plane by the exponential map. The left half-plane becomes the inside of the unit circle; the imaginary axis wraps around the circle.

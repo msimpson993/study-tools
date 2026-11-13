@@ -13,6 +13,7 @@ neighbors:
   - spectrum
   - zmap
 matlab: "p = roots([1 2*sig sig^2+wd^2]);   % poles of the ring"
+exampleScene: { overlays: [envelope, poles], caption: "The ring and its pole pair are one object: σ sets the decay, ω_d the ringing." }
 ---
 
 Take the free response of a damped second-order system: a mass on a spring, or a ringing RLC circuit, released from rest. It is a sinusoid under a decaying envelope. Two numbers describe it: the decay rate σ and the ringing frequency ω_d.

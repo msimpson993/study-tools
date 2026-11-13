@@ -13,6 +13,7 @@ neighbors:
   - ring
   - sampled
 matlab: "H = freqs(b, a, 2*pi*f);   plot(f, abs(H))"
+exampleScene: { overlays: [spectrum, poles], caption: "The poles' height above the axis is where the spectrum peaks." }
 ---
 
 The Fourier transform is the Laplace transform evaluated on the imaginary axis, s = jω. Geometrically: walk up the vertical axis of the s-plane and ask, at each height, how close the poles are. Close to a pole, the response is large.

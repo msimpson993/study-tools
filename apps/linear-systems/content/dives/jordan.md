@@ -16,6 +16,7 @@ neighbors:
   - expm
   - tf
 matlab: J = jordan(sym(A))
+exampleScene: { overlays: [critical, trace], caption: "Tighten the damper to c = 2√2 and the two poles merge: there is no second eigenvector." }
 ---
 
 When a repeated eigenvalue does not have enough independent eigenvectors, A is not diagonalizable. The next-best basis puts A into Jordan form: each block is λI plus a single superdiagonal of 1s. The missing pure mode is replaced by a chain, and time response picks up polynomial factors t^k e^{λt}.

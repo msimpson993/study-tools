@@ -16,6 +16,7 @@ neighbors:
   - ortho
   - lti
 matlab: c = fft(x) / N    % x = one period, N samples; this is a DFS / sampled-period approximation
+exampleScene: { overlays: [shaker, poles], caption: "A periodic force is a sum of sines; the cart answers each one separately." }
 ---
 
 A period-T signal is already a discrete superposition of harmonics e^{j k ω₀ t} with ω₀ = 2π / T. The coefficients are inner products over one period. Periodicity in time is what makes frequency discrete; the spectrum is a train of lines, and it is not periodic in k. Convention here: analysis carries the 1/T, synthesis is the unweighted sum.

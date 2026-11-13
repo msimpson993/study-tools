@@ -12,6 +12,7 @@ sections:
 board:
   pairs: [samp, ft, dft, fs, dtft, fsamp, lap, zt, map]
 runningExample:
+  scene: { id: tine, overlays: [envelope] }
   title: The free response of a second-order system
   summary: "A mass-spring-damper (or an RLC circuit) released from rest: x(t) is a decaying ring, X(s) = A(s − z₀)/((s − p₁)(s − p₂)) with s-plane poles p = −σ ± jω_d (by default σ = 0.6 s⁻¹, f₀ = 1 Hz, sampled at fs = 8 Hz). The same signal appears in all six domains: continuous time, continuous frequency, s-plane, sampled time, DTFT and z-plane."
   details: |

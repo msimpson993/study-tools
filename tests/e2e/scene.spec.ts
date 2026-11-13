@@ -56,3 +56,85 @@ test('un-frozen, the scene animates (two frames differ)', async ({ page }) => {
   await page.waitForTimeout(300); const a = await ink(page, sel); await page.waitForTimeout(700); const b = await ink(page, sel);
   expect(a.hsh).not.toBe(b.hsh);
 });
+
+/* ───────────── in the apps: every dive of linear-systems and transforms, and the hero on both maps ───────────── */
+import { APPS, open, trackErrors } from './helpers';
+type Dv = { id: string; title: string; exampleScene?: { overlays?: string[] } };
+const dives = (page: Page): Promise<Dv[]> => page.evaluate(() => (window as any).__study.content.dives);
+/** Hold the scene at a frame where its overlays have something to show, then repaint. */
+const freezeAt = async (page: Page, t: number) => { await page.evaluate((x) => { (window as any).__sceneFreeze = x; window.dispatchEvent(new Event('study-theme')); }, t); await page.waitForTimeout(120); };
+const restFor = (ov: string[]) => (ov.includes('hammer') ? 0.9 : ov.includes('shaker') ? 9 : ov.includes('push') ? 1.6 : ov.includes('window') || ov.includes('sampler') || ov.includes('envelope') ? 1.3 : 1.0);
+const SHOT_DIVES: Record<string, string[]> = { 'linear-systems': ['ss', 'eig', 'ctrl', 'obs', 'lti', 'sampling', 'jordan'], transforms: ['ring', 'sampled', 'zmap', 'leakage'] };
+
+for (const app of ['linear-systems', 'transforms'] as const) {
+  test.describe(`${app}: example scenes in dives and on the map`, () => {
+    test('every dive shows the scene beside “what this adds”, with the overlays its content chose', async ({ page }) => {
+      test.setTimeout(120_000);
+      const errs = trackErrors(page); await open(page, app);
+      const ds = await dives(page); expect(ds.length).toBeGreaterThanOrEqual(5);
+      for (const d of ds) {
+        await page.evaluate((id) => { location.hash = `#/dive/${id}`; }, d.id);
+        const row = page.getByTestId('dive-example-row'); await expect(row, `${d.id}: row`).toBeVisible();
+        await expect(row.getByTestId('dive-example')).toBeVisible();
+        const sc = row.getByTestId('example-scene'); await expect(sc, `${d.id}: scene`).toBeVisible();
+        expect(d.exampleScene?.overlays?.length, `${d.id}: content chose overlays`).toBeGreaterThan(0);
+        await expect(sc).toHaveAttribute('data-overlays', d.exampleScene!.overlays!.join(','));
+        await freezeAt(page, restFor(d.exampleScene!.overlays!));
+        const r = await ink(page, '[data-testid=dive-example-row] [data-testid=scene-canvas]');
+        expect(r.n, `${d.id}: painted`).toBeGreaterThan(1500);
+        expect((await sc.getByTestId('scene-canvas').getAttribute('aria-label'))!.length).toBeGreaterThan(60);
+      }
+      expect(errs).toEqual([]);
+    });
+
+    test('different dives draw different pictures (the overlays matter)', async ({ page }) => {
+      await open(page, app); const ds = await dives(page); const seen = new Map<string, string>();
+      for (const d of ds) {
+        await page.evaluate((id) => { location.hash = `#/dive/${id}`; }, d.id); await page.getByTestId('example-scene').waitFor();
+        await freezeAt(page, restFor(d.exampleScene!.overlays!)); const r = await ink(page, '[data-testid=scene-canvas]');
+        const k = d.exampleScene!.overlays!.slice().sort().join(',');
+        if (seen.has(k)) continue; seen.set(k, `${r.hsh}`);
+      }
+      expect(new Set(seen.values()).size, 'distinct overlay sets paint distinct pictures').toBe(seen.size);
+    });
+
+    for (const [view, vp] of [['desktop', { width: 1300, height: 900 }], ['mobile', { width: 390, height: 844 }]] as const) {
+      test(`${view}: map hero sits ${view === 'desktop' ? 'beside' : 'under'} the central question`, async ({ page }) => {
+        await page.addInitScript(() => { (window as any).__sceneFreeze = 1.2; });
+        await page.setViewportSize(vp); await open(page, app);
+        const hero = page.getByTestId('map-hero'), sc = hero.getByTestId('example-scene'); await expect(sc).toBeVisible();
+        const q = (await page.getByTestId('central-question').boundingBox())!, s = (await sc.boundingBox())!;
+        expect(s.x + s.width, 'hero inside viewport').toBeLessThanOrEqual(vp.width + 1);
+        if (view === 'desktop') { expect(s.x, 'beside the question').toBeGreaterThan(q.x + q.width - 4); expect(s.height, 'small').toBeLessThanOrEqual(190); }
+        else { expect(s.y, 'under the question').toBeGreaterThanOrEqual(q.y + q.height - 2); expect(s.height, 'small').toBeLessThanOrEqual(170); }
+        expect((await ink(page, '[data-testid=map-hero] [data-testid=scene-canvas]')).n).toBeGreaterThan(800);
+        expect(await noHScroll(page)).toBe(true);
+        for (const th of ['light', 'dark'] as const) { await setTheme(page, th); await page.waitForTimeout(150); await page.screenshot({ path: path.join(OUT, `scene-hero-${app}-${view}-${th}.png`) }); }
+      });
+      test(`${view}: dives fit with no horizontal scroll, light and dark; screenshots`, async ({ page }) => {
+        test.setTimeout(120_000);
+        await page.setViewportSize(vp); await open(page, app);
+        const ds = await dives(page);
+        for (const d of ds) {
+          await page.evaluate((id) => { location.hash = `#/dive/${id}`; }, d.id); const sc = page.getByTestId('example-scene'); await sc.waitFor();
+          await freezeAt(page, restFor(d.exampleScene!.overlays!));
+          const bb = (await sc.boundingBox())!; expect(bb.x + bb.width, `${d.id}: scene inside viewport`).toBeLessThanOrEqual(vp.width + 1); expect(await noHScroll(page), `${d.id}: no h-scroll`).toBe(true);
+          if (view === 'desktop') expect(bb.x, `${d.id}: scene is beside the text on desktop`).toBeGreaterThan(vp.width * 0.4);
+          if (!SHOT_DIVES[app].includes(d.id)) continue;
+          for (const th of ['light', 'dark'] as const) {
+            await setTheme(page, th); await page.waitForTimeout(150);
+            await page.getByTestId('dive-example-row').screenshot({ path: path.join(OUT, `scene-${app}-${d.id}-${view}-${th}.png`) });
+          }
+        }
+      });
+    }
+  });
+}
+
+test('apps that declare no scene (control-systems, pid-tuning) are unchanged: no hero, no scene in dives', async ({ page }) => {
+  for (const app of APPS.filter((a) => a === 'control-systems' || a === 'pid-tuning')) {
+    await open(page, app); expect(await page.getByTestId('example-scene').count(), app).toBe(0);
+    await page.evaluate(() => { location.hash = '#/dive/' + (window as any).__study.content.dives[0].id; }); await page.getByTestId('dive').waitFor();
+    expect(await page.getByTestId('example-scene').count(), `${app} dive`).toBe(0);
+  }
+});

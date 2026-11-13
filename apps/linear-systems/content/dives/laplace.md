@@ -16,6 +16,7 @@ neighbors:
   - tf
   - sampling
 matlab: "X = laplace(x)    % or ztrans(x);  for systems: tf(sys), tf(sysd)"
+exampleScene: { overlays: [hammer, poles], caption: "The impulse response e^{−t} − e^{−2t} is read straight off the poles at −1 and −2." }
 ---
 
 Laplace (continuous time) and Z (discrete time) are the natural transforms for control and for transient analysis. They use the full eigenfunctions e^{st} and z^n, not just the eternal phasors e^{jω t} and e^{jΩ n}. The ROC is part of the transform: the same formal expression 1/(s+a) can belong to a causal decaying exponential or to an anti-causal growing one. When the ROC contains the jω axis (or the unit circle), restricting the transform recovers the FT (or DTFT). Transfer functions live in these planes, and their poles are the system modes.
