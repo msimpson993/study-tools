@@ -49,7 +49,7 @@ export function drawStepResponse(g: CanvasRenderingContext2D, w: number, h: numb
   tline(g, f, [0, ref], [tEnd, ref], col.muted(), 1, [5, 4]);
   if (s.ghost) curve(g, f, Array.from(s.ghost.t), Array.from(s.ghost.y), col.muted(), 2, [6, 4]);
   curve(g, f, t, y, s.color ?? col.a(), 2.4);
-  if (s.ghost?.label) text(g, `┄ ${s.ghost.label}`, f.box.l + 6, f.box.t + 9, col.muted(), 'left', 10);
+  if (s.ghost?.label) text(g, `┄ ${s.ghost.label}`, f.box.r - 5, f.box.b - 8, col.muted(), 'right', 10);
   const lbl = (str: string, px: number, py: number, color: string, align: CanvasTextAlign = 'left') => text(g, str, px, py, color, align, 10.5);
   if (show.timing && Number.isFinite(m.riseTime)) {
     const y10 = yf * 0.1, y90 = yf * 0.9;
