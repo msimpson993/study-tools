@@ -3,6 +3,7 @@ title: PID tuning (EECE5130)
 centralQuestion: Given a plant we know only roughly, how do we choose Kp, Ki and Kd so the output tracks a step command quickly with little overshoot, shrugs off a push and ignores sensor noise, and how do we recognize what to turn when it does not?
 blurb: A question-chain map of the PID tuning guide (why feedback, what P, I and D each do, tuning methods, Project 1, and a 14-card gallery of things that go wrong) over the 1 kg cart, with the interactive PID Lab, the 46-question quiz and Ziegler–Nichols, windup and troubleshooting figures.
 archetype: guide
+quizFigures: [pid-step]
 categories:
   - { id: why, label: Why feedback }
   - { id: terms, label: "P, I and D" }

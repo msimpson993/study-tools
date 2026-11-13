@@ -6,6 +6,7 @@ import { problemFigure, bodeFigure, integralFigure } from './figs/misc';
 import { secondFigure } from './figs/second';
 import { caseFigure, CASE_IDS } from './figs/cases';
 import { PRE } from './lab/model';
+import { quizFigures } from './quizfigs';
 import './quiz.css';
 
 const ZN = PRE.p3.ZN!;
@@ -20,4 +21,4 @@ const figures: Record<string, ReturnType<typeof makeLab>> = {
 for (const id of CASE_IDS) figures[`fail-${id}`] = caseFigure(id);
 
 // The legacy interactive guide (migrated 1:1) stays as the full reference board; the figures are core Figures on the core simulator.
-mountApp(content, { board: (host) => mountBoard(host), figures });
+mountApp(content, { board: (host) => mountBoard(host), figures, quizFigures });

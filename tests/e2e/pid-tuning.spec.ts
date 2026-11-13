@@ -36,13 +36,18 @@ test.describe('pid-tuning: the migrated interactive guide', () => {
     await expect(page.locator('#fg-ap-slow svg').first()).toBeVisible();
   });
 
-  test('quiz: 46 questions tagged to map nodes; troubleshooting questions carry their scope plot', async ({ page }) => {
+  test('quiz: 46 questions tagged to map nodes; troubleshooting questions carry their scope plot (core figure or inline SVG)', async ({ page }) => {
     await open(page, 'pid-tuning');
     const q = await page.evaluate(() => (window as any).__study.content.quiz);
     expect(q.length).toBe(46);
-    expect(q.filter((x: any) => x.q.includes('svg class="scope"')).length).toBe(9);
+    // 5 scopes need LOOPSIM (delay, sensor lag, nonlinear, rate limit, dead zone) and stay inline SVG; the 4 on the core simulator are `figure: pid-step`
+    expect(q.filter((x: any) => x.q.includes('svg class="scope"')).length).toBe(5);
+    expect(q.filter((x: any) => x.figure?.id === 'pid-step').length).toBe(4);
     expect(q.filter((x: any) => x.q.includes('svg class="diagram"')).length).toBe(1);
     await page.goto('/pid-tuning/index.html#/quiz?tags=ap-slow&title=Slow'); await page.reload();
+    await expect(page.locator('[data-testid=qcard] [data-testid=quiz-figure]').first()).toBeVisible();
+    await expect(page.locator('[data-testid=quiz-figure-missing]')).toHaveCount(0);
+    await page.goto('/pid-tuning/index.html#/quiz?tags=ap-delay&title=Delay'); await page.reload();
     await expect(page.locator('[data-testid=qcard] svg.scope').first()).toBeVisible();
   });
 
