@@ -154,17 +154,22 @@ function text(g: G, s: string, x: number, y: number, color: string, o: { align?:
   let x0 = o.align === 'center' ? x - w / 2 : o.align === 'right' ? x - w : x;
   if (BND) x0 = Math.min(Math.max(x0, BND.x + 2), BND.x + BND.w - 2 - w);
   let yy = y;
+  if (BND) yy = Math.min(Math.max(yy, BND.y + px * 0.85 + 0.5), BND.y + BND.h - px * 0.25 - 0.5);
   const box = (yv: number) => ({ x0: x0 - 1, x1: x0 + w + 1, y0: yv - px * 0.85, y1: yv + px * 0.25 });
   if (hits(box(yy))) {
     if (o.optional) return false;
-    let placed = false; for (const dy of [-(px + 1), px + 1, -2 * (px + 1), 2 * (px + 1)]) { const yv = y + dy; const bx = box(yv); if (!hits(bx) && (!BND || (bx.y0 >= BND.y && bx.y1 <= BND.y + BND.h))) { yy = yv; placed = true; break; } }
-    if (!placed) { yy = y; } // nowhere clear: keep it where it was
+    let placed = false; for (const dy of [-(px + 1), px + 1, -2 * (px + 1), 2 * (px + 1)]) { const yv = yy + dy; const bx = box(yv); if (!hits(bx) && (!BND || (bx.y0 >= BND.y && bx.y1 <= BND.y + BND.h))) { yy = yv; placed = true; break; } }
+    void placed; // nowhere clear: stay where it was (already clamped to the panel)
   }
   const bx = box(yy); LB.push(bx);
   g.textAlign = 'left'; g.textBaseline = o.base ?? 'alphabetic';
   if (o.bg) { g.fillStyle = o.bg; g.globalAlpha = 0.82; g.fillRect(x0 - 3, yy - px, w + 6, px + 4); g.globalAlpha = 1; }
   g.fillStyle = color; g.fillText(s, x0, yy);
   return true;
+}
+/** The first variant of a label that fits `maxW` px at this size (the last if none does): short labels instead of squeezed or overlapping ones. */
+function pick(g: G, px: number, wt: number, maxW: number, ...v: string[]): string {
+  g.font = font(px, wt); for (const s of v) if (g.measureText(s).width <= maxW) return s; return v[v.length - 1];
 }
 function arrow(g: G, x1: number, y1: number, x2: number, y2: number, color: string, wd = 2, dash: number[] = []) {
   const L = Math.hypot(x2 - x1, y2 - y1); if (L < 1.5) return;
@@ -245,8 +250,8 @@ function drawLoopDiagram(g: G, r: Rect, P: Pal, S: CartSim, st: ReturnType<CartS
   line(g, [[xu, top], [xu, o.cartT + o.chh + 0.5]], uCol, 2.6); arrow(g, xu, o.cartT + o.chh + 9, xu, o.cartT + o.chh, uCol, 2.6);
   line(g, [[xs, o.cartT + o.chh], [xs, yr], [sx, yr], [sx, ym + 8]], P.ok, 1.8); arrow(g, sx, ym + 15, sx, ym + 8, P.ok, 1.8);
   g.save(); g.fillStyle = P.ok; g.translate(xs, o.cartT + o.chh); g.rotate(Math.PI / 4); g.fillRect(-3, -3, 6, 6); g.restore();
-  text(g, `u = ${fmt(st.u)} N${sat ? ` (clipped, asked ${fmt(st.uc)})` : ''}`, xu + 6, yb + 18, uCol, { px, wt: 700 });
-  text(g, seen ? `sensor: y = ${fmt(st.x)}, reads y_m = ${fmt(st.ym)} m` : `sensor: y = x = ${fmt(st.x)} m`, xs - 5, yr - 3, P.ok, { align: 'right', px, wt: 700 });
+  text(g, pick(g, px, 700, w - (xu + 6) - 4, `u = ${fmt(st.u)} N${sat ? ` (clipped, asked ${fmt(st.uc)})` : ''}`, `u = ${fmt(st.u)} N${sat ? ' (clipped)' : ''}`, `u = ${fmt(st.u)} N`), xu + 6, yb + 18, uCol, { px, wt: 700 });
+  text(g, pick(g, px, 700, xs - 5 - 6, ...(seen ? [`sensor: y = ${fmt(st.x)}, reads y_m = ${fmt(st.ym)} m`, `y = ${fmt(st.x)}, y_m = ${fmt(st.ym)} m`, `y_m = ${fmt(st.ym)} m`] : [`sensor: y = x = ${fmt(st.x)} m`, `y = x = ${fmt(st.x)} m`, `y = ${fmt(st.x)} m`])), xs - 5, yr - 3, P.ok, { align: 'right', px, wt: 700 });
   if (seen) late.push(() => text(g, 'dashed ghost: what C sees (y_m)', w - 6, 14, P.ok, { align: 'right', px: px - 0.5, wt: 700, optional: true }));
   late.push(() => text(g, 'e = r − y: the gap C acts on', 6, r.h - 4, P.muted, { px: px - 1, wt: 600, optional: true }));
 }
@@ -320,9 +325,10 @@ function drawCartMain(g: G, r: Rect, P: Pal, S: CartSim, ov: string[], t: number
     const tail = len >= 0 ? cx + len + 5 : cx + len - 5, al: CanvasTextAlign = len >= 0 ? 'left' : 'right';
     const lab = ln.label === 'ẋ' ? `ẋ = ${fmt(ln.val)} m/s  (hidden from y)` : `${ln.label} = ${fmt(ln.val)} N`;
     const tw = (g.font = font(px, 700), g.measureText(lab).width);
-    let lx = tail; if (al === 'left' && lx + tw > w - 2) { lx = cx + Math.min(len, 0) - 5; text(g, lab, lx, y + 4, ln.color, { align: 'right', px, wt: 700 }); } else if (al === 'right' && lx - tw < 2) text(g, lab, cx + Math.max(len, 0) + 5, y + 4, ln.color, { px, wt: 700 }); else text(g, lab, lx, y + 4, ln.color, { align: al, px, wt: 700 });
+    const opt = !!compactHint && i >= 1; // in the small hero the second and later force labels (when they would collide) give way instead of piling up
+    let lx = tail; if (al === 'left' && lx + tw > w - 2) { lx = cx + Math.min(len, 0) - 5; text(g, lab, lx, y + 4, ln.color, { align: 'right', px, wt: 700, optional: opt }); } else if (al === 'right' && lx - tw < 2) text(g, lab, cx + Math.max(len, 0) + 5, y + 4, ln.color, { px, wt: 700, optional: opt }); else text(g, lab, lx, y + 4, ln.color, { align: al, px, wt: 700, optional: opt });
   });
-  if (ov.includes('forces')) late.push(() => text(g, 'm·ẍ = −kx − cẋ' + (hasU ? ' + u' : '') + '   (net force = mass × acceleration)', w / 2, r.h - 4, P.muted, { align: 'center', px: small ? 9 : 10, wt: 600, optional: !!compactHint }));
+  if (ov.includes('forces')) late.push(() => text(g, 'm·ẍ = −kx − cẋ' + (hasU ? ' + u' : '') + '   (net force = mass × acceleration)', loop ? 6 : w / 2, loop ? 14 : r.h - 4, P.muted, { align: loop ? 'left' : 'center', px: small ? 9 : 10, wt: 600, optional: !!compactHint || !!loop }));
   // the shove d, when the forces overlay isn't already showing it
   if (loop?.P.hasDisturb && st.d && !ov.includes('forces')) {
     const y = cartT + chh / 2, len = st.d * 30;
