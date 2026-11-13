@@ -17,6 +17,8 @@ maps:
           transfer function.
         eq: Av = λv,    H{e^{st}} = H(s) e^{st}
       - id: matrix
+        addsToExample: "Turns the cart into a 2×2 matrix: the state is x = (position, velocity) and A = [[0, 1], [−2, −3]] says how that pair changes from one instant to the next."
+        accountsFor: "Why the motion is fully described by two numbers, and why a push on the velocity row is what moves the cart."
         label: A is a matrix
         detail: Operators on ℝⁿ or ℂⁿ
         series: 0
@@ -27,6 +29,8 @@ maps:
           diagonalization, e^{At}, controllability — is a consequence of that change of coordinates.
         eq: x ↦ Ax
       - id: lti
+        addsToExample: "Looks at the same cart as a black box: force u(t) in, position y(t) out. Doubling the push doubles the motion, and a push today does the same thing tomorrow."
+        accountsFor: "How we can predict the response to any push if we know the response to one sharp tap."
         label: A is convolution
         detail: Operators on signals
         series: 1
@@ -38,6 +42,8 @@ maps:
           eigenbasis.
         eq: y = h ∗ x
       - id: similar
+        addsToExample: "Relabels the cart's state, e.g. in new coordinates ξ instead of (position, velocity). The cart and its motion do not change; only the numbers we write do."
+        accountsFor: "Why different-looking state models (or a rotated plot) can describe the very same cart."
         label: Change of basis
         detail: x = T ξ
         series: 0
@@ -48,6 +54,8 @@ maps:
           maps become T⁻¹ B and C T, and the transfer function is invariant.
         eq: Ā = T⁻¹ A T,    B̄ = T⁻¹ B,    C̄ = C T
       - id: modes
+        addsToExample: "Finds two special starting states of the cart, (1, −1) and (1, −2): launch it like that and it simply decays along that straight line, at rates 1 and 2 per second."
+        accountsFor: "Why the cart's response is a mix of exactly two exponentials, e^{−t} and e^{−2t}."
         label: Eigenvectors / modes
         detail: Av = λv
         series: 0
@@ -58,6 +66,8 @@ maps:
           combination of independent modal coordinates."
         eq: Av = λv,    v ≠ 0
       - id: eigenfn
+        addsToExample: "Says that if you push the cart with a pure exponential force, the steady motion is the same exponential scaled by a number G(s)."
+        accountsFor: "Why a sine wave in gives a sine wave out at the same frequency, only scaled and delayed."
         label: Eigenfunctions
         detail: e^{st} and zⁿ
         series: 1
@@ -68,6 +78,8 @@ maps:
           by signal and matrix replaced by convolution."
         eq: H{e^{st}} = H(s) e^{st}
       - id: time
+        addsToExample: "Turns the cart's matrix into its motion in time: x(t) = e^{At}x(0), a sum of the two decaying modes."
+        accountsFor: "What the cart actually does after you let go of it, and how fast it settles."
         label: e^{At} and stability
         detail: Each mode is just e^{λt}
         series: 0
@@ -79,6 +91,8 @@ maps:
         eq: x(t) = e^{At} x(0) = V e^{Λt} V⁻¹ x(0)
         live: figure:expm
       - id: ctrl
+        addsToExample: "Asks whether the force u can steer both position and velocity anywhere, and whether the position sensor tells us both."
+        accountsFor: "Whether pushing and watching can reach and see everything about this cart."
         label: Steer and see
         detail: Can u reach, and y see, every mode?
         series: 0
@@ -90,6 +104,8 @@ maps:
           in the language of left and right eigenvectors."
         eq: Ctrb = [B AB … A^{n−1} B],    O = [C; CA; …; CA^{n−1}]
       - id: fourier
+        addsToExample: "Describes the force and the motion as sums of exponentials/sinusoids, so the cart acts on each one independently as a number G(s)."
+        accountsFor: "How the cart responds to a vibrating or arbitrary push, one frequency at a time."
         label: Laplace / Fourier / Z
         detail: Coordinates in the exponential basis
         series: 1
@@ -103,6 +119,8 @@ maps:
           href: ../transforms/#/board?pair=lap
           label: See it on the six-domains board
       - id: four
+        addsToExample: "Picks the right Fourier tool for the signals around the cart: continuous or sampled, periodic or one-shot."
+        accountsFor: "Which spectrum to use for a periodic shaker, a one-off tap, or a logged recording."
         label: FS, FT, DTFT, DFT
         detail: Time continuous/discrete × periodic/aperiodic
         series: 1
@@ -116,6 +134,8 @@ maps:
           href: ../transforms/#/board?pair=ft
           label: See it on the six-domains board
       - id: sampling
+        addsToExample: "Records the cart's position with a digital sensor every T seconds, so only the samples x(nT) remain."
+        accountsFor: "Why a fast vibration can appear as a slow one in the log, and how z = e^{sT} maps the cart's poles."
         label: Sampling / aliasing
         detail: z = e^{sT}; periodize frequency
         series: 1
@@ -130,6 +150,8 @@ maps:
           href: ../transforms/#/board?pair=map
           label: See it on the six-domains board
       - id: tf
+        addsToExample: "Collapses the cart's A, B, C into one function G(s) = 1/(s² + 3s + 2): force to position."
+        accountsFor: "The cart's whole input-output behaviour, with its poles at −1 and −2, in one line."
         label: Transfer function
         detail: G(s) = C(sI − A)⁻¹B + D
         series: 2
@@ -140,6 +162,8 @@ maps:
           cancel and do not appear as poles of G, even though they still live in A."
         eq: G(s) = C(sI − A)⁻¹ B + D
       - id: poles
+        addsToExample: "Reads the cart's modes straight off G(s): poles at −1 and −2, and no zeros."
+        accountsFor: "Stability and speed at a glance, and why a hidden mode would not show up here."
         label: Poles and zeros
         detail: Hidden modes cancel
         series: 2
@@ -150,6 +174,8 @@ maps:
           unobservable) mode: G looks simpler than A really is."
         eq: "{poles of G} ⊆ {eig(A)},    equality iff the realization is minimal"
       - id: kalman
+        addsToExample: "Splits a state into the parts the force can push and the sensor can see. For the cart, both modes are controllable and observable, so nothing hides."
+        accountsFor: "Why G(s) is the cart's complete description (and what would be missing if a mode were hidden)."
         label: Minimal realization
         detail: Only the CO part of the state
         series: 2
@@ -297,6 +323,8 @@ maps:
           controllability, the transfer function — is a follow-up to that change of coordinates."
         eq: x ↦ Ax
       - id: qStretch
+        addsToExample: "Asks, for the cart's A, whether any starting states keep their direction under A."
+        accountsFor: "Where the cart's two special starting states come from."
         label: Directions that only stretch?
         kind: decision
         short: "The first follow-up: are there lines that A leaves invariant? On such a line A cannot
@@ -304,6 +332,8 @@ maps:
           are the start of a useful coordinate system."
         eq: A(cv) is parallel to v?
       - id: eig
+        addsToExample: "Solves Av = λv for the cart: λ = −1 with v = (1, −1) and λ = −2 with v = (1, −2)."
+        accountsFor: "The two decay rates of the cart and the shape of each mode: position and velocity move together."
         label: Eigenvectors & eigenvalues
         detail: Av = λv
         series: 0
@@ -314,6 +344,8 @@ maps:
           the free response."
         eq: Av = λv,    det(λI − A) = 0
       - id: leftEig
+        addsToExample: "Gives the row-eigenvectors of the cart's A. They read out how much of each mode a given state contains."
+        accountsFor: "How to split an arbitrary starting state of the cart into its two modes."
         label: Left vs right eigenvectors
         detail: wᵀA = λ wᵀ
         series: 0
@@ -324,6 +356,8 @@ maps:
           controllability and right eigenvectors for observability; they are not interchangeable."
         eq: wᵀ A = λ wᵀ,    wᵀ v = 1   (bi-orthogonal)
       - id: qSpan
+        addsToExample: "Asks whether the cart's two eigenvectors are enough to describe every (position, velocity)."
+        accountsFor: "Whether the cart can be written entirely in modes."
         label: Do they span the space?
         kind: decision
         short: "An eigenbasis is useful only if it is complete: you need n independent eigenvectors in n
@@ -331,6 +365,8 @@ maps:
           they do not, some directions are generalized eigenvectors, and Jordan blocks appear."
         eq: need n linearly independent eigenvectors
       - id: spanRank
+        addsToExample: "Checks that the cart's two eigenvectors are independent, so they span the whole plane of (position, velocity)."
+        accountsFor: "Why every starting state of the cart is a combination of the two modes."
         label: Span and rank
         detail: dim of the image
         series: 0
@@ -341,6 +377,8 @@ maps:
           Ctrb span the state space — the same word, span, in a new job.
         eq: "rank(A) = dim range(A),    range(A) = {Ax : x ∈ ℝⁿ}"
       - id: diag
+        addsToExample: "Rewrites the cart as A = VΛV⁻¹ with Λ = diag(−1, −2): in mode coordinates the cart is two independent decays."
+        accountsFor: "The cart's behaviour decouples: one coordinate falls at rate 1, the other at rate 2."
         label: Diagonalization
         detail: A = VΛV⁻¹
         series: 0
@@ -350,6 +388,8 @@ maps:
           by λᵢ. That is the change of basis the class is always looking for."
         eq: A = V Λ V⁻¹,    ξ = V⁻¹ x
       - id: jordan
+        addsToExample: "What the cart becomes if the damper is tuned to critical damping (k = 1, c = 2): a repeated pole −1 with one eigenvector."
+        accountsFor: "The extra t·e^{−t} term that appears for the critically damped cart."
         label: Jordan form
         detail: If the eigenbasis is short
         series: 0
@@ -360,6 +400,8 @@ maps:
           produces the extra factors 1, t, …, t^{k−1} times e^{λt}."
         eq: (A − λI) v^{(j)} = v^{(j−1)},    e^{Jt} has t^k e^{λt} terms
       - id: similar
+        addsToExample: "Relabels the cart's state, e.g. in new coordinates ξ instead of (position, velocity). The cart and its motion do not change; only the numbers we write do."
+        accountsFor: "Why different-looking state models (or a rotated plot) can describe the very same cart."
         label: Similarity transforms
         detail: Ā = T⁻¹ A T
         series: 0
@@ -370,6 +412,8 @@ maps:
           move into modal coordinates, or into the Kalman form.
         eq: Ā = T⁻¹ A T,    B̄ = T⁻¹ B,    C̄ = C T
       - id: modal
+        addsToExample: "Plots the cart's mode coordinates ξ = V⁻¹x next to (position, velocity)."
+        accountsFor: "Why the same cart motion looks like two clean exponentials in the right coordinates."
         label: Modal decomposition
         detail: x = Vξ,  ξ̇ᵢ = λᵢ ξᵢ
         series: 0
@@ -381,6 +425,8 @@ maps:
         eq: x(t) = Σᵢ vᵢ ξᵢ(t),    ξ̇ᵢ = λᵢ ξᵢ + wᵢᵀ B u
         live: figure:expm
       - id: ortho
+        addsToExample: "Measures how much of the cart's state lies along a direction using dot products, and shows that eigenvectors of a symmetric A would be perpendicular."
+        accountsFor: "How to read mode amounts as projections, and why the cart's modes are not perpendicular (A is not symmetric)."
         label: Inner products & orthogonality
         detail: ⟨u, w⟩ = u* w
         series: 0
@@ -392,6 +438,8 @@ maps:
           (left) eigenvectors to do the projection."
         eq: ⟨u, w⟩ = u* w,    x = Σᵢ ⟨qᵢ, x⟩ qᵢ    (orthonormal {qᵢ})
       - id: qTime
+        addsToExample: "Asks how the cart's state evolves after time t, not just in one step."
+        accountsFor: "How to get position and velocity at any later time."
         label: A acts over time?
         kind: decision
         short: "The next question after a good basis is dynamics. If the same A now appears in ẋ = Ax (or x+
@@ -399,6 +447,8 @@ maps:
           λ^k, and the matrix exponential is the state transition."
         eq: ẋ = Ax    or    x[k+1] = A x[k]
       - id: ss
+        addsToExample: "Writes the cart's physics as ẋ = Ax + Bu with x = (position, velocity), B = (0, 1)ᵀ for a force on the mass, y = Cx with C = (1, 0) for a position sensor."
+        accountsFor: "The cart's full dynamics, inputs and measurement in one standard form."
         label: State space
         detail: ẋ = Ax + Bu
         series: 1
@@ -410,6 +460,8 @@ maps:
           modes."
         eq: ẋ = Ax + Bu,    y = Cx + Du
       - id: expm
+        addsToExample: "Gives the cart's state transition matrix e^{At}: multiply by it to jump the state forward t seconds."
+        accountsFor: "The cart's free motion x(t) = e^{At}x(0) in closed form."
         label: Matrix exponential
         detail: Φ(t) = e^{At}
         series: 1
@@ -421,6 +473,8 @@ maps:
         eq: e^{At} = Σ_{k=0}^{∞} (At)^k / k!,    Φ̇ = A Φ,    Φ(0) = I
         live: figure:expm
       - id: cayley
+        addsToExample: "Shows A² + 3A + 2I = 0 for the cart: the matrix satisfies its own characteristic equation."
+        accountsFor: "Why the cart's reachable directions only need B and AB, not higher powers."
         label: Cayley–Hamilton
         detail: p(A) = 0
         series: 1
@@ -432,6 +486,8 @@ maps:
           the ones already there."
         eq: p(A) = 0,    A^n is in span{I, A, …, A^{n−1}}
       - id: stab
+        addsToExample: "Checks the cart's eigenvalues −1 and −2 are in the left half-plane, so every motion decays to rest."
+        accountsFor: "Why the cart settles instead of oscillating forever or running away."
         label: Stability
         detail: Re(λ) < 0 or |z| < 1
         series: 1
@@ -443,6 +499,8 @@ maps:
           circle) is not even marginally well-behaved, because of the t^k factors.
         eq: ẋ = Ax is asymptotically stable  ⇔  Re(λᵢ) < 0 for all i
       - id: qSteer
+        addsToExample: "Asks whether pushing with u can drive the cart's state to any (position, velocity)."
+        accountsFor: "Whether the cart can be parked at any position with any velocity."
         label: Can u reach every mode?
         kind: decision
         short: With an input, the question is no longer only what A does by itself, but which states B,
@@ -450,6 +508,8 @@ maps:
           mode is orthogonal to the input in the left-eigenvector sense, u can never excite it.
         eq: "reachability from 0:  x = ∫ e^{A(t−τ)} B u(τ) dτ"
       - id: ctrl
+        addsToExample: "Asks whether the force u can steer both position and velocity anywhere, and whether the position sensor tells us both."
+        accountsFor: "Whether pushing and watching can reach and see everything about this cart."
         label: Controllability
         detail: Range of [B AB … A^{n−1}B]
         series: 2
@@ -461,6 +521,8 @@ maps:
           function.
         eq: rank[B AB … A^{n−1} B] = n
       - id: range
+        addsToExample: "Computes the span of the vectors the force can push: B = (0, 1) and AB = (1, −3)."
+        accountsFor: "That the cart's reachable set is the whole plane, since those two directions are independent."
         label: Range of Ctrb
         detail: The reachable subspace
         series: 2
@@ -472,6 +534,8 @@ maps:
           eigenvectors) that B does not excite."
         eq: "R = range(Ctrb) = {x : some u reaches x from 0}"
       - id: qSee
+        addsToExample: "Asks whether watching the position y alone reveals both position and velocity."
+        accountsFor: "Whether a position sensor is enough for the cart."
         label: Can y see every mode?
         kind: decision
         short: Dual to steering is seeing. Two initial states that produce the same output history for every
@@ -479,6 +543,8 @@ maps:
           matrix. If that null space is only {0}, every mode leaves a fingerprint in y.
         eq: the free response y(t) = C e^{At} x0 determines x0 uniquely?
       - id: obs
+        addsToExample: "Checks that watching the position y(t) alone is enough to reconstruct both position and velocity of the cart: rank of [C; CA] = [[1, 0], [0, 1]] is 2."
+        accountsFor: "That a position sensor can recover the velocity too, so a state estimator for the cart is possible."
         label: Observability
         detail: Null space of O is {0}
         series: 2
@@ -489,6 +555,8 @@ maps:
           from the output and cancel in G(s).
         eq: ker O = {0},    O = [C; CA; …; CA^{n−1}]
       - id: nullspace
+        addsToExample: "Finds the cart's states that give y ≡ 0 forever. For the position sensor, only the zero state does."
+        accountsFor: "That nothing about the cart's state is invisible to the position measurement."
         label: Null space of O
         detail: Unobservable states
         series: 2
@@ -499,6 +567,8 @@ maps:
           generalized eigenvectors) that C does not see."
         eq: "N = ker O = {x : C e^{At} x = 0 for all t ≥ 0}"
       - id: pbh
+        addsToExample: "Tests each cart mode separately: can u excite it, can y see it?"
+        accountsFor: "Whether one particular mode (say −2) could be hidden, without computing big matrices."
         label: PBH tests
         detail: Eigenvectors of hidden modes
         series: 2
@@ -510,6 +580,8 @@ maps:
           eigenvalue λ (in fact at every complex λ)."
         eq: wᵀ A = λ wᵀ implies wᵀ B ≠ 0;    Av = λv implies C v ≠ 0
       - id: duality
+        addsToExample: "Observing the cart through y = x₁ is the same maths as steering a 'dual' cart with force Cᵀ."
+        accountsFor: "Why every controllability fact has a mirror image for observability."
         label: Duality
         detail: (A, B) ↔ (Aᵀ, Cᵀ)
         series: 2
@@ -521,6 +593,8 @@ maps:
           swap under the same transposition.
         eq: (A, C) observable  ⇔  (Aᵀ, Cᵀ) controllable
       - id: gramian
+        addsToExample: "Measures how much force energy it takes to push the cart to a state, and how much output energy a state produces."
+        accountsFor: "Which directions of the cart are cheap or expensive to reach, not just reachable."
         label: Gramians
         detail: Energy to reach or see
         series: 2
@@ -533,6 +607,8 @@ maps:
           W\_o is. Discrete time has an analogous pair of Stein equations.
         eq: A W_c + W_c Aᵀ + B Bᵀ = 0,    Aᵀ W_o + W_o A + Cᵀ C = 0
       - id: kalman
+        addsToExample: "Splits a state into the parts the force can push and the sensor can see. For the cart, both modes are controllable and observable, so nothing hides."
+        accountsFor: "Why G(s) is the cart's complete description (and what would be missing if a mode were hidden)."
         label: Kalman / minimal realization
         detail: Hidden modes cancel in G(s)
         series: 2
@@ -544,6 +620,8 @@ maps:
           exactly the eigenvalues of A."
         eq: "four subspaces: CO, C unobs, uncontr O, neither;    G sees only CO"
       - id: tf
+        addsToExample: "Collapses the cart's A, B, C into one function G(s) = 1/(s² + 3s + 2): force to position."
+        accountsFor: "The cart's whole input-output behaviour, with its poles at −1 and −2, in one line."
         label: Transfer function
         detail: G(s) = C(sI − A)⁻¹B + D
         series: 2
@@ -555,6 +633,8 @@ maps:
           unchanged."
         eq: G(s) = C(sI − A)⁻¹ B + D
       - id: poles
+        addsToExample: "Reads the cart's modes straight off G(s): poles at −1 and −2, and no zeros."
+        accountsFor: "Stability and speed at a glance, and why a hidden mode would not show up here."
         label: Poles and zeros
         detail: Cancellations hide modes
         series: 2
@@ -858,12 +938,16 @@ maps:
           exponentials that convolution only scales."
         eq: y = h ∗ x
       - id: qEig
+        addsToExample: "Asks which inputs the cart (as a black box) returns unchanged in shape."
+        accountsFor: "Why exponentials, and so sinusoids, are special for the cart."
         label: Eigenfunctions?
         kind: decision
         short: Are there signals that an LTI system leaves invariant in shape, only scaled? Those signals,
           if they exist, play the same role that eigenvectors play for a matrix, and they will be
           the useful basis in which to expand everything else.
       - id: eigenfn
+        addsToExample: "Says that if you push the cart with a pure exponential force, the steady motion is the same exponential scaled by a number G(s)."
+        accountsFor: "Why a sine wave in gives a sine wave out at the same frequency, only scaled and delayed."
         label: Complex exponentials
         detail: H{e^{st}} = H(s) e^{st}
         series: 0
@@ -874,6 +958,8 @@ maps:
           switched on at t = 0 is not a pure eigenfunction: it also produces transients."
         eq: H{e^{st}} = H(s) e^{st},    H{z^n} = H(z) z^n
       - id: impulse
+        addsToExample: "Gives h(t) = e^{−t} − e^{−2t} for the cart: its position after a sharp tap."
+        accountsFor: "The cart's entire response, since any push is a stack of taps."
         label: Impulse response
         detail: h is the whole LTI story
         series: 0
@@ -884,6 +970,8 @@ maps:
           space, for t ≥ 0, h(t) = C e^{At} B + D δ(t).
         eq: h(t) = C e^{At} B + D δ(t)    (t ≥ 0)
       - id: lti
+        addsToExample: "Looks at the same cart as a black box: force u(t) in, position y(t) out. Doubling the push doubles the motion, and a push today does the same thing tomorrow."
+        accountsFor: "How we can predict the response to any push if we know the response to one sharp tap."
         label: Convolution
         detail: y = h ∗ x becomes Y = HX
         series: 0
@@ -894,6 +982,8 @@ maps:
           useful."
         eq: y(t) = (h ∗ x)(t) = ∫ h(t − τ) x(τ) dτ
       - id: convThm
+        addsToExample: "Turns the cart's convolution y = h ∗ u into Y(s) = G(s)U(s)."
+        accountsFor: "Computing the cart's response by multiplying instead of integrating."
         label: Convolution theorem
         detail: y = h ∗ x  ↔  Y = H X
         series: 0
@@ -904,6 +994,8 @@ maps:
           convolutions in frequency (with a 2π where the page's FT convention needs one)."
         eq: FT{h ∗ x} = H(jω) X(jω)
       - id: qExpand
+        addsToExample: "Asks how to write a push or a recording as a sum of exponentials the cart handles one by one."
+        accountsFor: "How to get the cart's response to a general force."
         label: Expand a signal in that basis?
         kind: decision
         short: "To use the eigenfunctions you have to compute coordinates: the coefficients of e^{st} or
@@ -911,6 +1003,8 @@ maps:
           transforms. Which tool you pick depends on whether time is continuous or discrete, whether
           the signal is periodic, and whether you need an ROC for transients or unstable signals."
       - id: orthoSig
+        addsToExample: "Shows that the exponentials are orthogonal, so each coefficient of a force is a simple inner product."
+        accountsFor: "How much of each frequency a shaker force contains."
         label: Orthogonality of the basis
         detail: Coefficients are inner products
         series: 0
@@ -921,6 +1015,8 @@ maps:
           corresponding coefficient. This is the same projection idea as in the matrix branch.
         eq: ⟨e^{jωt}, e^{jνt}⟩ = 0  for ω ≠ ν   (in the appropriate sense)
       - id: parseval
+        addsToExample: "Says the energy of the cart's motion is the same whether measured in time or in frequency."
+        accountsFor: "How to account for where in frequency the cart's response energy sits."
         label: Parseval's relation
         detail: Energy in both domains
         series: 0
@@ -931,6 +1027,8 @@ maps:
           statement that the transform is (a scalar multiple of) a unitary change of coordinates.
         eq: ∫ |x(t)|² dt = (1/2π) ∫ |X(jω)|² dω;    Σ_n |x[n]|² = (1/N) Σ_k |X[k]|²
       - id: laplace
+        addsToExample: "Takes the cart's response and its force into the s-plane, where the cart is G(s) with poles −1, −2."
+        accountsFor: "The cart's transient and steady-state from the same function, including growth."
         label: Laplace transform
         detail: s-plane, with an ROC
         series: 1
@@ -945,6 +1043,8 @@ maps:
           href: ../transforms/#/board?pair=lap
           label: See it on the six-domains board
       - id: ztrans
+        addsToExample: "Does the same for the cart's sampled position log, with poles at e^{−T} and e^{−2T}."
+        accountsFor: "The sampled cart's stability: poles inside the unit circle."
         label: Z-transform
         detail: z-plane, with an ROC
         series: 1
@@ -958,6 +1058,8 @@ maps:
           href: ../transforms/#/board?pair=lap
           label: See it on the six-domains board
       - id: roc
+        addsToExample: "Records for which s the cart's integral converges: Re s > −1 for its causal response."
+        accountsFor: "Why the same G(s) can describe different signals, and why the cart's is causal."
         label: Region of convergence
         detail: Part of the transform's answer
         series: 1
@@ -973,6 +1075,8 @@ maps:
           href: ../transforms/#/board?pair=lap
           label: See it on the six-domains board
       - id: ft
+        addsToExample: "Evaluates the cart on s = jω: its frequency response, a resonance-free low-pass for this damping."
+        accountsFor: "How much a vibration at each frequency moves the cart."
         label: Fourier transform
         detail: Time continuous, aperiodic
         series: 1
@@ -986,6 +1090,8 @@ maps:
           href: ../transforms/#/board?pair=ft
           label: See it on the six-domains board
       - id: fs
+        addsToExample: "Treats a periodic push (a square-wave force) as a sum of harmonics."
+        accountsFor: "How the cart's steady motion under a periodic push is a sum of scaled harmonics."
         label: Fourier series
         detail: Time continuous, periodic
         series: 1
@@ -999,6 +1105,8 @@ maps:
           href: ../transforms/#/board?pair=fs
           label: See it on the six-domains board
       - id: dtft
+        addsToExample: "Gives the spectrum of the cart's sampled position log: periodic with period 2π."
+        accountsFor: "What the sampled data say about the cart's frequency content, and where the copies overlap."
         label: DTFT
         detail: Time discrete, aperiodic
         series: 1
@@ -1012,6 +1120,8 @@ maps:
           href: ../transforms/#/board?pair=dtft
           label: See it on the six-domains board
       - id: dft
+        addsToExample: "Computes N frequency samples of a finite log of the cart's position, which is what a spectrum analyser does."
+        accountsFor: "The cart's spectrum from a real record; why a tone between bins leaks."
         label: DFT
         detail: Time discrete and finite
         series: 1
@@ -1026,6 +1136,8 @@ maps:
           href: ../transforms/#/board?pair=dft
           label: See it on the six-domains board
       - id: qSample
+        addsToExample: "Asks what is lost when the cart's position is only recorded at sample times."
+        accountsFor: "Whether a log can still describe the cart."
         label: Sample in time?
         kind: decision
         short: Sampling is the move from a continuous-time signal to a discrete-time sequence. The new
@@ -1033,6 +1145,8 @@ maps:
           original continuous-time signal can be recovered (the sampling theorem and the Nyquist
           rate).
       - id: sampling
+        addsToExample: "Records the cart's position with a digital sensor every T seconds, so only the samples x(nT) remain."
+        accountsFor: "Why a fast vibration can appear as a slow one in the log, and how z = e^{sT} maps the cart's poles."
         label: Sampling theorem
         detail: Bandlimited implies recoverable
         series: 2
@@ -1046,6 +1160,8 @@ maps:
           href: ../transforms/#/board?pair=map
           label: See it on the six-domains board
       - id: aliasing
+        addsToExample: "Shows a fast vibration of the cart folding down to a lower frequency in the log."
+        accountsFor: "Why a 6.5 Hz vibration looks like 1.5 Hz at fs = 8 Hz."
         label: Aliasing
         detail: Periodized frequency copies overlap
         series: 2
@@ -1059,6 +1175,8 @@ maps:
           href: ../transforms/#/board?pair=map
           label: See it on the six-domains board
       - id: nyquist
+        addsToExample: "Sets the rule for the cart's log: sample faster than twice the highest vibration frequency present."
+        accountsFor: "How fast the position sensor must run to record the cart faithfully."
         label: Nyquist rate
         detail: f_s > 2 f_max
         series: 2
@@ -1073,6 +1191,8 @@ maps:
           href: ../transforms/#/board?pair=map
           label: See it on the six-domains board
       - id: tfSig
+        addsToExample: "Reads G(s) as the eigenvalue the cart assigns to each exponential force."
+        accountsFor: "The cart's gain and phase at every frequency from one function."
         label: Transfer function H(s), H(z)
         detail: The eigenvalue of convolution
         series: 2
@@ -1083,6 +1203,8 @@ maps:
           you read resonance, stability (together with the ROC), and cancelled hidden modes.
         eq: H(s) = Laplace{h(t)} = C(sI − A)⁻¹ B + D
       - id: poles
+        addsToExample: "Reads the cart's modes straight off G(s): poles at −1 and −2, and no zeros."
+        accountsFor: "Stability and speed at a glance, and why a hidden mode would not show up here."
         label: Poles and zeros
         detail: Read stability and cancellations
         series: 2

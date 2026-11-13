@@ -16,6 +16,20 @@ sections:
   - { id: figures, title: Live figures, kind: figures }
   - { id: quiz, title: Self-check, kind: quiz }
   - { id: glossary, title: Variables & terms, kind: glossary }
+runningExample:
+  title: A mass on a spring with a damper
+  summary: "A 1 kg cart on a spring (k = 2 N/m) and a damper (c = 3 N·s/m). You push it with a force u(t) and a sensor reads only its position y(t). With state x = (position, velocity) it is ẋ = Ax + Bu, y = Cx, where A = [[0, 1], [−2, −3]] is the matrix that runs through every deep dive."
+  details: |
+    | piece | in the cart | numbers |
+    |---|---|---|
+    | state **x** | (position, velocity) | x₁ = x, x₂ = ẋ |
+    | **A** | spring and damper | [[0, 1], [−2, −3]]: ẍ = −2x − 3ẋ |
+    | **B** | the push acts on the velocity | (0, 1)ᵀ, force per unit mass |
+    | **C** | a position sensor | (1, 0) |
+    | modes | two decaying exponentials | e^{−t} along (1, −1) and e^{−2t} along (1, −2) |
+    | transfer function | force → position | G(s) = 1/(s² + 3s + 2) |
+
+    Every box of the map says what its idea **adds to this cart** and what it lets us **account for** that we could not explain before.
 hub:
   order: 2
 # Porting guard: counts carried over from the Canvas dashboard (3 maps, 64 boxes, 80 lines, 18 dives, 8 self-check
