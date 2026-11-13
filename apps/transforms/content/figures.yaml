@@ -1,0 +1,111 @@
+- id: ring
+  title: "The running example: a decaying ring, and its two poles"
+  x: time t (s) or σ = Re s
+  y: x(t) or ω = Im s
+  legend:
+    - { label: "x(t), the free response", color: "var(--cyan)" }
+    - { label: "decay envelope ±e^{−σt}", color: "var(--muted)", dash: true }
+    - { label: "poles (×) and zero (○) of X(s)", color: "var(--bad)" }
+  howToRead: "Left: the signal, a ring that decays. Right: its poles in the s-plane. The distance of the poles to the left of the imaginary axis is the decay rate σ, and their height is the ringing frequency. Drag σ and f₀ and the two pictures move together; switch to critical or overdamped and the pole pair meets on the real axis and then splits: the ringing disappears."
+  lookFor: "Raise σ and the envelope collapses faster while the poles slide left. Raise f₀ and the ring gets faster while the poles slide up. Pole position and curve shape are the same information."
+  animate: { control: f0, speed: 0.3, loop: true }
+  controls:
+    - { id: mode, label: "damping", type: seg, default: under, group: primary, options: [{ value: under, label: "under (rings)" }, { value: crit, label: "critical" }, { value: over, label: "over" }] }
+    - { id: sig, label: "σ: decay rate", type: range, min: 0.1, max: 4, step: 0.05, default: 0.6, group: primary, unit: "1/s" }
+    - { id: f0, label: "f₀: ringing frequency", type: range, min: 0.2, max: 3.6, step: 0.05, default: 1, group: primary, unit: Hz }
+    - { id: dl, label: "δ (overdamped split)", type: range, min: 0.1, max: 3, step: 0.05, default: 1.5, group: more, unit: "1/s" }
+  presets:
+    - { id: under, label: "Underdamped (default)", set: { mode: under, sig: 0.6, f0: 1, dl: 1.5 }, about: "Poles −0.6 ± j2π: rings at 1 Hz and decays." }
+    - { id: crit, label: "Critically damped", set: { mode: crit, sig: 2, f0: 1, dl: 1.5 }, about: "A double pole at −2: fastest return without overshoot." }
+    - { id: over, label: "Overdamped", set: { mode: over, sig: 2.5, f0: 1, dl: 1.5 }, about: "Two real poles at −1 and −4: no ringing, a slow tail." }
+
+
+- id: spectrum
+  title: "From the ring to its spectrum: decay sets the width of the peak"
+  x: time t (s) or frequency f (Hz)
+  y: x(t) or |X(f)|
+  legend:
+    - { label: "x(t)", color: "var(--cyan)" }
+    - { label: "|X(jω)| (the Fourier transform)", color: "var(--cyan)" }
+    - { label: "peak width ≈ σ/π", color: "var(--accent)" }
+  howToRead: "Left: the ring. Right: its Fourier transform magnitude, which is the s-plane's pole pair read along the imaginary axis (s = jω). The peak sits at the ringing frequency f₀, and its width is set by how fast the ring decays: a short ring is a broad peak, a long ring a sharp one."
+  lookFor: "Make σ small and the peak narrows to a spike at f₀ (a nearly pure tone). Make σ large and the ring dies in a cycle, so no single frequency dominates and the peak smears out."
+  animate: { control: sig, speed: 0.4, loop: true }
+  controls:
+    - { id: mode, label: "damping", type: seg, default: under, group: primary, options: [{ value: under, label: "under (rings)" }, { value: crit, label: "critical" }, { value: over, label: "over" }] }
+    - { id: sig, label: "σ: decay rate", type: range, min: 0.1, max: 4, step: 0.05, default: 0.6, group: primary, unit: "1/s" }
+    - { id: f0, label: "f₀: ringing frequency", type: range, min: 0.2, max: 3.6, step: 0.05, default: 1, group: primary, unit: Hz }
+    - { id: dl, label: "δ (overdamped split)", type: range, min: 0.1, max: 3, step: 0.05, default: 1.5, group: more, unit: "1/s" }
+  presets:
+    - { id: under, label: "Underdamped (default)", set: { mode: under, sig: 0.6, f0: 1, dl: 1.5 }, about: "Poles −0.6 ± j2π: rings at 1 Hz and decays." }
+    - { id: crit, label: "Critically damped", set: { mode: crit, sig: 2, f0: 1, dl: 1.5 }, about: "A double pole at −2: fastest return without overshoot." }
+    - { id: over, label: "Overdamped", set: { mode: over, sig: 2.5, f0: 1, dl: 1.5 }, about: "Two real poles at −1 and −4: no ringing, a slow tail." }
+
+
+- id: sampled
+  title: "Sampling the ring: the spectrum is copied every fs and the copies add"
+  x: time t (s) or frequency f (Hz)
+  y: x(t), x[n] or amplitude
+  legend:
+    - { label: "x(t) and its samples (yellow)", color: "var(--cyan)" }
+    - { label: "original |X(f)|", color: "var(--cyan)" }
+    - { label: "T·DTFT: all copies added", color: "var(--yel)" }
+    - { label: "shifted copies", color: "var(--muted)", dash: true }
+  howToRead: "Left: the ring and the samples you keep (yellow stems). Right: the spectrum of the samples is the original spectrum (blue) repeated at every multiple of fs (grey dashed copies) and added (yellow). In the green band below fs/2 the yellow curve matches the blue one only if the copies do not reach into it. Lower fs, or raise f₀ past fs/2, and the copies overlap: that is aliasing."
+  lookFor: "At fs = 8 Hz and f₀ = 1 Hz the yellow and blue curves agree below 4 Hz. Press Play to raise f₀ past 4 Hz: the peak of a neighbouring copy walks into the green band."
+  animate: { control: f0, speed: 0.35, loop: true }
+  controls:
+    - { id: mode, label: "damping", type: seg, default: under, group: primary, options: [{ value: under, label: "under (rings)" }, { value: crit, label: "critical" }, { value: over, label: "over" }] }
+    - { id: sig, label: "σ: decay rate", type: range, min: 0.1, max: 4, step: 0.05, default: 0.6, group: primary, unit: "1/s" }
+    - { id: f0, label: "f₀: ringing frequency", type: range, min: 0.2, max: 3.6, step: 0.05, default: 1, group: primary, unit: Hz }
+    - { id: fs, label: "fs: sampling rate", type: range, min: 4, max: 40, step: 1, default: 8, group: primary, unit: Hz }
+    - { id: dl, label: "δ (overdamped split)", type: range, min: 0.1, max: 3, step: 0.05, default: 1.5, group: more, unit: "1/s" }
+  presets:
+    - { id: under, label: "Safe: 1 Hz at 8 Hz", set: { mode: under, sig: 0.6, f0: 1, dl: 1.5, fs: 8 }, about: "Copies are far apart: no visible aliasing." }
+    - { id: alias, label: "Aliased: 3.6 Hz at 5 Hz", set: { mode: under, sig: 0.6, f0: 3.6, dl: 1.5, fs: 5 }, about: "The copy of the 3.6 Hz peak lands at 1.4 Hz inside the band." }
+    - { id: heavy, label: "Heavy damping: broad spectrum", set: { mode: under, sig: 4, f0: 0.5, dl: 1.5, fs: 8 }, about: "A fast decay is not band-limited: copies overlap even though f₀ is low." }
+
+
+- id: zmap
+  title: "z = e^(sT): each s-plane pole becomes a z-plane pole"
+  x: Re s or Re z
+  y: Im s or Im z
+  legend:
+    - { label: "poles (×)", color: "var(--bad)" }
+    - { label: "zero (○) of the sampled signal", color: "var(--grn)" }
+    - { label: "±π fs strip", color: "var(--yel)", dash: true }
+  howToRead: "Left: the poles of the ring in the s-plane. The yellow dashed lines at ±π·fs bound the strip of s-plane that sampling can distinguish. Right: the z-plane, with the unit circle shaded. Every s-pole p lands at z = e^(pT): a pole's real part sets the radius e^(−σT) and its imaginary part sets the angle 2π f₀/fs. The whole left half-plane lands inside the unit circle; the imaginary axis wraps around it."
+  lookFor: "Press Play to raise f₀. The z-pole circles the unit circle at constant radius. When f₀ passes fs/2 the s-pole leaves the yellow strip and the z-pole comes back around: the angle wraps (aliasing, seen as a pole)."
+  animate: { control: f0, speed: 0.3, loop: true }
+  controls:
+    - { id: mode, label: "damping", type: seg, default: under, group: primary, options: [{ value: under, label: "under (rings)" }, { value: crit, label: "critical" }, { value: over, label: "over" }] }
+    - { id: sig, label: "σ: decay rate", type: range, min: 0.1, max: 4, step: 0.05, default: 0.6, group: primary, unit: "1/s" }
+    - { id: f0, label: "f₀: ringing frequency", type: range, min: 0.2, max: 3.6, step: 0.05, default: 1, group: primary, unit: Hz }
+    - { id: fs, label: "fs: sampling rate", type: range, min: 4, max: 40, step: 1, default: 8, group: primary, unit: Hz }
+    - { id: dl, label: "δ (overdamped split)", type: range, min: 0.1, max: 3, step: 0.05, default: 1.5, group: more, unit: "1/s" }
+  presets:
+    - { id: under, label: "Underdamped (default)", set: { mode: under, sig: 0.6, f0: 1, dl: 1.5, fs: 8 }, about: "Poles −0.6 ± j2π: rings at 1 Hz and decays." }
+    - { id: crit, label: "Critically damped", set: { mode: crit, sig: 2, f0: 1, dl: 1.5, fs: 8 }, about: "A double pole at −2: fastest return without overshoot." }
+    - { id: over, label: "Overdamped", set: { mode: over, sig: 2.5, f0: 1, dl: 1.5, fs: 8 }, about: "Two real poles at −1 and −4: no ringing, a slow tail." }
+
+
+- id: leakage
+  title: "Finite records: windows trade main-lobe width for sidelobe height"
+  x: sample n or frequency (DFT bins)
+  y: x[n]·w[n] or level (dB)
+  legend:
+    - { label: "windowed record", color: "var(--cyan)" }
+    - { label: "window shape", color: "var(--muted)", dash: true }
+    - { label: "DFT bins (M points)", color: "var(--yel)" }
+    - { label: "the DTFT those bins sample", color: "var(--accent)", dash: true }
+  howToRead: "Left: a tone recorded for M samples, multiplied by a window. Right: its spectrum in decibels. The dashed curve is the DTFT of the record; the yellow stems are the DFT bins, which only sample it. When the tone sits exactly on a bin (offset 0) the stems hit the nulls of the curve and you see one clean line. Off the bin, the stems land on its sidelobes and the energy appears to leak. A tapering window lowers the sidelobes but widens the main lobe."
+  lookFor: "Set the offset to 0.5 with a rectangular window and see the leakage across many bins, then switch to Hann or Blackman: the far sidelobes drop by tens of dB while the central peak gets wider."
+  controls:
+    - { id: win, label: "window", type: seg, default: rect, group: primary, options: [{ value: rect, label: "rect" }, { value: hann, label: "Hann" }, { value: blackman, label: "Blackman" }] }
+    - { id: off, label: "tone offset from bin 8", type: range, min: 0, max: 1, step: 0.05, default: 0.5, group: primary, unit: bins }
+    - { id: M, label: "record length M", type: range, min: 16, max: 64, step: 4, default: 32, group: primary }
+  presets:
+    - { id: onbin, label: "On a bin", set: { win: rect, off: 0, M: 32 }, about: "Exactly 8 cycles: a single clean line." }
+    - { id: offbin, label: "Between bins (rect)", set: { win: rect, off: 0.5, M: 32 }, about: "Worst-case scalloping and leakage." }
+    - { id: hann, label: "Between bins (Hann)", set: { win: hann, off: 0.5, M: 32 }, about: "Lower sidelobes, wider main lobe." }
+    - { id: black, label: "Between bins (Blackman)", set: { win: blackman, off: 0.5, M: 32 }, about: "Very low sidelobes, widest main lobe." }

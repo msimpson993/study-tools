@@ -16,6 +16,10 @@ maps:
         live: board:ft?preset=under
         link: { href: "../linear-systems/#/dive/lti", label: "Linear systems: Convolution, LTI & eigenfunctions" }
       - id: eigenfn
+        dive: ring
+        quizTag: eigenfn
+        addsToExample: "Feed the ringing signal's own ingredients, exponentials e^{pt}, into the system: each comes out as itself times a number. The signal's poles −0.6 ± j2π are the exponentials it is built from."
+        accountsFor: "Why we pick exponentials: every LTI system acts on each one as a simple multiplication."
         label: Eigenfunctions of LTI
         detail: e^(st) and zⁿ
         series: 0
@@ -24,6 +28,10 @@ maps:
         eq: H{e^(st)} = H(s) e^(st),   H{zⁿ} = H(z) zⁿ
         live: board:lap?preset=under
       - id: expand
+        dive: ring
+        quizTag: expand
+        addsToExample: "Writes the ringing signal as a sum of exponentials: the analysis step finds how much of each one is in x(t), the synthesis step adds them back."
+        accountsFor: "How we get from one messy curve to a list of simple numbers (one per exponential)."
         label: Expand x in them
         detail: Analysis and synthesis
         series: 0
@@ -32,6 +40,10 @@ maps:
           finite, produces the different transforms.
         eq: x = Σ cₖ e^(sₖt),   cₖ = ⟨x, e^(sₖt)⟩
       - id: laplace
+        dive: ring
+        quizTag: laplace
+        addsToExample: "Puts the decaying ring into the s-plane: two poles at −0.6 ± j2π, a zero, and a region of convergence to the right of the poles."
+        accountsFor: "Growth and decay, not just oscillation: the real part of the poles is the decay rate σ."
         label: Laplace transform
         detail: Any s = σ + jω
         series: 1
@@ -40,6 +52,10 @@ maps:
         eq: X(s) = ∫ x(t) e^(−st) dt
         live: board:lap?preset=over
       - id: ft
+        dive: spectrum
+        quizTag: ft
+        addsToExample: "Restricts to s = jω: the spectrum of the decaying ring is a peak near 1 Hz whose width is set by the decay σ."
+        accountsFor: "Where the signal's energy sits in frequency, and why a faster decay gives a broader peak."
         label: Fourier transform
         detail: Only s = jω
         series: 1
@@ -49,6 +65,10 @@ maps:
         eq: X(jω) = ∫ x(t) e^(−jωt) dt
         live: board:ft?preset=heavy
       - id: fs
+        dive: spectrum
+        quizTag: fs
+        addsToExample: "Repeats the ring periodically (period T₀) so that only the harmonics k/T₀ exist: the peak becomes a picket fence of lines under the same envelope."
+        accountsFor: "How a repeating signal is a short list of amplitudes, and how they sample the one-shot spectrum."
         label: Fourier series
         detail: Periodic signal
         series: 1
@@ -57,6 +77,10 @@ maps:
         eq: x(t) = Σ cₖ e^(jkω₀t)
         live: board:fs?preset=fsview
       - id: sampling
+        dive: sampled
+        quizTag: sampling
+        addsToExample: "Records the ring only every T = 1/8 s: the continuous curve becomes the stems x[n] = x(nT)."
+        accountsFor: "What a computer actually stores of the ringing, and what is lost in between."
         label: What if we sample?
         detail: x[n] = x(nT)
         kind: decision
@@ -66,6 +90,10 @@ maps:
         eq: x[n] = x(nT),   fs = 1/T
         live: board:samp?preset=under
       - id: alias
+        dive: sampled
+        quizTag: alias
+        addsToExample: "Raises the ring's frequency until it passes fs/2: the spectrum copies at multiples of fs overlap, and a fast ring masquerades as a slow one."
+        accountsFor: "Why 'the samples look slower than the real thing': the copies of the 1 Hz peak overlap when fs is too low."
         label: Aliasing and Nyquist
         detail: Copies every fs
         series: 2
@@ -74,6 +102,10 @@ maps:
         eq: fₐ = |f₀ − k fs|
         live: board:samp?preset=alias
       - id: recon
+        dive: sampled
+        quizTag: recon
+        addsToExample: "Rebuilds a continuous curve from the stems of the ring with a hold (ZOH, FOH) or ideal sinc."
+        accountsFor: "How the staircase or smooth curve we see relates to the samples, and which copies each kernel removes."
         label: Reconstruction
         detail: ZOH, FOH, ideal sinc
         series: 2
@@ -83,6 +115,10 @@ maps:
         eq: H_ZOH(f) = T sinc(fT) e^(−jπfT)
         live: board:samp?preset=zohsinc
       - id: dtft
+        dive: zmap
+        quizTag: dtft
+        addsToExample: "Gives the spectrum of the ring's samples as a function of Ω, periodic every 2π: the 1 Hz peak at Ω = 2π/8 = 45°, repeated."
+        accountsFor: "The sampled ringing's frequency content in one periodic picture, including the copies."
         label: DTFT
         detail: Discrete time, continuous Ω
         series: 2
@@ -91,6 +127,10 @@ maps:
         eq: X(e^(jΩ)) = Σ x[n] e^(−jΩn)
         live: board:dtft?preset=heavy
       - id: zt
+        dive: zmap
+        quizTag: zt
+        addsToExample: "Puts the sampled ring in the z-plane: the poles −0.6 ± j2π become z = e^{pT}, a pair at radius 0.93 and angle 45°."
+        accountsFor: "Growth and decay of the stems with a pole picture, the discrete-time counterpart of the s-plane."
         label: Z-transform
         detail: Any z = r e^(jΩ)
         series: 2
@@ -99,6 +139,10 @@ maps:
         eq: X(z) = Σ x[n] z^{−n}
         live: board:zt?preset=crit
       - id: map
+        dive: zmap
+        quizTag: map
+        addsToExample: "Maps the ring's s-plane poles into the z-plane with z = e^{sT}: the same pole pair, in new coordinates, with the angle depending on fs."
+        accountsFor: "How a continuous system turns into its sampled version, pole by pole, and why fast sampling crowds the poles near z = 1."
         label: z = e^(sT)
         detail: s-plane to z-plane
         series: 2
@@ -107,6 +151,10 @@ maps:
         eq: z = e^(sT),   r = e^(σT),   Ω = ωT
         live: board:map?preset=oversamp
       - id: stable
+        dive: ring
+        quizTag: stable
+        addsToExample: "Checks that the ring decays: poles in the left half of the s-plane, equivalently inside the unit circle of the z-plane."
+        accountsFor: "Why the ring dies out, and what would happen with σ < 0 (growth)."
         label: Poles and stability
         detail: LHP ⇔ inside circle
         series: 2
@@ -115,6 +163,10 @@ maps:
         eq: Re{s} < 0  ⇔  |z| < 1
         live: board:map?preset=unstable
       - id: dft
+        dive: leakage
+        quizTag: dft
+        addsToExample: "Takes N samples of the ring (a finite record) and computes N frequency bins: samples of the DTFT."
+        accountsFor: "What a spectrum analyser would display for the ring, from a finite recording."
         label: Finite record (DFT)
         detail: N samples, N bins
         series: 3
@@ -123,6 +175,10 @@ maps:
         eq: X[k] = Σ x[n] e^(−j2πkn/N)
         live: board:dft?preset=onbin
       - id: leak
+        dive: leakage
+        quizTag: leak
+        addsToExample: "Lets the ring's frequency fall between bins: the periodic extension of the record has a jump, and the spectral line spreads out."
+        accountsFor: "Why the peak of a real recording is smeared and lower than expected (scalloping)."
         label: Leakage and scalloping
         detail: Off-bin tones
         series: 3
@@ -131,6 +187,10 @@ maps:
         eq: "|P_N(½ bin)| ≈ 2/π  (−3.9 dB)"
         live: board:dft?preset=offbin
       - id: window
+        dive: leakage
+        quizTag: window
+        addsToExample: "Tapers the ring's record before the DFT: the smearing is traded for a wider main lobe."
+        accountsFor: "Which window to use to see weak components next to a strong ring, and what each costs."
         label: Windows
         detail: Main lobe vs sidelobes
         series: 3
@@ -139,6 +199,10 @@ maps:
         eq: ENBW = M Σw² / (Σw)²
         live: board:dft?preset=wincomp
       - id: resolution
+        dive: leakage
+        quizTag: resolution
+        addsToExample: "Compares a short record, a long record and zero padding of the ring's samples."
+        accountsFor: "Why resolution comes from the record length, and why zero-padding only interpolates."
         label: Resolution vs padding
         detail: Record length decides
         series: 3

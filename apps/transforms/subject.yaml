@@ -5,14 +5,30 @@ blurb: A question map of CT / DT / S / Z / frequency, plus the original six-doma
 archetype: overview
 sections:
   - { id: map, title: The question map, kind: map }
+  - { id: dives, title: Short visual dives, kind: dives }
   - { id: board, title: Six-domains board, kind: board }
   - { id: quiz, title: Self-check, kind: quiz }
   - { id: glossary, title: Variables & terms, kind: glossary }
 board:
   pairs: [samp, ft, dft, fs, dtft, fsamp, lap, zt, map]
+runningExample:
+  title: The free response of a second-order system
+  summary: "A mass-spring-damper (or an RLC circuit) released from rest: x(t) is a decaying ring, X(s) = A(s − z₀)/((s − p₁)(s − p₂)) with s-plane poles p = −σ ± jω_d (by default σ = 0.6 s⁻¹, f₀ = 1 Hz, sampled at fs = 8 Hz). The same signal appears in all six domains: continuous time, continuous frequency, s-plane, sampled time, DTFT and z-plane."
+  details: |
+    | view | what the ring looks like |
+    |---|---|
+    | time | e^{−σt} cos(ω_d t): rings and decays |
+    | s-plane | pole pair −σ ± jω_d: σ is the decay rate, ω_d the ringing frequency |
+    | frequency | a peak at ±f₀ whose width is about σ |
+    | sampled time | stems x[n] = x(nT) |
+    | z-plane | poles z = e^{pT}: radius e^{−σT}, angle Ω = 2πf₀/fs |
+    | DTFT / DFT | periodic spectrum; N bins of it for a finite record |
+
+    Change σ (damping) or f₀ and watch every panel move together. Every box of the map says what its idea **adds to this ring** and what it lets us **account for**.
 hub:
   order: 1
 expect:
   maps: 1
   nodes: 17
   examples: 20
+  dives: 5
