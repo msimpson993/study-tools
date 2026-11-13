@@ -29,7 +29,10 @@
     },
     "quizFigures": {
       "type": "array",
-      "items": { "type": "string", "pattern": "^[A-Za-z0-9_-]+$" },
+      "items": {
+        "type": "string",
+        "pattern": "^[A-Za-z0-9_-]+$"
+      },
       "uniqueItems": true
     },
     "archetype": {
@@ -164,6 +167,25 @@
         "details": {
           "type": "string",
           "description": "Optional longer markdown (states, inputs, outputs, numbers)."
+        },
+        "scene": {
+          "type": "object",
+          "required": [
+            "id"
+          ],
+          "additionalProperties": false,
+          "description": "Which core example scene draws this running example (cart, tine) and, optionally, the overlays of the small hero picture on the map page.",
+          "properties": {
+            "id": {
+              "type": "string"
+            },
+            "overlays": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          }
         }
       }
     }

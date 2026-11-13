@@ -3,6 +3,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { parse as parseYaml } from 'yaml';
 import Ajv from 'ajv';
+import { sceneProblems } from '../../core/src/scenedefs';
 import { createMarkdown, MathErrors } from './markdown';
 import type { AppContent, MapDef, Dive, Question, Term, FigureDef, Subject } from '../../core/src/types';
 
@@ -112,7 +113,7 @@ export function loadApp(appDir: string): { content: AppContent; warnings: string
           predict: n.predict ? inline(n.predict, `${m.id}/${n.id}`) : undefined,
           addsToExample: n.addsToExample ? inline(n.addsToExample, `${m.id}/${n.id}`) : undefined,
           accountsFor: n.accountsFor ? inline(n.accountsFor, `${m.id}/${n.id}`) : undefined,
-          dive: n.dive, live: n.live, quizTag: n.quizTag, link: n.link,
+          exampleScene: n.exampleScene, dive: n.dive, live: n.live, quizTag: n.quizTag, link: n.link,
         })),
         edges: (m.edges ?? []).map((e: any) => ({
           from: e.from, to: e.to, label: e.label, dashed: e.dashed, eq: e.eq,
@@ -136,7 +137,7 @@ export function loadApp(appDir: string): { content: AppContent; warnings: string
         const d = fm as any;
         if (d.id !== f.replace(/\.md$/, '')) problems.push(`dives/${f}: id "${d.id}" must equal the file name`);
         if (body.trim().length < 80) problems.push(`dives/${f}: body is empty`);
-        dives.push({ id: d.id, order: d.order, title: d.title, category: d.category, chain: d.chain, neighbors: d.neighbors ?? [], matlab: d.matlab, addsToExample: d.addsToExample ? inline(d.addsToExample, `dives/${f}`) : undefined, accountsFor: d.accountsFor ? inline(d.accountsFor, `dives/${f}`) : undefined, html: block(body, `dives/${f}`) });
+        dives.push({ id: d.id, order: d.order, title: d.title, category: d.category, chain: d.chain, neighbors: d.neighbors ?? [], matlab: d.matlab, addsToExample: d.addsToExample ? inline(d.addsToExample, `dives/${f}`) : undefined, accountsFor: d.accountsFor ? inline(d.accountsFor, `dives/${f}`) : undefined, exampleScene: d.exampleScene, html: block(body, `dives/${f}`) });
       } catch (e) { problems.push(`dives/${f}: ${(e as Error).message}`); }
     }
   }
@@ -226,7 +227,16 @@ export function loadApp(appDir: string): { content: AppContent; warnings: string
       const n = maps.flatMap((m) => m.nodes).find((x) => x.dive === d.id && x.addsToExample);
       if (n) { d.addsToExample = n.addsToExample; d.accountsFor ??= n.accountsFor; }
     }
+    if (!d.exampleScene) { const n = maps.flatMap((m) => m.nodes).find((x) => x.dive === d.id && x.exampleScene); if (n) d.exampleScene = n.exampleScene; }
     if (re && !d.addsToExample) problems.push(`dives/${d.id}: no addsToExample (front matter, or a map node with dive: ${d.id} that has one)`);
+  }
+  // Example scenes: scene id and overlay names are checked against core's catalogue (packages/core/src/scenedefs.ts).
+  const sceneId = re?.scene?.id;
+  if (re?.scene) problems.push(...sceneProblems(re.scene.id, re.scene.overlays, 'subject.yaml runningExample.scene'));
+  for (const m of maps) for (const n of m.nodes) if (n.exampleScene) { if (!sceneId) problems.push(`graph.yaml ${m.id}/${n.id}: exampleScene needs runningExample.scene in subject.yaml`); else problems.push(...sceneProblems(sceneId, n.exampleScene.overlays, `graph.yaml ${m.id}/${n.id} exampleScene`)); }
+  for (const d of dives) {
+    if (d.exampleScene) { if (!sceneId) problems.push(`dives/${d.id}: exampleScene needs runningExample.scene in subject.yaml`); else problems.push(...sceneProblems(sceneId, d.exampleScene.overlays, `dives/${d.id} exampleScene`)); }
+    else if (sceneId) warnings.push(`dives/${d.id}: no exampleScene; the scene's default overlays are shown`);
   }
   for (const ref of mathErrors.figureRefs) if (!figures.some((f) => f.id === ref.id)) problems.push(`${ref.where}: figure:${ref.id} is not in figures.yaml`);
 
@@ -281,7 +291,7 @@ export function loadApp(appDir: string): { content: AppContent; warnings: string
   if (problems.length) throw new ContentError(problems, appName);
 
   const content: AppContent = {
-    subject: { ...subject, sections: sectionsR as any, runningExample: re ? { title: re.title, summary: inline(re.summary, 'runningExample'), details: re.details ? block(re.details, 'runningExample.details') : undefined } : undefined },
+    subject: { ...subject, sections: sectionsR as any, runningExample: re ? { title: re.title, summary: inline(re.summary, 'runningExample'), details: re.details ? block(re.details, 'runningExample.details') : undefined, scene: re.scene } : undefined },
     maps, dives, quiz, glossary: glossaryR as Term[], figures: figuresR as FigureDef[], extra,
   };
   return { content, warnings };

@@ -58,6 +58,25 @@
     "accountsFor": {
       "type": "string",
       "minLength": 10
+    },
+    "exampleScene": {
+      "type": "object",
+      "additionalProperties": false,
+      "description": "Pick the overlays of the subject's example scene that this node adds (see docs/components.md, example scenes). Names are validated against the scene's catalogue at build time.",
+      "properties": {
+        "overlays": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "minItems": 1,
+          "description": "Overlay ids, e.g. [forces, phase]. At most two small panels may open."
+        },
+        "caption": {
+          "type": "string",
+          "description": "One line under the picture."
+        }
+      }
     }
   }
 }

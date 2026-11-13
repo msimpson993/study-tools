@@ -3,6 +3,7 @@ import { initTheme, toggleTheme, currentTheme } from './theme';
 import { storeGet, storeSet } from './store';
 import type { AppContent, FigureDef } from './types';
 import { Progress } from './progress';
+import { mountScene } from './scene';
 import { mountConceptMap, newMapState, type MapState } from './conceptmap';
 import { mountQuiz } from './quiz';
 import type { QuizFigureRegistry } from './quizfig';
@@ -182,15 +183,20 @@ export function mountApp(content: AppContent, hooks: AppHooks = {}): void {
     const art = h('article', { class: 'prose', dataset: { testid: 'dive' } }, h('h2', null, d.title));
     art.append(h('details', { class: 'fold', open: true }, h('summary', null, 'Where are we? The chain of questions that leads here'),
       h('ol', { class: 'chain' }, ...d.chain.map((s) => h('li', null, s.title, s.detail ? h('small', null, s.detail) : null)))));
+    let sceneStop: (() => void) | null = null;
     if (content.subject.runningExample && d.addsToExample) {
-      art.append(h('aside', { class: 'callout c-example', dataset: { testid: 'dive-example' } }, h('b', { class: 'lead' }, `Running example: ${content.subject.runningExample.title}`),
-        h('div', { class: 'cb', html: `<p><b>What this adds:</b> ${d.addsToExample}</p>${d.accountsFor ? `<p><b>What it lets us account for:</b> ${d.accountsFor}</p>` : ''}` })));
+      const callout = h('aside', { class: 'callout c-example', dataset: { testid: 'dive-example' } }, h('b', { class: 'lead' }, `Running example: ${content.subject.runningExample.title}`),
+        h('div', { class: 'cb', html: `<p><b>What this adds:</b> ${d.addsToExample}</p>${d.accountsFor ? `<p><b>What it lets us account for:</b> ${d.accountsFor}</p>` : ''}` }));
+      const sc = content.subject.runningExample.scene;
+      const row = h('div', { class: `ex-row${sc ? ' has-scene' : ''}`, dataset: { testid: 'dive-example-row' } }, callout);
+      art.append(row);
+      if (sc) sceneStop = mountScene(row, { scene: sc.id, overlays: d.exampleScene?.overlays, caption: d.exampleScene?.caption }).destroy;
     }
     const body = h('div', { html: d.html });
     art.append(body);
     const stops = embedFigures(body);
     const prevCleanup = cleanup;
-    cleanup = () => { prevCleanup?.(); stops.forEach((f) => f()); };
+    cleanup = () => { prevCleanup?.(); stops.forEach((f) => f()); sceneStop?.(); };
     if (d.matlab) art.append(h('details', { class: 'fold' }, h('summary', null, 'MATLAB'), h('div', null, h('pre', null, h('code', null, d.matlab)))));
     if (d.neighbors.length) art.append(h('div', null, h('b', { class: 'ui' }, 'Neighbors'), h('div', { class: 'chips' }, ...d.neighbors.map((n) => h('a', { class: 'chip', href: `#/dive/${n}` }, content.dives.find((x) => x.id === n)?.title ?? n)))));
     const qs = progress.questionsFor([d.id]);

@@ -1,6 +1,7 @@
 import { h, s, clear } from './dom';
 import type { AppContent, MapDef, MapNode, MapEdge } from './types';
 import { computeGeometry, placeLabels, roundedPath, arrowHead, edgeKey, pathToRoot, mapHighlight, type Geometry, type Label } from './maplayout';
+import { mountScene } from './scene';
 import { Progress, quizTagOf, subtree } from './progress';
 
 export interface MapState {
@@ -34,8 +35,12 @@ export function mountConceptMap(host: HTMLElement, content: AppContent, progress
   const reviewBar = h('div', { class: 'cm-top', dataset: { testid: 'review-bar' } });
   const caption = h('div');
   const legend = h('div', { class: 'cm-legend', role: 'group', 'aria-label': 'How to read the lines and boxes', dataset: { testid: 'map-legend' } });
+  const heroScene = content.subject.runningExample?.scene;
+  const hero = h('div', { class: `cm-hero${heroScene ? ' has-scene' : ''}`, dataset: { testid: 'map-hero' } },
+    h('div', { class: 'cm-q', dataset: { testid: 'central-question' } }, content.subject.centralQuestion, h('small', null, 'Central question. Tap any box or line to open it.')));
+  const heroHandle = heroScene ? mountScene(hero, { scene: heroScene.id, overlays: heroScene.overlays, compact: true }) : null;
   root.append(
-    h('div', { class: 'cm-q', dataset: { testid: 'central-question' } }, content.subject.centralQuestion, h('small', null, 'Central question. Tap any box or line to open it.')),
+    hero,
     top, reviewBar, caption, legend,
     h('div', { class: 'cm-wrap' }, scroll, panel),
     h('div', { class: 'cm-pad' }),
@@ -272,7 +277,7 @@ export function mountConceptMap(host: HTMLElement, content: AppContent, progress
   const off = progress.onChange(() => { renderReview(); renderSvg(); renderPanel(); });
   const onKey = (ev: KeyboardEvent) => { if (ev.key === 'Escape' && (st.pick || st.series !== null) && !document.querySelector('.fig-overlay:not([hidden])')) { st.series = null; setPick(null); } };
   document.addEventListener('keydown', onKey);
-  return () => { ro.disconnect(); off(); document.removeEventListener('keydown', onKey); root.remove(); };
+  return () => { heroHandle?.destroy(); ro.disconnect(); off(); document.removeEventListener('keydown', onKey); root.remove(); };
 }
 
 /** Expose geometry+labels of the *current* render to tests. */
