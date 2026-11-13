@@ -20,3 +20,272 @@
     - { id: k7, label: "The map's K = 7", set: { K: 7, ctrl: p }, about: "Poles −1.5 ± j2.6: ζ = 0.5, about 16 % overshoot, settles in about 2.7 s, stops at 7/9 of the command." }
     - { id: high, label: "High gain (K = 30)", set: { K: 30, ctrl: p }, about: "Poles −1.5 ± j5.4: very fast ringing, still 6 % short of the command." }
     - { id: zero, label: "Add a zero (K = 7)", set: { K: 7, ctrl: pd }, about: "A controller zero at −1.5 pulls the locus to the left: the same gain rings less." }
+- id: cart
+  title: "The cart: mass, spring and damper decide the poles"
+  x: "time (s) · σ (1/s)"
+  y: "position (m) · jω (rad/s)"
+  legend:
+    - { label: "position after a 1 N push", color: "var(--cyan)" }
+    - { label: "running cart (ghost)", color: "var(--muted)", dash: true }
+    - { label: "poles ×", color: "var(--org)" }
+  howToRead: "Left: the poles of 1/(m s² + c s + k) in the s-plane (grey rings: the running cart, poles −1 and −2). Right: the position after a 1 N push, against the running cart dashed. A stiffer spring pushes the poles apart or off the real axis; less damper moves them toward the jω axis; a heavier cart slows everything."
+  lookFor: "Take the damper away (c = 0): the poles land on the jω axis and the cart rings forever. Put it back: they slide left and the ringing decays."
+  controls:
+    - { id: m, label: "Mass m", type: range, min: 0.3, max: 3, step: 0.05, default: 1, group: primary, unit: kg }
+    - { id: k, label: "Spring k", type: range, min: 0.5, max: 8, step: 0.05, default: 2, group: primary, unit: N/m }
+    - { id: c, label: "Damper c", type: range, min: 0, max: 8, step: 0.05, default: 3, group: primary, unit: N·s/m }
+  presets:
+    - { id: cart, label: "Running cart", set: { m: 1, k: 2, c: 3 }, about: "Poles −1 and −2: overdamped, no overshoot, settles in about 4.6 s." }
+    - { id: stiff, label: "Stiffer spring (k = 8)", set: { k: 8 }, about: "Complex poles: the cart now rings." }
+    - { id: free, label: "No damper (c = 0)", set: { c: 0 }, about: "Poles on the jω axis: sustained oscillation." }
+    - { id: heavy, label: "Heavy cart (m = 3)", set: { m: 3 }, about: "Slower: poles closer to the origin." }
+- id: second
+  title: "Feel ζ and ωn: the poles decide the step"
+  x: "time (s) · σ (1/s)"
+  y: "output (normalised) · jω (rad/s)"
+  legend:
+    - { label: "step response", color: "var(--cyan)" }
+    - { label: "poles ×", color: "var(--org)" }
+  howToRead: "Left: the s-plane. Drag the × (or use the sliders): its distance from the origin is the natural frequency ωn, its angle from the negative real axis sets the damping ratio ζ. Right: the step response of ωn²/(s² + 2ζωn s + ωn²) with rise time, overshoot, ±2 % band and settling time marked."
+  lookFor: "Drag the pole straight up: the ringing grows but the decay rate (its real part) does not. Drag it left: faster, same shape. Overshoot depends on the angle only."
+  controls:
+    - { id: wn, label: "Natural frequency ωn", type: range, min: 0.3, max: 6, step: 0.01, default: 1.41, group: primary, unit: rad/s }
+    - { id: zeta, label: "Damping ratio ζ", type: range, min: 0.05, max: 2, step: 0.01, default: 1.06, group: primary }
+    - { id: marks, label: "Show Tr, %OS, Ts, band", type: toggle, default: true, group: more }
+  presets:
+    - { id: cart, label: "Running cart", set: { wn: 1.41, zeta: 1.06 }, about: "ζ ≈ 1.06: just overdamped, poles −1 and −2." }
+    - { id: half, label: "ζ = 0.5", set: { wn: 2, zeta: 0.5 } }
+    - { id: ring, label: "Rings (ζ = 0.12)", set: { wn: 3, zeta: 0.12 } }
+    - { id: over, label: "Overdamped (ζ = 1.6)", set: { wn: 2, zeta: 1.6 } }
+- id: height
+  title: "The transfer function as a landscape: |G(s)| over the s-plane"
+  x: "σ · ω"
+  y: "jω · |G|"
+  legend:
+    - { label: "jω axis", color: "var(--yel)" }
+    - { label: "poles ×", color: "#fff" }
+  howToRead: "Left: |G(s)| as height over the s-plane (bright = tall, dark = low); poles are peaks, zeros pits. Walk up the yellow jω axis: the height you pass is the frequency response. Right: that cut, drawn flat (the Bode magnitude), with the running cart dashed."
+  lookFor: "Lower the damper c: the poles slide toward the jω axis, the peak rises, and the cut gets a resonance bump. Add a zero: a pit appears and the cut dips."
+  controls:
+    - { id: c, label: "Damper c", type: range, min: 0.2, max: 6, step: 0.01, default: 3, group: primary, unit: N·s/m }
+    - { id: omega, label: "Probe frequency ω", type: range, min: 0, max: 5, step: 0.01, default: 1, group: primary, unit: rad/s }
+    - { id: db, label: "Slice in dB", type: toggle, default: false, group: more }
+    - { id: zero, label: "Add a zero", type: toggle, default: false, group: more }
+    - { id: zr, label: "Zero position", type: range, min: -5, max: 5, step: 0.1, default: -2, group: more }
+  presets:
+    - { id: cart, label: "Running cart", set: { c: 3, omega: 1 } }
+    - { id: light, label: "Lightly damped", set: { c: 0.4, omega: 1.4 } }
+    - { id: zero, label: "Cart with a zero at −2", set: { c: 3, omega: 1, zero: true, zr: -2 } }
+- id: first
+  title: "First order: K/(Ts + 1)"
+  x: "time (s) · σ (1/s)"
+  y: "output · jω"
+  legend:
+    - { label: "step response", color: "var(--cyan)" }
+    - { label: "initial tangent", color: "var(--vio)", dash: true }
+    - { label: "impulse response", color: "var(--grn)", dash: true }
+  howToRead: "Left: the single pole at −1/T. Right: the step response K(1 − e^(−t/T)): it reaches 63 % of K at t = T and 98 % at 4T; the dashed tangent at t = 0 meets the final value at t = T."
+  lookFor: "Double T: the pole moves toward the origin, everything takes twice as long, the final value K does not change."
+  controls:
+    - { id: K, label: "DC gain K", type: range, min: 0.2, max: 3, step: 0.1, default: 1, group: primary }
+    - { id: T, label: "Time constant T", type: range, min: 0.2, max: 4, step: 0.1, default: 1, group: primary, unit: s }
+    - { id: tan, label: "Show initial tangent", type: toggle, default: true, group: more }
+    - { id: imp, label: "Show impulse response", type: toggle, default: false, group: more }
+  presets:
+    - { id: t1, label: "T = 1 s", set: { K: 1, T: 1 } }
+    - { id: fast, label: "Fast (T = 0.3 s)", set: { K: 1, T: 0.3 } }
+    - { id: slow, label: "Slow (T = 3 s)", set: { K: 2, T: 3 } }
+- id: dominant
+  title: "Dominant poles: which ones matter"
+  x: "time (s) · σ (1/s)"
+  y: "output · jω"
+  legend:
+    - { label: "full response", color: "var(--cyan)" }
+    - { label: "dominant pair alone", color: "var(--muted)", dash: true }
+    - { label: "poles ×", color: "var(--org)" }
+  howToRead: "A second-order pair plus one extra real pole at −p (unit DC gain). The dashed trace is the pair alone. If p is several times farther left than the pair, the two traces coincide: the near poles dominate."
+  lookFor: "Slide p from 20 down to 1: the extra pole stops being negligible and slows the rise. Beyond about 5× the pair, you can drop it."
+  controls:
+    - { id: p, label: "Extra real pole at −p", type: range, min: 0.5, max: 20, step: 0.1, default: 10, group: primary }
+    - { id: wn, label: "Pair ωn", type: range, min: 0.5, max: 4, step: 0.05, default: 2, group: primary, unit: rad/s }
+    - { id: zeta, label: "Pair ζ", type: range, min: 0.1, max: 1.5, step: 0.01, default: 0.5, group: primary }
+  presets:
+    - { id: far, label: "Far (p = 20)", set: { p: 20 } }
+    - { id: near, label: "Comparable (p = 2)", set: { p: 2 } }
+    - { id: close, label: "Right on top (p = 1)", set: { p: 1 } }
+- id: pidcart
+  title: "P, PI and PID on the cart"
+  x: "time (s)"
+  y: "position (m), force (N)"
+  legend:
+    - { label: "position", color: "var(--cyan)" }
+    - { label: "force u", color: "var(--org)" }
+    - { label: "poles ×", color: "var(--org)" }
+  howToRead: "The cart G = 1/(s² + 3s + 2) under u = Kp·e + Ki·∫e + Kd·de/dt, simulated with the core PID simulator. Top left: position against the command 1 (with overshoot and steady-state error marked); bottom left: the force; right: the closed-loop poles."
+  lookFor: "P alone settles short of 1 (the offset is 1/(1 + Kp·G(0)) = 0.4 at Kp = 3). Adding Ki closes the gap, at the cost of a slower settle; add a lot of Ki and it overshoots. Kd speeds the settle up again."
+  controls:
+    - { id: Kp, label: "Kp", type: range, min: 0, max: 20, step: 0.1, default: 3, group: primary }
+    - { id: Ki, label: "Ki", type: range, min: 0, max: 10, step: 0.05, default: 0, group: primary }
+    - { id: Kd, label: "Kd", type: range, min: 0, max: 4, step: 0.05, default: 0, group: primary }
+    - { id: push, label: "Push of −1 N at t = 8 s", type: toggle, default: false, group: more }
+  presets:
+    - { id: p, label: "P only (Kp = 3)", set: { Kp: 3, Ki: 0, Kd: 0 }, about: "Final value 0.6: an offset of 0.4, with about 6 % overshoot." }
+    - { id: pi, label: "PI (3, 2)", set: { Kp: 3, Ki: 2, Kd: 0 }, about: "Final value 1, no overshoot, settles in about 4.9 s." }
+    - { id: pid, label: "PID (3, 2, 0.5)", set: { Kp: 3, Ki: 2, Kd: 0.5 }, about: "Kd speeds the settle up to about 4.1 s." }
+    - { id: hot, label: "Too much Ki (3, 8)", set: { Kp: 3, Ki: 8, Kd: 0 }, about: "A strong integral overshoots." }
+    - { id: push, label: "PI with a push", set: { Kp: 3, Ki: 2, Kd: 0, push: true }, about: "I removes the effect of a constant push." }
+- id: sse
+  title: "Steady-state error: why P leaves one and I removes it"
+  x: "time (s)"
+  y: "position, error"
+  legend:
+    - { label: "position", color: "var(--cyan)" }
+    - { label: "error e", color: "var(--org)" }
+    - { label: "e_ss = 1/(1+Kp·G(0))", color: "var(--bad)", dash: true }
+  howToRead: "Top: the cart under P or PI. Bottom: the error r − y and, for P only, the predicted final error 1/(1 + Kp·G(0)) with G(0) = 0.5. With an integrator the loop cannot rest until e = 0."
+  lookFor: "Raise Kp: the predicted error shrinks as 1/(1 + 0.5·Kp) but never reaches zero. Set Ki > 0: the error is driven to zero."
+  controls:
+    - { id: Kp, label: "Kp", type: range, min: 0, max: 20, step: 0.1, default: 3, group: primary }
+    - { id: Ki, label: "Ki", type: range, min: 0, max: 10, step: 0.05, default: 0, group: primary }
+  presets:
+    - { id: p3, label: "P, Kp = 3", set: { Kp: 3, Ki: 0 } }
+    - { id: p10, label: "P, Kp = 10", set: { Kp: 10, Ki: 0 }, about: "Better, never zero." }
+    - { id: pi, label: "PI (3, 2)", set: { Kp: 3, Ki: 2 }, about: "e → 0." }
+- id: loop
+  title: "The loop: command path and disturbance path"
+  x: "time (s)"
+  y: "position (m)"
+  legend:
+    - { label: "with the chosen K", color: "var(--cyan)" }
+    - { label: "K = 1 (ghost)", color: "var(--muted)", dash: true }
+  howToRead: "Close the loop with a gain K around the cart. Left: how the output follows the command, Y/R = CG/(1 + CG). Right: how the same loop answers a unit push on the cart, Y/D = G/(1 + CG). The same loop shapes both, but not in the same way."
+  lookFor: "Raise K: the command path gets faster and its error smaller, and the push is held back harder, but the command path starts to ring."
+  controls:
+    - { id: K, label: "Loop gain K", type: range, min: 0, max: 30, step: 0.1, default: 7, group: primary }
+  presets:
+    - { id: k1, label: "K = 1", set: { K: 1 } }
+    - { id: k7, label: "K = 7", set: { K: 7 }, about: "ζ = 0.5, about 16 % overshoot, final value 7/9." }
+    - { id: k30, label: "K = 30", set: { K: 30 }, about: "Strong rejection, but rings." }
+- id: states
+  title: "State space: the cart as two states"
+  x: "time (s) · σ (1/s)"
+  y: "x₁, x₂ · jω"
+  legend:
+    - { label: "x₁ position", color: "var(--cyan)" }
+    - { label: "x₂ velocity", color: "var(--org)" }
+    - { label: "eigenvalues ×", color: "var(--org)" }
+  howToRead: "The same cart written as ẋ = Ax + Bu, with x = (position, velocity) and A = [[0, 1], [−k, −c]]. Left: both states after a 1 N push. Right: the eigenvalues of A, which are exactly the poles of G(s)."
+  lookFor: "Change c and k and watch the eigenvalues move: the same pole picture as the transfer function, now with the inside of the cart in view."
+  controls:
+    - { id: k, label: "Spring k", type: range, min: 0.5, max: 8, step: 0.05, default: 2, group: primary, unit: N/m }
+    - { id: c, label: "Damper c", type: range, min: 0, max: 8, step: 0.05, default: 3, group: primary, unit: N·s/m }
+  presets:
+    - { id: cart, label: "Running cart", set: { k: 2, c: 3 } }
+    - { id: stiff, label: "Stiff spring (k = 8)", set: { k: 8, c: 3 } }
+    - { id: free, label: "No damper", set: { k: 2, c: 0 } }
+- id: rlc
+  title: "An RLC circuit is the same second-order system"
+  x: "time (s) · σ (1/s)"
+  y: "v_C (V) · jω"
+  legend:
+    - { label: "capacitor voltage", color: "var(--cyan)" }
+    - { label: "poles ×", color: "var(--org)" }
+  howToRead: "Series R, L and C driven by a voltage step, output across the capacitor: G = 1/(LC s² + RC s + 1), so ωn = 1/√(LC) and ζ = (R/2)√(C/L), exactly like the cart with m ↔ L, c ↔ R and k ↔ 1/C."
+  lookFor: "Raise R: the poles are pulled onto the real axis (overdamped). Lower R: they approach the jω axis and the capacitor voltage rings."
+  controls:
+    - { id: R, label: "Resistance R", type: range, min: 0.1, max: 6, step: 0.05, default: 1, group: primary, unit: Ω }
+    - { id: L, label: "Inductance L", type: range, min: 0.2, max: 3, step: 0.05, default: 1, group: primary, unit: H }
+    - { id: Cap, label: "Capacitance C", type: range, min: 0.1, max: 2, step: 0.05, default: 1, group: primary, unit: F }
+  presets:
+    - { id: under, label: "Underdamped (R = 1)", set: { R: 1, L: 1, Cap: 1 } }
+    - { id: crit, label: "Critical (R = 2)", set: { R: 2, L: 1, Cap: 1 } }
+    - { id: over, label: "Overdamped (R = 4)", set: { R: 4, L: 1, Cap: 1 } }
+- id: pz
+  title: "Poles and a zero: what moving them does"
+  x: "time (s) · σ (1/s)"
+  y: "output · jω"
+  legend:
+    - { label: "step response", color: "var(--cyan)" }
+    - { label: "without the zero", color: "var(--muted)", dash: true }
+    - { label: "poles × and zero ○", color: "var(--org)" }
+  howToRead: "G(s) = ωn²(1 − s/z)/(s² + 2ζωn s + ωn²). Drag the pole or the zero in the s-plane (or use the sliders). A left-half-plane zero speeds the rise and adds overshoot; a right-half-plane zero makes the response start the wrong way."
+  lookFor: "Turn the zero on at −2 and drag it toward the origin: more overshoot. Drag it across to the right half-plane: the output dips below zero before it rises."
+  controls:
+    - { id: wn, label: "Pole ωn", type: range, min: 0.5, max: 5, step: 0.05, default: 2, group: primary, unit: rad/s }
+    - { id: zeta, label: "Pole ζ", type: range, min: 0.05, max: 1.5, step: 0.01, default: 0.5, group: primary }
+    - { id: zero, label: "Add a zero", type: toggle, default: false, group: primary }
+    - { id: z, label: "Zero at s = z", type: range, min: -6, max: 6, step: 0.1, default: -2, group: primary }
+  presets:
+    - { id: none, label: "No zero", set: { wn: 2, zeta: 0.5 } }
+    - { id: lhp, label: "Zero at −2", set: { wn: 2, zeta: 0.5, zero: true, z: -2 } }
+    - { id: rhp, label: "Zero at +2 (wrong-way start)", set: { wn: 2, zeta: 0.5, zero: true, z: 2 } }
+    - { id: cancel, label: "Zero on a pole", set: { wn: 2, zeta: 1, zero: true, z: -2 }, about: "A zero close to a pole cancels it." }
+- id: shift
+  title: "Moving on the s-plane: multiplying by e^(−at)"
+  x: "time (s) · σ (1/s)"
+  y: "response · jω"
+  legend:
+    - { label: "e^(−at)·h(t)", color: "var(--cyan)" }
+    - { label: "h(t)", color: "var(--muted)", dash: true }
+  howToRead: "Multiplying a time signal by e^(−at) replaces s by s + a in its transform, so every pole moves left by a (grey rings: where they were). The response keeps its shape but decays faster."
+  lookFor: "Set a negative: the poles move right and the response grows. Set a large positive: the ringing dies almost at once."
+  controls:
+    - { id: a, label: "Shift a", type: range, min: -1.5, max: 3, step: 0.05, default: 0.5, group: primary, unit: 1/s }
+    - { id: wn, label: "Pole ωn", type: range, min: 0.5, max: 4, step: 0.05, default: 2, group: more, unit: rad/s }
+    - { id: zeta, label: "Pole ζ", type: range, min: 0.05, max: 0.9, step: 0.01, default: 0.3, group: more }
+  presets:
+    - { id: a0, label: "No shift", set: { a: 0 } }
+    - { id: a1, label: "a = 1", set: { a: 1 } }
+    - { id: neg, label: "a = −1 (poles move right)", set: { a: -1 } }
+- id: partial
+  title: "Partial fractions: the response is a sum of modes"
+  x: "time (s) · σ (1/s)"
+  y: "response · jω"
+  legend:
+    - { label: "h(t)", color: "var(--cyan)" }
+    - { label: "first mode", color: "var(--org)", dash: true }
+    - { label: "second mode", color: "var(--grn)", dash: true }
+  howToRead: "For two real poles p₁, p₂, G = 1/((s − p₁)(s − p₂)) splits into residues over s − p₁ and s − p₂, so h(t) = A₁e^(p₁t) + A₂e^(p₂t) with A₁ = 1/(p₁ − p₂), A₂ = −A₁. The cart (−1, −2) gives e^(−t) − e^(−2t)."
+  lookFor: "Pull the two poles apart: one mode dies quickly, the other sets the tail. Push them together: the residues grow and cancel."
+  controls:
+    - { id: p1, label: "Pole p₁", type: range, min: -5, max: -0.2, step: 0.05, default: -1, group: primary }
+    - { id: p2, label: "Pole p₂", type: range, min: -5, max: -0.2, step: 0.05, default: -2, group: primary }
+  presets:
+    - { id: cart, label: "Running cart (−1, −2)", set: { p1: -1, p2: -2 } }
+    - { id: wide, label: "Far apart (−0.5, −4)", set: { p1: -0.5, p2: -4 } }
+    - { id: close, label: "Close together (−1, −1.2)", set: { p1: -1, p2: -1.2 } }
+- id: fvt
+  title: "Final- and initial-value theorems on the map"
+  x: "time (s) · σ (1/s)"
+  y: "output · jω"
+  legend:
+    - { label: "y(t)", color: "var(--cyan)" }
+    - { label: "final value G(0)", color: "var(--grn)", dash: true }
+    - { label: "initial slope", color: "var(--vio)", dash: true }
+  howToRead: "G(s) = (a s + b)/((s + 1)(s − q)) under a unit step. The final-value theorem says y(∞) = G(0) = b/(−q), and the initial slope is lim s·G(s) = a. Both only mean something when all poles are in the left half-plane."
+  lookFor: "Move q to the right of zero: G(0) is still a perfectly good number, but the output runs away, so the theorem does not apply."
+  controls:
+    - { id: a, label: "a (numerator s coefficient)", type: range, min: -2, max: 3, step: 0.1, default: 1, group: primary }
+    - { id: b, label: "b (numerator constant)", type: range, min: 0.5, max: 4, step: 0.1, default: 2, group: primary }
+    - { id: q, label: "Second pole at s = q", type: range, min: -3, max: 0.5, step: 0.1, default: -2, group: primary }
+  presets:
+    - { id: stable, label: "Stable (q = −2)", set: { a: 1, b: 2, q: -2 } }
+    - { id: slow, label: "Slow pole (q = −0.5)", set: { a: 1, b: 2, q: -0.5 } }
+    - { id: trap, label: "The trap: q = +0.4", set: { a: 1, b: 2, q: 0.4 }, about: "G(0) exists but y diverges: the theorem fails." }
+- id: bode
+  title: "Gain and phase margin: how far from the edge?"
+  x: "ω (rad/s)"
+  y: "dB · degrees"
+  legend:
+    - { label: "|L(jω)| (dB)", color: "var(--cyan)" }
+    - { label: "phase", color: "var(--org)" }
+    - { label: "K = 1 (ghost)", color: "var(--muted)", dash: true }
+  howToRead: "The cart with integral action, L = K/(s(s+1)(s+2)). Left: loop gain in dB and phase; the green bars are the phase margin (at the 0 dB crossing) and the gain margin (at the −180° crossing). Right: what that does to the closed-loop step."
+  lookFor: "Slide K up until the gain-margin bar shrinks to zero at K = 6: that is the jω-axis crossing of the root locus, seen from the other side."
+  controls:
+    - { id: K, label: "Integral gain K", type: range, min: 0.2, max: 10, step: 0.01, default: 2, group: primary }
+  presets:
+    - { id: k1, label: "K = 1", set: { K: 1 } }
+    - { id: k2, label: "K = 2", set: { K: 2 } }
+    - { id: k6, label: "K = 6", set: { K: 6 }, about: "Gain margin 0 dB." }
+    - { id: k9, label: "K = 9", set: { K: 9 } }
