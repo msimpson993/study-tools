@@ -1,6 +1,6 @@
 import { expect, type Page } from '@playwright/test';
 
-export const APPS = ['transforms', 'linear-systems', 'control-systems'] as const;
+export const APPS = ['transforms', 'linear-systems', 'control-systems', 'pid-tuning'] as const;
 export const url = (app: string, hash = '') => `/${app}/index.html${hash}`;
 
 /** Collect console errors / page errors during a test. */

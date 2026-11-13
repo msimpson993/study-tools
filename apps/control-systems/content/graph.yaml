@@ -66,6 +66,14 @@ maps:
         addsToExample: "Replaces the cart's open-loop push with u = K(r − y). With K = 7 the closed-loop denominator becomes s² + 3s + 9: faster, but now it rings."
         accountsFor: "Why the cart with only a proportional loop is faster but overshoots 16 % and stops short of the command."
         live: "board:s5"
+      - id: pid-tuning
+        label: How do I choose the gains?
+        detail: the PID tuning map (separate page)
+        series: 1
+        short: "Choosing Kp, Ki and Kd is its own chain of questions: what each gain does, why I removes offset, what D costs, tuning methods (manual, Ziegler–Nichols, automatic), a worked project and a gallery of failures. It continues this map on its own page, with the interactive PID Lab."
+        addsToExample: "Takes the cart's proportional loop (K = 7 rings 16 %, stops 22 % short) and tunes P, then PI, then PID until it tracks a position step despite a push and sensor noise."
+        accountsFor: "How to pick the three numbers, not just recognize what each does."
+        link: { href: "../pid-tuning/index.html", label: "Open the PID tuning map" }
       - id: sse
         label: Why does P leave an error and I remove it?
         detail: steady-state error, system type
@@ -165,6 +173,7 @@ maps:
       - { from: tf, to: first, label: "simplest plant", question: "How does the simplest plant respond, as a yardstick?", idea: "First order is an exponential with time constant τ; other plants are compared to it." }
       - { from: blocks, to: ctrl, label: "what is C?", question: "What can the controller do?", idea: "P, I and D each trade speed, error, damping and noise; standard and parallel forms are the same controller." }
       - { from: blocks, to: fb, label: "why bother?", question: "What does closing the loop buy and cost?", idea: "Lower sensitivity and disturbance effect and a faster transient, at the cost of noise, hardware and stability risk (S + T = 1)." }
+      - { from: ctrl, to: pid-tuning, label: "tune it", question: "How do I choose the three gains?", idea: "Tune P, then I, then D against a spec: the PID tuning map continues from here." }
       - { from: ctrl, to: sse, label: "error?", question: "Why does proportional control leave an error and integral remove it?", idea: "A P controller needs an error to hold its output; an integrator forces zero error at rest (system type 1)." }
       - { from: ss, to: ss2tf, label: "link back", question: "How are the two descriptions related?", idea: "G(s) = C(sI − A)⁻¹B + D; eigenvalues of A are the poles of G." }
       - { from: first, to: dominant, label: "more poles", question: "With more poles, which ones matter?", idea: "The slowest stable pole dominates; far-left poles can be dropped if the DC gain is kept." }

@@ -1,0 +1,132 @@
+- term: r(t)
+  meaning: "Reference / set-point: the target speed you want (same units as y)."
+  section: Signals
+- term: y(t)
+  meaning: Measured output (engine speed, rpm). Written <i>C</i> in some class notes.
+  section: Signals
+- term: e
+  meaning: Error <i>e</i> = <i>r</i> − <i>y</i>. The PID's input.
+  section: Signals
+- term: u(t)
+  meaning: Control signal / actuator command (throttle). Output of the PID.
+  section: Signals
+- term: d
+  meaning: Disturbance (load torque, hill). Unwanted input pushing <i>y</i> off <i>r</i>.
+  section: Signals
+- term: n
+  meaning: Sensor noise added to the measurement (σ = std. dev., 0.01 in the Lab).
+  section: Signals
+- term: xᵢ
+  meaning: Integrator state, ∫<i>e</i> dt (what “I” remembers).
+  section: Signals
+- term: G(s)
+  meaning: Plant transfer function (the engine). <i>G</i>(0) = its DC gain.
+  section: Plant & loop
+- term: C(s)
+  meaning: "Controller transfer function: <i>K</i><sub>p</sub> + <i>K</i><sub>i</sub>/<i>s</i> + <i>K</i><sub>d</sub><i>s</i>."
+  section: Controller
+- term: H(s)
+  meaning: Feedback / sensor path (= 1 for unity feedback).
+  section: Plant & loop
+- term: L(s)
+  meaning: Loop gain <i>C</i>·<i>G</i>(·<i>H</i>). Its Bode plot sets margins. (In Z–N reaction curve, <i>L</i> is instead dead time, s.)
+  section: Plant & loop
+- term: s
+  meaning: Laplace variable (rad/s). 1/<i>s</i> = integrate, <i>s</i> = differentiate.
+  section: Math
+- term: t
+  meaning: Time (s). τ as an integration dummy variable in ∫<sub>0</sub><sup>t</sup>.
+  section: Math
+- term: ω
+  meaning: Frequency (rad/s) on the Bode plots / noise gain.
+  section: Math
+- term: Kₚ
+  meaning: Proportional gain (dimensionless-ish; units of <i>u</i>/<i>e</i>).
+  section: Controller
+- term: Kᵢ
+  meaning: Integral gain (parallel form), <i>K</i><sub>p</sub>/<i>T</i><sub>i</sub>; units 1/s × gain.
+  section: Controller
+- term: K_d
+  meaning: Derivative gain (parallel form), <i>K</i><sub>p</sub><i>T</i><sub>d</sub>; units s × gain.
+  section: Controller
+- term: Tᵢ
+  meaning: Integral time (s), standard form. Bigger = <em>weaker</em> I. <i>K</i><sub>i</sub> = <i>K</i><sub>p</sub>/<i>T</i><sub>i</sub>.
+  section: Controller
+- term: T_d
+  meaning: Derivative time (s), standard form. <i>K</i><sub>d</sub> = <i>K</i><sub>p</sub><i>T</i><sub>d</sub>.
+  section: Controller
+- term: N
+  meaning: "Derivative filter coefficient (rad/s): <i>K</i><sub>d</sub><i>Ns</i>/(<i>s</i>+<i>N</i>); HF gain = <i>K</i><sub>d</sub><i>N</i>. Lower = more filtering."
+  section: Controller
+- term: K, τ
+  meaning: "First-order plant <i>K</i>/(τ<i>s</i>+1): <i>K</i> = DC gain, τ = time constant (s)."
+  section: Plant & loop
+- term: e_ss
+  meaning: "Steady-state error, lim<sub><i>t</i>→∞</sub> <i>e</i>(<i>t</i>). Step: 1/(1+<i>C</i>(0)<i>G</i>(0))."
+  section: Step-response specs
+- term: "%OS"
+  meaning: "Percent overshoot: peak above final value, % of final value."
+  section: Step-response specs
+- term: T_s
+  meaning: "Settling time (s): stays within ±2% of final value. Spec: &lt; 5 s."
+  section: Step-response specs
+- term: Tₚ
+  meaning: Peak time (s), π/(ω<sub>n</sub>√(1−ζ²)) = π/ω<sub>d</sub>.
+  section: Step-response specs
+- term: T_r
+  meaning: Rise time (s), 10–90%.
+  section: Step-response specs
+- term: ζ
+  meaning: Damping ratio (dimensionless). 0<ζ<1 overshoot, ≥1 none. Sets %OS.
+  section: Step-response specs
+- term: ωₙ
+  meaning: Natural frequency (rad/s). With ζ sets speed of 2nd-order response.
+  section: Step-response specs
+- term: ω_d
+  meaning: Damped frequency ω<sub>n</sub>√(1−ζ²) (rad/s).
+  section: Step-response specs
+- term: θ
+  meaning: Pole angle from the negative real axis; cos θ = ζ.
+  section: Step-response specs
+- term: ω_c
+  meaning: "Gain crossover (rad/s): |<i>L</i>(<i>j</i>ω)| = 1 (0 dB). ≈ bandwidth; response time ~ 1/ω<sub>c</sub>."
+  section: Frequency domain
+- term: PM
+  meaning: Phase margin (°) = 180° + ∠<i>L</i>(<i>j</i>ω<sub>c</sub>). More = calmer; ζ ≈ PM/100.
+  section: Frequency domain
+- term: Bandwidth
+  meaning: "Frequency range the closed loop tracks (≈ ω<sub>c</sub>). Slider: Response time ↔ BW."
+  section: Frequency domain
+- term: K_u
+  meaning: "Ultimate gain: P-only gain at sustained oscillation (= 8 for 1/(s+1)³)."
+  section: Tuning methods
+- term: T_u
+  meaning: Ultimate period (s) of that oscillation (≈ 3.63 s here); ω<sub>u</sub> = 2π/<i>T</i><sub>u</sub>.
+  section: Tuning methods
+- term: K, L, T
+  meaning: "Z–N reaction curve: plant gain <i>K</i>, dead time <i>L</i> (s), time constant <i>T</i> (s)."
+  section: Tuning methods
+- term: "|u| ≤ 1.2"
+  meaning: Actuator saturation limit (Lab / windup example).
+  section: Signals
+- term: T_dead
+  meaning: "Dead time / transport delay (s): y starts responding only this long after <i>u</i> changes (A10). Not <i>T</i><sub>d</sub>, which is derivative time."
+  section: Plant & loop
+- term: τ_m
+  meaning: "Sensor lag time constant (s): the controller sees <i>y</i> through 1/(τ<sub>m</sub><i>s</i>+1) (A11)."
+  section: Plant & loop
+- term: u_max
+  meaning: Actuator amplitude limit, |<i>u</i>| ≤ <i>u</i><sub>max</sub> (A7, A9).
+  section: Signals
+- term: "|du/dt|_max"
+  meaning: Actuator rate (slew) limit, units of <i>u</i> per second (A9).
+  section: Signals
+- term: δ
+  meaning: "Actuator dead-zone half-width: nothing moves while |<i>u</i>| ≤ δ (A14)."
+  section: Plant & loop
+- term: b, T_f
+  meaning: "2-DOF set-point shaping: weight <i>b</i> (0–1) on the P term, or set-point filter time constant <i>T</i><sub>f</sub> (s) (A13)."
+  section: Controller
+- term: Response time / Transient behavior
+  meaning: "PID Tuner sliders (Project 1: 3.4 → 1.5 s, 0.6 → 0.72). Response time is a design target, not measured <i>T</i><sub>s</sub>."
+  section: Tuning methods

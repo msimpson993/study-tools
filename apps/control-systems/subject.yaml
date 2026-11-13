@@ -31,10 +31,10 @@ runningExample:
     Every box of the map says what its idea **adds to this cart** and what it lets us **account for**.
 hub:
   order: 3
-# Porting guard: 2 maps (course chain + s-plane sub-chain), 26 boxes, 25 lines, the 68-question course quiz + the 22-question mini-exam
+# Porting guard: 2 maps (course chain + s-plane sub-chain), 27 boxes, 26 lines, the 68-question course quiz + the 22-question mini-exam
 expect:
   maps: 2
-  nodes: 26
-  edges: 25
+  nodes: 27
+  edges: 26
   dives: 0
   quiz: 90

@@ -1,0 +1,402 @@
+maps:
+  - id: chain
+    title: The tuning question chain
+    caption: Read top to bottom. Each box is the question the previous one leaves open; tap a box for the short answer and what it adds to the cart, tap a line for the question that leads on. The bottom row is the 14-card gallery of failures with the knob that fixes each.
+    nodes:
+      - id: root
+        label: How do I choose Kp, Ki, Kd so the output tracks, rejects and ignores?
+        detail: track a step, shrug off a push, ignore sensor noise
+        kind: decision
+        series: 0
+        link: { href: "../control-systems/index.html", label: "Back to the control-systems map" }
+        short: A PID controller has three numbers and a plant we know only roughly. Tuning means choosing them so the step response is fast with little overshoot, the loop removes steady-state error and rejects a load, and sensor noise and actuator limits do not wreck it. This map is the tuning branch of the control-systems map.
+      - id: problem
+        label: What problem does feedback control solve?
+        detail: command, disturbance, uncertainty
+        series: 0
+        short: We want an output (position, speed) to follow a command r even though the plant is only approximately known and disturbances push on it. Feedback measures the output and corrects from the error, instead of computing the input once and hoping.
+        addsToExample: "States the cart's job: put the 1 kg cart at a commanded position and keep it there while a force d pushes on it and the position sensor is noisy."
+        accountsFor: "Why no fixed push profile can do the job: the true spring and damper differ from the model and the load changes."
+        live: board:problem
+      - id: feedback
+        label: Why feedback, and what goes wrong with it?
+        detail: sensors, delay, saturation, instability
+        series: 0
+        short: Feedback is robust to model error and disturbances because it reacts to what actually happened, but it needs a sensor, can be noisy, adds lag and delay, runs into actuator limits, and can go unstable if the loop gain is too high at the wrong frequency.
+        addsToExample: Puts a sensor on the cart and feeds position error back to the push; the same loop can ring or go unstable if the gain is too large.
+        accountsFor: Why a wrong spring constant stops mattering once the loop is closed, and what the cost is.
+        live: board:feedback
+      - id: pid
+        label: What are P, I and D, and which form is this?
+        detail: parallel versus standard form
+        series: 1
+        short: u = Kp·e + Ki·∫e dt + Kd·de/dt. P reacts to the present error, I to the accumulated past error, D to the trend. Parallel form uses Kp, Ki, Kd; standard form uses Kp, Ti, Td with Ki = Kp/Ti and Kd = Kp·Td.
+        eq: C(s) = Kp + Ki/s + Kd·s = Kp(1 + 1/(Ti·s) + Td·s)
+        addsToExample: "Puts C(s) in front of the cart (p2 = 2/((s + 1)(s + 2))): the open loop is C(s)·2/((s + 1)(s + 2)) and the controller adds a pole at 0 (I) and a zero (D)."
+        accountsFor: "How the three terms are three different things the cart can use from the error: now, accumulated and rate."
+        live: board:pid
+      - id: gains
+        label: What does each gain do to the step response?
+        detail: rise time, overshoot, settling, error
+        series: 1
+        short: Raising Kp speeds the rise but increases overshoot and leaves less steady-state error; raising Ki removes steady-state error but adds overshoot and slow oscillation; raising Kd adds damping but amplifies noise. The table of cause and effect is the backbone of manual tuning.
+        addsToExample: "On the cart with Kp = 3 the loop is s² + 3s + 8 (ωₙ ≈ 2.83, ζ ≈ 0.53): about 14 % overshoot and a final value of only 0.75."
+        accountsFor: Why the cart with P control alone is quick but stops at 75 % of the command (error 1/(1 + Kp) = 0.25).
+        live: board:gains
+      - id: integral
+        label: Why does integral action give zero steady-state error?
+        detail: deep dive A
+        series: 1
+        short: "The integral state keeps changing while any error remains, dx_i/dt = e, so at rest e must be 0. That is also why a load disturbance is cancelled in steady state. The price is a lower phase margin: more overshoot and slower ringing."
+        eq: e_ss = 1/(1 + C(0)G(0)), C(0) → ∞ with an integrator
+        addsToExample: Adding Ki = 2 to the Kp = 3 cart loop brings the final value from 0.75 to exactly 1, at the cost of about 13 % overshoot and a settling time near 3.5 s.
+        accountsFor: Why the cart now ends exactly at the commanded position, and why a constant push is eventually fully rejected.
+        live: board:dd-int
+      - id: derivative
+        label: What does D buy, and what does it cost?
+        detail: damping, noise, filter N, kick
+        series: 1
+        short: D adds damping by reacting to the rate of change, which cuts overshoot. An ideal derivative amplifies high-frequency sensor noise, so it is filtered (time constant 1/N) and usually applied to the measurement, not the error, to avoid a kick when the set-point steps.
+        eq: Kd·N·s/(s + N)  (filtered derivative)
+        addsToExample: Adding Kd = 0.5 to the PI cart cuts the overshoot to about 8 % and the settling time to about 2.8 s, but the noise on the push grows with Kd·N.
+        accountsFor: Why the cart can be both quick and well damped with D, and why its push chatters when the position sensor is noisy.
+        live: board:dd-der
+      - id: windup
+        label: What happens when the actuator saturates?
+        detail: integrator windup, anti-windup
+        series: 1
+        short: "When the actuator is at its limit the integrator keeps charging, so after the error changes sign the stored area has to be unwound before the output moves: a long overshoot. Anti-windup (clamping or back-calculation) stops the integrator from charging while saturated."
+        addsToExample: If the cart's push is limited to |u| ≤ umax, a big position step saturates it; without anti-windup the integrator winds up and the cart overshoots badly.
+        accountsFor: Why a controller that works for small steps overshoots wildly on large ones, and the simple fix.
+        live: board:dd-windup
+      - id: tuning
+        label: What does tuning mean, and how do we measure good?
+        detail: speed vs overshoot vs effort, second-order specs
+        series: 2
+        short: "Tuning is a trade-off: faster response costs overshoot, effort, noise sensitivity and robustness. We measure it with step-response specs (percent overshoot, settling time, rise time) which, for a dominant second-order pair, come from ζ and ωₙ."
+        eq: "%OS = 100·e^(−πζ/√(1 − ζ²))   Ts ≈ 4/(ζωₙ)"
+        addsToExample: The cart's closed loop s² + 3s + 8 has ζ = 3/(2√8) ≈ 0.53, so %OS ≈ 14 % and Ts ≈ 4/1.5 ≈ 2.7 s; the PID Lab lets you move Kp, Ki, Kd and watch those numbers change.
+        accountsFor: How to turn a spec on the cart (settle in 3 s, under 10 % overshoot) into constraints on the gains.
+        live: board:tuning
+      - id: lab
+        label: What happens if I drag the gains myself?
+        detail: the PID Lab
+        series: 2
+        short: The PID Lab runs a parallel PID with a filtered derivative on a choice of three teaching plants, with live sliders for Kp, Ki, Kd, N and the time window, and toggles for a load disturbance, sensor noise, an actuator limit, anti-windup, D on measurement, and a ghost of the previous run.
+        addsToExample: Run the cart (p2) with Kp = 3, then add Ki = 2, then Kd = 0.5 and watch the numbers on this map appear; switch on the push, the noise and the actuator limit to see each failure mode.
+        accountsFor: Every claim on this map about the cart (offset, overshoot, noise, windup) can be reproduced by hand with visible controls.
+        live: board:lab
+      - id: methods
+        label: How do I actually find the gains?
+        detail: manual, Ziegler–Nichols, automatic
+        series: 2
+        short: "Three practical routes: tune by hand with the cause-and-effect table, use a classic recipe such as Ziegler–Nichols (find where the loop just oscillates, then scale), or use an automatic tuner that linearizes the plant and gives you a speed and a robustness slider."
+        addsToExample: "Applied to the cart: start from P, add I until the offset is gone, add D to calm the ringing; or find Ku on the plant and read the gains from a table."
+        accountsFor: How to go from 'it works but rings' to concrete gain changes, and when a recipe is only a first guess.
+        live: board:methods
+      - id: zn
+        label: Can I tune from the edge of instability?
+        detail: Ziegler–Nichols, deep dive C
+        series: 2
+        short: "Raise Kp with P only until the output oscillates steadily: that is the ultimate gain Ku with period Tu. The classic PID is Kp = 0.6·Ku, Ti = Tu/2, Td = Tu/8. It aims at quarter-amplitude decay, so expect a lot of overshoot and detune."
+        eq: Kp = 0.6·Ku,  Ti = Tu/2,  Td = Tu/8
+        addsToExample: "On the Lab's alternate plant 1/(s + 1)³: Ku = 8 with Tu = 2π/√3 ≈ 3.63 s, so Kp = 4.8, Ti = 1.81 s, Td = 0.45 s (Ki ≈ 2.65, Kd ≈ 2.18), giving about 43 % overshoot."
+        accountsFor: Why Ziegler–Nichols gains are fast at rejecting a load but rough on a set-point step, and why they are only a starting point.
+        live: board:dd-zn
+      - id: sliders
+        label: What do the PID Tuner sliders really set?
+        detail: bandwidth, phase margin, deep dive D
+        series: 2
+        short: "MATLAB's PID Tuner sliders map to loop bandwidth (response time) and phase margin (transient behavior): faster response means higher bandwidth, and more robustness means more phase margin and less overshoot. Gains are computed from these two targets."
+        addsToExample: On the cart's loop, dragging Response time shorter (3.4 s to 1.5 s in Project 1) raises the bandwidth and the gains together; the Bode figure shows the crossover moving.
+        accountsFor: Why the sliders change several gains at once and what each slider does to overshoot.
+        live: board:dd-sliders
+      - id: project
+        label: How does it play out in Project 1, step by step?
+        detail: speed-control worked example
+        series: 2
+        short: "A worked walkthrough: model the plant, open the PID block's tuner, choose PI, read the response, and move the sliders to hit the specs, with the reason for each move tied back to a concept above."
+        addsToExample: "The same moves as on the cart: PI to remove offset, response time 3.4 s → 1.5 s for speed, transient behavior 0.6 → 0.72 for damping."
+        accountsFor: Why each slider move in the project did what it did, in terms of Kp, Ki and the phase margin.
+        live: board:project
+      - id: report
+        label: What are the pitfalls, and how do I explain my result?
+        detail: report template, cheat sheet, glossary
+        series: 2
+        short: Common pitfalls (wrong form, ZN overshoot, ignoring saturation), a template for explaining results, a cheat sheet of cause and effect, and a glossary.
+        addsToExample: "Frames what to state about the cart: the spec, the gains, the measured overshoot and settling time, and what limits further speed."
+        accountsFor: How to justify a tuning to a reader rather than only showing a plot.
+        live: board:report
+      - id: failures
+        label: What can go wrong, and which knob fixes it?
+        detail: gallery of 14 failure cards
+        series: 3
+        short: "Fourteen simulated failures, each with symptoms, cause, what to try and the knob to turn: slow, offset, overshoot, oscillation, poor disturbance rejection, noise, windup, kick, saturation, delay, sensor lag, nonlinearity, set-point versus load, limit cycles."
+        addsToExample: Each card is the cart-like loop with one thing wrong, with the corrected loop dashed for contrast.
+        accountsFor: How to diagnose a misbehaving loop from its picture and pick the right fix (a gain, a filter, anti-windup or a set-point weight).
+        live: board:ap-lookup
+      - id: ap-slow
+        label: A1 · Slow response
+        detail: It gets there, but takes far too long to rise and settle.
+        series: 3
+        short: "It gets there, but takes far too long to rise and settle. Symptoms: Long rise time; smooth, no overshoot; Output creeps toward r and the error shrinks slowly; Control signal u stays small — the controller is barely pushing. Open the card for the simulated picture, the cause and what to try."
+        addsToExample: Runs this failure on a cart-like teaching plant and shows the fixed loop dashed for contrast. Teaching plant 1/((s+1)(0.5s+1))
+        accountsFor: "Which knob to turn when the cart does this: ↑ Kp (and Ki) — until overshoot or effort says stop."
+        live: board:ap-slow
+      - id: ap-offset
+        label: A2 · Steady-state offset
+        detail: It settles calmly, but not at the target.
+        series: 3
+        short: "It settles calmly, but not at the target. Symptoms: Flat, steady line that stays below (or above) r; Error never decays to zero however long you wait; Often appears with P-only control or after a constant load appears. Open the card for the simulated picture, the cause and what to try."
+        addsToExample: Runs this failure on a cart-like teaching plant and shows the fixed loop dashed for contrast. Teaching plant 1/((s+1)(0.5s+1)); P-only vs PI.
+        accountsFor: "Which knob to turn when the cart does this: Add / increase Ki (I action). Kp only shrinks the offset."
+        live: board:ap-offset
+      - id: ap-overshoot
+        label: A3 · Overshoot
+        detail: The output shoots past the target, then comes back.
+        series: 3
+        short: "The output shoots past the target, then comes back. Symptoms: Peak above r (%OS), then a return, possibly with a small undershoot; Often caused by an integral term that is too strong for the plant speed; Lower phase margin ⇒ more overshoot (Deep dive D). Open the card for the simulated picture, the cause and what to try."
+        addsToExample: Runs this failure on a cart-like teaching plant and shows the fixed loop dashed for contrast. Teaching plant 1/((s+1)(0.5s+1))
+        accountsFor: "Which knob to turn when the cart does this: ↓ Ki (first), or ↓ Kp / ↑ Kd."
+        live: board:ap-overshoot
+      - id: ap-oscillation
+        label: A4 · Sustained oscillation / instability
+        detail: The loop rings forever or the amplitude grows.
+        series: 3
+        short: "The loop rings forever or the amplitude grows. Symptoms: Constant-amplitude ringing = loop sits right at the stability edge (P-only gain = Ku); Growing swing, often hitting actuator limits = unstable; Period roughly the ultimate period Tu (Ziegler–Nichols). Open the card for the simulated picture, the cause and what to try."
+        addsToExample: Runs this failure on a cart-like teaching plant and shows the fixed loop dashed for contrast. Teaching plant 1/(s+1)³ (ultimate gain Ku = 8).
+        accountsFor: "Which knob to turn when the cart does this: ↓ Kp (and Ki); more robustness / phase margin."
+        live: board:ap-oscillation
+      - id: ap-disturbance
+        label: A5 · Poor disturbance rejection
+        detail: A load hits and the output is knocked far away, recovering slowly.
+        series: 3
+        short: "A load hits and the output is knocked far away, recovering slowly. Symptoms: Big excursion of y right after the load arrives; Slow return (or a permanent offset if there is no I); The set-point response may look fine: this is a separate requirement. Open the card for the simulated picture, the cause and what to try."
+        addsToExample: Runs this failure on a cart-like teaching plant and shows the fixed loop dashed for contrast. Teaching plant 1/((s+1)(0.5s+1)); disturbance d = +1 at the plant input at t = 1 s, r = 0.
+        accountsFor: "Which knob to turn when the cart does this: ↑ Kp and Ki; feedforward if the disturbance is measurable."
+        live: board:ap-disturbance
+      - id: ap-noise
+        label: A6 · Noisy / jittery actuator
+        detail: Measurement noise is amplified into a chattering control signal.
+        series: 3
+        short: "Measurement noise is amplified into a chattering control signal. Symptoms: y looks fine but u is fuzzy / chattering (the plant filters the noise, the actuator doesn't); Heard or felt as buzzing valves, hot motors, wear; Worse with large Kd and large derivative-filter N. Open the card for the simulated picture, the cause and what to try."
+        addsToExample: Runs this failure on a cart-like teaching plant and shows the fixed loop dashed for contrast. Teaching plant 1/((s+1)(0.5s+1)); PID with sensor noise σ = 0.02.
+        accountsFor: "Which knob to turn when the cart does this: ↓ N (filter D harder) or ↓ Kd."
+        live: board:ap-noise
+      - id: ap-windup
+        label: A7 · Integrator windup (actuator saturation)
+        detail: The integrator keeps charging while the actuator is pinned at its limit.
+        series: 3
+        short: "The integrator keeps charging while the actuator is pinned at its limit. Symptoms: u flat at the limit for a while; Output overshoots far more than the linear design predicted, then recovers slowly; Gets worse for large steps or long saturation. Open the card for the simulated picture, the cause and what to try."
+        addsToExample: Runs this failure on a cart-like teaching plant and shows the fixed loop dashed for contrast. Teaching plant 1/(s+1); PI (Kp = 2, Ki = 4); actuator limit |u| ≤ 1.2 (same as Deep dive E).
+        accountsFor: "Which knob to turn when the cart does this: Not a gain: add anti-windup (clamp / back-calculation) or avoid saturating."
+        live: board:ap-windup
+      - id: ap-kick
+        label: A8 · Derivative kick
+        detail: A set-point step makes D produce a huge one-sample spike in u.
+        series: 3
+        short: "A set-point step makes D produce a huge one-sample spike in u. Symptoms: Sharp spike in u exactly when r jumps (≈ Kd·N on top of the normal P kick); Output barely changes, but actuator slams (and may saturate); No spike for slow set-point changes. Open the card for the simulated picture, the cause and what to try."
+        addsToExample: Runs this failure on a cart-like teaching plant and shows the fixed loop dashed for contrast. Teaching plant 1/((s+1)(0.5s+1)); PID, Kd = 0.5, N = 20; r steps 0 → 1 at t = 0.
+        accountsFor: "Which knob to turn when the cart does this: Not a gain: D on measurement (or set-point filter)."
+        live: board:ap-kick
+      - id: ap-limits
+        label: A9 · Actuator saturation & rate limits
+        detail: The actuator can only deliver so much (amplitude) and so fast (rate).
+        series: 3
+        short: "The actuator can only deliver so much (amplitude) and so fast (rate). Symptoms: Amplitude limit: response is slower than the linear design promised for big steps (rise set by umax, not by the gains); Rate limit: extra lag ⇒ more overshoot / ringing than the linear model predicts; u is straight-line (ramp) or flat-topped instead of smooth. Open the card for the simulated picture, the cause and what to try."
+        addsToExample: "Runs this failure on a cart-like teaching plant and shows the fixed loop dashed for contrast. Left: plant 1/((s+1)(0.5s+1)), PI, step r = 2, |u| ≤ 2.5 with clamping anti-windup. Right: plant 1/(s+1)³, PI, step r = 1, rate limit 0.5 u/s. Top plot = amplitude limit, bottom plot = rate limit."
+        accountsFor: "Which knob to turn when the cart does this: ↓ aggressiveness; ramp the set-point; anti-windup."
+        live: board:ap-limits
+      - id: ap-delay
+        label: A10 · Time delay (dead time)
+        detail: Nothing happens for a while after u changes, so feedback acts on old news.
+        series: 3
+        short: "Nothing happens for a while after u changes, so feedback acts on old news. Symptoms: Flat start: the output ignores u for the delay; Gains that were fine without delay now ring or go unstable. Open the card for the simulated picture, the cause and what to try."
+        addsToExample: Runs this failure on a cart-like teaching plant and shows the fixed loop dashed for contrast. Teaching plant 1/(s+1) with 1 s dead time
+        accountsFor: "Which knob to turn when the cart does this: ↓↓ Kp and Ki; Smith predictor if delay dominates."
+        live: board:ap-delay
+      - id: ap-sensorlag
+        label: A11 · Measurement (sensor) lag
+        detail: The sensor is slow, so the controller sees an old, smoothed copy of y.
+        series: 3
+        short: "The sensor is slow, so the controller sees an old, smoothed copy of y. Symptoms: True y overshoots and rings; the measured signal is a delayed, smoother copy; Behaves like extra phase lag/delay (compare A10) — gains too high for the real loop; Derivative acts on the lagged signal, so it helps less than expected. Open the card for the simulated picture, the cause and what to try."
+        addsToExample: Runs this failure on a cart-like teaching plant and shows the fixed loop dashed for contrast. Teaching plant 1/((s+1)(0.5s+1)); sensor 1/(1.5s+1)
+        accountsFor: "Which knob to turn when the cart does this: ↓ Kp and Ki; fix/replace the sensor if you can."
+        live: board:ap-sensorlag
+      - id: ap-nonlinear
+        label: A12 · Nonlinearity / operating-point change
+        detail: The plant's gain depends on where it is operating, so one set of gains is right only near one point.
+        series: 3
+        short: "The plant's gain depends on where it is operating, so one set of gains is right only near one point. Symptoms: Same controller: fine for a small step, increasingly oscillatory for a bigger one (here incremental gain grows as 2√r); Behaviour differs with load/speed/temperature; PID Tuner linearizes at one operating point — that is its blind spot (Project 1: verify on the nonlinear model). Open the card for the simulated picture, the cause and what to try."
+        addsToExample: "Runs this failure on a cart-like teaching plant and shows the fixed loop dashed for contrast. Teaching plant: static curve v² followed by 1/((s+1)(0.5s+1)), PI (Kp = 2, Ki = 1.5), plotted as y/r."
+        accountsFor: "Which knob to turn when the cart does this: ↓ gains for the high-gain point, or schedule them with operating point."
+        live: board:ap-nonlinear
+      - id: ap-twodof
+        label: A13 · Set-point vs disturbance trade-off (2-DOF)
+        detail: Gains tuned to reject disturbances fast make the set-point step overshoot.
+        series: 3
+        short: "Gains tuned to reject disturbances fast make the set-point step overshoot. Symptoms: Strong integral action: quick recovery from the load, but big overshoot on the set-point step; Lowering gains fixes the step but slows the load recovery — a conflict with one controller. Open the card for the simulated picture, the cause and what to try."
+        addsToExample: Runs this failure on a cart-like teaching plant and shows the fixed loop dashed for contrast. Teaching plant 1/((s+1)(0.5s+1)); PI Kp = 1.5, Ki = 4; load disturbance −1 at t = 15 s.
+        accountsFor: "Which knob to turn when the cart does this: Not a gain: set-point filter / weight (2-DOF)."
+        live: board:ap-twodof
+      - id: ap-limitcycle
+        label: A14 · Limit cycle from dead zone / backlash
+        detail: Integral action plus a sticky actuator makes the loop hunt forever around the target.
+        series: 3
+        short: "Integral action plus a sticky actuator makes the loop hunt forever around the target. Symptoms: Slow, constant-amplitude swing around r that never dies out; u creeps through the dead zone, nothing moves, then it jumps; The integrator keeps winding up inside the dead zone, then the actuator suddenly moves and overshoots. Open the card for the simulated picture, the cause and what to try."
+        addsToExample: Runs this failure on a cart-like teaching plant and shows the fixed loop dashed for contrast. Teaching plant 1/(s(s+1)) (integrating, like a position servo); actuator dead zone ±0.3
+        accountsFor: "Which knob to turn when the cart does this: ↓ Ki (or I off); fix the actuator."
+        live: board:ap-limitcycle
+    edges:
+      - from: root
+        to: problem
+        label: the task
+        question: What exactly are we trying to do?
+        idea: Make an output follow a command despite model error and disturbances.
+      - from: problem
+        to: feedback
+        label: how?
+        question: How can the output be made to follow?
+        idea: "Measure and correct from the error. It works, with costs: sensors, delay, saturation, instability."
+      - from: feedback
+        to: pid
+        label: what is C?
+        question: What do we put in the controller?
+        idea: "P (present), I (past), D (trend): three numbers to choose."
+      - from: pid
+        to: gains
+        label: each gain?
+        question: What does each gain do to the response?
+        idea: Kp trades speed for overshoot, Ki removes the offset, Kd adds damping.
+      - from: gains
+        to: integral
+        label: the offset
+        question: Why does I remove steady-state error?
+        idea: The integrator only rests when the error is zero.
+      - from: gains
+        to: derivative
+        label: the ringing
+        question: How do I calm the ringing?
+        idea: D adds damping; filter it and use it on the measurement to keep noise and kick under control.
+      - from: integral
+        to: windup
+        label: limits
+        question: What if the actuator saturates?
+        idea: The integrator keeps charging; anti-windup stops it.
+        dashed: true
+      - from: derivative
+        to: tuning
+        label: how good?
+        question: How do I decide when it is good enough?
+        idea: Measure overshoot, settling time and effort against the spec.
+      - from: integral
+        to: tuning
+        label: how good?
+        question: How do I decide when it is good enough?
+        idea: Measure overshoot, settling time and effort against the spec.
+        dashed: true
+      - from: tuning
+        to: lab
+        label: try it
+        question: Can I feel the trade-offs myself?
+        idea: Drag Kp, Ki, Kd on the cart and watch overshoot, settling and effort move together.
+      - from: lab
+        to: methods
+        label: find gains
+        question: How do I actually find the gains?
+        idea: By hand, by recipe or by an automatic tuner.
+      - from: methods
+        to: zn
+        label: recipe
+        question: Is there a recipe that needs no model?
+        idea: "Ziegler–Nichols: find the edge of instability, then scale."
+      - from: methods
+        to: sliders
+        label: automatic
+        question: What does the automatic tuner set?
+        idea: Bandwidth and phase margin, from which it computes the gains.
+      - from: methods
+        to: project
+        label: worked case
+        question: How does this play out on a real task?
+        idea: Project 1, step by step, with the reason behind each move.
+      - from: project
+        to: report
+        label: write it up
+        question: How do I explain the result?
+        idea: State spec, gains, measured performance and the limit.
+      - from: report
+        to: failures
+        label: when wrong
+        question: What if it misbehaves?
+        idea: Match the symptom to a card, then turn the knob it names.
+      - from: failures
+        to: ap-slow
+        label: A1
+        question: What does 'Slow response' look like, and what do I turn?
+        idea: "Raise Kp first: more push when the error is big (faster rise)."
+      - from: failures
+        to: ap-offset
+        label: A2
+        question: What does 'Steady-state offset' look like, and what do I turn?
+        idea: Add integral action (Ki > 0). I keeps growing while any error remains, so it only stops when e = 0 (Deep dive A).
+      - from: failures
+        to: ap-overshoot
+        label: A3
+        question: What does 'Overshoot' look like, and what do I turn?
+        idea: "Lower Ki (most common cure): the integrator is overshooting because it has stored too much area."
+      - from: failures
+        to: ap-oscillation
+        label: A4
+        question: What does 'Sustained oscillation / instability' look like, and what do I turn?
+        idea: "Back off: cut Kp (and Ki). Lower gain at the frequency where phase lag reaches −180° is the fundamental cure."
+      - from: failures
+        to: ap-disturbance
+        label: A5
+        question: What does 'Poor disturbance rejection' look like, and what do I turn?
+        idea: "Raise the loop gain at the disturbance's speed: ↑ Kp for a bigger, faster reaction, ↑ Ki so a constant load is eventually cancelled exactly."
+      - from: failures
+        to: ap-noise
+        label: A6
+        question: What does 'Noisy / jittery actuator' look like, and what do I turn?
+        idea: "Filter the derivative: lower N (or the filter coefficient in the block) so D stops amplifying high frequencies (Deep dive B)."
+      - from: failures
+        to: ap-windup
+        label: A7
+        question: What does 'Integrator windup (actuator saturation)' look like, and what do I turn?
+        idea: "Turn on anti-windup: clamping or back-calculation (Simulink PID block → Output Saturation tab)."
+      - from: failures
+        to: ap-kick
+        label: A8
+        question: What does 'Derivative kick' look like, and what do I turn?
+        idea: Apply D to the measurement only (“derivative on measurement” / set-point weight 0 on D). It still damps the loop and ignores set-point jumps.
+      - from: failures
+        to: ap-limits
+        label: A9
+        question: What does 'Actuator saturation & rate limits' look like, and what do I turn?
+        idea: "Don't demand what the actuator can't deliver: smaller steps or a set-point ramp (rate limiter on r)."
+      - from: failures
+        to: ap-delay
+        label: A10
+        question: What does 'Time delay (dead time)' look like, and what do I turn?
+        idea: "Lower the gain a lot, especially Ki: integrating on delayed information winds the loop up."
+      - from: failures
+        to: ap-sensorlag
+        label: A11
+        question: What does 'Measurement (sensor) lag' look like, and what do I turn?
+        idea: "Detune: ↓ Kp and Ki until the true output is calm (the lag eats phase margin)."
+      - from: failures
+        to: ap-nonlinear
+        label: A12
+        question: What does 'Nonlinearity / operating-point change' look like, and what do I turn?
+        idea: Tune for the worst (highest-gain) operating point, accepting a slower response elsewhere.
+      - from: failures
+        to: ap-twodof
+        label: A13
+        question: What does 'Set-point vs disturbance trade-off (2-DOF)' look like, and what do I turn?
+        idea: "Use a two-degree-of-freedom structure: keep the feedback gains for disturbances, and shape the set-point separately (set-point weight b < 1 on P, or a set-point filter Tf)."
+      - from: failures
+        to: ap-limitcycle
+        label: A14
+        question: What does 'Limit cycle from dead zone / backlash' look like, and what do I turn?
+        idea: ↓ Ki (or turn I off) so the integrator can't keep winding up inside the dead zone; accept a small residual error.

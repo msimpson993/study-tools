@@ -1,0 +1,694 @@
+<div class="layout tochide"><main id="top">
+<section class="hero" data-stage="0" id="overview">
+  <div class="kicker ui">EECE5130 Control Systems · Fall 2026 · Study guide</div>
+  <h1>PID Tuning, from the Ground Up</h1>
+  <p class="lead">A question-and-answer guide: start with intuition, build the math only as far as it earns its keep, and finish by walking through your Project 1 (MathWorks <em>PID Controller Tuning in Simulink</em>, model <code>scdspeedctrlpidblock</code>) so you can explain every number in your report.</p>
+  <div class="pillrow ui"><span class="pill">Builds on: transfer functions</span><span class="pill">block diagrams · G/(1+GH)</span><span class="pill">C/R vs C/D</span><span class="pill">P, I, PI, PD, PID</span><span class="pill">first-order response</span><span class="pill">Previews: ζ, ω<sub>n</sub>, overshoot</span></div>
+
+  <div class="where"><div class="ic">🗺️</div><div><b class="h">The big picture (keep this in your head)</b>
+  We have a <b>plant</b> (an engine) whose output (speed) we want to follow a <b>reference</b>. A <b>controller</b> looks at the <b>error</b> and decides the <b>input</b> (throttle). PID is the most common controller; <b>tuning</b> is choosing its three numbers so the response is fast <em>enough</em>, calm <em>enough</em>, accurate, and robust. Every section below is one stop on this route. The bar at the top always shows which stop you're at.</div></div>
+
+  <div class="bigmap">
+    <a href="#problem"><div class="n">1</div><div class="t">The problem</div><div class="d">Make an output follow a target despite disturbances</div></a>
+    <a href="#feedback"><div class="n">2</div><div class="t">Feedback</div><div class="d">Measure, compare, correct. And what can go wrong</div></a>
+    <a href="#pid"><div class="n">3</div><div class="t">PID controller</div><div class="d">Present + past + future of the error</div></a>
+    <a href="#gains"><div class="n">4</div><div class="t">What each gain does</div><div class="d">Effects table · integral &amp; derivative deep dives</div></a>
+    <a href="#tuning"><div class="n">5</div><div class="t">Tuning = trade-offs</div><div class="d">Speed vs robustness vs noise vs effort · interactive lab</div></a>
+    <a href="#methods"><div class="n">6</div><div class="t">Tuning methods</div><div class="d">Manual · Ziegler–Nichols · PID Tuner (bandwidth, PM)</div></a>
+    <a href="#project"><div class="n">7</div><div class="t">Your Project 1</div><div class="d">Engine speed PI design in PID Tuner, step by step</div></a>
+    <a href="#report"><div class="n">8</div><div class="t">Report &amp; review</div><div class="d">Pitfalls · predict-then-explain · cheat sheet · glossary</div></a>
+    <a href="#appendix" style="grid-column:1/-1"><div class="n">A · optional</div><div class="t">Appendix: what goes wrong, in pictures</div><div class="d">14 compact cards (every Q3 case plus extras): the problem, its symptoms, what to try · symptom lookup table</div></a>
+  </div>
+  <p class="ui" style="font-size:.85rem;color:var(--muted)">How to use: read Q1–Q9 in order the first time. The <b>Deep dive</b> boxes (purple) each have their own mini-map and can be skipped on a first pass. Play with the <a href="#lab">PID Lab</a> after Q9. Then test yourself in the <a href="#/quiz">quiz &amp; flashcards</a>.</p>
+</section>
+
+<!-- ================= 1. PROBLEM ================= -->
+<section data-stage="1" id="problem">
+<h2>1 · The problem control solves</h2>
+<div class="where"><div class="ic">📍</div><div><b class="h">Where are we in the big picture?</b>Stop 1 of 8. Before any formulas: what are we trying to achieve, and why is it not trivial?
+<div class="mini"><span class="on">Problem</span><i>→</i><span>Feedback</span><i>→</i><span>PID</span><i>→</i><span>Gains</span><i>→</i><span>Tuning</span><i>→</i><span>Methods</span><i>→</i><span>Project 1</span><i>→</i><span>Report</span></div></div></div>
+
+<div class="q" id="q1"><span class="badge">Q1</span><h3>What problem does feedback control actually solve?</h3></div>
+<div class="ansr">
+<div class="short">Making a physical quantity (speed, temperature, position, voltage) follow a desired value <b>automatically</b>, even though the system is imperfectly known and is being pushed around by disturbances.</div>
+<p>Think of <b>cruise control</b>, or exactly your project: <b>engine speed control</b>. You set a desired speed <var>r</var> (the <em>reference</em>, or set-point). The engine (the <em>plant</em>) produces a speed <var>y</var>. The only thing you can touch is the throttle/actuator command <var>u</var>. Meanwhile, the world adds <em>disturbances</em> <var>d</var>: a hill, a load torque from the alternator or A/C compressor, friction that changes as the engine warms up.</p>
+<p>So the job is: <b>choose <var>u</var>(t) so that <var>y</var>(t) ≈ <var>r</var>(t)</b>, quickly and smoothly, without knowing the disturbances in advance and with only an approximate model of the engine.</p>
+<div class="note"><b class="h">RF analogy (you'll like this)</b>A phase-locked loop or an automatic gain control (AGC) loop is the same problem: a reference, a measured output, an error detector, and a loop filter that decides the correction. A PLL's loop filter is often literally a PI controller, and you've already met loop bandwidth vs. phase margin trade-offs there. Same math, different hardware.</div>
+</div>
+</section>
+
+<!-- ================= 2. FEEDBACK ================= -->
+<section data-stage="2" id="feedback">
+<h2>2 · Why feedback, and what goes wrong</h2>
+<div class="where"><div class="ic">📍</div><div><b class="h">Where are we in the big picture?</b>Stop 2 of 8. We know the goal. Now: the structure that achieves it (the loop) and the ways a loop can misbehave. These misbehaviours are exactly what PID tuning will fight.
+<div class="mini"><span>Problem</span><i>→</i><span class="on">Feedback</span><i>→</i><span>PID</span><i>→</i><span>Gains</span><i>→</i><span>Tuning</span><i>→</i><span>Methods</span><i>→</i><span>Project 1</span><i>→</i><span>Report</span></div></div></div>
+
+<div class="q" id="q2"><span class="badge">Q2</span><h3>Why use feedback instead of just computing the right throttle (open loop)?</h3></div>
+<div class="ansr">
+<div class="short">Open loop only works if you know the plant exactly and nothing disturbs it. Feedback <b>measures the result</b> and corrects for whatever went wrong, whether that's model error or disturbances, without needing to know why.</div>
+<p>Open loop: “1200 rpm needs 18% throttle, so command 18%.” That fails as soon as the load changes or the engine is warmer than the day you calibrated. Closed loop: measure <var>y</var>, form the <b>error</b> <var>e</var> = <var>r</var> − <var>y</var>, and let a controller <var>C</var>(s) turn the error into a command.</p>
+
+<figure id="fig-loop">
+<svg viewBox="0 0 700 220" role="img" aria-label="Feedback loop block diagram with PID controller, actuator, plant, disturbance and sensor noise">
+<defs><marker id="arw" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0L10,5L0,10z" fill="var(--text)"/></marker>
+<marker id="arwd" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0L10,5L0,10z" fill="var(--c2)"/></marker></defs>
+<text class="txt" x="14" y="76">r</text><text class="txs" x="6" y="98">reference</text>
+<line class="wire" x1="30" y1="72" x2="70" y2="72" marker-end="url(#arw)"/>
+<circle class="blk" cx="82" cy="72" r="12"/><text class="txb" x="61" y="62">+</text><text class="txb" x="88" y="100">−</text>
+<line class="wire" x1="94" y1="72" x2="150" y2="72" marker-end="url(#arw)"/>
+<text class="txt" x="114" y="64">e</text>
+<rect class="blk2" x="150" y="40" width="150" height="64" rx="8"/>
+<text class="txb" x="160" y="62">PID controller C(s)</text>
+<text class="txs" x="160" y="80">K<tspan dy="3" font-size="9">p</tspan><tspan dy="-3">e + K</tspan><tspan dy="3" font-size="9">i</tspan><tspan dy="-3">∫e + K</tspan><tspan dy="3" font-size="9">d</tspan><tspan dy="-3"> de/dt</tspan></text>
+<text class="txs" x="160" y="96">(the part you tune)</text>
+<line class="wire" x1="300" y1="72" x2="338" y2="72" marker-end="url(#arw)"/>
+<text class="txt" x="312" y="64">u</text>
+<rect class="blk" x="338" y="48" width="78" height="48" rx="6"/>
+<polyline points="350,84 366,84 386,60 404,60" class="wire"/>
+<text class="txs" x="342" y="114">actuator limit</text>
+<line class="wire" x1="416" y1="72" x2="452" y2="72" marker-end="url(#arw)"/>
+<circle class="blk" cx="464" cy="72" r="12"/><text class="txb" x="443" y="62">+</text><text class="txb" x="469" y="52">+</text>
+<line class="wired" x1="464" y1="18" x2="464" y2="58" marker-end="url(#arwd)"/>
+<text class="txd" x="472" y="22">d  load disturbance</text>
+<line class="wire" x1="476" y1="72" x2="512" y2="72" marker-end="url(#arw)"/>
+<rect class="blk" x="512" y="44" width="96" height="56" rx="8"/>
+<text class="txb" x="523" y="68">Plant G(s)</text><text class="txs" x="523" y="86">engine</text>
+<line class="wire" x1="608" y1="72" x2="680" y2="72" marker-end="url(#arw)"/>
+<text class="txt" x="664" y="62">y</text><text class="txs" x="640" y="98">speed</text>
+<polyline class="wire" points="644,72 644,178 488,178" marker-end="url(#arw)"/>
+<circle class="blk" cx="476" cy="178" r="12"/><text class="txb" x="490" y="170">+</text><text class="txb" x="466" y="203">+</text>
+<line class="wired" x1="476" y1="215" x2="476" y2="192" marker-end="url(#arwd)" transform="translate(0,0)"/>
+<text class="txd" x="486" y="214">n  sensor noise</text>
+<polyline class="wire" points="464,178 82,178 82,86" marker-end="url(#arw)"/>
+<text class="txs" x="250" y="170">measured speed (sensor)</text>
+</svg>
+<figcaption><b>The loop.</b> Everything in this guide lives in this picture. Tuning changes only the blue block; the orange inputs (<var>d</var>, <var>n</var>) are what the world throws at you. The actuator limit (saturation) matters later for <a href="#dd-windup">windup</a>.</figcaption>
+</figure>
+
+<p>From class: with forward path <var>CG</var> and unity feedback, superposition gives two transfer functions with the <b>same denominator</b>:</p>
+<div class="eq box"><span class="frac"><span>Y</span><span>R</span></span> = <span class="frac"><span>C G</span><span>1 + C G</span></span>
+ &nbsp;&nbsp;&nbsp;&nbsp;
+ <span class="frac"><span>Y</span><span>D</span></span> = <span class="frac"><span>G</span><span>1 + C G</span></span>
+ &nbsp;&nbsp;&nbsp;&nbsp;
+ <span class="frac"><span>E</span><span>R</span></span> = <span class="frac"><span>1</span><span>1 + C G</span></span></div>
+<p>Read them like an engineer: wherever the loop gain |<var>CG</var>| is <b>large</b>, <var>Y</var>/<var>R</var> → 1 (good tracking) and <var>Y</var>/<var>D</var> → 0 (disturbance rejected). That one sentence is the reason feedback works, and it's the seed of why integral action (infinite gain at DC) gives zero steady-state error.</p>
+</div>
+
+<div class="q" id="q3"><span class="badge">Q3</span><h3>So what goes wrong with feedback?</h3></div>
+<div class="ansr">
+<div class="short">Feedback acts on <em>delayed, lagged</em> information. Push too hard and you overshoot or oscillate; push too gently and you're slow or leave a permanent offset. Noise and actuator limits add their own problems.</div>
+<div class="tw"><table class="t">
+<tr><th>Symptom</th><th>What you see on a step response</th><th>Typical cause</th><th>Usual PID fix</th></tr>
+<tr><td><b>Slow</b> <a class="aplnk" href="#ap-slow" title="See it in the appendix">▸A1</a></td><td>Long rise / settling time</td><td>Gains too low (low bandwidth)</td><td>↑ K<sub>p</sub> (and K<sub>i</sub>)</td></tr>
+<tr><td><b>Steady-state offset</b> <a class="aplnk" href="#ap-offset" title="See it in the appendix">▸A2</a></td><td>Settles, but not at <var>r</var></td><td>No integrator in the loop (type-0)</td><td>Add I action</td></tr>
+<tr><td><b>Overshoot</b> <a class="aplnk" href="#ap-overshoot" title="See it in the appendix">▸A3</a></td><td>Goes past <var>r</var>, then comes back</td><td>Too aggressive; too much I; low phase margin</td><td>↓ K<sub>i</sub>, ↓ K<sub>p</sub>, or add K<sub>d</sub></td></tr>
+<tr><td><b>Oscillation / instability</b> <a class="aplnk" href="#ap-oscillation" title="See it in the appendix">▸A4</a></td><td>Ringing that decays slowly, persists, or grows</td><td>Loop gain too high where phase lag reaches −180°</td><td>Detune; add D; more robustness</td></tr>
+<tr><td><b>Poor disturbance rejection</b> <a class="aplnk" href="#ap-disturbance" title="See it in the appendix">▸A5</a></td><td>Big dip when load hits; slow recovery</td><td>Low loop gain at the disturbance frequencies</td><td>↑ gains; I action for constant loads</td></tr>
+<tr><td><b>Noisy / jittery actuator</b> <a class="aplnk" href="#ap-noise" title="See it in the appendix">▸A6</a></td><td>Control signal chatters</td><td>Derivative (or high K<sub>p</sub>) amplifying sensor noise</td><td>Filter D; ↓ K<sub>d</sub></td></tr>
+<tr><td><b>Windup</b> <a class="aplnk" href="#ap-windup" title="See it in the appendix">▸A7</a></td><td>Huge overshoot after a long saturation</td><td>Integrator keeps charging while actuator is maxed</td><td>Anti-windup</td></tr>
+</table></div>
+<p class="ui" style="font-size:.85rem;color:var(--muted)">▸A1–A7 link to a simulated picture of each row in the <a href="#appendix">appendix</a>.</p>
+<p>Keep this table in mind. The rest of the guide is basically: <em>which knob fixes which row, and what does it cost in the other rows?</em></p>
+</div>
+</section>
+
+<!-- ================= 3. PID ================= -->
+<section data-stage="3" id="pid">
+<h2>3 · The PID controller</h2>
+<div class="where"><div class="ic">📍</div><div><b class="h">Where are we in the big picture?</b>Stop 3 of 8. We have a loop and a list of failure modes. Now we fill the blue “controller” block with the most widely used design in industry.
+<div class="mini"><span>Problem</span><i>→</i><span>Feedback</span><i>→</i><span class="on">PID</span><i>→</i><span>Gains</span><i>→</i><span>Tuning</span><i>→</i><span>Methods</span><i>→</i><span>Project 1</span><i>→</i><span>Report</span></div></div></div>
+
+<div class="q" id="q4"><span class="badge">Q4</span><h3>What is a PID controller, and why are P, I and D each there?</h3></div>
+<div class="ansr">
+<div class="short">It adds three reactions to the error: <b>P</b> reacts to the error <b>now</b> (present), <b>I</b> to the error accumulated so far (past), <b>D</b> to how fast the error is changing (a prediction of the near future).</div>
+<div class="tw"><table class="t">
+<tr><th></th><th>Looks at</th><th>Intuition (driving)</th><th>Good at</th><th>Bad at / risk</th></tr>
+<tr><td><b>P</b> &nbsp;K<sub>p</sub>e</td><td>Present error</td><td>“I'm 10 mph slow → press harder, in proportion.”</td><td>Fast basic correction</td><td>Leaves offset on type-0 plants; too much ⇒ oscillation</td></tr>
+<tr><td><b>I</b> &nbsp;K<sub>i</sub>∫e dt</td><td>Past (accumulated) error</td><td>“I've been slow for a while → keep adding throttle until the error is truly gone.”</td><td>Removes steady-state error; rejects constant loads</td><td>Adds lag ⇒ overshoot; windup when saturated</td></tr>
+<tr><td><b>D</b> &nbsp;K<sub>d</sub> de/dt</td><td>Future trend</td><td>“I'm closing in fast → ease off before I overshoot.”</td><td>Damping, less overshoot</td><td>Amplifies noise; “kick” on set-point steps</td></tr>
+</table></div>
+<p>The figure below shows these three signals for an actual closed-loop step response (the PI loop of the PID Lab plant). Notice the punchline at the bottom: when the error has gone to zero, the <b>integral is still non-zero</b>, and that stored value is precisely what keeps holding the throttle where it needs to be.</p>
+<figure><div id="fig-eid"></div>
+<figcaption><b>Present, past, future.</b> Top: error <var>e</var>(t). Middle: its running integral ∫e (shaded area = what I “remembers”). Bottom: slope de/dt (what D “sees coming”). Simulated: plant 1/(s+1)³, PI with K<sub>p</sub> = 1, K<sub>i</sub> = 0.5, unit step. ∫e settles at 1/K<sub>i</sub> = 2, so the I-term K<sub>i</sub>∫e = 1 supplies the full steady control effort while e = 0.</figcaption></figure>
+</div>
+
+<div class="q" id="q5"><span class="badge">Q5</span><h3>Why write it as u = K<sub>p</sub>e + K<sub>i</sub>∫e + K<sub>d</sub> de/dt, and what's its transfer function?</h3></div>
+<div class="ansr">
+<div class="short">The time-domain law is literally “present + past + future.” Laplace-transform it (zero ICs) and integration becomes 1/s and differentiation becomes s, so it drops straight into block-diagram algebra: <var>C</var>(s) = K<sub>p</sub> + K<sub>i</sub>/s + K<sub>d</sub>s.</div>
+<div class="eq box">u(t) = K<sub>p</sub> e(t) + K<sub>i</sub> <span class="int">∫</span><sub>0</sub><sup>t</sup> e(τ) dτ + K<sub>d</sub> <span class="frac"><span>de</span><span>dt</span></span>
+&nbsp;&nbsp;⟹&nbsp;&nbsp;
+<span class="frac"><span>U(s)</span><span>E(s)</span></span> = K<sub>p</sub> + <span class="frac"><span>K<sub>i</sub></span><span>s</span></span> + K<sub>d</sub>s = <span class="frac"><span>K<sub>d</sub>s² + K<sub>p</sub>s + K<sub>i</sub></span><span>s</span></span></div>
+<p>Reading the transfer function like a math person:</p>
+<ul>
+<li><b>One pole at the origin</b> (from 1/s). That pole is the whole story of zero steady-state error (<a href="#dd-int">Deep dive A</a>).</li>
+<li><b>Two zeros</b> (roots of K<sub>d</sub>s² + K<sub>p</sub>s + K<sub>i</sub>). Tuning is really <em>placing these two zeros and setting an overall gain</em>. A PI has one zero at s = −K<sub>i</sub>/K<sub>p</sub> = −1/T<sub>i</sub>.</li>
+<li><b>Ideal D is improper</b> (more zeros than poles; gain → ∞ as ω → ∞). Real implementations add a filter: K<sub>d</sub>s → K<sub>d</sub><span class="frac"><span>N s</span><span>s + N</span></span>. This is exactly the <b>N</b> (“filter coefficient”) field in the Simulink PID block (<a href="#dd-der">Deep dive B</a>).</li>
+</ul>
+<p>Special cases you've seen in class: <b>P</b> (K<sub>i</sub> = K<sub>d</sub> = 0), <b>PI</b> (K<sub>d</sub> = 0), <b>PD</b> (K<sub>i</sub> = 0), <b>I-only</b> (K<sub>p</sub> = K<sub>d</sub> = 0). Hold on to I-only. Your Project 1 tuner lands on it at one point.</p>
+</div>
+
+<div class="q" id="q6"><span class="badge">Q6</span><h3>Parallel form vs. standard (ideal) form: what's the difference, and how do I convert?</h3></div>
+<div class="ansr">
+<div class="short">Same controller, different parameters. Standard form factors out K<sub>p</sub>: <var>C</var> = K<sub>p</sub>(1 + 1/(T<sub>i</sub>s) + T<sub>d</sub>s). Convert with <b>K<sub>i</sub> = K<sub>p</sub>/T<sub>i</sub></b> and <b>K<sub>d</sub> = K<sub>p</sub>T<sub>d</sub></b>.</div>
+<div class="eq box">Parallel: K<sub>p</sub> + <span class="frac"><span>K<sub>i</sub></span><span>s</span></span> + K<sub>d</sub>s
+&nbsp;&nbsp;&nbsp;⟺&nbsp;&nbsp;&nbsp;
+Standard (your class): K<sub>p</sub><span style="font-size:1.3em">(</span>1 + <span class="frac"><span>1</span><span>T<sub>i</sub>s</span></span> + T<sub>d</sub>s<span style="font-size:1.3em">)</span></div>
+<div class="tw"><table class="t">
+<tr><th></th><th>Parallel (K<sub>p</sub>, K<sub>i</sub>, K<sub>d</sub>)</th><th>Standard (K<sub>p</sub>, T<sub>i</sub>, T<sub>d</sub>)</th></tr>
+<tr><td>Units</td><td>K<sub>i</sub> in 1/s × gain, K<sub>d</sub> in s × gain</td><td>T<sub>i</sub>, T<sub>d</sub> in <b>seconds</b> (physical time scales)</td></tr>
+<tr><td>Conversion</td><td>K<sub>i</sub> = K<sub>p</sub>/T<sub>i</sub>, &nbsp; K<sub>d</sub> = K<sub>p</sub>T<sub>d</sub></td><td>T<sub>i</sub> = K<sub>p</sub>/K<sub>i</sub>, &nbsp; T<sub>d</sub> = K<sub>d</sub>/K<sub>p</sub></td></tr>
+<tr><td>Change K<sub>p</sub> only…</td><td>…only P action changes</td><td>…<b>all three</b> actions scale together</td></tr>
+<tr><td>Bigger integral parameter means…</td><td>larger K<sub>i</sub> ⇒ <b>stronger</b> I action</td><td>larger T<sub>i</sub> ⇒ <b>weaker</b> I action</td></tr>
+<tr><td>Where you meet it</td><td>Simulink PID block default (“Parallel”: P, I, D, N)</td><td>Ziegler–Nichols tables; textbooks; Simulink “Ideal” form</td></tr>
+</table></div>
+<div class="trap"><b class="h">Trap</b>“Increase T<sub>i</sub> to get more integral action” is <b>wrong</b>: T<sub>i</sub> is in the denominator. And in Simulink's Ideal form the “I” field is 1/T<sub>i</sub>, not T<sub>i</sub>. Always check which form a dialog is in before you copy numbers.</div>
+<div class="tip"><b class="h">Quick check</b>K<sub>p</sub> = 2, T<sub>i</sub> = 0.5 s, T<sub>d</sub> = 0.1 s ⇒ K<sub>i</sub> = 2/0.5 = 4 s⁻¹, K<sub>d</sub> = 2 × 0.1 = 0.2 s. Physical meaning of T<sub>i</sub>: for a constant error, the I term needs T<sub>i</sub> seconds to add as much as the P term already contributes.</div>
+</div>
+</section>
+<!-- ================= 4. GAINS ================= -->
+<section data-stage="4" id="gains">
+<h2>4 · What each gain does</h2>
+<div class="where"><div class="ic">📍</div><div><b class="h">Where are we in the big picture?</b>Stop 4 of 8. We have the controller's formula. Now: how turning each knob changes the step response, which is the intuition you need before “tuning” makes sense.
+<div class="mini"><span>Problem</span><i>→</i><span>Feedback</span><i>→</i><span>PID</span><i>→</i><span class="on">Gains</span><i>→</i><span>Tuning</span><i>→</i><span>Methods</span><i>→</i><span>Project 1</span><i>→</i><span>Report</span></div></div></div>
+
+<div class="q" id="q7"><span class="badge">Q7</span><h3>What does increasing each gain do to the step response?</h3></div>
+<div class="ansr">
+<div class="short">Roughly: <b>K<sub>p</sub></b> makes it faster but more oscillatory and only <em>reduces</em> offset; <b>K<sub>i</sub></b> <em>eliminates</em> offset but adds overshoot and slows settling; <b>K<sub>d</sub></b> adds damping (less overshoot, faster settling) but amplifies noise.</div>
+<div class="tw"><table class="t">
+<tr><th>Increase…</th><th>Rise time</th><th>Overshoot</th><th>Settling time</th><th>Steady-state error</th><th>Stability margin</th></tr>
+<tr><td><b>K<sub>p</sub></b></td><td class="dn">↓ decreases</td><td class="up">↑ increases</td><td>small change</td><td class="dn">↓ decreases (not to 0)</td><td class="up">↓ degrades</td></tr>
+<tr><td><b>K<sub>i</sub></b></td><td class="dn">↓ decreases</td><td class="up">↑ increases</td><td class="up">↑ increases</td><td class="dn">eliminated</td><td class="up">↓ degrades</td></tr>
+<tr><td><b>K<sub>d</sub></b></td><td>minor change</td><td class="dn">↓ decreases</td><td class="dn">↓ decreases</td><td>no effect (in theory)</td><td class="dn">↑ improves (if K<sub>d</sub> modest)</td></tr>
+</table></div>
+<div class="trap"><b class="h">These are rules of thumb, not theorems</b>The table describes the <em>typical</em> trend near a reasonable design. Push any gain far enough and the trend can reverse. Too much K<sub>d</sub> can make things worse, and with noise it always costs actuator jitter. Use the table to <b>predict</b>, then confirm with simulation, which is exactly the habit your instructor wants.</div>
+
+<figure><div class="legend" id="lg-ppid"></div><div id="fig-ppid"></div>
+<figcaption><b>P vs PI vs PID on the same plant</b> (1/(s+1)³, unit step, simulated). <b>P</b> (K<sub>p</sub> = 2) settles at 2/3, leaving 1/3 error (= 1/(1+K<sub>p</sub>G(0))). <b>PI</b> (K<sub>p</sub> = 1, K<sub>i</sub> = 0.4) removes the offset but is slow. <b>PID</b> (K<sub>p</sub> = 2, K<sub>i</sub> = 0.8, K<sub>d</sub> = 1.6, N = 20) is fast <em>and</em> well damped. Exact numbers are in the readouts when you load these presets in the <a href="#lab">Lab</a>.</figcaption></figure>
+<p><b>A first-order sanity check (ties to your class).</b> With a first-order plant <var>G</var> = K/(τs+1) and P control, the closed loop is still first order:</p>
+<div class="eq box"><span class="frac"><span>Y</span><span>R</span></span> = <span class="frac"><span>K<sub>p</sub>K</span><span>τs + 1 + K<sub>p</sub>K</span></span> = <span class="frac"><span>K<sub>p</sub>K/(1+K<sub>p</sub>K)</span><span>(τ/(1+K<sub>p</sub>K)) s + 1</span></span></div>
+<p>So raising K<sub>p</sub> <b>shrinks the time constant</b> by (1 + K<sub>p</sub>K) (faster) and pushes the DC gain toward 1 (smaller offset) but never to exactly 1. Example: τ = 1, K = 1, K<sub>p</sub> = 3 ⇒ time constant 0.25 s, final value 0.75, error 0.25. Overshoot and oscillation only appear when the closed loop is <em>second order or higher</em>, which is why the next class topic (ζ, ω<sub>n</sub>) is the natural language for tuning.</p>
+</div>
+
+<!-- Deep dive A -->
+<div class="deep" id="dd-int">
+<div class="dh"><span class="tag">Deep dive A</span><h3>Why does integral action give zero steady-state error?</h3></div>
+<div class="where" style="box-shadow:none"><div class="ic">🧭</div><div><b class="h">Mini big picture for this detail</b>This explains row 2 of the symptoms table (“offset”) and the Project 1 requirement “zero steady-state error to a step”. Three ways to see the same fact:</div></div>
+<div class="dmap"><div><b>Equilibrium argument</b>: an integrator's output can only stop changing if its input e is zero.</div><div><b>Final value theorem</b>: e<sub>ss</sub> = 1/(1 + C(0)G(0)), and an integrator makes C(0) = ∞.</div><div><b>Disturbances</b>: the same infinite DC gain wipes out constant loads.</div><div><b>Fine print</b>: only if the closed loop is stable. And it costs phase lag.</div></div>
+
+<h4>1. The equilibrium argument (the intuitive one)</h4>
+<p>Suppose the loop settles to steady state. Then every signal is constant, including the integrator output x<sub>i</sub> = ∫e dt. But <span class="mono">dx<sub>i</sub>/dt = e</span>. A constant x<sub>i</sub> requires <b>e = 0</b>. There is no other way for the loop to sit still. P-only control has no such constraint: it can sit still at any e that makes K<sub>p</sub>e equal to the needed throttle, which is why it needs an offset to “hold” the throttle open.</p>
+<h4>2. The final value theorem (the one for exams)</h4>
+<p>Unity feedback, step reference R(s) = 1/s, closed loop stable:</p>
+<div class="eq box">e<sub>ss</sub> = <span style="font-size:.9em">lim</span><sub>s→0</sub> s · <span class="frac"><span>1</span><span>1 + C(s)G(s)</span></span> · <span class="frac"><span>1</span><span>s</span></span> = <span class="frac"><span>1</span><span>1 + C(0)G(0)</span></span></div>
+<ul><li>P: e<sub>ss</sub> = 1/(1 + K<sub>p</sub>G(0)). Finite K<sub>p</sub> ⇒ finite but nonzero error (for a plant with no free integrator, i.e. “type 0”).</li>
+<li>PI/PID: C(s) ∋ K<sub>i</sub>/s ⇒ C(0) → ∞ ⇒ <b>e<sub>ss</sub> = 0</b>.</li>
+<li>If the plant <em>itself</em> has an integrator (type 1, e.g. a position servo), P alone already gives zero step error, and I is then for rejecting constant <em>disturbances</em>.</li></ul>
+<h4>3. Disturbances: the C/D view from class</h4>
+<div class="eq box"><span class="frac"><span>Y</span><span>D</span></span>(0) = <span class="frac"><span>G(0)</span><span>1 + C(0)G(0)</span></span> &nbsp;→&nbsp; <span class="frac"><span>G(0)</span><span>1 + K<sub>p</sub>G(0)</span></span> (P) &nbsp;&nbsp;or&nbsp;&nbsp; 0 (with I)</div>
+<figure><div class="legend" id="lg-dist"></div><div id="fig-dist"></div>
+<figcaption><b>Load disturbance step</b> (d = 1 at t = 1 s, r = 0, plant 1/(s+1)³). P-only (K<sub>p</sub> = 2) is left with a permanent deviation of G(0)/(1 + K<sub>p</sub>G(0)) = 1/3. PI (K<sub>p</sub> = 2, K<sub>i</sub> = 0.8) drives it back to zero. Think: a hill under cruise control.</figcaption></figure>
+<div class="trap"><b class="h">Fine print</b>(i) Zero error requires the closed loop to be <b>stable</b>; the final value theorem is invalid otherwise. (ii) The integrator contributes −90° of phase at all frequencies, which is why too much K<sub>i</sub> adds overshoot and can destabilize. (iii) “Zero error” is for step references/constant disturbances; a ramp reference with a type-1 loop still leaves a finite error.</div>
+</div>
+
+<!-- Deep dive B -->
+<div class="deep" id="dd-der">
+<div class="dh"><span class="tag">Deep dive B</span><h3>The derivative term: damping, noise, filters and “kick”</h3></div>
+<div class="where" style="box-shadow:none"><div class="ic">🧭</div><div><b class="h">Mini big picture for this detail</b>D is the “future” term. It's powerful for damping, but it is the term most likely to bite you in practice. And your Project 1 controller is <b>PI</b>, so understanding why D is often left out is part of the story.</div></div>
+<div class="dmap"><div><b>Why it damps</b>: opposes fast motion, like a shock absorber.</div><div><b>Why it's noisy</b>: |K<sub>d</sub>jω| grows with frequency.</div><div><b>Fix 1: filter</b> K<sub>d</sub>Ns/(s+N) caps the HF gain at K<sub>d</sub>N.</div><div><b>Fix 2: D on measurement</b> avoids the set-point “kick”.</div></div>
+<h4>Why it damps</h4>
+<p>Near the target the error is small but changing fast; D sees the slope and starts braking early. It's a velocity-proportional force, a <b>shock absorber</b>, so it adds damping (raises ζ, once you meet ζ next class). In frequency terms it adds <b>phase lead</b> (up to +90°) near crossover, which increases phase margin.</p>
+<h4>Why it amplifies noise</h4>
+<p>Your RF intuition is exactly right here: the ideal differentiator's frequency response is K<sub>d</sub>·jω, a +20 dB/decade high-pass with unbounded gain. Sensor noise lives at high frequency, so D turns a tiny noise ripple into a large actuator chatter. Example: noise at 100 rad/s with K<sub>d</sub> = 1 gets gain 100.</p>
+<div class="eq box">Filtered D: &nbsp;K<sub>d</sub> <span class="frac"><span>N s</span><span>s + N</span></span> &nbsp;≈&nbsp; K<sub>d</sub>s for ω ≪ N, &nbsp;&nbsp; → K<sub>d</sub>N for ω ≫ N</div>
+<figure><div class="legend" id="lg-noise"></div><div id="fig-noise"></div>
+<figcaption><b>Same small sensor noise, three controllers</b> (noise σ = 0.01, i.e. 1% of the set-point; plant 1/(s+1)³). The <b>control signal u</b> after the transient: PI is nearly quiet; PID with a light filter (N = 100) chatters strongly; a heavier filter (N = 10) tames it. Lower N = more filtering but less phase lead, which is a trade-off.</figcaption></figure>
+<h4>Derivative kick</h4>
+<p>If D acts on the error e = r − y and r <b>steps</b>, de/dt is an impulse, so u gets a huge spike (limited only by N). Common fix: apply D to <b>−y</b> only (“derivative on measurement”). For a constant r it's identical, but it ignores set-point jumps. Try the “D on measurement” toggle in the Lab and watch the <b>peak |u|</b> readout.</p>
+<div class="tip"><b class="h">Why a PI (not PID) is a sensible choice for Project 1</b>The example asks for a PI controller. That makes sense: the requirements (settle &lt; 5 s, zero step error) need the I term, and in your project they can be met without D. Leaving D out sidesteps the noise and kick issues entirely. A common practical default is <b>PI unless you really need the extra damping</b>.</div>
+</div>
+</section>
+<!-- ================= 5. TUNING ================= -->
+<section data-stage="5" id="tuning">
+<h2>5 · What “tuning” means, and why it's hard</h2>
+<div class="where"><div class="ic">📍</div><div><b class="h">Where are we in the big picture?</b>Stop 5 of 8. We know what each knob does on its own. Tuning is choosing all three <em>together</em> to meet requirements, and every gain helps one thing while hurting another.
+<div class="mini"><span>Problem</span><i>→</i><span>Feedback</span><i>→</i><span>PID</span><i>→</i><span>Gains</span><i>→</i><span class="on">Tuning</span><i>→</i><span>Methods</span><i>→</i><span>Project 1</span><i>→</i><span>Report</span></div></div></div>
+
+<div class="q" id="q8"><span class="badge">Q8</span><h3>What does “tuning” mean, and why is it hard?</h3></div>
+<div class="ansr">
+<div class="short">Tuning = picking K<sub>p</sub>, K<sub>i</sub>, K<sub>d</sub> (and filter N) so the loop meets specs such as settling time, overshoot, steady-state error and robustness. It's hard because the specs <b>conflict</b>: faster usually means less robust, noisier and harder on the actuator.</div>
+<p>The core trade-offs:</p>
+<ul>
+<li><b>Speed vs robustness.</b> A faster loop needs higher gain at higher frequencies, where the plant's phase lag is larger, so less phase margin, more overshoot, and more sensitivity to model error.</li>
+<li><b>Speed vs noise.</b> Higher bandwidth lets more sensor noise through to the actuator (D makes it worse).</li>
+<li><b>Speed vs actuator effort.</b> Fast responses demand big, sharp control signals. Real actuators saturate, which leads to windup.</li>
+<li><b>Tracking vs disturbance rejection.</b> A tuning optimized for set-point steps isn't automatically best for load disturbances.</li>
+</ul>
+<figure>
+<svg viewBox="0 0 640 300" role="img" aria-label="Trade-off diagram: speed versus robustness with achievable frontier">
+<defs><marker id="ar2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0L10,5L0,10z" fill="var(--axis)"/></marker>
+<marker id="ar3" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0L10,5L0,10z" fill="var(--accent)"/></marker></defs>
+<path d="M70,40 C150,48 260,80 330,130 S470,230 560,250 L560,262 L70,262 Z" class="band"/>
+<path class="ln s3" d="M70,40 C150,48 260,80 330,130 S470,230 560,250"/>
+<line class="ax" x1="70" y1="262" x2="600" y2="262" marker-end="url(#ar2)"/>
+<line class="ax" x1="70" y1="262" x2="70" y2="20" marker-end="url(#ar2)"/>
+<text class="lb" x="330" y="290" text-anchor="middle">Speed →  (higher bandwidth ω<tspan font-size="9" dy="3">c</tspan><tspan dy="-3">, shorter response time)</tspan></text>
+<text class="lb" transform="translate(28,150) rotate(-90)" text-anchor="middle">Robustness →  (phase margin)</text>
+<text class="annm" x="390" y="120">achievable-design frontier</text>
+<text class="annm" x="380" y="134">(set by the plant: lag, delay, limits)</text>
+<text class="annm" x="430" y="60">✗ not achievable</text><text class="annm" x="430" y="74">with this plant</text>
+<circle cx="120" cy="80" r="7" class="f4"/><text class="ann" x="132" y="84">Sluggish but safe</text><text class="annm" x="132" y="98">no overshoot, slow</text>
+<circle cx="300" cy="118" r="7" class="f3"/><text class="ann" x="286" y="128" text-anchor="end">Balanced</text><text class="annm" x="286" y="142" text-anchor="end">(what you aim for)</text>
+<circle cx="500" cy="228" r="7" class="f5"/><text class="ann" x="514" y="218">Aggressive</text><text class="annm" x="372" y="238">fast, overshoot, fragile,</text><text class="annm" x="372" y="252">noisy, big u</text>
+<line x1="100" y1="250" x2="220" y2="250" stroke="var(--accent)" stroke-width="2" marker-end="url(#ar3)"/>
+<text class="txa" x="100" y="242">Response-time slider → Faster</text>
+<line x1="300" y1="252" x2="300" y2="182" stroke="var(--accent)" stroke-width="2" marker-end="url(#ar3)"/>
+<text class="txa" x="308" y="200">Transient-behavior</text><text class="txa" x="308" y="214">slider → Robust</text>
+</svg>
+<figcaption><b>Conceptual trade-off map</b> (qualitative, not to scale). Good tuning means getting <em>onto</em> the frontier and then choosing where along it to sit. In the PID Tuner, the two sliders move you roughly along these two axes. That's the key to understanding your Project 1 (<a href="#dd-sliders">Deep dive D</a>). Below the curve is achievable but not the best you could do.</figcaption>
+</figure>
+</div>
+
+<div class="q" id="q9"><span class="badge">Q9</span><h3>How do we measure “good”? (A gentle preview of second-order systems)</h3></div>
+<div class="ansr">
+<div class="short">With step-response numbers: <b>rise time</b>, <b>overshoot</b> (%), <b>settling time</b> (time to stay within ±2% of final value), and <b>steady-state error</b>. For loops that behave like a second-order system, two numbers, the damping ratio <b>ζ</b> and natural frequency <b>ω<sub>n</sub></b>, predict all of them.</div>
+<p>Many closed loops (including a PI on a first-order plant, or an I-only loop) are exactly second order, and higher-order loops are often dominated by one pair of complex poles. The standard form is:</p>
+<div class="eq box"><span class="frac"><span>Y</span><span>R</span></span> = <span class="frac"><span>ω<sub>n</sub>²</span><span>s² + 2ζω<sub>n</sub>s + ω<sub>n</sub>²</span></span>
+&nbsp;&nbsp;&nbsp; poles: s = −ζω<sub>n</sub> ± jω<sub>n</sub>√(1−ζ²)</div>
+<div class="tw"><table class="t">
+<tr><th>Quantity</th><th>Formula (0 &lt; ζ &lt; 1)</th><th>Controlled by</th><th>Intuition</th></tr>
+<tr><td>Percent overshoot</td><td>%OS = 100·e<sup>−πζ/√(1−ζ²)</sup></td><td><b>ζ only</b></td><td>ζ = 0.5 → 16%, 0.6 → 9.5%, 0.7 → 4.6%, ≥1 → 0</td></tr>
+<tr><td>Settling time (2%)</td><td>T<sub>s</sub> ≈ 4/(ζω<sub>n</sub>)</td><td>real part of poles</td><td>Poles farther left ⇒ faster decay envelope</td></tr>
+<tr><td>Peak time</td><td>T<sub>p</sub> = π/(ω<sub>n</sub>√(1−ζ²))</td><td>imag part</td><td>Faster oscillation ⇒ earlier peak</td></tr>
+<tr><td>Rise time (10–90%)</td><td>ω<sub>n</sub>T<sub>r</sub> ≈ 1.768ζ³ − 0.417ζ² + 1.039ζ + 1 (curve fit)</td><td>mostly ω<sub>n</sub></td><td>Higher ω<sub>n</sub> ⇒ faster</td></tr>
+</table></div>
+<div class="widget" id="w2">
+<h4 class="ui">Mini-widget: feel ζ and ω<sub>n</sub></h4>
+<div class="wgrid">
+<div><div class="legend" id="lg-2nd"></div><div id="plot-2nd"></div><div id="splane-2nd"></div></div>
+<div class="ctl">
+<label>Damping ratio ζ <output id="o-z"></output></label><input type="range" id="z" min="0.05" max="2" step="0.01" value="0.5">
+<label>Natural frequency ω<sub>n</sub> (rad/s) <output id="o-wn"></output></label><input type="range" id="wn" min="0.5" max="6" step="0.05" value="2">
+<div class="readout" id="ro-2nd"></div>
+<p style="font-size:.78rem;color:var(--muted);margin:.4rem 0">Formula values vs. values measured from the simulated curve. The settling formula is an envelope estimate, so expect it to differ a bit. Below: pole locations (× marks) in the s-plane; the angle from the negative real axis is θ with cos θ = ζ.</p>
+</div></div></div>
+<div class="note"><b class="h">Connection to PID</b>Example: an I-only controller on a first-order plant K/(τs+1) gives Y/R = KK<sub>i</sub>/(τs² + s + KK<sub>i</sub>): second order with ω<sub>n</sub> = √(KK<sub>i</sub>/τ) and ζ = 1/(2√(τKK<sub>i</sub>)). Raising K<sub>i</sub> raises ω<sub>n</sub> but <b>lowers ζ</b>, so you get more overshoot. That's the “integral adds overshoot” row of the effects table, derived rather than memorized. With PI: ζ = (1 + KK<sub>p</sub>)/(2√(τKK<sub>i</sub>)), so K<sub>p</sub> adds damping here.</div>
+</div>
+
+<!-- LAB -->
+<div class="widget" id="lab">
+<h4 class="ui" style="font-size:1.1rem">🧪 PID Lab: drag the gains, watch the loop</h4>
+<p style="font-size:.9rem;margin:.1rem 0 .6rem;color:var(--muted)" class="ui">Controller: parallel PID, C(s) = K<sub>p</sub> + K<sub>i</sub>/s + K<sub>d</sub>·Ns/(s+N) (the Simulink block's form). Unit step in r at t = 0. Simulated live with 4th-order Runge–Kutta (dt = 0.01 s); checked against an exact matrix-exponential solution. Plants are teaching examples, <b>not</b> the Project 1 engine model.</p>
+<div class="wgrid">
+<div>
+  <div class="legend" id="lg-lab"></div>
+  <div id="plot-lab"></div>
+  <div id="plot-lab-u"></div>
+  <div class="status" id="lab-status"></div>
+  <div class="readout" id="ro-lab"></div>
+</div>
+<div class="ctl">
+  <label for="pl">Plant</label>
+  <select id="pl"><option value="p3" selected>1/(s+1)³ (third-order lag)</option><option value="p2">1/((s+1)(0.5s+1)) (second-order)</option><option value="p1">1/(s+1) (first-order)</option></select>
+  <div class="presets" id="presets">
+    <button data-p="P">P only</button><button data-p="PI">PI</button><button data-p="PID">PID</button><button data-p="I">I only</button><button data-p="Ku">Kp = Ku</button><button data-p="ZN">Z–N PID</button>
+  </div>
+  <label>K<sub>p</sub> <output id="o-kp"></output></label><input type="range" id="kp" min="0" max="10" step="0.05" value="2">
+  <label>K<sub>i</sub> <output id="o-ki"></output></label><input type="range" id="ki" min="0" max="5" step="0.02" value="0.8">
+  <label>K<sub>d</sub> <output id="o-kd"></output></label><input type="range" id="kd" min="0" max="4" step="0.02" value="1.6">
+  <label>Derivative filter N <output id="o-n"></output></label><input type="range" id="nf" min="1" max="100" step="1" value="20">
+  <label>Time window (s) <output id="o-T"></output></label><input type="range" id="tw" min="5" max="60" step="1" value="30">
+  <div class="chk"><input type="checkbox" id="cDist"><label for="cDist" style="margin:0;color:inherit">Load disturbance d = −0.5 at mid-window</label></div>
+  <div class="chk"><input type="checkbox" id="cNoise"><label for="cNoise" style="margin:0;color:inherit">Sensor noise (σ = 0.01)</label></div>
+  <div class="chk"><input type="checkbox" id="cSat"><label for="cSat" style="margin:0;color:inherit">Actuator limit |u| ≤ 1.2</label></div>
+  <div class="chk"><input type="checkbox" id="cAW"><label for="cAW" style="margin:0;color:inherit">Anti-windup (clamping)</label></div>
+  <div class="chk"><input type="checkbox" id="cDm"><label for="cDm" style="margin:0;color:inherit">D on measurement (no kick)</label></div>
+  <div class="chk"><input type="checkbox" id="cGhost" checked><label for="cGhost" style="margin:0;color:inherit">Keep previous run as ghost</label></div>
+</div>
+</div>
+<div class="predict"><b class="h">Predict first, then drag (your instructor's habit)</b>Start from “PI”. Before moving anything, write down what you expect, then check: (1) double K<sub>i</sub> → overshoot? settling? (2) set K<sub>i</sub> = 0 → what is e<sub>ss</sub>? (Hint: 1/(1+K<sub>p</sub>).) (3) “P only”, then raise K<sub>p</sub> to 8 → what happens, and why exactly 8 for this plant? (4) “PID” + noise → watch u. Then shrink N. (5) Switch to the first-order plant (PI preset: K<sub>p</sub> = 2, K<sub>i</sub> = 4), enable the actuator limit, then toggle anti-windup. Compare with <a href="#dd-windup">Deep dive E</a>.</div>
+</div>
+</section>
+<!-- ================= 6. METHODS ================= -->
+<section data-stage="6" id="methods">
+<h2>6 · Tuning methods: manual, Ziegler–Nichols, automatic</h2>
+<div class="where"><div class="ic">📍</div><div><b class="h">Where are we in the big picture?</b>Stop 6 of 8. We know <em>what</em> we want (specs) and the trade-offs. Now: <em>how</em> people actually pick gains, from “turn knobs and watch” to “let software do loop-shaping on a model.” The last of these is what you use in Project 1.
+<div class="mini"><span>Problem</span><i>→</i><span>Feedback</span><i>→</i><span>PID</span><i>→</i><span>Gains</span><i>→</i><span>Tuning</span><i>→</i><span class="on">Methods</span><i>→</i><span>Project 1</span><i>→</i><span>Report</span></div></div></div>
+<div class="tw"><table class="t">
+<tr><th>Method</th><th>Needs</th><th>Pros</th><th>Cons</th></tr>
+<tr><td><b>Manual / trial-and-error</b></td><td>A plant (or sim) you can safely poke</td><td>Builds intuition; no model</td><td>Slow; no guarantees; risky on real hardware</td></tr>
+<tr><td><b>Ziegler–Nichols</b></td><td>Ultimate gain K<sub>u</sub> &amp; period T<sub>u</sub> (or a step “reaction curve”)</td><td>Quick formulas; classic</td><td>Aggressive (oscillatory) results; needs pushing loop to the edge</td></tr>
+<tr><td><b>Model-based / automatic</b> (MATLAB PID Tuner, <code>pidtune</code>)</td><td>A linear model (Simulink linearizes it for you)</td><td>Fast; balances speed &amp; robustness explicitly; intuitive sliders</td><td>Only as good as the linear model, so verify on the nonlinear plant</td></tr>
+</table></div>
+
+<div class="q" id="q10"><span class="badge">Q10</span><h3>How do you tune by hand?</h3></div>
+<div class="ansr">
+<div class="short">Start with P, add I to kill the offset, add D only if you need damping. Change one gain at a time, by factors (×1.5 or ×2), and predict the effect before each run.</div>
+<ol class="steps">
+<li><b>P first.</b> Set K<sub>i</sub> = K<sub>d</sub> = 0. Raise K<sub>p</sub> until the response is reasonably fast with mild oscillation. <span class="concept">↑Kp: faster, more OS, less offset</span></li>
+<li><b>Add I.</b> Increase K<sub>i</sub> (decrease T<sub>i</sub>) until the offset disappears in acceptable time. Back off if overshoot grows. <span class="concept">I ⇒ e<sub>ss</sub> = 0, adds lag</span></li>
+<li><b>Add D if needed.</b> Increase K<sub>d</sub> to reduce overshoot/ringing; stop when noise in u becomes unacceptable; keep a filter. <span class="concept">D ⇒ damping, noise</span></li>
+<li><b>Iterate &amp; check margins.</b> Re-tweak K<sub>p</sub>; test with a disturbance and with the actuator limit; verify the spec numbers. <span class="concept">robustness</span></li>
+</ol>
+</div>
+
+<!-- Deep dive C: ZN -->
+<div class="deep" id="dd-zn">
+<div class="dh"><span class="tag">Deep dive C</span><h3>Ziegler–Nichols: tuning from the edge of instability</h3></div>
+<div class="where" style="box-shadow:none"><div class="ic">🧭</div><div><b class="h">Mini big picture for this detail</b>A historical, model-free recipe (1942). The idea is to find where the loop <em>just</em> oscillates, then back off by fixed ratios. Useful as a quick start, and a favourite exam calculation.</div></div>
+<div class="dmap"><div><b>P only</b>, raise K<sub>p</sub> until sustained oscillation.</div><div>Record <b>K<sub>u</sub></b> (ultimate gain) and <b>T<sub>u</sub></b> (period).</div><div>Look up gains in the table (standard form).</div><div>Expect ~quarter-decay, i.e. fairly big overshoot, so detune.</div></div>
+<div class="tw"><table class="t">
+<tr><th>Controller (closed-loop / ultimate-gain method)</th><th>K<sub>p</sub></th><th>T<sub>i</sub></th><th>T<sub>d</sub></th></tr>
+<tr><td>P</td><td>0.5 K<sub>u</sub></td><td>—</td><td>—</td></tr>
+<tr><td>PI</td><td>0.45 K<sub>u</sub></td><td>T<sub>u</sub>/1.2</td><td>—</td></tr>
+<tr><td>PID (classic)</td><td>0.6 K<sub>u</sub></td><td>T<sub>u</sub>/2</td><td>T<sub>u</sub>/8</td></tr>
+</table></div>
+<p><b>Worked example (the Lab's plant 1/(s+1)³).</b> With P control the characteristic equation is (s+1)³ + K<sub>p</sub> = s³ + 3s² + 3s + (1 + K<sub>p</sub>) = 0. Routh–Hurwitz (or substitute s = jω): marginal when 3·3 = 1 + K<sub>p</sub>, so <b>K<sub>u</sub> = 8</b>, with oscillation at ω<sub>u</sub> = √3 rad/s, so <b>T<sub>u</sub> = 2π/√3 ≈ 3.63 s</b>. Classic ZN PID: K<sub>p</sub> = 4.8, T<sub>i</sub> = 1.81 s, T<sub>d</sub> = 0.45 s ⇒ K<sub>i</sub> = K<sub>p</sub>/T<sub>i</sub> ≈ 2.65, K<sub>d</sub> = K<sub>p</sub>T<sub>d</sub> ≈ 2.18.</p>
+<figure><div class="legend" id="lg-zn"></div><div id="fig-zn"></div>
+<figcaption><b>Finding K<sub>u</sub></b> (P-only on 1/(s+1)³). Below K<sub>u</sub> = 8 the oscillation decays; at K<sub>u</sub> it sustains with period ≈ 3.63 s (the simulation measures 3.63 s); above it, it grows (unstable). The ZN PID built from these numbers gives ≈ 43% overshoot in the Lab. That's typical: ZN aims for fast disturbance rejection (quarter-amplitude decay), not gentle set-point tracking.</figcaption></figure>
+<div class="note"><b class="h">The other ZN method (open-loop “reaction curve”)</b>Apply a step to the plant (no feedback), fit an S-curve with gain K, dead time L and time constant T, then e.g. PID: K<sub>p</sub> = 1.2T/(KL), T<sub>i</sub> = 2L, T<sub>d</sub> = 0.5L. Same spirit, same aggressiveness.</div>
+<div class="trap"><b class="h">Caveats</b>Driving a real engine into sustained oscillation can be unsafe. ZN rules are in the <b>standard</b> form, so convert before typing them into a parallel-form block. And ZN gains are a starting point, not an answer.</div>
+</div>
+
+<div class="q" id="q11"><span class="badge">Q11</span><h3>What does automatic tuning (MATLAB's PID Tuner) actually do?</h3></div>
+<div class="ansr">
+<div class="short">It linearizes your Simulink plant at the operating point, then computes gains that achieve a target <b>speed</b> (response time ≈ bandwidth) with a target <b>robustness</b> (transient behavior ≈ phase margin). You steer with two sliders instead of three gains.</div>
+<ol class="steps">
+<li><b>Linearize.</b> Opening the tuner from the PID block makes Simulink compute a linear plant model seen by the controller at the current operating point. <span class="concept">transfer function of the plant</span></li>
+<li><b>Design.</b> It picks P, I (and D, N if present) so the open-loop L = C·G crosses 0 dB at a chosen frequency ω<sub>c</sub> with a chosen phase margin. Its initial design aims at a balance between performance and robustness. <span class="concept">loop shaping</span></li>
+<li><b>Adjust.</b> <b>Time-domain</b> mode: <em>Response time</em> slider (Slower ↔ Faster) and <em>Transient behavior</em> slider (Aggressive ↔ Robust). <b>Frequency-domain</b> mode: <em>Bandwidth</em> and <em>Phase margin</em>. Same two degrees of freedom, different labels. <span class="concept">trade-off map</span></li>
+<li><b>Inspect.</b> “Show parameters” lists gains plus rise/settling time, overshoot, gain &amp; phase margins, closed-loop stability. <span class="concept">specs</span></li>
+<li><b>Update Block</b> writes the gains to the Simulink block; then simulate the <b>nonlinear</b> model. <span class="concept">verification</span></li>
+</ol>
+</div>
+
+<!-- Deep dive D: sliders -->
+<div class="deep" id="dd-sliders">
+<div class="dh"><span class="tag">Deep dive D</span><h3>How the PID Tuner sliders map to bandwidth and phase margin</h3></div>
+<div class="where" style="box-shadow:none"><div class="ic">🧭</div><div><b class="h">Mini big picture for this detail</b>This is the bridge between the trade-off map (Q8) and your Project 1 slider moves. Two numbers describe a loop's “personality”: <b>how fast</b> (crossover/bandwidth) and <b>how calm</b> (phase margin).</div></div>
+<div class="dmap"><div><b>Response time ↕ bandwidth</b>: roughly inversely related.</div><div><b>Transient behavior ↕ phase margin</b>: more robust = more PM.</div><div><b>PM ↔ overshoot</b>: more PM ⇒ less overshoot (ζ ≈ PM/100).</div><div><b>The catch</b>: faster ⇒ more plant lag at ω<sub>c</sub> ⇒ PM shrinks unless you ask for it back.</div></div>
+<h4>Two loop numbers, in your RF language</h4>
+<ul>
+<li><b>Gain crossover ω<sub>c</sub></b>: where |L(jω)| = 1 (0 dB). Closed-loop bandwidth is close to ω<sub>c</sub>, and response time scales roughly like 1/ω<sub>c</sub> (double ω<sub>c</sub> → about half the response time). The <em>Response time</em> slider moves ω<sub>c</sub>: <b>sliding left = slower = longer response time = lower bandwidth</b>.</li>
+<li><b>Phase margin PM</b> = 180° + ∠L(jω<sub>c</sub>): how far the loop is from the −180° “oscillation condition” at crossover. The <em>Transient behavior</em> slider trades PM: toward <b>Robust = more PM = less overshoot</b>, toward Aggressive = less PM, snappier but more overshoot. (MATLAB's <code>pidtune</code> defaults to a 60° PM target.)</li>
+<li><b>Rule of thumb</b> (derived from the standard 2nd-order loop ω<sub>n</sub>²/(s(s+2ζω<sub>n</sub>)); only approximate for other loops): ζ ≈ PM/100 for PM ≲ 65°. So PM 45° → ζ ≈ 0.45 → ~20% OS; PM 60° → ζ ≈ 0.6 → ~10% OS; PM ≳ 70° → little or no overshoot.</li>
+</ul>
+<figure><div class="legend" id="lg-bode"></div><div id="fig-bode"></div>
+<figcaption><b>Loop-gain Bode plot for three PI tunings</b> on 1/(s+1)³ (computed). Dots mark ω<sub>c</sub> on the magnitude plot and the phase at ω<sub>c</sub> on the phase plot; the gap to −180° is the PM. Readouts: <span id="bode-read"></span>. Notice: the <b>faster</b> design (higher ω<sub>c</sub>) sits where the plant's phase lag is worse, so it has <b>less PM and more overshoot</b>; the <b>robust</b> design buys PM and kills overshoot. The Lab shows ω<sub>c</sub> and PM live for any gains.</figcaption></figure>
+<div class="tip"><b class="h">The sentence to remember</b>“Faster” alone moves you right on the trade-off map and <em>down</em> in PM, so overshoot rises. To get faster <em>and</em> calmer you must also slide toward Robust, if the plant allows it. That is exactly your Project 1's final design.</div>
+</div>
+
+<!-- Deep dive E: windup -->
+<div class="deep" id="dd-windup">
+<div class="dh"><span class="tag">Deep dive E</span><h3>Actuator saturation and integrator windup</h3></div>
+<div class="where" style="box-shadow:none"><div class="ic">🧭</div><div><b class="h">Mini big picture for this detail</b>Linear design (what PID Tuner does) assumes the actuator can deliver any u. A throttle can't open past 100%. When it saturates, the I term misbehaves. This is one reason to verify on the nonlinear model.</div></div>
+<div class="dmap"><div><b>Saturation</b>: u hits its limit, so the loop is effectively open.</div><div><b>Windup</b>: e stays large, so ∫e keeps growing.</div><div><b>Unwind</b>: integrator must discharge, causing big overshoot and slow settling.</div><div><b>Anti-windup</b>: stop (clamp) or bleed (back-calculate) the integrator.</div></div>
+<figure><div class="legend" id="lg-wu"></div><div id="fig-wu"></div><div id="fig-wu-u"></div>
+<figcaption><b>Windup, simulated.</b> Plant 1/(s+1), PI K<sub>p</sub> = 2, K<sub>i</sub> = 4, actuator limited to |u| ≤ 1.2. Without anti-windup the integrator charges while u is pinned at the limit, so overshoot ≈ 18% and slower settling. With clamping (integrator frozen while saturated and the error would push it further) overshoot ≈ 1.6%. Bottom: control signal u.</figcaption></figure>
+<p>In Simulink's PID block, anti-windup lives on the <b>Output Saturation</b> tab: enable limits, then choose “clamping” or “back-calculation.”</p>
+</div>
+</section>
+<!-- ================= 7. PROJECT ================= -->
+<section data-stage="7" id="project">
+<h2>7 · Your Project 1, step by step</h2>
+<div class="where"><div class="ic">📍</div><div><b class="h">Where are we in the big picture?</b>Stop 7 of 8. Everything so far gets applied to one real workflow: MathWorks' <em>PID Controller Tuning in Simulink</em> example (engine speed control, model <code>scdspeedctrlpidblock</code>). Each step below is tagged with the concept it uses.
+<div class="mini"><span>Problem</span><i>→</i><span>Feedback</span><i>→</i><span>PID</span><i>→</i><span>Gains</span><i>→</i><span>Tuning</span><i>→</i><span>Methods</span><i>→</i><span class="on">Project 1</span><i>→</i><span>Report</span></div></div></div>
+
+<div class="q" id="q12"><span class="badge">Q12</span><h3>What happens at each step of the example, and which concept explains it?</h3></div>
+<div class="ansr">
+<ol class="steps">
+<li><b>Open the model.</b> <code>open_system('scdspeedctrlpidblock')</code>. Find the loop: <em>Speed Reference</em> step → error → <em>PID Controller</em> block → engine dynamics → measured speed fed back.
+<span class="concept">Q2 block diagram, Y/R = CG/(1+CG)</span></li>
+<li><b>Read the requirements.</b> (a) settling time &lt; 5 s; (b) zero steady-state error to the step reference. Requirement (b) tells you immediately that you need <b>integral action</b>, which is why the block is configured as <b>PI</b>.
+<span class="concept">Deep dive A</span></li>
+<li><b>Open PID Tuner</b> (double-click the block, Main tab → <em>Tune</em>). Simulink <b>linearizes</b> the engine model at the current operating point to get the plant the controller “sees,” and proposes an initial PI design.
+<span class="concept">Q11 model-based tuning</span></li>
+<li><b>Initial design: settling ≈ 2 s, overshoot ≈ 7.5%.</b> (“Show parameters.”) Settling already meets the 5 s spec. If this loop behaved like a standard second-order system, 7.5% OS would correspond to ζ ≈ 0.64; you're near the “balanced” point on the trade-off map.
+<span class="concept">Q9 specs, ζ ↔ %OS</span></li>
+<li><b>Slide Response time to the LEFT</b> (slower = longer response time). Result: <b>0% overshoot, settling ≈ 4 s</b>, and the controller becomes <b>effectively integral-only</b> (P gain ≈ 0). Still meets &lt; 5 s: you spent the spare settling-time budget to buy zero overshoot.
+<span class="concept">Deep dive D: lower ω<sub>c</sub> ⇒ more PM</span></li>
+<li><b>Use both sliders:</b> response time <b>3.4 → 1.5 s</b> (faster) <em>and</em> robustness/transient behavior <b>0.6 → 0.72</b> (more robust). Result: <b>0% overshoot and settling &lt; 2 s</b>, better than the initial design on both counts.
+<span class="concept">trade-off map: move right <em>and</em> up</span></li>
+<li><b>Update Block</b> writes P and I into the Simulink block. <b>Simulate the nonlinear model</b> and confirm the step response still meets both requirements.
+<span class="concept">linearization validity, saturation</span></li>
+</ol>
+<div class="tw"><table class="t">
+<tr><th>Design</th><th>Slider move</th><th>Overshoot</th><th>Settling</th><th>Meets Ts &lt; 5 s?</th><th>Character</th></tr>
+<tr><td>Initial (tuner default)</td><td>—</td><td>≈ 7.5%</td><td>≈ 2 s</td><td>✓</td><td>Balanced PI</td></tr>
+<tr><td>Slower</td><td>Response time ← (longer)</td><td>0%</td><td>≈ 4 s</td><td>✓</td><td>≈ I-only, sluggish but calm</td></tr>
+<tr><td>Faster + more robust</td><td>Response time 3.4 → 1.5 s, robustness 0.6 → 0.72</td><td>0%</td><td>&lt; 2 s</td><td>✓</td><td>Fast and well damped</td></tr>
+</table></div>
+<div class="note"><b class="h">What to record yourself</b>The example doesn't list every gain value in its text, and gains differ slightly between MATLAB releases. For your report, copy P, I, rise time, settling time, overshoot, gain margin and phase margin from the “Show parameters” panel for <em>each</em> of the three designs, and screenshot each response. Also note: the slider's “response time” is a design target; it's not the same number as the measured settling time.</div>
+</div>
+
+<div class="q" id="q13"><span class="badge">Q13</span><h3>Why did each slider move do what it did?</h3></div>
+<div class="ansr">
+<h4>Move 1: slower response ⇒ zero overshoot, ≈4 s, “integral-only”</h4>
+<p><b>Predict:</b> slower means lower bandwidth, means less plant phase lag at crossover, so more phase margin, so less overshoot, at the cost of settling time. <b>Observed:</b> overshoot 7.5% → 0, settling 2 → 4 s. ✓</p>
+<p><b>Why “integral-only”?</b> Once the crossover is pushed low enough, an integrator by itself (gain falling at −20 dB/dec, phase −90°) already crosses 0 dB with plenty of margin, so the optimizer has no need for the P term. Remember the I-only second-order result (Q9): small K<sub>i</sub> ⇒ large ζ ⇒ no overshoot, but slow. The I term alone still guarantees zero steady-state error, so the requirement holds.</p>
+<h4>Move 2: faster (3.4 → 1.5 s) + more robust (0.6 → 0.72) ⇒ zero overshoot, &lt; 2 s</h4>
+<p><b>Predict each slider separately first:</b></p>
+<ul><li>Faster alone: higher ω<sub>c</sub>, so <em>less</em> PM, so overshoot comes back (likely above 7.5%).</li>
+<li>More robust alone: more PM, so less overshoot, typically a bit slower.</li></ul>
+<p><b>Together:</b> the speed slider sets ω<sub>c</sub> high (fast), and the robustness slider forces the tuner to place the PI zero/gain so the phase margin stays large at that higher ω<sub>c</sub>. The overshoot from the speed-up is cancelled by the added margin. That this works at all tells you the plant has enough phase “room” at that frequency; for a plant with more lag or delay, you'd hit the frontier and couldn't have both.</p>
+<h4>Why verify on the nonlinear model?</h4>
+<p>The tuner designed against a <b>linearization at one operating point</b>. The real engine model is nonlinear, so the gains may behave differently for larger steps or other speeds, and actuator limits (throttle saturation) are invisible to a linear design. Simulating the full model after <em>Update Block</em> confirms the design really meets &lt; 5 s and zero steady-state error. If it doesn't, suspect operating-point mismatch or saturation/windup.</p>
+</div>
+</section>
+
+<!-- ================= 8. REPORT ================= -->
+<section data-stage="8" id="report">
+<h2>8 · Pitfalls, explaining results, and review</h2>
+<div class="where"><div class="ic">📍</div><div><b class="h">Where are we in the big picture?</b>Stop 8 of 8 (the appendix after it is an optional extra). You can tune and you know why it works. Now: avoid the classic mistakes, and write it up the way your instructor wants (predict → run → explain).
+<div class="mini"><span>Problem</span><i>→</i><span>Feedback</span><i>→</i><span>PID</span><i>→</i><span>Gains</span><i>→</i><span>Tuning</span><i>→</i><span>Methods</span><i>→</i><span>Project 1</span><i>→</i><span class="on">Report</span></div></div></div>
+
+<div class="q" id="q14"><span class="badge">Q14</span><h3>What are the common pitfalls?</h3></div>
+<div class="ansr">
+<div class="tw"><table class="t">
+<tr><th>Pitfall</th><th>Why it's wrong / what happens</th></tr>
+<tr><td>“More K<sub>p</sub> eliminates steady-state error.”</td><td>It only <em>reduces</em> it (1/(1+K<sub>p</sub>G(0))) on a type-0 plant. Zero error needs an integrator.</td></tr>
+<tr><td>Mixing parallel and standard forms</td><td>K<sub>i</sub> = K<sub>p</sub>/T<sub>i</sub>, K<sub>d</sub> = K<sub>p</sub>T<sub>d</sub>. ZN tables are in standard form; the Simulink block defaults to parallel.</td></tr>
+<tr><td>“Bigger T<sub>i</sub> = more integral.”</td><td>Opposite: bigger T<sub>i</sub> = weaker I action.</td></tr>
+<tr><td>Unfiltered derivative</td><td>Noise amplified ∝ ω. Always keep a filter (N) and use D only if you need it.</td></tr>
+<tr><td>Ignoring actuator limits</td><td>Windup: huge overshoot after saturation. Enable anti-windup when limits exist.</td></tr>
+<tr><td>Response-time slider direction</td><td>Left = slower = <em>longer</em> response time = lower bandwidth. (Not “left = shorter time”.)</td></tr>
+<tr><td>Trusting the linear design blindly</td><td>Linearization is local. Verify on the nonlinear model (Update Block → simulate).</td></tr>
+<tr><td>Changing several things at once</td><td>You can't attribute the effect. One change per run, predicted in advance.</td></tr>
+<tr><td>Reporting “it looks good”</td><td>Report numbers vs. requirements: “Ts = 1.8 s &lt; 5 s ✓, e<sub>ss</sub> = 0 ✓, OS = 0%.”</td></tr>
+<tr><td>Confusing overshoot with steady-state error</td><td>Overshoot is a transient peak; e<sub>ss</sub> is what's left at t → ∞. They're controlled by different things.</td></tr>
+</table></div>
+</div>
+
+<div class="q" id="q15"><span class="badge">Q15</span><h3>How should I explain my results in the report?</h3></div>
+<div class="ansr">
+<div class="short">For each change: <b>Predict</b> (what and why, from theory) → <b>Run</b> → <b>Observe</b> (numbers) → <b>Explain</b> (mechanism, agree/disagree with prediction) → <b>Check</b> against requirements.</div>
+<div class="predict"><b class="h">Template paragraph</b>
+<p style="margin:.3rem 0"><em>Change:</em> moved the response-time slider left (slower).<br>
+<em>Prediction:</em> a slower target lowers the loop bandwidth; at lower crossover frequency the plant adds less phase lag, so the phase margin increases and the overshoot should decrease, while the settling time should increase.<br>
+<em>Observation:</em> overshoot fell from ≈7.5% to 0%, settling time rose from ≈2 s to ≈4 s; the tuned controller became effectively integral-only (P ≈ 0).<br>
+<em>Explanation:</em> consistent with the prediction. At this low bandwidth the integrator alone provides enough gain at crossover with large phase margin, so proportional action is unnecessary; the integrator still guarantees zero steady-state error.<br>
+<em>Requirement check:</em> Ts ≈ 4 s &lt; 5 s ✓; e<sub>ss</sub> = 0 ✓.</p></div>
+<ul>
+<li><b>Lead with the requirement</b>, end with the check. Put the three designs in one table (like Q12's).</li>
+<li><b>Name the mechanism</b> in one clause: “integrator ⇒ e<sub>ss</sub> = 0,” “higher bandwidth ⇒ less PM ⇒ more overshoot,” “linearization valid near operating point.”</li>
+<li><b>Show one overlay plot</b> of the three step responses (linear) and one of the final design on the nonlinear model.</li>
+<li><b>State limitations:</b> linear design, single operating point, actuator limits not exercised (unless they were).</li>
+</ul>
+</div>
+
+<h3 id="cheat">Cheat sheet</h3>
+<div class="cheat">
+<div><h4>Forms</h4><ul>
+<li>Parallel: K<sub>p</sub> + K<sub>i</sub>/s + K<sub>d</sub>s</li>
+<li>Standard: K<sub>p</sub>(1 + 1/(T<sub>i</sub>s) + T<sub>d</sub>s)</li>
+<li>K<sub>i</sub> = K<sub>p</sub>/T<sub>i</sub> · K<sub>d</sub> = K<sub>p</sub>T<sub>d</sub></li>
+<li>Filtered D: K<sub>d</sub>Ns/(s+N), HF gain K<sub>d</sub>N</li></ul></div>
+<div><h4>Loop algebra</h4><ul>
+<li>Y/R = CG/(1+CG) · Y/D = G/(1+CG)</li>
+<li>E/R = 1/(1+CG)</li>
+<li>Step e<sub>ss</sub> = 1/(1 + C(0)G(0))</li>
+<li>P: 1/(1+K<sub>p</sub>G(0)) · with I: 0</li></ul></div>
+<div><h4>Gain effects (↑ gain)</h4><ul>
+<li>K<sub>p</sub>: faster, more OS, less (≠0) e<sub>ss</sub></li>
+<li>K<sub>i</sub>: e<sub>ss</sub> → 0, more OS, slower settling</li>
+<li>K<sub>d</sub>: less OS, faster settling, noise ↑</li></ul></div>
+<div><h4>2nd-order specs</h4><ul>
+<li>%OS = 100 e<sup>−πζ/√(1−ζ²)</sup></li>
+<li>T<sub>s</sub>(2%) ≈ 4/(ζω<sub>n</sub>) · T<sub>p</sub> = π/ω<sub>d</sub></li>
+<li>ζ ≈ PM/100 (PM ≲ 65°, rule of thumb)</li>
+<li>7.5% OS ⇔ ζ ≈ 0.64</li></ul></div>
+<div><h4>Ziegler–Nichols (ultimate)</h4><ul>
+<li>P: 0.5K<sub>u</sub></li>
+<li>PI: 0.45K<sub>u</sub>, T<sub>i</sub> = T<sub>u</sub>/1.2</li>
+<li>PID: 0.6K<sub>u</sub>, T<sub>i</sub> = T<sub>u</sub>/2, T<sub>d</sub> = T<sub>u</sub>/8</li>
+<li>1/(s+1)³: K<sub>u</sub> = 8, T<sub>u</sub> = 2π/√3 ≈ 3.63 s</li></ul></div>
+<div><h4>PID Tuner &amp; Project 1</h4><ul>
+<li>Response time ← = slower, lower BW, less OS</li>
+<li>Transient → Robust = more PM, less OS</li>
+<li>Init: 2 s, 7.5% · Slower: 4 s, 0%, ≈I-only</li>
+<li>3.4→1.5 s &amp; 0.6→0.72: 0%, &lt; 2 s</li>
+<li>Update Block → verify nonlinear</li></ul></div>
+</div>
+
+<h3 id="glossary">Glossary</h3>
+<dl class="gl">
+<dt>Plant</dt><dd>The system being controlled (here: the engine), G(s).</dd>
+<dt>Reference / set-point r</dt><dd>The desired output value.</dd>
+<dt>Error e</dt><dd>e = r − y (measured). The PID controller's input.</dd>
+<dt>Disturbance d</dt><dd>An unwanted input (load torque, hill) that pushes the output away from r.</dd>
+<dt>Steady-state error e<sub>ss</sub></dt><dd>lim<sub>t→∞</sub> e(t). For a step: 1/(1 + C(0)G(0)) with unity feedback.</dd>
+<dt>System type</dt><dd>Number of free integrators (poles at s = 0) in the loop gain CG. Type ≥ 1 ⇒ zero step error.</dd>
+<dt>Overshoot (%OS)</dt><dd>How far the peak exceeds the final value, as a % of the final value.</dd>
+<dt>Rise time</dt><dd>Time to go from 10% to 90% of the final value (MATLAB default).</dd>
+<dt>Settling time</dt><dd>Time after which the response stays within ±2% of its final value (MATLAB <code>stepinfo</code> default).</dd>
+<dt>Damping ratio ζ</dt><dd>Second-order parameter: 0 &lt; ζ &lt; 1 underdamped (overshoot), ζ = 1 critically damped, ζ &gt; 1 overdamped.</dd>
+<dt>Natural frequency ω<sub>n</sub></dt><dd>Second-order “speed” parameter (rad/s); distance of the poles from the origin.</dd>
+<dt>Loop gain L(s)</dt><dd>C(s)G(s)H(s), the product around the loop. Its frequency response determines stability margins.</dd>
+<dt>Crossover frequency ω<sub>c</sub></dt><dd>Frequency where |L(jω)| = 1. Sets the loop's bandwidth/speed.</dd>
+<dt>Bandwidth</dt><dd>Frequency range over which the closed loop tracks well (≈ ω<sub>c</sub>). Higher ⇒ faster.</dd>
+<dt>Phase margin (PM)</dt><dd>180° + ∠L(jω<sub>c</sub>). Distance from the −180° oscillation condition; larger ⇒ more robust, less overshoot.</dd>
+<dt>Gain margin</dt><dd>Factor by which loop gain could increase before instability (at the −180° phase frequency).</dd>
+<dt>Robustness</dt><dd>Ability to stay stable and perform well despite model error. In PID Tuner: the transient-behavior slider.</dd>
+<dt>Response time (PID Tuner)</dt><dd>Design target for closed-loop speed; inversely related to bandwidth. Slider left = longer.</dd>
+<dt>Ultimate gain K<sub>u</sub>, period T<sub>u</sub></dt><dd>P-only gain giving sustained oscillation, and that oscillation's period (Ziegler–Nichols).</dd>
+<dt>Derivative filter N</dt><dd>Limits D's high-frequency gain: K<sub>d</sub>Ns/(s+N).</dd>
+<dt>Derivative kick</dt><dd>Spike in u when D acts on e and r steps. Fix: D on measurement.</dd>
+<dt>Saturation</dt><dd>Actuator hitting its physical limit.</dd>
+<dt>Integrator windup</dt><dd>Integrator accumulating during saturation, causing large overshoot afterwards.</dd>
+<dt>Anti-windup</dt><dd>Clamping or back-calculation to stop the integrator from winding up.</dd>
+<dt>Linearization</dt><dd>Approximating a nonlinear model by a linear one around an operating point (what PID Tuner does before designing).</dd>
+<dt>Operating point</dt><dd>The steady condition (e.g. a given engine speed/load) about which the model is linearized.</dd>
+</dl>
+
+<div class="endcta ui">
+<div style="font-weight:700;font-size:1.05rem;margin-bottom:.3rem">Ready to test yourself?</div>
+<div style="color:var(--muted);font-size:.9rem;margin-bottom:.7rem">46 multiple-choice questions + flashcards: concepts, traps, quick calculations, Project 1 numbers, and a troubleshooting set (identify the problem from a plot, then pick the fix) for every appendix case.</div>
+<a class="tbtn primary" href="#/quiz" style="font-size:.95rem;padding:.5rem 1rem">Open the quiz &amp; flashcards →</a>
+</div>
+</section>
+<section data-stage="9" id="appendix">
+<h2>A · Appendix: a gallery of things that go wrong</h2>
+<div class="where"><div class="ic">📍</div><div><b class="h">Where are we in the big picture?</b>Appendix (optional stop after the Report). Every misbehaviour from the Q3 table, plus some common extras, each as one small card: <em>see it, recognise the symptoms, know the first thing to try</em>. It is the “debugging” companion to the tuning stops.
+<div class="mini"><span>Q3 table</span><i>→</i><span class="on">Gallery</span><i>→</i><span>Gains &amp; knobs</span><i>→</i><span>PID Tuner</span></div></div></div>
+<p>All plots on this page are simulated with the same simulator as the PID Lab, using <b>teaching plants</b> (not your engine model, and without its numbers). They show the <em>shape</em> of each problem. Cards are collapsed so the page stays high level; open the ones you need.</p>
+
+<h3 id="ap-lookup">Symptom → first thing to try</h3>
+<div class="tw"><table class="t aplookup"><tr><th>What you see</th><th>Likely cause</th><th>First thing to try</th><th>Card</th></tr>
+<tr><td><b>Slow</b></td><td>Output takes too long</td><td><span class="chip">↑ <var>K</var><sub>p</sub> then <var>K</var><sub>i</sub></span></td><td><a href="#ap-slow">A1</a></td></tr>
+<tr><td><b>Stuck below / above target</b></td><td>Settles at the wrong value</td><td><span class="chip">Add I (<var>K</var><sub>i</sub>)</span></td><td><a href="#ap-offset">A2</a></td></tr>
+<tr><td><b>Overshoot</b></td><td>Goes past the target and returns</td><td><span class="chip">↓ <var>K</var><sub>i</sub> (or ↑ <var>K</var><sub>d</sub>)</span></td><td><a href="#ap-overshoot">A3</a></td></tr>
+<tr><td><b>Rings forever / grows</b></td><td>Oscillation or instability</td><td><span class="chip">↓ <var>K</var><sub>p</sub>, <var>K</var><sub>i</sub>; more robustness</span></td><td><a href="#ap-oscillation">A4</a></td></tr>
+<tr><td><b>Load knocks it far off</b></td><td>Big dip, slow recovery</td><td><span class="chip">↑ <var>K</var><sub>p</sub>, <var>K</var><sub>i</sub>; feedforward</span></td><td><a href="#ap-disturbance">A5</a></td></tr>
+<tr><td><b>Chattering <var>u</var></b></td><td>Fuzzy control signal</td><td><span class="chip">↓ <var>N</var> / ↓ <var>K</var><sub>d</sub></span></td><td><a href="#ap-noise">A6</a></td></tr>
+<tr><td><b>Big overshoot after saturating</b></td><td>u pinned at limit, then slow unwind</td><td><span class="chip">Anti-windup</span></td><td><a href="#ap-windup">A7</a></td></tr>
+<tr><td><b>Spike in <var>u</var> on a step</b></td><td>One-sample spike at set-point change</td><td><span class="chip">D on measurement</span></td><td><a href="#ap-kick">A8</a></td></tr>
+<tr><td><b>Slower than design / extra ringing</b></td><td>Actuator limit or rate limit</td><td><span class="chip">Ramp set-point; ↓ gains</span></td><td><a href="#ap-limits">A9</a></td></tr>
+<tr><td><b>Dead start, then rings</b></td><td>Pure transport delay</td><td><span class="chip">↓↓ gains; Smith predictor</span></td><td><a href="#ap-delay">A10</a></td></tr>
+<tr><td><b>True output rings, sensor looks calm</b></td><td>Slow sensor</td><td><span class="chip">↓ gains; faster sensor</span></td><td><a href="#ap-sensorlag">A11</a></td></tr>
+<tr><td><b>OK at one point, bad at another</b></td><td>Gain depends on operating point</td><td><span class="chip">Tune worst case; gain-schedule</span></td><td><a href="#ap-nonlinear">A12</a></td></tr>
+<tr><td><b>Step overshoots but load recovery is good</b></td><td>Set-point vs disturbance conflict</td><td><span class="chip">Set-point filter / weight</span></td><td><a href="#ap-twodof">A13</a></td></tr>
+<tr><td><b>Hunting around the target</b></td><td>Dead zone / backlash + I</td><td><span class="chip">↓ <var>K</var><sub>i</sub>; fix actuator</span></td><td><a href="#ap-limitcycle">A14</a></td></tr>
+</table></div>
+<div class="apbar ui"><button class="tbtn" id="apAll" type="button">Expand all</button><span class="muted">Cards marked <span class="src">from Q3</span> are the seven rows of the Q3 table.</span></div>
+<details class="apcard" id="ap-slow"><summary><span class="ti">A1 · Slow response</span><span class="wh">It gets there, but takes far too long to rise and settle.</span><span class="src">from Q3</span></summary>
+<div class="apbody">
+<figure class="apfig"><div class="legend" id="lg-ap-slow"></div><div id="fg-ap-slow"></div><figcaption><b>Simulated.</b> Teaching plant 1/((s+1)(0.5s+1)); PI. Solid = the problem; dashed green = a fixed version, shown for contrast. Teaching plant, not your engine model.</figcaption></figure>
+<div class="apcols"><div><h5>Symptoms</h5><ul><li>Long rise time; smooth, no overshoot</li><li>Output creeps toward <var>r</var> and the error shrinks slowly</li><li>Control signal <var>u</var> stays small — the controller is barely pushing</li></ul></div><div><h5>What to try</h5><ul><li>Raise <var>K</var><sub>p</sub> first: more push when the error is big (faster rise).</li><li>Then raise <var>K</var><sub>i</sub> so the last part of the error vanishes faster (watch for overshoot).</li><li>Stop when overshoot or noise/effort starts to hurt: that is the speed limit (Q8). In PID Tuner this is dragging <em>Response time</em> to the right/shorter (Project 1 did exactly that: 3.4 s → 1.5 s).</li></ul></div></div>
+<p class="knob"><b>Which knob?</b> ↑ <var>K</var><sub>p</sub> (and <var>K</var><sub>i</sub>) — until overshoot or effort says stop.</p>
+<p class="apback ui"><a href="#q3">↑ Back to the Q3 table</a></p>
+</div></details>
+<details class="apcard" id="ap-offset"><summary><span class="ti">A2 · Steady-state offset</span><span class="wh">It settles calmly, but not at the target.</span><span class="src">from Q3</span></summary>
+<div class="apbody">
+<figure class="apfig"><div class="legend" id="lg-ap-offset"></div><div id="fg-ap-offset"></div><figcaption><b>Simulated.</b> Teaching plant 1/((s+1)(0.5s+1)); P-only vs PI. Solid = the problem; dashed green = a fixed version, shown for contrast. Teaching plant, not your engine model.</figcaption></figure>
+<div class="apcols"><div><h5>Symptoms</h5><ul><li>Flat, steady line that stays below (or above) <var>r</var></li><li>Error never decays to zero however long you wait</li><li>Often appears with P-only control or after a constant load appears</li></ul></div><div><h5>What to try</h5><ul><li>Add <b>integral action</b> (<var>K</var><sub>i</sub> &gt; 0). I keeps growing while any error remains, so it only stops when <var>e</var> = 0 (Deep dive A).</li><li>Raising <var>K</var><sub>p</sub> alone only <em>shrinks</em> the offset (e<sub>ss</sub> = 1/(1+<var>K</var><sub>p</sub>·G(0))), it never removes it.</li><li>Project 1 asks for zero steady-state error: that is why it is a PI controller.</li></ul></div></div>
+<p class="knob"><b>Which knob?</b> Add / increase <var>K</var><sub>i</sub> (I action). <var>K</var><sub>p</sub> only shrinks the offset.</p>
+<p class="apback ui"><a href="#q3">↑ Back to the Q3 table</a></p>
+</div></details>
+<details class="apcard" id="ap-overshoot"><summary><span class="ti">A3 · Overshoot</span><span class="wh">The output shoots past the target, then comes back.</span><span class="src">from Q3</span></summary>
+<div class="apbody">
+<figure class="apfig"><div class="legend" id="lg-ap-overshoot"></div><div id="fg-ap-overshoot"></div><figcaption><b>Simulated.</b> Teaching plant 1/((s+1)(0.5s+1)); PI. Solid = the problem; dashed green = a fixed version, shown for contrast. Teaching plant, not your engine model.</figcaption></figure>
+<div class="apcols"><div><h5>Symptoms</h5><ul><li>Peak above <var>r</var> (%OS), then a return, possibly with a small undershoot</li><li>Often caused by an integral term that is too strong for the plant speed</li><li>Lower phase margin ⇒ more overshoot (Deep dive D)</li></ul></div><div><h5>What to try</h5><ul><li>Lower <var>K</var><sub>i</sub> (most common cure): the integrator is overshooting because it has stored too much area.</li><li>Or lower <var>K</var><sub>p</sub> a bit, or add some <var>K</var><sub>d</sub> to brake the approach (costs noise sensitivity).</li><li>If the overshoot only appears on set-point steps, a set-point filter or weight (A13) removes it without slowing disturbance recovery.</li><li>In PID Tuner, moving <em>Response time</em> slower (left) reduced overshoot in the Project 1 example.</li></ul></div></div>
+<p class="knob"><b>Which knob?</b> ↓ <var>K</var><sub>i</sub> (first), or ↓ <var>K</var><sub>p</sub> / ↑ <var>K</var><sub>d</sub>.</p>
+<p class="apback ui"><a href="#q3">↑ Back to the Q3 table</a></p>
+</div></details>
+<details class="apcard" id="ap-oscillation"><summary><span class="ti">A4 · Sustained oscillation / instability</span><span class="wh">The loop rings forever or the amplitude grows.</span><span class="src">from Q3</span></summary>
+<div class="apbody">
+<figure class="apfig"><div class="legend" id="lg-ap-oscillation"></div><div id="fg-ap-oscillation"></div><figcaption><b>Simulated.</b> Teaching plant 1/(s+1)³ (ultimate gain K<sub>u</sub> = 8). Solid = the problem; dashed green = a fixed version, shown for contrast. Teaching plant, not your engine model.</figcaption></figure>
+<div class="apcols"><div><h5>Symptoms</h5><ul><li>Constant-amplitude ringing = loop sits right at the stability edge (P-only gain = K<sub>u</sub>)</li><li>Growing swing, often hitting actuator limits = unstable</li><li>Period roughly the ultimate period T<sub>u</sub> (Ziegler–Nichols)</li></ul></div><div><h5>What to try</h5><ul><li><b>Back off</b>: cut <var>K</var><sub>p</sub> (and <var>K</var><sub>i</sub>). Lower gain at the frequency where phase lag reaches −180° is the fundamental cure.</li><li>A little <var>K</var><sub>d</sub> can add phase lead and calm it — but only if the sensor is clean.</li><li>If you must keep high gain, the plant has too much lag/delay for PID: look at A10 (delay) and A11 (sensor lag).</li><li>In PID Tuner this is the <em>Robustness / transient behaviour</em> slider (more robust = more phase margin).</li></ul></div></div>
+<p class="knob"><b>Which knob?</b> ↓ <var>K</var><sub>p</sub> (and <var>K</var><sub>i</sub>); more robustness / phase margin.</p>
+<p class="apback ui"><a href="#q3">↑ Back to the Q3 table</a></p>
+</div></details>
+<details class="apcard" id="ap-disturbance"><summary><span class="ti">A5 · Poor disturbance rejection</span><span class="wh">A load hits and the output is knocked far away, recovering slowly.</span><span class="src">from Q3</span></summary>
+<div class="apbody">
+<figure class="apfig"><div class="legend" id="lg-ap-disturbance"></div><div id="fg-ap-disturbance"></div><figcaption><b>Simulated.</b> Teaching plant 1/((s+1)(0.5s+1)); disturbance d = +1 at the plant input at t = 1 s, r = 0. Solid = the problem; dashed green = a fixed version, shown for contrast. Teaching plant, not your engine model.</figcaption></figure>
+<div class="apcols"><div><h5>Symptoms</h5><ul><li>Big excursion of <var>y</var> right after the load arrives</li><li>Slow return (or a permanent offset if there is no I)</li><li>The set-point response may look fine: this is a separate requirement</li></ul></div><div><h5>What to try</h5><ul><li>Raise the loop gain at the disturbance's speed: ↑ <var>K</var><sub>p</sub> for a bigger, faster reaction, ↑ <var>K</var><sub>i</sub> so a constant load is eventually cancelled exactly.</li><li>If the disturbance can be measured (e.g. a load sensor), add <b>feedforward</b>: act before the output moves — PID alone can only react afterwards.</li><li>The limit is the same trade-off as always: the more aggressively you reject, the less phase margin you have (A4).</li></ul></div></div>
+<p class="knob"><b>Which knob?</b> ↑ <var>K</var><sub>p</sub> and <var>K</var><sub>i</sub>; feedforward if the disturbance is measurable.</p>
+<p class="apback ui"><a href="#q3">↑ Back to the Q3 table</a></p>
+</div></details>
+<details class="apcard" id="ap-noise"><summary><span class="ti">A6 · Noisy / jittery actuator</span><span class="wh">Measurement noise is amplified into a chattering control signal.</span><span class="src">from Q3</span></summary>
+<div class="apbody">
+<figure class="apfig"><div class="legend" id="lg-ap-noise"></div><div id="fg-ap-noise"></div><figcaption><b>Simulated.</b> Teaching plant 1/((s+1)(0.5s+1)); PID with sensor noise σ = 0.02. Solid = the problem; dashed green = a fixed version, shown for contrast. Teaching plant, not your engine model.</figcaption></figure>
+<div class="apcols"><div><h5>Symptoms</h5><ul><li><var>y</var> looks fine but <var>u</var> is fuzzy / chattering (the plant filters the noise, the actuator doesn't)</li><li>Heard or felt as buzzing valves, hot motors, wear</li><li>Worse with large <var>K</var><sub>d</sub> and large derivative-filter <var>N</var></li></ul></div><div><h5>What to try</h5><ul><li>Filter the derivative: lower <var>N</var> (or the filter coefficient in the block) so D stops amplifying high frequencies (Deep dive B).</li><li>↓ <var>K</var><sub>d</sub>, or drop D entirely — a PI controller (as in Project 1) has no D noise problem.</li><li>Filter or choose a better sensor; avoid raising <var>K</var><sub>p</sub> just to chase speed.</li></ul></div></div>
+<p class="knob"><b>Which knob?</b> ↓ <var>N</var> (filter D harder) or ↓ <var>K</var><sub>d</sub>.</p>
+<p class="apback ui"><a href="#q3">↑ Back to the Q3 table</a></p>
+</div></details>
+<details class="apcard" id="ap-windup"><summary><span class="ti">A7 · Integrator windup (actuator saturation)</span><span class="wh">The integrator keeps charging while the actuator is pinned at its limit.</span><span class="src">from Q3</span></summary>
+<div class="apbody">
+<figure class="apfig"><div class="legend" id="lg-ap-windup"></div><div id="fg-ap-windup"></div><figcaption><b>Simulated.</b> Teaching plant 1/(s+1); PI (K<sub>p</sub> = 2, K<sub>i</sub> = 4); actuator limit |u| ≤ 1.2 (same as Deep dive E). Solid = the problem; dashed green = a fixed version, shown for contrast. Teaching plant, not your engine model.</figcaption></figure>
+<div class="apcols"><div><h5>Symptoms</h5><ul><li><var>u</var> flat at the limit for a while</li><li>Output overshoots far more than the linear design predicted, then recovers slowly</li><li>Gets worse for large steps or long saturation</li></ul></div><div><h5>What to try</h5><ul><li>Turn on <b>anti-windup</b>: clamping or back-calculation (Simulink PID block → <em>Output Saturation</em> tab).</li><li>Smaller steps, or ramp the set-point so the actuator never saturates.</li><li>Remember PID Tuner designs a <em>linear</em> loop; check the nonlinear model for this (Deep dive E).</li></ul></div></div>
+<p class="knob"><b>Which knob?</b> Not a gain: add anti-windup (clamp / back-calculation) or avoid saturating.</p>
+<p class="apback ui"><a href="#q3">↑ Back to the Q3 table</a></p>
+</div></details>
+<details class="apcard" id="ap-kick"><summary><span class="ti">A8 · Derivative kick</span><span class="wh">A set-point step makes D produce a huge one-sample spike in <var>u</var>.</span></summary>
+<div class="apbody">
+<figure class="apfig"><div class="legend" id="lg-ap-kick"></div><div id="fg-ap-kick"></div><figcaption><b>Simulated.</b> Teaching plant 1/((s+1)(0.5s+1)); PID, K<sub>d</sub> = 0.5, <var>N</var> = 20; r steps 0 → 1 at t = 0. Solid = the problem; dashed green = a fixed version, shown for contrast. Teaching plant, not your engine model.</figcaption></figure>
+<div class="apcols"><div><h5>Symptoms</h5><ul><li>Sharp spike in <var>u</var> exactly when <var>r</var> jumps (≈ <var>K</var><sub>d</sub>·<var>N</var> on top of the normal P kick)</li><li>Output barely changes, but actuator slams (and may saturate)</li><li>No spike for slow set-point changes</li></ul></div><div><h5>What to try</h5><ul><li>Apply D to the <b>measurement</b> only (“derivative on measurement” / set-point weight 0 on D). It still damps the loop and ignores set-point jumps.</li><li>Or put a set-point filter / ramp in front of the loop (A13).</li><li>Lower <var>N</var> if the spike is still too big.</li></ul></div></div>
+<p class="knob"><b>Which knob?</b> Not a gain: D on measurement (or set-point filter).</p>
+<p class="apback ui"><a href="#ap-lookup">↑ Back to the symptom table</a></p>
+</div></details>
+<details class="apcard" id="ap-limits"><summary><span class="ti">A9 · Actuator saturation &amp; rate limits</span><span class="wh">The actuator can only deliver so much (amplitude) and so fast (rate).</span></summary>
+<div class="apbody">
+<figure class="apfig"><div class="legend" id="lg-ap-limits"></div><div id="fg-ap-limits"></div><figcaption><b>Simulated.</b> Left: plant 1/((s+1)(0.5s+1)), PI, step r = 2, |u| ≤ 2.5 with clamping anti-windup. Right: plant 1/(s+1)³, PI, step r = 1, rate limit 0.5 u/s. Top plot = amplitude limit, bottom plot = rate limit. Solid = the problem; dashed green = a fixed version, shown for contrast. Teaching plant, not your engine model.</figcaption></figure>
+<div class="apcols"><div><h5>Symptoms</h5><ul><li>Amplitude limit: response is slower than the linear design promised for big steps (rise set by <var>u</var><sub>max</sub>, not by the gains)</li><li>Rate limit: extra lag ⇒ more overshoot / ringing than the linear model predicts</li><li><var>u</var> is straight-line (ramp) or flat-topped instead of smooth</li></ul></div><div><h5>What to try</h5><ul><li>Don't demand what the actuator can't deliver: smaller steps or a set-point ramp (rate limiter on <var>r</var>).</li><li>With a rate limit, lower <var>K</var><sub>p</sub> / <var>K</var><sub>i</sub> (the loop is effectively slower than you thought).</li><li>Always pair limits with anti-windup (A7); if the limit is the real bottleneck, a bigger actuator beats any retuning.</li></ul></div></div>
+<p class="knob"><b>Which knob?</b> ↓ aggressiveness; ramp the set-point; anti-windup.</p>
+<p class="apback ui"><a href="#ap-lookup">↑ Back to the symptom table</a></p>
+</div></details>
+<details class="apcard" id="ap-delay"><summary><span class="ti">A10 · Time delay (dead time)</span><span class="wh">Nothing happens for a while after <var>u</var> changes, so feedback acts on old news.</span></summary>
+<div class="apbody">
+<figure class="apfig"><div class="legend" id="lg-ap-delay"></div><div id="fg-ap-delay"></div><figcaption><b>Simulated.</b> Teaching plant 1/(s+1) with 1 s dead time; PI. Solid = the problem; dashed green = a fixed version, shown for contrast. Teaching plant, not your engine model.</figcaption></figure>
+<div class="apcols"><div><h5>Symptoms</h5><ul><li>Flat start: the output ignores <var>u</var> for the delay</li><li>Gains that were fine without delay now ring or go unstable</li></ul></div><div><h5>What to try</h5><ul><li><b>Lower the gain</b> a lot, especially <var>K</var><sub>i</sub>: integrating on delayed information winds the loop up.</li><li>D does not help (it can't see the future beyond the delay).</li><li>If the delay is large compared with the plant time constant, PID is the wrong tool: use a <b>Smith predictor</b>/model-based design, or reduce the delay physically (move the sensor).</li></ul></div></div>
+<p class="knob"><b>Which knob?</b> ↓↓ <var>K</var><sub>p</sub> and <var>K</var><sub>i</sub>; Smith predictor if delay dominates.</p>
+<p class="apback ui"><a href="#ap-lookup">↑ Back to the symptom table</a></p>
+</div></details>
+<details class="apcard" id="ap-sensorlag"><summary><span class="ti">A11 · Measurement (sensor) lag</span><span class="wh">The sensor is slow, so the controller sees an old, smoothed copy of <var>y</var>.</span></summary>
+<div class="apbody">
+<figure class="apfig"><div class="legend" id="lg-ap-sensorlag"></div><div id="fg-ap-sensorlag"></div><figcaption><b>Simulated.</b> Teaching plant 1/((s+1)(0.5s+1)); sensor 1/(1.5s+1); PI. Solid = the problem; dashed green = a fixed version, shown for contrast. Teaching plant, not your engine model.</figcaption></figure>
+<div class="apcols"><div><h5>Symptoms</h5><ul><li>True <var>y</var> overshoots and rings; the measured signal is a delayed, smoother copy</li><li>Behaves like extra phase lag/delay (compare A10) — gains too high for the real loop</li><li>Derivative acts on the lagged signal, so it helps less than expected</li></ul></div><div><h5>What to try</h5><ul><li>Detune: ↓ <var>K</var><sub>p</sub> and <var>K</var><sub>i</sub> until the <em>true</em> output is calm (the lag eats phase margin).</li><li>Best cure is hardware: faster sensor, less filtering, better placement.</li><li>Don't over-filter the measurement for noise (A6) unless you re-check stability.</li></ul></div></div>
+<p class="knob"><b>Which knob?</b> ↓ <var>K</var><sub>p</sub> and <var>K</var><sub>i</sub>; fix/replace the sensor if you can.</p>
+<p class="apback ui"><a href="#ap-lookup">↑ Back to the symptom table</a></p>
+</div></details>
+<details class="apcard" id="ap-nonlinear"><summary><span class="ti">A12 · Nonlinearity / operating-point change</span><span class="wh">The plant's gain depends on where it is operating, so one set of gains is right only near one point.</span></summary>
+<div class="apbody">
+<figure class="apfig"><div class="legend" id="lg-ap-nonlinear"></div><div id="fg-ap-nonlinear"></div><figcaption><b>Simulated.</b> Teaching plant: static curve v² followed by 1/((s+1)(0.5s+1)), PI (K<sub>p</sub> = 2, K<sub>i</sub> = 1.5), plotted as y/r. Solid = the problem; dashed green = a fixed version, shown for contrast. Teaching plant, not your engine model.</figcaption></figure>
+<div class="apcols"><div><h5>Symptoms</h5><ul><li>Same controller: fine for a small step, increasingly oscillatory for a bigger one (here incremental gain grows as 2√r)</li><li>Behaviour differs with load/speed/temperature</li><li>PID Tuner linearizes at one operating point — that is its blind spot (Project 1: verify on the nonlinear model)</li></ul></div><div><h5>What to try</h5><ul><li>Tune for the <em>worst</em> (highest-gain) operating point, accepting a slower response elsewhere.</li><li>Or use <b>gain scheduling</b>: change gains with the operating point (as the dashed curve does).</li><li>Always verify the linear design on the nonlinear simulation.</li></ul></div></div>
+<p class="knob"><b>Which knob?</b> ↓ gains for the high-gain point, or schedule them with operating point.</p>
+<p class="apback ui"><a href="#ap-lookup">↑ Back to the symptom table</a></p>
+</div></details>
+<details class="apcard" id="ap-twodof"><summary><span class="ti">A13 · Set-point vs disturbance trade-off (2-DOF)</span><span class="wh">Gains tuned to reject disturbances fast make the set-point step overshoot.</span></summary>
+<div class="apbody">
+<figure class="apfig"><div class="legend" id="lg-ap-twodof"></div><div id="fg-ap-twodof"></div><figcaption><b>Simulated.</b> Teaching plant 1/((s+1)(0.5s+1)); PI K<sub>p</sub> = 1.5, K<sub>i</sub> = 4; load disturbance −1 at t = 15 s. Solid = the problem; dashed green = a fixed version, shown for contrast. Teaching plant, not your engine model.</figcaption></figure>
+<div class="apcols"><div><h5>Symptoms</h5><ul><li>Strong integral action: quick recovery from the load, but big overshoot on the set-point step</li><li>Lowering gains fixes the step but slows the load recovery — a conflict with one controller</li></ul></div><div><h5>What to try</h5><ul><li>Use a <b>two-degree-of-freedom</b> structure: keep the feedback gains for disturbances, and shape the set-point separately (set-point weight <var>b</var> &lt; 1 on P, or a set-point filter <var>T</var><sub>f</sub>).</li><li>The disturbance response is unchanged; only the set-point path is softened.</li><li>PID Tuner offers a 2-DOF controller type for this.</li></ul></div></div>
+<p class="knob"><b>Which knob?</b> Not a gain: set-point filter / weight (2-DOF).</p>
+<p class="apback ui"><a href="#ap-lookup">↑ Back to the symptom table</a></p>
+</div></details>
+<details class="apcard" id="ap-limitcycle"><summary><span class="ti">A14 · Limit cycle from dead zone / backlash</span><span class="wh">Integral action plus a sticky actuator makes the loop hunt forever around the target.</span></summary>
+<div class="apbody">
+<figure class="apfig"><div class="legend" id="lg-ap-limitcycle"></div><div id="fg-ap-limitcycle"></div><figcaption><b>Simulated.</b> Teaching plant 1/(s(s+1)) (integrating, like a position servo); actuator dead zone ±0.3; PI. Solid = the problem; dashed green = a fixed version, shown for contrast. Teaching plant, not your engine model.</figcaption></figure>
+<div class="apcols"><div><h5>Symptoms</h5><ul><li>Slow, constant-amplitude swing around <var>r</var> that never dies out</li><li><var>u</var> creeps through the dead zone, nothing moves, then it jumps</li><li>The integrator keeps winding up inside the dead zone, then the actuator suddenly moves and overshoots</li></ul></div><div><h5>What to try</h5><ul><li>↓ <var>K</var><sub>i</sub> (or turn I off) so the integrator can't keep winding up inside the dead zone; accept a small residual error.</li><li>Add a small <em>controller</em> dead band on the error, or repair the actuator (backlash/stiction).</li><li>This is a non-linear effect: linear tuning rules only help indirectly.</li></ul></div></div>
+<p class="knob"><b>Which knob?</b> ↓ <var>K</var><sub>i</sub> (or I off); fix the actuator.</p>
+<p class="apback ui"><a href="#ap-lookup">↑ Back to the symptom table</a></p>
+</div></details>
+<div class="note"><b class="h">How these fit together</b>Most of these are the same trade-off in different clothes: more gain buys speed and disturbance rejection but costs phase margin, noise sensitivity and actuator effort. Delays, slow sensors, limits and nonlinearity <em>shrink the room you have</em>; they are why “just turn up the gain” eventually fails.</div>
+</section>
+
+<footer>PID Tuning study guide · EECE5130 (Fall 2026) · Self-contained: works offline, no external libraries. Simulations: RK4, dt = 0.01 s, verified against exact solutions. Project 1 figures quoted from the MathWorks example text; your MATLAB release may differ slightly.</footer>
+</main></div>

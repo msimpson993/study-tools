@@ -1,0 +1,37 @@
+id: pid-tuning
+title: PID tuning (EECE5130)
+centralQuestion: Given a plant we know only roughly, how do we choose Kp, Ki and Kd so the output tracks a step command quickly with little overshoot, shrugs off a push and ignores sensor noise, and how do we recognize what to turn when it does not?
+blurb: A question-chain map of the PID tuning guide (why feedback, what P, I and D each do, tuning methods, Project 1, and a 14-card gallery of things that go wrong) over the 1 kg cart, with the interactive PID Lab, the 46-question quiz and Ziegler–Nichols, windup and troubleshooting figures.
+archetype: guide
+categories:
+  - { id: why, label: Why feedback }
+  - { id: terms, label: "P, I and D" }
+  - { id: tune, label: Tuning }
+  - { id: fail, label: When it goes wrong }
+sections:
+  - { id: map, title: The question map, kind: map }
+  - { id: board, title: Interactive PID guide & lab, kind: board }
+  - { id: quiz, title: Quiz & flashcards, kind: quiz }
+  - { id: glossary, title: Variables & terms, kind: glossary }
+board:
+  pairs: [overview, problem, feedback, pid, gains, dd-int, dd-der, tuning, lab, methods, dd-zn, dd-sliders, dd-windup, project, report, appendix, ap-lookup, cheat, glossary, ap-slow, ap-offset, ap-overshoot, ap-oscillation, ap-disturbance, ap-noise, ap-windup, ap-kick, ap-limits, ap-delay, ap-sensorlag, ap-nonlinear, ap-twodof, ap-limitcycle]
+runningExample:
+  title: The 1 kg cart under a PID position loop
+  summary: "The 1 kg cart (k = 2 N/m, c = 3 N·s/m) from the control-systems map, with the actuator gain normalised so that its DC gain is 1: the PID Lab's default plant p2 = 1/((s + 1)(0.5s + 1)) = 2/((s + 1)(s + 2)) is exactly twice G(s) = 1/(s² + 3s + 2). The task: command a position step r, hold it against a push d at the plant input and against sensor noise n. Alternates in the lab: p1 = 1/(s + 1) and p3 = 1/(s + 1)³ (used for Ziegler–Nichols)."
+  details: |
+    | controller | closed-loop result on p2 (ideal D, no limits) |
+    |---|---|
+    | P, Kp = 3 | s² + 3s + 8: ωₙ ≈ 2.83, ζ ≈ 0.53, about 14 % overshoot, but only reaches 0.75 (offset 1/(1 + Kp) = 0.25) |
+    | PI, Kp = 3, Ki = 2 | final value 1 exactly, about 13 % overshoot, settles in about 3.5 s |
+    | PID, add Kd = 0.5 | overshoot about 8 %, settles in about 2.8 s, at the price of amplified sensor noise |
+
+    Every box of the map says what its idea **adds to this cart** and what it lets us **account for**.
+hub:
+  order: 4
+# Porting guard: 1 map (30 boxes: the guide's 9 stops + Lab + 14 failure cards), 46-question quiz
+expect:
+  maps: 1
+  nodes: 30
+  edges: 30
+  dives: 0
+  quiz: 46
