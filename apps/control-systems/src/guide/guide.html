@@ -1,0 +1,960 @@
+<div class="layout tochide"><main id="top">
+<section class="hero" data-stage="0" id="overview">
+  <div class="kicker ui">EECE5130 Control Systems · UML Fall 2026 · Prof. Mufeed MahD · Study guide</div>
+  <h1>From Plant Models to Feedback Characteristics</h1>
+  <p class="lead">Everything from the first lecture through Lecture Notes 2, in question-and-answer form. Each topic answers two questions: <b>why do we care?</b> and <b>what should you recognize on sight?</b> Derivations are kept short. The goal is that a formula, diagram, or plot tells you something the moment you see it.</p>
+  <div class="pillrow ui"><span class="pill">Lecture Notes 1 (modeling, TFs, state space)</span><span class="pill">Lecture Notes 2 (feedback characteristics)</span><span class="pill">Lectures 1–3 + Oct 23</span><span class="pill">Mini exam 1 material</span><span class="pill">Project 2 flavor: boring machine</span></div>
+
+  <div class="where"><div class="ic">🗺️</div><div><b class="h">The big picture (keep this in your head)</b>
+  Control is a pipeline: <b>describe the plant</b> (Laplace, transfer functions, state space) → <b>predict how it moves</b> (poles → first/second-order response, steady-state error) → <b>close the loop</b> and see what feedback buys you (less sensitivity, disturbance rejection, faster transients) and what it costs (noise, possible instability, trade-offs). Every stage below is one stop on that route, and the bar at the top shows where you are.</div></div>
+
+  <div class="bigmap">
+    <a href="#s1"><div class="n">1–3</div><div class="t">Describe the plant</div><div class="d">Laplace, <b>the s-plane map</b>, transfer functions, order = energy stores</div></a>
+    <a href="#s4"><div class="n">4–5</div><div class="t">Wire it into a loop</div><div class="d">Block diagrams, disturbances, P/I/D at a glance</div></a>
+    <a href="#s6"><div class="n">6–8</div><div class="t">State space &amp; circuits</div><div class="d">ABCD, phase variables, C(sI−A)⁻¹B+D, op-amps</div></a>
+    <a href="#s9"><div class="n">9–11</div><div class="t">How it moves</div><div class="d">1st order, dominant poles, ζ &amp; ω<sub>n</sub>, %OS, T<sub>s</sub></div></a>
+    <a href="#s12"><div class="n">12</div><div class="t">Where it ends up</div><div class="d">Final-value theorem, why P leaves error and I removes it</div></a>
+    <a href="#s13"><div class="n">13</div><div class="t">What feedback buys</div><div class="d">S + C = 1, sensitivity, disturbances, transients, indices</div></a>
+    <a href="#cheat"><div class="n">★</div><div class="t">Recognize-this sheet</div><div class="d">One-page review + glossary</div></a>
+    <a href="../pid-tuning/index.html"><div class="n">↗ sibling</div><div class="t">PID tuning guide</div><div class="d">The deep dive on choosing K<sub>p</sub>, K<sub>i</sub>, K<sub>d</sub> (Project 1)</div></a>
+  </div>
+  <p class="ui" style="font-size:.85rem;color:var(--muted)">How to use: the <b>Short answer</b> boxes alone are a decent review. Purple <b>Recognize</b> boxes are the “on sight” patterns, red <b>Trap</b> boxes are common exam mistakes, and yellow <b>Predict</b> boxes ask you to guess before reading on. Press <b>v</b> (or the <i>Vars</i> button) for the symbols used in the section you're reading. PID <em>tuning</em> lives in the <a href="../pid-tuning/index.html">PID guide</a>; self-test with this guide's <a href="#/quiz">quiz &amp; flashcards</a>, the <a href="#/quiz?tags=mini-exam&title=Mini-exam%201">mini-exam quiz</a> and the <a href="../pid-tuning/index.html#/quiz">PID quiz</a>.</p>
+</section>
+
+<!-- ================= 1 ================= -->
+<section data-stage="1" id="s1">
+<h2>1 · Why we model: Laplace &amp; LTI systems</h2>
+<div class="where"><div class="ic">📍</div><div><b class="h">Where are we in the big picture?</b>The very first step: before you can control something you need a way to <em>predict</em> it. This stage explains why the course's chosen language is the Laplace transform.
+<div class="mini"><span class="on">Describe</span><i>→</i><span>Loop</span><i>→</i><span>State space</span><i>→</i><span>Response</span><i>→</i><span>SSE</span><i>→</i><span>Feedback</span></div></div></div>
+
+<div class="q" id="q1"><span class="badge">Q1</span><h3>Why model at all?</h3></div>
+<div class="ansr">
+<div class="short">A controller is a bet on how the plant will react. A model is what makes that bet informed: it predicts the output for any input, so you can design and test on paper or in Simulink before touching hardware.</div>
+<p>Every design question in this course (“How much gain?”, “Will it overshoot?”, “Will it settle on target?”, “What happens when a load hits?”) is answered by running the model, not the machine. The model doesn't need to be perfect. Feedback (Stage 13) exists partly <em>because</em> models are never perfect. But it has to capture the dominant behavior.</p>
+<div class="why"><b class="h">Why it matters</b>Every later topic (poles, ζ, steady-state error, sensitivity) is a property <em>of a model</em>. If the model is wrong in the dominant dynamics, every number you compute from it is wrong too.</div>
+</div>
+
+<div class="q" id="q2"><span class="badge">Q2</span><h3>Why Laplace transforms and transfer functions?</h3></div>
+<div class="ansr">
+<div class="short">For <b>linear time-invariant (LTI)</b> systems, Laplace turns differential equations into algebra: d/dt becomes multiplication by <i>s</i>, and convolution becomes multiplication. Systems in series then simply multiply.</div>
+<p>Physical laws (KVL, Newton) give ODEs. Solving ODEs for every input is painful, and in the time domain chaining two systems means a convolution integral (Lecture 1: <i>y</i>(<i>t</i>) = ∫ <i>x</i>(τ)<i>h</i>(<i>t</i>−τ)dτ). In the <i>s</i>-domain the same chain is <i>Y</i> = <i>H</i>·<i>X</i>. That's why block diagrams work: each block is a multiplier.</p>
+<p>The price: <b>linear</b> (superposition holds: no saturation, no dead zones) and <b>time-invariant</b> (constant coefficients: R, L, C, m don't drift). Real plants are approximately LTI around an operating point, and that approximation is good enough for most of the design.</p>
+<p class="rf">You already think this way with impedances: <i>Z</i> = <i>j</i>ω<i>L</i> is just <i>s</i>L evaluated at <i>s</i> = <i>j</i>ω. Transfer functions are the same move, with <i>s</i> allowed off the <i>j</i>ω axis to capture transients.</p>
+<div class="recog"><b class="h">Recognize</b><ul><li><i>s</i> ↔ d/dt, 1/<i>s</i> ↔ ∫dt (with zero initial conditions).</li><li>“Blocks in series multiply” only holds in the <i>s</i>-domain. In time it's convolution.</li><li>Saturation, dead zones, or time-varying parameters mean you've left the LTI world, and transfer function results are approximations.</li></ul></div>
+</div>
+
+<div class="q" id="q3"><span class="badge">Q3</span><h3>What does “zero initial conditions” mean, and what doesn't it mean?</h3></div>
+<div class="ansr">
+<div class="short">A transfer function is <i>defined</i> with every initial condition set to zero, so it describes how the system responds to an <em>input</em> starting from rest. It doesn't claim real systems start at rest. It just leaves the initial-condition response out.</div>
+<p>Laplace of a derivative is <i>sX</i>(<i>s</i>) − <i>x</i>(0). Setting <i>x</i>(0) = 0 for every stored quantity (capacitor voltage, inductor current, position, velocity) removes those extra terms, and the output becomes a pure ratio times the input: <i>Y</i>(<i>s</i>) = <i>G</i>(<i>s</i>)<i>U</i>(<i>s</i>).</p>
+<div class="trap"><b class="h">Trap</b><ul><li>A transfer function can't show you the response to a charged capacitor with zero input. You need the ODE or <a href="#s6">state space</a> (which carries <i>x</i>(0) naturally) for that.</li><li>Because the system is linear, the full response = (zero-state response from <i>G</i>) + (zero-input response from the initial conditions). The transfer function only gives the first part.</li></ul></div>
+</div>
+
+<div class="q" id="q4"><span class="badge">Q4</span><h3>Poles and zeros: what are they telling me?</h3></div>
+<div class="ansr">
+<div class="short"><b>Poles</b> (roots of the denominator) are the system's <em>natural modes</em>: each pole <i>p</i> puts a term <i>e</i><sup><i>pt</i></sup> in the response. <b>Zeros</b> (roots of the numerator) are input shapes the system blocks, like transmission notches. Poles decide stability and speed; zeros change how the modes are weighted.</div>
+<p>Where a pole sits in the <i>s</i>-plane tells you the shape of its mode at a glance. Each mini-plot below is the mode <i>e</i><sup><i>pt</i></sup> for a pole at that location:</p>
+<figure><div id="fig-splane-modes"></div><figcaption><b>The s-plane as a picture dictionary.</b> Left half-plane: decays (stable). Farther left: decays faster. Farther from the real axis: oscillates faster. On the <i>j</i>ω axis: never dies. Right half-plane: grows (unstable). Only the upper half is drawn, since complex poles come with a mirror-image conjugate below the axis. All marks here are <b>poles (×)</b>; zeros are drawn as ○ and get their own story in <a href="#splane">the s-plane map</a>.</figcaption></figure>
+<div class="recog"><b class="h">Recognize</b><ul><li>Real part of the pole → decay rate (envelope <i>e</i><sup>σ<i>t</i></sup>). Imaginary part → oscillation frequency.</li><li>Any pole with Re &gt; 0 means the system is unstable, no matter what the others do.</li><li>Complex poles always come in conjugate pairs for physical (real-coefficient) systems.</li><li>A zero right on top of a pole cancels it in <i>G</i>(<i>s</i>), but the mode can still exist internally (see <a href="#q20">Q20</a>).</li></ul></div>
+</div>
+</section>
+
+<!-- ================= 1.5 S-PLANE MAP ================= -->
+<section data-stage="1.5" id="splane">
+<h2>1½ · The s-plane as a map</h2>
+<div class="where"><div class="ic">📍</div><div><b class="h">Where are we in the big picture?</b>A deep dive between “why Laplace” and “transfer functions.” Once you can <em>read</em> the s-plane, almost every later topic (first and second order, dominant poles, steady-state error, closing the loop) becomes a matter of looking at where the × and ○ marks sit and how an operation moves them.
+<div class="mini"><span class="on">Describe</span><i>→</i><span>Loop</span><i>→</i><span>State space</span><i>→</i><span>Response</span><i>→</i><span>SSE</span><i>→</i><span>Feedback</span></div></div></div>
+
+<div class="deep" id="dd-splane-map"><div class="dh"><span class="tag ui">Map</span><h3>This section in six stops</h3></div>
+<div class="dmap">
+<div><b>Marks</b>: × = pole, ○ = zero (S1) + <b>what a point means</b> (|G| surface picture, M1–M10)</div>
+<div><b>Poles vs zeros</b>: modes vs coupling (S2)</div>
+<div><b>Reading regions</b>: LHP, RHP, jω axis, ζ, ω<sub>n</sub> (S3)</div>
+<div><b>Explorer</b>: move a pole pair and a zero (S4)</div>
+<div><b>Operations dictionary</b>: d/dt, ∫, delay, shift, scale, convolve (S5–S6)</div>
+<div><b>Inverse transform, FVT/IVT &amp; closing the loop</b> (S7–S8)</div>
+</div>
+<div class="tip"><b class="h">The one-sentence version</b>A transfer function is a pattern of × and ○ marks plus a gain. <b>Poles say what motions the system can make; zeros say how much of each motion a given input and output actually see.</b> Every Laplace operation is a simple move of that pattern: add a mark, slide it, stretch it, or merge two patterns.</div>
+</div>
+
+<div class="q" id="sp1"><span class="badge">S1</span><h3>How are poles and zeros drawn, and why are they marked differently?</h3></div>
+<div class="ansr">
+<div class="short"><b>Poles are drawn as ×</b> and <b>zeros as ○</b>. Poles are where |<i>G</i>(<i>s</i>)| blows up to ∞; zeros are where <i>G</i>(<i>s</i>) = 0. Picture |<i>G</i>(<i>s</i>)| as a rubber sheet over the plane: poles are tent poles pushing it up to infinity, and zeros are tacks pinning it down to zero.</div>
+<figure><div id="fig-sheet"></div><figcaption><b>Marks for G(s) = (s + 2)/((s + 1)² + 4)</b>: a zero at −2 (○) and poles at −1 ± j2 (×). The shading shows |G(s)|, brighter where it's larger. It's bright near the ×'s and dark near the ○.</figcaption></figure>
+<div class="recog"><b class="h">Recognize</b><ul><li>× = pole = root of the denominator. ○ = zero = root of the numerator. Exam plots, MATLAB <code>pzmap</code>, and the Lecture Notes all use this convention.</li><li>The <b>picture dictionary</b> in <a href="#q4">Q4</a> shows only poles (×), because it's about natural modes. Zeros have no mode of their own.</li><li>Evaluating <i>G</i> on the <i>j</i>ω axis (<i>s</i> = <i>j</i>ω) is the frequency response: walking up the axis past a × gives a resonant bump, and past a ○ gives a notch.</li></ul></div>
+<p class="rf">Exactly like a filter's pole/zero plot: a high-Q pole pair close to the <i>j</i>ω axis is a sharp resonance, and a zero on the axis is a perfect notch (a trap circuit).</p>
+</div>
+
+<div class="deep" id="sp-meaning"><div class="dh"><span class="tag ui">Deep dive</span><h3>What does a point on the s-plane actually mean? (the |G| surface picture)</h3></div>
+<p>If the s-plane feels slippery, it's usually because three very different things are being pictured at the same spot: <b>the system</b>, <b>the input you apply</b>, and <b>the knobs you turn</b>. One picture keeps them apart. We'll use it for this whole deep dive.</p>
+
+<div class="where"><div class="ic">⛰️</div><div><b class="h">The picture: |G| as a 3D surface over the s-plane</b>
+Lay the s-plane flat and, above every point <i>s</i>, raise a surface to height |<i>G</i>(<i>s</i>)|. That's the whole transfer function drawn as one landscape (the phase ∠<i>G</i>(<i>s</i>) is a second number attached to each point). <b>Poles × are peaks</b> (the surface shoots to ∞), and <b>zeros ○ are sinkholes</b> (it touches 0). <b>A Bode magnitude plot is just a cut through this surface along the jω axis</b> (σ = 0): slice the landscape with a vertical plane standing on the jω axis, and the edge you see is |<i>G</i>(<i>j</i>ω)|. Left, on, and right of that axis describe <b>natural modes</b>, not geography: a pole in the LHP is a mode that <b>decays</b>, one on the axis <b>rings forever</b>, and one in the RHP <b>grows</b>, even with no input (<a href="#m8">M8</a>).
+<div class="mini"><span>surface height = |G(s)|</span><i>·</i><span>peaks = poles ×</span><i>·</i><span>sinkholes = zeros ○</span><i>·</i><span>Bode = slice along jω (σ = 0)</span><i>·</i><span>◆ = evaluate G at that s (your e<sup>st</sup> probe)</span><i>·</i><span>bulldozers = control knobs moving poles</span></div></div></div>
+
+<div class="tw"><table class="t">
+<tr><th>In the picture</th><th>In control</th><th>Who decides it?</th></tr>
+<tr><td>The whole surface</td><td><i>G</i>(<i>s</i>) evaluated everywhere</td><td>The hardware + controller (fixed while you test)</td></tr>
+<tr><td>Peaks ×</td><td>Poles: the system's own natural modes</td><td>The system. They move only when you turn a knob</td></tr>
+<tr><td>Sinkholes ○</td><td>Zeros: inputs the system blocks (not modes)</td><td>The system</td></tr>
+<tr><td>Left half (σ &lt; 0) / jω axis / right half (σ &gt; 0)</td><td>A pole there is a mode that <b>decays</b> / <b>rings forever</b> / <b>grows</b></td><td>Fixed meaning of σ</td></tr>
+<tr><td><b>The ◆ at s = jω</b></td><td><b>You drive the system with sin ω<i>t</i></b>, so you evaluate <i>G</i>(<i>j</i>ω)</td><td><b>You</b>: you choose the test frequency</td></tr>
+<tr><td>Surface height under the ◆</td><td>|<i>G</i>(<i>j</i>ω)|: output amplitude ÷ input amplitude</td><td>Read off the surface</td></tr>
+<tr><td>Phase attached to that point</td><td>∠<i>G</i>(<i>j</i>ω): output phase shift vs. input</td><td>Read off the surface</td></tr>
+<tr><td>Slicing the surface along the jω axis</td><td>The Bode magnitude plot</td><td>That's all a Bode plot is</td></tr>
+<tr><td>A peak standing close to the jω axis</td><td>Resonance (lightly damped poles): the slice passes near a peak, so it bumps up</td><td></td></tr>
+<tr><td>Bulldozers reshaping the surface</td><td>Changing <i>K</i>, <i>K</i><sub>p</sub>, <i>R</i>, <i>C</i>, … moves the poles/zeros</td><td>The designer, <em>before</em> the test</td></tr>
+</table></div>
+<p style="font-size:.9rem;color:var(--muted)"><b style="color:var(--text)">Contour lines.</b> Lines where |<i>G</i>| is constant are constant-gain contours. They crowd together near a pole because the surface rises steeply there. If that crowding reaches the jω axis, the Bode slice climbs fast too: a sharp resonance.</p>
+
+<div class="trap"><b class="h">Three misconceptions this kills</b><ul>
+<li><b>“A control setting is a position on the plane.”</b> No. A knob is a bulldozer: it reshapes the surface (moves the ×'s). It doesn't put you anywhere.</li>
+<li><b>“A point is the drive signal” or “a point is the response.”</b> No. A point is an <em>address</em> where you <b>evaluate</b> <i>G</i>. The input is a time signal (sin ω<i>t</i>). The output is that same sine scaled by the surface height and shifted by the phase.</li>
+<li><b>“Any point can be a sine drive.”</b> No. A steady sine of frequency ω lives only on the jω axis, at <i>s</i> = ±<i>j</i>ω. Points off the axis correspond to sinusoids that grow or decay exponentially.</li></ul></div>
+
+<div class="widget" id="w10"><h4 class="ui">|G| surface + probe explorer: G(s) = C·(s − z)/((s − p)(s − p̄)). Sliders build the |G| surface; drag the ◆ e<sup>st</sup> probe anywhere</h4>
+<div class="wgrid"><div>
+<div id="w10map" style="touch-action:none;cursor:crosshair"></div>
+<div class="legend ui" style="margin-top:.2rem"><span style="--lc:var(--c2)">× poles = peaks (from sliders)</span><span style="--lc:var(--c3)">○ zero = sinkhole (from slider)</span><span style="--lc:var(--warn)">jω axis (Bode slice)</span><span style="--lc:var(--c5)">◆ e<sup>st</sup> probe (drag me)</span><span style="--lc:var(--accent)">brighter = higher |G(s)|</span></div>
+<p class="ui" style="font-size:.78rem;color:var(--muted);margin:.15rem 0 .3rem"><b style="color:var(--text)">- - - dashed lines</b> = the vectors (<i>s</i> − <i>p</i>), (<i>s</i> − <i>p̄</i>), (<i>s</i> − <i>z</i>) from each ×/○ to the ◆. <b>Length → |G|</b> (zero lengths on top, pole lengths below), <b>angle → ∠G</b>. See <a href="#m7">M7</a>; RHP poles: <a href="#m8">M8</a>.</p>
+<div class="status" id="w10mode"></div>
+<div id="w10sine"></div><div class="legend ui" id="w10sleg"></div>
+<div class="ctl inctl" style="margin:.35rem 0 .2rem"><label>Time axis length T (window shown: 0 … T) <output id="w10Tv"></output></label><input type="range" id="w10T" min="1" max="60" step="0.5" value="8" aria-label="length of the time axis in seconds"><div class="presets" style="margin-top:.2rem"><button id="w10Tauto" type="button">auto-fit T to this probe</button><span style="font-size:.76rem;color:var(--muted);align-self:center">Longer T = zoom out (slow growth, decay, saturation). Shorter T = zoom in (read the phase shift).</span></div></div>
+<div class="readout" id="w10tro"></div>
+<div class="note" id="w10cap"><b class="h">How to read this plot</b><span id="w10capt"></span></div>
+<div id="w10bode"></div>
+</div>
+<div class="ctl">
+<div class="status" style="background:color-mix(in srgb,var(--c5) 12%,var(--panel));color:var(--text)"><b>◆ = the e<sup>st</sup> probe signal.</b> If the drive is ~ e<sup>st</sup>, then <b>response / probe = G(s)</b> at the ◆. It's where we <em>look up</em> G. It is <u>not</u> a pole, <u>not</u> a control setting, and your real input is usually a <b>combination (sum) of many probe signals</b>: a Fourier/Laplace mix. A sine = two probes at ±jω; a step or a pulse = a whole spread of them. Each probe gets multiplied by G at its own address, and the output is the sum of those responses.</div>
+<div class="presets"><button id="w10snap">snap probe to jω axis</button><label class="chk" style="font-size:.78rem;margin:0"><input type="checkbox" id="w10lock"> keep probe on jω axis</label></div>
+<label>Probe σ (growth/decay) <output id="w10sv"></output></label><input type="range" id="w10ps" min="-3" max="1.5" step="0.02" value="0">
+<label>Probe ω (oscillation) <output id="w10wv"></output></label><input type="range" id="w10pw" min="-5.5" max="5.5" step="0.02" value="1">
+<p style="font-size:.76rem;color:var(--muted);margin:.1rem 0 .5rem">Or drag ◆ (or click anywhere) on the map. Moving the probe never changes the surface.</p>
+<b class="ui" style="font-size:.8rem;color:var(--c2)">Surface (bulldozers: the system / your design)</b>
+<label>Pole pair real part −a <output id="w10av"></output></label><input type="range" id="w10a" min="-3" max="0.8" step="0.05" value="-1">
+<label>Pole pair imag. part ±b <output id="w10bv"></output></label><input type="range" id="w10b" min="0" max="5" step="0.05" value="2">
+<label class="chk"><input type="checkbox" id="w10zon" checked> include zero ○</label>
+<label>Zero location z (real) <output id="w10zv"></output></label><input type="range" id="w10z" min="-3" max="1.5" step="0.05" value="-2.5">
+<div class="presets"><button data-p="-1,2,1,-2.5,0,1">default</button><button data-p="-0.3,3,0,0,0,3">light damping · probe on ridge</button><button data-p="-0.3,3,0,0,-0.3,3">probe sits on the pole</button><button data-p="-1,2,1,1,0,1">RHP zero (sinkhole in RHP)</button><button data-p="-1,2,1,-0.5,-0.5,0">probe on the zero</button><button data-p="-1,2,1,-2.5,-0.6,2.5">decaying probe</button><button data-p="-1,2,1,-2.5,0.5,1.5">growing probe</button><button data-p="0.4,2,0,0,0,2">unstable poles (RHP)</button><button data-p="0,2,0,0,0,1">ideal oscillator (poles on jω)</button><button data-p="0.1,2,0,0,0,1">amp starting to oscillate (slight RHP)</button><button data-p="-0.3,3,0,0,0,2.75">stable amp: big |G| on jω, poles LHP</button></div>
+<div class="readout" id="w10ro"></div></div></div></div>
+<div class="q" id="m6"><span class="badge">M6</span><h3>If the ◆ is one probe signal, what is my real input?</h3></div>
+<div class="ansr">
+<div class="short">Your real input is a <b>combination, literally a sum, of many probe signals</b> e<sup><i>st</i></sup>, each with its own weight. That's what a transform does: <b>Fourier</b> writes a signal as a sum of probes <em>on the jω axis</em> (pure sines, <i>s</i> = <i>j</i>ω). <b>Laplace</b> allows probes <em>anywhere</em> (<i>s</i> = σ + <i>j</i>ω, growing or decaying). Linearity lets you handle each probe separately: response/probe = <i>G</i>(<i>s</i>) at that probe's address. Then add up all the responses.</div>
+<div class="tw"><table class="t">
+<tr><th>Real input</th><th>As a mix of probes</th></tr>
+<tr><td>3 sin 2<i>t</i></td><td>Two probes, at <i>s</i> = +<i>j</i>2 and −<i>j</i>2 (weights ∓3<i>j</i>/2)</td></tr>
+<tr><td>Any repeating (periodic) signal, e.g. a square wave</td><td>A <b>discrete</b> set of probes on the jω axis at the harmonics ±<i>j</i>ω₀, ±2<i>j</i>ω₀, … (square wave: odd ones only). That's its Fourier series. All σ = 0</td></tr>
+<tr><td>A chirp (frequency sweep)</td><td>Roughly <b>one probe sliding up the jω axis over time</b>: at each moment you're reading G near <i>j</i>ω(<i>t</i>). That's how a network/Bode analyzer sweeps. The probes are still on the jω axis, not off-axis σ ≠ 0 probes (a slow sweep ≈ steady state at each ω)</td></tr>
+<tr><td>A step, a pulse, speech, noise</td><td>A continuous spread of probes (Fourier/Laplace integral): <i>Y</i>(<i>s</i>) = <i>G</i>(<i>s</i>)·<i>U</i>(<i>s</i>), probe by probe</td></tr>
+<tr><td><i>e</i><sup>−0.5<i>t</i></sup> cos 2<i>t</i></td><td>Two off-axis probes at −0.5 ± <i>j</i>2: not a lab sine, but still just probes</td></tr>
+</table></div>
+<div class="trap"><b class="h">Trap</b>Dragging the ◆ doesn't change your input or your system. It just picks <em>which one</em> probe in the mix you're reading the answer for.</div>
+</div>
+
+<div class="q" id="m7"><span class="badge">M7</span><h3>Does the distance from the ◆ to a pole or zero matter?</h3></div>
+<div class="ansr">
+<div class="short"><b>Yes. It's the whole geometric meaning of G(s).</b> Write the explorer's system in factored form, <i>G</i>(<i>s</i>) = <i>C</i>·(<i>s</i> − <i>z</i>)/((<i>s</i> − <i>p</i>)(<i>s</i> − <i>p̄</i>)). Each factor (<i>s</i> − mark) is a complex number, and you can draw it as an arrow: <b>the vector from that mark to the ◆</b>. Those are exactly the <b>dashed lines</b> in the explorer. Read them like this:
+<ul style="margin:.4rem 0 0">
+<li><b>Length</b> of a dashed line = |<i>s</i> − mark| = how much that mark contributes to |<i>G</i>|.</li>
+<li><b>Angle</b> of a dashed line (measured from the +σ direction) = that mark's contribution to ∠<i>G</i>.</li>
+</ul></div>
+<div class="where"><div class="ic">📏</div><div><b class="h">The rule (magnitudes multiply, angles add)</b>
+<p style="margin:.2rem 0">|<i>G</i>(<i>s</i>)| = |<i>C</i>| · <span class="frac"><span>(product of distances ◆ → each zero ○)</span><span>(product of distances ◆ → each pole ×)</span></span></p>
+<p style="margin:.2rem 0">∠<i>G</i>(<i>s</i>) = ∠<i>C</i> + Σ(angles from zeros) − Σ(angles from poles)</p>
+<div class="mini"><span>◆ close to a × → tiny denominator → |G| → ∞</span><i>·</i><span>◆ close to a ○ → tiny numerator → |G| → 0</span><i>·</i><span>◆ far from everything → lengths roughly cancel, |G| set by the count of ×'s vs ○'s</span></div></div></div>
+<div class="recog"><b class="h">Why this matters</b><ul>
+<li><b>Resonance, explained by a ruler.</b> Slide the ◆ up the jω axis past a lightly damped pole (try the “light damping” preset). At the ω just beside the ×, one dashed line becomes very short, so the denominator shrinks and |<i>G</i>| spikes. That's the Bode peak. The closer the pole is to the jω axis (smaller ζ), the shorter that shortest line can get, and the taller the peak.</li>
+<li><b>Notches, same idea upside down.</b> A zero near the jω axis makes a numerator line short at that ω, so |<i>G</i>| dips.</li>
+<li><b>Phase, too.</b> As the ◆ walks past a pole, that pole's arrow swings through about 180°, which is why the phase drops quickly near resonance.</li></ul></div>
+<div class="recog"><b class="h">Recognize</b>Check it live: the readout lists each distance and the product |<i>C</i>|·<i>d</i><sub>○</sub>/(<i>d</i><sub>×</sub>·<i>d</i><sub>×̄</sub>). It matches |<i>G</i>(<i>s</i>)| every time. Drag the ◆ next to a × and watch that dashed line shrink while |<i>G</i>| climbs.</div>
+<div class="trap"><b class="h">Trap</b>Two different distances get mixed up. <b>Distance from the origin to a pole</b> is ω<sub>n</sub> = |<i>p</i>|, a property of the system (how fast that mode is). <b>Distance from the ◆ to a pole</b> is lookup geometry: it changes every time you move the probe and tells you how big |<i>G</i>| is <em>at that address</em>. Same ruler, different question.</div>
+</div>
+
+<div class="q" id="m8"><span class="badge">M8</span><h3>Do RHP poles mean the system blows up even with no input?</h3></div>
+<div class="ansr">
+<div class="short"><b>Yes. No input is required.</b> A pole is an <i>e</i><sup><i>st</i></sup> the system can produce <em>on its own</em> (that's why |<i>G</i>| → ∞ there: zero input, nonzero output). A pole pair at +σ ± <i>j</i>ω with σ &gt; 0 is the natural mode <i>e</i><sup>+σ<i>t</i></sup>cos(ω<i>t</i>). With <i>u</i> = 0, any tiny nonzero initial condition, sensor noise, or disturbance excites it a little, and then it grows exponentially. That's the definition of instability for an LTI system: the <b>free response doesn't die out</b>. So yes, those signals do spiral out of control. Nothing has to drive them.</div>
+<div class="tw"><table class="t">
+<tr><th>Poles at σ ± <i>j</i>ω</th><th>Free response (<i>u</i> = 0)</th><th>Verdict</th></tr>
+<tr><td>σ &lt; 0 (LHP)</td><td><i>e</i><sup>−|σ|<i>t</i></sup>cos ω<i>t</i> dies out</td><td>Stable: only the forced response is left</td></tr>
+<tr><td>σ = 0 (on the jω axis)</td><td>cos ω<i>t</i> rings forever, never grows</td><td>Marginal: not BIBO stable (a sine at that ω grows like <i>t</i>)</td></tr>
+<tr><td>σ &gt; 0 (RHP)</td><td><i>e</i><sup>+σ<i>t</i></sup>cos ω<i>t</i> grows without bound</td><td>Unstable, even with no input</td></tr>
+</table></div>
+<div class="recog"><b class="h">Recognize</b><ul>
+<li>Click the <b>“unstable poles (RHP)”</b> preset (poles at +0.4 ± <i>j</i>2). The ◆ can still sit on the jω axis and <i>G</i>(<i>j</i>ω) is still a perfectly good number, but it only describes the <em>forced</em> part. In a real lab sine test the total output = forced sine + free response, and the free response grows like <i>e</i><sup>0.4<i>t</i></sup>. Within seconds it drowns the sine, so the test <b>never settles</b>.</li>
+<li>That's why a Bode plot of an unstable plant can't be <em>measured</em> open-loop (it can still be computed), and why the first job of feedback is to bulldoze the peaks back into the LHP (<a href="#m5">M5</a>, root locus in <a href="#sp8">S8</a>).</li>
+<li>Real hardware doesn't grow forever. It saturates, clips, or breaks. That's the linear model telling you it is no longer valid. Oscillators use exactly this on purpose (<a href="#m9">M9</a>).</li></ul></div>
+<div class="trap"><b class="h">Trap</b>An <b>RHP zero</b> is not the same thing. A zero isn't a mode, so it never makes the free response grow. It causes a wrong-way start and limits feedback (the “RHP zero” preset; details in <a href="#m10">M10</a>), but the system can be perfectly stable. Only <b>poles</b> decide stability.</div>
+</div>
+
+
+<div class="q" id="m9"><span class="badge">M9</span><h3>So how do oscillators and amplifiers fit in? Do RHP poles give infinite power?</h3></div>
+<div class="ansr">
+<div class="short"><b>No infinite power. Where the poles sit tells you what kind of circuit you have.</b> An <b>ideal oscillator</b> has its poles exactly <b>on the jω axis</b>, so its free response rings forever at constant amplitude, cos(ω<sub>0</sub><i>t</i>), with no input. A <b>practical oscillator</b> is built with its poles <b>slightly in the RHP</b> so the ring <em>starts by itself</em> from noise and grows. Then <b>nonlinear saturation</b> (clipping at the supply rails, transistor gain compression) lowers the effective loop gain as the amplitude rises. That pushes the effective poles back onto the axis, and the amplitude settles at a finite value. A <b>linear amplifier</b> you want to behave keeps all its poles in the <b>LHP</b>: “high gain” means |<i>G</i>| is large <em>along the jω slice</em>, not that the poles moved right.</div>
+<div class="tw"><table class="t">
+<tr><th>Circuit</th><th>Poles</th><th>Free response (<i>u</i> = 0)</th><th>Explorer preset</th></tr>
+<tr><td>Amplifier / filter (you want it stable)</td><td>LHP</td><td>Dies out; only the amplified input remains</td><td>“stable amp: big |G| on jω, poles LHP”</td></tr>
+<tr><td>Ideal oscillator (textbook LC tank, no loss)</td><td>On the jω axis</td><td>Rings forever at constant amplitude</td><td>“ideal oscillator (poles on jω)”</td></tr>
+<tr><td>Practical oscillator, at start-up</td><td>Slightly RHP</td><td>Grows from noise… until saturation stops it</td><td>“amp starting to oscillate (slight RHP)”</td></tr>
+<tr><td>Practical oscillator, steady state</td><td><em>Effectively</em> on the axis (nonlinear)</td><td>Finite, steady amplitude set by the rails or the gain-control loop</td><td>dashed green curve (illustrative)</td></tr>
+</table></div>
+<div class="where"><div class="ic">⚡</div><div><b class="h">Why there's no free energy</b>An RHP pole doesn't create energy. It says the circuit <em>amplifies its own output</em> (positive feedback) using the <b>power supply</b>. The linear model predicts runaway <em>until something nonlinear stops it</em>: the output hits the rails, a transistor saturates, or something heats up. At that point the LTI model is no longer valid, which is why the explorer's dashed green “with saturation” curve is a caption-level illustration rather than part of <i>G</i>(<i>s</i>).</div></div>
+<div class="recog"><b class="h">Recognize</b><ul>
+<li>Click <b>“ideal oscillator”</b>: the orange free response neither grows nor decays, and the status line flags poles on the axis.</li>
+<li>Click <b>“amp starting to oscillate”</b> (poles at +0.1 ± <i>j</i>2): orange grows slowly with no input. The dashed green curve is the same ring once saturation caps it, which is what a real oscillator's output looks like.</li>
+<li>Click <b>“stable amp”</b>: the ◆ on the jω axis sits close to a LHP peak, so |<i>G</i>| is big (lots of gain at that frequency), yet there's no orange curve, because nothing rings on its own.</li>
+<li>An amplifier that “breaks into oscillation” (squealing audio amp, ringing op-amp with a capacitive load) is a stable design whose poles got pushed across the jω axis by unintended feedback.</li></ul></div>
+<div class="trap"><b class="h">Trap</b>Don't equate <b>high gain</b> with <b>RHP poles</b>. Gain is <em>surface height along the jω slice</em> (|<i>G</i>(<i>j</i>ω)|). Stability is <em>where the peaks stand</em>. A stable amp can have huge gain with every pole in the LHP. And a pole sitting <em>exactly</em> on the axis is a knife edge: in practice tiny parameter drift tips it to decay or grow, which is why real oscillators aim slightly RHP and let saturation hold the amplitude.</div>
+</div>
+
+
+<div class="q" id="m10"><span class="badge">M10</span><h3>What does a zero in the right half-plane actually do?</h3></div>
+<div class="ansr">
+<div class="short"><b>It's not a growing mode: zeros aren't modes.</b> A zero at <i>s</i> = +<i>z</i> just means the input shape <i>e</i><sup>+<i>zt</i></sup> gets blocked (<i>G</i> = 0 there). On the surface it is still a <b>sinkhole</b>, only one standing in the RHP. Nothing in the free response grows because of it. What it changes is <b>phase</b>, and through phase, what feedback can do. Systems with RHP zeros are called <b>non-minimum phase</b>.</div>
+<div class="where"><div class="ic">↩️</div><div><b class="h">Three consequences</b><ul style="margin:.2rem 0 0">
+<li><b>Same gain, extra lag.</b> Mirror the zero to −<i>z</i> and |<i>G</i>(<i>j</i>ω)| doesn't change at all (the distance from any point on the jω axis to +<i>z</i> equals the distance to −<i>z</i>, <a href="#m7">M7</a>), but the phase picks up extra lag (up to 180° more at high frequency). Same Bode magnitude, worse Bode phase.</li>
+<li><b>Wrong-way start.</b> The step response often heads the wrong way first (initial undershoot) before going to its final value: the classic inverse response of a boiler drum, a bicycle steered into a turn, or a time delay's Padé approximation. Try the RHP zero in the <a href="#w8">s-plane step explorer</a>.</li>
+<li><b>A speed limit for feedback.</b> That extra lag eats phase margin. Crank the loop gain to push bandwidth past roughly the zero's frequency <i>z</i>, and the loop rings or goes unstable. The closed-loop poles get pulled <em>toward</em> the RHP zero as gain rises (root locus ends on zeros).</li></ul></div></div>
+<div class="recog"><b class="h">Recognize</b><ul>
+<li>Click the explorer's <b>“RHP zero (sinkhole in RHP)”</b> preset: the ○ sits right of the jω axis, the surface still dips to 0 there, and the poles (and so stability) are unchanged. The status line flags non-minimum phase.</li>
+<li>Numerator factor like (1 − <i>s</i>/<i>z</i>) or (<i>z</i> − <i>s</i>) with <i>z</i> &gt; 0, i.e. a sign flip between the <i>s</i> term and the constant: suspect an RHP zero.</li>
+<li>If complex RHP zeros sit close to the jω axis, the Bode slice still shows a <b>notch</b> there, exactly like LHP zeros would. The magnitude can't tell them apart; the phase can.</li></ul></div>
+<div class="trap"><b class="h">Trap</b>Don't confuse an <b>RHP zero</b> with an <b>RHP pole</b>. RHP pole: a mode that grows with no input, so the system is unstable (<a href="#m8">M8</a>). RHP zero: no mode at all, the system can be perfectly stable, but it starts the wrong way and limits how aggressive your controller can be. Also, you can't cancel an RHP zero with an RHP controller pole: that pole would be an unstable hidden mode.</div>
+</div>
+
+<div class="q" id="m1"><span class="badge">M1</span><h3>So what is a point s = σ + jω, in plain words?</h3></div>
+<div class="ansr">
+<div class="short">It's an <b>address</b> that names a <em>type</em> of exponential signal, <i>e</i><sup><i>st</i></sup> = <i>e</i><sup>σ<i>t</i></sup>(cos ω<i>t</i> + <i>j</i> sin ω<i>t</i>): σ says how fast it grows or decays, and ω how fast it oscillates. <i>G</i>(<i>s</i>) at that address is the complex number the system would multiply that signal by. The point itself is neither a state of the system nor a setting.</div>
+<p>Linear systems have a special property: feed in <i>e</i><sup><i>st</i></sup> and (after transients) you get back <i>G</i>(<i>s</i>)·<i>e</i><sup><i>st</i></sup>, the same shape, just scaled and rotated. So the plane is a <b>catalogue of test shapes</b>, and the surface records how the system treats each one. On the jω axis (σ = 0) the shapes are steady sines. Left of it (σ &lt; 0) they're decaying sines; right of it (σ &gt; 0), growing ones.</p>
+<div class="recog"><b class="h">Recognize</b>When someone says “evaluate at <i>s</i> = <i>j</i>2,” read it as <b>“put the ◆ at <i>j</i>2 and read the surface height and phase there.”</b> You get a gain and a phase for a 2 rad/s sine. Nothing moves.</div>
+</div>
+
+<div class="q" id="m2"><span class="badge">M2</span><h3>Is my spot on the plane the input?</h3></div>
+<div class="ansr">
+<div class="short"><b>No.</b> The input is a time signal, e.g. 3 sin(2<i>t</i>). Your spot (<i>s</i> = <i>j</i>2) is only the <b>label</b> that says “a 2 rad/s sine,” i.e. where to look up the answer. The amplitude 3 isn't on the map at all. The output is 3·|<i>G</i>(<i>j</i>2)|·sin(2<i>t</i> + ∠<i>G</i>(<i>j</i>2)), a time signal, not another point.</div>
+<div class="side2">
+<div class="note"><b class="h">Lives on the map</b><ul><li>Poles × and zeros ○ (the system)</li><li>Height |<i>G</i>| and phase ∠<i>G</i> at every address</li><li>The <i>j</i>ω axis (where the Bode slice is taken)</li></ul></div>
+<div class="note"><b class="h">Does NOT live on the map</b><ul><li>The input waveform and its amplitude</li><li>The output waveform</li><li>Time <i>t</i> (nothing moves on the map as time passes)</li><li>Knob settings (they <em>reshape</em> the map)</li></ul></div>
+</div>
+</div>
+
+<div class="q" id="m3"><span class="badge">M3</span><h3>Does the gradient pull me toward a pole? Does the system “slide” across the plane over time?</h3></div>
+<div class="ansr">
+<div class="short"><b>No.</b> There's no ball rolling on this surface. For a fixed system the surface is frozen, and your lookup spot is wherever <em>you</em> put it (the drive frequency). The only motion on the map is <b>poles moving when you turn a knob</b>, and that's a design change, not something the response does in time.</div>
+<p>The slope of the surface still means something. A steep rise as you move up the jω axis toward a peak means the gain changes quickly with frequency (a sharp resonance). But slope is information <em>about</em> the system, not a force acting on anything.</p>
+<div class="trap"><b class="h">Trap</b>Don't confuse <b>root-locus motion</b> (closed-loop poles travel as you sweep the gain <i>K</i>, <a href="#sp8">S8</a>) with time evolution. A root locus is a flip-book of different surfaces, one per <i>K</i>, not one system moving.</div>
+</div>
+
+<div class="q" id="m4"><span class="badge">M4</span><h3>Why does a sine input only use the jω axis?</h3></div>
+<div class="ansr">
+<div class="short">A steady sine neither grows nor decays, so its σ = 0. sin ω<i>t</i> = (<i>e</i><sup><i>j</i>ω<i>t</i></sup> − <i>e</i><sup>−<i>j</i>ω<i>t</i></sup>)/2<i>j</i>, which lives at exactly <i>s</i> = ±<i>j</i>ω. Those are two mirror-image points on the jω axis (the surface is symmetric, so reading one is enough).</div>
+<div class="recog"><b class="h">Recognize</b><ul><li><b>Bode plot = a slice of the |G| surface along the jω axis</b>: |<i>G</i>(<i>j</i>ω)| and ∠<i>G</i>(<i>j</i>ω) for ω from small to large.</li><li><b>Poles are not on the jω axis</b> for a stable system. They sit in the LHP. Their effect on a sine test is felt only through how high they <em>lift the surface</em> along the slice: a peak close to the axis gives a resonant bump at that ω.</li><li>Off-axis addresses still matter, because that's where the poles live. They describe the system's <em>own</em> free motions (decaying sines at −σ ± <i>j</i>ω), not something you drive it with in a frequency test. If a pole sits in the RHP, that free motion grows instead, with or without your sine (<a href="#m8">M8</a>).</li></ul></div>
+</div>
+
+<div class="q" id="m5"><span class="badge">M5</span><h3>Then what does turning a control knob (like gain K) do on the map?</h3></div>
+<div class="ansr">
+<div class="short">It <b>rebuilds the surface</b>: the closed-loop poles (peaks) move, so the height everywhere changes, including under your fixed lookup spot. In the explorer, slide the pole pair toward the jω axis (−a → 0) or up (larger b) and watch the readout at a <em>fixed</em> ◆ probe change: the bulldozer moved the peak, not you. (In a feedback loop, a gain knob moves the closed-loop poles the same way. See the root locus in <a href="#sp8">S8</a>.)</div>
+<div class="tip"><b class="h">The two-hand rule</b>One hand holds the <b>bulldozer</b> (knobs → where the peaks are). The other hand holds the <b>◆ probe</b> (drive frequency → where you read). They're independent. Design = use the bulldozer so that, along the stretch of the jω axis your signals actually use, the height and phase of the slice are what you want: high and flat at low frequency (good tracking) and low at high frequency (noise rejection), just like <a href="#q34">S and C</a>.</div>
+<p class="rf">Same as a filter: the component values set the pole/zero map (the surface). The signal generator's frequency is where you probe it. Turning the generator's dial never moves the poles.</p>
+</div>
+</div>
+
+<div class="q" id="sp2"><span class="badge">S2</span><h3>Intuitively, what is the difference between a pole and a zero?</h3></div>
+<div class="ansr">
+<div class="short"><b>Poles belong to the system</b>: they are its natural modes, the motions it makes on its own (the free response). <b>Zeros belong to the input→output path</b>: they decide how strongly the input excites each mode and how strongly each mode shows up at the output. Poles set <em>which</em> exponentials appear; zeros set <em>how much</em> of each.</div>
+<div class="tw"><table class="t">
+<tr><th></th><th>Pole ×</th><th>Zero ○</th></tr>
+<tr><td>Algebra</td><td>Denominator root: <i>G</i> → ∞</td><td>Numerator root: <i>G</i> = 0</td></tr>
+<tr><td>Time domain</td><td>A mode <i>e</i><sup><i>pt</i></sup> in every response</td><td>No mode of its own; reshapes the mix of modes</td></tr>
+<tr><td>Input <i>e</i><sup><i>s</i>₀<i>t</i></sup> at that <i>s</i>₀</td><td>Resonates (response grows without bound)</td><td>Blocked: zero output in steady state (transmission null)</td></tr>
+<tr><td>Changes with feedback?</td><td>Yes, closing the loop moves poles</td><td>Plant zeros stay put under feedback</td></tr>
+<tr><td>Stability</td><td>RHP pole ⇒ unstable</td><td>RHP zero ⇒ still stable, but <b>non-minimum phase</b></td></tr>
+</table></div>
+<h4>Non-minimum phase: the wrong-way start</h4>
+<p>A zero in the RHP (e.g. <i>G</i> = (1 − <i>s</i>)/((<i>s</i>+1)(<i>s</i>+2))·2) makes the step response <b>start in the wrong direction</b> before heading to the correct final value. Examples: a boiler's water level briefly rises when you add cold water (shrink/swell), and an aircraft briefly dips when the elevator commands a climb. Feedback can't fix this with high gain. A RHP zero attracts closed-loop poles into the RHP as gain rises, so it limits how fast you can make the loop.</p>
+<h4>Pole–zero cancellation</h4>
+<p>If a ○ lands exactly on a ×, that mode disappears from the <b>input→output</b> transfer function, but it still exists <b>inside</b> the system. The input can't excite it, or the output can't see it. An initial condition or a disturbance entering elsewhere can still excite it. Cancelling a stable, fast pole is harmless. “Cancelling” an unstable pole hides an internal instability that will still blow up (<a href="#q20">Q20</a>).</p>
+<div class="trap"><b class="h">Trap</b><ul><li>A zero doesn't make a system faster or slower in the sense of new modes. It only reweights existing modes. Still, a zero near the dominant poles can drastically change overshoot (the boring-machine PD zero, <a href="#q38">Q38</a>).</li><li>A near-cancellation (○ close to ×) leaves a small residue: a slow, small “tail” that can still matter for settling time.</li></ul></div>
+</div>
+
+<div class="q" id="sp3"><span class="badge">S3</span><h3>How do I read a location on the plane?</h3></div>
+<div class="ansr">
+<div class="short"><b>Left/right = decay/growth</b> (real part σ: envelope <i>e</i><sup>σ<i>t</i></sup>). <b>Up/down = oscillation</b> (imaginary part ω). <b>Distance from origin = ω<sub>n</sub></b> (overall speed). <b>Angle from the negative real axis = damping</b> (cos θ = ζ).</div>
+<figure><div id="fig-regions"></div><figcaption><b>The plane, annotated.</b> Constant-σ lines are constant settling time, horizontal lines are constant ω<sub>d</sub> (peak time), circles are constant ω<sub>n</sub>, and rays from the origin are constant ζ (constant %OS).</figcaption></figure>
+<div class="tw"><table class="t">
+<tr><th>Location</th><th>Mode in time</th><th>Name</th></tr>
+<tr><td>Negative real axis, <i>p</i> = −<i>a</i></td><td><i>e</i><sup>−<i>at</i></sup></td><td>Pure exponential decay, τ = 1/<i>a</i></td></tr>
+<tr><td>LHP complex pair −σ ± <i>j</i>ω<sub>d</sub></td><td><i>e</i><sup>−σ<i>t</i></sup>cos(ω<sub>d</sub><i>t</i> + φ)</td><td>Damped sinusoid</td></tr>
+<tr><td><i>j</i>ω axis ±<i>j</i>ω₀</td><td>cos(ω₀<i>t</i> + φ)</td><td>Sustained oscillation (marginal)</td></tr>
+<tr><td>Origin</td><td>constant (1)</td><td>Integrator: holds its value</td></tr>
+<tr><td>RHP</td><td><i>e</i><sup>+σ<i>t</i></sup>…</td><td>Growth: unstable</td></tr>
+</table></div>
+<div class="recog"><b class="h">Recognize</b><ul><li>Complex poles always appear in conjugate pairs, so the plot is mirror-symmetric about the real axis.</li><li>A <b>repeated</b> pole at the same spot gives <i>t</i>·<i>e</i><sup><i>pt</i></sup>. On the <i>j</i>ω axis that means a growing response: a double integrator or a double pole at ±<i>j</i>ω₀ is unstable.</li><li>Design “boxes”: <i>T</i><sub>s</sub> spec ⇒ poles left of σ = 4/<i>T</i><sub>s</sub>; %OS spec ⇒ poles inside a ζ wedge.</li></ul></div>
+</div>
+
+<div class="q" id="sp4"><span class="badge">S4</span><h3>Explorer: what happens when I move a pole pair and a zero?</h3></div>
+<div class="ansr">
+<div class="short">Try it below. The DC gain is held at 1 (when finite), so you only see the <em>shape</em> change. Use the presets to see a LHP zero adding overshoot, a RHP zero causing a wrong-way start, near-cancellation, poles on the <i>j</i>ω axis, and poles in the RHP.</div>
+<div class="widget" id="w8"><h4 class="ui">s-plane explorer: G(s) = k·(1 − s/z) / ((s − p)(s − p̄)) [× poles, ○ zero]</h4>
+<div class="wgrid"><div><div id="w8plot"></div><div class="legend ui" id="w8leg"></div><div id="w8sp" style="margin-top:.4rem"></div></div>
+<div class="ctl">
+<label>Pole real part σ <output id="w8sv"></output></label><input type="range" id="w8s" min="-3" max="0.6" step="0.05" value="-0.6">
+<label>Pole imaginary part ω <output id="w8wv"></output></label><input type="range" id="w8w" min="0" max="3" step="0.05" value="1.5">
+<label class="chk"><input type="checkbox" id="w8zon" checked> Include zero ○</label>
+<label>Zero location z <output id="w8zv"></output></label><input type="range" id="w8z" min="-6" max="4" step="0.1" value="-3">
+<label class="chk"><input type="checkbox" id="w8int"> × 1/s (add integrator: pole at 0)</label>
+<label class="chk"><input type="checkbox" id="w8dif"> × s (add differentiator: zero at 0)</label>
+<div class="presets"><button data-p="-0.6,1.5,0,-3,0,0">plain pair</button><button data-p="-0.6,1.5,1,-0.7,0,0">LHP zero near poles</button><button data-p="-0.8,1.2,1,1.2,0,0">RHP zero</button><button data-p="-1,0.05,1,-1.05,0,0">near cancellation</button><button data-p="0,1.5,0,-3,0,0">on jω axis</button><button data-p="0.15,1.5,0,-3,0,0">RHP poles</button><button data-p="-0.6,1.5,0,-3,1,0">+ integrator</button><button data-p="-0.6,1.5,0,-3,0,1">+ differentiator</button></div>
+<div class="status" id="w8st"></div><div class="readout" id="w8ro"></div></div></div></div>
+<div class="predict"><b class="h">Predict, then check</b><ul><li>Slide the zero from −6 toward −0.7. What happens to the overshoot? <i>(It grows: a LHP zero near the poles adds a derivative-like kick.)</i></li><li>Push the zero across into the RHP. Which way does the response start? <i>(Down: wrong-way, non-minimum phase.)</i></li><li>Tick “× 1/s.” What does the step response turn into? <i>(A ramp. A step into an integrator never settles. The integrator's pole at 0 is a mode that never decays.)</i></li><li>Tick “× s.” What do you get? <i>(The impulse response: the derivative of the step response. Its final value is 0, because the zero at the origin blocks DC.)</i></li></ul></div>
+</div>
+
+<div class="q" id="sp5"><span class="badge">S5</span><h3>Which time-domain operations correspond to simple moves on the s-plane?</h3></div>
+<div class="ansr">
+<div class="short">Almost every Laplace property is a <b>move of the pole/zero pattern</b>: differentiation adds a ○ at the origin, integration adds a × at the origin, an exponential envelope slides the whole pattern sideways, time scaling stretches it radially, and putting systems in cascade overlays their patterns.</div>
+<div class="tw"><table class="t">
+<tr><th>Time domain</th><th>s-domain</th><th>What happens on the map</th><th>Intuition</th></tr>
+<tr><td>d<i>f</i>/d<i>t</i></td><td><i>s</i><i>F</i>(<i>s</i>) − <i>f</i>(0)</td><td>Adds a <b>○ at the origin</b> (zero ICs)</td><td>|<i>j</i>ω| rises with ω: boosts high frequencies, kills DC. <i>s</i>² = two ○'s at 0.</td></tr>
+<tr><td>∫₀<sup><i>t</i></sup> <i>f</i> dτ</td><td><i>F</i>(<i>s</i>)/<i>s</i></td><td>Adds a <b>× at the origin</b></td><td>|1/<i>j</i>ω| → ∞ at DC: infinite low-frequency gain. Each one raises the <b>system type</b> by 1.</td></tr>
+<tr><td><i>e</i><sup>−<i>at</i></sup><i>f</i>(<i>t</i>)</td><td><i>F</i>(<i>s</i> + <i>a</i>)</td><td><b>Slides the whole pattern left by <i>a</i></b> (right if <i>a</i> &lt; 0)</td><td>Multiplying by a decaying envelope adds damping to every mode: sin ω<i>t</i> (×'s at ±<i>j</i>ω) → <i>e</i><sup>−<i>at</i></sup>sin ω<i>t</i> (×'s at −<i>a</i> ± <i>j</i>ω).</td></tr>
+<tr><td><i>f</i>(<i>at</i>), <i>a</i> &gt; 0</td><td>(1/<i>a</i>)<i>F</i>(<i>s</i>/<i>a</i>)</td><td><b>Scales the pattern radially by <i>a</i></b>: a pole at <i>p</i> moves to <i>a·p</i></td><td>Playing the response <i>a</i>× faster pushes every mark <i>a</i>× farther from the origin. Angles (ζ, %OS) are unchanged, so it's the <b>same shape, faster</b>. That's exactly what ω<sub>n</sub> does.</td></tr>
+<tr><td><i>f</i>(<i>t</i> − <i>T</i>)·u(<i>t</i> − <i>T</i>)</td><td><i>e</i><sup>−<i>sT</i></sup><i>F</i>(<i>s</i>)</td><td><b>No finite pole or zero.</b> |<i>e</i><sup>−<i>j</i>ω<i>T</i></sup>| = 1, phase −ω<i>T</i></td><td>Pure lag: same magnitude at every frequency, phase falls without limit. Padé: <i>e</i><sup>−<i>sT</i></sup> ≈ (1 − <i>sT</i>/2)/(1 + <i>sT</i>/2), a <b>RHP ○ at +2/<i>T</i></b> mirrored by a LHP × at −2/<i>T</i>.</td></tr>
+<tr><td><i>f</i> * <i>g</i> (convolution)</td><td><i>F</i>(<i>s</i>)<i>G</i>(<i>s</i>)</td><td><b>Overlay both patterns</b> on one plane</td><td>Cascade = multiply = union of all ×'s and ○'s (a ○ on top of a × cancels).</td></tr>
+<tr><td><i>a</i>·<i>f</i> + <i>b</i>·<i>g</i></td><td><i>aF</i> + <i>bG</i></td><td>Poles: union. <b>Zeros: move</b> (new numerator)</td><td>Parallel paths keep all the modes but reshape the coupling, which is how PID's zeros appear.</td></tr>
+</table></div>
+<figure><div id="fig-ops"></div><figcaption><b>Three moves of the same pattern</b> (a pole pair and a zero). Left: original. Middle: <i>e</i><sup>−<i>at</i></sup> envelope (<i>s</i> → <i>s</i> + <i>a</i>) slides everything left by <i>a</i> = 1. Right: time compressed 2× (<i>s</i> → <i>s</i>/2) pushes everything radially outward ×2. Rays from the origin (ζ) are preserved.</figcaption></figure>
+<div class="recog"><b class="h">Recognize</b><ul><li>An <b>integrator in the loop</b> = × at the origin = type 1 = zero step error (<a href="#q28">Q28</a>). An integrator is literally “a pole at zero frequency.”</li><li>A <b>D term</b> = ○ at the origin (pure <i>K</i><sub>d</sub><i>s</i>), which explains the noise boost. A filtered D adds a far-left × to stop the boost.</li><li><b>Time delay</b> behaves like a RHP zero: it allows a wrong-way/late start and limits loop speed. Same lesson as non-minimum phase.</li></ul></div>
+<div class="trap"><b class="h">Trap</b>Shift and scale are easy to swap. <b>Multiply by <i>e</i><sup>−<i>at</i></sup> → slide</b> (horizontal translation: adds the same σ to every pole, so ζ changes). <b>Speed up time → stretch</b> (radial scaling: ζ preserved). Delay is a third thing: no pole moves at all, only phase is added.</div>
+</div>
+
+<div class="q" id="sp6"><span class="badge">S6</span><h3>How does the inverse Laplace transform look on the map (partial fractions)?</h3></div>
+<div class="ansr">
+<div class="short">Every × of <i>Y</i>(<i>s</i>) contributes one term to <i>y</i>(<i>t</i>): its <b>mode</b> (decided by where the × is) times its <b>residue</b> (how big it is). Zeros don't create terms; they change the residues. So inverse-transforming is “list the ×'s, then weigh each one.”</div>
+<div class="eq box"><i>Y</i>(<i>s</i>) = <span class="frac"><span><i>N</i>(<i>s</i>)</span><span>(<i>s</i>−<i>p</i>₁)(<i>s</i>−<i>p</i>₂)…</span></span> = <span class="frac"><span><i>r</i>₁</span><span><i>s</i>−<i>p</i>₁</span></span> + <span class="frac"><span><i>r</i>₂</span><span><i>s</i>−<i>p</i>₂</span></span> + … &nbsp;⇒&nbsp; <i>y</i>(<i>t</i>) = <i>r</i>₁<i>e</i><sup><i>p</i>₁<i>t</i></sup> + <i>r</i>₂<i>e</i><sup><i>p</i>₂<i>t</i></sup> + … , &nbsp; <i>r</i><sub><i>i</i></sub> = (<i>s</i> − <i>p</i><sub><i>i</i></sub>)<i>Y</i>(<i>s</i>)|<sub><i>s</i>=<i>p</i><sub><i>i</i></sub></sub></div>
+<div class="tw"><table class="t">
+<tr><th>Example</th><th>×'s (and ○'s)</th><th>Residues</th><th>y(t)</th></tr>
+<tr><td>Step into 2/((<i>s</i>+1)(<i>s</i>+2)): <i>Y</i> = 2/(<i>s</i>(<i>s</i>+1)(<i>s</i>+2))</td><td>× at 0, −1, −2</td><td>1, −2, 1</td><td>1 − 2<i>e</i><sup>−<i>t</i></sup> + <i>e</i><sup>−2<i>t</i></sup></td></tr>
+<tr><td>(<i>s</i>+1.1)/((<i>s</i>+1)(<i>s</i>+2)) impulse</td><td>× at −1, −2; ○ at −1.1</td><td><b>0.1</b>, 0.9</td><td>0.1<i>e</i><sup>−<i>t</i></sup> + 0.9<i>e</i><sup>−2<i>t</i></sup></td></tr>
+</table></div>
+<p>The second row is the key intuition: the ○ sitting next to the × at −1 shrinks that mode's residue to 0.1. A near-cancellation leaves a small, slow tail. Move the ○ exactly onto the × and the residue is 0, so the mode vanishes from this output (but not from the system; see <a href="#sp2">S2</a>).</p>
+<div class="recog"><b class="h">Recognize</b><ul><li>The × at the origin that a step input adds has residue = final value = <i>G</i>(0). That <em>is</em> the final-value theorem in disguise.</li><li>Complex pairs give conjugate residues, which combine into one damped sinusoid.</li><li>A residue's size measures how much a mode matters. A dominant pole with a tiny residue isn't really dominant.</li></ul></div>
+</div>
+
+<div class="q" id="sp7"><span class="badge">S7</span><h3>What do the final- and initial-value theorems mean on the map?</h3></div>
+<div class="ansr">
+<div class="short"><b>FVT: look at s → 0</b> (the origin, i.e. DC): <i>y</i>(∞) = lim<sub><i>s</i>→0</sub> <i>sY</i>(<i>s</i>), valid only if every × of <i>sY</i>(<i>s</i>) is in the open LHP. <b>IVT: look at s → ∞</b> (far away, i.e. infinitely high frequency): <i>y</i>(0⁺) = lim<sub><i>s</i>→∞</sub> <i>sY</i>(<i>s</i>), which is set by the <b>relative degree</b> (#×'s − #○'s).</div>
+<div class="recog"><b class="h">Recognize</b><ul><li>FVT is a statement about the <b>neighborhood of the origin</b>: DC gain, integrators (× at 0 → ∞ gain), differentiators (○ at 0 → zero gain).</li><li>The validity check is a statement about the <b>whole plane</b>: any × of <i>sY</i> on the <i>j</i>ω axis or in the RHP ⇒ no final value (<a href="#q27">Q27</a> trap).</li><li>IVT: step response of a strictly proper <i>G</i> starts at <i>y</i>(0⁺) = 0. Relative degree 1 ⇒ it starts with a nonzero slope; relative degree 2 ⇒ it starts flat. Far from all the marks, <i>G</i> looks like 1/<i>s</i><sup>(relative degree)</sup>.</li></ul></div>
+</div>
+
+<div class="q" id="sp8"><span class="badge">S8</span><h3>What does closing the loop do on the map? (root-locus preview)</h3></div>
+<div class="ansr">
+<div class="short">Closed-loop poles are the roots of <b>1 + <i>K</i>·<i>L</i>(<i>s</i>) = 0</b>. As gain <i>K</i> goes from 0 to ∞, they <b>start at the open-loop ×'s</b> and travel toward the open-loop ○'s (or off to infinity). Open-loop zeros stay put. The path they trace is the <b>root locus</b>, which is a later topic. For now: feedback moves poles, and the open-loop pattern decides where they can go.</div>
+<div class="widget" id="w9"><h4 class="ui">Root-locus preview: L(s) = K / (s(s + 2)) &nbsp;→&nbsp; closed loop s² + 2s + K = 0</h4>
+<div class="wgrid"><div><div id="w9plot"></div><div class="legend ui" id="w9leg"></div></div>
+<div class="ctl"><div class="sp" id="w9sp"></div>
+<label>Gain K <output id="w9kv"></output></label><input type="range" id="w9k" min="0" max="20" step="0.1" value="0.5">
+<label class="chk"><input type="checkbox" id="w9z"> add an open-loop zero at −3 (L = K(s+3)/(s(s+2)))</label>
+<div class="readout" id="w9ro"></div></div></div></div>
+<div class="recog"><b class="h">Recognize</b><ul><li>For <i>K</i>/(<i>s</i>(<i>s</i>+2)): the poles start at 0 and −2, meet at −1 when <i>K</i> = 1 (critical damping), then split vertically. More gain gives more ω<sub>n</sub> but less ζ, with σ stuck at −1. That's the boring machine's ζ = 6/√<i>K</i> story in pictures.</li><li>Adding a LHP zero <b>bends the locus left toward the ○</b>: more damping, better stability. That's why PD/lead control helps. A RHP zero would pull poles into the RHP.</li><li>This one picture ties together Stage 4 (one loop, one characteristic equation) and Stage 13 (high gain trades damping).</li></ul></div>
+</div>
+</section>
+
+<!-- ================= 2 ================= -->
+<section data-stage="2" id="s2">
+<h2>2 · Transfer functions</h2>
+<div class="where"><div class="ic">📍</div><div><b class="h">Where are we in the big picture?</b>The transfer function is the course's main “plant description.” Learn to read three numbers off it instantly.
+<div class="mini"><span class="on">Describe</span><i>→</i><span>Loop</span><i>→</i><span>State space</span><i>→</i><span>Response</span><i>→</i><span>SSE</span><i>→</i><span>Feedback</span></div></div></div>
+
+<div class="q" id="q5"><span class="badge">Q5</span><h3>What exactly is G(s)?</h3></div>
+<div class="ansr">
+<div class="short"><i>G</i>(<i>s</i>) = <i>Y</i>(<i>s</i>)/<i>U</i>(<i>s</i>) with zero initial conditions: output transform over input transform. For lumped LTI systems it's a ratio of polynomials in <i>s</i>.</div>
+<div class="eq box"><i>G</i>(<i>s</i>) = <span class="frac"><span><i>Y</i>(<i>s</i>)</span><span><i>U</i>(<i>s</i>)</span></span> = <span class="frac"><span><i>b</i><sub><i>m</i></sub><i>s</i><sup><i>m</i></sup> + … + <i>b</i><sub>1</sub><i>s</i> + <i>b</i><sub>0</sub></span><span><i>s</i><sup><i>n</i></sup> + <i>a</i><sub><i>n</i>−1</sub><i>s</i><sup><i>n</i>−1</sup> + … + <i>a</i><sub>1</sub><i>s</i> + <i>a</i><sub>0</sub></span></span></div>
+<p>It is also the Laplace transform of the impulse response <i>g</i>(<i>t</i>). <b>Proper</b> means <i>m</i> ≤ <i>n</i>, and <b>strictly proper</b> means <i>m</i> &lt; <i>n</i>, which is the usual case for physical plants (they can't respond instantly to infinitely fast inputs).</p>
+</div>
+
+<div class="q" id="q6"><span class="badge">Q6</span><h3>What three numbers should I read off any transfer function instantly?</h3></div>
+<div class="ansr">
+<div class="short"><b>Order</b> = highest power of <i>s</i> in the denominator. <b>DC gain</b> = <i>G</i>(0) (let <i>s</i> → 0). <b>Time constants / speeds</b> come from the pole locations (τ = 1/|<i>p</i>| for a real pole).</div>
+<div class="tw"><table class="t">
+<tr><th>G(s)</th><th>Order</th><th>DC gain G(0)</th><th>Poles → speed</th></tr>
+<tr><td>5/(2<i>s</i>+1)</td><td>1</td><td>5</td><td><i>p</i> = −0.5 → τ = 2 s</td></tr>
+<tr><td>4/(<i>s</i>+2)</td><td>1</td><td><b>2</b> (not 4!)</td><td><i>p</i> = −2 → τ = 0.5 s</td></tr>
+<tr><td>3/(<i>s</i>²+2<i>s</i>+3)</td><td>2</td><td>1</td><td>−1 ± <i>j</i>1.41 → oscillatory, decays like <i>e</i><sup>−<i>t</i></sup></td></tr>
+<tr><td>(<i>s</i>+1)/(<i>s</i>³+4<i>s</i>²+5<i>s</i>+2)</td><td>3</td><td>0.5</td><td>−1, −1, −2 (one −1 cancels the zero)</td></tr>
+<tr><td>1/(<i>s</i>(<i>s</i>+1))</td><td>2</td><td>∞ (integrator)</td><td>0, −1 → <b>type 1</b></td></tr>
+</table></div>
+<div class="recog"><b class="h">Recognize</b><ul><li><b>Order</b>: look only at the denominator's highest power. The numerator doesn't count.</li><li><b>DC gain</b>: substitute <i>s</i> = 0, i.e. the ratio of the constant terms. For a stable system, a unit step settles at <i>G</i>(0).</li><li>A bare <i>s</i> factor in the denominator is an integrator: infinite DC gain, and a step input makes the output ramp forever.</li><li><b>Time-constant form</b> <i>K</i>/(τ<i>s</i>+1) shows <i>K</i> and τ directly. <b>Pole form</b> <i>b</i>/(<i>s</i>+<i>a</i>) hides them: <i>K</i> = <i>b</i>/<i>a</i>, τ = 1/<i>a</i>.</li></ul></div>
+</div>
+
+<div class="q" id="q7"><span class="badge">Q7</span><h3>How do blocks combine: series, parallel, feedback?</h3></div>
+<div class="ansr">
+<div class="short">Series → multiply. Parallel → add. Negative feedback → <i>G</i>/(1 + <i>GH</i>), which reads as “forward path over one plus loop gain.”</div>
+<figure><svg viewBox="0 0 660 200" role="img" aria-label="cascade parallel feedback">
+<defs><marker id="ar" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0L10,5L0,10z" fill="currentColor" style="fill:var(--text)"/></marker></defs>
+<text class="txb" x="10" y="20">Series</text>
+<line class="wire" x1="10" y1="60" x2="40" y2="60" marker-end="url(#ar)"/><rect class="blk" x="40" y="44" width="46" height="32" rx="5"/><text class="txt" x="63" y="65" text-anchor="middle">G₁</text>
+<line class="wire" x1="86" y1="60" x2="110" y2="60" marker-end="url(#ar)"/><rect class="blk" x="110" y="44" width="46" height="32" rx="5"/><text class="txt" x="133" y="65" text-anchor="middle">G₂</text>
+<line class="wire" x1="156" y1="60" x2="186" y2="60" marker-end="url(#ar)"/>
+<text class="txa" x="98" y="110" text-anchor="middle">= G₁G₂</text>
+<text class="txb" x="225" y="20">Parallel</text>
+<line class="wire" x1="225" y1="80" x2="250" y2="80"/><line class="wire" x1="250" y1="50" x2="250" y2="110"/>
+<line class="wire" x1="250" y1="50" x2="275" y2="50" marker-end="url(#ar)"/><rect class="blk" x="275" y="35" width="46" height="30" rx="5"/><text class="txt" x="298" y="55" text-anchor="middle">G₁</text>
+<line class="wire" x1="250" y1="110" x2="275" y2="110" marker-end="url(#ar)"/><rect class="blk" x="275" y="95" width="46" height="30" rx="5"/><text class="txt" x="298" y="115" text-anchor="middle">G₂</text>
+<line class="wire" x1="321" y1="50" x2="355" y2="50"/><line class="wire" x1="355" y1="50" x2="355" y2="69" marker-end="url(#ar)"/>
+<line class="wire" x1="321" y1="110" x2="355" y2="110"/><line class="wire" x1="355" y1="110" x2="355" y2="91" marker-end="url(#ar)"/>
+<circle cx="355" cy="80" r="10" class="blk"/><text class="txs" x="360" y="68">+</text><text class="txs" x="360" y="100">±</text>
+<line class="wire" x1="365" y1="80" x2="395" y2="80" marker-end="url(#ar)"/>
+<text class="txa" x="310" y="150" text-anchor="middle">= G₁ ± G₂</text>
+<text class="txb" x="430" y="20">Negative feedback</text>
+<line class="wire" x1="430" y1="60" x2="460" y2="60" marker-end="url(#ar)"/><circle cx="470" cy="60" r="10" class="blk"/><text class="txs" x="452" y="52">+</text><text class="txs" x="474" y="84">−</text>
+<line class="wire" x1="480" y1="60" x2="510" y2="60" marker-end="url(#ar)"/><rect class="blk2" x="510" y="44" width="50" height="32" rx="5"/><text class="txt" x="535" y="65" text-anchor="middle">G</text>
+<line class="wire" x1="560" y1="60" x2="650" y2="60" marker-end="url(#ar)"/><line class="wire" x1="610" y1="60" x2="610" y2="120"/>
+<line class="wire" x1="610" y1="120" x2="560" y2="120" marker-end="url(#ar)"/><rect class="blk" x="510" y="104" width="50" height="32" rx="5"/><text class="txt" x="535" y="125" text-anchor="middle">H</text>
+<line class="wire" x1="510" y1="120" x2="470" y2="120"/><line class="wire" x1="470" y1="120" x2="470" y2="72" marker-end="url(#ar)"/>
+<text class="txa" x="540" y="170" text-anchor="middle">= G / (1 + GH)</text>
+<text class="txs" x="540" y="190" text-anchor="middle">(1 − GH for positive feedback)</text>
+</svg><figcaption><b>Three rules cover almost every reduction.</b> In a loop, <i>GH</i> is the <b>loop gain</b>: the product around the loop, ignoring the summing junction's sign.</figcaption></figure>
+<div class="trap"><b class="h">Trap</b>The sign in the denominator is the <em>opposite</em> of the feedback sign: negative feedback gives 1 <b>+</b> <i>GH</i>. With unity feedback (<i>H</i> = 1) it's <i>G</i>/(1+<i>G</i>), and the class notes write this as <i>C</i>/<i>R</i>.</div>
+</div>
+</section>
+
+<!-- ================= 3 ================= -->
+<section data-stage="3" id="s3">
+<h2>3 · System order &amp; energy storage</h2>
+<div class="where"><div class="ic">📍</div><div><b class="h">Where are we in the big picture?</b>Order tells you how complicated the response can be (how many modes) and how many states state space will need. You can often predict it from the hardware before writing any equations.
+<div class="mini"><span class="on">Describe</span><i>→</i><span>Loop</span><i>→</i><span>State space</span><i>→</i><span>Response</span><i>→</i><span>SSE</span><i>→</i><span>Feedback</span></div></div></div>
+
+<div class="q" id="q8"><span class="badge">Q8</span><h3>Why does order equal the number of independent energy-storage elements?</h3></div>
+<div class="ansr">
+<div class="short">Each independent energy store (L, C, mass, spring, rotating inertia J) holds a quantity that can't change instantly: current, voltage, velocity, position. Each one needs its own first-order ODE to track it, so <i>n</i> independent stores give an <i>n</i>th-order system with <i>n</i> poles and <i>n</i> states.</div>
+<div class="tw"><table class="t">
+<tr><th>System</th><th>Energy stores</th><th>Order</th></tr>
+<tr><td>RC low-pass</td><td>C (voltage)</td><td>1</td></tr>
+<tr><td>Series RL</td><td>L (current)</td><td>1</td></tr>
+<tr><td>Series RLC (Lecture Notes 1, slide 40)</td><td>L (current) + C (voltage)</td><td><b>2</b></td></tr>
+<tr><td>Two cascaded RC sections (slide 41)</td><td>C₁ + C₂</td><td>2</td></tr>
+<tr><td>Mass–spring–damper</td><td>m (kinetic) + k (potential); the damper only <em>dissipates</em></td><td>2</td></tr>
+<tr><td>DC motor (armature L + rotor J)</td><td>L + J</td><td>2 (often 1 if L is neglected)</td></tr>
+</table></div>
+<div class="recog"><b class="h">Recognize</b>Resistors and dampers <b>dissipate</b> energy and add no order. Count the L's, C's, masses, springs, and inertias, then check that each one is independent.</div>
+</div>
+
+<div class="q" id="q9"><span class="badge">Q9</span><h3>When does careless counting give the wrong order?</h3></div>
+<div class="ansr">
+<div class="short">When stores aren't independent (two capacitors in parallel act as one), or when a pole–zero cancellation hides a mode from the transfer function. Count poles of the final <i>G</i>(<i>s</i>), not parts on the schematic.</div>
+<div class="trap"><b class="h">Trap</b><ul><li>Two capacitors directly in parallel (or two inductors directly in series) count as <b>one</b> store, since their voltages (currents) are forced equal.</li><li>The transfer function's order can be <em>lower</em> than the physical order if a zero cancels a pole. The internal mode is still there. It just isn't visible from that input to that output.</li><li>The numerator degree doesn't set the order: (<i>s</i>²+1)/(<i>s</i>+3) isn't even proper, and you'd never call it second-order.</li></ul></div>
+</div>
+</section>
+
+<!-- ================= 4 ================= -->
+<section data-stage="4" id="s4">
+<h2>4 · Block diagrams &amp; disturbances</h2>
+<div class="where"><div class="ic">📍</div><div><b class="h">Where are we in the big picture?</b>Now the plant gets wired into a loop. This stage is the template for Lecture Notes 2 (Stage 13): one loop, several inputs (reference, disturbance, noise), and one shared denominator.
+<div class="mini"><span>Describe</span><i>→</i><span class="on">Loop</span><i>→</i><span>State space</span><i>→</i><span>Response</span><i>→</i><span>SSE</span><i>→</i><span>Feedback</span></div></div></div>
+
+<div class="q" id="q10"><span class="badge">Q10</span><h3>What does the standard feedback loop look like, and what is C/R?</h3></div>
+<div class="ansr">
+<div class="short">Reference <i>R</i> minus measured output gives error <i>E</i>. The controller <i>G</i><sub>c</sub> turns <i>E</i> into actuation, the plant <i>G</i> produces output <i>C</i> (or <i>Y</i>), and a disturbance <i>T</i><sub>d</sub> enters along the way. With unity feedback, <i>C</i>/<i>R</i> = <i>G</i><sub>c</sub><i>G</i>/(1 + <i>G</i><sub>c</sub><i>G</i>).</div>
+<figure><svg viewBox="0 0 660 170" role="img" aria-label="standard loop with disturbance">
+<text class="txt" x="8" y="64">R</text><line class="wire" x1="22" y1="60" x2="62" y2="60" marker-end="url(#ar)"/>
+<circle cx="72" cy="60" r="10" class="blk"/><text class="txs" x="54" y="52">+</text><text class="txs" x="76" y="84">−</text>
+<line class="wire" x1="82" y1="60" x2="140" y2="60" marker-end="url(#ar)"/><text class="txs" x="100" y="52">E</text>
+<rect class="blk2" x="140" y="42" width="70" height="36" rx="6"/><text class="txt" x="175" y="65" text-anchor="middle">G<tspan baseline-shift="sub" font-size="10">c</tspan>(s)</text>
+<line class="wire" x1="210" y1="60" x2="270" y2="60" marker-end="url(#ar)"/><text class="txs" x="232" y="52">U</text>
+<circle cx="280" cy="60" r="10" class="blk"/><text class="txs" x="262" y="52">+</text><text class="txs" x="286" y="40">+</text>
+<line class="wired" x1="280" y1="14" x2="280" y2="48" marker-end="url(#ar)"/><text class="txd" x="290" y="22">T<tspan baseline-shift="sub" font-size="9">d</tspan> (disturbance)</text>
+<line class="wire" x1="290" y1="60" x2="340" y2="60" marker-end="url(#ar)"/>
+<rect class="blk2" x="340" y="42" width="70" height="36" rx="6"/><text class="txt" x="375" y="65" text-anchor="middle">G(s)</text>
+<line class="wire" x1="410" y1="60" x2="520" y2="60" marker-end="url(#ar)"/><text class="txt" x="528" y="64">C (= Y)</text>
+<line class="wire" x1="470" y1="60" x2="470" y2="130"/><line class="wire" x1="470" y1="130" x2="72" y2="130"/><line class="wire" x1="72" y1="130" x2="72" y2="72" marker-end="url(#ar)"/>
+<text class="txs" x="270" y="148" text-anchor="middle">unity feedback (H = 1). With a sensor, put H(s) here.</text>
+</svg><figcaption><b>The loop you'll see on every exam.</b> Two inputs (<i>R</i> and <i>T</i><sub>d</sub>), one output, one loop gain <i>L</i> = <i>G</i><sub>c</sub><i>G</i>.</figcaption></figure>
+<div class="eq box"><span><span class="frac"><span><i>C</i></span><span><i>R</i></span></span> = <span class="frac"><span><i>G</i><sub>c</sub><i>G</i></span><span>1 + <i>G</i><sub>c</sub><i>G</i></span></span></span> &nbsp;&nbsp;&nbsp; <span><span class="frac"><span><i>C</i></span><span><i>T</i><sub>d</sub></span></span> = <span class="frac"><span><i>G</i></span><span>1 + <i>G</i><sub>c</sub><i>G</i></span></span></span></div>
+</div>
+
+<div class="q" id="q11"><span class="badge">Q11</span><h3>How do I get C/D (output due to the disturbance)?</h3></div>
+<div class="ansr">
+<div class="short">Set <i>R</i> = 0 and redraw with <i>T</i><sub>d</sub> as the input. The forward path from <i>T</i><sub>d</sub> to <i>C</i> is just <i>G</i>, and the loop is unchanged, so <i>C</i>/<i>T</i><sub>d</sub> = <i>G</i>/(1 + <i>G</i><sub>c</sub><i>G</i>).</div>
+<p>Rule of thumb for any input: <b>numerator = forward path from that input to the output; denominator = 1 + loop gain</b>. That's why <i>C</i>/<i>R</i> and <i>C</i>/<i>T</i><sub>d</sub> share a denominator. With both inputs present, superposition gives <i>C</i> = [<i>G</i><sub>c</sub><i>G</i>·<i>R</i> + <i>G</i>·<i>T</i><sub>d</sub>]/(1 + <i>G</i><sub>c</sub><i>G</i>).</p>
+<div class="recog"><b class="h">Recognize</b><ul><li><b>Same characteristic equation</b> 1 + <i>G</i><sub>c</sub><i>G</i> = 0 for every input. Stability and the transient “personality” (ζ, ω<sub>n</sub>) belong to the <em>loop</em>, not to the input.</li><li>Only the <b>numerator</b> changes with the input, so the final value and the zeros differ.</li></ul></div>
+</div>
+
+<div class="q" id="q12"><span class="badge">Q12</span><h3>Why does it matter where the disturbance enters?</h3></div>
+<div class="ansr">
+<div class="short">It changes the numerator. A disturbance entering at the plant <em>input</em> is filtered by <i>G</i>, giving <i>G</i>/(1+<i>L</i>). One at the plant <em>output</em> gives 1/(1+<i>L</i>). In both cases, making the loop gain large where the disturbance lives is what suppresses it.</div>
+<div class="predict"><b class="h">Predict</b><i>G</i><sub>c</sub> = <i>K</i> (P only), <i>G</i> = 1/(<i>s</i>+1), unit-step disturbance at the plant input, <i>R</i> = 0. Where does <i>C</i> settle?<br><details><summary class="ui" style="cursor:pointer">Show</summary>FVT: <i>C</i>(∞) = lim <i>s</i>·<span class="frac"><span>1/(<i>s</i>+1)</span><span>1 + <i>K</i>/(<i>s</i>+1)</span></span>·<span class="frac"><span>1</span><span><i>s</i></span></span> = 1/(1+<i>K</i>). Bigger <i>K</i> shrinks the effect but never removes it. For that you need integral action in <i>G</i><sub>c</sub> (<a href="#s12">Stage 12</a>).</details></div>
+<div class="tip"><b class="h">Key takeaway</b>High loop gain helps reject disturbances, and an integrator <em>in the controller, upstream of where the disturbance enters</em> drives the steady-state effect of a constant disturbance to zero.</div>
+</div>
+</section>
+
+<!-- ================= 5 ================= -->
+<section data-stage="5" id="s5">
+<h2>5 · Controllers at a glance (P, I, PI, PD, PID)</h2>
+<div class="where"><div class="ic">📍</div><div><b class="h">Where are we in the big picture?</b>The <i>G</i><sub>c</sub> block from Stage 4. This is the recognition-level summary. How to <em>choose</em> the gains is the whole subject of the <a href="../pid-tuning/index.html">PID tuning guide</a>.
+<div class="mini"><span>Describe</span><i>→</i><span class="on">Loop</span><i>→</i><span>State space</span><i>→</i><span>Response</span><i>→</i><span>SSE</span><i>→</i><span>Feedback</span></div></div></div>
+
+<div class="q" id="q13"><span class="badge">Q13</span><h3>What does each term fix, and what does it cost?</h3></div>
+<div class="ansr">
+<div class="short"><b>P</b> reacts to the present error: faster, but leaves a steady-state error on type-0 plants. <b>I</b> reacts to the accumulated past: removes step steady-state error, but slows things down and adds overshoot. <b>D</b> reacts to the trend (the future): adds damping and cuts overshoot, but amplifies noise.</div>
+<div class="tw"><table class="t">
+<tr><th>Term</th><th>G<sub>c</sub>(s)</th><th>Fixes</th><th>Costs / watch for</th></tr>
+<tr><td>P</td><td><i>K</i><sub>p</sub></td><td>Rise time, reduces (but doesn't eliminate) SSE</td><td>Too much → overshoot, oscillation</td></tr>
+<tr><td>I</td><td><i>K</i><sub>i</sub>/<i>s</i></td><td>Step SSE → 0 (adds a pole at the origin)</td><td>Slower, more overshoot, windup</td></tr>
+<tr><td>D</td><td><i>K</i><sub>d</sub><i>s</i></td><td>Damping, less overshoot</td><td>Noise amplification, derivative kick</td></tr>
+<tr><td>PI</td><td><i>K</i><sub>p</sub> + <i>K</i><sub>i</sub>/<i>s</i></td><td>Accuracy + reasonable speed</td><td>The industrial default (Project 1 is PI)</td></tr>
+<tr><td>PD</td><td><i>K</i><sub>p</sub> + <i>K</i><sub>d</sub><i>s</i></td><td>Speed + damping (adds a zero)</td><td>The boring machine's <i>K</i> + 11<i>s</i> is a PD!</td></tr>
+<tr><td>PID</td><td><i>K</i><sub>p</sub> + <i>K</i><sub>i</sub>/<i>s</i> + <i>K</i><sub>d</sub><i>s</i></td><td>All three</td><td>Three knobs to tune</td></tr>
+</table></div>
+<p>The class example (Lecture 2): you ask cruise control for 70 mph and get 72 mph forever. That's the steady-state error P-only leaves behind. The integral term keeps “learning” until the error is gone.</p>
+</div>
+
+<div class="q" id="q14"><span class="badge">Q14</span><h3>Parallel vs standard form: why two sets of symbols?</h3></div>
+<div class="ansr">
+<div class="short">Same controller, two parameterizations. Parallel: <i>K</i><sub>p</sub> + <i>K</i><sub>i</sub>/<i>s</i> + <i>K</i><sub>d</sub><i>s</i>. Standard (ISA): <i>K</i><sub>p</sub>(1 + 1/(<i>T</i><sub>i</sub><i>s</i>) + <i>T</i><sub>d</sub><i>s</i>). They're related by <i>K</i><sub>i</sub> = <i>K</i><sub>p</sub>/<i>T</i><sub>i</sub> and <i>K</i><sub>d</sub> = <i>K</i><sub>p</sub><i>T</i><sub>d</sub>.</div>
+<div class="trap"><b class="h">Trap</b><ul><li>In standard form, a <b>bigger</b> <i>T</i><sub>i</sub> means a <b>weaker</b> integral.</li><li><i>T</i><sub>d</sub> is overloaded: derivative time here, but <i>T</i><sub>d</sub>(<i>s</i>) is the <em>disturbance</em> in Lecture Notes 2. Context tells you which (the Vars panel lists both).</li></ul></div>
+<div class="note"><b class="h">Go deeper</b>Tuning methods, the PID Tuner sliders, windup, and the derivative filter are in the <a href="../pid-tuning/index.html">PID tuning guide</a>, with a <a href="../pid-tuning/index.html#/quiz">quiz &amp; flashcards</a>.</div>
+</div>
+</section>
+<!-- ================= 6 ================= -->
+<section data-stage="6" id="s6">
+<h2>6 · State space (ABCD)</h2>
+<div class="where"><div class="ic">📍</div><div><b class="h">Where are we in the big picture?</b>A second way to describe the same plant: instead of one <i>n</i>th-order equation, <i>n</i> first-order equations in matrix form. This was the heart of mini exam 1 (Lecture Notes 1, slides ~20–49).
+<div class="mini"><span>Describe</span><i>→</i><span>Loop</span><i>→</i><span class="on">State space</span><i>→</i><span>Response</span><i>→</i><span>SSE</span><i>→</i><span>Feedback</span></div></div></div>
+
+<div class="q" id="q15"><span class="badge">Q15</span><h3>We already have transfer functions. Why state space?</h3></div>
+<div class="ansr">
+<div class="short">Transfer functions only see input → output from rest. State space keeps the <em>internal</em> variables, handles initial conditions and multiple inputs/outputs (MIMO), is how computers simulate, and is the language of modern control (state feedback, observers, optimal control).</div>
+<div class="why"><b class="h">Why it matters</b><ul><li><b>Initial conditions</b>: <i>x</i>(0) is built in (compare <a href="#q3">Q3</a>).</li><li><b>MIMO</b>: two inputs and three outputs is just bigger <i>B</i> and <i>C</i>, not a 3×2 grid of transfer functions.</li><li><b>Simulation</b>: ODE solvers (and Simulink) integrate first-order vector equations.</li><li><b>Hidden modes</b>: internal states that a pole–zero cancellation would hide stay visible.</li></ul></div>
+</div>
+
+<div class="q" id="q16"><span class="badge">Q16</span><h3>What do ẋ = Ax + Bu and y = Cx + Du actually say?</h3></div>
+<div class="ansr">
+<div class="short"><b>A</b>: how the states drive each other (the dynamics, which hold the poles). <b>B</b>: where the input pushes. <b>C</b>: what you measure, i.e. which combination of states is the output. <b>D</b>: direct feedthrough from input to output (usually 0).</div>
+<div class="eq box"><i>ẋ</i> = <i>A</i><i>x</i> + <i>B</i><i>u</i> &nbsp;&nbsp;&nbsp;&nbsp; <i>y</i> = <i>C</i><i>x</i> + <i>D</i><i>u</i></div>
+<figure><svg viewBox="0 0 660 190" role="img" aria-label="state space block diagram">
+<text class="txt" x="8" y="74">u</text><line class="wire" x1="22" y1="70" x2="70" y2="70" marker-end="url(#ar)"/>
+<line class="wire" x1="40" y1="70" x2="40" y2="20"/><line class="wire" x1="40" y1="20" x2="300" y2="20" marker-end="url(#ar)"/>
+<rect class="blk" x="300" y="6" width="44" height="28" rx="5"/><text class="txt" x="322" y="25" text-anchor="middle">D</text>
+<line class="wire" x1="344" y1="20" x2="560" y2="20"/><line class="wire" x1="560" y1="20" x2="560" y2="60" marker-end="url(#ar)"/>
+<rect class="blk2" x="70" y="54" width="44" height="32" rx="5"/><text class="txt" x="92" y="75" text-anchor="middle">B</text>
+<line class="wire" x1="114" y1="70" x2="150" y2="70" marker-end="url(#ar)"/>
+<circle cx="160" cy="70" r="10" class="blk"/><text class="txs" x="142" y="62">+</text><text class="txs" x="166" y="94">+</text>
+<line class="wire" x1="170" y1="70" x2="220" y2="70" marker-end="url(#ar)"/><text class="txs" x="185" y="62">ẋ</text>
+<rect class="blk2" x="220" y="52" width="56" height="36" rx="5"/><text class="txt" x="248" y="75" text-anchor="middle">∫ (1/s)</text>
+<line class="wire" x1="276" y1="70" x2="460" y2="70" marker-end="url(#ar)"/><text class="txs" x="300" y="62">x (state vector)</text>
+<rect class="blk2" x="460" y="54" width="44" height="32" rx="5"/><text class="txt" x="482" y="75" text-anchor="middle">C</text>
+<line class="wire" x1="504" y1="70" x2="550" y2="70" marker-end="url(#ar)"/>
+<circle cx="560" cy="70" r="10" class="blk"/>
+<line class="wire" x1="570" y1="70" x2="640" y2="70" marker-end="url(#ar)"/><text class="txt" x="630" y="60">y</text>
+<line class="wire" x1="400" y1="70" x2="400" y2="140"/><line class="wire" x1="400" y1="140" x2="304" y2="140" marker-end="url(#ar)"/>
+<rect class="blk" x="260" y="124" width="44" height="32" rx="5"/><text class="txt" x="282" y="145" text-anchor="middle">A</text>
+<line class="wire" x1="260" y1="140" x2="160" y2="140"/><line class="wire" x1="160" y1="140" x2="160" y2="82" marker-end="url(#ar)"/>
+<text class="txs" x="282" y="178" text-anchor="middle">A closes an internal loop around the integrators → it holds the poles</text>
+</svg><figcaption><b>Read it like a block diagram.</b> The integrators hold the states (one per energy store). <i>A</i> is internal feedback, <i>B</i> and <i>C</i> are the input and output “ports,” and <i>D</i> bypasses everything.</figcaption></figure>
+<div class="tw"><table class="t">
+<tr><th>Matrix</th><th>Size</th><th>SISO size</th><th>Meaning</th></tr>
+<tr><td><i>A</i></td><td><i>n</i>×<i>n</i></td><td><i>n</i>×<i>n</i></td><td>State dynamics; eigenvalues = poles</td></tr>
+<tr><td><i>B</i></td><td><i>n</i>×<i>m</i></td><td><i>n</i>×1 (column)</td><td>Input → state derivatives</td></tr>
+<tr><td><i>C</i></td><td><i>p</i>×<i>n</i></td><td>1×<i>n</i> (row)</td><td>States → output</td></tr>
+<tr><td><i>D</i></td><td><i>p</i>×<i>m</i></td><td>1×1 (scalar)</td><td>Input → output directly</td></tr>
+</table></div>
+<p class="ui" style="font-size:.85rem;color:var(--muted)"><i>n</i> = number of states (= order), <i>m</i> = number of inputs, <i>p</i> = number of outputs.</p>
+<div class="recog"><b class="h">Recognize</b><ul><li>Dimension check catches most errors: <i>A</i> is square, <i>B</i> has as many rows as <i>A</i>, and <i>C</i> has as many columns as <i>A</i>.</li><li><i>D</i> ≠ 0 means the output jumps the instant the input does, so <i>G</i>(<i>s</i>) is proper but <em>not</em> strictly proper.</li><li>Here <i>C</i> is the <b>output matrix</b>. In Lecture Notes 2, <i>C</i>(<i>s</i>) is the <b>complementary sensitivity</b>, and in many block diagrams <i>C</i> is the <b>output signal</b>. Three different C's!</li></ul></div>
+</div>
+
+<div class="q" id="q17"><span class="badge">Q17</span><h3>Which direction does the derivation go?</h3></div>
+<div class="ansr">
+<div class="short">Physics/ODE → <b>choose states</b> → write each state derivative → read off <b>A</b> and <b>B</b>. Then, separately, write the output you care about in terms of the states → read off <b>C</b> and <b>D</b>. You never derive C and D from the dynamics.</div>
+<ol class="steps">
+<li><b>Write the physics</b> (KVL, Newton) as an ODE.<span class="concept">model</span></li>
+<li><b>Pick states</b>: one per energy store, or phase variables <i>x</i>₁ = <i>y</i>, <i>x</i>₂ = <i>ẏ</i>, …<span class="concept">choice</span></li>
+<li><b>Write ẋ<sub>i</sub></b> for each state using only states and <i>u</i>. The coefficients form <b>A</b>, and the <i>u</i>-coefficients form <b>B</b>.<span class="concept">dynamics</span></li>
+<li><b>Write y</b> in terms of states and <i>u</i>. The coefficients form <b>C</b> and <b>D</b>.<span class="concept">measurement</span></li>
+</ol>
+<div class="trap"><b class="h">Trap</b>Same circuit, different output → <b>same A and B, different C and D</b>. In a series RLC with states (<i>v</i><sub>C</sub>, <i>i</i>), the output “capacitor voltage” gives <i>C</i> = [1 0], while the output “resistor voltage” gives <i>C</i> = [0 <i>R</i>]. The dynamics didn't change, only what you're looking at.</div>
+</div>
+
+<div class="q" id="q18"><span class="badge">Q18</span><h3>How do I get phase-variable form straight from a transfer function?</h3></div>
+<div class="ansr">
+<div class="short">For <i>G</i> = <i>b</i>₀/(<i>s</i><sup><i>n</i></sup> + <i>a</i><sub><i>n</i>−1</sub><i>s</i><sup><i>n</i>−1</sup> + … + <i>a</i>₀): write the ODE, set <i>x</i>₁ = <i>y</i>, <i>x</i>₂ = <i>ẏ</i>, …. A then has 1's on the superdiagonal and the <b>negated</b> denominator coefficients (constant term first) in the bottom row.</div>
+<div class="eq box">A = <span class="mat"><table><tr><td>0</td><td>1</td><td>0</td></tr><tr><td>0</td><td>0</td><td>1</td></tr><tr><td>−<i>a</i>₀</td><td>−<i>a</i>₁</td><td>−<i>a</i>₂</td></tr></table></span>&nbsp; B = <span class="mat"><table><tr><td>0</td></tr><tr><td>0</td></tr><tr><td><i>b</i>₀</td></tr></table></span>&nbsp; C = <span class="mat"><table><tr><td>1</td><td>0</td><td>0</td></tr></table></span>&nbsp; D = 0 &nbsp;<span class="ui" style="font-size:.8rem;color:var(--muted)">(n = 3 shown)</span></div>
+
+<div class="deep" id="dd-worked"><div class="dh"><span class="tag ui">Worked</span><h3>G(s) = 3/(s² + 2s + 3) → ODE → ABCD</h3></div>
+<ol class="steps">
+<li><b>Cross-multiply</b>: (<i>s</i>² + 2<i>s</i> + 3)<i>Y</i> = 3<i>U</i>.</li>
+<li><b>Back to time</b> (<i>s</i> → d/dt, zero ICs): <i>ÿ</i> + 2<i>ẏ</i> + 3<i>y</i> = 3<i>u</i>.</li>
+<li><b>States</b>: <i>x</i>₁ = <i>y</i>, <i>x</i>₂ = <i>ẏ</i>. So <i>ẋ</i>₁ = <i>x</i>₂ (that's the definition), and <i>ẋ</i>₂ = <i>ÿ</i> = −3<i>x</i>₁ − 2<i>x</i>₂ + 3<i>u</i> (solve the ODE for <i>ÿ</i>).</li>
+<li><b>Read off</b>: A = <span class="mat"><table><tr><td>0</td><td>1</td></tr><tr><td>−3</td><td>−2</td></tr></table></span> B = <span class="mat"><table><tr><td>0</td></tr><tr><td>3</td></tr></table></span> C = <span class="mat"><table><tr><td>1</td><td>0</td></tr></table></span> D = 0.</li>
+</ol>
+<div class="note"><b class="h">Not unique</b>B = [0; 1], C = [3 0] also works: the 3 moved from the input side to the output side. Both give the same <i>G</i>(<i>s</i>) (check with <a href="#q19">Q19</a>). A state-space realization isn't unique, but the transfer function is.</div>
+<div class="predict"><b class="h">Predict</b>Second element of B = 1 instead of 3, with C = [1 0] kept? <details><summary class="ui" style="cursor:pointer">Show</summary><i>G</i> = 1/(<i>s</i>² + 2<i>s</i> + 3). Same poles, DC gain drops from 1 to 1/3. B scales the input's push, so it scales the whole response.</details></div>
+</div>
+
+<h4>LRC intuition (slide 40)</h4>
+<p>Series LRC, output across C, states <i>x</i>₁ = <i>e</i><sub>o</sub>, <i>x</i>₂ = <i>ė</i><sub>o</sub>. KVL gives <i>LC</i><i>ë</i><sub>o</sub> + <i>RC</i><i>ė</i><sub>o</sub> + <i>e</i><sub>o</sub> = <i>e</i><sub>i</sub>, so:</p>
+<div class="eq box">A = <span class="mat"><table><tr><td>0</td><td>1</td></tr><tr><td>−1/<i>LC</i></td><td>−<i>R</i>/<i>L</i></td></tr></table></span>&nbsp; B = <span class="mat"><table><tr><td>0</td></tr><tr><td>1/<i>LC</i></td></tr></table></span>&nbsp; C = <span class="mat"><table><tr><td>1</td><td>0</td></tr></table></span>&nbsp; D = 0</div>
+<p>Same pattern as the mass–spring–damper (slides 26–27) with <i>m</i> ↔ <i>L</i>, <i>b</i> ↔ <i>R</i>, <i>k</i> ↔ 1/<i>C</i>. Annotated slides (on this computer): <a href="LRCIMG/annot1_slide40_LRC_ABCD.png">slide 40 annotated</a> · <a href="LRCIMG/annot2_slide28_TF_from_ABCD.png">slide 28 (TF from ABCD)</a> · <a href="LRCIMG/annot3_LRC_walkthrough_board.png">LRC walkthrough board</a>.</p>
+<div class="recog"><b class="h">Recognize the companion pattern</b>A 2×2 <i>A</i> with [0 1] on top and [−<i>a</i>₀ −<i>a</i>₁] on the bottom <em>is</em> the denominator <i>s</i>² + <i>a</i>₁<i>s</i> + <i>a</i>₀, readable without any algebra. For the LRC: <i>s</i>² + (<i>R</i>/<i>L</i>)<i>s</i> + 1/(<i>LC</i>).</div>
+</div>
+</section>
+
+<!-- ================= 7 ================= -->
+<section data-stage="7" id="s7">
+<h2>7 · State space → transfer function</h2>
+<div class="where"><div class="ic">📍</div><div><b class="h">Where are we in the big picture?</b>The bridge back. With it you can always check an ABCD model against the transfer function you already trust (slides 28–29).
+<div class="mini"><span>Describe</span><i>→</i><span>Loop</span><i>→</i><span class="on">State space</span><i>→</i><span>Response</span><i>→</i><span>SSE</span><i>→</i><span>Feedback</span></div></div></div>
+
+<div class="q" id="q19"><span class="badge">Q19</span><h3>Where does G(s) = C(sI − A)⁻¹B + D come from?</h3></div>
+<div class="ansr">
+<div class="short">Laplace-transform the state equation with <i>x</i>(0) = 0, solve for <i>X</i>, and substitute into the output equation. Three lines.</div>
+<ol class="steps">
+<li><i>sX</i>(<i>s</i>) = <i>AX</i>(<i>s</i>) + <i>BU</i>(<i>s</i>) &nbsp;(zero ICs: the transfer-function convention again)</li>
+<li>(<i>sI</i> − <i>A</i>)<i>X</i> = <i>BU</i> ⇒ <i>X</i> = (<i>sI</i> − <i>A</i>)<sup>−1</sup><i>BU</i> &nbsp;(you need <i>I</i> to subtract a matrix from the scalar <i>s</i>)</li>
+<li><i>Y</i> = <i>CX</i> + <i>DU</i> = [<i>C</i>(<i>sI</i> − <i>A</i>)<sup>−1</sup><i>B</i> + <i>D</i>]<i>U</i></li>
+</ol>
+<div class="deep"><div class="dh"><span class="tag ui">Check</span><h3>Back to 3/(s² + 2s + 3)</h3></div>
+<p><i>sI</i> − <i>A</i> = <span class="mat"><table><tr><td><i>s</i></td><td>−1</td></tr><tr><td>3</td><td><i>s</i>+2</td></tr></table></span>, &nbsp;det = <i>s</i>² + 2<i>s</i> + 3.</p>
+<p>2×2 inverse: <b>swap the diagonal, negate the off-diagonal, divide by det</b>: (<i>sI</i>−<i>A</i>)<sup>−1</sup> = <span class="frac"><span>1</span><span><i>s</i>²+2<i>s</i>+3</span></span><span class="mat"><table><tr><td><i>s</i>+2</td><td>1</td></tr><tr><td>−3</td><td><i>s</i></td></tr></table></span></p>
+<p><i>C</i>(·)<sup>−1</sup> picks the top row: [<i>s</i>+2 &nbsp;1]/det. Times <i>B</i> = [0; 3] gives 3/det. So <i>G</i> = 3/(<i>s</i>²+2<i>s</i>+3) ✓.</p>
+</div>
+</div>
+
+<div class="q" id="q20"><span class="badge">Q20</span><h3>What should I recognize in that formula?</h3></div>
+<div class="ansr">
+<div class="short">det(<i>sI</i> − <i>A</i>) <em>is</em> the characteristic polynomial, so the <b>poles of G are the eigenvalues of A</b> (unless a zero cancels one). <i>C</i>, <i>B</i>, and <i>D</i> only shape the numerator.</div>
+<div class="recog"><b class="h">Recognize</b><ul><li>(<i>sI</i> − <i>A</i>)<sup>−1</sup> is called the <b>resolvent</b>. Its denominator is det(<i>sI</i> − <i>A</i>) for every entry.</li><li>Order of multiplication is fixed: <b>C · (inverse) · B</b> → (1×<i>n</i>)(<i>n</i>×<i>n</i>)(<i>n</i>×1) = scalar for SISO.</li><li>Eigenvalue of <i>A</i> missing from <i>G</i>? Then that mode is cancelled: uncontrollable from <i>u</i> or unobservable at <i>y</i>. It still exists inside, and if it's unstable the transfer function will hide it.</li></ul></div>
+<div class="trap"><b class="h">Trap</b>Forgetting <i>D</i>, writing <i>B</i>(<i>sI</i>−<i>A</i>)<sup>−1</sup><i>C</i>, or mis-inverting the 2×2 (forgetting to divide by the determinant). Always finish with the DC-gain sanity check <i>G</i>(0) = −<i>CA</i><sup>−1</sup><i>B</i> + <i>D</i>.</div>
+</div>
+</section>
+
+<!-- ================= 8 ================= -->
+<section data-stage="8" id="s8">
+<h2>8 · Modeling practice: circuits &amp; op-amps</h2>
+<div class="where"><div class="ic">📍</div><div><b class="h">Where are we in the big picture?</b>Practice turning hardware into <i>G</i>(<i>s</i>). Op-amp circuits are also how analog controllers (PI, PD) are physically built.
+<div class="mini"><span class="on">Describe</span><i>→</i><span>Loop</span><i>→</i><span>State space</span><i>→</i><span>Response</span><i>→</i><span>SSE</span><i>→</i><span>Feedback</span></div></div></div>
+
+<div class="q" id="q21"><span class="badge">Q21</span><h3>What's the fastest way to get a circuit's transfer function?</h3></div>
+<div class="ansr">
+<div class="short">Replace each element with its impedance (<i>R</i>, <i>sL</i>, 1/(<i>sC</i>)) and use voltage dividers, KVL, and KCL as if it were a resistor network. No differential equations needed.</div>
+<div class="tw"><table class="t">
+<tr><th>Circuit</th><th>Transfer function</th><th>Read off</th></tr>
+<tr><td>Series RL, output across R</td><td><i>V</i><sub>R</sub>/<i>V</i> = <i>R</i>/(<i>sL</i>+<i>R</i>) = 1/((<i>L</i>/<i>R</i>)<i>s</i>+1)</td><td>1st order, τ = <i>L</i>/<i>R</i>, DC gain 1</td></tr>
+<tr><td>RC low-pass</td><td>1/(<i>RCs</i>+1)</td><td>τ = <i>RC</i></td></tr>
+<tr><td>Series RLC, output across C</td><td>1/(<i>LCs</i>² + <i>RCs</i> + 1)</td><td>ω<sub>n</sub> = 1/√(<i>LC</i>), ζ = (<i>R</i>/2)√(<i>C</i>/<i>L</i>)</td></tr>
+</table></div>
+<p class="rf">ζ = 1/(2<i>Q</i>) for the series RLC. A high-Q tank is a lightly damped second-order system that rings, and that's exactly the overshoot of Stage 11.</p>
+</div>
+
+<div class="q" id="q22"><span class="badge">Q22</span><h3>How do I read an inverting op-amp stage?</h3></div>
+<div class="ansr">
+<div class="short"><i>V</i><sub>o</sub>/<i>V</i><sub>i</sub> = −<i>Z</i><sub>f</sub>/<i>Z</i><sub>in</sub>. Whatever impedances you choose for feedback and input set the transfer function, which is how you build integrators, differentiators, filters, and PI/PD controllers.</div>
+<div class="side2">
+<figure><svg viewBox="0 0 300 150" role="img" aria-label="inverting op amp">
+<text class="txt" x="4" y="94">Vᵢ</text><line class="wire" x1="24" y1="90" x2="50" y2="90"/>
+<rect class="blk" x="50" y="80" width="50" height="20" rx="3"/><text class="txs" x="75" y="94" text-anchor="middle">Z<tspan baseline-shift="sub" font-size="8">in</tspan></text>
+<line class="wire" x1="100" y1="90" x2="150" y2="90"/>
+<line class="wire" x1="130" y1="90" x2="130" y2="40"/><line class="wire" x1="130" y1="40" x2="175" y2="40"/>
+<rect class="blk" x="175" y="30" width="50" height="20" rx="3"/><text class="txs" x="200" y="44" text-anchor="middle">Z<tspan baseline-shift="sub" font-size="8">f</tspan></text>
+<line class="wire" x1="225" y1="40" x2="250" y2="40"/><line class="wire" x1="250" y1="40" x2="250" y2="100"/>
+<path class="wire" d="M150,70 L150,130 L220,100 Z"/><text class="txs" x="156" y="94">−</text><text class="txs" x="156" y="124">+</text>
+<line class="wire" x1="150" y1="120" x2="140" y2="120"/><line class="wire" x1="140" y1="120" x2="140" y2="140"/><line class="wire" x1="132" y1="140" x2="148" y2="140"/>
+<line class="wire" x1="220" y1="100" x2="290" y2="100"/><text class="txt" x="268" y="92">V₀</text>
+</svg><figcaption><b>Generic inverting stage.</b> Gain = −Z<sub>f</sub>/Z<sub>in</sub>.</figcaption></figure>
+<div class="tw" style="margin:0"><table class="t">
+<tr><th>Z<sub>in</sub></th><th>Z<sub>f</sub></th><th>V<sub>o</sub>/V<sub>i</sub></th><th>Shape</th></tr>
+<tr><td>R</td><td>C</td><td>−1/(<i>RCs</i>)</td><td>Integrator (pole at 0)</td></tr>
+<tr><td>C</td><td>R</td><td>−<i>RCs</i></td><td>Differentiator (zero at 0)</td></tr>
+<tr><td>R<sub>i</sub></td><td>R<sub>f</sub> ∥ C</td><td>−(<i>R</i><sub>f</sub>/<i>R</i><sub>i</sub>)/(<i>R</i><sub>f</sub><i>Cs</i>+1)</td><td>Low-pass</td></tr>
+<tr><td>R₁</td><td>R₂ + C (series)</td><td>−(<i>R</i>₂/<i>R</i>₁)(1 + 1/(<i>R</i>₂<i>Cs</i>))</td><td><b>PI controller</b></td></tr>
+</table></div>
+</div>
+<div class="recog"><b class="h">Recognize the filter from its poles and zeros</b><ul><li><b>Pole at the origin</b> → integrator (infinite DC gain, −90° phase).</li><li><b>Zero at the origin</b> → differentiator / high-pass (zero DC gain).</li><li><b>One LHP pole, no zeros</b> → low-pass with corner at |<i>p</i>|.</li><li><b>Zero at 0 plus an LHP pole</b> → high-pass. <b>Pole at 0 plus an LHP zero</b> → PI.</li></ul></div>
+</div>
+</section>
+<!-- ================= 9 ================= -->
+<section data-stage="9" id="s9">
+<h2>9 · First-order response</h2>
+<div class="where"><div class="ic">📍</div><div><b class="h">Where are we in the big picture?</b>Now we predict motion. First order is the simplest dynamic behavior, and it's what many plants (thermal, RC, motor speed with <i>L</i> neglected, the Project 1 engine to a first guess) look like.
+<div class="mini"><span>Describe</span><i>→</i><span>Loop</span><i>→</i><span>State space</span><i>→</i><span class="on">Response</span><i>→</i><span>SSE</span><i>→</i><span>Feedback</span></div></div></div>
+
+<div class="q" id="q23"><span class="badge">Q23</span><h3>What does K/(Ts + 1) do, and what's worth memorizing?</h3></div>
+<div class="ansr">
+<div class="short">One real pole at −1/<i>T</i>. A unit step gives <i>y</i>(<i>t</i>) = <i>K</i>(1 − <i>e</i><sup>−<i>t</i>/<i>T</i></sup>): it reaches <b>63%</b> of the final value at <i>t</i> = <i>T</i> and ~<b>98%</b> at 4<i>T</i>, and it <b>never overshoots</b>. <i>K</i> sets <em>where</em> it ends; <i>T</i> sets <em>how fast</em> it gets there.</div>
+<div class="tw"><table class="t">
+<tr><th>Quantity</th><th>Value</th><th>Why you care</th></tr>
+<tr><td>Final value <i>y</i>(∞)</td><td><i>K</i> (= <i>G</i>(0))</td><td>DC gain: read it off with <i>s</i> = 0</td></tr>
+<tr><td><i>y</i>(<i>T</i>)</td><td>0.632<i>K</i></td><td>Measure <i>T</i> from a plot: find 63%</td></tr>
+<tr><td>Initial slope</td><td><i>K</i>/<i>T</i></td><td>The tangent at <i>t</i> = 0 hits <i>K</i> at <i>t</i> = <i>T</i></td></tr>
+<tr><td>Settling (2%)</td><td>≈ 4<i>T</i></td><td>3<i>T</i> → 95%, 4<i>T</i> → 98.2%, 5<i>T</i> → 99.3%</td></tr>
+<tr><td>Impulse response</td><td>(<i>K</i>/<i>T</i>)<i>e</i><sup>−<i>t</i>/<i>T</i></sup></td><td>Derivative of the step response</td></tr>
+</table></div>
+<div class="widget" id="w1"><h4 class="ui">First-order explorer: G(s) = K/(Ts + 1)</h4>
+<div class="wgrid"><div><div id="w1plot"></div><div class="legend ui" id="w1leg"></div></div>
+<div class="ctl"><label>K (DC gain) <output id="w1Kv"></output></label><input type="range" id="w1K" min="0.2" max="3" step="0.1" value="1">
+<label>T (time constant, s) <output id="w1Tv"></output></label><input type="range" id="w1T" min="0.2" max="4" step="0.1" value="1">
+<label class="chk"><input type="checkbox" id="w1imp"> Show impulse response</label>
+<label class="chk"><input type="checkbox" id="w1tan" checked> Show initial tangent</label>
+<div class="readout" id="w1ro"></div></div></div></div>
+<div class="trap"><b class="h">Trap</b><i>G</i> = 4/(<i>s</i>+2) is first order with <b><i>K</i> = 2, <i>T</i> = 0.5 s</b>, not <i>K</i> = 4. Divide through so the constant in the denominator is 1 before reading <i>K</i> and <i>T</i>.</div>
+</div>
+</section>
+
+<!-- ================= 10 ================= -->
+<section data-stage="10" id="s10">
+<h2>10 · Dominant poles</h2>
+<div class="where"><div class="ic">📍</div><div><b class="h">Where are we in the big picture?</b>Real systems have many poles, but the response is usually shaped by just one or two. This is why the first- and second-order formulas are so useful, and it sets up model simplification in Lecture Notes 2.
+<div class="mini"><span>Describe</span><i>→</i><span>Loop</span><i>→</i><span>State space</span><i>→</i><span class="on">Response</span><i>→</i><span>SSE</span><i>→</i><span>Feedback</span></div></div></div>
+
+<div class="q" id="q24"><span class="badge">Q24</span><h3>Why do some poles matter more than others?</h3></div>
+<div class="ansr">
+<div class="short">Each pole contributes a mode <i>e</i><sup><i>pt</i></sup>. Poles far to the left die out fast; the poles <b>closest to the imaginary axis</b> are still alive when everything else is gone, so they <em>dominate</em> what you see. If a pole is roughly 5–10× farther left than the dominant ones, you can usually drop it.</div>
+<p>A pole at −30 decays 15× faster than one at −2. By the time the slow mode has done anything visible, the fast one has disappeared. That's why design often uses a first- or second-order approximation and why the specs in Stage 11 are defined for the second-order template.</p>
+<div class="widget" id="w2"><h4 class="ui">Dominant-pole explorer: second-order pair + one extra real pole</h4>
+<p class="ui" style="font-size:.82rem;color:var(--muted);margin:.1rem 0 .4rem">Full: <i>G</i> = <span class="frac"><span><i>p</i>ω<sub>n</sub>²</span><span>(<i>s</i>²+2ζω<sub>n</sub><i>s</i>+ω<sub>n</sub>²)(<i>s</i>+<i>p</i>)</span></span> vs. reduced: <span class="frac"><span>ω<sub>n</sub>²</span><span><i>s</i>²+2ζω<sub>n</sub><i>s</i>+ω<sub>n</sub>²</span></span> (same DC gain = 1). ω<sub>n</sub> = 1, ζ = 0.5.</p>
+<div class="wgrid"><div><div id="w2plot"></div><div class="legend ui" id="w2leg"></div></div>
+<div class="ctl"><label>Extra pole at s = −p, p = <output id="w2pv"></output></label><input type="range" id="w2p" min="0.2" max="10" step="0.1" value="5">
+<div class="status" id="w2st"></div></div></div></div>
+<div class="recog"><b class="h">Recognize</b><ul><li>Pole ratio ≥ ~5 → the extra pole barely matters. Ratio near 1 → it's no longer negligible (slower, more sluggish response).</li><li>When you drop a pole, <b>keep the DC gain</b>: <i>K</i>/(<i>s</i>(<i>s</i>+2)(<i>s</i>+30)) ≈ (<i>K</i>/30)/(<i>s</i>(<i>s</i>+2)), because (<i>s</i>+30) ≈ 30 at low frequency (Lecture Notes 2).</li><li>A zero near a pole nearly cancels it, which also removes that pole's influence.</li></ul></div>
+</div>
+</section>
+
+<!-- ================= 11 ================= -->
+<section data-stage="11" id="s11">
+<h2>11 · Second-order systems</h2>
+<div class="where"><div class="ic">📍</div><div><b class="h">Where are we in the big picture?</b>The template for nearly every performance spec: overshoot, settling time, and peak time are defined for this shape. Covered after mini exam 1 (Oct 23 lecture), and it's the language of the PID Tuner and both projects.
+<div class="mini"><span>Describe</span><i>→</i><span>Loop</span><i>→</i><span>State space</span><i>→</i><span class="on">Response</span><i>→</i><span>SSE</span><i>→</i><span>Feedback</span></div></div></div>
+
+<div class="q" id="q25"><span class="badge">Q25</span><h3>What is the standard form, and what do ζ and ω<sub>n</sub> mean?</h3></div>
+<div class="ansr">
+<div class="short"><i>G</i> = ω<sub>n</sub>²/(<i>s</i>² + 2ζω<sub>n</sub><i>s</i> + ω<sub>n</sub>²). <b>ζ (damping ratio)</b> sets the <em>shape</em> (how much it overshoots and rings). <b>ω<sub>n</sub> (natural frequency)</b> sets the <em>speed</em> (time scale). The poles are −ζω<sub>n</sub> ± <i>j</i>ω<sub>n</sub>√(1−ζ²).</div>
+<div class="tw"><table class="t">
+<tr><th>ζ</th><th>Name</th><th>Poles</th><th>Step response</th></tr>
+<tr><td>0</td><td>Undamped</td><td>±<i>j</i>ω<sub>n</sub> (on the axis)</td><td>Oscillates forever</td></tr>
+<tr><td>0 &lt; ζ &lt; 1</td><td>Underdamped</td><td>Complex pair</td><td>Overshoots, rings, settles</td></tr>
+<tr><td>1</td><td>Critically damped</td><td>Double real at −ω<sub>n</sub></td><td>Fastest with no overshoot</td></tr>
+<tr><td>&gt; 1</td><td>Overdamped</td><td>Two distinct real</td><td>Sluggish, no overshoot</td></tr>
+</table></div>
+<div class="recog"><b class="h">Recognize the geometry</b><ul><li>Distance from the origin = ω<sub>n</sub>. Angle from the negative real axis θ with <b>cos θ = ζ</b>.</li><li>Real part σ = ζω<sub>n</sub> → <b>settling time</b>. Imaginary part ω<sub>d</sub> = ω<sub>n</sub>√(1−ζ²) → <b>peak time / ringing frequency</b>.</li><li>Match coefficients to identify: <i>s</i>² + 2<i>s</i> + 3 → ω<sub>n</sub> = √3 ≈ 1.73, 2ζω<sub>n</sub> = 2 → ζ ≈ 0.577.</li></ul></div>
+</div>
+
+<div class="q" id="q26"><span class="badge">Q26</span><h3>Which spec formulas should I know?</h3></div>
+<div class="ansr">
+<div class="short">%OS = 100·<i>e</i><sup>−ζπ/√(1−ζ²)</sup> (depends on ζ only). <i>T</i><sub>s</sub> ≈ 4/(ζω<sub>n</sub>) (2% band). <i>T</i><sub>p</sub> = π/ω<sub>d</sub>. To get ζ from a measured overshoot: ζ = −ln(OS)/√(π² + ln²(OS)).</div>
+<div class="tw"><table class="t" id="ostable"><tr><th>ζ</th><th>0.2</th><th>0.3</th><th>0.4</th><th>0.5</th><th>0.6</th><th>0.7</th><th>0.8</th><th>1.0</th></tr><tr><td>%OS</td><td>52.7</td><td>37.2</td><td>25.4</td><td>16.3</td><td>9.5</td><td>4.6</td><td>1.5</td><td>0</td></tr></table></div>
+<div class="widget" id="w3"><h4 class="ui">Second-order explorer: ζ and ω<sub>n</sub> → step response + poles</h4>
+<div class="wgrid"><div><div id="w3plot"></div><div class="legend ui" id="w3leg"></div></div>
+<div class="ctl"><div class="sp" id="w3sp"></div>
+<label>ζ (damping ratio) <output id="w3zv"></output></label><input type="range" id="w3z" min="0" max="2" step="0.01" value="0.5">
+<label>ω<sub>n</sub> (rad/s) <output id="w3wv"></output></label><input type="range" id="w3w" min="0.5" max="5" step="0.05" value="1.73">
+<div class="presets"><button data-z="0.577" data-w="1.732">3/(s²+2s+3)</button><button data-z="0.1" data-w="2">lightly damped</button><button data-z="0.707" data-w="2">ζ=0.707</button><button data-z="1" data-w="2">critical</button><button data-z="1.6" data-w="2">overdamped</button></div>
+<div class="readout" id="w3ro"></div></div></div></div>
+<div class="predict"><b class="h">Predict</b>3/(<i>s</i>²+2<i>s</i>+3): overshoot and settling time? <details><summary class="ui" style="cursor:pointer">Show</summary>ζ = 0.577 → %OS ≈ 10.8%. ζω<sub>n</sub> = 1 → <i>T</i><sub>s</sub> ≈ 4 s. DC gain 3/3 = 1 → it settles at 1. Press the preset to check.</details></div>
+<div class="trap"><b class="h">Trap</b>These formulas are exact only for the <b>pure</b> two-pole, no-zero form. An added zero (like the PD controller in the boring machine, Q38) adds overshoot, and an extra pole slows things down. Treat them as estimates for dominant-pole systems. Also, ω<sub>n</sub> doesn't change %OS: two systems with the same ζ overshoot equally, one just does it faster.</div>
+</div>
+</section>
+
+<!-- ================= 12 ================= -->
+<section data-stage="12" id="s12">
+<h2>12 · Steady-state error: P vs I</h2>
+<div class="where"><div class="ic">📍</div><div><b class="h">Where are we in the big picture?</b>Transient analysis tells you how the response moves; this tells you where it <em>ends up</em>. The professor emphasized it: why P alone leaves an error and why I removes it.
+<div class="mini"><span>Describe</span><i>→</i><span>Loop</span><i>→</i><span>State space</span><i>→</i><span>Response</span><i>→</i><span class="on">SSE</span><i>→</i><span>Feedback</span></div></div></div>
+
+<div class="q" id="q27"><span class="badge">Q27</span><h3>How do I compute steady-state error?</h3></div>
+<div class="ansr">
+<div class="short">With unity feedback, <i>E</i>(<i>s</i>) = <i>R</i>(<i>s</i>)/(1 + <i>L</i>(<i>s</i>)). The final-value theorem gives <i>e</i><sub>ss</sub> = lim<sub><i>s</i>→0</sub> <i>s</i><i>E</i>(<i>s</i>), but <b>only if the closed loop is stable</b>.</div>
+<div class="eq box"><i>e</i><sub>ss</sub> = lim<sub><i>s</i>→0</sub> <i>s</i> · <span class="frac"><span>1</span><span>1 + <i>G</i><sub>c</sub>(<i>s</i>)<i>G</i>(<i>s</i>)</span></span> · <i>R</i>(<i>s</i>) &nbsp;&nbsp;→&nbsp;&nbsp; unit step: <i>e</i><sub>ss</sub> = <span class="frac"><span>1</span><span>1 + <i>L</i>(0)</span></span></div>
+<div class="trap"><b class="h">Trap: an unstable loop has no steady state</b>The final-value theorem will still happily give you a number for an unstable closed loop, and that number is meaningless. Always check stability (all closed-loop poles in the LHP) <em>first</em>.</div>
+</div>
+
+<div class="q" id="q28"><span class="badge">Q28</span><h3>Why does pure P leave an error, and why does I remove it?</h3></div>
+<div class="ansr">
+<div class="short"><b>P:</b> <i>u</i> = <i>K</i><sub>p</sub><i>e</i>. To hold the output at a nonzero value, a type-0 plant needs a nonzero <i>u</i>, which means a nonzero <i>e</i>. So <i>e</i><sub>ss</sub> = 1/(1 + <i>K</i><sub>p</sub><i>G</i>(0)), which shrinks with gain but never reaches zero. <b>I:</b> in steady state every signal is constant, including the integrator's output. An integrator's output is constant only if its input is zero, so <b><i>e</i> = 0</b>.</div>
+<p>In transfer-function terms, the integrator puts a pole at <i>s</i> = 0 in <i>L</i>, so <i>L</i>(0) = ∞ and 1/(1+<i>L</i>(0)) = 0. The plant can supply that integrator itself (a <b>type-1</b> plant like 1/(<i>s</i>(<i>s</i>+1)) in the boring machine). That's why the boring machine has zero step error even with a PD controller.</p>
+<div class="tw"><table class="t">
+<tr><th>System type (integrators in L)</th><th>Step error</th><th>Ramp error</th></tr>
+<tr><td>Type 0</td><td>1/(1+<i>K</i><sub>p</sub>), <i>K</i><sub>p</sub> = <i>L</i>(0)</td><td>∞</td></tr>
+<tr><td>Type 1</td><td>0</td><td>1/<i>K</i><sub>v</sub>, <i>K</i><sub>v</sub> = lim <i>sL</i>(<i>s</i>)</td></tr>
+<tr><td>Type 2</td><td>0</td><td>0</td></tr>
+</table></div>
+<div class="widget" id="w4"><h4 class="ui">P vs PI lab: plant G(s) = 1/((s + 1)(0.2s + 1)), unit step reference</h4>
+<div class="wgrid"><div><div id="w4plot"></div><div class="legend ui" id="w4leg"></div></div>
+<div class="ctl"><label>K<sub>p</sub> <output id="w4pv"></output></label><input type="range" id="w4p" min="0" max="10" step="0.1" value="2">
+<label>K<sub>i</sub> (0 = P only) <output id="w4iv"></output></label><input type="range" id="w4i" min="0" max="25" step="0.1" value="0">
+<div class="presets"><button data-p="2" data-i="0">P only</button><button data-p="8" data-i="0">big P</button><button data-p="2" data-i="2">PI</button><button data-p="1" data-i="15">too much I</button></div>
+<div class="status" id="w4st"></div><div class="readout" id="w4ro"></div></div></div></div>
+<div class="recog"><b class="h">Recognize</b><ul><li>Flat line below the target with P only → that's 1/(1+<i>K</i><sub>p</sub><i>G</i>(0)) of error. Raising <i>K</i><sub>p</sub> shrinks it but adds overshoot.</li><li>Adding I: the output creeps up and lands exactly on target. Too much I: overshoot, oscillation, and eventually instability (here when <i>K</i><sub>i</sub> &gt; 6(1+<i>K</i><sub>p</sub>)).</li></ul></div>
+</div>
+</section>
+<!-- ================= 13 ================= -->
+<section data-stage="13" id="s13">
+<h2>13 · Feedback control system characteristics (Lecture Notes 2)</h2>
+<div class="where"><div class="ic">📍</div><div><b class="h">Where are we in the big picture?</b>The payoff: what closing the loop actually buys you and what it costs. Lecture Notes 2 goes through eight themes, and almost all of them come back to one quantity, the <b>loop gain</b> <i>L</i> = <i>G</i><sub>c</sub><i>G</i>.
+<div class="mini"><span>Describe</span><i>→</i><span>Loop</span><i>→</i><span>State space</span><i>→</i><span>Response</span><i>→</i><span>SSE</span><i>→</i><span class="on">Feedback</span></div></div></div>
+
+<div class="deep" id="dd-ln2"><div class="dh"><span class="tag ui">Map</span><h3>Lecture Notes 2 in eight stops</h3></div>
+<div class="dmap">
+<div><b>Open vs closed</b> loop: why measure at all (Q33)</div>
+<div><b>Error signal</b>: E = SR − SGT<sub>d</sub> + CN (Q34)</div>
+<div><b>Sensitivity</b>: plant changes shrink by 1/(1+L) (Q35)</div>
+<div><b>Disturbances</b>: steel mill / DC motor (Q36)</div>
+<div><b>Transient</b>: feedback moves the pole left (Q37)</div>
+<div><b>SSE trade-off</b>: boring machine gain K (Q38)</div>
+<div><b>Performance indices</b>: ISE, IAE, ITAE (Q39)</div>
+<div><b>Simplification</b>: reduced-order models (Q40)</div>
+</div>
+<div class="tip"><b class="h">One idea behind all eight</b>Large loop gain |<i>L</i>| ⇒ small <i>S</i> = 1/(1+<i>L</i>) ⇒ less tracking error, less sensitivity, and less disturbance effect. But you can't make <i>L</i> large everywhere: noise, actuator limits, and stability push back. That tension is control design.</div>
+</div>
+
+<div class="q" id="q33"><span class="badge">Q33</span><h3>Open loop vs closed loop: what changes when you add a sensor?</h3></div>
+<div class="ansr">
+<div class="short">Open loop applies a pre-computed input and hopes. It can't notice a disturbance or a plant change. Closed loop measures the output (sensor <i>H</i>), compares it with the reference, and acts on the <b>error</b>. The costs: a sensor, sensor <b>noise N</b> that now enters the loop, and the possibility of instability.</div>
+<figure><svg viewBox="0 0 660 230" role="img" aria-label="open and closed loop">
+<text class="txb" x="8" y="18">Open loop</text>
+<text class="txt" x="8" y="64">R</text><line class="wire" x1="22" y1="60" x2="80" y2="60" marker-end="url(#ar)"/>
+<rect class="blk2" x="80" y="44" width="64" height="32" rx="5"/><text class="txt" x="112" y="65" text-anchor="middle">G<tspan baseline-shift="sub" font-size="10">c</tspan></text>
+<line class="wire" x1="144" y1="60" x2="200" y2="60" marker-end="url(#ar)"/><circle cx="210" cy="60" r="10" class="blk"/>
+<line class="wired" x1="210" y1="22" x2="210" y2="48" marker-end="url(#ar)"/><text class="txd" x="218" y="30">T<tspan baseline-shift="sub" font-size="9">d</tspan></text>
+<line class="wire" x1="220" y1="60" x2="270" y2="60" marker-end="url(#ar)"/>
+<rect class="blk2" x="270" y="44" width="64" height="32" rx="5"/><text class="txt" x="302" y="65" text-anchor="middle">G</text>
+<line class="wire" x1="334" y1="60" x2="400" y2="60" marker-end="url(#ar)"/><text class="txt" x="406" y="64">Y</text>
+<text class="txs" x="450" y="56">No measurement: T<tspan baseline-shift="sub" font-size="8">d</tspan> and changes</text><text class="txs" x="450" y="72">in G pass straight to Y</text>
+<text class="txb" x="8" y="118">Closed loop</text>
+<text class="txt" x="8" y="164">R</text><line class="wire" x1="22" y1="160" x2="40" y2="160" marker-end="url(#ar)"/>
+<circle cx="50" cy="160" r="10" class="blk"/><text class="txs" x="54" y="184">−</text>
+<line class="wire" x1="60" y1="160" x2="80" y2="160" marker-end="url(#ar)"/><text class="txs" x="62" y="152">E</text>
+<rect class="blk2" x="80" y="144" width="64" height="32" rx="5"/><text class="txt" x="112" y="165" text-anchor="middle">G<tspan baseline-shift="sub" font-size="10">c</tspan></text>
+<line class="wire" x1="144" y1="160" x2="200" y2="160" marker-end="url(#ar)"/><circle cx="210" cy="160" r="10" class="blk"/>
+<line class="wired" x1="210" y1="122" x2="210" y2="148" marker-end="url(#ar)"/><text class="txd" x="218" y="130">T<tspan baseline-shift="sub" font-size="9">d</tspan></text>
+<line class="wire" x1="220" y1="160" x2="270" y2="160" marker-end="url(#ar)"/>
+<rect class="blk2" x="270" y="144" width="64" height="32" rx="5"/><text class="txt" x="302" y="165" text-anchor="middle">G</text>
+<line class="wire" x1="334" y1="160" x2="440" y2="160" marker-end="url(#ar)"/><text class="txt" x="446" y="164">Y</text>
+<line class="wire" x1="390" y1="160" x2="390" y2="190"/><circle cx="390" cy="200" r="10" class="blk"/>
+<line class="wired" x1="430" y1="200" x2="400" y2="200" marker-end="url(#ar)"/><text class="txd" x="436" y="204">N (sensor noise)</text>
+<line class="wire" x1="380" y1="200" x2="334" y2="200" marker-end="url(#ar)"/>
+<rect class="blk" x="270" y="186" width="64" height="28" rx="5"/><text class="txt" x="302" y="205" text-anchor="middle">H</text>
+<line class="wire" x1="270" y1="200" x2="50" y2="200"/><line class="wire" x1="50" y1="200" x2="50" y2="172" marker-end="url(#ar)"/>
+</svg><figcaption><b>Lecture Notes 2, slide 2, redrawn.</b> The loop corrects for anything that shows up in the measurement, including the noise.</figcaption></figure>
+<div class="why"><b class="h">Why it matters</b>Every advantage below (sensitivity, disturbance rejection, faster transients, less steady-state error) exists only because of the loop. Every disadvantage (noise, more hardware, possible instability) exists for the same reason.</div>
+</div>
+
+<div class="q" id="q34"><span class="badge">Q34</span><h3>Error-signal analysis: what are S and C, and why does S + C = 1 matter?</h3></div>
+<div class="ansr">
+<div class="short">With <i>H</i> = 1 and <i>L</i> = <i>G</i><sub>c</sub><i>G</i>: <i>E</i> = <b><i>S</i></b><i>R</i> − <b><i>S</i></b><i>G</i><i>T</i><sub>d</sub> + <b><i>C</i></b><i>N</i>, where <b>sensitivity</b> <i>S</i> = 1/(1+<i>L</i>) and <b>complementary sensitivity</b> <i>C</i> = <i>L</i>/(1+<i>L</i>). Small <i>S</i> means good tracking and disturbance rejection; small <i>C</i> means good noise rejection. But <i>S</i> + <i>C</i> = 1, so you can't make both small at the same frequency.</div>
+<div class="eq box"><i>E</i>(<i>s</i>) = <span class="frac"><span>1</span><span>1 + <i>L</i></span></span><i>R</i> − <span class="frac"><span><i>G</i></span><span>1 + <i>L</i></span></span><i>T</i><sub>d</sub> + <span class="frac"><span><i>L</i></span><span>1 + <i>L</i></span></span><i>N</i> &nbsp;&nbsp;&nbsp; <i>S</i> + <i>C</i> = <span class="frac"><span>1 + <i>L</i></span><span>1 + <i>L</i></span></span> = 1</div>
+<p>The way out is <b>frequency separation</b>. References and disturbances are usually slow, while sensor noise is fast. So design <i>L</i> to be large at low frequency (<i>S</i> small there) and small at high frequency (<i>C</i> small there). The crossover where |<i>L</i>| ≈ 1 is the loop bandwidth.</p>
+<div class="widget" id="w5"><h4 class="ui">|S| and |C| vs frequency for L(s) = K/(s(s+1))</h4>
+<div class="wgrid"><div><div id="w5plot"></div><div class="legend ui" id="w5leg"></div></div>
+<div class="ctl"><label>Loop gain K <output id="w5kv"></output></label><input type="range" id="w5k" min="0.2" max="50" step="0.1" value="4">
+<div class="readout" id="w5ro"></div>
+<p style="font-size:.78rem;color:var(--muted)">Raise K: S drops at low frequency (better tracking) but C stays near 1 out to higher frequency (more noise passes), and a resonant peak shows the loop getting less damped.</p></div></div></div>
+<p class="rf">It's a PLL loop filter. Inside the loop bandwidth the output follows the reference (and its noise); outside it, the VCO's own noise wins. Same S/C trade-off.</p>
+<div class="trap"><b class="h">Trap: which C?</b>In these slides, <i>C</i>(<i>s</i>) = <i>L</i>/(1+<i>L</i>) is the complementary sensitivity, which for unity feedback equals the closed-loop transfer function <i>T</i>(<i>s</i>) = <i>Y</i>/<i>R</i>. It's not the state-space output matrix <i>C</i>, and not the output signal <i>C</i> in <i>C</i>/<i>R</i>.</div>
+</div>
+
+<div class="q" id="q35"><span class="badge">Q35</span><h3>Sensitivity to parameter variations: why does feedback make a sloppy plant behave?</h3></div>
+<div class="ansr">
+<div class="short">System sensitivity <i>S</i><sup><i>T</i></sup><sub><i>G</i></sub> = (∂<i>T</i>/<i>T</i>)/(∂<i>G</i>/<i>G</i>), i.e. the % change in the closed-loop transfer function per % change in the plant. <b>Open loop: 1</b> (a 10% plant drift gives a 10% output error). <b>Closed loop: 1/(1 + <i>G</i><sub>c</sub><i>G</i>)</b>, so large loop gain makes the plant's drift almost irrelevant.</div>
+<div class="eq box"><i>S</i><sup><i>T</i></sup><sub><i>G</i></sub> = <span class="frac"><span>∂<i>T</i></span><span>∂<i>G</i></span></span>·<span class="frac"><span><i>G</i></span><span><i>T</i></span></span> = <span class="frac"><span>1</span><span>1 + <i>G</i><sub>c</sub>(<i>s</i>)<i>G</i>(<i>s</i>)</span></span> &nbsp;&nbsp; with <i>T</i> = <span class="frac"><span><i>G</i><sub>c</sub><i>G</i></span><span>1 + <i>G</i><sub>c</sub><i>G</i></span></span></div>
+<div class="predict"><b class="h">Predict</b><i>G</i><sub>c</sub><i>G</i> = 100 at low frequency, and the plant gain drops 10% as it heats up. How much does the closed-loop gain change? <details><summary class="ui" style="cursor:pointer">Show</summary>About 10% × 1/101 ≈ <b>0.1%</b>. The closed loop is ~100× less sensitive than the open loop.</details></div>
+<p class="rf">This is Black's feedback amplifier (1927): an op-amp's gain varies wildly from part to part, but the closed-loop gain ≈ 1/β is set by precise resistors. Same 1/(1+<i>L</i>).</p>
+<div class="recog"><b class="h">Recognize</b>Parameter sensitivity <i>S</i><sup><i>T</i></sup><sub><i>G</i></sub> is the same function as the <i>S</i> in the error equation. Errors, plant changes, and disturbances are all divided by (1 + <i>L</i>). The slides also define sensitivity to a parameter α inside <i>G</i>: <i>S</i><sup><i>T</i></sup><sub>α</sub> = <i>S</i><sup><i>T</i></sup><sub><i>G</i></sub>·<i>S</i><sup><i>G</i></sup><sub>α</sub> (chain rule).</div>
+</div>
+
+<div class="q" id="q36"><span class="badge">Q36</span><h3>Disturbance rejection: what does the steel-mill example show?</h3></div>
+<div class="ansr">
+<div class="short">With <i>R</i> = <i>N</i> = 0, <i>E</i> = −<i>S</i><i>G</i><i>T</i><sub>d</sub> = −<span class="frac"><span><i>G</i></span><span>1+<i>L</i></span></span><i>T</i><sub>d</sub>. In the steel rolling mill, the load torque from the rolls slows the motor. Closing the loop with a tachometer cuts the steady-state speed drop by the loop gain, typically to <b>under 2%</b> of the open-loop drop.</div>
+<div class="tw"><table class="t">
+<tr><th></th><th>Steady-state speed change for load step <i>T</i><sub>d</sub> = <i>D</i>/<i>s</i></th></tr>
+<tr><td>Open loop</td><td>|Δω| = <i>D</i> / (<i>b</i> + <i>K</i><sub>m</sub><i>K</i><sub>b</sub>/<i>R</i><sub>a</sub>)</td></tr>
+<tr><td>Closed loop (tachometer <i>K</i><sub>t</sub>, amplifier <i>K</i><sub>a</sub>)</td><td>|Δω| ≈ <i>R</i><sub>a</sub><i>D</i> / (<i>K</i><sub>a</sub><i>K</i><sub>m</sub><i>K</i><sub>t</sub>)</td></tr>
+<tr><td>Ratio closed/open</td><td>(<i>R</i><sub>a</sub><i>b</i> + <i>K</i><sub>m</sub><i>K</i><sub>b</sub>)/(<i>K</i><sub>a</sub><i>K</i><sub>m</sub><i>K</i><sub>t</sub>), usually &lt; 0.02</td></tr>
+</table></div>
+<p>Intuition: in open loop, only the motor's own friction and back-EMF resist the load. In closed loop, the amplifier sees the speed drop and pushes back with gain <i>K</i><sub>a</sub>. Large <i>G</i><sub>1</sub><i>G</i><sub>2</sub><i>H</i> ⇒ <i>E</i> ≈ <i>T</i><sub>d</sub>/(<i>G</i><sub>1</sub><i>H</i>).</p>
+<div class="note"><b class="h">Noise is the flip side (same slide set)</b>With <i>R</i> = <i>T</i><sub>d</sub> = 0, <i>Y</i> = −<i>C</i>·<i>N</i> ≈ −<i>N</i> when <i>L</i> is large. The loop trusts the sensor completely, so it faithfully “corrects” the output to follow the noise. Attenuating measurement noise needs <em>small</em> loop gain at the noise frequencies.</div>
+</div>
+
+<div class="q" id="q37"><span class="badge">Q37</span><h3>Control of the transient response: how does feedback make a slow motor fast?</h3></div>
+<div class="ansr">
+<div class="short">The open-loop motor speed TF is <i>K</i><sub>1</sub>/(τ<sub>1</sub><i>s</i> + 1), and its speed is fixed by the hardware (the steel mill's huge roll inertia makes τ<sub>1</sub> large). Closing the loop moves the pole from −1/τ<sub>1</sub> to −(1 + <i>K</i><sub>a</sub><i>K</i><sub>t</sub><i>K</i><sub>1</sub>)/τ<sub>1</sub>, so the response is <b>(1 + loop gain)× faster</b> without changing the motor.</div>
+<div class="eq box"><span class="frac"><span>ω(<i>s</i>)</span><span><i>R</i>(<i>s</i>)</span></span> = <span class="frac"><span><i>K</i><sub>a</sub><i>K</i><sub>1</sub>/τ<sub>1</sub></span><span><i>s</i> + (1 + <i>K</i><sub>a</sub><i>K</i><sub>t</sub><i>K</i><sub>1</sub>)/τ<sub>1</sub></span></span> &nbsp;⇒&nbsp; τ<sub>closed</sub> = <span class="frac"><span>τ<sub>1</sub></span><span>1 + <i>K</i><sub>a</sub><i>K</i><sub>t</sub><i>K</i><sub>1</sub></span></span></div>
+<div class="widget" id="w6"><h4 class="ui">Open vs closed loop speed response (τ<sub>1</sub> = 10 s, normalized)</h4>
+<div class="wgrid"><div><div id="w6plot"></div><div class="legend ui" id="w6leg"></div></div>
+<div class="ctl"><label>Loop gain K<sub>a</sub>K<sub>t</sub>K<sub>1</sub> <output id="w6kv"></output></label><input type="range" id="w6k" min="0" max="60" step="1" value="20">
+<div class="readout" id="w6ro"></div>
+<p style="font-size:.78rem;color:var(--muted)">Closed-loop curve is scaled by K<sub>t</sub> so both aim at 1. Its final value K/(1+K) shows the leftover P-only error from Stage 12.</p></div></div></div>
+<div class="trap"><b class="h">Trap: speed isn't free</b>A faster closed loop means a big initial actuator command. In a real mill the amplifier saturates, and then the linear prediction no longer holds.</div>
+</div>
+
+<div class="q" id="q38"><span class="badge">Q38</span><h3>Steady-state error design: what's the trade-off in the English Channel boring machine?</h3></div>
+<div class="ansr">
+<div class="short">PD controller <i>G</i><sub>c</sub> = <i>K</i> + 11<i>s</i> on plant <i>G</i> = 1/(<i>s</i>(<i>s</i>+1)). One gain <i>K</i> must keep the angle response to commands acceptable <em>and</em> suppress the cutter's load disturbance. Step-reference error is 0 for any <i>K</i> (type-1 plant), but a step disturbance leaves <i>y</i><sub>ss</sub> = 1/<i>K</i>: <b>0.01 at K = 100, 0.05 at K = 20</b>.</div>
+<div class="eq box"><i>Y</i>(<i>s</i>) = <span class="frac"><span><i>K</i> + 11<i>s</i></span><span><i>s</i>² + 12<i>s</i> + <i>K</i></span></span><i>R</i>(<i>s</i>) + <span class="frac"><span>1</span><span><i>s</i>² + 12<i>s</i> + <i>K</i></span></span><i>T</i><sub>d</sub>(<i>s</i>)</div>
+<div class="widget" id="w7"><h4 class="ui">Boring-machine gain K: tracking vs disturbance (Project 2 flavor)</h4>
+<div class="wgrid"><div><div id="w7plot"></div><div class="legend ui" id="w7leg"></div></div>
+<div class="ctl"><label>Gain K <output id="w7kv"></output></label><input type="range" id="w7k" min="5" max="200" step="1" value="100">
+<div class="presets"><button data-k="100">K = 100</button><button data-k="20">K = 20</button></div>
+<div class="readout" id="w7ro"></div></div></div></div>
+<div class="recog"><b class="h">Recognize</b><ul><li>Same denominator <i>s</i>² + 12<i>s</i> + <i>K</i> for both inputs (Q11 again). ω<sub>n</sub> = √<i>K</i>, ζ = 6/√<i>K</i>, so a bigger <i>K</i> is less damped.</li><li>The R-path numerator <i>K</i> + 11<i>s</i> is a zero at −<i>K</i>/11. That's why <i>K</i> = 20 (ζ &gt; 1, overdamped poles!) still overshoots: the zero does it (Q26 trap).</li><li>The disturbance enters <em>after</em> the controller, and the controller has no integrator, so the disturbance error only shrinks as 1/<i>K</i>.</li></ul></div>
+<div class="tip"><b class="h">Design reading</b>Bigger <i>K</i> buys disturbance rejection (1/<i>K</i>) and speed (ω<sub>n</sub> = √<i>K</i>) at the cost of less damping (ζ = 6/√<i>K</i>) and more actuator effort. Choosing <i>K</i> is choosing where to sit on that trade-off.</div>
+</div>
+
+<div class="q" id="q39"><span class="badge">Q39</span><h3>Performance indices: why ISE, IAE, ITAE, ITSE?</h3></div>
+<div class="ansr">
+<div class="short">A performance index squashes a whole error curve into one number so you can <em>optimize</em> a gain. <b>ISE</b> = ∫<i>e</i>² dt punishes big errors (mostly the early ones). <b>IAE</b> = ∫|<i>e</i>|dt weighs all errors equally. <b>ITAE</b> = ∫<i>t</i>|<i>e</i>|dt and <b>ITSE</b> = ∫<i>t</i><i>e</i>² dt multiply by time, so <b>errors that linger late get punished</b>, which favors well-damped responses.</div>
+<figure><div id="fig-idx"></div><div class="legend ui" id="fig-idx-leg"></div><div class="ui" id="fig-idx-min" style="font-size:.8rem;color:var(--text);margin:.2rem 0"></div><figcaption><b>Each index (normalized to its own minimum) vs ζ for the standard second-order step (ω<sub>n</sub> = 1).</b> ISE is happiest at ζ = 0.5 (it tolerates ringing to get a fast rise). The time-weighted ITAE wants ζ ≈ 0.7–0.75 (it hates late ringing). Away from the minimum, ISE rises slowly (forgiving) while ITAE rises steeply (selective).</figcaption></figure>
+<div class="note"><b class="h">Slide example: space telescope pointing</b>Choose <i>K</i><sub>3</sub> to minimize a disturbance's effect: min ISE at <i>K</i><sub>3</sub> = √10 ≈ 3.2 (ζ = 0.50), min IAE at <i>K</i><sub>3</sub> = 4.2 (ζ = 0.665). Different index, different “optimal” design, which is the point: the index is how you encode what <em>you</em> care about.</div>
+<div class="recog"><b class="h">Recognize</b>“Optimal” always means “optimal for some index.” The time-weighted (T-) versions are what you choose when settling matters more than the first instant.</div>
+</div>
+
+<div class="q" id="q40"><span class="badge">Q40</span><h3>Simplification of linear systems: when and how can I use a smaller model?</h3></div>
+<div class="ansr">
+<div class="short">Keep the dominant dynamics and the <b>DC gain</b>; drop or approximate the rest. The simple way: delete insignificant (fast) poles while keeping <i>G</i>(0). The refined way (slides): pick a lower-order <i>G</i><sub>L</sub> whose frequency response matches the original's near <i>s</i> = 0, by matching derivatives.</div>
+<p>Slide example: <i>G</i><sub>H</sub> = 6/((<i>s</i>+1)(<i>s</i>+2)(<i>s</i>+3)) → <i>G</i><sub>L</sub> = 1.60/(<i>s</i>² + 2.590<i>s</i> + 1.60). Both have DC gain 1. The reduced poles (−1.024, −1.565) give a slightly overdamped response with <i>T</i><sub>s</sub> ≈ 3 s.</p>
+<figure><div id="fig-simp"></div><div class="legend ui" id="fig-simp-leg"></div><figcaption><b>Third-order original vs second-order approximation.</b> Nearly indistinguishable. The approximation is good enough to design with, and it brings back the Stage 11 formulas.</figcaption></figure>
+<div class="trap"><b class="h">Trap</b>Dropping a pole without fixing the gain: 6/((<i>s</i>+1)(<i>s</i>+2)) has DC gain 3, not 1. Divide by the dropped pole's constant (here 3) to keep <i>G</i>(0).</div>
+</div>
+</section>
+
+<!-- ================= CHEAT ================= -->
+<section data-stage="14" id="cheatsec">
+<h2 id="cheat">★ “Recognize this” cheat sheet</h2>
+<div class="cheat">
+<div><h4>Reading a transfer function</h4><ul><li>Order = highest power of <i>s</i> in the <b>denominator</b></li><li>DC gain = <i>G</i>(0); unit step settles there (if stable)</li><li><i>b</i>/(<i>s</i>+<i>a</i>) → <i>K</i> = <i>b</i>/<i>a</i>, τ = 1/<i>a</i></li><li>Bare 1/<i>s</i> → integrator → type 1</li><li>Poles: Re → decay, Im → ringing, RHP → unstable</li></ul></div>
+<div><h4>Block diagrams</h4><ul><li>Series ×, parallel +, loop <i>G</i>/(1+<i>GH</i>)</li><li>Any input: forward path / (1 + <i>L</i>)</li><li><i>C</i>/<i>R</i> and <i>C</i>/<i>D</i> share 1 + <i>G</i><sub>c</sub><i>G</i> → same poles</li><li>Disturbance at plant input: <i>G</i>/(1+<i>L</i>)</li></ul></div>
+<div><h4>Order &amp; energy</h4><ul><li>Order = # independent L, C, m, k, J</li><li>R and dampers add no order</li><li>Parallel C's = one store; cancellations hide modes</li></ul></div>
+<div><h4>State space</h4><ul><li><i>ẋ</i> = <i>Ax</i> + <i>Bu</i>, <i>y</i> = <i>Cx</i> + <i>Du</i></li><li>Physics → states → A, B; output choice → C, D</li><li>Phase variables: 1's above the diagonal, −<i>a</i><sub>0</sub> −<i>a</i><sub>1</sub>… in the bottom row</li><li><i>G</i> = <i>C</i>(<i>sI</i>−<i>A</i>)<sup>−1</sup><i>B</i> + <i>D</i>; poles = eig(<i>A</i>)</li><li>2×2 inverse: swap diag, negate off, ÷ det</li></ul></div>
+<div><h4>Circuits &amp; op-amps</h4><ul><li>Impedances <i>R</i>, <i>sL</i>, 1/(<i>sC</i>)</li><li>RLC: 1/(<i>LCs</i>²+<i>RCs</i>+1)</li><li>Op-amp: −<i>Z</i><sub>f</sub>/<i>Z</i><sub>in</sub></li><li>Pole at 0 = integrator; zero at 0 = differentiator</li></ul></div>
+<div><h4>First order K/(Ts+1)</h4><ul><li>63% at <i>T</i>, 98% at 4<i>T</i></li><li>No overshoot, ever</li><li>Initial slope <i>K</i>/<i>T</i>; impulse (<i>K</i>/<i>T</i>)<i>e</i><sup>−<i>t</i>/<i>T</i></sup></li></ul></div>
+<div><h4>Second order</h4><ul><li>ω<sub>n</sub>²/(<i>s</i>²+2ζω<sub>n</sub><i>s</i>+ω<sub>n</sub>²)</li><li>%OS = 100<i>e</i><sup>−ζπ/√(1−ζ²)</sup> (ζ only)</li><li><i>T</i><sub>s</sub> ≈ 4/(ζω<sub>n</sub>), <i>T</i><sub>p</sub> = π/ω<sub>d</sub></li><li>cos θ = ζ; radius = ω<sub>n</sub></li><li>Zeros add overshoot; extra poles slow it down</li></ul></div>
+<div><h4>Steady state</h4><ul><li><i>e</i><sub>ss</sub> = lim <i>sE</i>(<i>s</i>), stable loop only!</li><li>Step, type 0: 1/(1+<i>L</i>(0))</li><li>Integrator in <i>L</i> → step error 0</li><li>P leaves error; I removes it; D doesn't affect it</li></ul></div>
+<div><h4>Feedback (LN2)</h4><ul><li><i>S</i> = 1/(1+<i>L</i>), <i>C</i> = <i>L</i>/(1+<i>L</i>), <i>S</i>+<i>C</i> = 1</li><li><i>E</i> = <i>SR</i> − <i>SGT</i><sub>d</sub> + <i>CN</i></li><li>Open-loop sensitivity 1; closed-loop 1/(1+<i>L</i>)</li><li>Feedback: τ → τ/(1+loop gain)</li><li>Boring machine: <i>y</i><sub>ss</sub>(<i>T</i><sub>d</sub>) = 1/<i>K</i></li><li>ISE ↔ big errors; ITAE ↔ late errors</li><li>Reduce order: keep DC gain</li></ul></div>
+</div>
+
+<h2 id="glossary">Glossary</h2>
+<dl class="gl">
+<dt>LTI</dt><dd>Linear, time-invariant: superposition holds and coefficients are constant. Required for transfer functions.</dd>
+<dt>Transfer function</dt><dd><i>Y</i>(<i>s</i>)/<i>U</i>(<i>s</i>) with zero initial conditions; the Laplace transform of the impulse response.</dd>
+<dt>Pole / zero</dt><dd>Roots of the denominator (natural modes) / numerator (blocked input shapes).</dd>
+<dt>DC gain</dt><dd><i>G</i>(0): steady-state output per unit constant input (if stable).</dd>
+<dt>Order</dt><dd>Degree of the denominator = number of states = number of independent energy stores.</dd>
+<dt>System type</dt><dd>Number of pure integrators (poles at <i>s</i> = 0) in the loop gain.</dd>
+<dt>Loop gain L</dt><dd><i>G</i><sub>c</sub><i>G</i>(<i>H</i>): the product around the feedback loop.</dd>
+<dt>Characteristic equation</dt><dd>1 + <i>L</i>(<i>s</i>) = 0; its roots are the closed-loop poles (for every input).</dd>
+<dt>State</dt><dd>The minimum set of variables that, with the future input, determines the future (e.g. capacitor voltage, inductor current).</dd>
+<dt>Phase variables</dt><dd>States chosen as <i>y</i>, <i>ẏ</i>, <i>ÿ</i>, …; give the companion-form <i>A</i>.</dd>
+<dt>Resolvent</dt><dd>(<i>sI</i> − <i>A</i>)<sup>−1</sup>.</dd>
+<dt>Time constant T (τ)</dt><dd>First-order speed: 63% of the final value at <i>t</i> = <i>T</i>.</dd>
+<dt>ζ, ω<sub>n</sub></dt><dd>Damping ratio (shape/overshoot) and natural frequency (speed) of a second-order system.</dd>
+<dt>%OS, T<sub>s</sub>, T<sub>p</sub></dt><dd>Percent overshoot, settling time (2%), peak time.</dd>
+<dt>Dominant poles</dt><dd>The slowest (closest to the <i>j</i>ω axis) poles, which shape most of the response.</dd>
+<dt>Steady-state error</dt><dd>lim<sub><i>t</i>→∞</sub> <i>e</i>(<i>t</i>); found with the final-value theorem when the closed loop is stable.</dd>
+<dt>Sensitivity S</dt><dd>1/(1+<i>L</i>): the factor on reference error and disturbances, and the relative sensitivity to plant changes.</dd>
+<dt>Complementary sensitivity C</dt><dd><i>L</i>/(1+<i>L</i>) = closed-loop <i>T</i>(<i>s</i>) for unity feedback; the factor on sensor noise.</dd>
+<dt>Disturbance T<sub>d</sub></dt><dd>An unwanted input (load torque, cutter force) that pushes the output off target.</dd>
+<dt>Performance index</dt><dd>A scalar (ISE, IAE, ITAE, ITSE) that rates a response; minimized to pick gains.</dd>
+<dt>Model reduction</dt><dd>Replacing a high-order model with a lower-order one that keeps the dominant dynamics and DC gain.</dd>
+</dl>
+
+<div class="endcta"><b class="ui">Next stops</b><div class="linkrow"><a class="tbtn primary" href="#/quiz">Quiz &amp; flashcards →</a><a class="tbtn" href="../pid-tuning/index.html">PID tuning guide</a><a class="tbtn" href="../pid-tuning/index.html#/quiz">PID quiz &amp; flashcards</a><a class="tbtn" href="#/quiz?tags=mini-exam&title=Mini-exam%201">Mini-exam 1 quiz</a></div></div>
+<footer>EECE5130 Control Systems · UML · Fall 2026 · Study guide built from Lecture Notes 1–2, Lectures 1–3, and the Oct 23 lecture. Formulas are checked, but verify any grading-critical detail against the slides.</footer>
+</section>
+</main></div>

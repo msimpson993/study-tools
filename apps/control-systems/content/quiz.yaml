@@ -1,0 +1,1314 @@
+- id: cs-1
+  tags:
+    - model
+  kind: recognize
+  q: Why does the course describe plants with Laplace-domain transfer functions instead of solving the ODE in time?
+  choices:
+    - For LTI systems, Laplace turns derivatives into multiplication by s and convolution into multiplication, so blocks in series simply multiply
+    - Laplace transforms make nonlinear plants linear
+    - Transfer functions include the response to initial conditions automatically
+    - Time-domain ODEs can't describe electrical circuits
+  answer: 0
+  why: |-
+    That's the whole payoff: block diagrams become algebra. It only works for <b>linear time-invariant</b> systems, and transfer functions assume zero initial conditions.
+
+    <a class="rev" href="#/board?pair=s1&at=q2">Review this in the guide →</a>
+- id: cs-2
+  tags:
+    - model
+  kind: recognize
+  q: A transfer function G(s) is defined with zero initial conditions. What does that mean in practice?
+  choices:
+    - G(s) gives the response to an input starting from rest. The response to a pre-charged capacitor (zero input) has to come from the ODE or state space
+    - The real system must always start at rest, or the model is invalid
+    - Initial conditions are irrelevant for linear systems
+    - G(s) gives the total response, including initial-condition effects
+  answer: 0
+  why: |-
+    Total response = zero-state (from G) + zero-input (from ICs). The transfer function only describes the first part. State space carries x(0) naturally.
+
+    <a class="rev" href="#/board?pair=s1&at=q3">Review this in the guide →</a>
+- id: cs-3
+  tags:
+    - model
+  kind: recognize
+  q: A system has poles at −2, −0.5 ± j3, and +0.1. What can you say immediately?
+  choices:
+    - "It is unstable: the pole at +0.1 gives a growing mode, regardless of the others"
+    - It is stable, since most poles are in the left half-plane
+    - It oscillates at 3 rad/s forever but does not grow
+    - The slowest stable mode, at −0.5, dominates the response
+  answer: 0
+  why: |-
+    Any right-half-plane pole means e<sup>0.1t</sup> grows. Stability requires <b>all</b> poles in the LHP.
+
+    <a class="rev" href="#/board?pair=s1&at=q4">Review this in the guide →</a>
+- id: cs-53
+  tags:
+    - splane
+  kind: recognize
+  q: On a pole-zero map, how are poles and zeros marked?
+  choices:
+    - Poles are × (|G| → ∞); zeros are ○ (G = 0)
+    - Poles are ○; zeros are ×
+    - Both are ×, colored differently
+    - Poles are dots on the jω axis only
+  answer: 0
+  why: |-
+    × = root of the denominator (natural mode), ○ = root of the numerator (transmission null). MATLAB pzmap and the slides use the same convention.
+
+    <a class="rev" href="#/board?pair=splane&at=sp1">Review this in the guide →</a>
+- id: cs-54
+  tags:
+    - splane
+  kind: recognize
+  q: What does a zero of G(s) do to the time response?
+  choices:
+    - It creates no new mode; it changes how strongly the input excites and the output sees each pole's mode (the residues), e.g. a zero near the dominant poles adds overshoot
+    - It adds a new decaying exponential e<sup>zt</sup> to the response
+    - It makes the system unstable if it is in the LHP
+    - Nothing, because only poles matter for the time response
+  answer: 0
+  why: |-
+    Poles decide <i>which</i> exponentials appear, and zeros decide <i>how much</i> of each. Example: (s+1.1)/((s+1)(s+2)) has a residue of only 0.1 at −1, because the zero almost cancels that pole.
+
+    <a class="rev" href="#/board?pair=splane&at=sp2">Review this in the guide →</a>
+- id: cs-55
+  tags:
+    - splane
+  kind: recognize
+  q: A stable plant has a zero at s = +1.2. What will its step response show?
+  choices:
+    - "A wrong-way start (initial undershoot) before heading to the final value: non-minimum phase"
+    - Growth without bound, because the zero is in the RHP
+    - Faster settling than with no zero
+    - Sustained oscillation
+  answer: 0
+  why: |-
+    RHP zeros don't destabilize the open-loop system, but they cause inverse response and limit how much gain or speed feedback can use. A time delay behaves similarly (Padé gives a RHP zero).
+
+    <a class="rev" href="#/board?pair=splane&at=sp2">Review this in the guide →</a>
+- id: cs-56
+  tags:
+    - splane
+  kind: recognize
+  q: f(t) has poles at ±j3. What are the poles of e<sup>−2t</sup>f(t)?
+  choices:
+    - "−2 ± j3: the whole pattern slides left by 2 (s → s + 2)"
+    - ±j6
+    - −2 and ±j3
+    - ±j3/2
+  answer: 0
+  why: |-
+    Frequency-shift property: e<sup>−at</sup>f(t) ↔ F(s + a). Every × and ○ moves left by a, which adds damping. That's how sin 3t becomes e<sup>−2t</sup>sin 3t.
+
+    <a class="rev" href="#/board?pair=splane&at=sp5">Review this in the guide →</a>
+- id: cs-57
+  tags:
+    - splane
+  kind: recognize
+  q: On the s-plane, what does integrating a signal (or adding an integrator to a loop) correspond to?
+  choices:
+    - "Adding a pole (×) at the origin: infinite DC gain, raises the system type by 1"
+    - Adding a zero (○) at the origin
+    - Sliding all poles left
+    - Adding a pole at s = −1
+  answer: 0
+  why: |-
+    ∫f dt ↔ F(s)/s. The × at 0 is why an integrator gives zero step error. Differentiation is the opposite: a ○ at the origin, which kills DC and boosts high frequencies.
+
+    <a class="rev" href="#/board?pair=splane&at=sp5">Review this in the guide →</a>
+- id: cs-58
+  tags:
+    - splane
+  kind: recognize
+  q: "You play a system's step response back 3× faster: y(3t). What happens to its poles?"
+  choices:
+    - "They move radially outward ×3: same ζ (same %OS), 3× larger ω<sub>n</sub>"
+    - They slide left by 3
+    - They move toward the origin ×3
+    - Nothing; time scaling doesn't affect poles
+  answer: 0
+  why: |-
+    f(at) ↔ (1/a)F(s/a), so a pole at p moves to a·p. Angles from the origin are preserved, giving the same shape on a faster time scale. Compare with the shift (e<sup>−at</sup>), which slides the pattern and changes ζ.
+
+    <a class="rev" href="#/board?pair=splane&at=sp5">Review this in the guide →</a>
+- id: cs-59
+  tags:
+    - splane
+  kind: recognize
+  q: As loop gain K increases from 0, where do the closed-loop poles (roots of 1 + K·L(s) = 0) start and where do they head?
+  choices:
+    - They start at the open-loop poles (×) and move toward the open-loop zeros (○) or off to infinity
+    - They start at the zeros and move to the poles
+    - They stay at the open-loop poles
+    - They always move straight left
+  answer: 0
+  why: |-
+    That's the root locus. For K/(s(s+2)), the poles meet at −1 (K = 1) and then split vertically: more gain gives less damping. A LHP zero bends the locus leftward (PD/lead helps).
+
+    <a class="rev" href="#/board?pair=splane&at=sp8">Review this in the guide →</a>
+- id: cs-60
+  tags:
+    - splane
+  kind: recognize
+  q: You drive a stable system with u(t) = 3 sin(2t). What role does the point s = j2 on the s-plane play?
+  choices:
+    - "It's where you look up G: the output is 3·|G(j2)|·sin(2t + ∠G(j2))"
+    - It IS the input signal, so moving the point changes the input
+    - It's the location of the system's output pole
+    - It's where the system's state ends up as time goes on
+  answer: 0
+  why: |-
+    A point is an address where you evaluate G, not a signal. j2 labels "a 2 rad/s steady sine". The amplitude 3 isn't on the map; the output is the input scaled by the surface height |G(j2)| and shifted by the phase ∠G(j2).
+
+    <a class="rev" href="#/board?pair=splane&at=m2">Review this in the guide →</a>
+- id: cs-61
+  tags:
+    - splane
+  kind: recognize
+  q: In T(s) = K/(s² + 2s + K), you raise K from 4 to 16 while still testing at ω = 1 rad/s. What changes on the s-plane?
+  choices:
+    - The poles move (the terrain is rebuilt), so |T(j1)| changes even though the lookup spot j1 stays put
+    - The lookup spot moves to j16
+    - "Nothing changes: K only scales the output"
+    - Your operating point slides toward the nearest pole
+  answer: 0
+  why: |-
+    Knobs are bulldozers: they move the poles (here from −1 ± j1.73 to −1 ± j3.87) and reshape |T| everywhere. The drive frequency is a separate choice that only you make.
+
+    <a class="rev" href="#/board?pair=splane&at=m5">Review this in the guide →</a>
+- id: cs-62
+  tags:
+    - splane
+  kind: recognize
+  q: Why does the steady-state response to a pure sine only involve G evaluated on the jω axis?
+  choices:
+    - A steady sine neither grows nor decays (σ = 0), so it lives at s = ±jω
+    - Because poles are always on the jω axis
+    - Because the gradient of |G| pulls the response to the axis
+    - Because off-axis points are not allowed in Laplace transforms
+  answer: 0
+  why: |-
+    sin ωt = (e^{jωt} − e^{−jωt})/2j, i.e. s = ±jω. Off-axis points are growing (σ > 0) or decaying (σ < 0) sinusoids. Slicing the |G| surface along the jω axis gives the Bode plot. Nothing on the map 'pulls' anything.
+
+    <a class="rev" href="#/board?pair=splane&at=m4">Review this in the guide →</a>
+- id: cs-63
+  tags:
+    - splane
+  kind: recognize
+  q: You drag the e^{st} probe to s = −0.5 + j2 (off the jω axis). What does G(−0.5 + j2) tell you?
+  choices:
+    - If the drive were e^{−0.5t}·cos 2t (a decaying sinusoid), the forced response is that same shape scaled by |G| and shifted by ∠G
+    - The steady-state response to a lab sine at 2 rad/s
+    - That the system has a pole at −0.5 + j2
+    - "Nothing: G is only defined on the jω axis"
+  answer: 0
+  why: |-
+    Response/probe = G(s) works for any complex-exponential probe. Off the jω axis (σ ≠ 0), the probe itself decays or grows, so it isn't a usual lab sine. A lab sine at 2 rad/s uses G(j2). The probe's location says nothing about where the poles are.
+
+    <a class="rev" href="#/board?pair=splane&at=w10">Review this in the guide →</a>
+- id: cs-64
+  tags:
+    - splane
+  kind: recognize
+  q: Your real input is a square wave, and later a slow chirp (frequency sweep). In probe language, what are they?
+  choices:
+    - "Square wave: a discrete sum of probes on the jω axis at its harmonics. Slow chirp: roughly one probe sliding up the jω axis over time"
+    - Both are single probes off the jω axis
+    - "Square wave: a probe at σ = 1; chirp: a probe that moves into the RHP"
+    - Neither can be described with probes
+  answer: 0
+  why: |-
+    Real inputs are combinations of many probe signals. Periodic means a discrete Fourier sum at ±jkω₀, all with σ = 0. A slow sweep reads G near jω(t) as it goes (that's how a network/Bode analyzer works). Neither uses off-axis σ ≠ 0 probes.
+
+    <a class="rev" href="#/board?pair=splane&at=m6">Review this in the guide →</a>
+- id: cs-65
+  tags:
+    - splane
+  kind: recognize
+  q: Take G(s) = C(s − z)/((s − p)(s − p̄)). You move the ◆ probe very close to the pole p while staying far from the zero. What happens to |G(s)|, and why?
+  choices:
+    - "|G| → ∞: |G| = |C|·|s − z|/(|s − p|·|s − p̄|), and the distance |s − p| in the denominator shrinks toward 0"
+    - "|G| → 0, because you are close to a peak of the system's own motion"
+    - "|G| = ω<sub>n</sub>, the distance from the origin to the pole"
+    - "Nothing: distance from the probe to a pole has no effect on G"
+  answer: 0
+  why: |-
+    Each factor (s − mark) is the vector from that × or ○ to the ◆ (the dashed lines in the explorer). |G| = |C|·(product of distances to zeros)/(product of distances to poles); the angles of those vectors add up to ∠G. Short pole line → big |G| (resonance); short zero line → small |G| (notch). Don't confuse this with |p| = ω<sub>n</sub>, which is measured from the origin.
+
+    <a class="rev" href="#/board?pair=splane&at=m7">Review this in the guide →</a>
+- id: cs-66
+  tags:
+    - splane
+  kind: recognize
+  q: A system has poles at +0.4 ± j2 and you apply NO input (u = 0). What does its output do?
+  choices:
+    - "It still grows like e<sup>0.4t</sup>·cos 2t once any tiny initial condition, noise, or disturbance excites it: the free response of an RHP pole doesn't need an input"
+    - It stays at zero forever, because nothing drives it
+    - It grows only while you apply an input at 2 rad/s
+    - It decays, because there is no input to sustain it
+  answer: 0
+  why: |-
+    A pole is a mode the system can produce on its own. With σ > 0 that mode grows: that's what unstable means. In a lab sine test, G(jω) only describes the forced part; the growing free response drowns it, so the test never settles. An RHP <i>zero</i> by contrast doesn't destabilize anything.
+
+    <a class="rev" href="#/board?pair=splane&at=m8">Review this in the guide →</a>
+- id: cs-67
+  tags:
+    - splane
+  kind: recognize
+  q: "Which pole placement matches each circuit: a well-behaved high-gain amplifier, an ideal oscillator, and a practical oscillator at start-up?"
+  choices:
+    - "Amp: all poles in the LHP (high gain = large |G| along the jω axis). Ideal oscillator: poles on the jω axis. Practical oscillator: slightly RHP, so it starts from noise, then saturation holds a finite amplitude"
+    - "Amp: RHP poles (that's where the gain comes from). Ideal oscillator: LHP. Practical oscillator: on the jω axis"
+    - All three need RHP poles, because amplifying and oscillating both add energy
+    - "Amp: on the jω axis. Ideal oscillator: RHP, giving infinite output power. Practical oscillator: LHP"
+  answer: 0
+  why: |-
+    Gain is surface height along the jω slice, while stability is where the poles sit. On the axis the free response rings at constant amplitude. Slightly RHP, the linear model predicts runaway until nonlinear saturation (rails, gain compression) pulls the effective poles back to the axis. The energy comes from the power supply, not from the pole.
+
+    <a class="rev" href="#/board?pair=splane&at=m9">Review this in the guide →</a>
+- id: cs-68
+  tags:
+    - splane
+  kind: recognize
+  q: A stable plant G(s) = (1 − s)/((s + 1)(s + 2)) has a zero at s = +1. Which statement is right?
+  choices:
+    - "It's non-minimum phase: no growing mode (zeros aren't modes), but the step response starts the wrong way and the extra phase lag limits how much bandwidth feedback can safely add"
+    - It's unstable, because the zero is in the right half-plane
+    - "It behaves exactly like the zero at −1: same magnitude and same phase"
+    - The zero makes the response grow like e<sup>t</sup> until saturation
+  answer: 0
+  why: |-
+    Stability is set by the poles only (−1 and −2). The RHP zero gives the same |G(jω)| as a zero at −1 (same distances from the jω axis) but adds phase lag, so the step response dips negative first. That extra lag eats phase margin, so the crossover frequency (bandwidth) has to stay below about the zero's frequency.
+
+    <a class="rev" href="#/board?pair=splane&at=m10">Review this in the guide →</a>
+- id: cs-4
+  tags:
+    - tf
+  kind: recognize
+  q: What are the DC gain and time constant of G(s) = <span class="frac"><span>4</span><span>s + 2</span></span>?
+  choices:
+    - DC gain 2, τ = 0.5 s
+    - DC gain 4, τ = 2 s
+    - DC gain 4, τ = 0.5 s
+    - DC gain 2, τ = 2 s
+  answer: 0
+  why: |-
+    Trap from the guide. G(0) = 4/2 = 2. Rewrite as 2/(0.5s + 1), so τ = 1/2 = 0.5 s. In pole form b/(s+a), K = b/a and τ = 1/a.
+
+    <a class="rev" href="#/board?pair=s2&at=q6">Review this in the guide →</a>
+- id: cs-5
+  tags:
+    - tf
+  kind: compute
+  q: What is the order of G(s) = <span class="frac"><span>s<sup>2</sup> + 3s + 1</span><span>s<sup>3</sup> + 4s<sup>2</sup> + 5s + 2</span></span>?
+  choices:
+    - "3"
+    - "2"
+    - "5"
+    - "1"
+  answer: 0
+  why: |-
+    Order = highest power of s in the <b>denominator</b>. The numerator doesn't count.
+
+    <a class="rev" href="#/board?pair=s2&at=q6">Review this in the guide →</a>
+- id: cs-6
+  tags:
+    - tf
+  kind: recognize
+  q: A negative-feedback loop has forward path G and feedback path H. What is the closed-loop transfer function?
+  choices:
+    - <span class="frac"><span>G</span><span>1 + GH</span></span>
+    - <span class="frac"><span>G</span><span>1 − GH</span></span>
+    - <span class="frac"><span>GH</span><span>1 + G</span></span>
+    - G·H
+  answer: 0
+  why: |-
+    The denominator sign is the opposite of the feedback sign: negative feedback gives 1 <b>+</b> GH. Series blocks multiply; parallel blocks add.
+
+    <a class="rev" href="#/board?pair=s2&at=q7">Review this in the guide →</a>
+- id: cs-7
+  tags:
+    - tf
+  kind: compute
+  q: G(s) = <span class="frac"><span>1</span><span>s(s + 1)</span></span>. What is special about it?
+  choices:
+    - "It contains an integrator (pole at 0): infinite DC gain, type 1, and a step makes it ramp"
+    - Its DC gain is 1
+    - It is unstable because it has a pole in the right half-plane
+    - It is first order
+  answer: 0
+  why: |-
+    A bare s in the denominator is a free integrator. That's the boring machine plant, and it's why that loop has zero step error.
+
+    <a class="rev" href="#/board?pair=s2&at=q6">Review this in the guide →</a>
+- id: cs-8
+  tags:
+    - order
+  kind: recognize
+  q: Without writing any equations, what is the order of a series RLC circuit?
+  choices:
+    - "2: one inductor (current) plus one capacitor (voltage)"
+    - "3: one per component"
+    - "1: only the capacitor stores energy"
+    - "0: it's passive"
+  answer: 0
+  why: |-
+    Order = number of <b>independent energy stores</b>. Resistors and dampers dissipate energy and add no order.
+
+    <a class="rev" href="#/board?pair=s3&at=q8">Review this in the guide →</a>
+- id: cs-9
+  tags:
+    - order
+  kind: recognize
+  q: A circuit has two capacitors connected directly in parallel and one inductor. What order should you expect?
+  choices:
+    - "2: the parallel capacitors act as a single energy store"
+    - "3: three energy-storage parts"
+    - "1"
+    - "4"
+  answer: 0
+  why: |-
+    Parallel capacitors are forced to the same voltage, so they aren't independent. Count independent stores, or count poles in the final G(s).
+
+    <a class="rev" href="#/board?pair=s3&at=q9">Review this in the guide →</a>
+- id: cs-10
+  tags:
+    - blocks
+  kind: recognize
+  q: |-
+    <div class="qfig"><svg class="diagram" viewBox="0 0 360 118" role="img" aria-label="Block diagram: R to summing junction, controller G1, disturbance D added, plant G2, output C, feedback H"> <defs><marker id="ah-x10" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="currentColor"/></marker></defs> <g stroke="currentColor" fill="none" stroke-width="1.5"> <line x1="22" y1="40" x2="44" y2="40" marker-end="url(#ah-x10)"/> <circle cx="55" cy="40" r="10"/> <line x1="65" y1="40" x2="88" y2="40" marker-end="url(#ah-x10)"/> <rect x="88" y="26" width="46" height="28" rx="4"/> <line x1="134" y1="40" x2="157" y2="40" marker-end="url(#ah-x10)"/> <circle cx="168" cy="40" r="10"/> <line x1="168" y1="6" x2="168" y2="29" marker-end="url(#ah-x10)"/> <line x1="178" y1="40" x2="200" y2="40" marker-end="url(#ah-x10)"/> <rect x="200" y="26" width="46" height="28" rx="4"/> <line x1="246" y1="40" x2="318" y2="40" marker-end="url(#ah-x10)"/> <polyline points="290,40 290,95 237,95" marker-end="url(#ah-x10)"/> <rect x="190" y="81" width="46" height="28" rx="4"/> <polyline points="190,95 55,95 55,51" marker-end="url(#ah-x10)"/> </g> <g fill="currentColor" font-size="14" font-family="Georgia,serif" text-anchor="middle"> <text x="11" y="45">R</text><text x="111" y="45">G₁</text><text x="223" y="45">G₂</text> <text x="213" y="100">H</text><text x="332" y="45">C</text><text x="182" y="14">D</text> <text x="38" y="33" font-size="12">+</text><text x="66" y="63" font-size="13">−</text><text x="155" y="30" font-size="12">+</text> </g></svg></div>
+    In the diagram (G₁ = controller, G₂ = plant, H = sensor), what is C/R?
+  choices:
+    - <span class="frac"><span>G₁G₂</span><span>1 + G₁G₂H</span></span>
+    - <span class="frac"><span>G₂</span><span>1 + G₁G₂H</span></span>
+    - <span class="frac"><span>G₁G₂</span><span>1 − G₁G₂H</span></span>
+    - <span class="frac"><span>G₁G₂H</span><span>1 + G₁G₂</span></span>
+  answer: 0
+  why: |-
+    Forward path from R to C is G₁G₂; loop gain is G₁G₂H. Forward over (1 + loop).
+
+    <a class="rev" href="#/board?pair=s4&at=q10">Review this in the guide →</a>
+- id: cs-11
+  tags:
+    - blocks
+  kind: compute
+  q: |-
+    <div class="qfig"><svg class="diagram" viewBox="0 0 360 118" role="img" aria-label="Block diagram: R to summing junction, controller G1, disturbance D added, plant G2, output C, feedback H"> <defs><marker id="ah-x11" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="currentColor"/></marker></defs> <g stroke="currentColor" fill="none" stroke-width="1.5"> <line x1="22" y1="40" x2="44" y2="40" marker-end="url(#ah-x11)"/> <circle cx="55" cy="40" r="10"/> <line x1="65" y1="40" x2="88" y2="40" marker-end="url(#ah-x11)"/> <rect x="88" y="26" width="46" height="28" rx="4"/> <line x1="134" y1="40" x2="157" y2="40" marker-end="url(#ah-x11)"/> <circle cx="168" cy="40" r="10"/> <line x1="168" y1="6" x2="168" y2="29" marker-end="url(#ah-x11)"/> <line x1="178" y1="40" x2="200" y2="40" marker-end="url(#ah-x11)"/> <rect x="200" y="26" width="46" height="28" rx="4"/> <line x1="246" y1="40" x2="318" y2="40" marker-end="url(#ah-x11)"/> <polyline points="290,40 290,95 237,95" marker-end="url(#ah-x11)"/> <rect x="190" y="81" width="46" height="28" rx="4"/> <polyline points="190,95 55,95 55,51" marker-end="url(#ah-x11)"/> </g> <g fill="currentColor" font-size="14" font-family="Georgia,serif" text-anchor="middle"> <text x="11" y="45">R</text><text x="111" y="45">G₁</text><text x="223" y="45">G₂</text> <text x="213" y="100">H</text><text x="332" y="45">C</text><text x="182" y="14">D</text> <text x="38" y="33" font-size="12">+</text><text x="66" y="63" font-size="13">−</text><text x="155" y="30" font-size="12">+</text> </g></svg></div>
+    Same diagram. With R = 0, what is C/D (disturbance D enters between G₁ and G₂)?
+  choices:
+    - <span class="frac"><span>G₂</span><span>1 + G₁G₂H</span></span>
+    - <span class="frac"><span>G₁G₂</span><span>1 + G₁G₂H</span></span>
+    - <span class="frac"><span>1</span><span>1 + G₁G₂H</span></span>
+    - G₂
+  answer: 0
+  why: |-
+    Numerator = forward path from D to C = G₂. The loop is unchanged, so the denominator is the same as C/R.
+
+    <a class="rev" href="#/board?pair=s4&at=q11">Review this in the guide →</a>
+- id: cs-12
+  tags:
+    - blocks
+  kind: recognize
+  q: Why do C/R and C/D always have the same denominator in a single-loop system?
+  choices:
+    - "Both come from the same loop: the characteristic equation 1 + L = 0 belongs to the loop, not to the input"
+    - Only by coincidence of how textbooks draw the diagram
+    - Because the disturbance and reference are always equal
+    - They don't; C/D has 1 − L in the denominator
+  answer: 0
+  why: |-
+    Stability and transient personality (ζ, ω<sub>n</sub>) are properties of the loop. Only the numerator, and so the zeros and final value, changes with the input.
+
+    <a class="rev" href="#/board?pair=s4&at=q11">Review this in the guide →</a>
+- id: cs-13
+  tags:
+    - blocks
+  kind: recognize
+  q: P-only control G<sub>c</sub> = K, plant 1/(s+1), a unit step disturbance at the plant input, and R = 0. Where does the output settle?
+  choices:
+    - "1/(1 + K): smaller with bigger K, but never zero"
+    - 0, because feedback removes it
+    - 1, because the disturbance passes straight through
+    - K/(1 + K)
+  answer: 0
+  why: |-
+    FVT: lim s·\[G/(1+KG)\]·(1/s) = G(0)/(1 + K G(0)) = 1/(1 + K). Removing it completely needs an integrator in the controller.
+
+    <a class="rev" href="#/board?pair=s4&at=q12">Review this in the guide →</a>
+- id: cs-14
+  tags:
+    - ctrl
+  kind: recognize
+  q: Your cruise control is asked for 70 mph and settles at 72 mph forever. Which term is missing, and why?
+  choices:
+    - "Integral: P alone needs a nonzero error to produce a nonzero command, so some steady-state error remains"
+    - "Derivative: it removes steady-state error"
+    - More proportional gain will remove the error exactly
+    - Nothing is missing; feedback always leaves some error
+  answer: 0
+  why: |-
+    This is the class example. I keeps accumulating error until it is exactly zero. D affects damping and noise, not steady-state error.
+
+    <a class="rev" href="#/board?pair=s5&at=q13">Review this in the guide →</a>
+- id: cs-15
+  tags:
+    - ctrl
+  kind: recognize
+  q: Which term mainly adds damping (reduces overshoot) but amplifies sensor noise?
+  choices:
+    - Derivative (K<sub>d</sub>s)
+    - Integral (K<sub>i</sub>/s)
+    - Proportional (K<sub>p</sub>)
+    - A pure gain in the feedback path
+  answer: 0
+  why: |-
+    D reacts to the slope of the error: it adds phase lead (damping), but its gain grows with frequency, so it amplifies noise.
+
+    <a class="rev" href="#/board?pair=s5&at=q13">Review this in the guide →</a>
+- id: cs-16
+  tags:
+    - ctrl
+  kind: recognize
+  q: In Lecture Notes 2 you see "T<sub>d</sub>(s)" in a block diagram. In the PID standard form you see "T<sub>d</sub>". Are they the same thing?
+  choices:
+    - No. T<sub>d</sub>(s) is a disturbance input; T<sub>d</sub> in PID is derivative time (K<sub>d</sub> = K<sub>p</sub>T<sub>d</sub>)
+    - Yes, both are the derivative time
+    - Yes, both are disturbances
+    - T<sub>d</sub> is always a time delay
+  answer: 0
+  why: |-
+    A naming clash. Context decides: an input arrow into a summing junction is a disturbance, while a parameter inside K<sub>p</sub>(1 + 1/(T<sub>i</sub>s) + T<sub>d</sub>s) is derivative time.
+
+    <a class="rev" href="#/board?pair=s5&at=q14">Review this in the guide →</a>
+- id: cs-17
+  tags:
+    - ss
+  kind: recognize
+  q: Which is NOT a reason to use state space instead of a transfer function?
+  choices:
+    - It changes the system's poles to make it more stable
+    - It handles nonzero initial conditions naturally
+    - It handles multiple inputs and outputs (MIMO) cleanly
+    - It keeps internal states that a pole–zero cancellation would hide
+  answer: 0
+  why: |-
+    State space is just a different <i>description</i>: same physics, same poles (eigenvalues of A). The other three are real advantages, plus simulation and modern control.
+
+    <a class="rev" href="#/board?pair=s6&at=q15">Review this in the guide →</a>
+- id: cs-18
+  tags:
+    - ss
+  kind: recognize
+  q: For a SISO system with 3 states, what are the sizes of A, B, C, D?
+  choices:
+    - A 3×3, B 3×1, C 1×3, D 1×1
+    - A 3×3, B 1×3, C 3×1, D 1×1
+    - A 3×1, B 3×3, C 1×3, D 3×3
+    - A 3×3, B 3×3, C 3×3, D 3×3
+  answer: 0
+  why: |-
+    A is n×n, B has as many rows as A (column for SISO), C has as many columns as A (row for SISO), and D is a scalar for SISO.
+
+    <a class="rev" href="#/board?pair=s6&at=q16">Review this in the guide →</a>
+- id: cs-19
+  tags:
+    - ss
+  kind: recognize
+  q: You derive A and B for a series RLC with output = capacitor voltage. Now the output is the resistor voltage instead. What changes?
+  choices:
+    - Only C (and possibly D). A and B depend on the dynamics, which didn't change
+    - A and B change; C stays the same
+    - Everything changes
+    - Nothing changes; output choice doesn't matter
+  answer: 0
+  why: |-
+    Derivation direction: physics → states → A, B. Then output choice → C, D. Same circuit, different output: same A, B, new C.
+
+    <a class="rev" href="#/board?pair=s6&at=q17">Review this in the guide →</a>
+- id: cs-20
+  tags:
+    - ss
+  kind: compute
+  q: Phase-variable form for G(s) = <span class="frac"><span>3</span><span>s<sup>2</sup> + 2s + 3</span></span> with x₁ = y, x₂ = ẏ. What is A?
+  choices:
+    - <span class="mat"><table><tr><td>0</td><td>1</td></tr><tr><td>−3</td><td>−2</td></tr></table></span>
+    - <span class="mat"><table><tr><td>0</td><td>1</td></tr><tr><td>−2</td><td>−3</td></tr></table></span>
+    - <span class="mat"><table><tr><td>1</td><td>0</td></tr><tr><td>−3</td><td>−2</td></tr></table></span>
+    - <span class="mat"><table><tr><td>0</td><td>1</td></tr><tr><td>3</td><td>2</td></tr></table></span>
+  answer: 0
+  why: |-
+    ODE: ÿ + 2ẏ + 3y = 3u. ẋ₁ = x₂ and ẋ₂ = −3x₁ − 2x₂ + 3u. The bottom row holds the negated coefficients, constant term first.
+
+    <a class="rev" href="#/board?pair=s6&at=q18">Review this in the guide →</a>
+- id: cs-21
+  tags:
+    - ss
+  kind: recognize
+  q: Same G(s) = <span class="frac"><span>3</span><span>s<sup>2</sup> + 2s + 3</span></span> with C = \[1 0\]. What are B and D?
+  choices:
+    - B = \[0; 3\], D = 0
+    - B = \[3; 0\], D = 0
+    - B = \[0; 1\], D = 3
+    - B = \[0; 3\], D = 3
+  answer: 0
+  why: |-
+    The input enters only ẋ₂ with coefficient 3. B = \[0; 1\] with C = \[3 0\] also works, since a realization isn't unique. No direct feedthrough, so D = 0.
+
+    <a class="rev" href="#/board?pair=s6&at=dd-worked">Review this in the guide →</a>
+- id: cs-22
+  tags:
+    - ss2tf
+  kind: recognize
+  q: Where does G(s) = C(sI − A)⁻¹B + D come from?
+  choices:
+    - Laplace of ẋ = Ax + Bu with x(0) = 0 gives X = (sI − A)⁻¹BU; substitute into Y = CX + DU
+    - It's the definition of the matrix exponential
+    - It comes from solving y = Cx + Du for x
+    - It's an approximation valid only for 2×2 systems
+  answer: 0
+  why: |-
+    Three lines: sX = AX + BU → (sI − A)X = BU → Y = \[C(sI − A)⁻¹B + D\]U. You need I so you can subtract the matrix A from the scalar s.
+
+    <a class="rev" href="#/board?pair=s7&at=q19">Review this in the guide →</a>
+- id: cs-23
+  tags:
+    - ss2tf
+  kind: recognize
+  q: How are the poles of G(s) related to the matrix A?
+  choices:
+    - Poles = eigenvalues of A (roots of det(sI − A)), unless a pole–zero cancellation hides one
+    - Poles = diagonal entries of A, always
+    - Poles depend on C and B, not on A
+    - Poles = eigenvalues of A only when D ≠ 0
+  answer: 0
+  why: |-
+    det(sI − A) is the characteristic polynomial and the denominator of every entry of the resolvent (sI − A)⁻¹. C, B and D shape only the numerator.
+
+    <a class="rev" href="#/board?pair=s7&at=q20">Review this in the guide →</a>
+- id: cs-24
+  tags:
+    - ss2tf
+  kind: recognize
+  q: What is the inverse of <span class="mat"><table><tr><td>a</td><td>b</td></tr><tr><td>c</td><td>d</td></tr></table></span>?
+  choices:
+    - <span class="frac"><span>1</span><span>ad − bc</span></span><span class="mat"><table><tr><td>d</td><td>−b</td></tr><tr><td>−c</td><td>a</td></tr></table></span>
+    - <span class="frac"><span>1</span><span>ad − bc</span></span><span class="mat"><table><tr><td>a</td><td>−b</td></tr><tr><td>−c</td><td>d</td></tr></table></span>
+    - <span class="mat"><table><tr><td>d</td><td>−b</td></tr><tr><td>−c</td><td>a</td></tr></table></span>
+    - <span class="frac"><span>1</span><span>ad + bc</span></span><span class="mat"><table><tr><td>d</td><td>b</td></tr><tr><td>c</td><td>a</td></tr></table></span>
+  answer: 0
+  why: |-
+    Swap the diagonal, negate the off-diagonal, divide by the determinant. Forgetting the 1/det is the classic slip.
+
+    <a class="rev" href="#/board?pair=s7&at=q19">Review this in the guide →</a>
+- id: cs-25
+  tags:
+    - circuits
+  kind: recognize
+  q: Series RLC, input voltage across all three, output across C. What is V\_C/V\_in?
+  choices:
+    - <span class="frac"><span>1</span><span>LCs<sup>2</sup> + RCs + 1</span></span>
+    - <span class="frac"><span>RCs</span><span>LCs<sup>2</sup> + RCs + 1</span></span>
+    - <span class="frac"><span>1</span><span>Ls + R</span></span>
+    - <span class="frac"><span>LCs<sup>2</sup></span><span>LCs<sup>2</sup> + RCs + 1</span></span>
+  answer: 0
+  why: |-
+    Voltage divider with impedances: (1/sC)/(R + sL + 1/sC). Multiply through by sC. ω<sub>n</sub> = 1/√(LC) and ζ = (R/2)√(C/L).
+
+    <a class="rev" href="#/board?pair=s8&at=q21">Review this in the guide →</a>
+- id: cs-26
+  tags:
+    - circuits
+  kind: recognize
+  q: Inverting op-amp with Z\_in = R and Z\_f = C. What is the transfer function?
+  choices:
+    - "−1/(RCs): an integrator (pole at the origin)"
+    - "−RCs: a differentiator"
+    - −R/C
+    - "−1/(RCs + 1): a low-pass"
+  answer: 0
+  why: |-
+    V<sub>o</sub>/V<sub>i</sub> = −Z<sub>f</sub>/Z<sub>in</sub> = −(1/sC)/R. Swap R and C to get a differentiator, −RCs.
+
+    <a class="rev" href="#/board?pair=s8&at=q22">Review this in the guide →</a>
+- id: cs-27
+  tags:
+    - circuits
+  kind: recognize
+  q: An op-amp stage has Z\_in = R₁ and Z\_f = R₂ in series with C. What controller does it implement?
+  choices:
+    - "PI: −(R₂/R₁)(1 + 1/(R₂Cs))"
+    - PD
+    - Pure integrator
+    - Low-pass filter
+  answer: 0
+  why: |-
+    −(R₂ + 1/sC)/R₁ splits into a proportional part plus an integral part. Pole at 0 plus an LHP zero means PI.
+
+    <a class="rev" href="#/board?pair=s8&at=q22">Review this in the guide →</a>
+- id: cs-28
+  tags:
+    - first
+  kind: compute
+  q: A step response rises to 63% of its final value at t = 2 s with no overshoot. What is the time constant, and roughly when does it settle within 2%?
+  choices:
+    - T = 2 s; settles in about 8 s (4T)
+    - T = 2 s; settles in about 2 s
+    - T ≈ 3.2 s; settles in about 6 s
+    - T = 0.5 s; settles in about 2 s
+  answer: 0
+  why: |-
+    For K/(Ts+1), y(T) = 0.632K. The 2% settling time is about 4T (98.2%).
+
+    <a class="rev" href="#/board?pair=s9&at=q23">Review this in the guide →</a>
+- id: cs-29
+  tags:
+    - first
+  kind: compute
+  q: What is the unit step response of <span class="frac"><span>K</span><span>Ts + 1</span></span>?
+  choices:
+    - K(1 − e<sup>−t/T</sup>)
+    - (K/T)e<sup>−t/T</sup>
+    - K e<sup>−t/T</sup>
+    - K(1 − e<sup>−Tt</sup>)
+  answer: 0
+  why: |-
+    The final value is K = G(0). (K/T)e<sup>−t/T</sup> is the <i>impulse</i> response, and it's also the initial slope K/T.
+
+    <a class="rev" href="#/board?pair=s9&at=q23">Review this in the guide →</a>
+- id: cs-30
+  tags:
+    - first
+  kind: recognize
+  q: Can a first-order system K/(Ts + 1) overshoot its final value after a step?
+  choices:
+    - "No, never: one real pole gives a monotonic exponential"
+    - Yes, if K > 1
+    - Yes, if T is small
+    - Only with a negative K
+  answer: 0
+  why: |-
+    Overshoot needs complex poles (or a zero). If you see overshoot, the system is at least second order.
+
+    <a class="rev" href="#/board?pair=s9&at=q23">Review this in the guide →</a>
+- id: cs-31
+  tags:
+    - dominant
+  kind: recognize
+  q: A system has poles at −1 ± j1 and −20. Which poles dominate the response, and why?
+  choices:
+    - "−1 ± j1: they're closest to the jω axis, so their modes last longest"
+    - "−20: it's the largest"
+    - All three equally
+    - −20, because real poles always dominate complex ones
+  answer: 0
+  why: |-
+    e<sup>−20t</sup> is gone almost immediately. The pole ratio is 20, well above the \~5–10× rule, so a second-order approximation is good.
+
+    <a class="rev" href="#/board?pair=s10&at=q24">Review this in the guide →</a>
+- id: cs-32
+  tags:
+    - dominant
+  kind: compute
+  q: You approximate <span class="frac"><span>K</span><span>s(s + 2)(s + 30)</span></span> by dropping the pole at −30. What is the correct reduced model?
+  choices:
+    - <span class="frac"><span>K/30</span><span>s(s + 2)</span></span>
+    - <span class="frac"><span>K</span><span>s(s + 2)</span></span>
+    - <span class="frac"><span>30K</span><span>s(s + 2)</span></span>
+    - <span class="frac"><span>K</span><span>s + 2</span></span>
+  answer: 0
+  why: |-
+    At low frequency (s + 30) ≈ 30, so divide by 30 to keep the low-frequency gain. This is the Lecture Notes 2 example.
+
+    <a class="rev" href="#/board?pair=s13&at=q40">Review this in the guide →</a>
+- id: cs-33
+  tags:
+    - second
+  kind: recognize
+  q: For <span class="frac"><span>3</span><span>s<sup>2</sup> + 2s + 3</span></span>, what are ω<sub>n</sub> and ζ?
+  choices:
+    - ω<sub>n</sub> = √3 ≈ 1.73, ζ ≈ 0.577
+    - ω<sub>n</sub> = 3, ζ = 1/3
+    - ω<sub>n</sub> = √3, ζ = 1
+    - ω<sub>n</sub> = 2, ζ = 0.75
+  answer: 0
+  why: |-
+    Match s² + 2ζω<sub>n</sub>s + ω<sub>n</sub>²: ω<sub>n</sub>² = 3, so 2ζ√3 = 2 gives ζ = 1/√3. That predicts %OS ≈ 10.8% and T<sub>s</sub> ≈ 4/(ζω<sub>n</sub>) = 4 s.
+
+    <a class="rev" href="#/board?pair=s11&at=q25">Review this in the guide →</a>
+- id: cs-34
+  tags:
+    - second
+  kind: recognize
+  q: Two standard second-order systems have the same ζ = 0.5 but ω<sub>n</sub> = 1 and ω<sub>n</sub> = 5. How do their step responses compare?
+  choices:
+    - Same %OS (≈16%); the ω<sub>n</sub> = 5 one is 5× faster
+    - The ω<sub>n</sub> = 5 one overshoots more
+    - The ω<sub>n</sub> = 1 one overshoots more
+    - Identical in every way
+  answer: 0
+  why: |-
+    %OS depends on ζ only. ω<sub>n</sub> just rescales time.
+
+    <a class="rev" href="#/board?pair=s11&at=q26">Review this in the guide →</a>
+- id: cs-35
+  tags:
+    - second
+  kind: compute
+  q: A measured step response overshoots by about 16%. What is the damping ratio?
+  choices:
+    - ≈ 0.5
+    - ≈ 0.16
+    - ≈ 0.7
+    - ≈ 0.3
+  answer: 0
+  why: |-
+    ζ = −ln(OS)/√(π² + ln²OS) with OS = 0.16 gives ≈ 0.50. Anchors worth memorizing: ζ = 0.5 → 16%, 0.7 → \~5%, 0.3 → 37%.
+
+    <a class="rev" href="#/board?pair=s11&at=q26">Review this in the guide →</a>
+- id: cs-36
+  tags:
+    - second
+  kind: recognize
+  q: In the s-plane, what sets the settling time of an underdamped pair −σ ± jω<sub>d</sub>?
+  choices:
+    - "The real part σ = ζω<sub>n</sub>: T<sub>s</sub> ≈ 4/σ"
+    - The imaginary part ω<sub>d</sub>
+    - The angle θ alone
+    - The distance to the origin only
+  answer: 0
+  why: |-
+    The envelope is e<sup>−σt</sup>. ω<sub>d</sub> sets the ringing frequency and peak time (T<sub>p</sub> = π/ω<sub>d</sub>), and cos θ = ζ sets the overshoot.
+
+    <a class="rev" href="#/board?pair=s11&at=q25">Review this in the guide →</a>
+- id: cs-37
+  tags:
+    - second
+  kind: recognize
+  q: The boring machine with K = 20 has overdamped poles (ζ > 1), yet its reference step response still overshoots slightly. Why?
+  choices:
+    - The zero from the PD controller (K + 11s) adds overshoot; the %OS formula only holds for pure two-pole systems
+    - Numerical error
+    - Overdamped systems always overshoot a little
+    - The disturbance adds to it
+  answer: 0
+  why: |-
+    (11s + K)/(s² + 12s + K) has a zero at −K/11. A zero near the dominant poles boosts the early response, which causes the overshoot.
+
+    <a class="rev" href="#/board?pair=s11&at=q26">Review this in the guide →</a>
+- id: cs-38
+  tags:
+    - sse
+  kind: compute
+  q: You apply the final-value theorem and get e<sub>ss</sub> = 0.1, but the closed loop has a pole at +0.5. What is the actual steady-state error?
+  choices:
+    - "There is none: the loop is unstable, the error grows, and the FVT result is meaningless"
+    - "0.1"
+    - 0, because the unstable pole cancels the error
+    - 1/(1 + 0.5)
+  answer: 0
+  why: |-
+    Trap from the guide: the FVT only applies if sE(s) has all its poles in the LHP. Check stability first.
+
+    <a class="rev" href="#/board?pair=s12&at=q27">Review this in the guide →</a>
+- id: cs-39
+  tags:
+    - sse
+  kind: compute
+  q: Unity feedback, P control K<sub>p</sub> = 4, plant G(s) = <span class="frac"><span>1</span><span>(s + 1)(0.2s + 1)</span></span>, unit step. What is e<sub>ss</sub>?
+  choices:
+    - "0.2"
+    - "0.25"
+    - "0"
+    - "0.8"
+  answer: 0
+  why: |-
+    Type 0, so e<sub>ss</sub> = 1/(1 + K<sub>p</sub>G(0)) = 1/(1 + 4) = 0.2.
+
+    <a class="rev" href="#/board?pair=s12&at=q28">Review this in the guide →</a>
+- id: cs-40
+  tags:
+    - sse
+  kind: recognize
+  q: Why does adding integral action make the step steady-state error exactly zero (in a stable loop)?
+  choices:
+    - At steady state the integrator's output is constant, which is only possible if its input, the error, is zero
+    - Integral action is equivalent to infinite proportional gain at all frequencies
+    - It cancels the plant's slowest pole
+    - It makes the loop faster
+  answer: 0
+  why: |-
+    Equivalently, a pole at s = 0 in L makes L(0) = ∞, so 1/(1 + L(0)) = 0. A type-1 plant gets the same benefit from its own integrator.
+
+    <a class="rev" href="#/board?pair=s12&at=q28">Review this in the guide →</a>
+- id: cs-41
+  tags:
+    - sse
+  kind: compute
+  q: A type-1 loop (one integrator in L) is driven by a unit ramp. What is the steady-state error?
+  choices:
+    - "Finite: 1/K<sub>v</sub>, with K<sub>v</sub> = lim sL(s)"
+    - Zero
+    - Infinite
+    - 1/(1 + L(0))
+  answer: 0
+  why: |-
+    Type 0 → step error finite, ramp error ∞. Type 1 → step error 0, ramp error 1/K<sub>v</sub>. Type 2 → both 0.
+
+    <a class="rev" href="#/board?pair=s12&at=q28">Review this in the guide →</a>
+- id: cs-42
+  tags:
+    - fb
+  kind: recognize
+  q: With unity feedback and L = G<sub>c</sub>G, which expression is the tracking error from Lecture Notes 2?
+  choices:
+    - E = S·R − S·G·T<sub>d</sub> + C·N, with S = 1/(1+L) and C = L/(1+L)
+    - E = C·R + S·N
+    - E = S·R + S·T<sub>d</sub> − S·N
+    - E = L·R − T<sub>d</sub>
+  answer: 0
+  why: |-
+    Small S gives good tracking and disturbance rejection; small C gives good noise rejection. Here C is the complementary sensitivity, not the state-space C matrix.
+
+    <a class="rev" href="#/board?pair=s13&at=q34">Review this in the guide →</a>
+- id: cs-43
+  tags:
+    - fb
+  kind: recognize
+  q: Why can't you make both S and C small at the same frequency?
+  choices:
+    - S + C = 1 identically, so reducing one raises the other; separate them in frequency instead
+    - Because the plant is unstable
+    - Because sensors are too slow
+    - You can, with enough gain
+  answer: 0
+  why: |-
+    1/(1+L) + L/(1+L) = 1. Design L large at low frequency (references and disturbances) and small at high frequency (noise).
+
+    <a class="rev" href="#/board?pair=s13&at=q34">Review this in the guide →</a>
+- id: cs-44
+  tags:
+    - fb
+  kind: compute
+  q: The plant gain drifts by 10%. In open loop, how much does the overall transfer function change? With closed-loop gain G<sub>c</sub>G = 100?
+  choices:
+    - "Open loop: 10% (sensitivity = 1). Closed loop: about 0.1% (sensitivity 1/(1 + 100))"
+    - "Open loop: 0%. Closed loop: 10%"
+    - Both 10%
+    - "Open loop: 1%. Closed loop: 10%"
+  answer: 0
+  why: |-
+    S<sup>T</sup><sub>G</sub> = (∂T/T)/(∂G/G): equal to 1 for open loop and 1/(1 + G<sub>c</sub>G) for closed loop. It's the same idea as an op-amp's closed-loop gain being set by the resistors.
+
+    <a class="rev" href="#/board?pair=s13&at=q35">Review this in the guide →</a>
+- id: cs-45
+  tags:
+    - fb
+  kind: recognize
+  q: In the steel-mill speed control example, what does closing the loop with a tachometer do to the steady-state speed drop under a load-torque step?
+  choices:
+    - Shrinks it by roughly the loop gain, typically to under 2% of the open-loop drop
+    - Eliminates it exactly
+    - Makes it larger, because of sensor noise
+    - Has no effect; disturbances bypass the loop
+  answer: 0
+  why: |-
+    Open loop: D/(b + K<sub>m</sub>K<sub>b</sub>/R<sub>a</sub>). Closed loop: ≈ R<sub>a</sub>D/(K<sub>a</sub>K<sub>m</sub>K<sub>t</sub>). The ratio (R<sub>a</sub>b + K<sub>m</sub>K<sub>b</sub>)/(K<sub>a</sub>K<sub>m</sub>K<sub>t</sub>) is usually < 0.02. It's not zero, because there's no integrator.
+
+    <a class="rev" href="#/board?pair=s13&at=q36">Review this in the guide →</a>
+- id: cs-46
+  tags:
+    - fb
+  kind: recognize
+  q: With very large loop gain, what happens to sensor noise N at the output?
+  choices:
+    - "Y ≈ −N: the loop trusts the sensor and faithfully follows the noise"
+    - It is completely rejected
+    - It is amplified by L
+    - It only affects the error, not the output
+  answer: 0
+  why: |-
+    Y = −C·N and C → 1 when L is large. Attenuating noise needs small loop gain at the noise frequencies.
+
+    <a class="rev" href="#/board?pair=s13&at=q36">Review this in the guide →</a>
+- id: cs-47
+  tags:
+    - fb
+  kind: recognize
+  q: An open-loop motor speed response is K₁/(τ₁s + 1) with τ₁ = 10 s. Closing the loop with total loop gain K<sub>a</sub>K<sub>t</sub>K₁ = 19 gives what closed-loop time constant?
+  choices:
+    - 0.5 s
+    - 10 s
+    - 190 s
+    - 1.9 s
+  answer: 0
+  why: |-
+    The closed-loop pole moves to −(1 + 19)/τ₁, so τ = 10/20 = 0.5 s. That's 20× faster with no change to the motor. The cost is bigger actuator effort.
+
+    <a class="rev" href="#/board?pair=s13&at=q37">Review this in the guide →</a>
+- id: cs-48
+  tags:
+    - fb
+  kind: recognize
+  q: 'Boring machine: Y = <span class="frac"><span>K + 11s</span><span>s<sup>2</sup> + 12s + K</span></span>R + <span class="frac"><span>1</span><span>s<sup>2</sup> + 12s + K</span></span>T<sub>d</sub>. Steady-state output for a unit step disturbance at K = 100 and at K = 20?'
+  choices:
+    - 0.01 and 0.05 (= 1/K)
+    - 0 and 0
+    - 0.05 and 0.01
+    - 1 and 1
+  answer: 0
+  why: |-
+    FVT on 1/(s² + 12s + K) gives 1/K. The reference step error is 0 for any K because the plant has an integrator.
+
+    <a class="rev" href="#/board?pair=s13&at=q38">Review this in the guide →</a>
+- id: cs-49
+  tags:
+    - fb
+  kind: recognize
+  q: In the boring machine, what does raising K trade off?
+  choices:
+    - Better disturbance rejection (1/K) and speed (ω<sub>n</sub> = √K), but less damping (ζ = 6/√K) and more actuator effort
+    - Less steady-state reference error at the cost of speed
+    - Nothing; larger K is strictly better
+    - Better damping at the cost of disturbance rejection
+  answer: 0
+  why: |-
+    s² + 12s + K gives ω<sub>n</sub> = √K and 2ζω<sub>n</sub> = 12, so ζ = 6/√K. Choosing K means choosing where to sit on that trade-off.
+
+    <a class="rev" href="#/board?pair=s13&at=q38">Review this in the guide →</a>
+- id: cs-50
+  tags:
+    - fb
+  kind: recognize
+  q: Why would you pick ITAE (∫t|e|dt) over ISE (∫e²dt) as a performance index?
+  choices:
+    - ITAE weights error by time, so it punishes errors that linger late (long ringing) and favors well-damped responses
+    - ITAE punishes large early errors the most
+    - ITAE is the only index that can be minimized
+    - ISE can't be computed for step inputs
+  answer: 0
+  why: |-
+    For the standard second-order step, ISE is minimized near ζ = 0.5 and ITAE near ζ ≈ 0.7. Space telescope slide: min ISE at K₃ = 3.2 (ζ = 0.5), min IAE at K₃ = 4.2 (ζ = 0.665).
+
+    <a class="rev" href="#/board?pair=s13&at=q39">Review this in the guide →</a>
+- id: cs-51
+  tags:
+    - fb
+  kind: recognize
+  q: When simplifying a high-order model to a lower-order one (Lecture Notes 2), what must you preserve?
+  choices:
+    - The DC gain (steady-state response) and the dominant (slow) dynamics
+    - The exact number of zeros
+    - The fastest pole
+    - The high-frequency gain
+  answer: 0
+  why: |-
+    Example: 6/((s+1)(s+2)(s+3)) → 1.6/(s² + 2.59s + 1.6). Both have DC gain 1 and nearly identical step responses.
+
+    <a class="rev" href="#/board?pair=s13&at=q40">Review this in the guide →</a>
+- id: cs-52
+  tags:
+    - fb
+  kind: recognize
+  q: Which is a genuine cost of closing the loop compared with open loop?
+  choices:
+    - Sensor noise enters the loop, a sensor is needed, and the loop can become unstable
+    - The system becomes more sensitive to plant changes
+    - Disturbances have a larger effect
+    - Steady-state error always increases
+  answer: 0
+  why: |-
+    Feedback reduces sensitivity, disturbance effects, and error. The costs are hardware, noise, and the possibility of instability.
+
+    <a class="rev" href="#/board?pair=s13&at=q33">Review this in the guide →</a>
+- id: mini-1
+  tags:
+    - mini-exam
+    - tf
+  kind: recognize
+  q: Which statement best defines a transfer function G(s)?
+  choices:
+    - "Y(s)/U(s): ratio of Laplace transforms of output to input for an LTI system, with all initial conditions zero"
+    - Y(s)/U(s) for any system, linear or nonlinear, with initial conditions included
+    - The time-domain ratio y(t)/u(t) for an LTI system
+    - Y(s)/U(s) for an LTI system, with initial-condition terms kept in the numerator
+  answer: 0
+  why: A TF exists only for linear time-invariant systems and is defined with zero initial conditions — IC terms depend on the past, not on the system itself.
+- id: mini-2
+  tags:
+    - mini-exam
+    - order
+  kind: compute
+  q: A passive circuit contains 3 resistors, 2 inductors, and 1 capacitor (all independent). What is the order of its transfer function?
+  choices:
+    - "6"
+    - "2"
+    - "3"
+    - "1"
+  answer: 2
+  why: Order = number of independent energy-storage elements (L's and C's) = number of poles. Resistors store no energy, so 2 + 1 = 3.
+- id: mini-3
+  tags:
+    - mini-exam
+    - order
+  kind: compute
+  q: What is the order of G(s) = <span class="frac"><span>s + 5</span><span>s<sup>3</sup> + 2s<sup>2</sup> + 4s + 1</span></span>?
+  choices:
+    - 1st order
+    - 3rd order
+    - 4th order
+    - 2nd order
+  answer: 1
+  why: Order is the degree of the denominator (number of poles), not the numerator. The denominator is cubic → 3rd order.
+- id: mini-4
+  tags:
+    - mini-exam
+    - blocks
+  kind: compute
+  q: G<sub>1</sub>(s) = 2 and G<sub>2</sub>(s) = <span class="frac"><span>3</span><span>s + 1</span></span> are in cascade inside a unity negative-feedback loop. Find C(s)/R(s).
+  choices:
+    - <span class="frac"><span>6</span><span>s + 6</span></span>
+    - <span class="frac"><span>6</span><span>s + 7</span></span>
+    - <span class="frac"><span>6</span><span>s − 5</span></span>
+    - <span class="frac"><span>6(s + 1)</span><span>s + 7</span></span>
+  answer: 1
+  why: 'Cascade multiplies: G = G<sub>1</sub>G<sub>2</sub> = <span class="frac"><span>6</span><span>s + 1</span></span>. Unity negative feedback: <span class="frac"><span>G</span><span>1 + G</span></span> = <span class="frac"><span>6</span><span>s + 1 + 6</span></span> = <span class="frac"><span>6</span><span>s + 7</span></span>.'
+- id: mini-5
+  tags:
+    - mini-exam
+    - blocks
+  kind: compute
+  q: |-
+    <div class="qfig"><svg class="diagram" viewBox="0 0 360 118" role="img" aria-label="Block diagram: R to summing junction, G1, disturbance D added, G2, output C, feedback H"> <defs><marker id="ah-x5" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="currentColor"/></marker></defs> <g stroke="currentColor" fill="none" stroke-width="1.5"> <line x1="22" y1="40" x2="44" y2="40" marker-end="url(#ah-x5)"/> <circle cx="55" cy="40" r="10"/> <line x1="65" y1="40" x2="88" y2="40" marker-end="url(#ah-x5)"/> <rect x="88" y="26" width="46" height="28" rx="4"/> <line x1="134" y1="40" x2="157" y2="40" marker-end="url(#ah-x5)"/> <circle cx="168" cy="40" r="10"/> <line x1="168" y1="6" x2="168" y2="29" marker-end="url(#ah-x5)"/> <line x1="178" y1="40" x2="200" y2="40" marker-end="url(#ah-x5)"/> <rect x="200" y="26" width="46" height="28" rx="4"/> <line x1="246" y1="40" x2="318" y2="40" marker-end="url(#ah-x5)"/> <polyline points="290,40 290,95 237,95" marker-end="url(#ah-x5)"/> <rect x="190" y="81" width="46" height="28" rx="4"/> <polyline points="190,95 55,95 55,51" marker-end="url(#ah-x5)"/> </g> <g fill="currentColor" font-size="14" font-family="Georgia,serif" text-anchor="middle"> <text x="11" y="45">R</text><text x="111" y="45">G₁</text><text x="223" y="45">G₂</text> <text x="213" y="100">H</text><text x="332" y="45">C</text><text x="182" y="14">D</text> <text x="38" y="33" font-size="12">+</text><text x="66" y="63" font-size="13">−</text><text x="155" y="30" font-size="12">+</text> </g></svg></div>
+    In the block diagram above, set R = 0. What is C(s)/D(s)?
+  choices:
+    - <span class="frac"><span>G₂</span><span>1 + G₁G₂H</span></span>
+    - <span class="frac"><span>G₁G₂</span><span>1 + G₁G₂H</span></span>
+    - <span class="frac"><span>G₂</span><span>1 + G₂H</span></span>
+    - <span class="frac"><span>G₂</span><span>1 − G₁G₂H</span></span>
+  answer: 0
+  why: From D to C the forward path is only G₂, while the loop gain is still G₁G₂H. By superposition the total output is C = (C/R)·R + (C/D)·D.
+- id: mini-6
+  tags:
+    - mini-exam
+    - blocks
+  kind: recognize
+  q: |-
+    <div class="qfig"><svg class="diagram" viewBox="0 0 360 118" role="img" aria-label="Block diagram: R to summing junction, G1, disturbance D added, G2, output C, feedback H"> <defs><marker id="ah-x6" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="currentColor"/></marker></defs> <g stroke="currentColor" fill="none" stroke-width="1.5"> <line x1="22" y1="40" x2="44" y2="40" marker-end="url(#ah-x6)"/> <circle cx="55" cy="40" r="10"/> <line x1="65" y1="40" x2="88" y2="40" marker-end="url(#ah-x6)"/> <rect x="88" y="26" width="46" height="28" rx="4"/> <line x1="134" y1="40" x2="157" y2="40" marker-end="url(#ah-x6)"/> <circle cx="168" cy="40" r="10"/> <line x1="168" y1="6" x2="168" y2="29" marker-end="url(#ah-x6)"/> <line x1="178" y1="40" x2="200" y2="40" marker-end="url(#ah-x6)"/> <rect x="200" y="26" width="46" height="28" rx="4"/> <line x1="246" y1="40" x2="318" y2="40" marker-end="url(#ah-x6)"/> <polyline points="290,40 290,95 237,95" marker-end="url(#ah-x6)"/> <rect x="190" y="81" width="46" height="28" rx="4"/> <polyline points="190,95 55,95 55,51" marker-end="url(#ah-x6)"/> </g> <g fill="currentColor" font-size="14" font-family="Georgia,serif" text-anchor="middle"> <text x="11" y="45">R</text><text x="111" y="45">G₁</text><text x="223" y="45">G₂</text> <text x="213" y="100">H</text><text x="332" y="45">C</text><text x="182" y="14">D</text> <text x="38" y="33" font-size="12">+</text><text x="66" y="63" font-size="13">−</text><text x="155" y="30" font-size="12">+</text> </g></svg></div>
+    For the same system, how do the characteristic equations of C/R and C/D compare?
+  choices:
+    - C/R uses 1 + G₁G₂H = 0, but C/D uses 1 + G₂H = 0
+    - C/D has an extra pole because D is a second input
+    - They can't be compared — superposition doesn't apply with two inputs
+    - Both are 1 + G₁G₂H = 0; the disturbance changes the numerator, not the poles
+  answer: 3
+  why: "Both TFs share the same loop, so they share the denominator 1 + G₁G₂H. Only the numerators (forward paths: G₁G₂ vs G₂) differ."
+- id: mini-7
+  tags:
+    - mini-exam
+    - ctrl
+  kind: recognize
+  q: Which is the standard (K<sub>p</sub>, T<sub>i</sub>, T<sub>d</sub>) form of the PID controller transfer function?
+  choices:
+    - K<sub>p</sub>(1 + T<sub>i</sub>s + <span class="frac"><span>1</span><span>T<sub>d</sub>s</span></span>)
+    - K<sub>p</sub>(1 + <span class="frac"><span>1</span><span>T<sub>i</sub>s</span></span> + T<sub>d</sub>s)
+    - K<sub>p</sub><span class="frac"><span>T<sub>d</sub>s</span><span>T<sub>i</sub>s + 1</span></span>
+    - <span class="frac"><span>K<sub>p</sub></span><span>1 + T<sub>i</sub>s + T<sub>d</sub>s</span></span>
+  answer: 1
+  why: "Integral term 1/(T<sub>i</sub>s) (pole at the origin) plus derivative T<sub>d</sub>s, all multiplied by K<sub>p</sub>. Drop the T<sub>d</sub> term for PI; drop the T<sub>i</sub> term for PD: K<sub>p</sub>(1 + T<sub>d</sub>s)."
+- id: mini-8
+  tags:
+    - mini-exam
+    - ctrl
+  kind: recognize
+  q: A controller has G<sub>c</sub>(s) = <span class="frac"><span>K<sub>p</sub>(T<sub>i</sub>s + 1)</span><span>T<sub>i</sub>s</span></span>. Which controller is it?
+  choices:
+    - PD
+    - PID
+    - PI
+    - Pure I
+  answer: 2
+  why: 'Split it: K<sub>p</sub>(1 + <span class="frac"><span>1</span><span>T<sub>i</sub>s</span></span>) → proportional + integral. One pole at the origin and one zero; a PD would be K<sub>p</sub>(1 + T<sub>d</sub>s) with no pole.'
+- id: mini-9
+  tags:
+    - mini-exam
+    - ss
+  kind: compute
+  q: A 3rd-order SISO system is written as ẋ = Ax + Bu, y = Cx + Du. How many states are there, and what are the sizes of B and C?
+  choices:
+    - 3 states; B is 1×3, C is 3×1
+    - 3 states; B is 3×1, C is 1×3
+    - 1 state; B and C are 3×3
+    - 3 states; B and C are both 3×3
+  answer: 1
+  why: "# states = order = n = 3. B is n × (#inputs) = 3×1 (column), C is (#outputs) × n = 1×3 (row), and D is 1×1."
+- id: mini-10
+  tags:
+    - mini-exam
+    - ss
+  kind: recognize
+  q: A MIMO system has 4 states, 2 inputs, and 3 outputs. What are the dimensions of B, C, and D?
+  choices:
+    - "B: 4×2, C: 3×4, D: 3×2"
+    - "B: 2×4, C: 4×3, D: 2×3"
+    - "B: 4×3, C: 2×4, D: 3×2"
+    - "B: 4×2, C: 3×4, D: 2×3"
+  answer: 0
+  why: "B is states×inputs, C is outputs×states, D is outputs×inputs. Check: y(3×1) = C(3×4)·x(4×1) + D(3×2)·u(2×1)."
+- id: mini-11
+  tags:
+    - mini-exam
+    - ss2tf
+  kind: compute
+  q: In G(s) = C(sI − A)<sup>−1</sup>B + D, what is (sI − A)<sup>−1</sup>?
+  choices:
+    - The controllability matrix of the system
+    - The characteristic polynomial of A
+    - The state transition matrix Φ(s) (s-domain); its inverse Laplace transform is e<sup>At</sup>
+    - The output matrix that maps the states to y
+  answer: 2
+  why: Φ(s) = (sI − A)⁻¹ is the state transition matrix in the s-domain. Its denominator det(sI − A) is the characteristic polynomial, so the poles are the eigenvalues of A.
+- id: mini-12
+  tags:
+    - mini-exam
+    - ss2tf
+  kind: compute
+  q: Find G(s) = Y(s)/U(s) for A = <span class="mat"><table><tr><td>0</td><td>1</td></tr><tr><td>−2</td><td>−3</td></tr></table></span>, B = <span class="mat"><table><tr><td>0</td></tr><tr><td>1</td></tr></table></span>, C = <span class="mat"><table><tr><td>1</td><td>0</td></tr></table></span>, D = 0.
+  choices:
+    - <span class="frac"><span>1</span><span>s² + 3s + 2</span></span>
+    - <span class="frac"><span>s + 3</span><span>s² + 3s + 2</span></span>
+    - <span class="frac"><span>s</span><span>s² + 3s + 2</span></span>
+    - <span class="frac"><span>1</span><span>s² − 3s − 2</span></span>
+  answer: 0
+  why: sI − A = <span class="mat"><table><tr><td>s</td><td>−1</td></tr><tr><td>2</td><td>s + 3</td></tr></table></span>, det = s² + 3s + 2. (sI − A)⁻¹B is the 2nd column \[1, s\]ᵀ/det, and C = \[1 0\] keeps the first entry → 1/(s² + 3s + 2).
+- id: mini-13
+  tags:
+    - mini-exam
+    - circuits
+  kind: recognize
+  q: A source v<sub>i</sub> drives a series R–L circuit. Taking the output as the inductor voltage, V<sub>L</sub>(s)/V<sub>i</sub>(s) = ?
+  choices:
+    - <span class="frac"><span>R</span><span>R + Ls</span></span>
+    - <span class="frac"><span>Ls</span><span>R + Ls</span></span>
+    - <span class="frac"><span>Ls</span><span>R</span></span>
+    - <span class="frac"><span>1</span><span>Ls + R</span></span>
+  answer: 1
+  why: "Impedance divider: Z\\_L/(Z\\_R + Z\\_L) = Ls/(R + Ls). Note 1/(R + Ls) is I(s)/V(s), and R/(R + Ls) is the resistor voltage."
+- id: mini-14
+  tags:
+    - mini-exam
+    - circuits
+  kind: recognize
+  q: A series RLC circuit is driven by v<sub>i</sub>; the output is the capacitor voltage. Using KVL in the Laplace domain (zero ICs), V<sub>C</sub>/V<sub>i</sub> = ?
+  choices:
+    - <span class="frac"><span>LCs²</span><span>LCs² + RCs + 1</span></span>
+    - <span class="frac"><span>RCs</span><span>LCs² + RCs + 1</span></span>
+    - <span class="frac"><span>1</span><span>LCs² + Rs + 1</span></span>
+    - <span class="frac"><span>1</span><span>LCs² + RCs + 1</span></span>
+  answer: 3
+  why: 'Divider: <span class="frac"><span>1/Cs</span><span>R + Ls + 1/Cs</span></span>; multiply top and bottom by Cs → 1/(LCs² + RCs + 1). The LCs² and RCs numerators would be the inductor and resistor voltages.'
+- id: mini-15
+  tags:
+    - mini-exam
+    - circuits
+  kind: recognize
+  q: An inverting op-amp has resistor R at the input and capacitor C in the feedback path. V<sub>o</sub>/V<sub>i</sub> = ?
+  choices:
+    - −sRC
+    - <span class="frac"><span>−1</span><span>sRC</span></span>
+    - <span class="frac"><span>1</span><span>sRC</span></span>
+    - <span class="frac"><span>−RC</span><span>s</span></span>
+  answer: 1
+  why: "Inverting gain = −Z₂/Z₁ = −(1/sC)/R = −1/(sRC): an integrator (pole at the origin). Don't drop the minus sign."
+- id: mini-16
+  tags:
+    - mini-exam
+    - circuits
+  kind: recognize
+  q: "Swap the elements: capacitor C at the input, resistor R in the feedback path. What is V<sub>o</sub>/V<sub>i</sub>, and how does it behave?"
+  choices:
+    - −sRC; gain → 0 as s → 0 and grows at high frequency (high-pass behavior)
+    - −1/(sRC); low-pass behavior
+    - −sRC; low-pass behavior, since its gain is largest at DC
+    - sRC; all-pass, the gain is constant
+  answer: 0
+  why: "−Z₂/Z₁ = −R/(1/sC) = −sRC: a differentiator. s → 0 gives 0 (blocks DC) and s → ∞ gives large gain, so it acts like a high-pass."
+- id: mini-17
+  tags:
+    - mini-exam
+    - circuits
+  kind: recognize
+  q: An inverting op-amp has Z₁ = R₁ and Z₂ = R₂ ∥ C, giving V<sub>o</sub>/V<sub>i</sub> = −<span class="frac"><span>R₂/R₁</span><span>R₂Cs + 1</span></span>. What type of filter is this?
+  choices:
+    - High-pass
+    - Band-pass
+    - Low-pass
+    - Pure integrator (unbounded DC gain)
+  answer: 2
+  why: "Check the limits: s → 0 gives −R₂/R₁ (DC passes); s → ∞ gives 0 (high frequencies blocked). Passes low, blocks high → low-pass (a 'lossy' integrator)."
+- id: mini-18
+  tags:
+    - mini-exam
+    - first
+  kind: compute
+  q: A unit step is applied to G(s) = <span class="frac"><span>4</span><span>2s + 1</span></span>. What is y(t) at t = 2 s?
+  choices:
+    - ≈ 1.47
+    - ≈ 2.00
+    - ≈ 2.53
+    - "4.00"
+  answer: 2
+  why: K/(Ts + 1) with K = 4, T = 2 s, so y(t) = 4(1 − e^(−t/2)). At t = T, y = 0.632 × 4 ≈ 2.53 (63.2% of the final value); 1.47 is the 36.8% still remaining.
+- id: mini-19
+  tags:
+    - mini-exam
+    - first
+  kind: recognize
+  q: For G(s) = <span class="frac"><span>10</span><span>s + 5</span></span>, what are the time constant T and the DC gain?
+  choices:
+    - T = 5 s, gain = 10
+    - T = 0.2 s, gain = 10
+    - T = 5 s, gain = 2
+    - T = 0.2 s, gain = 2
+  answer: 3
+  why: 'Rewrite in K/(Ts + 1) form: <span class="frac"><span>10</span><span>s + 5</span></span> = <span class="frac"><span>2</span><span>0.2s + 1</span></span>. So K = G(0) = 2 and T = 1/5 = 0.2 s (pole at s = −5).'
+- id: mini-20
+  tags:
+    - mini-exam
+    - first
+  kind: compute
+  q: What is the unit-impulse response of G(s) = <span class="frac"><span>1</span><span>Ts + 1</span></span>?
+  choices:
+    - 1 − e<sup>−t/T</sup>
+    - (1/T) e<sup>−t/T</sup>
+    - e<sup>−t/T</sup>
+    - T e<sup>−t/T</sup>
+  answer: 1
+  why: Impulse ⇒ U(s) = 1, so Y(s) = <span class="frac"><span>1/T</span><span>s + 1/T</span></span> → (1/T)e^(−t/T). 1 − e^(−t/T) is the step response; the impulse response is its derivative.
+- id: mini-21
+  tags:
+    - mini-exam
+    - tf
+  kind: recognize
+  q: Convert <span class="frac"><span>Y(s)</span><span>U(s)</span></span> = <span class="frac"><span>2s + 3</span><span>s² + 5s + 6</span></span> to a differential equation (zero ICs).
+  choices:
+    - 2y′ + 3y = u″ + 5u′ + 6u
+    - y″ + 5y′ + 6y = 2u′ + 3u
+    - y″ + 5y′ + 6y = 2u + 3u′
+    - y″ + 5y′ + 6y = 5u
+  answer: 1
+  why: "Cross-multiply: (s² + 5s + 6)Y = (2s + 3)U, then replace each sⁿ with dⁿ/dtⁿ. Denominator → output side, numerator → input side."
+- id: mini-22
+  tags:
+    - mini-exam
+    - dominant
+  kind: recognize
+  q: A system has poles at s = −2 and s = −40. Which pole dominates the response, and why?
+  choices:
+    - s = −40, because it has the larger magnitude
+    - s = −2, because it is closest to the jω-axis, so its e<sup>−2t</sup> term decays slowest
+    - Both equally — every pole contributes the same
+    - Neither; only the zeros determine the transient
+  answer: 1
+  why: "e^(−40t) dies out \\~20× faster, so the pole nearest the imaginary axis dominates; the system behaves roughly first-order with T = 0.5 s (rule of thumb: other poles ≳5× farther left)."

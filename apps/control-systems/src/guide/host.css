@@ -1,0 +1,9 @@
+/* Host chrome for the legacy guide board (the guide's own top bar / TOC / theme switch were dropped). */
+.legacy-board.guide-host{min-height:60vh;padding:0 .2rem}
+.legacy-board .gbar{position:sticky;top:0;z-index:30;display:flex;gap:.45rem;align-items:center;flex-wrap:wrap;padding:.45rem .6rem;background:color-mix(in srgb,var(--bg) 92%,transparent);backdrop-filter:blur(8px);border-bottom:1px solid var(--border);font:600 .8rem system-ui,sans-serif}
+.legacy-board .gbar select,.legacy-board .gbar button{border:1px solid var(--border);background:var(--panel);color:var(--text);border-radius:9px;padding:.32rem .6rem;font:600 .78rem system-ui,sans-serif;cursor:pointer;max-width:100%}
+.legacy-board .gbar select{flex:1 1 14rem;min-width:0}
+.legacy-board .gbar .gnote{color:var(--muted);font-weight:500;flex:1 1 100%}
+.legacy-board .gh-hide{display:none!important}
+.legacy-board .layout.tochide{display:block;padding:0 .8rem}
+.legacy-board main{margin:0 auto}

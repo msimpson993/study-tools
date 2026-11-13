@@ -1,0 +1,40 @@
+id: control-systems
+title: Control systems (EECE5130)
+centralQuestion: How do we make a system we only know approximately do what we command, quickly, smoothly and despite disturbances and noise, and how can we predict that from its poles before we build it?
+blurb: A question-chain map of the course (Laplace and poles, the s-plane, transfer functions, block diagrams, state space, time response, steady-state error, feedback) over one running example, a 1 kg cart. Opens the full interactive guide, the 68-question course quiz and the mini-exam quiz.
+archetype: guide
+categories:
+  - { id: describe, label: Describe the plant }
+  - { id: loop, label: Close the loop }
+  - { id: state, label: State space }
+  - { id: time, label: Time response }
+sections:
+  - { id: map, title: The question map, kind: map }
+  - { id: board, title: Interactive course guide, kind: board }
+  - { id: quiz, title: Quiz & flashcards, kind: quiz }
+  - { id: glossary, title: Variables & terms, kind: glossary }
+board:
+  pairs: [overview, s1, splane, sp1, sp-meaning, sp2, sp3, sp4, sp5, sp6, sp7, sp8, s2, s3, s4, s5, s6, s7, s8, s9, s10, s11, s12, s13, cheatsec, glossary]
+runningExample:
+  title: A 1 kg cart on a spring and a damper
+  summary: "A 1 kg cart on a spring (k = 2 N/m) and a damper (c = 3 N·s/m). You push it with a force u(t) and a sensor reads its position y(t). One equation, ẍ + 3ẋ + 2x = u, gives G(s) = 1/(s² + 3s + 2) with poles at −1 and −2 and DC gain 0.5. The same cart is the plant of the linear-systems map and of the PID tuning map."
+  details: |
+    | piece | in the cart | numbers |
+    |---|---|---|
+    | plant | force → position | G(s) = 1/((s + 1)(s + 2)) |
+    | poles | two real, left half-plane | −1 and −2 (time constants 1 s and 0.5 s) |
+    | DC gain | 1 N moves it 0.5 m at rest | G(0) = 0.5 |
+    | damping | ζ = c / (2√(km)) | ζ ≈ 1.06 (slightly overdamped), ωₙ = √2 rad/s |
+    | proportional loop | u = K(r − y) | closed loop s² + 3s + (2 + K) |
+    | K = 7 | ωₙ = 3, ζ = 0.5 | %OS ≈ 16 %, steady-state error 2/9 ≈ 22 % |
+
+    Every box of the map says what its idea **adds to this cart** and what it lets us **account for**.
+hub:
+  order: 3
+# Porting guard: 2 maps (course chain + s-plane sub-chain), 26 boxes, 25 lines, the 68-question course quiz + the 22-question mini-exam
+expect:
+  maps: 2
+  nodes: 26
+  edges: 25
+  dives: 0
+  quiz: 90

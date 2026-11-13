@@ -1,0 +1,195 @@
+- term: s
+  meaning: Laplace variable (1/s). <i>s</i> ↔ d/dt, 1/<i>s</i> ↔ ∫dt (zero ICs). <i>s</i> = σ + <i>j</i>ω.
+  section: Math
+- term: t
+  meaning: Time (s).
+  section: Math
+- term: σ, ω
+  meaning: Real part (decay rate) and imaginary part (oscillation frequency, rad/s) of a pole / point in the s-plane.
+  section: Math
+- term: p, z
+  meaning: Pole (root of denominator → mode <i>e</i><sup><i>pt</i></sup>) and zero (root of numerator).
+  section: Transfer functions & loop
+- term: u, U(s)
+  meaning: Plant input / actuator command (e.g. voltage <i>e</i><sub>i</sub>, throttle).
+  section: Signals
+- term: y, Y(s)
+  meaning: Output. Class notes often call the output <i>C</i>(<i>s</i>) in <i>C</i>/<i>R</i>, which is <b>not</b> the C matrix or complementary sensitivity.
+  section: Signals
+- term: R(s)
+  meaning: Reference / desired input (set-point).
+  section: Signals
+- term: E(s)
+  meaning: Error = <i>R</i> − <i>Y</i> (unity feedback). Input to the controller.
+  section: Signals
+- term: T_d(s), D
+  meaning: Disturbance input (load torque, cutter force). <i>D</i>/<i>s</i> = step of size <i>D</i>. Not the derivative time <i>T</i><sub>d</sub>.
+  section: Signals
+- term: N(s)
+  meaning: Sensor / measurement noise, added at the sensor.
+  section: Signals
+- term: G(s)
+  meaning: Plant (process) transfer function. <i>G</i>(0) = DC gain.
+  section: Transfer functions & loop
+- term: G_c(s)
+  meaning: Controller transfer function (P, PI, PD, PID…).
+  section: Transfer functions & loop
+- term: H(s)
+  meaning: Sensor / feedback-path transfer function (= 1 for unity feedback).
+  section: Transfer functions & loop
+- term: L(s)
+  meaning: Loop gain <i>G</i><sub>c</sub><i>G</i>(<i>H</i>). Large |<i>L</i>| ⇒ small <i>S</i>.
+  section: Transfer functions & loop
+- term: T(s)
+  meaning: Closed-loop transfer function <i>Y</i>/<i>R</i> = <i>L</i>/(1+<i>L</i>) for unity feedback. (In Stage 9, <i>T</i> is the time constant.)
+  section: Transfer functions & loop
+- term: K
+  meaning: "A gain. First order: DC gain of <i>K</i>/(<i>Ts</i>+1). Boring machine: controller gain in <i>K</i> + 11<i>s</i>."
+  section: Transfer functions & loop
+- term: n, m
+  meaning: "Denominator degree (= order, # states) and numerator degree. Strictly proper: <i>m</i> &lt; <i>n</i>."
+  section: Transfer functions & loop
+- term: Type
+  meaning: Number of integrators (poles at 0) in <i>L</i>. Type 1 ⇒ zero step error.
+  section: Transfer functions & loop
+- term: x, ẋ
+  meaning: State vector (<i>n</i>×1) and its time derivative. One state per energy store.
+  section: State space
+- term: A
+  meaning: "<i>n</i>×<i>n</i> system matrix: how states drive each other. Eigenvalues = poles."
+  section: State space
+- term: B
+  meaning: "<i>n</i>×<i>m</i> input matrix: where the input pushes (column for SISO)."
+  section: State space
+- term: C (matrix)
+  meaning: "<i>p</i>×<i>n</i> output matrix: which state combination is measured (row for SISO). Not the complementary sensitivity <i>C</i>(<i>s</i>)."
+  section: State space
+- term: D (matrix)
+  meaning: "<i>p</i>×<i>m</i> feedthrough: input straight to output (usually 0)."
+  section: State space
+- term: I
+  meaning: "Identity matrix; needed so <i>s</i> can be subtracted from <i>A</i>: (<i>sI</i> − <i>A</i>)."
+  section: State space
+- term: (sI−A)^−1
+  meaning: Resolvent. Denominator det(<i>sI</i>−<i>A</i>) = characteristic polynomial.
+  section: State space
+- term: x₁, x₂
+  meaning: "Phase variables: <i>x</i>₁ = <i>y</i>, <i>x</i>₂ = <i>ẏ</i> (LRC: <i>e</i><sub>o</sub>, <i>ė</i><sub>o</sub>)."
+  section: State space
+- term: aᵢ, bᵢ
+  meaning: Denominator / numerator coefficients. Bottom row of companion <i>A</i> = −<i>a</i>₀, −<i>a</i>₁, …
+  section: State space
+- term: R, L, C
+  meaning: Resistance (Ω), inductance (H), capacitance (F). Impedances <i>R</i>, <i>sL</i>, 1/(<i>sC</i>). (Here <i>L</i> is not loop gain.)
+  section: Physical / circuit
+- term: eᵢ, e_o
+  meaning: Input / output voltage of the LRC example (slide 40).
+  section: Physical / circuit
+- term: m, b, k
+  meaning: "Mass, damping, spring constant. Analog: <i>m</i>↔<i>L</i>, <i>b</i>↔<i>R</i>, <i>k</i>↔1/<i>C</i>."
+  section: Physical / circuit
+- term: Zᵢₙ, Z_f
+  meaning: Op-amp input and feedback impedances; gain −<i>Z</i><sub>f</sub>/<i>Z</i><sub>in</sub>.
+  section: Physical / circuit
+- term: Kₚ
+  meaning: Proportional gain. (In the SSE table, <i>K</i><sub>p</sub> = <i>L</i>(0) is the position constant.)
+  section: Controller
+- term: Kᵢ
+  meaning: Integral gain = <i>K</i><sub>p</sub>/<i>T</i><sub>i</sub>.
+  section: Controller
+- term: K_d
+  meaning: Derivative gain = <i>K</i><sub>p</sub><i>T</i><sub>d</sub>.
+  section: Controller
+- term: Tᵢ, T_d
+  meaning: Integral time and derivative time (standard form). Bigger <i>T</i><sub>i</sub> = weaker I. This <i>T</i><sub>d</sub> is not the disturbance.
+  section: Controller
+- term: T (τ)
+  meaning: "Time constant (s) of <i>K</i>/(<i>Ts</i>+1): 63.2% at <i>t</i> = <i>T</i>."
+  section: Time response
+- term: ζ
+  meaning: Damping ratio. Sets %OS. cos θ = ζ.
+  section: Time response
+- term: ωₙ
+  meaning: "Natural frequency (rad/s): distance of the poles from the origin; sets the speed."
+  section: Time response
+- term: ω_d
+  meaning: "Damped frequency ω<sub>n</sub>√(1−ζ²): imaginary part of the poles."
+  section: Time response
+- term: "%OS"
+  meaning: Percent overshoot = 100·<i>e</i><sup>−ζπ/√(1−ζ²)</sup>.
+  section: Time response
+- term: T_s
+  meaning: Settling time (2%) ≈ 4/(ζω<sub>n</sub>), or ≈ 4<i>T</i> for first order.
+  section: Time response
+- term: Tₚ
+  meaning: Peak time π/ω<sub>d</sub>.
+  section: Time response
+- term: e_ss
+  meaning: "Steady-state error lim <i>sE</i>(<i>s</i>) (stable loop only). Step, type 0: 1/(1+<i>L</i>(0))."
+  section: Time response
+- term: K_v
+  meaning: Velocity constant lim <i>sL</i>(<i>s</i>); ramp error 1/<i>K</i><sub>v</sub>.
+  section: Time response
+- term: S(s)
+  meaning: "Sensitivity 1/(1+<i>L</i>): multiplies <i>R</i> in <i>E</i>, scales disturbances, and equals <i>S</i><sup><i>T</i></sup><sub><i>G</i></sub>."
+  section: Feedback (LN2)
+- term: C(s) (LN2)
+  meaning: Complementary sensitivity <i>L</i>/(1+<i>L</i>). Multiplies noise <i>N</i>. <i>S</i> + <i>C</i> = 1. Not the C matrix.
+  section: Feedback (LN2)
+- term: S^T_G
+  meaning: "System sensitivity (∂<i>T</i>/<i>T</i>)/(∂<i>G</i>/<i>G</i>): 1 open loop, 1/(1+<i>G</i><sub>c</sub><i>G</i>) closed loop."
+  section: Feedback (LN2)
+- term: α
+  meaning: A parameter inside <i>G</i>; <i>S</i><sup><i>T</i></sup><sub>α</sub> = <i>S</i><sup><i>T</i></sup><sub><i>G</i></sub><i>S</i><sup><i>G</i></sup><sub>α</sub>.
+  section: Feedback (LN2)
+- term: K_a, K_m, K_b, K_t
+  meaning: "Steel mill / DC motor: amplifier gain, motor torque constant, back-EMF constant, tachometer gain."
+  section: Feedback (LN2)
+- term: J, b, R_a
+  meaning: Rotor + load inertia, friction, armature resistance.
+  section: Feedback (LN2)
+- term: K₁, τ₁
+  meaning: Open-loop motor speed TF <i>K</i><sub>1</sub>/(τ<sub>1</sub><i>s</i>+1).
+  section: Feedback (LN2)
+- term: ω_c
+  meaning: Crossover frequency where |<i>L</i>(<i>j</i>ω)| = 1 (≈ loop bandwidth).
+  section: Feedback (LN2)
+- term: ISE, IAE, ITAE, ITSE
+  meaning: ∫<i>e</i>², ∫|<i>e</i>|, ∫<i>t</i>|<i>e</i>|, ∫<i>t</i><i>e</i>² over [0, <i>T</i>]. Time-weighted ones punish late error.
+  section: Feedback (LN2)
+- term: ×  /  ○
+  meaning: "Pole (×): root of denominator, |G| → ∞, a natural mode. Zero (○): root of numerator, G = 0, a transmission null."
+  section: s-plane map
+- term: RHP zero
+  meaning: "Zero with Re > 0: non-minimum phase. Not a mode (never makes anything grow). Same |G(jω)| as its LHP mirror but extra phase lag; wrong-way start; limits achievable bandwidth (M10)."
+  section: s-plane map
+- term: rᵢ
+  meaning: "Residue at pole <i>p</i><sub>i</sub>: amplitude of mode <i>e</i><sup><i>p</i><sub>i</sub><i>t</i></sup> in <i>y</i>(<i>t</i>). Zeros change residues."
+  section: s-plane map
+- term: a (shift)
+  meaning: "<i>e</i><sup>−<i>at</i></sup><i>f</i>(<i>t</i>) ↔ <i>F</i>(<i>s</i>+<i>a</i>): every mark slides left by <i>a</i>. Time scaling <i>f</i>(<i>at</i>) instead stretches marks radially ×<i>a</i>."
+  section: s-plane map
+- term: e^−sT
+  meaning: "Pure time delay T: no finite poles/zeros, |·| = 1, phase −ω<i>T</i>. Padé ≈ (1−<i>sT</i>/2)/(1+<i>sT</i>/2)."
+  section: s-plane map
+- term: rel. degree
+  meaning: "#poles − #zeros. Sets the initial behavior (IVT) and high-frequency roll-off."
+  section: s-plane map
+- term: K (locus)
+  meaning: "Loop gain swept 0 → ∞: closed-loop poles (roots of 1 + <i>KL</i> = 0) start at open-loop ×'s, end at ○'s or ∞."
+  section: s-plane map
+- term: ω (drive)
+  meaning: The frequency of the sine you apply. Picks the lookup spot s = jω on the jω axis. Not a pole, not the signal itself.
+  section: s-plane map
+- term: e^st probe ◆
+  meaning: "Test signal at address s = σ + jω: σ = growth/decay rate, ω = oscillation. If drive ~ e<sup><i>st</i></sup>, response/probe = G(s). Real inputs are sums of many probes (Fourier: on jω; Laplace: anywhere)."
+  section: s-plane map
+- term: "|s − p|, |s − z|"
+  meaning: Length of the vector from a pole × / zero ○ to the lookup point ◆ (dashed lines in the explorer). |<i>G</i>| = |<i>C</i>|·Π(zero distances)/Π(pole distances); vector angles add up to ∠<i>G</i>. Not the same as ω<sub><i>n</i></sub> = |<i>p</i>| (distance from the origin).
+  section: s-plane map
+- term: "|G(jω)|, ∠G(jω)"
+  meaning: "Surface height and phase at the lookup point: output/input amplitude ratio and phase shift for a steady sine."
+  section: s-plane map
+- term: G_H, G_L
+  meaning: High-order original and lower-order approximation (same DC gain).
+  section: Feedback (LN2)
