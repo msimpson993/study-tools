@@ -25,6 +25,11 @@ The unique solution of x′ = Ax is x(t) = e^{At} x(0), where e^{At} is the matr
 ```figure:flow
 ```
 
+The same picture in modal coordinates: in the eigenbasis the two motions separate into pure exponentials.
+
+```figure:expm
+```
+
 ```eq
 x(t) = e^{At} x(0),    e^{At} = Σ (At)^k / k!
 ```

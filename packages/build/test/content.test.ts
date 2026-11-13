@@ -86,3 +86,57 @@ describe('the build fails on broken content', () => {
     expect(errorsOf(dir)).toMatch(/ghost-app/);
   });
 });
+
+describe('running example (visual-first / central-example schema)', () => {
+  const ls = () => copyApp('linear-systems');
+  it('linear-systems declares a running example and every node says what it adds and what it accounts for', () => {
+    const { content, warnings } = loadApp(path.join(repoRoot, 'apps', 'linear-systems'));
+    expect(content.subject.runningExample?.title).toMatch(/spring/i);
+    for (const m of content.maps) for (const n of m.nodes) if (n.id !== 'root') expect(n.addsToExample?.length ?? 0, `${m.id}/${n.id}`).toBeGreaterThan(14);
+    expect(warnings.filter((w) => /addsToExample/.test(w))).toEqual([]);
+  });
+  it('FAILS when a running example is declared and a node lacks addsToExample', () => {
+    const dir = ls();
+    edit(path.join(dir, 'content/graph.yaml'), (y) => { delete y.maps[1].nodes[3].addsToExample; });
+    expect(errorsOf(dir)).toMatch(/addsToExample/);
+  });
+  it('only WARNS when there is no running example', () => {
+    const dir = ls();
+    edit(path.join(dir, 'subject.yaml'), (y) => { delete y.runningExample; });
+    edit(path.join(dir, 'content/graph.yaml'), (y) => { delete y.maps[1].nodes[3].addsToExample; });
+    expect(errorsOf(dir)).toBe('');
+    const { warnings } = loadApp(dir);
+    expect(warnings.join('\n')).toMatch(/no runningExample/);
+  });
+  it('rejects a too-short addsToExample (schema)', () => {
+    const dir = ls();
+    edit(path.join(dir, 'content/graph.yaml'), (y) => { y.maps[1].nodes[3].addsToExample = 'tiny'; });
+    expect(errorsOf(dir)).not.toBe('');
+  });
+  it('rejects an invalid runningExample (schema)', () => {
+    const dir = ls();
+    edit(path.join(dir, 'subject.yaml'), (y) => { y.runningExample = { title: 'x' }; });
+    expect(errorsOf(dir)).not.toBe('');
+  });
+  it('a figure fence that names no figure fails the build', () => {
+    const dir = ls();
+    const p = path.join(dir, 'content/dives/eig.md');
+    fs.writeFileSync(p, fs.readFileSync(p, 'utf8') + '\n```figure:no-such-figure\n```\n');
+    expect(errorsOf(dir)).toMatch(/no-such-figure/);
+  });
+  it('a dive without addsToExample (own or inherited from a node) fails when a running example exists', () => {
+    const dir = ls();
+    const p = path.join(dir, 'content/graph.yaml');
+    edit(p, (y) => { for (const m of y.maps) for (const n of m.nodes) if (n.dive === 'eig') delete n.addsToExample; });
+    expect(errorsOf(dir)).toMatch(/addsToExample/);
+  });
+  it('every linear-systems dive embeds at least one live figure that exists', () => {
+    const { content } = loadApp(path.join(repoRoot, 'apps', 'linear-systems'));
+    const ids = new Set(((content.figures ?? []) as { id: string }[]).map((f) => f.id));
+    for (const d of content.dives) {
+      const refs = [...d.html.matchAll(/data-figure="([^"]+)"/g)].map((m) => m[1]);
+      expect(refs.length, `dive ${d.id} has a figure`).toBeGreaterThan(0);
+      for (const r of refs) expect(ids.has(r), `${d.id} -> ${r}`).toBe(true);
+    }
+  });
+});
