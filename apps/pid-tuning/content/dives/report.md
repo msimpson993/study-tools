@@ -10,7 +10,7 @@ chain:
 neighbors:
   - project
   - failures
-exampleScene: { overlays: [push, trace], caption: "Every claim in the report is a statement about a curve like this one: speed, overshoot, offset." }
+exampleScene: { overlays: [pid], params: { K: 6, Ki: 3, Kd: 1.5 }, caption: "Every claim in the report is a statement about these curves: how fast, how much overshoot, whether the offset closes." }
 ---
 **What are the pitfalls, and how do I explain my result?**
 

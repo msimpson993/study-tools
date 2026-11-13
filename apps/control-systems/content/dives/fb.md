@@ -11,7 +11,7 @@ chain:
 neighbors:
   - blocks
   - cheat
-exampleScene: { overlays: [forces, poles], caption: "Feedback acts like a force you add. It moves the poles shown here, which is how it speeds the cart up and, pushed too far, rings it." }
+exampleScene: { overlays: [loop, poles], params: { K: 20 }, caption: "Raise K to 20: the cart is faster and the offset shrinks to 0.09 m, but the poles leave the real axis and it overshoots about 35 %." }
 ---
 **What does feedback buy us, and what does it cost?**
 

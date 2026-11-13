@@ -9,7 +9,7 @@ chain:
   - title: "The integrator keeps charging while the actuator is pinned at its limit."
 neighbors:
   - failures
-exampleScene: { overlays: [forces, push], caption: "When the actuator is at its limit more demand does nothing, yet the integrator keeps charging." }
+exampleScene: { overlays: [pid, limit], params: { K: 4, Ki: 5, Kd: 0, umax: 3, r: 1 }, caption: "Saturation: the push is clipped at ±3 N while the integral keeps charging, so the cart overshoots about 31 % instead of 24 % without the limit." }
 ---
 **A7 · Integrator windup (actuator saturation)**
 

@@ -11,7 +11,7 @@ chain:
 neighbors:
   - gains
   - tuning
-exampleScene: { overlays: [forces, phase], caption: "D is a force proportional to velocity, the vertical axis of the phase plane: a damper you can dial." }
+exampleScene: { overlays: [pid, noise], params: { K: 10, Ki: 0, Kd: 3, noise: 0.04 }, caption: "D brakes the cart by acting on the error's rate of change, but it also acts on sensor noise: the push u turns jittery." }
 ---
 **What does D buy, and what does it cost?**
 

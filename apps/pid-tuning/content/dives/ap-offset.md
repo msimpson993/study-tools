@@ -9,7 +9,7 @@ chain:
   - title: "It settles calmly, but not at the target."
 neighbors:
   - failures
-exampleScene: { overlays: [push, trace], caption: "A steady push leaves a 0.5 m offset: P alone does the same in the loop, and only an integrator removes it." }
+exampleScene: { overlays: [loop], params: { K: 7 }, caption: "P alone leaves an offset: with K = 7 the cart stops at 0.78 m and the push K·e is too small to close the last 0.22 m." }
 ---
 **A2 · Steady-state offset**
 

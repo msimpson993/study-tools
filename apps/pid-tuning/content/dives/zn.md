@@ -10,7 +10,7 @@ chain:
     detail: "Kp = 0.6·Ku,  Ti = Tu/2,  Td = Tu/8"
 neighbors:
   - methods
-exampleScene: { overlays: [shaker, trace], caption: "Shaking at one frequency shows how the plant answers it, the idea behind the ultimate period in Ziegler–Nichols." }
+exampleScene: { overlays: [delay], params: { K: 8, delay: 0.5 }, caption: "Raise K with a 0.5 s sensor delay until the ringing neither dies nor grows: that gain, about 8, is the ultimate gain K_u." }
 ---
 **Can I tune from the edge of instability?**
 

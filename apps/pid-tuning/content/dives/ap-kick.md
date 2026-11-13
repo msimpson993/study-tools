@@ -9,7 +9,7 @@ chain:
   - title: "A set-point step makes D produce a huge one-sample spike in u."
 neighbors:
   - failures
-exampleScene: { overlays: [hammer, trace], caption: "A step in the set-point is the derivative's worst case: its derivative is an impulse, a hammer blow on the push." }
+exampleScene: { overlays: [pid], params: { K: 6, Ki: 0, Kd: 4 }, caption: "A step in the target makes the error jump, and D acts on its rate of change: the push u spikes at t = 0." }
 ---
 **A8 · Derivative kick**
 

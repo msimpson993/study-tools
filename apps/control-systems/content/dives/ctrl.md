@@ -11,7 +11,7 @@ chain:
 neighbors:
   - blocks
   - sse
-exampleScene: { overlays: [forces, push], caption: "The push u is the one force a controller chooses. P, I and D are three recipes for choosing it from the sensor reading." }
+exampleScene: { overlays: [loop, poles], params: { K: 7 }, caption: "u = K·e is the proportional part of a controller. With K = 7 the cart overshoots about 16 % and stops short of 1 m; the closed-loop poles are on the right." }
 ---
 **What can P, I and D each do about it?**
 

@@ -9,7 +9,7 @@ chain:
   - title: "integrator windup, anti-windup"
 neighbors:
   - integral
-exampleScene: { overlays: [forces, push], caption: "The push is what the actuator delivers; a real actuator has a limit, however much force the controller asks for." }
+exampleScene: { overlays: [pid, limit], params: { K: 4, Ki: 5, Kd: 0, umax: 3, r: 1 }, caption: "The push is clipped at ±3 N at the start while the I part keeps charging; it then has to discharge, so the overshoot is about 31 % instead of 24 % without the limit." }
 ---
 **What happens when the actuator saturates?**
 

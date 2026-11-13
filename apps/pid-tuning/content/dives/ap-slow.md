@@ -9,7 +9,7 @@ chain:
   - title: "It gets there, but takes far too long to rise and settle."
 neighbors:
   - failures
-exampleScene: { overlays: [push, trace], caption: "Slow: left alone the cart takes several seconds to settle. Too little gain leaves the loop just as slow." }
+exampleScene: { overlays: [pid], params: { K: 1, Ki: 0.8, Kd: 0 }, caption: "Slow: with K = 1 and Ki = 0.8 the cart creeps toward the target, with no overshoot and no spare push." }
 ---
 **A1 · Slow response**
 

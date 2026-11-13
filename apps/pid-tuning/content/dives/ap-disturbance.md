@@ -9,7 +9,7 @@ chain:
   - title: "A load hits and the output is knocked far away, recovering slowly."
 neighbors:
   - failures
-exampleScene: { overlays: [hammer, trace], caption: "A shove on the cart: the controller must push back harder or faster than the shove disturbs." }
+exampleScene: { overlays: [pid, disturb], params: { K: 7, Ki: 6, Kd: 1.5, d: -2, td: 4 }, caption: "A 2 N shove at 4 s moves the cart off target; the I part keeps pushing until it is back at 1 m. Without I it would stay off." }
 ---
 **A5 · Poor disturbance rejection**
 

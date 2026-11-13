@@ -10,7 +10,7 @@ chain:
 neighbors:
   - problem
   - pid
-exampleScene: { overlays: [sensor, poles], caption: "The sensor feeds y back. That is what lets feedback fix errors, and what can make the loop ring if the gain is too high." }
+exampleScene: { overlays: [delay], params: { K: 10, delay: 0.3 }, caption: "The price of feedback: with the sensor 0.3 s late and K = 10, the controller acts on old news and the cart overshoots and rings for a long time." }
 ---
 **Why feedback, and what goes wrong with it?**
 

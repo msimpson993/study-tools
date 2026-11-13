@@ -9,7 +9,7 @@ chain:
   - title: "The sensor is slow, so the controller sees an old, smoothed copy of y."
 neighbors:
   - failures
-exampleScene: { overlays: [sensor, clock, trace], caption: "A slow sensor reports where the cart was: the controller acts on old data and overshoots." }
+exampleScene: { overlays: [lag], params: { K: 15, lag: 0.8 }, caption: "A slow sensor (τ = 0.8 s) shows a smoothed, late position: the controller reacts late and the cart overshoots and rings." }
 ---
 **A11 · Measurement (sensor) lag**
 

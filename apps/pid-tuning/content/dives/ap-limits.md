@@ -9,7 +9,7 @@ chain:
   - title: "The actuator can only deliver so much (amplitude) and so fast (rate)."
 neighbors:
   - failures
-exampleScene: { overlays: [forces, shaker], caption: "Ask for a bigger swing and the actuator has to deliver more force: past its limit, the limit, not the gain, sets how fast the cart can move." }
+exampleScene: { overlays: [limit], params: { K: 20, umax: 1.5, r: 0.5 }, caption: "With K = 20 the demanded push starts at 10 N, but the actuator gives at most 1.5 N: the push is flat-topped, and the limit, not the gain, sets how fast the cart can go." }
 ---
 **A9 · Actuator saturation & rate limits**
 

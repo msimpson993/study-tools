@@ -9,7 +9,7 @@ chain:
   - title: "The loop rings forever or the amplitude grows."
 neighbors:
   - failures
-exampleScene: { overlays: [shaker, trace], caption: "Push at the right rhythm and the cart rings with sustained swings, which is what too much gain does to the loop." }
+exampleScene: { overlays: [delay], params: { K: 10, delay: 0.5 }, caption: "Raise the gain past K_u with a 0.5 s delay and the swings grow instead of dying out." }
 ---
 **A4 · Sustained oscillation / instability**
 

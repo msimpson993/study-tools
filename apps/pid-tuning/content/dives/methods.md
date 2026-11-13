@@ -12,7 +12,7 @@ neighbors:
   - zn
   - sliders
   - project
-exampleScene: { overlays: [push, trace], caption: "Manual tuning starts from the open-loop response: speed, offset and ringing are all visible in this trace." }
+exampleScene: { overlays: [pid], params: { K: 6, Ki: 2, Kd: 1 }, caption: "Manual tuning: raise K for speed, add Ki to close the offset, add Kd to calm the swing, one at a time." }
 ---
 **How do I actually find the gains?**
 

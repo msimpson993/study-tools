@@ -9,7 +9,7 @@ chain:
   - title: "root-locus preview"
 neighbors:
   - sp6
-exampleScene: { overlays: [forces, poles], caption: "Think of the controller as one more force. These are the open-loop poles; raising the loop gain moves them along the locus." }
+exampleScene: { overlays: [loop, poles], params: { K: 7 }, caption: "The closed-loop poles at K = 7 sit at −1.5 ± j2.6, on the path they travelled from the open-loop poles −1 and −2 as K grew from 0." }
 ---
 **What does closing the loop do on the map?**
 

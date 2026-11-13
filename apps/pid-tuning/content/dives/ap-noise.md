@@ -9,7 +9,7 @@ chain:
   - title: "Measurement noise is amplified into a chattering control signal."
 neighbors:
   - failures
-exampleScene: { overlays: [sensor, trace], caption: "The controller only knows what the sensor says: noise on y becomes a jittery push u, most of all through D." }
+exampleScene: { overlays: [noise], params: { K: 7, Kd: 3, noise: 0.06 }, caption: "Sensor noise of σ = 0.06 m, amplified by Kd, makes the push u jitter although the cart barely moves." }
 ---
 **A6 · Noisy / jittery actuator**
 

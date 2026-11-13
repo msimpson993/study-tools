@@ -9,7 +9,7 @@ chain:
   - title: "The plant's gain depends on where it is operating, so one set of gains is right only near one point."
 neighbors:
   - failures
-exampleScene: { overlays: [forces, shaker, poles], caption: "The loop was tuned at one operating point: a different size or speed of motion changes what the cart does with the same force." }
+exampleScene: { overlays: [limit], params: { K: 7, umax: 2.5, r: 2 }, caption: "Small targets behave linearly, but 2 m needs more than the ±2.5 N the actuator has, so the cart stalls near 1.25 m: the same gains give a different answer at another operating point." }
 ---
 **A12 · Nonlinearity / operating-point change**
 

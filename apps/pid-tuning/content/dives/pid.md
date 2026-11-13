@@ -12,7 +12,7 @@ neighbors:
   - feedback
   - gains
 matlab: "C = pid(Kp, Ki, Kd);   % parallel form;  pidstd(Kp, Ti, Td) is the standard form"
-exampleScene: { overlays: [forces, push], caption: "The push u is what the controller outputs; P, I and D decide it from the error the sensor reports." }
+exampleScene: { overlays: [pid], caption: "The controller split in three: P (like a spring), I (the running total of the error) and D (its rate of change, like a damper). Their sum is the push u." }
 ---
 **What are P, I and D, and which form is this?**
 

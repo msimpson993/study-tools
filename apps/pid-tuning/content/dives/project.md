@@ -10,7 +10,7 @@ chain:
 neighbors:
   - methods
   - report
-exampleScene: { overlays: [sensor, push, trace], caption: "Project 1 starts from this plant: the push goes in, the position sensor reads out." }
+exampleScene: { overlays: [pid, disturb], params: { K: 8, Ki: 6, Kd: 1.5, d: -2, td: 5 }, caption: "Project 1 in miniature: the PID takes the cart to the target, and when a 2 N shove hits at 5 s the integral brings it back." }
 ---
 **How does it play out in Project 1, step by step?**
 

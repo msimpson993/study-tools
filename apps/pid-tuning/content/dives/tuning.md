@@ -12,7 +12,7 @@ neighbors:
   - derivative
   - integral
   - lab
-exampleScene: { overlays: [push, poles], caption: "Good tuning is a place for the poles: here are the open-loop −1 and −2 and the step response they give." }
+exampleScene: { overlays: [loop, poles], params: { K: 7 }, caption: "Tuning moves the poles: at K = 7 they are at −1.5 ± j2.6, which gives about 16 % overshoot and a settling time near 2.7 s." }
 ---
 **What does tuning mean, and how do we measure good?**
 

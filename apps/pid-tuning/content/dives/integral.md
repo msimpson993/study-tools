@@ -12,7 +12,7 @@ neighbors:
   - gains
   - windup
   - tuning
-exampleScene: { overlays: [push, trace], caption: "A steady push leaves the cart at 0.5 m. An integrator keeps adding force until the sensor reads exactly r." }
+exampleScene: { overlays: [pid], params: { K: 6, Ki: 6, Kd: 0 }, caption: "The I part keeps growing while any error remains, so the cart ends exactly at 1 m (P alone would stop at 0.75 m). The price is about 25 % overshoot." }
 ---
 **Why does integral action give zero steady-state error?**
 
