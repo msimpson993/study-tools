@@ -14,6 +14,7 @@ export default defineConfig({
     baseURL: 'http://localhost:4173',
     launchOptions: { executablePath, args: ['--no-sandbox'] },
     trace: 'retain-on-failure',
+    actionTimeout: 10_000,
   },
   webServer: { command: 'npx tsx scripts/serve.ts 4173', url: 'http://localhost:4173/index.html', reuseExistingServer: !process.env.CI },
 });

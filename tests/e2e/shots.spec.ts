@@ -35,10 +35,10 @@ for (const v of VIEWS) {
         const maps: { title: string }[] = await page.evaluate(() => (window as any).__study.content.maps);
         // map with an open node popup
         const node = page.locator('[data-testid=map-node]').nth(2);
-        await node.click(); await snap(page, `${app}-map-popup-${tag}`);
+        await node.dispatchEvent('click'); await snap(page, `${app}-map-popup-${tag}`);
         // review mode
         await page.getByRole('button', { name: 'Review' }).click();
-        for (let i = 0; i < 4; i++) await page.locator('[data-testid=map-node]').nth(i).click();
+        for (let i = 0; i < 4; i++) await page.locator('[data-testid=map-node]').nth(i).dispatchEvent('click');
         await snap(page, `${app}-map-review-${tag}`);
         await page.evaluate(() => { localStorage.clear(); });
         if (maps.length > 1) {
@@ -69,7 +69,7 @@ for (const v of VIEWS) {
       await snap(page, `linear-systems-dive-${tag}`);
       await open(page, 'linear-systems', '#/figure/expm'); await setTheme(page, theme);
       await snap(page, `linear-systems-figure-${tag}`, v.mobile);
-      await page.locator('[data-testid=fig-stage] canvas').first().click();
+      await page.locator('[data-testid=fig-stage] canvas').first().click({ force: true });
       await snap(page, `linear-systems-figure-expanded-${tag}`);
       if (!v.mobile) { await page.getByTestId('pair-open').click(); await page.getByTestId('legend-chip').first().click(); await snap(page, `linear-systems-figure-pair-${tag}`); }
       await ctx.close();

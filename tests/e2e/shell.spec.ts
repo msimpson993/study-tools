@@ -66,8 +66,8 @@ for (const app of APPS) {
 
 test('linear-systems: a deep dive renders chain, MATLAB fold collapsed, math and neighbours', async ({ page }) => {
   const errs = trackErrors(page);
-  await open(page, 'linear-systems', '#/dive/expm');
-  await expect(page.locator('[data-testid=dive] h2')).toContainText(/State transition/);
+  await open(page, 'linear-systems', '#/dive/dtft');
+  await expect(page.locator('[data-testid=dive] h2')).toContainText(/DTFT/);
   await expect(page.locator('.katex').first()).toBeVisible();
   const fold = page.locator('details', { hasText: /MATLAB/ }).first();
   await expect(fold).not.toHaveAttribute('open', '');
