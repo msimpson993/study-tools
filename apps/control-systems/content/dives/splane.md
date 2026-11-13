@@ -10,6 +10,7 @@ chain:
     detail: "pole p = σ + jω  →  mode e^(σt)·cos(ωt)"
 neighbors:
   - model
+exampleScene: { overlays: [push, poles], caption: "The two poles at −1 and −2 are the two decaying exponentials inside the cart's step response." }
 ---
 **What is a pole or a zero, physically?**
 

@@ -11,6 +11,7 @@ chain:
 neighbors:
   - dominant
   - sse
+exampleScene: { overlays: [critical, poles], caption: "Tighten the damper to c = 2√2 (ζ = 1) and the two poles meet. Less damping would split them into a complex pair." }
 ---
 **What do ζ and ωₙ say about two poles?**
 

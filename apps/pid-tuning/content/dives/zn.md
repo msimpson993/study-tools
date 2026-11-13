@@ -10,6 +10,7 @@ chain:
     detail: "Kp = 0.6·Ku,  Ti = Tu/2,  Td = Tu/8"
 neighbors:
   - methods
+exampleScene: { overlays: [shaker, trace], caption: "Shaking at one frequency shows how the plant answers it, the idea behind the ultimate period in Ziegler–Nichols." }
 ---
 **Can I tune from the edge of instability?**
 

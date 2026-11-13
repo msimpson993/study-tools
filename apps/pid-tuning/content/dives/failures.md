@@ -12,6 +12,7 @@ neighbors:
   - ap-slow
   - ap-offset
   - ap-overshoot
+exampleScene: { overlays: [forces, sensor], caption: "Fourteen things that go wrong, each at the actuator (the push), the plant or the sensor of this cart." }
 ---
 **What can go wrong, and which knob fixes it?**
 

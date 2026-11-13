@@ -11,6 +11,7 @@ neighbors:
   - pid
   - integral
   - derivative
+exampleScene: { overlays: [push, trace], caption: "A 1 N push is the step the controller applies: this is the open-loop response each gain has to improve on." }
 ---
 **What does each gain do to the step response?**
 

@@ -12,6 +12,7 @@ neighbors:
   - derivative
   - integral
   - lab
+exampleScene: { overlays: [push, poles], caption: "Good tuning is a place for the poles: here are the open-loop −1 and −2 and the step response they give." }
 ---
 **What does tuning mean, and how do we measure good?**
 

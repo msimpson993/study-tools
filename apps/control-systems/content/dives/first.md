@@ -11,6 +11,7 @@ chain:
 neighbors:
   - tf
   - dominant
+exampleScene: { overlays: [push, trace], caption: "The −1 pole is the slow one: after the first half second the cart's step response looks first-order with T ≈ 1 s." }
 ---
 **How does the simplest plant respond?**
 

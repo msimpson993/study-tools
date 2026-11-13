@@ -9,6 +9,7 @@ chain:
   - title: "Nothing happens for a while after u changes, so feedback acts on old news."
 neighbors:
   - failures
+exampleScene: { overlays: [clock, trace], caption: "A reading that arrives late or is held acts like delay: the controller reacts to the past and rings." }
 ---
 **A10 · Time delay (dead time)**
 

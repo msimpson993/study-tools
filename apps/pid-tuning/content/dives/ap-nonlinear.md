@@ -9,6 +9,7 @@ chain:
   - title: "The plant's gain depends on where it is operating, so one set of gains is right only near one point."
 neighbors:
   - failures
+exampleScene: { overlays: [forces, shaker, poles], caption: "The loop was tuned at one operating point: a different size or speed of motion changes what the cart does with the same force." }
 ---
 **A12 · Nonlinearity / operating-point change**
 

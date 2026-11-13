@@ -12,6 +12,7 @@ neighbors:
   - gains
   - windup
   - tuning
+exampleScene: { overlays: [push, trace], caption: "A steady push leaves the cart at 0.5 m. An integrator keeps adding force until the sensor reads exactly r." }
 ---
 **Why does integral action give zero steady-state error?**
 

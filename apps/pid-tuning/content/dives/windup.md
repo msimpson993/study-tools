@@ -9,6 +9,7 @@ chain:
   - title: "integrator windup, anti-windup"
 neighbors:
   - integral
+exampleScene: { overlays: [forces, push], caption: "The push is what the actuator delivers; a real actuator has a limit, however much force the controller asks for." }
 ---
 **What happens when the actuator saturates?**
 

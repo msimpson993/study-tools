@@ -10,6 +10,7 @@ chain:
 neighbors:
   - methods
   - report
+exampleScene: { overlays: [sensor, push, trace], caption: "Project 1 starts from this plant: the push goes in, the position sensor reads out." }
 ---
 **How does it play out in Project 1, step by step?**
 

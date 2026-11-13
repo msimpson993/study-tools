@@ -10,6 +10,7 @@ chain:
     detail: "G(s) = C(sI − A)⁻¹B + D"
 neighbors:
   - ss
+exampleScene: { overlays: [sensor, push, poles], caption: "A, B and C give the same poles, −1 and −2, as G(s): the sensor sees them in the push response." }
 ---
 **How do the two descriptions connect?**
 

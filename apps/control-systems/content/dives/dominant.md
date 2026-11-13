@@ -11,6 +11,7 @@ chain:
 neighbors:
   - first
   - second
+exampleScene: { overlays: [push, poles], caption: "The pole at −1 is only twice as slow as the pole at −2, so neither can be dropped: both show in the step response." }
 ---
 **Which poles matter?**
 

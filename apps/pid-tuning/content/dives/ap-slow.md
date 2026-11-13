@@ -9,6 +9,7 @@ chain:
   - title: "It gets there, but takes far too long to rise and settle."
 neighbors:
   - failures
+exampleScene: { overlays: [push, trace], caption: "Slow: left alone the cart takes several seconds to settle. Too little gain leaves the loop just as slow." }
 ---
 **A1 · Slow response**
 

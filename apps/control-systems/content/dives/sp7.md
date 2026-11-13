@@ -10,6 +10,7 @@ chain:
     detail: "y(∞) = lim s→0 sY(s)   y(0⁺) = lim s→∞ sY(s)"
 neighbors:
   - sp6
+exampleScene: { overlays: [push, trace], caption: "For a steady 1 N push the final value is G(0) = 0.5 m, and the start is flat (zero initial slope)." }
 ---
 **What do the final- and initial-value theorems mean?**
 

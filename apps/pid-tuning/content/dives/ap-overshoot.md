@@ -9,6 +9,7 @@ chain:
   - title: "The output shoots past the target, then comes back."
 neighbors:
   - failures
+exampleScene: { overlays: [critical, trace], caption: "Overshoot is a lack of damping: at c = 2√2 the cart has none, any less and it overshoots and rings." }
 ---
 **A3 · Overshoot**
 

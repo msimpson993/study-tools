@@ -10,6 +10,7 @@ chain:
 neighbors:
   - sp2
   - sp3
+exampleScene: { overlays: [forces, poles], caption: "Each pole is one mode of the cart: its two × sit on the negative real axis, so both modes die out without ringing." }
 ---
 **How are poles and zeros drawn?**
 

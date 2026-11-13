@@ -9,6 +9,7 @@ chain:
   - title: "Gains tuned to reject disturbances fast make the set-point step overshoot."
 neighbors:
   - failures
+exampleScene: { overlays: [push, trace], caption: "A set-point step and a load push enter the cart in different places, so one set of gains cannot be best for both." }
 ---
 **A13 · Set-point vs disturbance trade-off (2-DOF)**
 

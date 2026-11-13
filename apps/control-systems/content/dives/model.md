@@ -13,6 +13,7 @@ neighbors:
   - tf
   - ss
   - circuits
+exampleScene: { overlays: [forces, push], caption: "Newton's law gives the model: spring, damper and push sum to m·ẍ, and a 1 N push produces this x(t)." }
 ---
 **How do we describe a plant without re-solving its ODE?**
 

@@ -12,6 +12,7 @@ neighbors:
   - tf
   - ctrl
   - fb
+exampleScene: { overlays: [sensor, hammer, trace], caption: "Whatever drives the cart (a command or a shove), the sensor reports only y. A feedback loop sends that y back to the controller." }
 ---
 **How does the plant sit in a loop with a controller and a disturbance?**
 

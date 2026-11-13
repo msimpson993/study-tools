@@ -13,6 +13,7 @@ neighbors:
   - order
   - blocks
   - first
+exampleScene: { overlays: [sensor, push, trace], caption: "The sensor reads y = x. Hold a 1 N push and the cart settles at G(0) = 0.5 m: the DC gain read straight off G(s)." }
 ---
 **What can I read off any transfer function?**
 

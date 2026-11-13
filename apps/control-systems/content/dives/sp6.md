@@ -12,6 +12,7 @@ neighbors:
   - sp4
   - sp7
   - sp8
+exampleScene: { overlays: [hammer, modes, trace], caption: "The response is a sum of one exponential per pole: e^{−t} − e^{−2t}, each mode fading on its own." }
 ---
 **How does the inverse Laplace transform look here?**
 

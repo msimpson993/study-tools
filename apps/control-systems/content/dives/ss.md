@@ -11,6 +11,7 @@ chain:
 neighbors:
   - model
   - ss2tf
+exampleScene: { overlays: [forces, sensor, phase], caption: "The state (x, ẋ) is one point; A turns the forces into where it goes next; the sensor reads only x." }
 ---
 **Is there a description that tracks the inside too?**
 

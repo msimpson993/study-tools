@@ -9,6 +9,7 @@ chain:
   - title: "cheat sheet and glossary"
 neighbors:
   - fb
+exampleScene: { overlays: [forces, push, poles], caption: "The cart's facts in one picture: three forces, a 1 N push, and the poles at −1 and −2." }
 ---
 **What should I recognize on sight?**
 

@@ -9,6 +9,7 @@ chain:
   - title: "bandwidth, phase margin, deep dive D"
 neighbors:
   - methods
+exampleScene: { overlays: [poles, push], caption: "The Tuner's speed and robustness sliders move the poles; this is where they start, with the step response they give." }
 ---
 **What do the PID Tuner sliders really set?**
 

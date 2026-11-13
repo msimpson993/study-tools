@@ -10,6 +10,7 @@ chain:
 neighbors:
   - tuning
   - methods
+exampleScene: { overlays: [sensor, push, trace], caption: "The plant in the Lab: a push in, the sensor reading out. Drag the gains and watch the same trace change." }
 ---
 **What happens if I drag the gains myself?**
 

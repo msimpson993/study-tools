@@ -10,6 +10,7 @@ chain:
     detail: "R → R,  L → sL,  C → 1/(sC);  inverting stage −Zf/Zin"
 neighbors:
   - model
+exampleScene: { overlays: [push, poles], caption: "The same second-order equation as an RLC circuit: one step response, two poles at −1 and −2." }
 ---
 **How do I get G(s) for real hardware?**
 

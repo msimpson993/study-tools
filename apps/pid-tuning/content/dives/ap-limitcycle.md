@@ -9,6 +9,7 @@ chain:
   - title: "Integral action plus a sticky actuator makes the loop hunt forever around the target."
 neighbors:
   - failures
+exampleScene: { overlays: [shaker, phase], caption: "A steady-amplitude swing is a closed loop in the (x, ẋ) plane that never spirals in." }
 ---
 **A14 · Limit cycle from dead zone / backlash**
 

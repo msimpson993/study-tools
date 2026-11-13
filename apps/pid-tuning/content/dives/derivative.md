@@ -11,6 +11,7 @@ chain:
 neighbors:
   - gains
   - tuning
+exampleScene: { overlays: [forces, phase], caption: "D is a force proportional to velocity, the vertical axis of the phase plane: a damper you can dial." }
 ---
 **What does D buy, and what does it cost?**
 

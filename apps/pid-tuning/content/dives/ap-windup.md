@@ -9,6 +9,7 @@ chain:
   - title: "The integrator keeps charging while the actuator is pinned at its limit."
 neighbors:
   - failures
+exampleScene: { overlays: [forces, push], caption: "When the actuator is at its limit more demand does nothing, yet the integrator keeps charging." }
 ---
 **A7 · Integrator windup (actuator saturation)**
 

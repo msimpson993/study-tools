@@ -11,6 +11,7 @@ chain:
 neighbors:
   - ctrl
   - second
+exampleScene: { overlays: [push, trace], caption: "A steady push of 1 N holds the cart at 0.5 m, not 1 m: with no integral action the gap to the command never closes." }
 ---
 **Why does P leave an error and I remove it?**
 

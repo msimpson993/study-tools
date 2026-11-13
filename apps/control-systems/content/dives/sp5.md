@@ -9,6 +9,7 @@ chain:
   - title: "operations dictionary"
 neighbors:
   - sp4
+exampleScene: { overlays: [hammer, trace], caption: "A hammer blow is the derivative of a steady push: differentiating the input multiplies its transform by s." }
 ---
 **Which time-domain operations are moves on the plane?**
 

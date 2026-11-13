@@ -11,6 +11,7 @@ chain:
 neighbors:
   - sp1
   - sp4
+exampleScene: { overlays: [modes, poles], caption: "Read a location: left of the axis means decay, and each pole is one eigen-direction of the state." }
 ---
 **How do I read a location on the plane?**
 

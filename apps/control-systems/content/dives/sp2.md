@@ -9,6 +9,7 @@ chain:
   - title: "modes versus how much of each"
 neighbors:
   - sp1
+exampleScene: { overlays: [hammer, poles], caption: "A hammer blow excites both modes at once: the poles say which exponentials appear, the weights say how much of each." }
 ---
 **What is the difference between a pole and a zero?**
 

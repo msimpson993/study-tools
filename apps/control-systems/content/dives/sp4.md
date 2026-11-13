@@ -11,6 +11,7 @@ neighbors:
   - sp3
   - sp5
   - sp6
+exampleScene: { overlays: [critical, poles], caption: "Move the poles together and they merge at −√2 ≈ −1.41 when c = 2√2: the fastest response without ringing." }
 ---
 **What happens if I move a pole pair and a zero?**
 

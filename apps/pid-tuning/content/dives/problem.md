@@ -9,6 +9,7 @@ chain:
   - title: "command, disturbance, uncertainty"
 neighbors:
   - feedback
+exampleScene: { overlays: [sensor, push, trace], caption: "The model says what a push does. The sensor shows what really happened; control closes the gap between the two." }
 ---
 **What problem does feedback control solve?**
 

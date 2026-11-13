@@ -17,6 +17,7 @@ sections:
 board:
   pairs: [overview, s1, splane, sp1, sp-meaning, sp2, sp3, sp4, sp5, sp6, sp7, sp8, s2, s3, s4, s5, s6, s7, s8, s9, s10, s11, s12, s13, cheatsec, glossary]
 runningExample:
+  scene: { id: cart, overlays: [forces, sensor] }
   title: A 1 kg cart on a spring and a damper
   summary: "A 1 kg cart on a spring (k = 2 N/m) and a damper (c = 3 N·s/m). You push it with a force u(t) and a sensor reads its position y(t). One equation, ẍ + 3ẋ + 2x = u, gives G(s) = 1/(s² + 3s + 2) with poles at −1 and −2 and DC gain 0.5. The same cart is the plant of the linear-systems map and of the PID tuning map."
   details: |

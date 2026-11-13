@@ -10,6 +10,7 @@ chain:
 neighbors:
   - problem
   - pid
+exampleScene: { overlays: [sensor, poles], caption: "The sensor feeds y back. That is what lets feedback fix errors, and what can make the loop ring if the gain is too high." }
 ---
 **Why feedback, and what goes wrong with it?**
 
