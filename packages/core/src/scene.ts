@@ -13,8 +13,9 @@
  */
 import { cssVar, fitCanvas } from './plot';
 import { h } from './dom';
-import { c2dZoh } from './dsp/tf';
-import { SCENES, insetsOf, type InsetKind } from './scenedefs';
+import { c2dZoh, tf, type TF } from './dsp/tf';
+import { simulatePid, pidClosedLoopPoles } from './dsp/pid';
+import { SCENES, insetsOf, expandOverlays, isLoopScene, type InsetKind } from './scenedefs';
 
 /* ───────────────────────────── models (pure, unit-tested) ───────────────────────────── */
 
@@ -27,10 +28,22 @@ export interface CartSim {
   /** eigenvalues of A (equal when critical) */
   lam: [number, number];
   /** state, input and modal coefficients at time t (linear interpolation) */
-  at(t: number): { x: number; v: number; u: number; a: number; b: number };
+  at(t: number): { x: number; v: number; u: number; a: number; b: number } & LoopAt;
   /** hammer: time of the strike, else null */
   strike: number | null;
+  /** closed-loop data when a loop overlay is on, else null */
+  loop: LoopData | null;
 }
+/** Closed-loop signals (from simulatePid on the cart's G(s) = 1/(s² + 3s + 2); plant input = u + d). All arrays share CartSim's time grid. */
+export interface LoopData {
+  P: ResolvedLoop;
+  /** what the controller sees (true y → delay → lag → + noise) */ ym: Float64Array; /** error the controller computes, r − y_m */ e: Float64Array;
+  up: Float64Array; ui: Float64Array; ud: Float64Array; /** demanded control (P + I + D) before the actuator limit */ uc: Float64Array; /** disturbance force */ d: Float64Array;
+  /** closed-loop poles at the chosen gains (sensor delay / lag not included) */ poles: { re: number; im: number }[];
+  /** the same poles for K swept from 0 to 2.5·K (other gains fixed), the path they travel */ locus: { K: number; poles: { re: number; im: number }[] }[];
+}
+export interface ResolvedLoop { K: number; Ki: number; Kd: number; r: number; umax: number; td: number; d: number; noise: number; seed: number; delay: number; lag: number; hasLimit: boolean; hasDisturb: boolean; hasNoise: boolean }
+export interface LoopAt { ym: number; e: number; up: number; ui: number; ud: number; uc: number; d: number }
 export const cartEigs = (m: number, k: number, c: number): [number, number] => {
   const d = c * c - 4 * m * k;
   if (Math.abs(d) < 1e-9) return [-c / (2 * m), -c / (2 * m)];
@@ -38,7 +51,8 @@ export const cartEigs = (m: number, k: number, c: number): [number, number] => {
   return [(-c + r) / (2 * m), (-c - r) / (2 * m)];
 };
 /** Exact simulation of the cart for a given overlay set. Hammer > shaker > push > released from x(0) = 1. */
-export function simulateCart(overlays: string[]): CartSim {
+export function simulateCart(overlays: string[], params: Record<string, number> = {}): CartSim {
+  if (isLoopScene('cart', overlays)) return simulateCartLoop(expandOverlays('cart', overlays), params);
   const { m, k } = CART, c = overlays.includes('critical') ? CART.cCrit : CART.c;
   const hammer = overlays.includes('hammer'), shaker = overlays.includes('shaker'), push = overlays.includes('push');
   const dt = 1 / 120, T = shaker ? 14 : 8, n = Math.round(T / dt) + 1;
@@ -61,9 +75,41 @@ export function simulateCart(overlays: string[]): CartSim {
     dt, T, n, k, c, m, x, v, u, Ts: overlays.includes('clock') ? CART.Ts : 0, lam, strike: hammer ? CART.hammerAt : null,
     at(t) {
       const f = Math.min(n - 1.001, Math.max(0, t / dt)), xx = lerp(x, f), vv = lerp(v, f);
-      return { x: xx, v: vv, u: u[Math.min(n - 1, Math.round(f))], a: Math.abs(den) > 1e-9 ? (vv - lam[1] * xx) / den : NaN, b: Math.abs(den) > 1e-9 ? (lam[0] * xx - vv) / den : NaN };
+      return { x: xx, v: vv, u: u[Math.min(n - 1, Math.round(f))], a: Math.abs(den) > 1e-9 ? (vv - lam[1] * xx) / den : NaN, b: Math.abs(den) > 1e-9 ? (lam[0] * xx - vv) / den : NaN, ym: 0, e: 0, up: 0, ui: 0, ud: 0, uc: 0, d: 0 };
     },
+    loop: null,
   };
+}
+
+export const CART_TF: TF = tf([1], [CART.m, CART.c, CART.k]);
+const LOOP_DEF = { K: 6, Ki: 0, Kd: 0, r: 1, umax: 2.5, td: 4, d: 1, noise: 0.04, seed: 7, delay: 0.3, lag: 0.4, N: 20 };
+/** Resolve the closed-loop parameters: a param only takes effect with its overlay (umax ← limit, d/td ← disturb, noise/seed ← noise, delay ← delay, lag ← lag); `pid` defaults Ki = 6, Kd = 1.5. */
+export function resolveLoop(overlays: string[], params: Record<string, number> = {}): ResolvedLoop {
+  const ov = expandOverlays('cart', overlays), pid = ov.includes('pid'), g = (k: keyof typeof LOOP_DEF, alt?: number) => (Number.isFinite(params[k]) ? params[k] : alt ?? LOOP_DEF[k]);
+  return {
+    K: g('K'), Ki: g('Ki', pid ? 6 : 0), Kd: g('Kd', pid ? 1.5 : 0), r: g('r'),
+    umax: ov.includes('limit') ? g('umax') : Infinity, hasLimit: ov.includes('limit'),
+    td: g('td'), d: ov.includes('disturb') ? g('d') : 0, hasDisturb: ov.includes('disturb'),
+    noise: ov.includes('noise') ? g('noise') : 0, seed: g('seed'), hasNoise: ov.includes('noise'),
+    delay: ov.includes('delay') ? g('delay') : 0, lag: ov.includes('lag') ? g('lag') : 0,
+  };
+}
+/** The real closed-loop simulation behind the loop overlays: simulatePid (RK4) on the cart, resampled to dt = 5 ms; velocity from central differences of y. */
+export function simulateCartLoop(overlays: string[], params: Record<string, number> = {}): CartSim {
+  const P = resolveLoop(overlays, params), T = 10, dt = 0.005;
+  const s = simulatePid({ plant: CART_TF, Kp: P.K, Ki: P.Ki, Kd: P.Kd, N: LOOP_DEF.N, r: P.r, T, dt, umax: Number.isFinite(P.umax) ? P.umax : null, aw: 'clamp', dist: P.d ? { t: P.td, amp: P.d } : null, noise: P.noise, noiseTs: 0.05, seed: P.seed, sensorDelay: P.delay, sensorLag: P.lag });
+  const n = s.y.length, f = (a: number[]) => Float64Array.from(a), x = f(s.y), v = new Float64Array(n);
+  for (let i = 0; i < n; i++) v[i] = i === 0 ? (x[1] - x[0]) / dt : i === n - 1 ? (x[n - 1] - x[n - 2]) / dt : (x[i + 1] - x[i - 1]) / (2 * dt);
+  const u = f(s.u), up = f(s.up), ui = f(s.ui), ud = f(s.ud), uc = new Float64Array(n), ym = f(s.ym), e = new Float64Array(n), d = f(s.d);
+  for (let i = 0; i < n; i++) { uc[i] = up[i] + ui[i] + ud[i]; e[i] = P.r - ym[i]; }
+  const cl = (K: number) => pidClosedLoopPoles(CART_TF, { Kp: K, Ki: P.Ki, Kd: P.Kd, N: LOOP_DEF.N }).map((z) => ({ re: z.re, im: z.im }));
+  const locus: LoopData['locus'] = []; for (let i = 0; i <= 60; i++) { const K = (i / 60) * 2.5 * Math.max(P.K, 1); locus.push({ K, poles: cl(K) }); }
+  const loop: LoopData = { P, ym, e, up, ui, ud, uc, d, poles: cl(P.K), locus };
+  const at = (t: number) => {
+    const fi = Math.min(n - 1.001, Math.max(0, t / dt)), i = Math.floor(fi), w = fi - i, l = (a: Float64Array) => a[i] + (a[i + 1] - a[i]) * w;
+    return { x: l(x), v: l(v), u: l(u), a: NaN, b: NaN, ym: l(ym), e: l(e), up: l(up), ui: l(ui), ud: l(ud), uc: l(uc), d: l(d) };
+  };
+  return { dt, T, n, k: CART.k, c: CART.c, m: CART.m, x, v, u, Ts: 0, lam: cartEigs(CART.m, CART.k, CART.c), strike: null, at, loop };
 }
 
 export const TINE = { sigma: 0.6, f0: 1, fs: 8, T: 4.5, M: 16 } as const;
@@ -77,10 +123,11 @@ export function tineSpectrum(f: number): number {
 }
 
 /** Total length of one loop (animation time) for a scene + overlays. */
-export function sceneDuration(scene: string, overlays: string[]): number { return scene === 'tine' ? TINE.T : simulateCart(overlays).T; }
+export function sceneDuration(scene: string, overlays: string[]): number { return scene === 'tine' ? TINE.T : isLoopScene(scene, overlays) ? 10 : simulateCart(overlays).T; }
 /** Frame to hold under reduced motion / as the poster: an instant where the overlays have something to show. */
-export function sceneRestTime(scene: string, overlays: string[]): number {
+export function sceneRestTime(scene: string, overlays: string[], params: Record<string, number> = {}): number {
   if (scene === 'tine') return 1.6;
+  if (isLoopScene(scene, overlays)) { const ov = expandOverlays(scene, overlays); return ov.includes('disturb') ? (Number.isFinite(params.td) ? params.td : 4) + 2.2 : ov.includes('limit') ? 0.6 : ov.includes('delay') || ov.includes('lag') || ov.includes('noise') ? 3.2 : 2.4; }
   if (overlays.includes('hammer')) return 0.75;
   if (overlays.includes('shaker')) return 9;
   if (overlays.includes('push')) return 1.4;
@@ -96,10 +143,28 @@ type G = CanvasRenderingContext2D;
 const font = (px: number, wt = 500) => `${wt} ${px}px system-ui,-apple-system,"Segoe UI",Roboto,sans-serif`;
 const fmt = (v: number, d = 2) => (Math.abs(v) < 0.5 * 10 ** -d ? 0 : v).toFixed(d).replace('-', '−');
 
-function text(g: G, s: string, x: number, y: number, color: string, o: { align?: CanvasTextAlign; base?: CanvasTextBaseline; px?: number; wt?: number; bg?: string } = {}) {
-  g.font = font(o.px ?? 11, o.wt ?? 500); g.textAlign = o.align ?? 'left'; g.textBaseline = o.base ?? 'alphabetic';
-  if (o.bg) { const w = g.measureText(s).width + 6, px = o.px ?? 11, x0 = (o.align === 'center' ? x - w / 2 : o.align === 'right' ? x - w : x - 3); g.fillStyle = o.bg; g.globalAlpha = 0.82; g.fillRect(x0, y - px, w, px + 4); g.globalAlpha = 1; }
-  g.fillStyle = color; g.fillText(s, x, y);
+/** Labels drawn so far in the current panel: later labels dodge them (or are dropped when `optional`), and every label is kept inside the panel. */
+let LB: { x0: number; y0: number; x1: number; y1: number }[] = [];
+let BND: Rect | null = null;
+const beginPanel = (r: Rect) => { LB = []; BND = r; };
+const hits = (a: { x0: number; y0: number; x1: number; y1: number }) => LB.some((b) => a.x0 < b.x1 && a.x1 > b.x0 && a.y0 < b.y1 && a.y1 > b.y0);
+function text(g: G, s: string, x: number, y: number, color: string, o: { align?: CanvasTextAlign; base?: CanvasTextBaseline; px?: number; wt?: number; bg?: string; /** secondary label: dropped instead of moved when it would collide */ optional?: boolean } = {}): boolean {
+  let px = o.px ?? 11; g.font = font(px, o.wt ?? 500); let w = g.measureText(s).width;
+  if (BND) { const room = BND.w - 4; if (w > room) { px = Math.max(8, (px * room) / w); g.font = font(px, o.wt ?? 500); w = g.measureText(s).width; } }
+  let x0 = o.align === 'center' ? x - w / 2 : o.align === 'right' ? x - w : x;
+  if (BND) x0 = Math.min(Math.max(x0, BND.x + 2), BND.x + BND.w - 2 - w);
+  let yy = y;
+  const box = (yv: number) => ({ x0: x0 - 1, x1: x0 + w + 1, y0: yv - px * 0.85, y1: yv + px * 0.25 });
+  if (hits(box(yy))) {
+    if (o.optional) return false;
+    let placed = false; for (const dy of [-(px + 1), px + 1, -2 * (px + 1), 2 * (px + 1)]) { const yv = y + dy; const bx = box(yv); if (!hits(bx) && (!BND || (bx.y0 >= BND.y && bx.y1 <= BND.y + BND.h))) { yy = yv; placed = true; break; } }
+    if (!placed) { yy = y; } // nowhere clear: keep it where it was
+  }
+  const bx = box(yy); LB.push(bx);
+  g.textAlign = 'left'; g.textBaseline = o.base ?? 'alphabetic';
+  if (o.bg) { g.fillStyle = o.bg; g.globalAlpha = 0.82; g.fillRect(x0 - 3, yy - px, w + 6, px + 4); g.globalAlpha = 1; }
+  g.fillStyle = color; g.fillText(s, x0, yy);
+  return true;
 }
 function arrow(g: G, x1: number, y1: number, x2: number, y2: number, color: string, wd = 2, dash: number[] = []) {
   const L = Math.hypot(x2 - x1, y2 - y1); if (L < 1.5) return;
@@ -118,29 +183,78 @@ const clip = (g: G, r: Rect) => { g.beginPath(); g.rect(r.x, r.y, r.w, r.h); g.c
 
 /* ───────────────────────────── layout ───────────────────────────── */
 
-export interface SceneLayout { w: number; h: number; main: Rect; insets: { kind: InsetKind; rect: Rect }[] }
+export interface SceneLayout { w: number; h: number; compact: boolean; main: Rect; insets: { kind: InsetKind; rect: Rect }[] }
 export function sceneLayout(scene: string, overlays: string[], w: number, compact: boolean): SceneLayout {
-  const mainH = Math.round(Math.min(200, Math.max(compact ? 120 : 136, w * (compact ? 0.4 : 0.42))));
+  const loopMode = isLoopScene(scene, overlays);
+  const mainH = loopMode ? Math.round(Math.min(250, Math.max(compact ? 192 : 200, w * 0.5))) + (overlays.includes('forces') ? 40 : 0) + (overlays.includes('pid') ? 8 : 0) : Math.round(Math.min(200, Math.max(compact ? 120 : 136, w * (compact ? 0.4 : 0.42))));
   const kinds = compact ? [] : insetsOf(scene, overlays);
   const gap = 8, insetH = Math.round(Math.min(210, Math.max(150, w * (kinds.length === 1 ? 0.5 : 0.52))));
   const insets: SceneLayout['insets'] = kinds.map((kind, i) => {
     const cw = (w - gap * (kinds.length - 1)) / kinds.length;
     return { kind, rect: { x: i * (cw + gap), y: mainH + gap, w: cw, h: insetH } };
   });
-  return { w, h: kinds.length ? mainH + gap + insetH : mainH, main: { x: 0, y: 0, w, h: mainH }, insets };
+  return { w, h: kinds.length ? mainH + gap + insetH : mainH, compact, main: { x: 0, y: 0, w, h: mainH }, insets };
 }
 
 /* ───────────────────────────── cart ───────────────────────────── */
 
 const sim = new Map<string, CartSim>();
-const simFor = (overlays: string[]): CartSim => {
-  const key = ['critical', 'hammer', 'shaker', 'push', 'clock'].filter((o) => overlays.includes(o)).join('|');
-  let s = sim.get(key); if (!s) { s = simulateCart(overlays); sim.set(key, s); } return s;
+const simFor = (overlays: string[], params: Record<string, number> = {}): CartSim => {
+  const key = ['critical', 'hammer', 'shaker', 'push', 'clock', 'loop', 'pid', 'disturb', 'noise', 'limit', 'delay', 'lag'].filter((o) => overlays.includes(o)).join('|') + (isLoopScene('cart', overlays) ? JSON.stringify(params) : '');
+  let s = sim.get(key); if (!s) { s = simulateCart(overlays, params); sim.set(key, s); } return s;
 };
 
-function drawCartMain(g: G, r: Rect, P: Pal, S: CartSim, ov: string[], t: number, small: boolean) {
-  const px = small ? 9.5 : 10.5, st = S.at(t);
-  const w = r.w, yb = r.h - (ov.includes('sensor') ? 40 : ov.includes('forces') ? 44 : 34), xc0 = w * 0.5, scale = Math.min(88, Math.max(38, w * 0.2));
+const statsMemo = new WeakMap<CartSim, { xmax: number; umax: number; pidMax: number }>();
+/** Peaks of a simulation (cached): used to keep the cart on screen and to scale bars once for the whole loop. */
+function stats(S: CartSim) {
+  let s = statsMemo.get(S); if (s) return s;
+  let xmax = 0, umax = 0, pidMax = 0; for (let i = 0; i < S.n; i += 2) { xmax = Math.max(xmax, Math.abs(S.x[i])); umax = Math.max(umax, Math.abs(S.u[i])); if (S.loop) pidMax = Math.max(pidMax, Math.abs(S.loop.up[i]), Math.abs(S.loop.ui[i]), Math.abs(S.loop.ud[i])); }
+  s = { xmax, umax, pidMax }; statsMemo.set(S, s); return s;
+}
+
+interface LoopGeo { yb: number; cx: number; xc0: number; scale: number; cw: number; cartL: number; cartT: number; chh: number; px: number; compactHint: boolean; late: (() => void)[] }
+/** The block diagram under the cart: r → Σ → e → C → u → cart, and the sensor y back to Σ. Every signal is named and shows its live value. */
+function drawLoopDiagram(g: G, r: Rect, P: Pal, S: CartSim, st: ReturnType<CartSim['at']>, ov: string[], o: LoopGeo) {
+  const L = S.loop!, lp = L.P, { yb, cx, xc0, px, late } = o, w = r.w, pid = ov.includes('pid');
+  const bw = Math.min(176, w * 0.52), bh = pid ? 58 : 34, bx0 = xc0 - bw / 2, bx1 = xc0 + bw / 2, top = yb + 26, ym = top + bh / 2, yr = yb + 16, sx = Math.max(24, bx0 - 24);
+  const seen = lp.hasNoise || lp.delay > 0 || lp.lag > 0, sat = lp.hasLimit && Math.abs(st.uc) > lp.umax + 1e-9;
+  // controller block C
+  g.fillStyle = P.elev; g.strokeStyle = P.strong; g.lineWidth = 1.6; g.beginPath(); g.roundRect(bx0, top, bw, bh, 7); g.fill(); g.stroke();
+  if (!pid) {
+    text(g, `C: u = K·e,  K = ${fmt(lp.K, lp.K % 1 ? 1 : 0)} N/m`, xc0, top + 14, P.text, { align: 'center', px, wt: 700 });
+    text(g, `e = r − y${seen ? '_m' : ''} = ${fmt(st.e)} m`, xc0, top + 27, P.muted, { align: 'center', px: px - 0.5, wt: 600 });
+  } else {
+    text(g, `C = P + I + D    e = ${fmt(st.e)} m`, xc0, top + 11, P.text, { align: 'center', px: px - 0.5, wt: 700 });
+    const rows: [string, number, string][] = [['P', st.up, P.s1], ['I', st.ui, P.s2], ['D', st.ud, P.s3]], bx = bx0 + 20, bwid = bw - 20 - 44, mid = bx + bwid / 2, sc = (bwid / 2) / Math.max(1, stats(S).pidMax);
+    rows.forEach(([nm, v, col], i) => {
+      const y = top + 21 + i * 12;
+      text(g, nm, bx0 + 7, y + 9, col, { px, wt: 800 });
+      line(g, [[mid, y - 1], [mid, y + 11]], P.muted, 1, [], 0.6);
+      g.fillStyle = col; g.globalAlpha = 0.85; g.fillRect(Math.min(mid, mid + v * sc), y + 1, Math.abs(v * sc), 8); g.globalAlpha = 1;
+      text(g, fmt(v, 1), bx1 - 5, y + 9, col, { align: 'right', px: px - 1, wt: 700 });
+    });
+  }
+  // target r into the summing junction, error e on to C
+  line(g, [[6, ym], [sx - 9, ym]], P.text, 1.6); arrow(g, sx - 14, ym, sx - 9, ym, P.text, 1.6);
+  text(g, `r = ${fmt(lp.r, 1)} m`, 6, ym - 7, P.text, { px, wt: 700 });
+  g.beginPath(); g.arc(sx, ym, 8, 0, 7); g.fillStyle = P.panel; g.fill(); g.strokeStyle = P.strong; g.lineWidth = 1.6; g.stroke();
+  text(g, '+', sx - 3, ym - 10, P.muted, { px: 10, wt: 800, optional: true }); text(g, '−', sx + 6, ym + 17, P.muted, { px: 11, wt: 800, optional: true });
+  arrow(g, sx + 8, ym, bx0, ym, P.muted, 1.6); text(g, 'e', (sx + bx0) / 2 + 4, ym - 5, P.muted, { align: 'center', px: 10, wt: 700, optional: true });
+  // push u: C up to the cart; sensor y: cart down, back left to the junction
+  const xu = cx + 6, xs = cx - 6, uCol = sat ? P.warn : P.s0;
+  line(g, [[xu, top], [xu, o.cartT + o.chh + 0.5]], uCol, 2.6); arrow(g, xu, o.cartT + o.chh + 9, xu, o.cartT + o.chh, uCol, 2.6);
+  line(g, [[xs, o.cartT + o.chh], [xs, yr], [sx, yr], [sx, ym + 8]], P.ok, 1.8); arrow(g, sx, ym + 15, sx, ym + 8, P.ok, 1.8);
+  g.save(); g.fillStyle = P.ok; g.translate(xs, o.cartT + o.chh); g.rotate(Math.PI / 4); g.fillRect(-3, -3, 6, 6); g.restore();
+  text(g, `u = ${fmt(st.u)} N${sat ? ` (clipped, asked ${fmt(st.uc)})` : ''}`, xu + 6, yb + 18, uCol, { px, wt: 700 });
+  text(g, seen ? `sensor: y = ${fmt(st.x)}, reads y_m = ${fmt(st.ym)} m` : `sensor: y = x = ${fmt(st.x)} m`, xs - 5, yr - 3, P.ok, { align: 'right', px, wt: 700 });
+  if (seen) late.push(() => text(g, 'dashed ghost: what C sees (y_m)', w - 6, 14, P.ok, { align: 'right', px: px - 0.5, wt: 700, optional: true }));
+  late.push(() => text(g, 'e = r − y: the gap C acts on', 6, r.h - 4, P.muted, { px: px - 1, wt: 600, optional: true }));
+}
+
+function drawCartMain(g: G, r: Rect, P: Pal, S: CartSim, ov: string[], t: number, small: boolean, compactHint = false) {
+  const px = small ? 9.5 : 10.5, st = S.at(t), late: (() => void)[] = [];
+  const loop = S.loop, w = r.w, yb = r.h - (loop ? (ov.includes('pid') ? 92 : 84) : ov.includes('sensor') ? 40 : ov.includes('forces') ? 44 : 34), xc0 = w * 0.5;
+  let scale = Math.min(88, Math.max(38, w * 0.2)); if (loop) scale = Math.min(scale, (w * 0.5 - 62) / Math.max(1.1, stats(S).xmax));
   const cw = 52, chh = 38, cx = xc0 + st.x * scale, cartL = cx - cw / 2, cartT = yb - 12 - chh;
   // ground and wall
   line(g, [[6, yb], [w - 6, yb]], P.strong, 2);
@@ -169,30 +283,34 @@ function drawCartMain(g: G, r: Rect, P: Pal, S: CartSim, ov: string[], t: number
   }
   // rest mark (behind the cart)
   line(g, [[xc0, yb - 4], [xc0, cartT - 4]], P.muted, 1, [3, 3], 0.7);
+  // what the controller sees (noise / delay / lag): a dashed ghost cart at the position the sensor reports
+  if (loop && (loop.P.hasNoise || loop.P.delay > 0 || loop.P.lag > 0)) { g.save(); g.strokeStyle = P.ok; g.lineWidth = 1.6; g.setLineDash([4, 3]); g.strokeRect(xc0 + st.ym * scale - cw / 2, cartT, cw, chh); g.restore(); }
   // cart
   g.fillStyle = P.elev; g.strokeStyle = P.s0; g.lineWidth = 2; g.beginPath(); g.roundRect(cartL, cartT, cw, chh, 6); g.fill(); g.stroke();
   dot(g, cartL + 12, yb - 6, 6, P.panel, P.strong); dot(g, cartL + cw - 12, yb - 6, 6, P.panel, P.strong);
   text(g, 'm = 1 kg', cx, cartT + chh / 2 + 4, P.text, { align: 'center', px, wt: 700 });
   // displacement (or the sensor ruler)
-  if (ov.includes('sensor')) {
+  if (loop) drawLoopDiagram(g, r, P, S, st, ov, { yb, cx, xc0, scale, cw, cartL, cartT, chh, px, compactHint, late });
+  else if (ov.includes('sensor')) {
     const ry = yb + 14;
     line(g, [[xc0 - scale * 1.1, ry], [xc0 + scale * 1.1, ry]], P.muted, 1.2);
     for (const v of [-1, -0.5, 0, 0.5, 1]) { line(g, [[xc0 + v * scale, ry - 3], [xc0 + v * scale, ry + 3]], P.muted, 1.2); if (!small || v % 1 === 0) text(g, fmt(v, v % 1 ? 1 : 0), xc0 + v * scale, ry + 14, P.muted, { align: 'center', px: 9 }); }
     g.fillStyle = P.ok; g.beginPath(); g.moveTo(cx, ry - 2); g.lineTo(cx - 5, ry - 10); g.lineTo(cx + 5, ry - 10); g.closePath(); g.fill();
     line(g, [[cx, cartT + chh], [cx, ry - 10]], P.ok, 1.2, [2, 3], 0.8);
-    text(g, `sensor reads y = x = ${fmt(st.x)} m   (C = (1 0))`, w / 2, 14, P.ok, { align: 'center', px, wt: 700 });
+    late.push(() => text(g, `sensor reads y = x = ${fmt(st.x)} m   (C = (1 0))`, w / 2, 14, P.ok, { align: 'center', px, wt: 700, optional: !!compactHint }));
   } else {
     const ry = yb + 18; line(g, [[xc0, ry], [cx, ry]], P.s0, 1.8); if (Math.abs(cx - xc0) > 4) arrow(g, xc0, ry, cx, ry, P.s0, 2);
     dot(g, xc0, ry, 2.5, P.muted);
     text(g, `x = ${fmt(st.x)} m`, Math.max(xc0, cx) + 8, ry + 4, P.s0, { px, wt: 700 });
-    text(g, 'x = 0 (spring relaxed)', xc0 - 6, ry + 4, P.muted, { align: 'right', px: 9.5 });
+    late.push(() => text(g, 'x = 0 (spring relaxed)', xc0 - 6, ry + 4, P.muted, { align: 'right', px: 9.5, optional: true }));
   }
   // forces, one lane each, drawn above the cart
   const lanes: { label: string; val: number; color: string; dash?: number[] }[] = [];
-  const hasU = ov.includes('push') || ov.includes('shaker');
+  const hasU = ov.includes('push') || ov.includes('shaker') || !!loop;
   if (ov.includes('forces')) {
     lanes.push({ label: '−kx', val: -S.k * st.x, color: P.s1 }, { label: '−cẋ', val: -S.c * st.v, color: P.s3 });
     if (hasU) lanes.push({ label: 'u', val: st.u, color: P.s0 });
+    if (loop?.P.hasDisturb && st.d) lanes.push({ label: 'd', val: st.d, color: P.bad });
   }
   if (ov.includes('observe')) lanes.push({ label: 'ẋ', val: st.v, color: P.s2, dash: [4, 3] });
   const FS = 26;
@@ -204,7 +322,13 @@ function drawCartMain(g: G, r: Rect, P: Pal, S: CartSim, ov: string[], t: number
     const tw = (g.font = font(px, 700), g.measureText(lab).width);
     let lx = tail; if (al === 'left' && lx + tw > w - 2) { lx = cx + Math.min(len, 0) - 5; text(g, lab, lx, y + 4, ln.color, { align: 'right', px, wt: 700 }); } else if (al === 'right' && lx - tw < 2) text(g, lab, cx + Math.max(len, 0) + 5, y + 4, ln.color, { px, wt: 700 }); else text(g, lab, lx, y + 4, ln.color, { align: al, px, wt: 700 });
   });
-  if (ov.includes('forces')) text(g, 'm·ẍ = −kx − cẋ' + (hasU ? ' + u' : '') + '   (net force = mass × acceleration)', w / 2, r.h - 4, P.muted, { align: 'center', px: small ? 9 : 10, wt: 600 });
+  if (ov.includes('forces')) late.push(() => text(g, 'm·ẍ = −kx − cẋ' + (hasU ? ' + u' : '') + '   (net force = mass × acceleration)', w / 2, r.h - 4, P.muted, { align: 'center', px: small ? 9 : 10, wt: 600, optional: !!compactHint }));
+  // the shove d, when the forces overlay isn't already showing it
+  if (loop?.P.hasDisturb && st.d && !ov.includes('forces')) {
+    const y = cartT + chh / 2, len = st.d * 30;
+    line(g, [[cartL + cw, y], [cartL + cw + 6, y]], P.bad, 2); arrow(g, cartL + cw + 6, y, cartL + cw + 6 + len, y, P.bad, 3);
+    late.push(() => text(g, `shove d = ${fmt(st.d, 1)} N from t = ${fmt(loop.P.td, 1)} s`, w - 6, 15, P.bad, { align: 'right', px, wt: 700 }));
+  }
   // the push itself, when the forces overlay isn't already showing it
   if ((ov.includes('push') || ov.includes('shaker')) && !ov.includes('forces')) {
     const y = cartT + chh / 2, len = st.u * 34;
@@ -230,6 +354,7 @@ function drawCartMain(g: G, r: Rect, P: Pal, S: CartSim, ov: string[], t: number
     text(g, `clock: every T = ${S.Ts} s`, cx2 - 19, cy2 - 4, P.warn, { align: 'right', px, wt: 700 });
     text(g, `reads x(kT), holds it`, cx2 - 19, cy2 + 9, P.muted, { align: 'right', px: 9.5, wt: 600 });
   }
+  for (const f of late) f();
 }
 
 /** One axis box with ticks; returns data→pixel maps. */
@@ -245,6 +370,7 @@ function axes(g: G, r: Rect, P: Pal, xr: [number, number], yr: [number, number],
 }
 
 function drawCartTrace(g: G, r: Rect, P: Pal, S: CartSim, ov: string[], t: number) {
+  if (S.loop) return drawLoopTrace(g, r, P, S, t);
   const hasU = ov.includes('push') || ov.includes('shaker') || ov.includes('hammer');
   let lo = 0, hi = 0; for (let i = 0; i < S.n; i += 4) { lo = Math.min(lo, S.x[i]); hi = Math.max(hi, S.x[i]); }
   const pad = 0.12 * Math.max(0.3, hi - lo); lo -= pad; hi += pad;
@@ -280,6 +406,7 @@ function drawCartPhase(g: G, r: Rect, P: Pal, S: CartSim, ov: string[], t: numbe
   const side = Math.min(r.w - 4, r.h - 4), sq: Rect = { x: r.x + r.w - side - 2, y: r.y + 2, w: side, h: side };
   let R = 0.4; for (let i = 0; i < S.n; i += 4) R = Math.max(R, Math.abs(S.x[i]), Math.abs(S.v[i])); R = Math.max(1.1, R * 1.15);
   if (ov.includes('reach')) R = Math.max(R, 1.1);
+  if (S.loop) R = Math.max(R, S.loop.P.r * 1.15);
   const { X, Y } = axes(g, sq, P, [-R, R], [-R, R], 'x', 'ẋ', { pad: [4, 12, 4, 12] });
   const cur = S.at(t), pxy = (x: number, v: number): [number, number] => [X(x), Y(v)];
   g.save(); clip(g, { x: sq.x + 1, y: sq.y + 1, w: sq.w - 2, h: sq.h - 2 });
@@ -306,6 +433,7 @@ function drawCartPhase(g: G, r: Rect, P: Pal, S: CartSim, ov: string[], t: numbe
     line(g, [pxy(cur.x, cur.v), pxy(cur.x, 0)], P.ok, 1.6, [3, 3]);
     g.save(); g.fillStyle = P.ok; g.globalAlpha = 0.18; g.fillRect(sq.x, Y(0) - 4, sq.w, 8); g.restore(); dot(g, X(cur.x), Y(0), 4.5, P.ok, P.panel);
   }
+  if (S.loop) { const [tx, ty] = pxy(S.loop.P.r, 0); g.strokeStyle = P.text; g.lineWidth = 1.6; g.beginPath(); g.arc(tx, ty, 6, 0, 7); g.stroke(); line(g, [[tx - 3, ty], [tx + 3, ty]], P.text, 1.4); line(g, [[tx, ty - 3], [tx, ty + 3]], P.text, 1.4); }
   // trail + dot
   const trail: [number, number][] = []; for (let i = 0; i * S.dt <= t; i += 3) trail.push(pxy(S.x[i], S.v[i]));
   const full: [number, number][] = []; for (let i = 0; i < S.n; i += 4) full.push(pxy(S.x[i], S.v[i]));
@@ -316,6 +444,7 @@ function drawCartPhase(g: G, r: Rect, P: Pal, S: CartSim, ov: string[], t: numbe
     text(g, 'v₁ (λ = −1)', sq.x + sq.w - 4, Y(-R * lam[0]) < sq.y + 14 ? sq.y + 24 : Y(-R * lam[0]) - 4, P.s1, { align: 'right', px: 10, wt: 700 });
     text(g, 'v₂ (λ = −2)', sq.x + sq.w - 4, sq.y + sq.h - 28, P.s2, { align: 'right', px: 10, wt: 700 });
   }
+  if (S.loop) text(g, 'target (r, 0)', X(S.loop.P.r) - 4, Y(0) - 10, P.text, { align: 'right', px: 10, wt: 700 });
   if (ov.includes('critical')) text(g, 'v (λ = −√2, twice)', sq.x + sq.w - 4, sq.y + 24, P.s1, { align: 'right', px: 10, wt: 700 });
   if (ov.includes('observe')) text(g, 'y = x: only this', X(cur.x) + (cur.x < 0 ? 6 : -6), Y(0) + (cur.v >= 0 ? 15 : -8), P.ok, { align: cur.x < 0 ? 'left' : 'right', px: 10, wt: 700 });
   // readout in the free column
@@ -326,6 +455,7 @@ function drawCartPhase(g: G, r: Rect, P: Pal, S: CartSim, ov: string[], t: numbe
 }
 
 function drawCartPoles(g: G, r: Rect, P: Pal, S: CartSim, ov: string[], t: number) {
+  if (S.loop) return drawLoopPoles(g, r, P, S, t);
   const xr: [number, number] = [-3.4, 0.9], yr: [number, number] = [-2.1, 2.1];
   const { X, Y } = axes(g, r, P, xr, yr, 'Re s', 'Im s', { pad: [28, 14, 8, 14], noYZero: true });
   g.save(); g.globalAlpha = 0.07; g.fillStyle = P.ok; g.fillRect(X(xr[0]), Y(yr[1]), X(0) - X(xr[0]), Y(yr[0]) - Y(yr[1])); g.restore();
@@ -339,8 +469,74 @@ function drawCartPoles(g: G, r: Rect, P: Pal, S: CartSim, ov: string[], t: numbe
     const c0 = i ? P.s2 : P.s1, xx = X(l), yy = Y(0); line(g, [[xx - 5, yy - 5], [xx + 5, yy + 5]], c0, 2.6); line(g, [[xx - 5, yy + 5], [xx + 5, yy - 5]], c0, 2.6);
     text(g, crit ? `λ = −√2 (twice)` : `λ${i ? '₂' : '₁'} = ${i ? '−2' : '−1'}`, xx, i ? yy - 14 : yy + 24, c0, { align: 'center', px: 10, wt: 700 });
   });
-  if (!crit) text(g, 'halo: mode size now', r.x + r.w - 6, r.y + 10, P.muted, { align: 'right', px: 9.5 });
+  if (!crit) text(g, 'halo: mode size now', r.x + r.w - 6, r.y + 10, P.muted, { align: 'right', px: 9.5, optional: true });
   if (ov.includes('shaker')) { dot(g, X(0), Y(CART.shakerW), 4, P.s0); text(g, 'input jω, ω = 1.5', X(0) - 6, Y(CART.shakerW) + 4, P.s0, { align: 'right', px: 10, wt: 700 }); }
+}
+
+/* ───────────────────────────── closed loop panels ───────────────────────────── */
+
+function drawLoopTrace(g: G, r: Rect, P: Pal, S: CartSim, t: number) {
+  const L = S.loop!, lp = L.P, seen = lp.hasNoise || lp.delay > 0 || lp.lag > 0;
+  let lo = 0, hi = lp.r * 1.15; for (let i = 0; i < S.n; i += 4) { lo = Math.min(lo, S.x[i], seen ? L.ym[i] : 0); hi = Math.max(hi, S.x[i], seen ? L.ym[i] : 0); }
+  const pad = 0.1 * (hi - lo); lo -= pad; hi += pad;
+  const { X, Y } = axes(g, r, P, [0, S.T], [lo, hi], 't (s)', 'x (m)', { pad: [32, 14, 8, 24], xTicks: [0, 2, 4, 6, 8, 10] });
+  const path = (a: Float64Array, to: number) => { const q: [number, number][] = []; for (let i = 0; i * S.dt <= to; i += 2) q.push([X(i * S.dt), Y(a[i])]); return q; };
+  g.save(); clip(g, { x: r.x + 30, y: r.y, w: r.w - 36, h: r.h });
+  line(g, [[X(0), Y(lp.r)], [X(S.T), Y(lp.r)]], P.text, 1.4, [5, 4], 0.85);
+  if (lp.hasDisturb) { line(g, [[X(lp.td), Y(lo)], [X(lp.td), Y(hi)]], P.bad, 1.3, [3, 3], 0.8); }
+  line(g, path(S.x, S.T), P.s0, 2, [], 0.2);
+  if (seen) line(g, path(L.ym, t), P.ok, 1.2, [], 0.9);
+  line(g, path(S.x, t), P.s0, 2.6);
+  const c = S.at(t); line(g, [[X(t), Y(lo)], [X(t), Y(hi)]], P.muted, 1, [2, 3], 0.6); dot(g, X(t), Y(c.x), 4, P.s0, P.panel);
+  g.restore();
+  text(g, `target r = ${fmt(lp.r, 1)} m`, r.x + r.w - 8, Y(lp.r) - 4, P.text, { align: 'right', px: 10, wt: 700 });
+  if (lp.hasDisturb) text(g, `shove d at t = ${fmt(lp.td, 1)} s`, X(lp.td) + 4, r.y + 12, P.bad, { px: 10, wt: 700 });
+  if (seen) text(g, 'green: what C sees (y_m)', r.x + r.w - 8, r.y + r.h - 40, P.ok, { align: 'right', px: 10, wt: 700, optional: true });
+  text(g, 'blue: true x', r.x + r.w - 8, r.y + r.h - (seen ? 52 : 40), P.s0, { align: 'right', px: 10, wt: 700, optional: true });
+}
+
+function drawLoopCtrl(g: G, r: Rect, P: Pal, S: CartSim, ov: string[], t: number) {
+  const L = S.loop!, lp = L.P, pid = ov.includes('pid');
+  let lo = 0, hi = 0; const take = (a: Float64Array) => { for (let i = 0; i < S.n; i += 4) { lo = Math.min(lo, a[i]); hi = Math.max(hi, a[i]); } };
+  take(S.u); if (lp.hasLimit) take(L.uc); if (pid) { take(L.up); take(L.ui); take(L.ud); }
+  if (lp.hasLimit) { lo = Math.min(lo, -lp.umax); hi = Math.max(hi, lp.umax); }
+  const pad = 0.1 * Math.max(0.5, hi - lo); lo -= pad; hi += pad;
+  const { X, Y } = axes(g, r, P, [0, S.T], [lo, hi], 't (s)', 'push u (N)', { pad: [32, 14, 8, 24], xTicks: [0, 2, 4, 6, 8, 10] });
+  const path = (a: Float64Array, to: number) => { const q: [number, number][] = []; for (let i = 0; i * S.dt <= to; i += 2) q.push([X(i * S.dt), Y(a[i])]); return q; };
+  g.save(); clip(g, { x: r.x + 30, y: r.y, w: r.w - 36, h: r.h });
+  if (lp.hasLimit) for (const sg of [1, -1]) line(g, [[X(0), Y(sg * lp.umax)], [X(S.T), Y(sg * lp.umax)]], P.warn, 1.3, [5, 4], 0.95);
+  if (lp.hasLimit) line(g, path(L.uc, t), P.muted, 1.3, [2, 3], 0.9);
+  if (pid) { line(g, path(L.up, t), P.s1, 1.5, [], 0.95); line(g, path(L.ui, t), P.s2, 1.5, [], 0.95); line(g, path(L.ud, t), P.s3, 1.5, [], 0.95); }
+  line(g, path(S.u, S.T), P.s0, 2, [], 0.18); line(g, path(S.u, t), P.s0, 2.6);
+  const c = S.at(t); line(g, [[X(t), Y(lo)], [X(t), Y(hi)]], P.muted, 1, [2, 3], 0.6); dot(g, X(t), Y(c.u), 4, P.s0, P.panel);
+  g.restore();
+  let ly = r.y + 12;
+  const key = (s: string, col: string, opt = false) => { text(g, s, r.x + r.w - 8, ly, col, { align: 'right', px: 10, wt: 700, optional: opt }); ly += 12; };
+  key('u: what the cart gets', P.s0);
+  if (pid) { key('P = K·e', P.s1); key('I = Ki·∫e dt', P.s2); key('D = Kd·de/dt', P.s3); }
+  if (lp.hasLimit) { key(`±u_max = ${fmt(lp.umax, 1)} N`, P.warn); key('grey: demand', P.muted, true); }
+  if (lp.hasNoise) key(`noise σ = ${fmt(lp.noise, 2)} m → jitter in u`, P.ok, true);
+}
+
+function drawLoopPoles(g: G, r: Rect, P: Pal, S: CartSim, t: number) {
+  const L = S.loop!, lp = L.P; void t;
+  const near = (z: { re: number; im: number }) => Math.hypot(z.re, z.im) < 9;
+  let xmin = -3.4, xmax = 0.9, ymax = 2.1;
+  for (const e of L.locus) for (const z of e.poles) if (near(z)) { xmin = Math.min(xmin, z.re - 0.3); xmax = Math.max(xmax, z.re + 0.3); ymax = Math.max(ymax, Math.abs(z.im) * 1.12); }
+  const { X, Y } = axes(g, r, P, [xmin, xmax], [-ymax, ymax], 'Re s', 'Im s', { pad: [28, 14, 8, 14], noYZero: true });
+  g.save(); g.globalAlpha = 0.07; g.fillStyle = P.ok; g.fillRect(X(xmin), Y(ymax), X(0) - X(xmin), Y(-ymax) - Y(ymax)); g.restore();
+  line(g, [[X(0), Y(-ymax)], [X(0), Y(ymax)]], P.strong, 1.5); line(g, [[X(xmin), Y(0)], [X(xmax), Y(0)]], P.muted, 1, [], 0.7);
+  g.save(); clip(g, { x: r.x + 26, y: r.y, w: r.w - 30, h: r.h });
+  // the path the poles take as K grows (each branch as a line), and the open-loop poles it starts from
+  const nb = Math.max(...L.locus.map((e) => e.poles.filter(near).length), 0);
+  for (let b = 0; b < nb; b++) { const q: [number, number][] = []; for (const e of L.locus) { const z = e.poles.filter(near).sort((a, c) => a.re - c.re || a.im - c.im)[b]; if (z) q.push([X(z.re), Y(z.im)]); } line(g, q, P.s0, 1.4, [], 0.45); }
+  for (const l of [-1, -2]) { const x = X(l), y = Y(0); line(g, [[x - 4, y - 4], [x + 4, y + 4]], P.muted, 1.6); line(g, [[x - 4, y + 4], [x + 4, y - 4]], P.muted, 1.6); }
+  for (const z of L.poles) { if (!near(z)) continue; const x = X(z.re), y = Y(z.im); g.save(); g.globalAlpha = 0.25; g.fillStyle = P.s0; g.beginPath(); g.arc(x, y, 9, 0, 7); g.fill(); g.restore(); line(g, [[x - 5, y - 5], [x + 5, y + 5]], P.s0, 2.8); line(g, [[x - 5, y + 5], [x + 5, y - 5]], P.s0, 2.8); }
+  g.restore();
+  text(g, `poles at K = ${fmt(lp.K, lp.K % 1 ? 1 : 0)}`, X(xmin) + 6, r.y + 26, P.s0, { px: 10, wt: 700 });
+  text(g, 'grey ×: open loop (−1, −2)', r.x + r.w - 4, r.y + r.h - 16, P.muted, { align: 'right', px: 9.5, optional: true });
+  text(g, 'line: path as K grows', r.x + r.w - 4, r.y + r.h - 28, P.s0, { align: 'right', px: 9.5, optional: true });
+  if (lp.delay > 0 || lp.lag > 0) text(g, '(sensor delay / lag not in these poles)', r.x + r.w - 4, r.y + 12, P.warn, { align: 'right', px: 9, optional: true });
 }
 
 /* ───────────────────────────── tine ───────────────────────────── */
@@ -389,7 +585,7 @@ function drawTinePoles(g: G, r: Rect, P: Pal, ov: string[], t: number) {
   for (const sg of [1, -1]) { const xx = X(-s), yy = Y(sg * wd); g.save(); g.globalAlpha = 0.25; g.fillStyle = P.s0; g.beginPath(); g.arc(xx, yy, 4 + 11 * e, 0, 7); g.fill(); g.restore(); line(g, [[xx - 5, yy - 5], [xx + 5, yy + 5]], P.s0, 2.6); line(g, [[xx - 5, yy + 5], [xx + 5, yy - 5]], P.s0, 2.6); }
   arrow(g, X(0), Y(wd) - 1, X(-s) + 6, Y(wd) - 1, P.s1, 1.6); text(g, 'σ = 0.6', X(0) - 4, Y(wd) - 8, P.s1, { align: 'right', px: 10, wt: 700 });
   arrow(g, X(-s) - 14, Y(0), X(-s) - 14, Y(wd) - 6, P.s2, 1.6); text(g, `ω_d = 2π f₀ = 6.28`, X(-s) - 18, Y(wd / 2) + 3, P.s2, { align: 'right', px: 10, wt: 700 });
-  text(g, 'halo: ring size now', r.x + r.w - 6, r.y + 10, P.muted, { align: 'right', px: 9.5 });
+  text(g, 'halo: ring size now', r.x + r.w - 6, r.y + 10, P.muted, { align: 'right', px: 9.5, optional: true });
 }
 
 function drawTineSpectrum(g: G, r: Rect, P: Pal, ov: string[]) {
@@ -428,29 +624,26 @@ function drawTineZ(g: G, r: Rect, P: Pal) {
 
 /* ───────────────────────────── one frame, and the mounted component ───────────────────────────── */
 
-/** Draw one frame of a scene at animation time t into a canvas of CSS size (w, layout.h). */
-export function drawSceneFrame(g: G, L: SceneLayout, scene: string, overlays: string[], t: number): void {
-  const P = palette(), small = L.w < 380;
+/** Draw one frame of a scene at animation time t into a canvas of CSS size (w, layout.h). `params` feed the closed-loop overlays. */
+export function drawSceneFrame(g: G, L: SceneLayout, scene: string, overlays: string[], t: number, params: Record<string, number> = {}): void {
+  const P = palette(), small = L.w < 380, ov = expandOverlays(scene, overlays);
   g.clearRect(0, 0, L.w, L.h);
+  const region = (rect: Rect, f: () => void) => { g.save(); g.beginPath(); g.rect(rect.x, rect.y, rect.w, rect.h); g.clip(); beginPanel(rect); f(); g.restore(); };
   if (scene === 'cart') {
-    const S = simFor(overlays);
-    g.save(); g.beginPath(); g.rect(L.main.x, L.main.y, L.main.w, L.main.h); g.clip(); drawCartMain(g, L.main, P, S, overlays, t, small); g.restore();
-    for (const { kind, rect } of L.insets) {
-      g.save(); g.beginPath(); g.rect(rect.x, rect.y, rect.w, rect.h); g.clip();
-      if (kind === 'trace') drawCartTrace(g, rect, P, S, overlays, t); else if (kind === 'phase') drawCartPhase(g, rect, P, S, overlays, t); else if (kind === 'poles') drawCartPoles(g, rect, P, S, overlays, t);
-      g.restore();
-    }
+    const S = simFor(ov, params);
+    region(L.main, () => drawCartMain(g, L.main, P, S, ov, t, small, L.compact));
+    for (const { kind, rect } of L.insets) region(rect, () => {
+      if (kind === 'trace') drawCartTrace(g, rect, P, S, ov, t); else if (kind === 'phase') drawCartPhase(g, rect, P, S, ov, t); else if (kind === 'poles') drawCartPoles(g, rect, P, S, ov, t); else if (kind === 'ctrl' && S.loop) drawLoopCtrl(g, rect, P, S, ov, t);
+    });
   } else if (scene === 'tine') {
-    g.save(); g.beginPath(); g.rect(L.main.x, L.main.y, L.main.w, L.main.h); g.clip(); drawTineMain(g, L.main, P, overlays, t, small); g.restore();
-    for (const { kind, rect } of L.insets) {
-      g.save(); g.beginPath(); g.rect(rect.x, rect.y, rect.w, rect.h); g.clip();
-      if (kind === 'poles') drawTinePoles(g, rect, P, overlays, t); else if (kind === 'spectrum') drawTineSpectrum(g, rect, P, overlays); else if (kind === 'zplane') drawTineZ(g, rect, P);
-      g.restore();
-    }
+    region(L.main, () => drawTineMain(g, L.main, P, ov, t, small));
+    for (const { kind, rect } of L.insets) region(rect, () => {
+      if (kind === 'poles') drawTinePoles(g, rect, P, ov, t); else if (kind === 'spectrum') drawTineSpectrum(g, rect, P, ov); else if (kind === 'zplane') drawTineZ(g, rect, P);
+    });
   }
 }
 
-export interface SceneOptions { scene: string; overlays?: string[]; caption?: string; /** small hero: main picture only */ compact?: boolean }
+export interface SceneOptions { scene: string; overlays?: string[]; caption?: string; /** closed-loop parameters (see scenedefs SCENES.cart.params) */ params?: Record<string, number>; /** small hero: main picture only */ compact?: boolean }
 export interface SceneHandle { el: HTMLElement; canvas: HTMLCanvasElement; setOverlays(o: string[]): void; destroy(): void; /** draw a fixed frame (animation time, s) */ drawAt(t: number): void }
 declare global { interface Window { __sceneFreeze?: number } }
 
@@ -471,7 +664,7 @@ export function mountScene(host: HTMLElement, opts: SceneOptions): SceneHandle {
   const reduced = typeof matchMedia === 'function' && matchMedia('(prefers-reduced-motion: reduce)').matches;
   let raf = 0, visible = true, t0 = performance.now(), layout: SceneLayout | null = null;
   const frozen = () => (typeof window.__sceneFreeze === 'number' ? window.__sceneFreeze : reduced ? sceneRestTime(opts.scene, overlays) : null);
-  const render = (tt: number) => { const w = Math.floor(canvas.getBoundingClientRect().width || el.clientWidth - 12 || 340); layout = sceneLayout(opts.scene, overlays, w, !!opts.compact); canvas.style.height = `${layout.h}px`; const { g } = fitCanvas(canvas); drawSceneFrame(g, layout, opts.scene, overlays, tt); };
+  const render = (tt: number) => { const w = Math.floor(canvas.getBoundingClientRect().width || el.clientWidth - 12 || 340); layout = sceneLayout(opts.scene, overlays, w, !!opts.compact); canvas.style.height = `${layout.h}px`; const { g } = fitCanvas(canvas); drawSceneFrame(g, layout, opts.scene, overlays, tt, opts.params); };
   const setCaption = () => {
     cap.replaceChildren(h('b', null, info.title), opts.caption ? ` — ${opts.caption}` : '');
     if (!opts.compact) cap.append(h('span', { class: 'scene-ov' }, ...overlays.map((id) => h('span', { class: 'scene-chip', title: info.overlays.find((o) => o.id === id)?.says ?? '' }, info.overlays.find((o) => o.id === id)?.label ?? id))));

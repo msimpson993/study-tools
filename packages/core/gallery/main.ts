@@ -154,10 +154,11 @@ void suggestKMax;
 {
   const sec = h('section', { dataset: { testid: 'scenes' } }, h('h2', { style: 'font-size:1.05rem;margin:2rem 0 .3rem' }, 'Example scenes'), h('p', { style: 'color:var(--muted);margin:0 0 .8rem;font-size:.9rem' }, 'mountScene(host, { scene, overlays }): the cart and the plucked tine, animated from the real simulation. Each overlay is one thing a node adds.'));
   const grid = h('div', { style: 'display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,360px),1fr));gap:.8rem' });
-  const sets: [string, string[]][] = [
+  const sets: [string, string[], Record<string, number>?][] = [
     ['cart', ['forces', 'phase']], ['cart', ['modes', 'trace']], ['cart', ['hammer', 'trace']], ['cart', ['shaker', 'poles']], ['cart', ['clock', 'trace']], ['cart', ['sensor', 'observe']], ['cart', ['push', 'reach']], ['cart', ['critical', 'flow']],
+    ['cart', ['loop', 'poles']], ['cart', ['pid']], ['cart', ['disturb'], { Ki: 6, Kd: 1.5 }], ['cart', ['noise'], { Kd: 1.5 }], ['cart', ['limit'], { Ki: 6 }], ['cart', ['delay']], ['cart', ['lag'], { K: 8 }], ['cart', ['loop', 'phase']],
     ['tine', ['envelope', 'poles']], ['tine', ['sampler', 'spectrum']], ['tine', ['window', 'sampler']], ['tine', ['poles', 'zpoles']],
   ];
-  for (const [scene, overlays] of sets) { const cell = h('div', { dataset: { sceneSet: `${scene}:${overlays.join('+')}` } }); grid.append(cell); mountScene(cell, { scene, overlays }); }
+  for (const [scene, overlays, params] of sets) { const cell = h('div', { dataset: { sceneSet: `${scene}:${overlays.join('+')}` } }); grid.append(cell); mountScene(cell, { scene, overlays, params }); }
   sec.append(grid); root.append(sec);
 }
