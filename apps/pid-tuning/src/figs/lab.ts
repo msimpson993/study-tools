@@ -4,7 +4,12 @@ import { PRE, windowFor, runLab, verdict, DIST_AMP, UMAX, type LabValues, type L
 import type { PlantId, AntiWindup } from '@study/core/dsp';
 
 type V = Record<string, number | string | boolean>;
-export const labValues = (v: V): LabValues => ({ plant: String(v.plant) as PlantId, Kp: +v.Kp, Ki: +v.Ki, Kd: +v.Kd, N: +v.N, T: +v.T, dist: !!v.dist, noise: !!v.noise, sat: !!v.sat, aw: String(v.aw) as AntiWindup, dm: !!v.dm });
+const DEF: LabValues = { plant: 'p3', Kp: 2, Ki: 0.8, Kd: 1.6, N: 20, T: 30, dist: false, noise: false, sat: false, aw: 'none', dm: false };
+/** The control values with the figure's fixed settings filled in (a focused figure declares only some of the Lab's controls). */
+export const labValues = (v: V, fixed: Partial<LabValues> = {}): LabValues => {
+  const d = { ...DEF, ...fixed }, pick = <K extends keyof LabValues>(k: K): LabValues[K] => (v[k] === undefined ? d[k] : (v[k] as LabValues[K]));
+  return { plant: String(pick('plant')) as PlantId, Kp: +pick('Kp'), Ki: +pick('Ki'), Kd: +pick('Kd'), N: +pick('N'), T: +pick('T'), dist: !!pick('dist'), noise: !!pick('noise'), sat: !!pick('sat'), aw: String(pick('aw')) as AntiWindup, dm: !!pick('dm') };
+};
 const f2 = (x: number, d = 2) => (Number.isFinite(x) ? x.toFixed(d).replace('-', '−') : '—');
 const pct = (a: number[], p: number) => { const b = a.slice().sort((x, y) => x - y); return b[Math.min(b.length - 1, Math.max(0, Math.floor(p * (b.length - 1))))]; };
 const levelColor = (l: string) => (l === 'bad' ? col.bad() : l === 'warn' ? col.c() : l === 'ok' ? col.ok() : col.text());
@@ -17,10 +22,11 @@ function wrap(g: CanvasRenderingContext2D, s: string, maxW: number, size: number
 }
 
 /** The PID Lab as a core Figure on simulatePid / pidMetrics: every legacy toggle is a declared control, and the ghost keeps the previous run. */
-export const labFigure = figureOf((c) => {
+export interface LabOptions { panels?: ('out' | 'u' | 'poles' | 'read')[]; fixed?: Partial<LabValues>; /** rewrite the values before simulating (e.g. a Ziegler–Nichols switch) */ map?: (lv: LabValues, v: V) => LabValues }
+export const makeLab = (opt: LabOptions = {}) => figureOf((c) => {
   let cur: LabRun | null = null, curKey = '', committed: LabRun | null = null, ghost: LabRun | null = null, timer: ReturnType<typeof setTimeout> | undefined;
   const run = (v: V): LabRun => {
-    const lv = labValues(v), key = JSON.stringify(lv);
+    const lv0 = labValues(v, opt.fixed), lv = opt.map ? opt.map(lv0, v) : lv0, key = JSON.stringify(lv);
     if (key !== curKey) {
       ghost = committed; curKey = key; cur = runLab(lv);
       clearTimeout(timer); const mine = cur; timer = setTimeout(() => { committed = mine; }, 450); // a slider drag keeps the ghost = where the drag began
@@ -30,7 +36,7 @@ export const labFigure = figureOf((c) => {
   // switching plant resets the gains and window to that plant's PI preset, as the original page did
   let busy = false;
   c.onChange((k) => {
-    if (k !== 'plant' || busy) return; busy = true;
+    if (k !== 'plant' || busy || !c.defs.some((d) => d.id === 'Kp')) return; busy = true;
     const p = String(c.values.plant) as PlantId, g = PRE[p].PI!;
     c.set('Kp', g[0]); c.set('Ki', g[1]); c.set('Kd', g[2]); c.set('T', windowFor(p, 'PI')); busy = false;
   });
@@ -99,5 +105,6 @@ export const labFigure = figureOf((c) => {
       height: 270,
     },
   ];
-  return panels;
+  return opt.panels ? opt.panels.map((id) => panels.find((p) => p.id === id)!) : panels;
 });
+export const labFigure = makeLab();

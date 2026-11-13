@@ -38,3 +38,395 @@
     - { id: p1-pi, label: "1st-order lag · PI", set: { plant: p1, Kp: 2, Ki: 4, Kd: 0, T: 10 }, about: "The integral removes the offset; Ki trades speed for overshoot." }
     - { id: p1-pid, label: "1st-order lag · PID", set: { plant: p1, Kp: 3, Ki: 5, Kd: 0.2, T: 10 }, about: "D adds damping, so a larger Kp is affordable." }
     - { id: p1-i, label: "1st-order lag · I", set: { plant: p1, Kp: 0, Ki: 0.25, Kd: 0, T: 20 }, about: "Integral only: slow, and it overshoots as soon as Ki is large." }
+- id: gains
+  title: "What each gain does to the cart-like plant"
+  x: "time (s)"
+  y: "output y and control u"
+  legend:
+    - { label: "output y", color: "var(--cyan)" }
+    - { label: "reference r = 1", color: "var(--muted)", dash: true }
+    - { label: "previous run (ghost)", color: "var(--muted)", dash: true }
+    - { label: "control u", color: "var(--org)" }
+    - { label: "closed-loop poles ×", color: "var(--org)" }
+  howToRead: "Left: the step response of the plant 1/((s+1)(0.5s+1)) (the cart of the running example, scaled to unit DC gain) under u = Kp·e + Ki·∫e + Kd·de/dt. Dashed grey is the previous setting. Right: where the closed-loop poles are."
+  lookFor: "Raise Kp: faster, but the poles pull toward each other and then ring. Add Ki: the offset vanishes but overshoot grows. Add Kd: the ringing is damped."
+  controls:
+    - { id: Kp, label: "Kp", type: range, min: 0, max: 10, step: 0.05, default: 2, group: primary }
+    - { id: Ki, label: "Ki", type: range, min: 0, max: 6, step: 0.02, default: 0, group: primary }
+    - { id: Kd, label: "Kd", type: range, min: 0, max: 3, step: 0.02, default: 0, group: primary }
+    - { id: ghost, label: "Keep previous run as ghost", type: toggle, default: true, group: more }
+  presets:
+    - { id: p, label: "P only", set: { Kp: 2, Ki: 0, Kd: 0 }, about: "Fast-ish, but the output stops short of r." }
+    - { id: pi, label: "Add I", set: { Kp: 2, Ki: 2, Kd: 0 }, about: "The offset is gone; a little overshoot appears." }
+    - { id: pid, label: "Add D", set: { Kp: 4, Ki: 4, Kd: 0.8 }, about: "Faster again, and D keeps the ringing down." }
+    - { id: hi, label: "Too much Kp", set: { Kp: 10, Ki: 0, Kd: 0 }, about: "High gain: a lightly damped pole pair." }
+- id: derivative
+  title: "The derivative term: damping, noise and kick"
+  x: "time (s)"
+  y: "output y and control u"
+  legend:
+    - { label: "output y", color: "var(--cyan)" }
+    - { label: "reference r = 1", color: "var(--muted)", dash: true }
+    - { label: "previous run (ghost)", color: "var(--muted)", dash: true }
+    - { label: "control u", color: "var(--org)" }
+  howToRead: "Top: the output; bottom: the control the actuator sees. A noisy sensor (σ = 0.02) feeds the derivative term, so the control signal is hairy unless N is low; a set-point step makes D on the error spike at t = 0 unless it acts on the measurement."
+  lookFor: "Turn on D with N = 100: the control u turns into noise although y looks fine. Lower N to 10, or switch D to the measurement: the spike and the hair go away."
+  controls:
+    - { id: Kd, label: "Kd", type: range, min: 0, max: 3, step: 0.02, default: 0.5, group: primary }
+    - { id: N, label: "Derivative filter N", type: range, min: 1, max: 100, step: 1, default: 100, group: primary }
+    - { id: noise, label: "Sensor noise (σ = 0.01)", type: toggle, default: true, group: primary }
+    - { id: dm, label: "D on measurement (no kick)", type: toggle, default: false, group: primary }
+    - { id: ghost, label: "Keep previous run as ghost", type: toggle, default: true, group: more }
+  presets:
+    - { id: off, label: "D off", set: { Kd: 0, N: 100 } }
+    - { id: raw, label: "D, unfiltered (N = 100)", set: { Kd: 0.5, N: 100, noise: true } }
+    - { id: filt, label: "Filtered (N = 10)", set: { Kd: 0.5, N: 10, noise: true } }
+    - { id: meas, label: "D on measurement", set: { Kd: 0.5, N: 100, noise: true, dm: true } }
+- id: windup
+  title: "Actuator saturation and integrator windup"
+  x: "time (s)"
+  y: "output y and control u"
+  legend:
+    - { label: "output y", color: "var(--cyan)" }
+    - { label: "reference r = 1", color: "var(--muted)", dash: true }
+    - { label: "previous run (ghost)", color: "var(--muted)", dash: true }
+    - { label: "control u", color: "var(--org)" }
+  howToRead: "The actuator can only deliver |u| ≤ 1.2. While it is saturated the error stays positive, so a plain integrator keeps accumulating; after the output reaches r it has to unwind, which shows up as overshoot. Clamping stops the integrator while it would push further into the limit; back-calculation bleeds it off smoothly."
+  lookFor: "With anti-windup off, the output overshoots long after the control comes off the limit. Switch it to clamping: the overshoot shrinks. Then lower Ki: the effect fades because the integral has less to wind up."
+  controls:
+    - { id: Ki, label: "Ki", type: range, min: 0, max: 8, step: 0.1, default: 4, group: primary }
+    - { id: Kp, label: "Kp", type: range, min: 0, max: 6, step: 0.05, default: 2, group: primary }
+    - { id: aw, label: "Anti-windup", type: select, options: [{ value: none, label: "off" }, { value: clamp, label: "clamping" }, { value: backcalc, label: "back-calculation" }], default: none, group: primary }
+    - { id: ghost, label: "Keep previous run as ghost", type: toggle, default: true, group: more }
+  presets:
+    - { id: off, label: "No anti-windup", set: { aw: none } }
+    - { id: clamp, label: "Clamping", set: { aw: clamp } }
+    - { id: bc, label: "Back-calculation", set: { aw: backcalc } }
+    - { id: weak, label: "Weak integral (Ki = 1)", set: { Ki: 1, aw: none } }
+- id: zn
+  title: "Ziegler–Nichols: tune from the edge of instability"
+  x: "time (s)"
+  y: "output y and control u"
+  legend:
+    - { label: "output y", color: "var(--cyan)" }
+    - { label: "reference r = 1", color: "var(--muted)", dash: true }
+    - { label: "previous run (ghost)", color: "var(--muted)", dash: true }
+    - { label: "control u", color: "var(--org)" }
+    - { label: "closed-loop poles ×", color: "var(--org)" }
+  howToRead: "Plant 1/(s+1)³ under P only. Raise Kp until the output rings forever: that gain is the ultimate gain Kᵤ = 8 and the ringing period is Tᵤ = 2π/√3 ≈ 3.63 s. The Z–N rules turn those two numbers into Kp = 0.6 Kᵤ, Ti = Tᵤ/2, Td = Tᵤ/8. Switch on \"Use the Z–N PID\" to see what they give."
+  lookFor: "Raise Kp toward 8: the closed-loop poles walk to the jω axis and the response rings forever. Then switch on the Z–N PID: fast, but with big overshoot (the rules aim for quarter-amplitude decay, not elegance)."
+  controls:
+    - { id: Kp, label: "Kp (P only)", type: range, min: 0, max: 12, step: 0.05, default: 4, group: primary }
+    - { id: zn, label: "Use the Ziegler–Nichols PID from Kᵤ = 8", type: toggle, default: false, group: primary }
+    - { id: ghost, label: "Keep previous run as ghost", type: toggle, default: true, group: more }
+  presets:
+    - { id: p4, label: "P, Kp = 4", set: { Kp: 4 } }
+    - { id: ku, label: "P, Kp = Kᵤ = 8", set: { Kp: 8 }, about: "Marginally stable: sustained oscillation of period ≈ 3.63 s." }
+    - { id: over, label: "P, Kp = 11", set: { Kp: 11 }, about: "Past Kᵤ: the oscillation grows." }
+    - { id: zn, label: "Z–N PID", set: { Kp: 8, zn: true }, about: "Kp = 4.8, Ki ≈ 2.65, Kd ≈ 2.18." }
+- id: integral
+  title: "Why integral action removes the offset"
+  x: "time (s)"
+  y: "e(t), Kp·e, Ki·∫e"
+  legend:
+    - { label: "output y", color: "var(--cyan)" }
+    - { label: "error e", color: "var(--org)" }
+    - { label: "Kp·e (dashed)", color: "var(--muted)", dash: true }
+    - { label: "Ki·∫e", color: "var(--yel)" }
+  howToRead: "Three views of one run on the plant 1/(s+1)³. Top: the output. Middle: the error e and the P term Kp·e that acts on it right now. Bottom: the I term Ki·∫e, which keeps growing for as long as e is not zero and then holds whatever u the plant needs."
+  lookFor: "With Ki = 0 the P term settles at a non-zero value, so e never reaches zero. Add Ki: the bottom trace climbs until e is zero and then stays put at exactly the control that holds y = r."
+  controls:
+    - { id: Ki, label: "Ki", type: range, min: 0, max: 1.5, step: 0.02, default: 0.4, group: primary }
+    - { id: Kp, label: "Kp", type: range, min: 0, max: 5, step: 0.05, default: 1, group: primary }
+  presets:
+    - { id: p, label: "P only", set: { Ki: 0, Kp: 1 }, about: "e settles at 1/(1+Kp·G(0)) = 0.5." }
+    - { id: pi, label: "PI", set: { Ki: 0.4, Kp: 1 }, about: "The offset is integrated away." }
+    - { id: fast, label: "Larger Ki", set: { Ki: 1, Kp: 1 }, about: "Faster, but it rings." }
+- id: problem
+  title: "Why feedback: a plant whose gain we got wrong"
+  x: "time (s)"
+  y: "output y (target r = 1)"
+  legend:
+    - { label: "output y", color: "var(--cyan)" }
+    - { label: "reference r = 1", color: "var(--muted)", dash: true }
+  howToRead: "Left: open loop, where the controller sends u = r and trusts the model that the plant has unit DC gain. Right: a PI loop that measures y and corrects from the error. Slide the true plant gain away from 1 and add a push on the plant input halfway: open loop is wrong by exactly that much; closed loop recovers."
+  lookFor: "Set the true gain to 0.6: open loop ends at 0.6, closed loop at 1. Then add a push of 0.3: open loop shifts again, closed loop returns to 1."
+  controls:
+    - { id: gain, label: "True plant gain", type: range, min: 0.4, max: 1.6, step: 0.02, default: 0.6, group: primary }
+    - { id: push, label: "Push on the plant input (at t = 6 s)", type: range, min: 0, max: 0.5, step: 0.01, default: 0, group: primary }
+  presets:
+    - { id: known, label: "Model is right", set: { gain: 1, push: 0 } }
+    - { id: low, label: "Gain is 0.6", set: { gain: 0.6, push: 0 } }
+    - { id: push, label: "Gain 0.6 and a push of 0.3", set: { gain: 0.6, push: 0.3 } }
+    - { id: high, label: "Gain is 1.4", set: { gain: 1.4, push: 0 } }
+- id: bodepid
+  title: "PID by its margins: crossover and phase margin"
+  x: "ω (rad/s)"
+  y: "dB · degrees"
+  legend:
+    - { label: "|L(jω)| (dB)", color: "var(--cyan)" }
+    - { label: "phase (°)", color: "var(--org)" }
+    - { label: "PM / GM bars", color: "var(--grn)" }
+  howToRead: "Left: the Bode plot of the loop L = C·G for the PID on the chosen plant; the green bars are the phase margin (at the 0 dB crossover) and the gain margin (at the −180° crossover). Right: the step response that loop gives. More crossover means faster; more phase margin means less ringing. The MATLAB PID Tuner sliders move exactly these two numbers."
+  lookFor: "Raise Kp: the crossover moves right (faster) and the phase margin shrinks (more overshoot). Add Kd: the phase margin comes back."
+  controls:
+    - { id: plant, label: "Plant", type: select, options: [{ value: p3, label: "1/(s+1)³" }, { value: p2, label: "1/((s+1)(0.5s+1))" }, { value: p1, label: "1/(s+1)" }], default: p3, group: primary }
+    - { id: Kp, label: "Kp", type: range, min: 0.1, max: 10, step: 0.05, default: 2, group: primary }
+    - { id: Ki, label: "Ki", type: range, min: 0, max: 5, step: 0.02, default: 0.4, group: primary }
+    - { id: Kd, label: "Kd", type: range, min: 0, max: 4, step: 0.02, default: 0.8, group: primary }
+  presets:
+    - { id: mild, label: "Gentle PID", set: { Kp: 1, Ki: 0.3, Kd: 0.5 } }
+    - { id: fast, label: "Fast, less margin", set: { Kp: 4, Ki: 1, Kd: 0.5 } }
+    - { id: edge, label: "Near the edge", set: { Kp: 7.5, Ki: 0, Kd: 0 }, about: "Phase margin close to zero." }
+    - { id: damped, label: "Kd restores margin", set: { Kp: 4, Ki: 1, Kd: 2 } }
+- id: second
+  title: "Feel ζ and ωn: the poles decide the step"
+  x: "time (s) · σ (1/s)"
+  y: "output (normalised) · jω (rad/s)"
+  legend:
+    - { label: "step response", color: "var(--cyan)" }
+    - { label: "poles ×", color: "var(--org)" }
+  howToRead: "Left: the s-plane. Drag the × (or use the sliders): its distance from the origin is the natural frequency ωn, its angle from the negative real axis sets the damping ratio ζ. Right: the step response of ωn²/(s² + 2ζωn s + ωn²) with rise time, overshoot, ±2 % band and settling time marked."
+  lookFor: "Drag the pole straight up: the ringing grows but the decay rate (its real part) does not. Drag it left: faster, same shape. Overshoot depends on the angle only."
+  controls:
+    - { id: wn, label: "Natural frequency ωn", type: range, min: 0.3, max: 6, step: 0.01, default: 2, group: primary, unit: rad/s }
+    - { id: zeta, label: "Damping ratio ζ", type: range, min: 0.05, max: 2, step: 0.01, default: 0.5, group: primary }
+    - { id: marks, label: "Show Tr, %OS, Ts, band", type: toggle, default: true, group: more }
+  presets:
+    - { id: half, label: "ζ = 0.5", set: { wn: 2, zeta: 0.5 } }
+    - { id: crit, label: "Critical (ζ = 1)", set: { wn: 2, zeta: 1 } }
+    - { id: ring, label: "Rings (ζ = 0.12)", set: { wn: 3, zeta: 0.12 } }
+    - { id: over, label: "Overdamped (ζ = 1.6)", set: { wn: 2, zeta: 1.6 } }
+- id: fail-slow
+  title: "A1 · Slow response"
+  x: "time (s)"
+  y: "output y"
+  legend:
+    - { label: "problem (solid)", color: "var(--org)" }
+    - { label: "fixed version (dashed)", color: "var(--grn)", dash: true }
+    - { label: "reference r", color: "var(--muted)", dash: true }
+  howToRead: "The solid trace is the failure (plant 1/((s+1)(0.5s+1)) with a PI that is too timid); the dashed trace is a fixed version, for contrast. The sliders move the solid run, so you can walk it to the fix or away from it. Teaching plant, not the engine model."
+  lookFor: "Raise Kp and Ki toward the dashed fix: the rise and settling times shrink."
+  controls:
+    - { id: Kp, label: "Kp", type: range, min: 0, max: 4, step: 0.05, default: 0.3, group: primary }
+    - { id: Ki, label: "Ki", type: range, min: 0, max: 4, step: 0.05, default: 0.2, group: primary }
+  presets:
+    - { id: problem, label: "The problem", set: { Kp: 0.3, Ki: 0.2 } }
+    - { id: fixed, label: "The fix", set: { Kp: 1.5, Ki: 1 } }
+- id: fail-offset
+  title: "A2 · Steady-state offset"
+  x: "time (s)"
+  y: "output y"
+  legend:
+    - { label: "problem (solid)", color: "var(--org)" }
+    - { label: "fixed version (dashed)", color: "var(--grn)", dash: true }
+    - { label: "reference r", color: "var(--muted)", dash: true }
+  howToRead: "The solid trace is the failure (P only against PI); the dashed trace is a fixed version, for contrast. The sliders move the solid run, so you can walk it to the fix or away from it. Teaching plant, not the engine model."
+  lookFor: "Raise Kp: the offset shrinks but never vanishes. Add Ki: it is gone."
+  controls:
+    - { id: Kp, label: "Kp", type: range, min: 0, max: 6, step: 0.05, default: 2, group: primary }
+    - { id: Ki, label: "Ki", type: range, min: 0, max: 4, step: 0.05, default: 0, group: primary }
+  presets:
+    - { id: problem, label: "The problem", set: { Kp: 2, Ki: 0 } }
+    - { id: fixed, label: "The fix", set: { Kp: 2, Ki: 1 } }
+- id: fail-overshoot
+  title: "A3 · Overshoot"
+  x: "time (s)"
+  y: "output y"
+  legend:
+    - { label: "problem (solid)", color: "var(--org)" }
+    - { label: "fixed version (dashed)", color: "var(--grn)", dash: true }
+    - { label: "reference r", color: "var(--muted)", dash: true }
+  howToRead: "The solid trace is the failure (PI with an integral term too strong for the plant); the dashed trace is a fixed version, for contrast. The sliders move the solid run, so you can walk it to the fix or away from it. Teaching plant, not the engine model."
+  lookFor: "Lower Ki first; or add Kd to damp it."
+  controls:
+    - { id: Kp, label: "Kp", type: range, min: 0, max: 6, step: 0.05, default: 2, group: primary }
+    - { id: Ki, label: "Ki", type: range, min: 0, max: 6, step: 0.05, default: 3.5, group: primary }
+    - { id: Kd, label: "Kd", type: range, min: 0, max: 2, step: 0.05, default: 0, group: primary }
+  presets:
+    - { id: problem, label: "The problem", set: { Kp: 2, Ki: 3.5, Kd: 0 } }
+    - { id: fixed, label: "The fix", set: { Kp: 2, Ki: 1, Kd: 0 } }
+    - { id: damp, label: "Damp", set: { Kp: 2, Ki: 3.5, Kd: 0.6 } }
+- id: fail-oscillation
+  title: "A4 · Sustained oscillation / instability"
+  x: "time (s)"
+  y: "output y"
+  legend:
+    - { label: "problem (solid)", color: "var(--org)" }
+    - { label: "fixed version (dashed)", color: "var(--grn)", dash: true }
+    - { label: "reference r", color: "var(--muted)", dash: true }
+  howToRead: "The solid trace is the failure (P only on 1/(s+1)³ at its ultimate gain); the dashed trace is a fixed version, for contrast. The sliders move the solid run, so you can walk it to the fix or away from it. Teaching plant, not the engine model."
+  lookFor: "Kp = 8 rings forever, 12 grows, 2 is calm: back the gain off."
+  controls:
+    - { id: Kp, label: "Kp", type: range, min: 0, max: 14, step: 0.1, default: 8, group: primary }
+  presets:
+    - { id: problem, label: "The problem", set: { Kp: 8 } }
+    - { id: fixed, label: "The fix", set: { Kp: 2 } }
+    - { id: grows, label: "Grows", set: { Kp: 12 } }
+- id: fail-disturbance
+  title: "A5 · Poor disturbance rejection"
+  x: "time (s)"
+  y: "output y"
+  legend:
+    - { label: "problem (solid)", color: "var(--org)" }
+    - { label: "fixed version (dashed)", color: "var(--grn)", dash: true }
+    - { label: "reference r", color: "var(--muted)", dash: true }
+  howToRead: "The solid trace is the failure (a push on the plant input with the set-point at 0); the dashed trace is a fixed version, for contrast. The sliders move the solid run, so you can walk it to the fix or away from it. Teaching plant, not the engine model."
+  lookFor: "Stronger Kp and Ki shrink the excursion and speed the return."
+  controls:
+    - { id: Kp, label: "Kp", type: range, min: 0, max: 6, step: 0.05, default: 0.8, group: primary }
+    - { id: Ki, label: "Ki", type: range, min: 0, max: 6, step: 0.05, default: 0.4, group: primary }
+  presets:
+    - { id: problem, label: "The problem", set: { Kp: 0.8, Ki: 0.4 } }
+    - { id: fixed, label: "The fix", set: { Kp: 3, Ki: 3 } }
+- id: fail-noise
+  title: "A6 · Noisy / jittery actuator"
+  x: "time (s)"
+  y: "output y"
+  legend:
+    - { label: "problem (solid)", color: "var(--org)" }
+    - { label: "fixed version (dashed)", color: "var(--grn)", dash: true }
+    - { label: "reference r", color: "var(--muted)", dash: true }
+  howToRead: "The solid trace is the failure (D acting on a noisy measurement); the dashed trace is a fixed version, for contrast. The sliders move the solid run, so you can walk it to the fix or away from it. Teaching plant, not the engine model."
+  lookFor: "The output looks fine; the control does not. Lower N."
+  controls:
+    - { id: Kd, label: "Kd", type: range, min: 0, max: 2, step: 0.05, default: 0.5, group: primary }
+    - { id: N, label: "Derivative filter N", type: range, min: 1, max: 100, step: 1, default: 100, group: primary }
+  presets:
+    - { id: problem, label: "The problem", set: { Kd: 0.5, N: 100 } }
+    - { id: fixed, label: "The fix", set: { Kd: 0.5, N: 10 } }
+- id: fail-windup
+  title: "A7 · Integrator windup (actuator saturation)"
+  x: "time (s)"
+  y: "output y"
+  legend:
+    - { label: "problem (solid)", color: "var(--org)" }
+    - { label: "fixed version (dashed)", color: "var(--grn)", dash: true }
+    - { label: "reference r", color: "var(--muted)", dash: true }
+  howToRead: "The solid trace is the failure (PI against |u| ≤ 1.2); the dashed trace is a fixed version, for contrast. The sliders move the solid run, so you can walk it to the fix or away from it. Teaching plant, not the engine model."
+  lookFor: "Switch on clamping: the overshoot after saturation disappears."
+  controls:
+    - { id: Kp, label: "Kp", type: range, min: 0, max: 6, step: 0.05, default: 2, group: primary }
+    - { id: Ki, label: "Ki", type: range, min: 0, max: 8, step: 0.1, default: 4, group: primary }
+    - { id: aw, label: "Anti-windup", type: select, options: [{ value: none, label: "off" }, { value: clamp, label: "clamping" }, { value: backcalc, label: "back-calculation" }], default: none, group: primary }
+  presets:
+    - { id: problem, label: "The problem", set: { aw: none } }
+    - { id: fixed, label: "The fix", set: { aw: clamp } }
+- id: fail-kick
+  title: "A8 · Derivative kick"
+  x: "time (s)"
+  y: "output y"
+  legend:
+    - { label: "problem (solid)", color: "var(--org)" }
+    - { label: "fixed version (dashed)", color: "var(--grn)", dash: true }
+    - { label: "reference r", color: "var(--muted)", dash: true }
+  howToRead: "The solid trace is the failure (D on the error at a set-point step); the dashed trace is a fixed version, for contrast. The sliders move the solid run, so you can walk it to the fix or away from it. Teaching plant, not the engine model."
+  lookFor: "Put D on the measurement: the spike in u at t = 0 vanishes."
+  controls:
+    - { id: Kd, label: "Kd", type: range, min: 0, max: 2, step: 0.05, default: 0.5, group: primary }
+    - { id: N, label: "Derivative filter N", type: range, min: 1, max: 100, step: 1, default: 20, group: primary }
+    - { id: dm, label: "D on measurement", type: toggle, default: false, group: primary }
+  presets:
+    - { id: problem, label: "The problem", set: { dm: false } }
+    - { id: fixed, label: "The fix", set: { dm: true } }
+- id: fail-limits
+  title: "A9 · Actuator saturation and rate limits"
+  x: "time (s)"
+  y: "output y"
+  legend:
+    - { label: "problem (solid)", color: "var(--org)" }
+    - { label: "fixed version (dashed)", color: "var(--grn)", dash: true }
+    - { label: "reference r", color: "var(--muted)", dash: true }
+  howToRead: "The solid trace is the failure (a limit on the size and on the speed of u); the dashed trace is a fixed version, for contrast. The sliders move the solid run, so you can walk it to the fix or away from it. Teaching plant, not the engine model."
+  lookFor: "Tighten the limits: the response slows and a rate limit adds lag. Dashed is the unlimited loop."
+  controls:
+    - { id: umax, label: "Amplitude limit |u| ≤", type: range, min: 1, max: 5, step: 0.1, default: 2.5, group: primary }
+    - { id: Ki, label: "Ki", type: range, min: 0, max: 4, step: 0.05, default: 1.5, group: primary }
+    - { id: rmax, label: "Rate limit (1/s)", type: range, min: 0.1, max: 3, step: 0.05, default: 0.5, group: primary }
+  presets:
+    - { id: problem, label: "The problem", set: { umax: 2.5, rmax: 0.5 } }
+    - { id: ideal, label: "Ideal", set: { umax: 5, rmax: 3 } }
+- id: fail-delay
+  title: "A10 · Time delay (dead time)"
+  x: "time (s)"
+  y: "output y"
+  legend:
+    - { label: "problem (solid)", color: "var(--org)" }
+    - { label: "fixed version (dashed)", color: "var(--grn)", dash: true }
+    - { label: "reference r", color: "var(--muted)", dash: true }
+  howToRead: "The solid trace is the failure (a delay of 1 s inside the loop); the dashed trace is a fixed version, for contrast. The sliders move the solid run, so you can walk it to the fix or away from it. Teaching plant, not the engine model."
+  lookFor: "The gains that were fine without delay oscillate with it: lower them, or shrink the delay."
+  controls:
+    - { id: Kp, label: "Kp", type: range, min: 0, max: 4, step: 0.05, default: 2, group: primary }
+    - { id: Ki, label: "Ki", type: range, min: 0, max: 4, step: 0.05, default: 2, group: primary }
+    - { id: delay, label: "Delay (s)", type: range, min: 0, max: 2, step: 0.05, default: 1, group: primary }
+  presets:
+    - { id: problem, label: "The problem", set: { Kp: 2, Ki: 2 } }
+    - { id: fixed, label: "The fix", set: { Kp: 0.5, Ki: 0.4 } }
+- id: fail-sensorlag
+  title: "A11 · Measurement (sensor) lag"
+  x: "time (s)"
+  y: "output y"
+  legend:
+    - { label: "problem (solid)", color: "var(--org)" }
+    - { label: "fixed version (dashed)", color: "var(--grn)", dash: true }
+    - { label: "reference r", color: "var(--muted)", dash: true }
+  howToRead: "The solid trace is the failure (a slow sensor, 1.5 s); the dashed trace is a fixed version, for contrast. The sliders move the solid run, so you can walk it to the fix or away from it. Teaching plant, not the engine model."
+  lookFor: "The controller reacts to the lagged copy, so the true output rings; lower the gains or fix the sensor."
+  controls:
+    - { id: Kp, label: "Kp", type: range, min: 0, max: 4, step: 0.05, default: 2, group: primary }
+    - { id: Ki, label: "Ki", type: range, min: 0, max: 4, step: 0.05, default: 1, group: primary }
+    - { id: sensTau, label: "Sensor time constant (s)", type: range, min: 0, max: 3, step: 0.05, default: 1.5, group: primary }
+  presets:
+    - { id: problem, label: "The problem", set: { Kp: 2, Ki: 1 } }
+    - { id: fixed, label: "The fix", set: { Kp: 0.8, Ki: 0.4 } }
+- id: fail-nonlinear
+  title: "A12 · Nonlinearity / operating-point change"
+  x: "time (s)"
+  y: "output y"
+  legend:
+    - { label: "problem (solid)", color: "var(--org)" }
+    - { label: "fixed version (dashed)", color: "var(--grn)", dash: true }
+    - { label: "reference r", color: "var(--muted)", dash: true }
+  howToRead: "The solid trace is the failure (a plant whose gain grows with the operating point); the dashed trace is a fixed version, for contrast. The sliders move the solid run, so you can walk it to the fix or away from it. Teaching plant, not the engine model."
+  lookFor: "Gains tuned at r = 1 are three times too hot at r = 9: divide them, or gain-schedule."
+  controls:
+    - { id: Kp, label: "Kp", type: range, min: 0, max: 3, step: 0.05, default: 2, group: primary }
+    - { id: Ki, label: "Ki", type: range, min: 0, max: 3, step: 0.05, default: 1.5, group: primary }
+    - { id: r, label: "Step size r", type: range, min: 1, max: 9, step: 0.5, default: 9, group: primary }
+  presets:
+    - { id: problem, label: "The problem", set: { Kp: 2, Ki: 1.5, r: 9 } }
+    - { id: fixed, label: "The fix", set: { Kp: 0.667, Ki: 0.5, r: 9 } }
+- id: fail-twodof
+  title: "A13 · Set-point against disturbance (2-DOF)"
+  x: "time (s)"
+  y: "output y"
+  legend:
+    - { label: "problem (solid)", color: "var(--org)" }
+    - { label: "fixed version (dashed)", color: "var(--grn)", dash: true }
+    - { label: "reference r", color: "var(--muted)", dash: true }
+  howToRead: "The solid trace is the failure (a PI tuned for disturbances overshoots on set-point steps); the dashed trace is a fixed version, for contrast. The sliders move the solid run, so you can walk it to the fix or away from it. Teaching plant, not the engine model."
+  lookFor: "Add a set-point filter: the overshoot goes, the disturbance response is untouched."
+  controls:
+    - { id: Kp, label: "Kp", type: range, min: 0, max: 4, step: 0.05, default: 1.5, group: primary }
+    - { id: Ki, label: "Ki", type: range, min: 0, max: 8, step: 0.1, default: 4, group: primary }
+    - { id: tauf, label: "Set-point filter τ (s)", type: range, min: 0, max: 3, step: 0.05, default: 0, group: primary }
+  presets:
+    - { id: problem, label: "The problem", set: { tauf: 0 } }
+    - { id: fixed, label: "The fix", set: { tauf: 1.5 } }
+- id: fail-limitcycle
+  title: "A14 · Limit cycle from dead zone / backlash"
+  x: "time (s)"
+  y: "output y"
+  legend:
+    - { label: "problem (solid)", color: "var(--org)" }
+    - { label: "fixed version (dashed)", color: "var(--grn)", dash: true }
+    - { label: "reference r", color: "var(--muted)", dash: true }
+  howToRead: "The solid trace is the failure (an integrator plant behind a dead zone); the dashed trace is a fixed version, for contrast. The sliders move the solid run, so you can walk it to the fix or away from it. Teaching plant, not the engine model."
+  lookFor: "The integral drives u across the dead zone again and again: lower Ki or shrink the dead zone."
+  controls:
+    - { id: Ki, label: "Ki", type: range, min: 0, max: 1, step: 0.02, default: 0.5, group: primary }
+    - { id: dz, label: "Dead zone ±", type: range, min: 0, max: 0.6, step: 0.02, default: 0.3, group: primary }
+  presets:
+    - { id: problem, label: "The problem", set: { Ki: 0.5 } }
+    - { id: fixed, label: "The fix", set: { Ki: 0.3 } }
