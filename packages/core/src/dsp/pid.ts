@@ -7,6 +7,8 @@
  *     pole in rad/s (filter 1/(1+s/N)), NOT the textbook "N = Td/Tf" ratio. Kd = 0 removes the filter state.
  *   • b ∈ [0,1] is the setpoint weight on the proportional term only (b = 1: standard error feedback; b = 0: P acts on
  *     −y only). The integral always acts on the full error, so there is no steady-state error from b.
+ *   • Sensor path (optional): y → pure delay `sensorDelay` → first-order lag `sensorLag` → + noise n. With both 0 (default) y_m = y + n exactly as before.
+ *     The delay is held between internal sub-steps (zero-order), so it is exact to one sub-step h; the lag is one more state, integrated by the same RK4.
  *   • Measurement noise n is added to y: y_m = y + n; noise is zero-order-held, Gaussian, seeded (xorshift32), period `noiseTs`.
  *
  * PLANT / SIGNALS:
@@ -56,6 +58,8 @@ export interface PidSimOptions extends Partial<PidGains> {
   aw?: AntiWindup; Kt?: number;
   dist?: { t: number; amp: number } | null;
   /** sensor noise standard deviation (default 0) */ noise?: number; noiseTs?: number; seed?: number;
+  /** sensor first-order lag τ in s: the controller sees y filtered by 1/(τs+1) (default 0 = none) */ sensorLag?: number;
+  /** pure sensor delay in s: the controller sees y(t − delay) (rounded to the internal sub-step; default 0). Order: true y → delay → lag → + noise. */ sensorDelay?: number;
 }
 export interface PidSim {
   t: number[]; r: number[]; y: number[]; /** applied (saturated) control */ u: number[]; /** true error r − y */ e: number[]; /** measured y + noise */ ym: number[];
@@ -98,21 +102,26 @@ export function simulatePid(o: PidSimOptions): PidSim {
   const sig = o.noise ?? 0, noiseTs = o.noiseTs ?? 0.01, rand = seededRng(o.seed ?? 12345);
   const gauss = () => { const u1 = rand() || 1e-12, u2 = rand(); return Math.sqrt(-2 * Math.log(u1)) * Math.cos(2 * Math.PI * u2); };
   const dist = o.dist ?? null, dmeas = !!o.dOnMeasurement;
+  const tauL = o.sensorLag ?? 0, delayS = o.sensorDelay ?? 0;
+  if (!(tauL >= 0) || !Number.isFinite(tauL)) throw new TFError('simulatePid: sensorLag must be ≥ 0');
+  if (!(delayS >= 0) || !Number.isFinite(delayS)) throw new TFError('simulatePid: sensorDelay must be ≥ 0');
 
   // sub-stepping for accuracy/stability
   const warnings: string[] = [];
   let lam = Math.max(...tfPoles(G).map((p) => Math.hypot(p.re, p.im)), 0);
   if (Kd) lam = Math.max(lam, N);
+  if (tauL > 0) lam = Math.max(lam, 1 / tauL);
   try { for (const p of pidClosedLoopPoles(G, { Kp, Ki, Kd, N })) lam = Math.max(lam, Math.hypot(p.re, p.im)); } catch { /* keep plant/filter estimate */ }
   let substeps = Math.max(1, Math.ceil((dt * lam) / 0.2));
   if (substeps > 400) { warnings.push(`step too coarse for the fastest mode (|λ| = ${lam.toExponential(2)} 1/s); capped at 400 substeps`); substeps = 400; }
   const h = dt / substeps;
 
-  const { A, B, C: Cc } = ss, m = n + 2; // state: plant (n), integral of e (xi), derivative-filter state (xf)
+  const { A, B, C: Cc } = ss, m = n + 2 + (tauL > 0 ? 1 : 0); // state: plant (n), integral of e (xi), derivative-filter state (xf), [sensor-lag state]
+  const kd = Math.round(delayS / h), hist: number[] = [], delayed = kd > 0; let jcur = 0, ydCur = 0;
   const S = new Float64Array(m);
   const yOf = (s: Float64Array) => { let y = 0; for (let i = 0; i < n; i++) y += Cc[i] * s[i]; return y; };
   const ctrl = (s: Float64Array, nv: number) => {
-    const y = yOf(s), ym = y + nv, e = r - ym, ed = dmeas ? -ym : e;
+    const y = yOf(s), yd = delayed ? ydCur : y, ym = (tauL > 0 ? s[n + 2] : yd) + nv, e = r - ym, ed = dmeas ? -ym : e;
     const up = Kp * (b * r - ym), ui = Ki * s[n], ud = Kd ? Kd * N * (ed - s[n + 1]) : 0, uu = up + ui + ud, us = Math.max(-umax, Math.min(umax, uu));
     return { y, ym, e, ed, up, ui, ud, uu, us };
   };
@@ -125,6 +134,7 @@ export function simulatePid(o: PidSimOptions): PidSim {
       else if (aw === 'backcalc') integ = c.e + (Kt * (c.us - c.uu)) / Ki;
     }
     out[n] = Ki ? integ : 0; out[n + 1] = Kd ? N * (c.ed - s[n + 1]) : 0;
+    if (tauL > 0) out[n + 2] = ((delayed ? ydCur : yOf(s)) - s[n + 2]) / tauL;
   };
   const steps = Math.round(T / dt), nEvery = Math.max(1, Math.round(noiseTs / dt));
   const out: PidSim = { t: [], r: [], y: [], u: [], e: [], ym: [], up: [], ui: [], ud: [], d: [], unstable: false, substeps, dt, warnings };
@@ -133,12 +143,14 @@ export function simulatePid(o: PidSimOptions): PidSim {
   for (let k = 0; k <= steps; k++) {
     const t = k * dt;
     if (sig && k % nEvery === 0) nv = sig * gauss();
+    if (delayed) { jcur = k * substeps; if (hist.length <= jcur) hist.push(yOf(S)); ydCur = jcur - kd >= 0 ? hist[jcur - kd] : 0; }
     const c = ctrl(S, nv);
     out.t.push(t); out.y.push(c.y); out.u.push(c.us); out.e.push(r - c.y); out.ym.push(c.ym); out.up.push(c.up); out.ui.push(c.ui); out.ud.push(c.ud); out.r.push(r); out.d.push(dist && t >= dist.t ? dist.amp : 0);
     if (!Number.isFinite(c.y) || Math.abs(c.y) > 1e4) { out.unstable = true; break; }
     if (k === steps) break;
     for (let q = 0; q < substeps; q++) {
       const ts = t + q * h;
+      if (delayed) { jcur = k * substeps + q; if (hist.length <= jcur) hist.push(yOf(S)); ydCur = jcur - kd >= 0 ? (kd > 0 ? 0.5 * (hist[jcur - kd] + hist[jcur - kd + 1]) : hist[jcur]) : 0; } // mid-step value: second order in h
       f(S, ts, nv, k1); for (let i = 0; i < m; i++) tmp[i] = S[i] + (h / 2) * k1[i];
       f(tmp, ts + h / 2, nv, k2); for (let i = 0; i < m; i++) tmp[i] = S[i] + (h / 2) * k2[i];
       f(tmp, ts + h / 2, nv, k3); for (let i = 0; i < m; i++) tmp[i] = S[i] + h * k3[i];

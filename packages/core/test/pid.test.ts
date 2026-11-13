@@ -146,3 +146,35 @@ describe('validation and helpers', () => {
     const p = pidClosedLoopPoles('p3', { Kp: 8, Ki: 0, Kd: 0 }); expect(Math.max(...p.map((x) => x.re))).toBeCloseTo(0, 4);
   });
 });
+
+describe('sensor lag and delay (sensorLag, sensorDelay)', () => {
+  const cart = tf([1], [1, 3, 2]);
+  it('zero lag and zero delay change nothing', () => {
+    const a = simulatePid({ plant: cart, Kp: 4, Ki: 2, T: 6, dt: 0.01 }), b = simulatePid({ plant: cart, Kp: 4, Ki: 2, T: 6, dt: 0.01, sensorLag: 0, sensorDelay: 0 });
+    expect(maxDiff(a.y, b.y)).toBe(0); expect(maxDiff(a.u, b.u)).toBe(0);
+  });
+  it('a sensor lag τ matches the linear loop: y/r = CG(τs+1)/(CG(τs+1)… ) and the controller sees CGF/(1+CGF)', () => {
+    const g = { Kp: 3, Ki: 2, Kd: 0 }, tau = 0.3, C = pidTF(g);
+    const s = simulatePid({ plant: cart, ...g, sensorLag: tau, T: 8, dt: 0.005 });
+    const F = tf([1], [tau, 1]), CG = tfSeries(C, cart);
+    // y/r = C G / (1 + C G F);   ym/r = C G F / (1 + C G F)
+    const CGF = tfSeries(CG, F), den = polyAddLocal(CGF.den, CGF.num);
+    const Ty = tf(polyMulLocal(CG.num, [1, 1 / tau]), den); // tf() makes the denominator monic, so (τs+1) enters as (s + 1/τ)
+    const ry = step(Ty, s.t), rm = step(tf(CGF.num, den), s.t);
+    expect(maxDiff(s.y, ry.y)).toBeLessThan(2e-4); expect(maxDiff(s.ym, rm.y)).toBeLessThan(2e-4);
+    expect(Math.max(...s.y), 'the lag makes the controller late: more overshoot than without').toBeGreaterThan(Math.max(...simulatePid({ plant: cart, ...g, T: 8, dt: 0.005 }).y));
+  });
+  it('a pure sensor delay matches an independent fine-step (1e-4 s) integration of y′ = −y + Kp(r − y(t − Td))', () => {
+    const Kp = 2, Td = 0.5, T = 6, s = simulatePid({ plant: 'p1', Kp, Ki: 0, Kd: 0, sensorDelay: Td, T, dt: 0.01 });
+    const h = 1e-4, n = Math.round(T / h), y = new Float64Array(n + 1), kd = Math.round(Td / h);
+    for (let i = 0; i < n; i++) { const yd = i >= kd ? y[i - kd] : 0; y[i + 1] = y[i] + h * (-y[i] + Kp * (1 - yd)); }
+    for (let i = 0; i < s.t.length; i += 25) expect(Math.abs(s.y[i] - y[Math.round(s.t[i] / h)]), `t = ${s.t[i]}`).toBeLessThan(6e-3);
+    expect(s.ym[Math.round(0.4 / 0.01)], 'nothing arrives before Td').toBeCloseTo(0, 12);
+    expect(s.ym[Math.round(1 / 0.01)], 'after Td it reports the old y').toBeCloseTo(s.y[Math.round(0.5 / 0.01)], 3);
+  });
+  it('delay makes a loop that is fine without it ring or go unstable', () => {
+    const ok = simulatePid({ plant: 'p1', Kp: 5, T: 10, dt: 0.01 }), late = simulatePid({ plant: 'p1', Kp: 5, sensorDelay: 0.6, T: 10, dt: 0.01 });
+    expect(pidMetrics(ok).overshootPct).toBeLessThan(5); expect(late.unstable || pidMetrics(late).overshootPct > 30).toBe(true);
+  });
+  it('rejects negative values', () => { expect(() => simulatePid({ plant: 'p1', sensorLag: -1 })).toThrow(TFError); expect(() => simulatePid({ plant: 'p1', sensorDelay: -1 })).toThrow(TFError); });
+});
