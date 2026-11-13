@@ -11,3 +11,4 @@ export * from './plot';
 export * from './figure';
 export * from './app';
 export * from './viz';
+export * from './ctrlviz';

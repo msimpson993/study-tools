@@ -39,6 +39,7 @@ npm run check          # everything above in order
 | `docs/content-format.md` | writing or editing `graph.yaml`, dives, quiz, figures, examples |
 | `docs/components.md` | using or changing something in `packages/core` |
 | `docs/dsp-control.md` | using or changing the control math (`tf`, `pid`) in `packages/core/dsp` |
+| `docs/ctrl-visuals.md` | drawing step/s-plane/root-locus/Bode/height-map pictures or draggable poles |
 | `docs/verification-checklist.md` | before you say a change is finished |
 | `docs/porting-legacy-pages.md` | moving an old single-file page (e.g. Control Systems Tutor) into this repo |
 | `packages/core/README.md`, `apps/*/README.md` | working inside that package/app |

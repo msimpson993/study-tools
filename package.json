@@ -7,12 +7,12 @@
   "workspaces": ["packages/*", "apps/*"],
   "scripts": {
     "validate": "tsx scripts/validate-content.ts",
-    "build": "tsx scripts/build-all.ts",
+    "build": "tsx scripts/build-all.ts && tsx scripts/build-gallery.ts",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "test": "vitest run",
     "test:e2e": "playwright test",
     "test:e2e:full": "FULL_PAIRWISE=1 playwright test tests/e2e/transforms.spec.ts",
-    "shots": "playwright test tests/e2e/shots.spec.ts",
+    "shots": "playwright test tests/e2e/shots.spec.ts tests/e2e/ctrlviz-shots.spec.ts",
     "serve": "tsx scripts/serve.ts",
     "check": "npm run validate && npm run typecheck && npm test && npm run build && npm run test:e2e"
   },
