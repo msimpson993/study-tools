@@ -18,6 +18,11 @@ matlab: W = dftmtx(N);  W' * W    % equals N * eye(N)
 
 Once you have a basis, coordinates are the expansion coefficients. If the basis is orthogonal, each coefficient is an inner product — no matrix inverse needed. Fourier series, the FT, the DTFT, and the DFT are all 'compute inner products against complex exponentials.' For a general (non-normal) matrix A, eigenvectors need not be orthogonal, which is why V can be ill-conditioned even when A is diagonalizable.
 
+**Picture it first.** A dot product is a shadow. And two different sinusoids are as perpendicular as two functions can be.
+
+```figure:ortho
+```
+
 ```eq
 ⟨u, w⟩ = u* w    (conjugate the first argument)
 ```

@@ -19,6 +19,11 @@ matlab: "D = inv(V) * A * V    % equivalent: A = V * D * inv(V)"
 
 If the eigenvectors form a basis, stack them as the columns of V and write x = V ξ. In the ξ-coordinates A does nothing but scale each axis: Λ = V⁻¹ A V is diagonal. Solving, iterating, and exponentiating A all become scalar operations on those coordinates.
 
+**Picture it first.** Ask the plane to use the eigenvectors as its grid. In those coordinates, A has nothing left to do but stretch each axis.
+
+```figure:diag
+```
+
 ```eq
 A = V Λ V⁻¹,    Λ = V⁻¹ A V
 ```

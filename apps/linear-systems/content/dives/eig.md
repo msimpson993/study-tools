@@ -19,6 +19,11 @@ matlab: "[V, D] = eig(A)"
 
 An eigenvector is a line that A leaves invariant: the output is a scalar multiple of the input. That scalar is the eigenvalue, and it is the whole story of A along that line. In a linear system those lines are the modes.
 
+**Picture it first.** Think of A as an instruction to move the whole plane. Most vectors get turned as well as stretched, but a few special directions only stretch. Try it on the running cart.
+
+```figure:eig
+```
+
 ```eq
 Av = λv,    v ≠ 0
 ```

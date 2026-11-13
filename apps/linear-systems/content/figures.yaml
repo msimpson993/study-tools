@@ -26,3 +26,94 @@
     forwardName: "Analysis: ξ = V⁻¹ x"
     inverseName: "Synthesis: x = V ξ"
     strip: "V = [v₁ v₂] with v_i = [1, λ_i]ᵀ for this companion matrix."
+
+- id: eig
+  title: "A matrix is a transformation of the plane: which directions only stretch?"
+  x: x₁ = position
+  y: x₂ = velocity
+  legend:
+    - { label: "v: a probe vector", color: "var(--cyan)" }
+    - { label: "Av: where A sends it", color: "var(--yel)" }
+    - { label: "eigen-direction 1 (dashed)", color: "var(--grn)", dash: true }
+    - { label: "eigen-direction 2 (dashed)", color: "var(--org)", dash: true }
+    - { label: "image of the unit grid", color: "var(--accent)" }
+  howToRead: "Left: the faint grid is the plane before, the blue grid is where A sends it (drag the morph slider or press Play to watch it happen). The cyan arrow is a probe v, the yellow arrow is Av. Right: for every direction of v, how far Av is turned away from v. It touches zero exactly at the eigenvectors, the dashed lines on the left. Edit the four entries of A, or start from the running cart."
+  lookFor: "Turn the probe angle: Av swings around, but when v lies on a dashed line Av stays on that same line. Now pick Rotation: the dashed lines vanish and the right plot never touches zero."
+  animate: { control: t, speed: 0.25, loop: true }
+  controls:
+    - { id: a, label: "A₁₁", type: range, min: -3, max: 3, step: 0.1, default: 0, group: primary }
+    - { id: b, label: "A₁₂", type: range, min: -3, max: 3, step: 0.1, default: 1, group: primary }
+    - { id: c, label: "A₂₁", type: range, min: -3, max: 3, step: 0.1, default: -2, group: primary }
+    - { id: d, label: "A₂₂", type: range, min: -3, max: 3, step: 0.1, default: -3, group: primary }
+    - { id: th, label: "probe direction of v", type: range, min: 0, max: 360, step: 1, default: 30, group: primary, unit: "°" }
+    - { id: t, label: "morph: identity → A", type: range, min: 0, max: 1, step: 0.01, default: 1, group: primary }
+  presets:
+    - { id: cart, label: "Running cart", set: { a: 0, b: 1, c: -2, d: -3, th: 30, t: 1 }, about: "A = [[0, 1], [−2, −3]]: eigenvalues −1 and −2, eigen-directions (1, −1) and (1, −2)." }
+    - { id: stretch, label: "Symmetric stretch", set: { a: 2, b: 1, c: 1, d: 2, th: 30, t: 1 }, about: "A symmetric matrix: perpendicular eigen-directions (1, 1) and (1, −1), stretching by 3 and 1." }
+    - { id: rotation, label: "Rotation", set: { a: 0, b: -1, c: 1, d: 0, th: 30, t: 1 }, about: "A quarter turn: no direction keeps its line, eigenvalues ±j." }
+    - { id: shear, label: "Shear", set: { a: 1, b: 1, c: 0, d: 1, th: 30, t: 1 }, about: "Repeated eigenvalue 1 and only one eigen-direction (the x-axis)." }
+
+- id: diag
+  title: "Change of basis: in the eigenbasis, A just stretches the axes"
+  x: ξ₁ or x₁
+  y: ξ₂ or x₂
+  legend:
+    - { label: "x, ξ: the probe", color: "var(--cyan)" }
+    - { label: "Ax, Λξ: its image", color: "var(--yel)" }
+    - { label: "eigenvector v₁ and its coordinate ξ₁", color: "var(--grn)", dash: true }
+    - { label: "eigenvector v₂ and its coordinate ξ₂", color: "var(--org)", dash: true }
+  howToRead: "Left: the plane in the usual (position, velocity) coordinates, with a skewed grid whose lines run along the eigenvectors v₁ and v₂. Right: the same vector measured on that skewed grid, which makes the grid square. In ξ coordinates A is the diagonal matrix Λ: it only stretches ξ₁ by λ₁ and ξ₂ by λ₂. Rotate the probe with the slider or press Play."
+  lookFor: "Left, the dashed legs of the probe are its components along v₁ and v₂. Right, those same legs are plain horizontal and vertical, and Λξ just scales each leg independently."
+  animate: { control: phi, speed: 45, loop: true }
+  controls:
+    - { id: l1, label: "λ₁", type: range, min: -3, max: 2, step: 0.05, default: -1, group: primary }
+    - { id: l2, label: "λ₂", type: range, min: -3, max: 2, step: 0.05, default: -2, group: primary }
+    - { id: phi, label: "probe direction", type: range, min: 0, max: 360, step: 1, default: 20, group: primary, unit: "°" }
+    - { id: th1, label: "direction of v₁", type: range, min: -90, max: 90, step: 1, default: -45, group: more, unit: "°" }
+    - { id: th2, label: "direction of v₂", type: range, min: -90, max: 90, step: 1, default: -63, group: more, unit: "°" }
+  presets:
+    - { id: cart, label: "Running cart", set: { l1: -1, l2: -2, th1: -45, th2: -63, phi: 20 }, about: "Eigenvalues −1, −2 with eigenvectors (1, −1) and (1, −2): a skewed, not perpendicular, basis." }
+    - { id: symmetric, label: "Perpendicular basis", set: { l1: 3, l2: 1, th1: 45, th2: -45, phi: 20 }, about: "A symmetric matrix: orthogonal eigenvectors, the skew disappears." }
+    - { id: nearly, label: "Nearly parallel", set: { l1: -1, l2: -2, th1: -45, th2: -50, phi: 20 }, about: "Eigenvectors almost on top of each other: the basis is ill-conditioned, coordinates become huge." }
+    - { id: defective, label: "Parallel (defective)", set: { l1: -1, l2: -1, th1: -45, th2: -45, phi: 20 }, about: "One eigen-direction only: there is no eigenbasis, so no diagonal form." }
+
+- id: jordan
+  title: "Jordan form: when the eigenvectors run short, e^{At} shears the plane"
+  x: x₁ or time t (s)
+  y: x₂ or entry of e^{At}
+  legend:
+    - { label: "image of the unit square's edges", color: "var(--cyan)" }
+    - { label: "t·e^{λt} term", color: "var(--org)" }
+    - { label: "e^{λt} term", color: "var(--cyan)" }
+    - { label: "the one eigen-direction", color: "var(--grn)", dash: true }
+    - { label: "path of the starting point (0, 1)", color: "var(--yel)" }
+  howToRead: "A = [[λ, k], [0, λ]] has a repeated eigenvalue and only the x-axis as an eigen-direction. Left: e^{At} applied to the plane. The grid shrinks by e^{λt} (as for any decaying mode) but also slides sideways, a shear. Right: the entries of e^{At}. The corner entry k·t·e^{λt} rises first and decays later, a transient hump even though everything is stable. With k = 0 the matrix is diagonal and the hump disappears."
+  lookFor: "Press Play and follow the yellow path: the starting point first drifts sideways (the shear), then is pulled home. Set the coupling k to 0 and watch the shear vanish."
+  animate: { control: t, speed: 0.8, loop: true }
+  controls:
+    - { id: lam, label: "repeated eigenvalue λ", type: range, min: -2, max: 0.5, step: 0.05, default: -1, group: primary }
+    - { id: k, label: "coupling k (0 = diagonal)", type: range, min: 0, max: 2, step: 0.05, default: 1, group: primary }
+    - { id: t, label: "time t", type: range, min: 0, max: 6, step: 0.05, default: 1, group: primary, unit: s }
+  presets:
+    - { id: block, label: "Jordan block, λ = −1", set: { lam: -1, k: 1, t: 1 }, about: "Repeated −1 with one eigenvector: e^{At} = e^{−t}[[1, t], [0, 1]]. Like the critically damped cart (k = 1, c = 2)." }
+    - { id: diagonal, label: "Diagonalizable (k = 0)", set: { lam: -1, k: 0, t: 1 }, about: "The same eigenvalue twice but two eigenvectors: no shear, no hump." }
+    - { id: marginal, label: "λ = 0: linear growth", set: { lam: 0, k: 1, t: 1 }, about: "A Jordan block at λ = 0: e^{At} = [[1, t], [0, 1]], unbounded though λ = 0." }
+
+- id: ortho
+  title: "Orthogonality: inner product as a shadow, sinusoids as perpendicular directions"
+  x: x₁ or t (rad)
+  y: x₂ or sin(mt) sin(nt)
+  legend:
+    - { label: "w", color: "var(--cyan)" }
+    - { label: "u", color: "var(--org)" }
+    - { label: "projection of u on w", color: "var(--grn)" }
+    - { label: "product of two sinusoids", color: "var(--text)" }
+  howToRead: "Left: the inner product ⟨u, w⟩ is the signed length of the shadow that u casts on the line through w (times |w|). It is zero exactly when u is perpendicular to w. Right: the same idea for functions. ⟨sin mt, sin nt⟩ = ∫ sin(mt) sin(nt) dt over one period is the net green-minus-red area. For m ≠ n the positive and negative lobes cancel, so different sinusoids are orthogonal, which is why Fourier coefficients are just inner products."
+  lookFor: "Turn α to 90° and the shadow shrinks to zero. On the right, set m ≠ n and watch the green and red areas balance exactly."
+  controls:
+    - { id: alpha, label: "angle between u and w", type: range, min: 0, max: 180, step: 1, default: 40, group: primary, unit: "°" }
+    - { id: m, label: "frequency m", type: range, min: 1, max: 6, step: 1, default: 1, group: primary }
+    - { id: n, label: "frequency n", type: range, min: 1, max: 6, step: 1, default: 2, group: primary }
+  presets:
+    - { id: perp, label: "Perpendicular, m ≠ n", set: { alpha: 90, m: 1, n: 2 }, about: "No shadow; the two sinusoids have zero inner product." }
+    - { id: same, label: "Parallel, m = n", set: { alpha: 0, m: 2, n: 2 }, about: "Full shadow; a sinusoid is not orthogonal to itself (area π)." }
