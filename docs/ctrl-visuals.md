@@ -39,3 +39,5 @@ Draw and drag must use the same `range`/`reCenter` (both go through `splaneFrame
 - `drawHeightMap` evaluates |G| per colour cell on every redraw (≈ 5 000 evaluations at default cell size): fine for TFs of degree ≲ 8, slower beyond; raise `cell` for big ones.
 - `drawBode` is for one loop TF; margins come from `margins()` (log-grid interpolation, no Nyquist test).
 - The gallery is built by `scripts/build-gallery.ts` (part of `npm run build`) and is not linked from the hub.
+
+Quiz questions can also carry a small fixed-parameter plot (`figure:` in quiz.yaml): see [content-format.md](content-format.md#quizyaml) and the “Quiz questions with a fixed-parameter figure” section of the gallery.

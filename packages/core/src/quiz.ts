@@ -1,10 +1,12 @@
 import { h, clear } from './dom';
 import type { AppContent, Question } from './types';
 import type { Progress } from './progress';
+import { mountQuizFigure, type QuizFigureRegistry } from './quizfig';
 
 export interface QuizOpts {
   tags?: string[];
   title?: string;
+  /** renderers for questions that carry a `figure` (see quizfig.ts) */ figures?: QuizFigureRegistry;
   openDive(id: string): void;
   back(): void;
 }
@@ -48,7 +50,9 @@ export function mountQuiz(host: HTMLElement, content: AppContent, progress: Prog
 
   function next() { idx++; chosen = null; revealed = false; graded = null; render(); }
 
+  let figCleanups: (() => void)[] = [];
   function render() {
+    figCleanups.forEach((f) => f()); figCleanups = [];
     clear(root);
     const title = opts.title ?? 'Self-check';
     root.append(h('div', { class: 'row' },
@@ -81,6 +85,7 @@ export function mountQuiz(host: HTMLElement, content: AppContent, progress: Prog
     root.append(h('div', { class: 'prog' }, h('i', { style: `width:${(idx / list.length) * 100}%` })), h('div', { class: 'cm-sum' }, `Question ${idx + 1} of ${list.length} · ${q.kind}`));
     const card = h('div', { class: 'qcard', dataset: { testid: 'qcard', qid: q.id } });
     card.append(h('div', { class: 'qtext', html: q.q }));
+    if (q.figure) { const mf = mountQuizFigure(q.figure, opts.figures); figCleanups.push(mf.destroy); card.append(mf.el); }
     const isMcq = q.kind !== 'recall' && !!q.choices;
     if (flash || !isMcq) {
       // flashcard / recall: tap to flip, then self-grade
@@ -125,5 +130,5 @@ export function mountQuiz(host: HTMLElement, content: AppContent, progress: Prog
   document.addEventListener('keydown', onKey);
   rebuild();
   render();
-  return () => { document.removeEventListener('keydown', onKey); root.remove(); };
+  return () => { document.removeEventListener('keydown', onKey); figCleanups.forEach((f) => f()); root.remove(); };
 }

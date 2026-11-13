@@ -114,6 +114,7 @@ details.fold>div{padding:0 .8rem .6rem}
 .quiz .choice:hover:not([disabled]){border-color:var(--accent)}
 .quiz .choice.right{border-color:var(--ok);background:color-mix(in srgb,var(--ok) 14%,var(--panel))}
 .quiz .choice.wrong{border-color:var(--bad);background:color-mix(in srgb,var(--bad) 14%,var(--panel))}
+.quiz .qfigure{margin:.5rem 0 .2rem}.quiz .qfigure canvas{background:var(--panel2);border:1px solid var(--border);border-radius:10px}.quiz .qfig-cap{font-size:.8rem;color:var(--muted);text-align:center}.quiz .qfig-miss{padding:.5rem .7rem;border:1px dashed var(--border-strong);border-radius:10px;color:var(--muted);font-size:.85rem}
 .quiz .why{margin-top:.5rem;padding:.4rem .7rem;border-radius:9px;background:var(--panel2);font-size:.9rem}
 .quiz .flip{min-height:9rem;display:flex;flex-direction:column;justify-content:center;cursor:pointer}
 .quiz .prog{height:5px;background:var(--panel2);border-radius:3px;overflow:hidden;margin:.4rem 0}

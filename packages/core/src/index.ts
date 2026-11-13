@@ -6,6 +6,7 @@ export * from './progress';
 export * from './maplayout';
 export * from './conceptmap';
 export * from './quiz';
+export * from './quizfig';
 export * from './controls';
 export * from './plot';
 export * from './figure';

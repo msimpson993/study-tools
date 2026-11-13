@@ -44,6 +44,20 @@ Front matter: `id, order, title, category, chain[{title,detail?}], neighbors[ids
 ## quiz.yaml
 List of `{id, tags[], kind, q, …}`. `kind: recall` needs `a`; every other kind (`recognize|action|compute|trap`) needs `choices[2..6], answer (index), why`. Each tag must match a node `quizTag/dive/id` or a dive id. Subtree quizzes use these tags.
 
+**Optional `figure`** (a small fixed plot under the question text, e.g. the legacy "scope" plots):
+```yaml
+- id: pid-29
+  tags: [ap-slow]
+  kind: action
+  q: "A PI loop's step response is plotted above. What is the most likely problem?"
+  figure:
+    id: loop                       # renderer registered by the app: mountApp(content, { quizFigures: { loop: scopeFigure(...) } })
+    params: { Kp: 0.3, Ki: 0.2, T: 30 }   # FIXED inputs for the renderer (number | string | boolean)
+    alt: "Step response rising slowly to 1, no overshoot."   # required, ≥ 8 chars: the canvas aria-label
+    caption: "p2 plant, Kp = 0.3, Ki = 0.2"   # optional
+```
+`subject.yaml` may list `quizFigures: [loop, …]`; then the build rejects a question whose `figure.id` is not listed. Without the list ids are checked at run time: an unregistered id shows a visible fallback with the alt text (the question never disappears). Renderers: `QuizFigureDef {draw(g,w,h,params), aspect?, maxWidth?}`, or `scopeFigure((params) => ScopeSpec)` for time traces with reference lines and a legend (see `packages/core/src/quizfig.ts`; live example in the gallery). Questions without `figure` are unchanged.
+
 ## glossary.yaml
 `[{term, meaning, units?}]`, shown in the "Variables" drawer.
 

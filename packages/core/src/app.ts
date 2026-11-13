@@ -5,12 +5,15 @@ import type { AppContent, FigureDef } from './types';
 import { Progress } from './progress';
 import { mountConceptMap, newMapState, type MapState } from './conceptmap';
 import { mountQuiz } from './quiz';
+import type { QuizFigureRegistry } from './quizfig';
 import { ControlSet } from './controls';
 
 export interface BoardHandle { destroy?(): void; show?(params: URLSearchParams): void; hide?(): void }
 export interface AppHooks {
   /** Mount a live figure for figures.yaml entry `def`. Return a cleanup. */
   figures?: Record<string, (host: HTMLElement, def: FigureDef, controls: ControlSet) => (() => void) | void>;
+  /** Renderers for quiz questions with a `figure:` (id → def); see quizfig.ts. */
+  quizFigures?: QuizFigureRegistry;
   /** Mount the app's single custom board view lazily (kept alive while hidden). */
   board?: (host: HTMLElement, params: URLSearchParams) => BoardHandle;
 }
@@ -129,7 +132,7 @@ export function mountApp(content: AppContent, hooks: AppHooks = {}): void {
       renderSidebar('quiz');
       const tags = (q.get('tags') ?? '').split(',').filter(Boolean);
       main.append(crumbs('Self-check'));
-      cleanup = mountQuiz(main, content, progress, { tags, title: q.get('title') ?? 'Self-check', openDive: (id) => go(`/dive/${id}`), back: () => history.length > 1 ? history.back() : go('/') });
+      cleanup = mountQuiz(main, content, progress, { figures: hooks.quizFigures, tags, title: q.get('title') ?? 'Self-check', openDive: (id) => go(`/dive/${id}`), back: () => history.length > 1 ? history.back() : go('/') });
     } else if (a === 'figure' && b) {
       renderSidebar('figures');
       renderFigure(b, q);

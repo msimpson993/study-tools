@@ -4,8 +4,8 @@
  * Built to dist/_gallery/index.html by scripts/build-gallery.ts; exercised by tests/e2e/ctrlviz.spec.ts.
  * It is also the copy-paste reference for the Tutor's figures: each figure is figureOf-style panels + a FigureDef.
  */
-import { initTheme, toggleTheme, currentTheme, ControlSet, mountFigure, h, drawStepResponse, drawSPlane, drawRootLocus, drawBode, drawHeightMap, drawJwSlice, splaneDrag, locusDrag, wnZeta, poleFromWnZeta, suggestKMax, type FigureDef, type FigurePanel } from '../src';
-import { C, tf, tfFeedback, step, rlocus, polyMul, timeGrid, isStable, type TF } from '../src/dsp';
+import { initTheme, toggleTheme, currentTheme, ControlSet, mountFigure, mountQuiz, Progress, scopeFigure, h, drawStepResponse, drawSPlane, drawRootLocus, drawBode, drawHeightMap, drawJwSlice, splaneDrag, locusDrag, wnZeta, poleFromWnZeta, suggestKMax, type FigureDef, type FigurePanel, type AppContent, type Question } from '../src';
+import { simulatePid, C, tf, tfFeedback, step, rlocus, polyMul, timeGrid, isStable, type TF } from '../src/dsp';
 
 initTheme();
 const root = document.getElementById('app')!;
@@ -118,6 +118,25 @@ gal.push({
     ];
   },
 });
+
+/* ─── 5 ─ quiz with figures (fixed params, legacy "scope" plots) ─── */
+{
+  const registry = {
+    // the legacy quiz_plots.js `overshoot` / `slow` scopes: one renderer, the question's FIXED params pick the loop
+    loop: scopeFigure((p) => { const T = Number(p.T ?? 15), s = simulatePid({ plant: 'p2', Kp: Number(p.Kp), Ki: Number(p.Ki), T, dt: 0.01 }); return { xr: [0, T], yr: [0, Number(p.ymax ?? 1.5)], yLabel: 'output y', hl: [1], series: [{ t: s.t, y: s.y }] }; }),
+  };
+  const quiz: Question[] = [
+    { id: 'qf-1', tags: ['gal'], kind: 'action', q: 'A PI loop’s step response is plotted above. It overshoots to about 1.4 and then settles. What would you change first?', choices: ['Lower Ki', 'Raise Ki', 'Add a delay', 'Nothing'], answer: 0, why: 'Overshoot with a slow return is integral windup of the error: lower Ki (or add a little Kp).', figure: { id: 'loop', params: { Kp: 2, Ki: 3.5, T: 15 }, alt: 'Step response overshooting to about 1.38 and then settling to 1.', caption: 'p2 plant, Kp = 2, Ki = 3.5' } },
+    { id: 'qf-2', tags: ['gal'], kind: 'action', q: 'Same renderer, different fixed parameters: this loop rises slowly. What is wrong?', choices: ['Gains too small', 'Gains too large', 'Sensor noise', 'Nothing'], answer: 0, why: 'A smooth rise that takes 20 s means the loop is gentle: raise the gains.', figure: { id: 'loop', params: { Kp: 0.3, Ki: 0.2, T: 30, ymax: 1.2 }, alt: 'Step response rising slowly to 1 with no overshoot.' } },
+    { id: 'qf-3', tags: ['gal'], kind: 'recognize', q: 'A question without a figure renders exactly as before.', choices: ['Yes', 'No'], answer: 0, why: 'Existing quizzes are unchanged.' },
+    { id: 'qf-4', tags: ['gal'], kind: 'recognize', q: 'A question whose figure id has no renderer shows a visible fallback instead of failing.', choices: ['Yes', 'No'], answer: 0, why: 'Never silently drops the question.', figure: { id: 'nope', alt: 'A plot that is not registered in this build.' } },
+    { id: 'qf-5', tags: ['gal'], kind: 'recall', q: 'Flashcard with a figure: what is the overshoot of the plot?', a: 'About 38 %: the peak is near 1.38.', figure: { id: 'loop', params: { Kp: 2, Ki: 3.5, T: 15 }, alt: 'Step response overshooting to about 1.38 and then settling to 1.' } },
+  ];
+  const content = { subject: { id: 'gallery', title: 'Gallery', centralQuestion: '?', blurb: '?', archetype: 'x', sections: [] }, maps: [], dives: [], quiz, glossary: [], figures: [], extra: {} } as unknown as AppContent;
+  const sec = h('section', { id: 'fig-quiz', dataset: { gallery: 'quiz' }, style: 'margin:1.4rem 0' }, h('h2', { style: 'font-size:1.05rem;margin:.2rem 0 .5rem' }, 'Quiz questions with a fixed-parameter figure'));
+  const host = h('div'); sec.append(host); root.append(sec);
+  mountQuiz(host, content, new Progress('gallery', quiz, []), { figures: registry, title: 'Quiz figures', openDive: () => {}, back: () => {} });
+}
 
 const api: { id: string; controls: FigureDef['controls'] }[] = [];
 for (const { def, build } of gal) {
