@@ -8,9 +8,11 @@ export interface MapState {
   mode: 'explore' | 'review';
   recall: boolean;
   pick: { kind: 'node' | 'edge'; id: string } | null;
+  /** colour family (node.series) whose boxes are lit via the legend chips, or null */
+  series: number | null;
   revealed: Set<string>;
 }
-export const newMapState = (content: AppContent): MapState => ({ mapId: content.maps[0].id, mode: 'explore', recall: false, pick: null, revealed: new Set() });
+export const newMapState = (content: AppContent): MapState => ({ mapId: content.maps[0].id, mode: 'explore', recall: false, pick: null, series: null, revealed: new Set() });
 
 export interface MapNav {
   openDive(id: string): void;
@@ -47,7 +49,7 @@ export function mountConceptMap(host: HTMLElement, content: AppContent, progress
   ro.observe(scroll);
   width = Math.floor(scroll.clientWidth - 8) || 960;
 
-  const setPick = (p: MapState['pick']) => { st.pick = p; renderSvg(); renderPanel(); nav.onState?.(); };
+  const setPick = (p: MapState['pick']) => { st.pick = p; if (p) st.series = null; renderLegend(); renderSvg(); renderPanel(); nav.onState?.(); };
   const toggleNode = (id: string) => {
     if (st.mode === 'review' && st.recall && !st.revealed.has(`${st.mapId}/${id}`)) {
       st.revealed.add(`${st.mapId}/${id}`); renderSvg(); return;
@@ -62,7 +64,7 @@ export function mountConceptMap(host: HTMLElement, content: AppContent, progress
     clear(top);
     const tabs = h('div', { class: 'st-seg', role: 'tablist', 'aria-label': 'Map', style: 'flex:1;min-width:220px' });
     for (const m of content.maps) {
-      tabs.append(h('button', { class: m.id === st.mapId ? 'on' : '', role: 'tab', 'aria-selected': m.id === st.mapId, dataset: { map: m.id }, onclick: () => { st.mapId = m.id; st.pick = null; st.revealed.clear(); renderAll(); nav.onState?.(); } }, m.title));
+      tabs.append(h('button', { class: m.id === st.mapId ? 'on' : '', role: 'tab', 'aria-selected': m.id === st.mapId, dataset: { map: m.id }, onclick: () => { st.mapId = m.id; st.pick = null; st.series = null; st.revealed.clear(); renderAll(); nav.onState?.(); } }, m.title));
     }
     const modes = h('div', { class: 'st-seg', style: 'flex:0 0 auto;min-width:190px', role: 'group', 'aria-label': 'Mode' },
       h('button', { class: st.mode === 'explore' ? 'on' : '', dataset: { mode: 'explore' }, onclick: () => { st.mode = 'explore'; st.recall = false; renderAll(); nav.onState?.(); } }, 'Explore'),
@@ -116,6 +118,17 @@ export function mountConceptMap(host: HTMLElement, content: AppContent, progress
       ...(kinds.has('decision') ? [item('decision', shape('decision'), 'a fork: the answer picks the way')] : []),
       ...(kinds.has('terminal') ? [item('terminal', shape('terminal'), 'where the map starts')] : []),
     );
+    // the coloured bar on the left of a box is its chapter (node.series): name it, and let a tap light that chapter up
+    const used = [...new Set(m.nodes.map((n) => n.series).filter((x): x is number => x !== undefined))].sort();
+    if (used.length) {
+      const chips = h('span', { class: 'lg-series', dataset: { testid: 'legend-series' } }, h('span', { class: 'lg-lead' }, 'bar colour = chapter:'));
+      for (const k of used) {
+        const name = m.seriesNames?.[k] ?? `group ${k + 1}`, on = st.series === k;
+        chips.append(h('button', { class: `lg-chip${on ? ' on' : ''}`, type: 'button', 'aria-pressed': String(on), dataset: { series: String(k), legend: `series-${k}` }, style: `--c:${SERIES[k]}`, title: `Light up the boxes in “${name}”`,
+          onclick: () => { st.series = on ? null : k; st.pick = null; renderLegend(); renderSvg(); renderPanel(); nav.onState?.(); } }, h('i', { class: 'sw' }), name));
+      }
+      legend.append(chips);
+    }
   }
 
   let geom: Geometry | null = null;
@@ -126,6 +139,7 @@ export function mountConceptMap(host: HTMLElement, content: AppContent, progress
     geom = computeGeometry(m.nodes, m.edges, width);
     const pick = st.pick;
     const hl = mapHighlight(pick, m.edges);
+    const ser = pick === null ? st.series : null;
     const selNode = hl.selected, selEdgeKey = pick?.kind === 'edge' && hl.edges.size ? pick.id : null;
     const pathSet = hl.path, neigh = hl.neigh, ends = hl.ends, pathKeys = hl.edges;
     labels = placeLabels(geom, m.edges, hl.priority);
@@ -137,7 +151,7 @@ export function mountConceptMap(host: HTMLElement, content: AppContent, progress
     for (const g of geom.edges) {
       const data = edgeData[g.key];
       const active = pathKeys.has(g.key);
-      const dim = pick !== null && !active;
+      const dim = (pick !== null && !active) || (ser !== null && !(byId[g.from].series === ser && byId[g.to].series === ser));
       const d = roundedPath(g.points);
       const act = () => toggleEdge(g.key);
       const grp = s('g', {
@@ -163,14 +177,15 @@ export function mountConceptMap(host: HTMLElement, content: AppContent, progress
     for (const id of geom.order) {
       const b = geom.boxes[id], n = byId[id];
       const selected = selNode === id, onPath = pathSet.has(id), isNeigh = neigh.has(id) && !onPath, isEnd = ends.has(id);
-      const dim = pick !== null && !selected && !onPath && !isNeigh && !isEnd;
+      const inSer = ser !== null && n.series === ser;
+      const dim = (pick !== null && !selected && !onPath && !isNeigh && !isEnd) || (ser !== null && !inSer);
       const status = st.mode === 'review' ? progress.status(m.id, n) : null;
       const hide = recallHide(id);
-      const cls = ['qm-node', selected ? 'n-sel' : isEnd ? 'n-end' : onPath ? 'n-path' : isNeigh ? 'n-neigh' : dim ? 'n-dim' : '', status ? `st-${status}` : '', hide ? 'recall-hidden' : ''].filter(Boolean).join(' ');
+      const cls = ['qm-node', selected ? 'n-sel' : isEnd ? 'n-end' : onPath ? 'n-path' : isNeigh ? 'n-neigh' : inSer ? 'n-ser' : dim ? 'n-dim' : '', status ? `st-${status}` : '', hide ? 'recall-hidden' : ''].filter(Boolean).join(' ');
       const act = () => toggleNode(id);
       const grp = s('g', {
         class: cls, role: 'button', tabindex: 0, 'aria-label': hide ? `Hidden box ${m.nodes.indexOf(n)}. Tap to reveal.` : `${n.label}${n.detail ? `. ${n.detail}` : ''}. Tap for more.`,
-        'aria-pressed': selected, 'data-node': id, 'data-status': status ?? undefined, 'data-testid': 'map-node', onclick: act,
+        'aria-pressed': selected, style: n.series !== undefined ? `--c:${SERIES[n.series]}` : undefined, 'data-node': id, 'data-status': status ?? undefined, 'data-testid': 'map-node', onclick: act,
         onkeydown: (ev: KeyboardEvent) => { if (ev.key === 'Enter' || ev.key === ' ') { ev.preventDefault(); act(); } },
       });
       const r = 14;
@@ -255,7 +270,7 @@ export function mountConceptMap(host: HTMLElement, content: AppContent, progress
   function renderAll() { renderTop(); renderLegend(); renderReview(); renderSvg(); renderPanel(); }
   renderAll();
   const off = progress.onChange(() => { renderReview(); renderSvg(); renderPanel(); });
-  const onKey = (ev: KeyboardEvent) => { if (ev.key === 'Escape' && st.pick && !document.querySelector('.fig-overlay:not([hidden])')) setPick(null); };
+  const onKey = (ev: KeyboardEvent) => { if (ev.key === 'Escape' && (st.pick || st.series !== null) && !document.querySelector('.fig-overlay:not([hidden])')) { st.series = null; setPick(null); } };
   document.addEventListener('keydown', onKey);
   return () => { ro.disconnect(); off(); document.removeEventListener('keydown', onKey); root.remove(); };
 }

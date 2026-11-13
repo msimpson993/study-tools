@@ -13,12 +13,13 @@ maps:
   - id: chain              # ^[a-z0-9-]+$
     title: The question chain
     caption: optional text under "How to read this map"
+    seriesNames: ["Chapter one", "Chapter two"]   # names of the colour families node.series 0..3 (≤ 4, in order). Legend chips; tap = light that chapter. Build WARNS if nodes use `series` without it, FAILS if a used series has no name
     nodes:
       - id: root           # exactly one node per map is `root`; all nodes must be reachable from it
         label: Short box text
         detail: optional second line
         kind: box|decision|terminal
-        series: 0..3       # colour family
+        series: 0..3       # colour family (the bar on the box's left edge); name it in the map's seriesNames
         short: ≥20 chars. The popup answer. (required)
         eq: Unicode equation text   # stays text on the map; use KaTeX only in dives
         addsToExample: ≥15 chars. What this box adds to the running example (required on non-root nodes when a runningExample exists)

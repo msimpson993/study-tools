@@ -49,6 +49,8 @@ export interface MapDef {
   id: string;
   title: string;
   caption?: string;
+  /** names of the colour families node.series 0..3 (legend chips) */
+  seriesNames?: string[];
   nodes: MapNode[];
   edges: MapEdge[];
 }

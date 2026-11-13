@@ -4,8 +4,9 @@ import path from 'node:path';
 let failed = 0;
 for (const app of listApps()) {
   try {
-    const { content } = loadApp(path.join(repoRoot, 'apps', app));
+    const { content, warnings } = loadApp(path.join(repoRoot, 'apps', app));
     const nodes = content.maps.reduce((a, m) => a + m.nodes.length, 0), edges = content.maps.reduce((a, m) => a + m.edges.length, 0);
+    for (const w of warnings) console.warn(`warn ${app}: ${w}`);
     console.log(`ok  ${app}: ${content.maps.length} maps, ${nodes} nodes, ${edges} edges, ${content.dives.length} dives, ${content.quiz.length} questions, ${content.figures.length} figures`);
   } catch (e) {
     failed++;

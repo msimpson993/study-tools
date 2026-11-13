@@ -7,7 +7,7 @@ import { APPS, open, selectMap, noHScroll } from './helpers';
 // It must list only what the current map uses, draw its swatches with the SAME dash pattern as the real lines, and no line state may read as dotted.
 const OUT = path.resolve(import.meta.dirname, '..', '..', 'shots');
 fs.mkdirSync(OUT, { recursive: true });
-type M = { id: string; title: string; nodes: { kind?: string }[]; edges: { from: string; to: string; dashed?: boolean }[] };
+type M = { id: string; title: string; seriesNames?: string[]; nodes: { id: string; kind?: string; series?: number }[]; edges: { from: string; to: string; dashed?: boolean }[] };
 const maps = (page: Page): Promise<M[]> => page.evaluate(() => (window as any).__study.content.maps);
 const items = (page: Page) => page.locator('[data-testid=map-legend] [data-legend]').evaluateAll((els) => els.map((e) => ({ key: e.getAttribute('data-legend'), text: e.textContent?.trim() })));
 const dash = (page: Page, sel: string) => page.locator(sel).first().evaluate((el) => { const c = getComputedStyle(el); return { arr: c.strokeDasharray, cap: c.strokeLinecap }; });
@@ -22,7 +22,7 @@ for (const app of APPS) {
         await selectMap(page, m.title);
         const legend = page.getByTestId('map-legend');
         await expect(legend).toBeVisible();
-        const got = (await items(page)).map((i) => i.key);
+        const got = (await items(page)).map((i) => i.key).filter((k) => !k!.startsWith('series-'));
         const kinds = new Set(m.nodes.map((n) => n.kind ?? 'box'));
         const want = ['solid', ...(m.edges.some((e) => e.dashed) ? ['dashed'] : []), ...(kinds.has('decision') ? ['decision'] : []), ...(kinds.has('terminal') ? ['terminal'] : [])];
         expect(got, `${m.id} legend entries`).toEqual(want);
@@ -38,6 +38,39 @@ for (const app of APPS) {
           const [d, g] = nums(sw.arr); expect(d, 'dash is long enough to read as a dash, not a dot').toBeGreaterThanOrEqual(6); expect(g).toBeGreaterThan(0);
           expect(real.cap, 'butt caps: no rounded dots').toBe('butt');
         }
+      }
+    });
+
+    test('colour chips name each chapter bar; tapping one lights that chapter, tapping again, a box, or Esc clears it', async ({ page }) => {
+      await open(page, app);
+      for (const m of await maps(page)) {
+        await selectMap(page, m.title);
+        const used = [...new Set(m.nodes.map((n) => n.series).filter((x): x is number => x !== undefined))].sort();
+        const chips = page.locator('[data-testid=legend-series] .lg-chip');
+        expect(await chips.count(), `${m.id}: one chip per series used`).toBe(used.length);
+        for (const k of used) {
+          const chip = page.locator(`.lg-chip[data-series="${k}"]`);
+          const name = m.seriesNames?.[k] ?? `group ${k + 1}`;
+          await expect(chip, `${m.id}: chip ${k} is named`).toContainText(name);
+          expect(await chip.evaluate((el) => getComputedStyle(el.querySelector('.sw')!).backgroundColor), 'swatch has the series colour').not.toBe('rgba(0, 0, 0, 0)');
+          await chip.click();
+          await expect(chip).toHaveAttribute('aria-pressed', 'true');
+          const lit = await page.locator('[data-testid=map-node].n-ser').evaluateAll((els) => els.map((e) => e.getAttribute('data-node')).sort());
+          const want = m.nodes.filter((n) => n.series === k).map((n) => n.id).sort();
+          expect(lit, `${m.id}/${name}: lit boxes are exactly that chapter`).toEqual(want);
+          const dim = await page.locator('[data-testid=map-node].n-dim').count();
+          expect(dim, 'the rest dims').toBe(m.nodes.length - want.length);
+          await chip.click(); await expect(chip).toHaveAttribute('aria-pressed', 'false');
+          expect(await page.locator('[data-testid=map-node].n-ser, [data-testid=map-node].n-dim').count(), 'tap again clears').toBe(0);
+        }
+        // a box tap replaces the chapter highlight; Esc clears
+        const k0 = used[0];
+        await page.locator(`.lg-chip[data-series="${k0}"]`).click();
+        await page.locator('[data-testid=map-node]').first().dispatchEvent('click');
+        await expect(page.locator(`.lg-chip[data-series="${k0}"]`)).toHaveAttribute('aria-pressed', 'false');
+        expect(await page.locator('[data-testid=map-node].n-ser').count()).toBe(0);
+        await page.locator(`.lg-chip[data-series="${k0}"]`).click(); await page.keyboard.press('Escape');
+        expect(await page.locator('[data-testid=map-node].n-ser, [data-testid=map-node].n-dim').count()).toBe(0);
       }
     });
 
@@ -74,9 +107,9 @@ for (const app of APPS) {
           await expect(legend).toBeVisible();
           const box = (await legend.boundingBox())!;
           expect(box.x + box.width, 'legend inside viewport').toBeLessThanOrEqual(vp.width + 1);
-          expect(box.height, 'legend stays small').toBeLessThanOrEqual(vp.width < 600 ? 110 : 60);
+          expect(box.height, 'legend stays small').toBeLessThanOrEqual(vp.width < 600 ? 150 : 70);
           expect(await noHScroll(page)).toBe(true);
-          await page.locator('[data-testid=map-edge]').first().dispatchEvent('click');
+          const chip = page.locator('.lg-chip').first(); if (await chip.count()) await chip.click(); else await page.locator('[data-testid=map-edge]').first().dispatchEvent('click');
           await page.waitForTimeout(150);
           await page.screenshot({ path: path.join(OUT, `map-legend-${app}-${view}-${theme}.png`) });
         });

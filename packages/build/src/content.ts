@@ -100,7 +100,7 @@ export function loadApp(appDir: string): { content: AppContent; warnings: string
       for (let i = 0; i < ids.size; i++) for (const e of m.edges ?? []) if (reach.has(e.from)) reach.add(e.to);
       for (const id of ids) if (!reach.has(id)) problems.push(`graph.yaml ${m.id}: node ${id} is not reachable from root`);
       maps.push({
-        id: m.id, title: m.title, caption: m.caption,
+        id: m.id, title: m.title, caption: m.caption, seriesNames: m.seriesNames,
         nodes: (m.nodes ?? []).map((n: any) => ({
           id: n.id, label: n.label, detail: n.detail, kind: n.kind, series: n.series,
           short: inline(n.short, `graph.yaml ${m.id}/${n.id}`),
@@ -200,6 +200,16 @@ export function loadApp(appDir: string): { content: AppContent; warnings: string
     return { id: s.id, title: s.title, kind: s.kind };
   });
   if (subject.sections && subject.sections[0] && subject.sections[0].kind !== 'map') problems.push('subject.yaml: the first section must be the map (map-first rule)');
+
+  // ---------- colour families (node.series) ----------
+  // The accent bar on a box means nothing unless the legend names it: warn when `series` is used without `seriesNames`; fail on an index with no name.
+  for (const m of maps) {
+    const used = [...new Set(m.nodes.map((n) => n.series).filter((x): x is number => x !== undefined))].sort();
+    if (!used.length) continue;
+    if (!m.seriesNames) { warnings.push(`graph.yaml ${m.id}: nodes use series ${used.join(', ')} but the map has no seriesNames (the legend cannot name the colours)`); continue; }
+    for (const s of used) if (s >= m.seriesNames.length) problems.push(`graph.yaml ${m.id}: series ${s} is used but seriesNames has only ${m.seriesNames.length} names`);
+    if (m.seriesNames.length > used[used.length - 1] + 1) warnings.push(`graph.yaml ${m.id}: seriesNames lists ${m.seriesNames.length} names but only series ${used.join(', ')} are used`);
+  }
 
   // ---------- running example ----------
   // Policy: if subject.yaml declares `runningExample`, every non-root map node MUST carry `addsToExample` and every dive must have

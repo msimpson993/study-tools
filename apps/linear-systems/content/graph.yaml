@@ -5,6 +5,7 @@ maps:
     caption: "The overview: the root question splits into a matrix branch and a convolution (LTI) branch
       that meet again at “same idea”. Diamonds are questions; solid arrows are the next step in the
       chain; dashed arrows mark the same idea in another language."
+    seriesNames: ["Matrix and state space", "Convolution and transforms", "Transfer function and poles"]
     nodes:
       - id: root
         label: Best basis for A?
@@ -312,6 +313,7 @@ maps:
     caption: "Operators & control: from “what does A do?” through eigenvectors, diagonalization, time
       evolution, and the steering/seeing questions (controllability, observability) to the transfer
       function."
+    seriesNames: ["Eigen-structure and bases", "Dynamics over time", "Steering, seeing, transfer function"]
     nodes:
       - id: root
         label: What does A do to a vector?
@@ -327,6 +329,7 @@ maps:
         accountsFor: "Where the cart's two special starting states come from."
         label: Directions that only stretch?
         kind: decision
+        series: 0
         short: "The first follow-up: are there lines that A leaves invariant? On such a line A cannot
           rotate; it can only scale. Those lines, if they exist, are the eigen-directions, and they
           are the start of a useful coordinate system."
@@ -360,6 +363,7 @@ maps:
         accountsFor: "Whether the cart can be written entirely in modes."
         label: Do they span the space?
         kind: decision
+        series: 0
         short: "An eigenbasis is useful only if it is complete: you need n independent eigenvectors in n
           dimensions. If they span, every vector has modal coordinates and A is diagonalizable. If
           they do not, some directions are generalized eigenvectors, and Jordan blocks appear."
@@ -442,6 +446,7 @@ maps:
         accountsFor: "How to get position and velocity at any later time."
         label: A acts over time?
         kind: decision
+        series: 1
         short: "The next question after a good basis is dynamics. If the same A now appears in ẋ = Ax (or x+
           = Ax), the eigen-picture becomes a statement about time: each mode multiplies by e^{λt} or
           λ^k, and the matrix exponential is the state transition."
@@ -503,6 +508,7 @@ maps:
         accountsFor: "Whether the cart can be parked at any position with any velocity."
         label: Can u reach every mode?
         kind: decision
+        series: 2
         short: With an input, the question is no longer only what A does by itself, but which states B,
           acting through the powers of A, can actually reach from the origin in finite time. If a
           mode is orthogonal to the input in the left-eigenvector sense, u can never excite it.
@@ -538,6 +544,7 @@ maps:
         accountsFor: "Whether a position sensor is enough for the cart."
         label: Can y see every mode?
         kind: decision
+        series: 2
         short: Dual to steering is seeing. Two initial states that produce the same output history for every
           input are indistinguishable; their difference lives in the null space of the observability
           matrix. If that null space is only {0}, every mode leaves a fingerprint in y.
@@ -927,6 +934,7 @@ maps:
     caption: "LTI & transforms: if A is convolution, its eigenfunctions are complex exponentials, and
       every transform (Laplace, Z, FT, FS, DTFT, DFT) is an expansion in that basis; sampling ties
       the two worlds together."
+    seriesNames: ["Convolution and eigenfunctions", "Transforms", "Sampling and transfer functions"]
     nodes:
       - id: root
         label: What if A is convolution?
@@ -942,6 +950,7 @@ maps:
         accountsFor: "Why exponentials, and so sinusoids, are special for the cart."
         label: Eigenfunctions?
         kind: decision
+        series: 0
         short: Are there signals that an LTI system leaves invariant in shape, only scaled? Those signals,
           if they exist, play the same role that eigenvectors play for a matrix, and they will be
           the useful basis in which to expand everything else.
@@ -998,6 +1007,7 @@ maps:
         accountsFor: "How to get the cart's response to a general force."
         label: Expand a signal in that basis?
         kind: decision
+        series: 0
         short: "To use the eigenfunctions you have to compute coordinates: the coefficients of e^{st} or
           e^{jωt} or z^n in a given signal. Those analysis formulas are the Laplace, Z, and Fourier
           transforms. Which tool you pick depends on whether time is continuous or discrete, whether
@@ -1140,6 +1150,7 @@ maps:
         accountsFor: "Whether a log can still describe the cart."
         label: Sample in time?
         kind: decision
+        series: 2
         short: Sampling is the move from a continuous-time signal to a discrete-time sequence. The new
           question is what that move does to the frequency picture — it periodizes it — and when the
           original continuous-time signal can be recovered (the sampling theorem and the Nyquist

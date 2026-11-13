@@ -4,6 +4,7 @@ maps:
     title: The question chain
     caption: "Start at the root question and follow the arrows: each line is the question the previous idea leaves open.
       Boxes with a board link open the matching transform (forward and inverse) on the six-domains board, set to a worked example."
+    seriesNames: ["Eigenfunction idea", "Continuous transforms", "Sampling and discrete time", "Finite records (DFT)"]
     nodes:
       - id: root
         label: Represent x so LTI is simple
