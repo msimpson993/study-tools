@@ -2,6 +2,8 @@
 id: lti
 order: 12
 title: Convolution, LTI & eigenfunctions
+addsToExample: "Looks at the same cart as a black box: force u(t) in, position y(t) out. Doubling the push doubles the motion, and a push today does the same thing tomorrow."
+accountsFor: "How we can predict the response to any push if we know the response to one sharp tap."
 category: transforms
 chain:
   - title: What if the operator A is an LTI system on signals?

@@ -2,6 +2,8 @@
 id: obs
 order: 9
 title: Observability
+addsToExample: "Checks that watching the position y(t) alone is enough to reconstruct both position and velocity of the cart: rank of [C; CA] = [[1, 0], [0, 1]] is 2."
+accountsFor: "That a position sensor can recover the velocity too, so a state estimator for the cart is possible."
 category: control
 chain:
   - title: Can the input reach every mode?

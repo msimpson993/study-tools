@@ -2,6 +2,8 @@
 id: ctrl
 order: 8
 title: Controllability
+addsToExample: "Asks whether the force u can steer both position and velocity anywhere, and whether the position sensor tells us both."
+accountsFor: "Whether pushing and watching can reach and see everything about this cart."
 category: control
 chain:
   - title: The state has modes, each along an eigenvector.

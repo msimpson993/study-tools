@@ -2,6 +2,8 @@
 id: ft
 order: 13
 title: Fourier transform
+addsToExample: "Evaluates the cart on s = jω: its frequency response, a resonance-free low-pass for this damping."
+accountsFor: "How much a vibration at each frequency moves the cart."
 category: transforms
 chain:
   - title: Eigenfunctions of continuous-time LTI systems are e^{jω t} (and e^{st}).

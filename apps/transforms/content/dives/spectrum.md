@@ -2,6 +2,8 @@
 id: spectrum
 order: 2
 title: "From the ring to its spectrum"
+addsToExample: "Reads the ring's poles along the imaginary axis to get its spectrum: a peak at f₀ whose width is about σ/π."
+accountsFor: "Why a long ring is a sharp line and a short ring a broad smear."
 category: transforms
 chain:
   - title: "I know the poles of the ring."

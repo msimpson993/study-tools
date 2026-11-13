@@ -2,6 +2,8 @@
 id: dtft
 order: 15
 title: DTFT
+addsToExample: "Gives the spectrum of the cart's sampled position log: periodic with period 2π."
+accountsFor: "What the sampled data say about the cart's frequency content, and where the copies overlap."
 category: transforms
 chain:
   - title: What if time is already a sequence?

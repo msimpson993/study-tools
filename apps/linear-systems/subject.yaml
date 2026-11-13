@@ -26,7 +26,7 @@ runningExample:
     | **A** | spring and damper | [[0, 1], [−2, −3]]: ẍ = −2x − 3ẋ |
     | **B** | the push acts on the velocity | (0, 1)ᵀ, force per unit mass |
     | **C** | a position sensor | (1, 0) |
-    | modes | two decaying exponentials | e^{−t} along (1, −1) and e^{−2t} along (1, −2) |
+    | modes | two decaying exponentials | e^(−t) along (1, −1) and e^(−2t) along (1, −2) |
     | transfer function | force → position | G(s) = 1/(s² + 3s + 2) |
 
     Every box of the map says what its idea **adds to this cart** and what it lets us **account for** that we could not explain before.

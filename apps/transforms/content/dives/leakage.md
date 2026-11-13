@@ -2,6 +2,8 @@
 id: leakage
 order: 5
 title: "Finite records: leakage, windows and resolution"
+addsToExample: "Records only M samples of the ring-like tone and shows how the window smears its line."
+accountsFor: "Why a real spectrum has sidelobes and leakage, and what a window or zero padding really changes."
 category: transforms
 chain:
   - title: "I only have M samples of the ring."

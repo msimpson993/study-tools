@@ -2,6 +2,8 @@
 id: tf
 order: 11
 title: Transfer functions
+addsToExample: "Collapses the cart's A, B, C into one function G(s) = 1/(s² + 3s + 2): force to position."
+accountsFor: "The cart's whole input-output behaviour, with its poles at −1 and −2, in one line."
 category: control
 chain:
   - title: I have a state realization (A, B, C, D).

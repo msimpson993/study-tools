@@ -76,3 +76,29 @@ for (const v of VIEWS) {
     });
   }
 }
+
+// New visuals: every live figure (desktop figure card + a phone dive page) plus the running-example popup. Run: npm run shots
+for (const app of ['linear-systems', 'transforms']) {
+  test(`shots visuals ${app}`, async ({ browser }) => {
+    test.setTimeout(240_000);
+    const dir = path.join(OUT, 'viz'); fs.mkdirSync(dir, { recursive: true });
+    const ctx = await browser.newContext({ viewport: { width: 1300, height: 800 } });
+    const page = await ctx.newPage();
+    await open(page, app);
+    const figs: { id: string }[] = await page.evaluate(() => (window as any).__study.content.figures);
+    for (const f of figs) {
+      await open(page, app, `#/figure/${f.id}`); await page.waitForTimeout(500);
+      await page.locator('.fig-layout').first().screenshot({ path: path.join(dir, `${app}-${f.id}.png`) });
+    }
+    // running example: fold + a node popup that says what it adds
+    await open(page, app); await page.getByTestId('running-example').locator('summary').click();
+    await page.locator('[data-testid=map-node]').nth(3).dispatchEvent('click'); await page.waitForTimeout(250);
+    await page.screenshot({ path: path.join(dir, `${app}-running-example-popup.png`) });
+    await ctx.close();
+    const m = await browser.newContext({ viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true, deviceScaleFactor: 2 });
+    const mp = await m.newPage();
+    const dives: string[] = await (async () => { await open(mp, app); return mp.evaluate(() => (window as any).__study.content.dives.map((d: any) => d.id)); })();
+    for (const id of dives.slice(0, 3)) { await open(mp, app, `#/dive/${id}`); await mp.waitForTimeout(500); await mp.screenshot({ path: path.join(dir, `${app}-dive-${id}-phone.png`) }); }
+    await m.close();
+  });
+}

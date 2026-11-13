@@ -2,6 +2,8 @@
 id: kalman
 order: 10
 title: Kalman decomposition & minimal realization
+addsToExample: "Splits a state into the parts the force can push and the sensor can see. For the cart, both modes are controllable and observable, so nothing hides."
+accountsFor: "Why G(s) is the cart's complete description (and what would be missing if a mode were hidden)."
 category: control
 chain:
   - title: Some modes may be unreachable, or invisible, or both.

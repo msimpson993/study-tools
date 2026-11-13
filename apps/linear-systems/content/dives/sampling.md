@@ -2,6 +2,8 @@
 id: sampling
 order: 18
 title: Sampling
+addsToExample: "Records the cart's position with a digital sensor every T seconds, so only the samples x(nT) remain."
+accountsFor: "Why a fast vibration can appear as a slow one in the log, and how z = e^{sT} maps the cart's poles."
 category: transforms
 chain:
   - title: I have a continuous-time picture (s-plane, FT) and a discrete-time one (z-plane, DTFT).

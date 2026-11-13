@@ -2,6 +2,8 @@
 id: ss
 order: 5
 title: State space
+addsToExample: "Writes the cart's physics as ẋ = Ax + Bu with x = (position, velocity), B = (0, 1)ᵀ for a force on the mass, y = Cx with C = (1, 0) for a position sensor."
+accountsFor: "The cart's full dynamics, inputs and measurement in one standard form."
 category: time
 chain:
   - title: What if A acts over time?

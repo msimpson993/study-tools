@@ -2,6 +2,8 @@
 id: fs
 order: 14
 title: Fourier series
+addsToExample: "Treats a periodic push (a square-wave force) as a sum of harmonics."
+accountsFor: "How the cart's steady motion under a periodic push is a sum of scaled harmonics."
 category: transforms
 chain:
   - title: What if the continuous-time signal is periodic?

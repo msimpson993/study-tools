@@ -2,6 +2,8 @@
 id: sampled
 order: 3
 title: "Sampling the ring: copies and aliasing"
+addsToExample: "Samples the ring every T and shows its spectrum copied every fs, with the copies added together."
+accountsFor: "Why a ring above fs/2, or one that decays fast, looks different after sampling."
 category: transforms
 chain:
   - title: "I only keep samples x(nT) of the ring."

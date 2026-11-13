@@ -2,6 +2,8 @@
 id: dft
 order: 16
 title: DFT
+addsToExample: "Computes N frequency samples of a finite log of the cart's position, which is what a spectrum analyser does."
+accountsFor: "The cart's spectrum from a real record; why a tone between bins leaks."
 category: transforms
 chain:
   - title: In practice the record is finite — or the sequence is periodic.

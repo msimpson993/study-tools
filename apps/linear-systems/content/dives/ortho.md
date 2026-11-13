@@ -2,6 +2,8 @@
 id: ortho
 order: 4
 title: Orthogonality & inner products
+addsToExample: "Measures how much of the cart's state lies along a direction using dot products, and shows that eigenvectors of a symmetric A would be perpendicular."
+accountsFor: "How to read mode amounts as projections, and why the cart's modes are not perpendicular (A is not symmetric)."
 category: basis
 chain:
   - title: We have a basis of modes.

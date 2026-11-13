@@ -2,6 +2,8 @@
 id: ring
 order: 1
 title: "The running example: a ring and its poles"
+addsToExample: "Draws the ringing signal next to its two poles, so the curve and the pole pair are one object seen twice."
+accountsFor: "How fast the ring dies (σ) and how fast it rings (ω_d) read straight off the poles."
 category: transforms
 chain:
   - title: "I have a signal that rings and decays."

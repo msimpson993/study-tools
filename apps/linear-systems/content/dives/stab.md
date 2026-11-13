@@ -2,6 +2,8 @@
 id: stab
 order: 7
 title: Stability
+addsToExample: "Checks the cart's eigenvalues −1 and −2 are in the left half-plane, so every motion decays to rest."
+accountsFor: "Why the cart settles instead of oscillating forever or running away."
 category: time
 chain:
   - title: The modes evolve as e^{λt} (or λ^k in discrete time).

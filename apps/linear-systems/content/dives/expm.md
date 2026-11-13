@@ -2,6 +2,8 @@
 id: expm
 order: 6
 title: State transition matrix
+addsToExample: "Gives the cart's state transition matrix e^{At}: multiply by it to jump the state forward t seconds."
+accountsFor: "The cart's free motion x(t) = e^{At}x(0) in closed form."
 category: time
 chain:
   - title: In state space, what if u = 0?

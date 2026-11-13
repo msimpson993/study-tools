@@ -2,6 +2,8 @@
 id: zmap
 order: 4
 title: "Poles move from s to z: z = e^(sT)"
+addsToExample: "Carries the ring's poles from the s-plane to the z-plane by z = e^(pT)."
+accountsFor: "How the sampled ring's decay and frequency become a radius and an angle, and why the angle wraps."
 category: transforms
 chain:
   - title: "I sampled the ring."

@@ -2,6 +2,8 @@
 id: laplace
 order: 17
 title: Laplace & Z transforms
+addsToExample: "Takes the cart's response and its force into the s-plane, where the cart is G(s) with poles −1, −2."
+accountsFor: "The cart's transient and steady-state from the same function, including growth."
 category: transforms
 chain:
   - title: The Fourier axis jω (or the unit circle) is only part of the eigenfunction family.

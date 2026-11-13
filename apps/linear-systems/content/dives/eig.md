@@ -2,6 +2,8 @@
 id: eig
 order: 1
 title: Eigenvectors & eigenvalues
+addsToExample: "Solves Av = λv for the cart: λ = −1 with v = (1, −1) and λ = −2 with v = (1, −2)."
+accountsFor: "The two decay rates of the cart and the shape of each mode: position and velocity move together."
 category: basis
 chain:
   - title: What does a linear operator A do to a vector?

@@ -2,6 +2,8 @@
 id: jordan
 order: 3
 title: Jordan form
+addsToExample: "What the cart becomes if the damper is tuned to critical damping (k = 1, c = 2): a repeated pole −1 with one eigenvector."
+accountsFor: "The extra t·e^{−t} term that appears for the critically damped cart."
 category: basis
 chain:
   - title: Do the eigenvectors span the space?

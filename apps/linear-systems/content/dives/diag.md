@@ -2,6 +2,8 @@
 id: diag
 order: 2
 title: Diagonalization & change of basis
+addsToExample: "Rewrites the cart as A = VΛV⁻¹ with Λ = diag(−1, −2): in mode coordinates the cart is two independent decays."
+accountsFor: "The cart's behaviour decouples: one coordinate falls at rate 1, the other at rate 2."
 category: basis
 chain:
   - title: Are there directions A only stretches?
