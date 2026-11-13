@@ -1,0 +1,19 @@
+- { term: "A", meaning: "The linear operator under study: a matrix acting on states, or convolution acting on signals." }
+- { term: "λ (eigenvalue)", meaning: "Scale factor an eigenvector picks up: A v = λ v. In a linear system it sets one mode, e^{λt} (or λ^k in discrete time)." }
+- { term: "v, w (right / left eigenvector)", meaning: "A v = λ v and wᵀ A = λ wᵀ. PBH uses left eigenvectors for controllability and right for observability." }
+- { term: "V, Λ", meaning: "V has eigenvectors as columns; Λ is the diagonal matrix of eigenvalues, so A = V Λ V⁻¹." }
+- { term: "ξ (xi)", meaning: "Modal coordinates: x = V ξ, so ξ = V⁻¹ x. In ξ each mode evolves independently." }
+- { term: "x, u, y", meaning: "State, input, output of the state-space model ẋ = Ax + Bu, y = Cx + Du." }
+- { term: "e^{At}, Φ(t)", meaning: "State transition matrix: x(t) = e^{At} x(0) when u = 0. Equals V e^{Λt} V⁻¹ when A is diagonalizable." }
+- { term: "Ctrb, Obsv", meaning: "Controllability matrix [B AB … Aⁿ⁻¹B] and observability matrix [C; CA; …; CAⁿ⁻¹]. Full rank n means controllable / observable." }
+- { term: "PBH", meaning: "Popov-Belevitch-Hautus test: rank[λI − A, B] = n (controllable) and rank[λI − A; C] = n (observable) for every eigenvalue λ." }
+- { term: "G(s), H(s)", meaning: "Transfer function: G(s) = C(sI − A)⁻¹B + D. The eigenvalue an LTI system assigns to e^{st}." }
+- { term: "LTI", meaning: "Linear time-invariant system; its output is the convolution y = h ∗ x." }
+- { term: "ROC", meaning: "Region of convergence of a Laplace or Z transform. The transform is only meaningful together with its ROC." }
+- { term: "FT, FS, DTFT, DFT", meaning: "Fourier transform, Fourier series, discrete-time Fourier transform, discrete Fourier transform: expansions in complex exponentials for the four combinations of continuous/discrete and aperiodic/periodic time." }
+- { term: "ω, Ω", meaning: "Angular frequency: ω in rad/s (continuous time), Ω = ωT in rad/sample (discrete time).", units: "rad/s, rad/sample" }
+- { term: "T, fs", meaning: "Sample period and sample rate, fs = 1/T. Nyquist frequency is fs/2.", units: "s, Hz" }
+- { term: "z = e^{sT}", meaning: "Map from the s-plane to the z-plane. Left half-plane → inside the unit circle; many-to-one (aliasing)." }
+- { term: "BIBO", meaning: "Bounded-input bounded-output stability: poles of G(s) in the open left half-plane. Weaker than internal stability when modes are hidden." }
+- { term: "Minimal realization", meaning: "A state-space model that is both controllable and observable; deg G = n and poles = eig(A)." }
+- { term: "Jordan block", meaning: "λI plus a superdiagonal of ones; arises when a repeated eigenvalue lacks enough eigenvectors. Produces t e^{λt} terms." }

@@ -1,0 +1,18 @@
+id: transforms
+title: Six domains of linear systems
+centralQuestion: How do we represent a signal so that linear time-invariant systems become simple?
+blurb: A question map of CT / DT / S / Z / frequency, plus the original six-domain board with nine transform arrows, draggable poles, 20 worked examples and windowing.
+archetype: overview
+sections:
+  - { id: map, title: The question map, kind: map }
+  - { id: board, title: Six-domains board, kind: board }
+  - { id: quiz, title: Self-check, kind: quiz }
+  - { id: glossary, title: Variables & terms, kind: glossary }
+board:
+  pairs: [samp, ft, dft, fs, dtft, fsamp, lap, zt, map]
+hub:
+  order: 1
+expect:
+  maps: 1
+  nodes: 17
+  examples: 20

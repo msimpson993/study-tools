@@ -1,0 +1,25 @@
+{
+  "$id": "examples.schema.json",
+  "description": "Presets of the six-domains board. Every example is a partial assignment of visible controls (p) plus the highlighted transform (sel).",
+  "type": "object",
+  "required": ["categories", "defs", "examples", "tryThis"],
+  "additionalProperties": false,
+  "properties": {
+    "categories": { "type": "array", "items": { "type": "string" } },
+    "defs": { "type": "object", "additionalProperties": { "type": "string" } },
+    "examples": {
+      "type": "array",
+      "items": {
+        "type": "object", "required": ["id", "cat", "n", "p", "sel", "look", "why", "eq", "ml"], "additionalProperties": false,
+        "properties": {
+          "id": { "type": "string" }, "cat": { "type": "integer", "minimum": 0 }, "n": { "type": "string" },
+          "p": { "type": "object" }, "sel": { "type": "string" },
+          "extra": { "type": "string", "description": "key into defs" },
+          "look": { "type": "string", "minLength": 10 }, "why": { "type": "string", "minLength": 10 },
+          "eq": { "type": "string" }, "ml": { "type": "string" }
+        }
+      }
+    },
+    "tryThis": { "type": "array", "items": { "type": "object", "required": ["id", "head", "text"], "properties": { "id": { "type": "string" }, "head": { "type": "string" }, "text": { "type": "string" } }, "additionalProperties": false } }
+  }
+}

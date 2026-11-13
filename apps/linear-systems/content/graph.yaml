@@ -1,0 +1,1289 @@
+# Question maps. Node/edge ids are per map. `dive` links a node to dives/<id>.md; `live` to a figure; `link` to another page.
+maps:
+  - id: overview
+    title: Overview
+    caption: "The overview: the root question splits into a matrix branch and a convolution (LTI) branch
+      that meet again at “same idea”. Diamonds are questions; solid arrows are the next step in the
+      chain; dashed arrows mark the same idea in another language."
+    nodes:
+      - id: root
+        label: Best basis for A?
+        detail: What does A do, simply?
+        kind: terminal
+        short: This is the class's root question. A linear operator is completely known once you know what
+          it does to a basis. The useful basis is the one in which A acts independently on each
+          coordinate, by a simple scale factor — an eigenvalue. The same idea, in another language,
+          is expanding a signal in complex exponentials so an LTI system becomes multiplication by a
+          transfer function.
+        eq: Av = λv,    H{e^{st}} = H(s) e^{st}
+      - id: matrix
+        label: A is a matrix
+        detail: Operators on ℝⁿ or ℂⁿ
+        series: 0
+        dive: eig
+        short: When the state lives in a finite-dimensional vector space, A is a matrix. Understanding A
+          then means finding directions it only stretches, writing every vector in that basis, and
+          reading off a list of scale factors. Everything that follows on the matrix branch —
+          diagonalization, e^{At}, controllability — is a consequence of that change of coordinates.
+        eq: x ↦ Ax
+      - id: lti
+        label: A is convolution
+        detail: Operators on signals
+        series: 1
+        dive: lti
+        short: When the vector is a signal and the operator is linear and time-invariant, A is convolution
+          with a fixed impulse response h. The eigenfunctions of that operator are eternal complex
+          exponentials, and the eigenvalue attached to e^{st} is the transfer function H(s).
+          Fourier, Laplace, and Z transforms are the analysis formulas that put a signal into that
+          eigenbasis.
+        eq: y = h ∗ x
+      - id: similar
+        label: Change of basis
+        detail: x = T ξ
+        series: 0
+        dive: diag
+        short: A change of coordinates x = T ξ does not change the underlying operator; it changes the
+          numbers you write it with. The same map A becomes Ā = T⁻¹ A T (a similarity). Choose the
+          columns of T to be eigenvectors and Ā is diagonal. In state space the input and output
+          maps become T⁻¹ B and C T, and the transfer function is invariant.
+        eq: Ā = T⁻¹ A T,    B̄ = T⁻¹ B,    C̄ = C T
+      - id: modes
+        label: Eigenvectors / modes
+        detail: Av = λv
+        series: 0
+        dive: eig
+        short: "An eigenvector is a line that A leaves invariant: the output is a scalar multiple of the
+          input. That scalar is the eigenvalue, and it is the whole story of A along that line. In a
+          linear system those lines are the modes. If they form a basis, every state is a
+          combination of independent modal coordinates."
+        eq: Av = λv,    v ≠ 0
+      - id: eigenfn
+        label: Eigenfunctions
+        detail: e^{st} and zⁿ
+        series: 1
+        dive: lti
+        short: "The eigenfunctions of convolution are the signals that come out looking the same, only
+          scaled: the two-sided exponentials e^{st} in continuous time, or zⁿ in discrete time. The
+          scale factor is H(s) or H(z). This is the same statement as Av = λv, with vector replaced
+          by signal and matrix replaced by convolution."
+        eq: H{e^{st}} = H(s) e^{st}
+      - id: time
+        label: e^{At} and stability
+        detail: Each mode is just e^{λt}
+        series: 0
+        dive: expm
+        short: "Once A acts in time, ẋ = Ax, the free motion is x(t) = e^{At} x(0). In an eigenbasis that is
+          just multiplication of each modal coordinate by e^{λt}. Stability is then a question about
+          those factors: they decay when every continuous-time eigenvalue has a negative real part,
+          or every discrete-time eigenvalue sits inside the unit circle."
+        eq: x(t) = e^{At} x(0) = V e^{Λt} V⁻¹ x(0)
+        live: figure:expm
+      - id: ctrl
+        label: Steer and see
+        detail: Can u reach, and y see, every mode?
+        series: 0
+        dive: ctrl
+        short: "Adding an input and an output asks the linear-algebra questions about the modes.
+          Controllability: can u drive the state onto every mode (is the range of the
+          controllability matrix the whole space)? Observability: can a record of y distinguish
+          every mode (is the null space of the observability matrix {0})? The PBH tests restate both
+          in the language of left and right eigenvectors."
+        eq: Ctrb = [B AB … A^{n−1} B],    O = [C; CA; …; CA^{n−1}]
+      - id: fourier
+        label: Laplace / Fourier / Z
+        detail: Coordinates in the exponential basis
+        series: 1
+        dive: laplace
+        short: To use the eigenfunctions of convolution you have to expand the signal in that family. The
+          Fourier transform is the expansion on the imaginary axis s = jω (or the unit circle z =
+          e^{jΩ}). Laplace and Z continue the same expansion off that axis, and they need a region
+          of convergence because the integral or sum may only exist in part of the plane.
+        eq: X(s) = ∫ x(t) e^{−st} dt    (with an ROC)
+        link:
+          href: ../transforms/#/board?pair=lap
+          label: See it on the six-domains board
+      - id: four
+        label: FS, FT, DTFT, DFT
+        detail: Time continuous/discrete × periodic/aperiodic
+        series: 1
+        dive: ft
+        short: "The four everyday Fourier tools are one idea under two choices: is time continuous or
+          discrete, and is the signal periodic or aperiodic? Periodicity in one domain is
+          discreteness in the other. Sampling in time periodizes frequency (aliases); periodizing in
+          time samples frequency (a line spectrum)."
+        eq: periodicity in one domain  ⇔  discreteness in the other
+        link:
+          href: ../transforms/#/board?pair=ft
+          label: See it on the six-domains board
+      - id: sampling
+        label: Sampling / aliasing
+        detail: z = e^{sT}; periodize frequency
+        series: 1
+        dive: sampling
+        short: "Sampling a continuous-time signal with period T produces a discrete-time sequence whose
+          frequency axis is a periodized copy of the original, repeated every 2π/T. That
+          periodization is aliasing. The same geometry maps the s-plane to the z-plane by z =
+          e^{sT}: the left half-plane wraps to the interior of the unit disk, and vertical lines of
+          constant Re(s) become circles of constant |z|."
+        eq: z = e^{sT},    X_s(jω) = (1/T) Σ_k X(j(ω − 2πk/T))
+        link:
+          href: ../transforms/#/board?pair=map
+          label: See it on the six-domains board
+      - id: tf
+        label: Transfer function
+        detail: G(s) = C(sI − A)⁻¹B + D
+        series: 2
+        dive: tf
+        short: "The transfer function is the eigenvalue of the LTI operator: it is the Laplace (or Z)
+          transform of the impulse response, and also the i/o formula G(s) = C(sI − A)⁻¹ B + D. It
+          only sees the part of the state that is both controllable and observable; hidden modes
+          cancel and do not appear as poles of G, even though they still live in A."
+        eq: G(s) = C(sI − A)⁻¹ B + D
+      - id: poles
+        label: Poles and zeros
+        detail: Hidden modes cancel
+        series: 2
+        dive: tf
+        short: "Poles of G are frequencies where the response blows up; in a minimal realization they are
+          exactly the eigenvalues of A. Zeros are frequencies the system blocks. A cancellation
+          between a pole and a zero is the i/o signature of a hidden (uncontrollable or
+          unobservable) mode: G looks simpler than A really is."
+        eq: "{poles of G} ⊆ {eig(A)},    equality iff the realization is minimal"
+      - id: kalman
+        label: Minimal realization
+        detail: Only the CO part of the state
+        series: 2
+        dive: kalman
+        short: "A change of basis (the Kalman decomposition) splits the state into four invariant pieces:
+          controllable and observable, controllable but unobservable, uncontrollable but observable,
+          and neither. The transfer function depends only on the first piece. A realization is
+          minimal when it is both controllable and observable; then the dimension of A equals the
+          degree of G(s)."
+        eq: minimal  ⇔  controllable and observable  ⇔  deg G = n
+    edges:
+      - from: root
+        to: matrix
+        label: operators on ℝⁿ
+        question: Why does the root question split into a matrix branch?
+        idea: "If the state is a finite list of numbers, A is a matrix, and the best basis is a basis of
+          eigenvectors (or generalized eigenvectors). The rest of the matrix branch is what that
+          change of coordinates makes easy: powers of A, e^{At}, and questions about range and null
+          space."
+      - from: root
+        to: lti
+        label: operators on signals
+        question: Why is there a parallel branch for signals?
+        idea: If the vector is a time signal and A is an LTI operator, the same root question asks for the
+          eigenfunctions of convolution. They are complex exponentials, and the eigenvalue is a
+          transfer function.
+      - from: matrix
+        to: similar
+        label: new coordinates
+        question: Why does a matrix lead to a change of basis?
+        idea: "The operator is the same in every coordinate system; only its matrix changes. Choosing better
+          coordinates is the whole game: we want the coordinates in which A looks as simple as
+          possible."
+        eq: x = T ξ,    Ā = T⁻¹ A T
+      - from: similar
+        to: modes
+        label: A becomes diagonal?
+        question: Which coordinates actually simplify A?
+        idea: If you can take the columns of T to be eigenvectors, Ā is the diagonal matrix of eigenvalues.
+          Each new coordinate is an independent mode that A only scales.
+        eq: A V = V Λ    when the columns of V are eigenvectors
+      - from: modes
+        to: time
+        label: x' = Ax
+        question: Why do modes make time evolution easy?
+        idea: The ODE ẋ = Ax becomes, in modal coordinates, a set of independent scalar ODEs ξ̇ᵢ = λᵢ ξᵢ.
+          Each mode just multiplies by e^{λᵢ t}, so the matrix exponential is easy and stability is
+          a list of λ's.
+        eq: e^{At} = V e^{Λt} V⁻¹
+      - from: time
+        to: ctrl
+        label: add u and y
+        question: Once you can evolve the state, what is left to ask?
+        idea: "Inputs and outputs raise the linear-algebra questions: can u reach every mode, and can y see
+          every mode? Controllability and observability then decide which modes appear in the
+          transfer function."
+      - from: ctrl
+        to: kalman
+        label: hidden modes
+        question: What happens when some modes cannot be reached or seen?
+        idea: The Kalman decomposition isolates the hidden parts. They still evolve inside A, and they still
+          matter for internal stability, but they cancel out of G(s).
+      - from: kalman
+        to: tf
+        label: i/o after cancels
+        question: Why does a transfer function come after the Kalman split?
+        idea: G(s) is an input-output object. It is exactly the transfer function of the
+          controllable-and-observable subsystem, so writing G is what you get after discarding
+          hidden modes.
+        eq: G(s) = C_co (sI − A_co)⁻¹ B_co + D
+      - from: tf
+        to: poles
+        label: poles vs eig(A)
+        question: How do the poles of G relate to the eigenvalues of A?
+        idea: "Every pole of G is an eigenvalue of A, but the converse is true only when the realization is
+          minimal. A cancelled pole is a hidden mode: it is in eig(A) and not a pole of G."
+        eq: "{poles of G} ⊆ {eig(A)},    equality iff minimal"
+      - from: lti
+        to: eigenfn
+        label: invariant signals
+        question: What are the eigenvectors of convolution?
+        idea: The signals that convolution only scales, never reshapes, are the eternal exponentials e^{st}
+          (or z^n). Finding them is the same question as Av = λv, asked of an operator on a function
+          space.
+        eq: (h ∗ e^{st})(t) = H(s) e^{st}
+      - from: eigenfn
+        to: fourier
+        label: expand in that basis
+        question: Once you have eigenfunctions, what do you do with a general signal?
+        idea: You expand the signal as a combination of those exponentials. The coefficients are a Fourier,
+          Laplace, or Z transform, and the LTI operator becomes multiplication by H on each
+          coefficient — the convolution theorem.
+      - from: fourier
+        to: four
+        label: four flavors of time
+        question: Why are there four Fourier tools, not one?
+        idea: "Time may be continuous or discrete, and the signal may be periodic or aperiodic. Each of the
+          four combinations has a matching frequency domain: periodic iff discrete, aperiodic iff
+          continuous, and sampling or periodization moves you from one cell of that 2x2 to another."
+      - from: fourier
+        to: sampling
+        label: sample t
+        question: How does sampling sit on this map?
+        idea: Sampling is the bridge between the continuous-time and discrete-time pictures. It periodizes
+          the frequency axis (aliasing) and, under the map z = e^{sT}, sends the left half-plane to
+          the interior of the unit disk.
+      - from: modes
+        to: eigenfn
+        label: same idea
+        dashed: true
+        question: Why is there a dashed link between eigenvectors and eigenfunctions?
+        idea: "They are the same statement in two languages: a direction that A only stretches, versus a
+          signal that convolution only scales. Modal decomposition of a state-space system and
+          Fourier analysis of an LTI system are the same change of basis."
+      - from: time
+        to: tf
+        label: Laplace of e^{At}
+        dashed: true
+        question: How does e^{At} meet the transfer function?
+        idea: The impulse response of a state-space system is h(t) = C e^{At} B + D δ(t) for t ≥ 0, and G(s)
+          is the Laplace transform of that h. In the eigenbasis, each mode contributes a term C v\_i
+          e^{λ\_i t} w\_i^T B.
+        eq: G(s) = C(sI − A)⁻¹ B + D  =  Laplace{C e^{At} B} + D
+      - from: sampling
+        to: four
+        label: periodize frequency
+        dashed: true
+        question: Why does sampling point at the four Fourier tools?
+        idea: Sampling in time periodizes frequency, which is exactly the move from the FT (continuous,
+          aperiodic frequency) toward the DTFT (periodic frequency). A finite periodic record then
+          samples frequency as well, and you are at the DFT.
+  - id: ops
+    title: Operators & control
+    caption: "Operators & control: from “what does A do?” through eigenvectors, diagonalization, time
+      evolution, and the steering/seeing questions (controllability, observability) to the transfer
+      function."
+    nodes:
+      - id: root
+        label: What does A do to a vector?
+        detail: In which basis is that simplest?
+        kind: terminal
+        short: "The matrix branch starts here. A linear map is completely known once you know what it does
+          to a basis, so the useful question is: in which basis does A act independently on each
+          coordinate, by a simple scale factor? Every later topic — Jordan form, e^{At},
+          controllability, the transfer function — is a follow-up to that change of coordinates."
+        eq: x ↦ Ax
+      - id: qStretch
+        label: Directions that only stretch?
+        kind: decision
+        short: "The first follow-up: are there lines that A leaves invariant? On such a line A cannot
+          rotate; it can only scale. Those lines, if they exist, are the eigen-directions, and they
+          are the start of a useful coordinate system."
+        eq: A(cv) is parallel to v?
+      - id: eig
+        label: Eigenvectors & eigenvalues
+        detail: Av = λv
+        series: 0
+        dive: eig
+        short: "An eigenvector is a nonzero vector that A only stretches: Av = λv. The scale factor λ is the
+          eigenvalue, a root of the characteristic polynomial det(λI − A) = 0. Along that line, A is
+          completely described by a single number. In a linear system those lines are the modes of
+          the free response."
+        eq: Av = λv,    det(λI − A) = 0
+      - id: leftEig
+        label: Left vs right eigenvectors
+        detail: wᵀA = λ wᵀ
+        series: 0
+        dive: eig
+        short: "Right eigenvectors v are the modal shapes in the state: Av = λv. Left eigenvectors w satisfy
+          wᵀ A = λ wᵀ, and they are the dual coordinates that read off how much of each mode is in a
+          given vector (when suitably normalized, wᵢᵀ vⱼ = δᵢⱼ). PBH uses left eigenvectors for
+          controllability and right eigenvectors for observability; they are not interchangeable."
+        eq: wᵀ A = λ wᵀ,    wᵀ v = 1   (bi-orthogonal)
+      - id: qSpan
+        label: Do they span the space?
+        kind: decision
+        short: "An eigenbasis is useful only if it is complete: you need n independent eigenvectors in n
+          dimensions. If they span, every vector has modal coordinates and A is diagonalizable. If
+          they do not, some directions are generalized eigenvectors, and Jordan blocks appear."
+        eq: need n linearly independent eigenvectors
+      - id: spanRank
+        label: Span and rank
+        detail: dim of the image
+        series: 0
+        dive: diag
+        short: The span of a set of vectors is every linear combination of them; the rank of a matrix is the
+          dimension of its column space (its image, or range). Diagonalization asks whether the
+          eigenvectors span the whole domain. Later, controllability asks whether the columns of
+          Ctrb span the state space — the same word, span, in a new job.
+        eq: "rank(A) = dim range(A),    range(A) = {Ax : x ∈ ℝⁿ}"
+      - id: diag
+        label: Diagonalization
+        detail: A = VΛV⁻¹
+        series: 0
+        dive: diag
+        short: "If the eigenvectors form a basis and you pack them as the columns of V, then A = V Λ V⁻¹,
+          with Λ diagonal. In the coordinates ξ = V⁻¹ x, the operator is just: multiply coordinate i
+          by λᵢ. That is the change of basis the class is always looking for."
+        eq: A = V Λ V⁻¹,    ξ = V⁻¹ x
+      - id: jordan
+        label: Jordan form
+        detail: If the eigenbasis is short
+        series: 0
+        dive: jordan
+        short: "If A does not have a full set of eigenvectors, it is not diagonalizable. There is still a
+          nearly-diagonal form, the Jordan form: blocks with λ on the diagonal and 1's on the
+          superdiagonal, acting on chains of generalized eigenvectors. In time, a block of size k
+          produces the extra factors 1, t, …, t^{k−1} times e^{λt}."
+        eq: (A − λI) v^{(j)} = v^{(j−1)},    e^{Jt} has t^k e^{λt} terms
+      - id: similar
+        label: Similarity transforms
+        detail: Ā = T⁻¹ A T
+        series: 0
+        dive: diag
+        short: Any invertible T is a change of basis, and Ā = T⁻¹ A T is similar to A. Similar matrices
+          share eigenvalues, characteristic and minimal polynomials, Jordan form, and rank. In state
+          space, a similarity on (A, B, C) leaves the transfer function unchanged and is how you
+          move into modal coordinates, or into the Kalman form.
+        eq: Ā = T⁻¹ A T,    B̄ = T⁻¹ B,    C̄ = C T
+      - id: modal
+        label: Modal decomposition
+        detail: x = Vξ,  ξ̇ᵢ = λᵢ ξᵢ
+        series: 0
+        dive: expm
+        short: "Once you have an eigenbasis, write x = V ξ. The state is a sum of modes, ξᵢ(t) = e^{λᵢ t}
+          ξᵢ(0) (plus a forced term if there is an input). This is the concrete payoff of
+          diagonalization: n independent scalar systems instead of a coupled n-dimensional one. For
+          a Jordan block the scalar picture is replaced by a small chain."
+        eq: x(t) = Σᵢ vᵢ ξᵢ(t),    ξ̇ᵢ = λᵢ ξᵢ + wᵢᵀ B u
+        live: figure:expm
+      - id: ortho
+        label: Inner products & orthogonality
+        detail: ⟨u, w⟩ = u* w
+        series: 0
+        dive: ortho
+        short: "An inner product lets you take coordinates by projection: the coefficient of a basis vector
+          q is the inner product of q with x when the basis is orthonormal. Symmetric and orthogonal
+          (or Hermitian and unitary) matrices have orthonormal eigenbases; Fourier bases are
+          orthonormal in the same sense on signals. Without orthonormality you still have dual
+          (left) eigenvectors to do the projection."
+        eq: ⟨u, w⟩ = u* w,    x = Σᵢ ⟨qᵢ, x⟩ qᵢ    (orthonormal {qᵢ})
+      - id: qTime
+        label: A acts over time?
+        kind: decision
+        short: "The next question after a good basis is dynamics. If the same A now appears in ẋ = Ax (or x+
+          = Ax), the eigen-picture becomes a statement about time: each mode multiplies by e^{λt} or
+          λ^k, and the matrix exponential is the state transition."
+        eq: ẋ = Ax    or    x[k+1] = A x[k]
+      - id: ss
+        label: State space
+        detail: ẋ = Ax + Bu
+        series: 1
+        dive: ss
+        short: "State space is the first-order form of a linear system: a vector x whose derivative is a
+          linear function of x and the input, with the output a linear function of x and u. Any
+          linear ODE or difference equation can be written this way. A, B, C, D are not unique —
+          similarity changes them — but they contain both the i/o map and the hidden internal
+          modes."
+        eq: ẋ = Ax + Bu,    y = Cx + Du
+      - id: expm
+        label: Matrix exponential
+        detail: Φ(t) = e^{At}
+        series: 1
+        dive: expm
+        short: The state transition matrix Φ(t) = e^{At} is the unique solution of Φ̇ = A Φ with Φ(0) = I.
+          It maps any initial state to the free motion at time t. In an eigenbasis it is V e^{Λt}
+          V⁻¹; more generally it is a power series, and Cayley–Hamilton lets you reduce that series
+          to a polynomial in A of degree less than n.
+        eq: e^{At} = Σ_{k=0}^{∞} (At)^k / k!,    Φ̇ = A Φ,    Φ(0) = I
+        live: figure:expm
+      - id: cayley
+        label: Cayley–Hamilton
+        detail: p(A) = 0
+        series: 1
+        dive: ctrl
+        short: "The characteristic polynomial p(s) = det(sI − A) annihilates A: p(A) = 0. So A^n is a linear
+          combination of I, A, …, A^{n−1}, and every higher power of A, including the series for
+          e^{At}, lives in that n-dimensional span of matrices. That is why the controllability and
+          observability matrices stop at A^{n−1}: any further column would be linearly dependent on
+          the ones already there."
+        eq: p(A) = 0,    A^n is in span{I, A, …, A^{n−1}}
+      - id: stab
+        label: Stability
+        detail: Re(λ) < 0 or |z| < 1
+        series: 1
+        dive: stab
+        short: Internal (asymptotic) stability of ẋ = Ax is equivalent to every eigenvalue of A sitting in
+          the open left half-plane; in discrete time, inside the open unit disk. BIBO stability
+          looks only at the poles of G, so a hidden unstable mode can make the state blow up while G
+          looks fine. For a Jordan block, a repeated eigenvalue on the imaginary axis (or unit
+          circle) is not even marginally well-behaved, because of the t^k factors.
+        eq: ẋ = Ax is asymptotically stable  ⇔  Re(λᵢ) < 0 for all i
+      - id: qSteer
+        label: Can u reach every mode?
+        kind: decision
+        short: With an input, the question is no longer only what A does by itself, but which states B,
+          acting through the powers of A, can actually reach from the origin in finite time. If a
+          mode is orthogonal to the input in the left-eigenvector sense, u can never excite it.
+        eq: "reachability from 0:  x = ∫ e^{A(t−τ)} B u(τ) dτ"
+      - id: ctrl
+        label: Controllability
+        detail: Range of [B AB … A^{n−1}B]
+        series: 2
+        dive: ctrl
+        short: The pair (A, B) is controllable when the controllability matrix Ctrb = [B AB … A^{n−1} B] has
+          full row rank n — equivalently, when its range is the whole state space. Then some input
+          steers the state from any x0 to any x1 in any positive time (continuous time).
+          Uncontrollable modes are invisible to u, and they cancel from a corresponding transfer
+          function.
+        eq: rank[B AB … A^{n−1} B] = n
+      - id: range
+        label: Range of Ctrb
+        detail: The reachable subspace
+        series: 2
+        dive: ctrl
+        short: "The range (image, column space) of Ctrb is exactly the reachable subspace: every state you
+          can get to from 0 by applying some input, and also an A-invariant subspace.
+          Controllability is the statement that this range is the whole state space. The orthogonal
+          complement of that range is spanned by left eigenvectors (or left generalized
+          eigenvectors) that B does not excite."
+        eq: "R = range(Ctrb) = {x : some u reaches x from 0}"
+      - id: qSee
+        label: Can y see every mode?
+        kind: decision
+        short: Dual to steering is seeing. Two initial states that produce the same output history for every
+          input are indistinguishable; their difference lives in the null space of the observability
+          matrix. If that null space is only {0}, every mode leaves a fingerprint in y.
+        eq: the free response y(t) = C e^{At} x0 determines x0 uniquely?
+      - id: obs
+        label: Observability
+        detail: Null space of O is {0}
+        series: 2
+        dive: obs
+        short: The pair (A, C) is observable when the observability matrix O, stacked as C, CA, …, CA^{n−1},
+          has full column rank n — equivalently, when its null space is {0}. Then a finite record of
+          the free response (or of y and u together) recovers x(0). Unobservable modes are hidden
+          from the output and cancel in G(s).
+        eq: ker O = {0},    O = [C; CA; …; CA^{n−1}]
+      - id: nullspace
+        label: Null space of O
+        detail: Unobservable states
+        series: 2
+        dive: obs
+        short: "The null space (kernel) of O is the unobservable subspace: initial states that produce the
+          zero free output, and an A-invariant subspace. Observability is the statement that this
+          kernel is trivial. Those states are linear combinations of right eigenvectors (or
+          generalized eigenvectors) that C does not see."
+        eq: "N = ker O = {x : C e^{At} x = 0 for all t ≥ 0}"
+      - id: pbh
+        label: PBH tests
+        detail: Eigenvectors of hidden modes
+        series: 2
+        dive: ctrl
+        short: "The Popov–Belevitch–Hautus tests restate controllability and observability in the
+          eigen-language. (A, B) is controllable iff no left eigenvector is orthogonal to B: wᵀ B ≠
+          0 whenever wᵀ A = λ wᵀ, w ≠ 0. (A, C) is observable iff C v ≠ 0 for every right
+          eigenvector. Equivalently, the matrices [λI − A B] and [λI − A; C] have full rank at every
+          eigenvalue λ (in fact at every complex λ)."
+        eq: wᵀ A = λ wᵀ implies wᵀ B ≠ 0;    Av = λv implies C v ≠ 0
+      - id: duality
+        label: Duality
+        detail: (A, B) ↔ (Aᵀ, Cᵀ)
+        series: 2
+        dive: obs
+        short: Controllability and observability are the same fact about a swapped system. (A, C) is
+          observable if and only if (Aᵀ, Cᵀ) is controllable, and vice versa with (A, B) and (Aᵀ,
+          Bᵀ). That is why the observability matrix is the controllability matrix of the dual, and
+          why PBH uses left eigenvectors for one test and right eigenvectors for the other. Gramians
+          swap under the same transposition.
+        eq: (A, C) observable  ⇔  (Aᵀ, Cᵀ) controllable
+      - id: gramian
+        label: Gramians
+        detail: Energy to reach or see
+        series: 2
+        dive: ctrl
+        short: The controllability Gramian measures how much input energy it takes to reach a state, and the
+          observability Gramian measures how visible a state is in the output energy. For a stable
+          continuous-time system they are the integrals of e^{At} B Bᵀ e^{Aᵀ t} and e^{Aᵀ t} Cᵀ C
+          e^{At}, and they solve the Lyapunov equations A W\_c + W\_c Aᵀ + B Bᵀ = 0 and Aᵀ W\_o +
+          W\_o A + Cᵀ C = 0. The pair is controllable iff W\_c is positive definite, observable iff
+          W\_o is. Discrete time has an analogous pair of Stein equations.
+        eq: A W_c + W_c Aᵀ + B Bᵀ = 0,    Aᵀ W_o + W_o A + Cᵀ C = 0
+      - id: kalman
+        label: Kalman / minimal realization
+        detail: Hidden modes cancel in G(s)
+        series: 2
+        dive: kalman
+        short: "A change of basis splits the state into four A-invariant pieces: controllable and observable
+          (CO), controllable but unobservable, uncontrollable but observable, and neither. The
+          transfer function depends only on the CO part. A realization is minimal when it is both
+          controllable and observable; then dim(A) equals the degree of G(s), and the poles of G are
+          exactly the eigenvalues of A."
+        eq: "four subspaces: CO, C unobs, uncontr O, neither;    G sees only CO"
+      - id: tf
+        label: Transfer function
+        detail: G(s) = C(sI − A)⁻¹B + D
+        series: 2
+        dive: tf
+        short: "The transfer function is both the Laplace transform of the impulse response and the
+          input-output formula G(s) = C(sI − A)⁻¹ B + D. It is the eigenvalue of the LTI operator:
+          if the input is e^{st}, the particular output is G(s) e^{st}. Because G is an i/o object,
+          it only sees the controllable-and-observable subsystem; similarity transforms leave it
+          unchanged."
+        eq: G(s) = C(sI − A)⁻¹ B + D
+      - id: poles
+        label: Poles and zeros
+        detail: Cancellations hide modes
+        series: 2
+        dive: tf
+        short: "Poles of G are frequencies where a forced exponential response blows up; in a minimal
+          realization they are exactly the eigenvalues of A. Zeros are frequencies the system can
+          block (there is a nonzero input direction whose particular output is zero). A pole-zero
+          cancellation is the i/o signature of a hidden mode: G looks simpler than A really is, and
+          internal stability can differ from BIBO stability."
+        eq: poles of G = eig(A_co);    zeros block particular inputs
+    edges:
+      - from: root
+        to: qStretch
+        label: invariant lines
+        question: What is the first question to ask about A?
+        idea: Look for lines that A leaves invariant. If such a direction exists, A does something simple
+          there — only a scale factor — and those directions become the start of a coordinate
+          system.
+      - from: qStretch
+        to: eig
+        label: "yes: Av = λv"
+        question: If a direction only stretches, what do we call it?
+        idea: "That direction is an eigenvector, and the stretch factor is the eigenvalue. Computing them is
+          a characteristic-polynomial (or numerically, a matrix) problem: Av = λv with v ≠ 0."
+        eq: Av = λv,    v ≠ 0
+      - from: eig
+        to: leftEig
+        label: two kinds
+        question: Why do we need two kinds of eigenvectors?
+        idea: "Right eigenvectors are the modal shapes; left eigenvectors are the dual coordinates that
+          extract those modal amplitudes. The two families are bi-orthogonal, and the PBH tests
+          assign them different jobs: left for controllability, right for observability."
+        eq: wᵢᵀ vⱼ = δᵢⱼ
+      - from: eig
+        to: qSpan
+        label: complete basis?
+        question: Once you have some eigenvectors, what still has to be checked?
+        idea: You may not have enough of them. A complete set of n independent eigenvectors is a basis, and
+          only then can every vector be written in modal coordinates. That is the next question.
+      - from: qSpan
+        to: spanRank
+        label: what does span mean?
+        question: What does it mean, precisely, for the eigenvectors to span?
+        idea: Span is the set of all linear combinations; rank is the dimension of a column space. The
+          eigenvectors span the space when they produce rank n — when their span is the whole
+          domain. The same language returns when we ask whether the columns of Ctrb span the state
+          space.
+        eq: span{v1,...,vk} = whole space  iff  rank[v1 ... vk] = n
+      - from: qSpan
+        to: diag
+        label: yes
+        question: What do you get if the eigenvectors do span?
+        idea: "A is diagonalizable: in the eigenbasis it becomes the diagonal matrix of eigenvalues. Every
+          later formula that looks like V Λ V⁻¹ is this case."
+        eq: A = V Λ V⁻¹
+      - from: qSpan
+        to: jordan
+        label: "no: chains"
+        question: What if there are not enough eigenvectors?
+        idea: A is not diagonalizable. Jordan form still puts A into blocks of the nicest possible shape,
+          using chains of generalized eigenvectors. Time evolution then picks up polynomial factors
+          t^k e^{λt}.
+      - from: diag
+        to: similar
+        label: A = T Ā T⁻¹
+        question: How is diagonalization an instance of a similarity?
+        idea: Any invertible T gives a similar matrix T⁻¹ A T. Diagonalization is the special case T = V,
+          the eigenvector matrix. Other useful similarities include the Kalman decomposition and any
+          coordinate change you use to make B or C simpler.
+        eq: diagonalization is the similarity T = V
+      - from: jordan
+        to: similar
+        label: still a similarity
+        dashed: true
+        question: Is Jordan form also a similarity?
+        idea: "Yes: A = T J T⁻¹ for some invertible T whose columns are generalized eigenvectors, with J
+          block-diagonal of Jordan blocks. It is the canonical form under similarity when a full
+          eigenbasis does not exist."
+        eq: A = T J T⁻¹
+      - from: diag
+        to: modal
+        label: coordinates in the eigenbasis
+        question: What is the payoff of a diagonal form?
+        idea: The state splits into independent modal coordinates. Each mode is a scalar ODE (or
+          recurrence), forced through the left-eigenvector component of B and read out through C
+          v\_i. That is modal decomposition.
+      - from: jordan
+        to: modal
+        label: generalized modes
+        dashed: true
+        question: Can you still talk about modes when A is not diagonalizable?
+        idea: Yes, but a Jordan chain is a small coupled family rather than a single scalar mode, and the
+          free response includes t^k e^{λt}. People still call this a modal picture, with
+          generalized modes.
+      - from: similar
+        to: ortho
+        label: also orthonormal?
+        question: Once you can change basis, can you also make the basis orthonormal?
+        idea: "Sometimes: if A is symmetric (or Hermitian), the spectral theorem gives an orthonormal
+          eigenbasis and the change of basis is an orthogonal (unitary) matrix. In general you only
+          have a bi-orthogonal pair of left and right eigenvectors. The same inner-product language
+          is how Fourier coefficients are computed on signals."
+      - from: diag
+        to: qTime
+        label: evolve x
+        question: After a good basis, what is the next question?
+        idea: Let A act over time. The independent modal coordinates become independent functions of time,
+          and the whole linear-system apparatus — state transition, stability, forced response —
+          drops out of ẋ = Ax.
+      - from: jordan
+        to: qTime
+        label: still evolve
+        dashed: true
+        question: Does a Jordan form still let you evolve the state?
+        idea: Yes. e^{At} is still well-defined; you compute it from the Jordan blocks, and the only change
+          is the polynomial-in-t prefactors. Stability now also cares about block size on the
+          stability boundary.
+      - from: qTime
+        to: ss
+        label: first-order form
+        question: How do we write a linear system that lives in time?
+        idea: "In first-order (state-space) form: the derivative of the state is A times the state plus B
+          times the input, and the output is C times the state plus D times the input. Every linear
+          ODE can be rewritten this way."
+        eq: ẋ = Ax + Bu,    y = Cx + Du
+      - from: ss
+        to: expm
+        label: u = 0 solution
+        question: What is the free motion of a state-space system?
+        idea: When u = 0, the solution is x(t) = e^{At} x(0). The matrix exponential is the state transition
+          matrix, and it is the object you later sandwich between C and B to get the impulse
+          response.
+        eq: x(t) = e^{At} x(0)
+      - from: expm
+        to: cayley
+        label: powers of A truncate
+        question: Why can every power of A be reduced to degree less than n?
+        idea: Cayley–Hamilton says the characteristic polynomial annihilates A, so A^n and every higher
+          power (and therefore the series for e^{At}) live in the span of {I, A, …, A^{n−1}}. That
+          finite span is also why controllability matrices stop after n terms.
+        eq: p(A) = 0
+      - from: expm
+        to: stab
+        label: do modes decay?
+        question: When does the free motion decay?
+        idea: "When every factor e^{λt} (and, for a Jordan block, every t^k e^{λt}) goes to zero: all
+          eigenvalues of A must have negative real part in continuous time, or lie inside the unit
+          circle in discrete time."
+      - from: ss
+        to: qSteer
+        label: add input u
+        question: After writing ẋ = Ax + Bu, what is the new question?
+        idea: "The input opens the question of reachability: which states can u actually produce? That is a
+          question about the range of the map from input signals into the state space, generated by
+          B, AB, A^2 B, and so on."
+      - from: cayley
+        to: ctrl
+        label: why stop at A^{n−1}
+        dashed: true
+        question: Why does the controllability matrix stop at A^{n−1} B?
+        idea: Because Cayley–Hamilton makes A^n B a linear combination of the earlier columns. Adding more
+          powers cannot enlarge the range, so rank[B AB … A^{n−1} B] already tells you the whole
+          reachable subspace.
+      - from: qSteer
+        to: ctrl
+        label: range of Ctrb
+        question: How do you test whether u can reach every mode?
+        idea: "Form the controllability matrix and check that it has full rank n, i.e. that its range is the
+          whole state space. Equivalently, use the PBH test: no left eigenvector of A is orthogonal
+          to B."
+      - from: ctrl
+        to: range
+        label: the reachable set
+        question: What set, exactly, is the range of Ctrb?
+        idea: "It is the reachable subspace: every state you can steer to from the origin, and an
+          A-invariant subspace. Controllability is the special case in which that subspace is
+          everything. The states you cannot reach are hidden from the input."
+      - from: ctrl
+        to: qSee
+        label: and the output
+        question: After asking what the input can reach, what is the dual question?
+        idea: What can the output see? Two states that produce the same y for every u are indistinguishable,
+          and the difference lives in a null space. That is observability.
+      - from: qSee
+        to: obs
+        label: ker O = {0}?
+        question: How do you test whether y can see every mode?
+        idea: "Form the observability matrix and check that its null space is {0} (full column rank).
+          Equivalently, use PBH: no right eigenvector of A is in the kernel of C."
+      - from: obs
+        to: nullspace
+        label: unobservable states
+        question: What is the null space of the observability matrix?
+        idea: "It is the unobservable subspace: initial states with zero free output, and an A-invariant
+          subspace. Observability is the statement that this kernel is trivial. Those states never
+          appear in y, and they cancel from G(s)."
+      - from: ctrl
+        to: pbh
+        label: left eigenvectors
+        question: How do you restate controllability with eigenvectors?
+        idea: "PBH: (A, B) is controllable iff wᵀ B ≠ 0 for every left eigenvector w, equivalently iff [λI −
+          A B] has rank n at every eigenvalue. A left eigenvector orthogonal to B is precisely an
+          uncontrollable mode."
+        eq: rank[λI − A  B] = n  for all λ
+      - from: obs
+        to: pbh
+        label: right eigenvectors
+        question: How do you restate observability with eigenvectors?
+        idea: "PBH: (A, C) is observable iff C v ≠ 0 for every right eigenvector v, equivalently iff [λI −
+          A; C] has rank n at every eigenvalue. A right eigenvector in the kernel of C is an
+          unobservable mode."
+        eq: rank[λI − A; C] = n  for all λ
+      - from: ctrl
+        to: duality
+        label: the dual picture
+        question: Why do controllability and observability look like mirrors?
+        idea: "They are the same property on a transposed system: (A, B) is controllable iff (Aᵀ, Bᵀ) is
+          observable. Duality is why one test uses a range and the other a null space, and why left
+          and right eigenvectors swap jobs in PBH."
+      - from: obs
+        to: duality
+        label: transpose the pair
+        question: How does observability map to a controllability problem?
+        idea: "Take transposes: (A, C) is observable iff (Aᵀ, Cᵀ) is controllable. The observability matrix
+          of (A, C) is the transpose of the controllability matrix of (Aᵀ, Cᵀ). Gramians swap under
+          the same rule."
+      - from: ctrl
+        to: gramian
+        label: energy to reach
+        question: Is there a quantitative version of controllability?
+        idea: "Yes: the controllability Gramian. For a stable system it solves a Lyapunov equation, and it
+          is positive definite exactly when (A, B) is controllable. The quadratic form xᵀ W\\_c⁻¹ x
+          is (proportional to) the minimum input energy needed to reach x."
+        eq: A W_c + W_c Aᵀ + B Bᵀ = 0
+      - from: obs
+        to: gramian
+        label: energy to see
+        question: Is there a quantitative version of observability?
+        idea: The observability Gramian solves the dual Lyapunov equation, and it is positive definite
+          exactly when (A, C) is observable. The quadratic form xᵀ W\_o x is the output energy
+          produced by a free initial state x.
+        eq: Aᵀ W_o + W_o A + Cᵀ C = 0
+      - from: ctrl
+        to: kalman
+        label: some modes hidden
+        question: What do you do with the modes that u cannot reach?
+        idea: Split the state, by a similarity, into a controllable part and an uncontrollable part (and,
+          with the output, into a four-way Kalman decomposition). The uncontrollable part stays in
+          A, matters for internal stability, and cancels from G(s).
+      - from: obs
+        to: kalman
+        label: the rest are hidden too
+        question: What do you do with the modes that y cannot see?
+        idea: "They occupy the unobservable summands of the Kalman decomposition. Together with the
+          uncontrollable ones they are the hidden modes: absent from the transfer function, still
+          present in the realization."
+      - from: kalman
+        to: tf
+        label: i/o after cancels
+        question: After discarding hidden modes, what i/o object remains?
+        idea: "The transfer function of the controllable-and-observable subsystem. That is G(s), and it is a
+          complete i/o invariant: every minimal realization of the same G is similar to this one."
+        eq: G(s) = C_co (sI − A_co)⁻¹ B_co + D
+      - from: tf
+        to: poles
+        label: poles vs eig(A)
+        question: What in G(s) corresponds to the eigenvalues of A?
+        idea: "The poles — but only after cancellations. In a minimal realization, poles of G and
+          eigenvalues of A are the same set. Zeros are a different i/o feature: frequencies (and
+          input directions) the system can block."
+      - from: stab
+        to: poles
+        label: internal vs BIBO
+        dashed: true
+        question: How does internal stability compare with the poles of G?
+        idea: Internal stability needs every eigenvalue of A in the open left half-plane (or unit disk).
+          BIBO stability only needs the poles of G there. A hidden unstable mode is the gap between
+          the two.
+      - from: ss
+        to: tf
+        label: eliminate the state
+        dashed: true
+        question: How do you pass from (A, B, C, D) to G(s) directly?
+        idea: Take the Laplace transform of the state equation, solve for X(s), and substitute into Y(s).
+          The result is G(s) = C(sI − A)⁻¹ B + D, which is also the Laplace transform of the impulse
+          response C e^{At} B + D δ(t).
+        eq: G(s) = C(sI − A)⁻¹ B + D
+  - id: signals
+    title: LTI & transforms
+    caption: "LTI & transforms: if A is convolution, its eigenfunctions are complex exponentials, and
+      every transform (Laplace, Z, FT, FS, DTFT, DFT) is an expansion in that basis; sampling ties
+      the two worlds together."
+    nodes:
+      - id: root
+        label: What if A is convolution?
+        detail: The operator is an LTI system
+        kind: terminal
+        short: "On the signal branch the operator is an LTI system: linear and time-invariant, hence
+          convolution with a fixed impulse response. The root question is the same one as on the
+          matrix branch — what is the best basis? — and the answer is the family of complex
+          exponentials that convolution only scales."
+        eq: y = h ∗ x
+      - id: qEig
+        label: Eigenfunctions?
+        kind: decision
+        short: Are there signals that an LTI system leaves invariant in shape, only scaled? Those signals,
+          if they exist, play the same role that eigenvectors play for a matrix, and they will be
+          the useful basis in which to expand everything else.
+      - id: eigenfn
+        label: Complex exponentials
+        detail: H{e^{st}} = H(s) e^{st}
+        series: 0
+        dive: lti
+        short: "The eigenfunctions of convolution are the eternal exponentials e^{st} in continuous time, or
+          z^n in discrete time. Passing one through the system multiplies it by a scalar H(s) or
+          H(z), the transfer function (provided s or z is in the region of convergence). A sinusoid
+          switched on at t = 0 is not a pure eigenfunction: it also produces transients."
+        eq: H{e^{st}} = H(s) e^{st},    H{z^n} = H(z) z^n
+      - id: impulse
+        label: Impulse response
+        detail: h is the whole LTI story
+        series: 0
+        dive: lti
+        short: An LTI system is completely determined by its response h to a unit impulse (δ(t) or δ[n]).
+          Every other input is a superposition of shifted impulses, so the output is the
+          superposition of shifted copies of h — that is the definition of convolution. In state
+          space, for t ≥ 0, h(t) = C e^{At} B + D δ(t).
+        eq: h(t) = C e^{At} B + D δ(t)    (t ≥ 0)
+      - id: lti
+        label: Convolution
+        detail: y = h ∗ x becomes Y = HX
+        series: 0
+        dive: lti
+        short: "A system is linear and time-invariant if and only if it is convolution with a fixed h. In an
+          eigenbasis of exponentials, that convolution becomes a product: the transform of the
+          output is H times the transform of the input. That is why transfer functions are so
+          useful."
+        eq: y(t) = (h ∗ x)(t) = ∫ h(t − τ) x(τ) dτ
+      - id: convThm
+        label: Convolution theorem
+        detail: y = h ∗ x  ↔  Y = H X
+        series: 0
+        dive: lti
+        short: "Convolution in one domain is multiplication in the other. That is the payoff of expanding in
+          eigenfunctions: the operator is diagonal in the Fourier / Laplace / Z basis, just as a
+          diagonalizable matrix is diagonal in its eigenbasis. Products in time, dually, become
+          convolutions in frequency (with a 2π where the page's FT convention needs one)."
+        eq: FT{h ∗ x} = H(jω) X(jω)
+      - id: qExpand
+        label: Expand a signal in that basis?
+        kind: decision
+        short: "To use the eigenfunctions you have to compute coordinates: the coefficients of e^{st} or
+          e^{jωt} or z^n in a given signal. Those analysis formulas are the Laplace, Z, and Fourier
+          transforms. Which tool you pick depends on whether time is continuous or discrete, whether
+          the signal is periodic, and whether you need an ROC for transients or unstable signals."
+      - id: orthoSig
+        label: Orthogonality of the basis
+        detail: Coefficients are inner products
+        series: 0
+        dive: ortho
+        short: The reason the analysis formulas work is that the complex exponentials are orthogonal (in
+          fact, on suitable intervals or with a suitable density, an orthonormal basis). An inner
+          product against e^{jωt} or e^{j 2π k t / T} or e^{j 2π k n / N} reads off the
+          corresponding coefficient. This is the same projection idea as in the matrix branch.
+        eq: ⟨e^{jωt}, e^{jνt}⟩ = 0  for ω ≠ ν   (in the appropriate sense)
+      - id: parseval
+        label: Parseval's relation
+        detail: Energy in both domains
+        series: 0
+        dive: ortho
+        short: When a basis is orthogonal, energy is preserved (up to a convention-dependent constant)
+          between a signal and its coefficients. With this page's Fourier conventions — 1/2π on the
+          inverse CTFT and DTFT, 1/N on the inverse DFT — the identities below hold. They are the
+          statement that the transform is (a scalar multiple of) a unitary change of coordinates.
+        eq: ∫ |x(t)|² dt = (1/2π) ∫ |X(jω)|² dω;    Σ_n |x[n]|² = (1/N) Σ_k |X[k]|²
+      - id: laplace
+        label: Laplace transform
+        detail: s-plane, with an ROC
+        series: 1
+        dive: laplace
+        short: The (unilateral, in the state-space setting) Laplace transform continues the Fourier
+          expansion off the imaginary axis, with s = σ + jω. It exists in a region of convergence,
+          typically a right half-plane for causal signals. It is the natural tool for transients,
+          ODEs, and transfer functions G(s), and it reduces to the CTFT on the imaginary axis when
+          that axis lies in the ROC.
+        eq: X(s) = ∫_{0⁻}^{∞} x(t) e^{−st} dt    (unilateral; ROC is part of the answer)
+        link:
+          href: ../transforms/#/board?pair=lap
+          label: See it on the six-domains board
+      - id: ztrans
+        label: Z-transform
+        detail: z-plane, with an ROC
+        series: 1
+        dive: laplace
+        short: "The Z-transform is the discrete-time sibling of Laplace: X(z) = Σ x[n] z^{−n}, with a region
+          of convergence in the z-plane (typically the exterior of a circle for causal sequences).
+          On the unit circle z = e^{jΩ}, when that circle lies in the ROC, it reduces to the DTFT.
+          The map z = e^{sT} is how sampled continuous-time systems pass from s to z."
+        eq: X(z) = Σ_n x[n] z^{−n}    (ROC is part of the answer)
+        link:
+          href: ../transforms/#/board?pair=lap
+          label: See it on the six-domains board
+      - id: roc
+        label: Region of convergence
+        detail: Part of the transform's answer
+        series: 1
+        dive: laplace
+        short: A Laplace or Z transform is a pair (function, ROC), not a function alone. Different signals
+          can share a formula and disagree in the ROC (a causal exponential versus an anti-causal
+          one). The ROC decides which poles you may invert around, whether the Fourier axis is
+          included (so a frequency response exists), and whether a causal system is stable (the axis
+          / unit circle must lie in the ROC).
+        eq: a causal stable rational H has every pole in Re(s) < 0 (or |z| < 1), and the Fourier axis in the
+          ROC
+        link:
+          href: ../transforms/#/board?pair=lap
+          label: See it on the six-domains board
+      - id: ft
+        label: Fourier transform
+        detail: Time continuous, aperiodic
+        series: 1
+        dive: ft
+        short: "The CTFT is the analysis formula for a continuous aperiodic time signal against the basis
+          {e^{jω t}}. Its transform is a continuous function of ω, and it is not periodic in ω,
+          because e^{jω t} does not repeat when you add 2π to ω. Convention on this page: radian
+          frequency ω in rad/s, with the 1/2π factor on the inverse."
+        eq: X(jω) = ∫ x(t) e^{−jω t} dt,    x(t) = (1/2π) ∫ X(jω) e^{jω t} dω
+        link:
+          href: ../transforms/#/board?pair=ft
+          label: See it on the six-domains board
+      - id: fs
+        label: Fourier series
+        detail: Time continuous, periodic
+        series: 1
+        dive: fs
+        short: "A continuous-time periodic signal (period T) has a discrete line spectrum: it is a
+          combination of harmonics at k ω0, ω0 = 2π/T. The analysis integral over one period, with a
+          1/T factor, produces the coefficients a\\_k. Periodicity in time is discreteness in
+          frequency — one cell of the 2x2 Fourier table."
+        eq: a_k = (1/T) ∫_T x(t) e^{−j k ω0 t} dt,    ω0 = 2π/T
+        link:
+          href: ../transforms/#/board?pair=fs
+          label: See it on the six-domains board
+      - id: dtft
+        label: DTFT
+        detail: Time discrete, aperiodic
+        series: 1
+        dive: dtft
+        short: "The DTFT is the analysis formula for a discrete-time aperiodic sequence. Time being discrete
+          makes the frequency response 2π-periodic in Ω (radians per sample): e^{jΩ n} = e^{j(Ω+2π)
+          n}. Sampling a continuous-time signal is exactly what produces a DTFT that is a periodized
+          copy of the original CTFT."
+        eq: X(e^{jΩ}) = Σ x[n] e^{−jΩ n},    x[n] = (1/2π) ∫_{−π}^{π} X(e^{jΩ}) e^{jΩ n} dΩ
+        link:
+          href: ../transforms/#/board?pair=dtft
+          label: See it on the six-domains board
+      - id: dft
+        label: DFT
+        detail: Time discrete and finite
+        series: 1
+        dive: dft
+        short: "The DFT is the finite, computable Fourier tool: an N-sample record is exactly represented by
+          N frequency bins X[k] = Σ\\_{n=0}^{N−1} x[n] e^{−j 2π k n / N}, with 1/N on the inverse
+          (MATLAB fft / ifft). It is the discrete Fourier series of a periodic extension of the
+          record. A finite window of a longer sequence produces leakage; sampling an underlying DTFT
+          produces the usual picket fence of bins."
+        eq: X[k] = Σ_{n=0}^{N−1} x[n] e^{−j 2π kn/N},    x[n] = (1/N) Σ_k X[k] e^{j 2π kn/N}
+        link:
+          href: ../transforms/#/board?pair=dft
+          label: See it on the six-domains board
+      - id: qSample
+        label: Sample in time?
+        kind: decision
+        short: Sampling is the move from a continuous-time signal to a discrete-time sequence. The new
+          question is what that move does to the frequency picture — it periodizes it — and when the
+          original continuous-time signal can be recovered (the sampling theorem and the Nyquist
+          rate).
+      - id: sampling
+        label: Sampling theorem
+        detail: Bandlimited implies recoverable
+        series: 2
+        dive: sampling
+        short: "If a continuous-time signal is bandlimited to |ω| &lt; π/T, sampling with period T is
+          lossless: you can reconstruct x(t) from the sequence x(nT) by sinc interpolation. The
+          frequency-domain view is that the periodized copies of X(jω), spaced 2π/T apart, do not
+          overlap, so you can cut the baseband copy out with an ideal low-pass filter."
+        eq: x(t) = Σ_n x(nT) sinc((t − nT)/T)    when X(jω) = 0 for |ω| ≥ π/T
+        link:
+          href: ../transforms/#/board?pair=map
+          label: See it on the six-domains board
+      - id: aliasing
+        label: Aliasing
+        detail: Periodized frequency copies overlap
+        series: 2
+        dive: sampling
+        short: "Sampling always periodizes frequency: X\\_s(jω) = (1/T) Σ\\_k X(j(ω − 2πk/T)). If the copies
+          overlap, high frequencies fold down into the baseband and cannot be untangled — that
+          overlap is aliasing. Two continuous-time sinusoids that differ by a multiple of the
+          sampling frequency become the same discrete-time sequence."
+        eq: X_s(jω) = (1/T) Σ_k X(j(ω − 2πk/T))
+        link:
+          href: ../transforms/#/board?pair=map
+          label: See it on the six-domains board
+      - id: nyquist
+        label: Nyquist rate
+        detail: f_s > 2 f_max
+        series: 2
+        dive: sampling
+        short: For a real baseband signal whose energy lives in |f| ≤ f\_max (Hz), the sampling rate must
+          satisfy f\_s &gt; 2 f\_max to avoid aliasing (strictly greater if there is energy at
+          exactly f\_max). The number 2 f\_max is the Nyquist rate. Bandpass signals can sometimes
+          be sampled more slowly by exploiting the gaps, but the aliases still have to be kept from
+          overlapping.
+        eq: f_s > 2 f_max    (real baseband signal bandlimited to f_max)
+        link:
+          href: ../transforms/#/board?pair=map
+          label: See it on the six-domains board
+      - id: tfSig
+        label: Transfer function H(s), H(z)
+        detail: The eigenvalue of convolution
+        series: 2
+        dive: tf
+        short: H is the eigenvalue attached to each eigenfunction, and it is also the transform of the
+          impulse response. In the s-domain, H(s) = C(sI − A)⁻¹ B + D for a state-space realization;
+          in the z-domain there is the analogous formula with zI − A. Poles and zeros of H are how
+          you read resonance, stability (together with the ROC), and cancelled hidden modes.
+        eq: H(s) = Laplace{h(t)} = C(sI − A)⁻¹ B + D
+      - id: poles
+        label: Poles and zeros
+        detail: Read stability and cancellations
+        series: 2
+        dive: tf
+        short: Poles of H are the values of s or z where a rational transfer function blows up (after
+          cancelling common factors with the numerator). Zeros are the values it vanishes at.
+          Combined with the ROC they decide stability and whether a frequency response H(jω) or
+          H(e^{jΩ}) exists. A cancellation is a hidden mode of some realization.
+        eq: H(s) = N(s)/D(s) after cancelling common factors; poles are roots of D
+    edges:
+      - from: root
+        to: qEig
+        label: invariant signals
+        question: What is the first question to ask of an LTI operator?
+        idea: Look for signals that convolution leaves invariant in shape. Those eigenfunctions, if they
+          exist, will be the basis in which the operator is diagonal — multiplication by a transfer
+          function.
+      - from: qEig
+        to: eigenfn
+        label: e^{st} or z^n
+        question: Which signals are eigenfunctions of convolution?
+        idea: The two-sided complex exponentials e^{st} (continuous time) and z^n (discrete time). The scale
+          factor is H(s) or H(z), provided the transform of h converges there.
+        eq: (h ∗ e^{st})(t) = H(s) e^{st}
+      - from: eigenfn
+        to: lti
+        label: multiply by H
+        question: What does the system do to an eigenfunction?
+        idea: It multiplies it by H. Because a general input is a combination of eigenfunctions (its
+          transform), the same multiplication acts coefficient-wise, which is why LTI systems are so
+          simple in the transform domain.
+      - from: lti
+        to: impulse
+        label: H is the transform of h
+        question: Where does the transfer function come from in time?
+        idea: "From the impulse response. H is the Laplace, Z, or Fourier transform of h, and h itself is
+          the system's complete time-domain signature: y = h ∗ x."
+        eq: H = transform of h
+      - from: impulse
+        to: convThm
+        label: y = h∗x ↔ Y = HX
+        question: Why is y = h ∗ x so important in the transform domain?
+        idea: The convolution theorem says this becomes a product of transforms. That is the diagonalization
+          of the LTI operator, exactly analogous to a matrix becoming a diagonal of eigenvalues.
+        eq: FT{h ∗ x} = H X
+      - from: eigenfn
+        to: qExpand
+        label: coefficients?
+        question: Once you have the eigenfunctions, what do you still need?
+        idea: "Coordinates: the coefficients of those exponentials in a given signal. Computing them is the
+          analysis half of a transform, and the right tool depends on how the signal lives in time."
+      - from: qExpand
+        to: orthoSig
+        label: inner products
+        question: How are the expansion coefficients actually computed?
+        idea: By an inner product against the basis functions, using orthogonality of complex exponentials
+          on the appropriate interval or with the appropriate density. This is the same projection
+          formula as in an orthonormal matrix basis.
+      - from: orthoSig
+        to: parseval
+        label: energy both sides
+        question: What does orthogonality say about energy?
+        idea: "Parseval's relation: the energy (or power) of a signal equals the energy of its coefficients,
+          up to the constant in your Fourier convention. The transform is, in that sense, a change
+          of coordinates that preserves the inner product."
+      - from: qExpand
+        to: ft
+        label: t continuous, aperiodic
+        question: Which tool expands a continuous aperiodic signal?
+        idea: "The Fourier transform: a continuous function of radian frequency ω, not periodic in ω. It is
+          the analysis formula on the imaginary axis s = jω."
+      - from: qExpand
+        to: fs
+        label: t continuous, periodic
+        question: Which tool expands a continuous periodic signal?
+        idea: "The Fourier series: a discrete set of harmonic coefficients at k times the fundamental ω0 =
+          2π/T. Periodicity in time has made frequency discrete."
+      - from: qExpand
+        to: dtft
+        label: t discrete, aperiodic
+        question: Which tool expands a discrete aperiodic sequence?
+        idea: "The DTFT: a 2π-periodic function of radian frequency Ω. Time being discrete has made
+          frequency periodic. It is also what you get by sampling a continuous-time signal and
+          periodizing its CTFT."
+      - from: qExpand
+        to: dft
+        label: t discrete and finite
+        question: Which tool expands a finite (or periodic discrete) record?
+        idea: "The DFT: N samples in, N frequency bins out, exactly invertible. It is the tool you actually
+          compute, and it can be viewed as sampling one period of a DTFT or as the discrete Fourier
+          series of a periodic extension."
+      - from: qExpand
+        to: laplace
+        label: need transients / ROC
+        question: When is the Fourier axis not enough?
+        idea: When you need transients, causal systems, or signals whose Fourier transform does not converge
+          on the imaginary axis. The Laplace transform continues the same expansion into the
+          s-plane, and the ROC becomes part of the answer.
+      - from: laplace
+        to: ztrans
+        label: discrete time
+        question: What is the discrete-time analogue of Laplace?
+        idea: "The Z-transform, a function of a complex z with its own ROC. The two are tied together by
+          sampling: z = e^{sT} maps vertical lines in s to circles in z, and the left half-plane to
+          the interior of the unit disk."
+        eq: z = e^{sT}
+      - from: laplace
+        to: roc
+        label: ROC is part of the answer
+        question: Why is a Laplace transform incomplete without an ROC?
+        idea: The integral may converge only in part of the s-plane, and two different signals can share a
+          formula but not an ROC. Stability of a causal system, and the very existence of a
+          frequency response, are statements about whether the imaginary axis lies in that region.
+      - from: ztrans
+        to: roc
+        label: same warning in z
+        dashed: true
+        question: Does the Z-transform also need an ROC?
+        idea: "Yes: a region in the z-plane, typically the exterior of a circle for causal sequences. The
+          unit circle in the ROC is the condition that a frequency response (the DTFT) exists, and
+          for a causal system it is equivalent to all poles sitting inside the unit disk."
+      - from: ft
+        to: qSample
+        label: sample t
+        question: What happens if you sample a continuous-time signal?
+        idea: You pass from the CTFT picture to a discrete-time one. The new question is what sampling does
+          to frequency (periodization, aliases) and when the original signal is recoverable.
+      - from: laplace
+        to: qSample
+        label: z = e^{sT}
+        dashed: true
+        question: How does sampling look in the s-plane?
+        idea: It becomes the map z = e^{sT} from the s-plane of a continuous-time system (or a
+          hold-equivalent) to the z-plane of the discrete-time system. That is why the left
+          half-plane lands inside the unit disk, and why poles map to z = e^{λT}.
+        eq: z = e^{sT}
+      - from: qSample
+        to: sampling
+        label: lossless if bandlimited
+        question: When can the continuous-time signal be recovered from its samples?
+        idea: When it is bandlimited inside the Nyquist frequency π/T and you reconstruct with sinc
+          interpolation (the sampling theorem). In frequency, the periodized copies of X must not
+          overlap.
+      - from: sampling
+        to: aliasing
+        label: overlapping copies
+        question: What goes wrong if the bandlimit is violated?
+        idea: The periodized copies of X overlap, high frequencies fold into the baseband, and no filter can
+          separate them. That overlap is aliasing, and it is irreversible.
+      - from: aliasing
+        to: nyquist
+        label: how fast?
+        question: How fast, then, do you have to sample?
+        idea: "Faster than twice the highest frequency in a real baseband signal: f\\_s &gt; 2 f\\_max, the
+          Nyquist rate. Sampling at exactly 2 f\\_max is a borderline case that fails if there is
+          energy at f\\_max itself."
+        eq: f_s > 2 f_max
+      - from: dtft
+        to: dft
+        label: finite record; sample Ω
+        question: How do you get from a DTFT to a DFT?
+        idea: Take a finite record of N samples (implicitly periodizing in time) and sample the DTFT at the
+          N points Ω = 2π k / N. Windowing a longer sequence first is what produces leakage around
+          those bins.
+      - from: fs
+        to: dft
+        label: both discrete frequency
+        dashed: true
+        question: Why is there a dashed link from Fourier series to the DFT?
+        idea: Both have discrete frequency. The DFT is the Fourier series of a periodic discrete-time signal
+          (or of the periodic extension of a finite record), just as the FS is the expansion of a
+          periodic continuous-time signal. Time being discrete additionally makes the DFT's
+          frequency axis periodic, with period N bins.
+      - from: impulse
+        to: tfSig
+        label: H = transform of h
+        question: How is the transfer function attached to the impulse response?
+        idea: H is the Laplace or Z transform of h (with an ROC). In state space that statement is the same
+          as H(s) = C(sI − A)⁻¹ B + D, because the causal impulse response is C e^{At} B + D δ(t).
+      - from: tfSig
+        to: poles
+        label: read poles and zeros
+        question: What should you read off a transfer function first?
+        idea: Its poles and zeros (after cancellations), together with the ROC. Poles, plus the ROC, decide
+          stability and whether a frequency response exists; zeros decide frequencies the system
+          blocks; cancellations flag hidden modes of a realization.
+      - from: ztrans
+        to: tfSig
+        label: H(z) as well
+        dashed: true
+        question: Does a discrete-time system have a transfer function too?
+        idea: "Yes: H(z), the Z-transform of h[n], or C(zI − A)⁻¹ B + D for a discrete-time state-space
+          realization. Its poles live in the z-plane, and stability for a causal system means they
+          all sit inside the unit circle."
+        eq: H(z) = C(zI − A)⁻¹ B + D
+      - from: convThm
+        to: ft
+        label: product of transforms
+        dashed: true
+        question: Which transform is the convolution theorem usually written for?
+        idea: "Any of them, but the everyday statement is about the Fourier transform: convolution in time
+          is a product of FTs (and, dually, a product in time is a convolution in frequency, with a
+          2π in this page's convention). Laplace and Z have the same product rule, with ROC
+          conditions."

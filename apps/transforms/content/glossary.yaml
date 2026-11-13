@@ -1,0 +1,11 @@
+- { term: "x(t), x[n]", meaning: "Continuous-time signal and its samples x[n] = x(nT)." }
+- { term: "T, fs", meaning: "Sample period and sample rate, fs = 1/T. Nyquist frequency is fs/2.", units: "s, Hz" }
+- { term: "σ, ω_d, f₀", meaning: "The pole pair is s = −σ ± jω_d; f₀ = ω_d/2π is the ringing frequency. σ sets the decay e^{−σt}.", units: "1/s, rad/s, Hz" }
+- { term: "ζ, ωₙ", meaning: "Damping ratio and natural frequency of s² + 2ζωₙs + ωₙ². ζ < 1 under-, ζ = 1 critically, ζ > 1 over-damped." }
+- { term: "s, z", meaning: "Complex frequency variables: s = σ + jω for Laplace, z = r e^{jΩ} for the Z-transform." }
+- { term: "Ω", meaning: "Discrete-time angular frequency Ω = ωT, in rad per sample. Only defined modulo 2π.", units: "rad/sample" }
+- { term: "M, N", meaning: "M is the record length (samples taken); N is the DFT length (bins computed). N > M zero-pads; N < M truncates." }
+- { term: "ROC", meaning: "Region of convergence of a Laplace or Z transform. The FT exists if the jω axis is in the ROC; the DTFT if the unit circle is." }
+- { term: "ZOH / FOH / sinc", meaning: "Reconstruction kernels: zero-order hold (staircase), first-order hold (straight chords), ideal low-pass (non-causal)." }
+- { term: "ENBW", meaning: "Equivalent noise bandwidth of a window in bins: M Σw² / (Σw)²." }
+- { term: "Scalloping loss", meaning: "Peak amplitude lost when a tone sits half a bin from the nearest bin centre. 3.92 dB for rectangular." }

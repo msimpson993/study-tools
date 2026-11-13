@@ -1,0 +1,90 @@
+<div class="bbar ui"><div class="in">
+  <span class="ttl">Six Domains of Linear Systems</span>
+  <span class="sub">One signal, six views. Click any arrow to see the transform; drag the poles in the s- or z-plane.</span>
+  <button class="tbtn" id="btnReset">Reset</button>
+</div></div>
+
+<div class="layout">
+<main>
+  <div class="board">
+    <div class="map" id="map">
+      <svg class="arrows" id="arrows"></svg>
+      <div class="panel p-ct" id="pCT"><h3>Continuous Time</h3><button class="xp" data-k="CT" aria-label="Expand Continuous Time" title="Expand">⤢</button><canvas id="cvCT"></canvas></div>
+      <div class="panel p-dt" id="pDT"><h3>Discrete Time</h3><button class="xp" data-k="DT" aria-label="Expand Discrete Time" title="Expand">⤢</button><canvas id="cvDT"></canvas></div>
+      <div class="panel p-cf" id="pCF"><h3>Continuous Frequency</h3><button class="xp" data-k="CF" aria-label="Expand Continuous Frequency" title="Expand">⤢</button><canvas id="cvCF"></canvas></div>
+      <div class="panel p-df" id="pDF"><h3>Discrete Frequency</h3><button class="xp" data-k="DF" aria-label="Expand Discrete Frequency" title="Expand">⤢</button><canvas id="cvDF"></canvas></div>
+      <div class="panel p-s" id="pS"><h3>Continuous S-Domain</h3><button class="xp" data-k="S" aria-label="Expand Continuous S-Domain" title="Expand">⤢</button><canvas id="cvS"></canvas></div>
+      <div class="panel p-z" id="pZ"><h3>Discrete Z-Domain</h3><button class="xp" data-k="Z" aria-label="Expand Discrete Z-Domain" title="Expand">⤢</button><canvas id="cvZ"></canvas></div>
+    </div>
+    <p class="hint"><b>Tap an arrow or its label</b> to open that transform. <b>Drag the ✕ poles</b> in the s- or z-plane. <b>Tap a panel (or ⤢)</b> to expand it.<br>Example: <span id="modelHint"></span>. Everything on the board is computed live from the same σ, f<sub>0</sub>, T, M, N.</p>
+    <div class="modal" id="modal" hidden><div class="mbox ui" role="dialog" aria-labelledby="mTitle">
+      <div class="mhead"><h3 id="mTitle"></h3><span class="mhint" id="mHint"></span><button class="mclose" id="mClose" aria-label="Close expanded plot">✕</button></div>
+      <div class="mstrip" id="mStrip" hidden></div><div class="mgrid" id="mGrid"><div class="mslot" id="slot0"><div class="shead"><span class="sname" id="sName0"></span><button class="lgchip" data-s="0" aria-expanded="false" aria-controls="lgBox0">Legend ▾</button></div><div class="mcv"><canvas id="cvM" data-big="1"></canvas><div class="lgbox" id="lgBox0" hidden></div></div></div><div class="mslot" id="slot1" hidden><div class="shead"><span class="sname" id="sName1"></span><button class="lgchip" data-s="1" aria-expanded="false" aria-controls="lgBox1">Legend ▾</button></div><div class="mcv"><canvas id="cvM2" data-big="1"></canvas><div class="lgbox" id="lgBox1" hidden></div></div></div></div>
+    </div></div>
+  </div>
+
+  <section class="card" id="explain"></section>
+
+  <h2 class="sec">How the domains relate</h2>
+  <div class="notes">
+    <div><h4>Discrete ⇔ periodic</h4>Sampling in one domain makes the other periodic. Sampling time every <i>T</i> makes the spectrum repeat every <i>f</i><sub>s</sub> (DTFT). Sampling frequency every Δ<i>f</i> = <i>f</i><sub>s</sub>/<i>N</i> makes time repeat every <i>NT</i> (DFT and Fourier series). The DFT is discrete and periodic in both.</div>
+    <div><h4>Slices of the complex planes</h4>The Fourier transform is the Laplace transform on the <i>j</i>ω axis. The DTFT is the Z-transform on the unit circle. If that contour is outside the region of convergence (σ ≤ 0 here), the FT/DTFT doesn't exist, but <i>X</i>(<i>s</i>) and <i>X</i>(<i>z</i>) still do.</div>
+    <div><h4>z = e<sup>sT</sup> ties the bottom row</h4>The left half-plane maps inside the unit circle, the <i>j</i>ω axis maps onto it, and ω = ±π/<i>T</i> lands on <i>z</i> = −1. The map is many-to-one: every horizontal strip 2π/<i>T</i> tall covers the whole z-plane. That is aliasing, seen as a pole picture.</div>
+  </div>
+
+  <h2 class="sec">Try this</h2>
+  <ul class="try" id="tryList"></ul>
+</main>
+
+<aside class="ui">
+  <div class="card ctl" style="margin-top:0">
+    <h4>Shared example system</h4>
+    <div class="cats" id="cats"></div>
+    <div class="presets" id="presets"></div>
+    <details class="exinfo" id="exinfo"><summary id="exsum"></summary><div class="exb" id="exbody"></div></details>
+    <label>Pole pair (damping)</label>
+    <div class="seg" id="segMode"><button data-v="under">Complex · ζ&lt;1</button><button data-v="crit">Repeated · ζ=1</button><button data-v="over">Real · ζ&gt;1</button></div>
+    <label>σ, damping (1/s) <input type="number" class="num" data-n="sig" min="-0.5" max="4" step="any" inputmode="decimal" aria-label="sig value"></label>
+    <input type="range" id="sSig" data-k="sig" min="-0.5" max="4" step="0.01">
+    <label id="lblF0">f<sub>0</sub> = ω<sub>d</sub>/2π (Hz) <input type="number" class="num" data-n="f0" min="0.1" max="15" step="any" inputmode="decimal" aria-label="f0 value"></label>
+    <input type="range" id="sF0" data-k="f0" min="0.1" max="15" step="0.005">
+    <div id="rowDl"><label>δ, split: s = −σ ± δ (1/s) <input type="number" class="num" data-n="dl" min="0.05" max="4" step="any" inputmode="decimal" aria-label="dl value"></label><input type="range" id="sDl" data-k="dl" min="0.05" max="4" step="0.01"></div>
+    <label>f<sub>s</sub> = 1/T (Hz) <span class="sub" id="oT"></span> <input type="number" class="num" data-n="fs" min="1" max="40" step="any" inputmode="decimal" aria-label="fs value"></label>
+    <input type="range" id="sFs" data-k="fs" min="1" max="40" step="0.1">
+    <div class="row2">
+      <div><label>Record M <input type="number" class="num" data-n="M" min="4" max="256" step="1" inputmode="decimal" aria-label="M value"></label><input type="range" id="sM" data-k="M" min="4" max="256" step="1"></div>
+      <div><label>DFT N <input type="number" class="num" data-n="N" min="4" max="512" step="1" inputmode="decimal" aria-label="N value"></label><input type="range" id="sN" data-k="N" min="4" max="512" step="1"></div>
+    </div>
+    <label for="selWin">Window on the record</label>
+    <select id="selWin" aria-label="Window"></select>
+    <div id="rowBeta"><label>Kaiser β <input type="number" class="num" data-n="beta" min="0" max="20" step="any" inputmode="decimal" aria-label="beta value"></label><input type="range" data-k="beta" min="0" max="20" step="0.1"></div>
+    <div id="rowAlpha"><label>Tukey α (tapered fraction) <input type="number" class="num" data-n="alpha" min="0" max="1" step="any" inputmode="decimal" aria-label="alpha value"></label><input type="range" data-k="alpha" min="0" max="1" step="0.05"></div>
+    <details class="more" id="more"><summary>More controls <span class="badge" id="moreBadge" hidden></span></summary><div class="morebody">
+    <label for="selWave">Waveform</label>
+    <select id="selWave"><option value="free">2nd-order free response (x(0)=A, x′(0)=0)</option><option value="cos">Damped cosine A·e^(−σt)·cos(ω_d t)</option></select>
+    <label for="selSel">Highlighted transform (= clicking an arrow)</label>
+    <select id="selSel"></select>
+    <label>Continuous-Time panel</label>
+    <div class="seg" id="segCtv"><button data-v="sig">Signal + reconstruction</button><button data-v="per">Periodic ext. (FS)</button></div>
+    <label>Continuous-Freq. panel: shifted copies X(j(ω−kω<sub>s</sub>))</label>
+    <div class="seg" id="segCop"><button data-v="off">Hide</button><button data-v="on">Show</button></div>
+    <label>Interpolation (DT → CT)</label>
+    <div class="seg" id="segInterp"><button data-v="zoh">ZOH</button><button data-v="foh">FOH (linear)</button><button data-v="sinc">Ideal sinc</button></div>
+    <label>Magnitude scale</label>
+    <div class="seg" id="segDb"><button data-v="lin">Linear</button><button data-v="db">dB</button></div>
+    <details class="exinfo" id="wininfo"><summary id="winsum"></summary><div class="exb" id="winbody"></div></details>
+    </div></details>
+    <div id="status"></div>
+    <div class="readout" id="readout"></div>
+    <div class="legend">
+      <span style="--lc:var(--yel)">x(t), X(jω)</span>
+      <span style="--lc:var(--pink)">samples / reconstruction</span>
+      <span class="dash" style="--lc:var(--grn)">T·DTFT</span>
+      <span style="--lc:var(--cyan)">DFT bins (T·X[k])</span>
+      <span style="--lc:var(--org)">periodic ext. (FS)</span>
+    </div>
+  </div>
+</aside>
+</div>
+<footer>Self-contained page: vanilla JS + canvas, no network needed. Conventions: s = Re{s} + jω, z = r e<sup>jΩ</sup>, Ω = ωT (rad/sample). The pole is at s = −σ ± jω<sub>d</sub>, so r = e<sup>−σT</sup>.</footer>
+

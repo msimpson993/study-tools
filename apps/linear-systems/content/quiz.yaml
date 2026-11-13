@@ -1,0 +1,257 @@
+- id: q1
+  tags:
+    - diag
+    - lti
+    - laplace
+  kind: recall
+  q: Why is choosing the eigenbasis of A the same idea as taking a Fourier, Laplace, or Z transform?
+  a: In both cases you change to a basis of invariant directions so the operator becomes a set of
+    independent scalar multiplies. For a matrix those directions are eigenvectors (A v = λ v). For
+    an LTI system they are the eigenfunctions e^{st} or z^n, and the scalar is H(s) or H(z).
+    Expanding a signal in that basis is the transform, and it is what turns convolution into
+    multiplication.
+- id: q2
+  tags:
+    - ctrl
+    - obs
+  kind: recall
+  q: State the PBH test for controllability, and explain it with a left eigenvector.
+  a: "(A, B) is controllable if and only if rank[λI − A, B] = n for every eigenvalue λ of A.
+    Equivalently, every left eigenvector satisfies w\\* B ≠ 0. If w\\* A = λ w\\* and w\\* B = 0,
+    the coordinate along w is decoupled from u: you can never change that mode. Observability is the
+    dual statement: C v ≠ 0 for every right eigenvector, or rank of the stack [λI − A; C] equals n."
+- id: q3
+  tags:
+    - kalman
+    - tf
+  kind: recall
+  q: When are the poles of G(s) not exactly the eigenvalues of A?
+  a: "When the realization is not minimal: an uncontrollable or unobservable mode cancels in G(s) =
+    C(sI − A)⁻¹ B + D and does not appear as a pole. The eigenvalue is still in A, and it still
+    counts for internal stability. A realization is minimal if and only if it is both controllable
+    and observable, in which case deg G = n and the poles are exactly the eigenvalues."
+- id: q4
+  tags:
+    - dtft
+    - ft
+  kind: recall
+  q: Why is the DTFT 2π-periodic in Ω, while the CTFT is not periodic in ω?
+  a: "Because time is discrete, e^{j(Ω+2π)n} = e^{jΩ n} e^{j 2π n} = e^{jΩ n}. Two frequencies 2π
+    apart are the same sequence, so the DTFT must repeat every 2π. In continuous time, e^{j(ω+2π)t}
+    is not e^{jω t}, so the CTFT has no such period. This is the general rule: discreteness in one
+    domain ⇔ periodicity in the other."
+- id: q5
+  tags:
+    - expm
+    - diag
+  kind: recall
+  q: If A = V Λ V⁻¹, what is e^{At}, and why does that make x′ = Ax easy?
+  a: e^{At} = V e^{Λt} V⁻¹, and e^{Λt} is diagonal with entries e^{λ\_i t}. In the eigenbasis each
+    coordinate just multiplies by e^{λ\_i t} (or, if a Jordan block is present, by e^{λt} times a
+    small polynomial in t). The vector ODE becomes n scalar ones. In discrete time the same fact is
+    A^k = V Λ^k V⁻¹.
+- id: q6
+  tags:
+    - sampling
+  kind: recall
+  q: A 5 Hz cosine is sampled at 6 Hz. What frequency do you actually see, and what does that say
+    about z = e^{s T}?
+  a: "You see a 1 Hz discrete-time cosine: cos(2π · 5 n / 6) = cos(2π · 1 n / 6). The map z = e^{s T}
+    is many-to-one — s and s + j 2π k / T share a z — so the poles e^{± j 2π · 5 / 6} are the same
+    unit-circle points as e^{∓ j 2π · 1 / 6}. That many-to-one geometry is aliasing."
+- id: q7
+  tags:
+    - jordan
+    - expm
+  kind: recall
+  q: A 2×2 system has a repeated pole at λ = −α. Does e^{At} contain a t e^{−α t} term?
+  a: Only if A is not diagonalizable — that is, only if it is a single Jordan block, not −α I. The
+    companion matrix of (s+α)² does produce t e^{−α t}. If A is already −α I, both modes are
+    independent and e^{At} = e^{−α t} I, with no factor of t. A repeated pole in G(s) does not, by
+    itself, tell you which of the two you have.
+- id: q8
+  tags:
+    - stab
+    - kalman
+  kind: recall
+  q: What is the difference between BIBO stability and internal (asymptotic) stability?
+  a: Internal asymptotic stability requires every eigenvalue of A to satisfy Re(λ) &lt; 0 (or |λ| &lt;
+    1 in discrete time). BIBO stability only looks at the poles of G(s). If an unstable mode is
+    uncontrollable or unobservable, it cancels in G and the i/o map can look BIBO stable while the
+    hidden state still blows up. For a minimal realization the two notions agree.
+- id: m1
+  tags: [eig]
+  kind: recognize
+  q: Which statement says that v is an eigenvector of A with eigenvalue λ?
+  choices:
+    - "A v = λ v with v ≠ 0"
+    - "A v = 0 for every v"
+    - "Aᵀ A = I"
+    - "A = Aᵀ"
+  answer: 0
+  why: "An eigenvector is a nonzero line that A only rescales: the output is the input times the scalar λ."
+- id: m2
+  tags: [eig]
+  kind: compute
+  q: "For A = [[0, 1], [−2, −3]], what are the eigenvalues?"
+  choices:
+    - "1 and 2"
+    - "−3 and −2"
+    - "−1 and −2"
+    - "0 and −3"
+  answer: 2
+  why: "det(sI − A) = s² + 3s + 2 = (s + 1)(s + 2), so the roots are −1 and −2."
+- id: m3
+  tags: [diag]
+  kind: trap
+  q: "A = V Λ V⁻¹ with eigenvectors in the columns of V. Which formula is correct?"
+  choices:
+    - "Λ = V A V⁻¹"
+    - "Λ = V⁻¹ A V"
+    - "Λ = A V⁻¹ V"
+    - "Λ = Vᵀ A V for every diagonalizable A"
+  answer: 1
+  why: "Multiply A = VΛV⁻¹ on the left by V⁻¹ and on the right by V. Writing V A V⁻¹ is the common slip. Vᵀ only works when V is orthogonal."
+- id: m4
+  tags: [jordan]
+  kind: recognize
+  q: "A 2×2 system has a repeated eigenvalue −α but only one independent eigenvector. What shows up in e^{At}?"
+  choices:
+    - "Only e^{−αt}"
+    - "A term t e^{−αt}"
+    - "A growing exponential"
+    - "A sinusoid at α rad/s"
+  answer: 1
+  why: "A Jordan block is λI + N with N² = 0, so e^{Jt} = e^{λt}(I + Nt). The off-diagonal t is the fingerprint."
+- id: m5
+  tags: [jordan, expm]
+  kind: trap
+  q: "A 2×2 A has a repeated eigenvalue −α. Does e^{At} necessarily contain t e^{−αt}?"
+  choices:
+    - "Yes, a repeated eigenvalue always does that"
+    - "No, never"
+    - "Only if A is not diagonalizable (a single Jordan block)"
+    - "Only if α < 0"
+  answer: 2
+  why: "If A = −αI the two modes are independent and e^{At} = e^{−αt} I. The companion matrix of (s+α)² is a single Jordan block and does produce t e^{−αt}."
+- id: m6
+  tags: [expm]
+  kind: compute
+  q: "For A = [[0, 1], [−2, −3]], the (1,1) entry of e^{At} is"
+  choices:
+    - "e^{−t} + e^{−2t}"
+    - "2e^{−t} − e^{−2t}"
+    - "e^{−t} − e^{−2t}"
+    - "2e^{−2t} − e^{−t}"
+  answer: 1
+  why: "e^{At} = V e^{Λt} V⁻¹. The (1,1) entry is 2e^{−t} − e^{−2t}, which equals 1 at t = 0, as it must."
+- id: m7
+  tags: [stab]
+  kind: action
+  q: "A discrete-time system has poles at z = 0.5 ± 0.9j. Is it asymptotically stable?"
+  choices:
+    - "Yes, the real part is less than 1"
+    - "Yes, both poles are in the left half-plane"
+    - "Marginally, they are close to the circle"
+    - "No: |z| = √1.06 ≈ 1.03 > 1, outside the unit circle"
+  answer: 3
+  why: "Discrete-time stability needs |z| < 1 for every pole. |0.5 + 0.9j|² = 0.25 + 0.81 = 1.06."
+- id: m8
+  tags: [ctrl]
+  kind: recognize
+  q: "Which rank condition is the PBH test for controllability?"
+  choices:
+    - "rank[λI − A, B] = n for every eigenvalue λ"
+    - "rank[λI − A; C] = n for every eigenvalue λ"
+    - "rank(A) = n"
+    - "rank[B, AB] = 1"
+  answer: 0
+  why: "The stacked version [λI − A; C] is the observability test. PBH controllability asks that no left eigenvector of A be orthogonal to B."
+- id: m9
+  tags: [ctrl, obs]
+  kind: trap
+  q: "Which eigenvectors does the PBH test for controllability use?"
+  choices:
+    - "Right eigenvectors"
+    - "Left eigenvectors (w\\* A = λ w\\*)"
+    - "Generalized eigenvectors only"
+    - "None, it only uses eigenvalues"
+  answer: 1
+  why: "Controllability: every left eigenvector must satisfy w\\* B ≠ 0. Observability uses right eigenvectors: C v ≠ 0."
+- id: m10
+  tags: [ctrl]
+  kind: action
+  q: "A = [[0, 1], [−2, −3]] and B = [1, −2]ᵀ (which is the eigenvector v₂). What is rank Ctrb, and what does it mean?"
+  choices:
+    - "Rank 2: fully controllable"
+    - "Rank 1: the −1 mode cannot be moved by u"
+    - "Rank 1: the −2 mode cannot be moved by u"
+    - "Rank 0: nothing is controllable"
+  answer: 1
+  why: "AB = −2B, so Ctrb = [B, −2B] has rank 1. The left eigenvector w₁ = [2, 1]ᵀ at λ = −1 satisfies w₁ᵀB = 0, so only the −1 mode is uncontrollable."
+- id: m11
+  tags: [kalman]
+  kind: recognize
+  q: "G(s) has fewer poles than A has eigenvalues. What is the most likely reason?"
+  choices:
+    - "The realization is not minimal: an uncontrollable or unobservable mode cancels in G(s)"
+    - "A is not diagonalizable"
+    - "D is nonzero"
+    - "The system is time-varying"
+  answer: 0
+  why: "G(s) = C(sI − A)⁻¹B + D only shows the modes that are both reachable from u and visible in y."
+- id: m12
+  tags: [stab, kalman]
+  kind: trap
+  q: "G(s) is BIBO stable, yet the internal state blows up. How is that possible?"
+  choices:
+    - "BIBO stability is only about u = 0"
+    - "An unstable mode is uncontrollable or unobservable, so it cancels in G"
+    - "The eigenvalues were misread"
+    - "It is not possible"
+  answer: 1
+  why: "BIBO stability looks only at the poles of G. A hidden unstable mode is still in A and still counts for internal stability."
+- id: m13
+  tags: [dtft]
+  kind: recognize
+  q: "Why is the DTFT 2π-periodic in Ω?"
+  choices:
+    - "Because the signal is real"
+    - "Because the signal is causal"
+    - "Because e^{j(Ω+2π)n} = e^{jΩn} for integer n"
+    - "Because the sampling rate is fixed"
+  answer: 2
+  why: "Two frequencies 2π apart are the same sequence. Discreteness in one domain gives periodicity in the other."
+- id: m14
+  tags: [sampling]
+  kind: compute
+  q: "A 5 Hz cosine is sampled at 6 Hz. Which frequency do the samples look like?"
+  choices:
+    - "5 Hz"
+    - "3 Hz"
+    - "11 Hz"
+    - "1 Hz"
+  answer: 3
+  why: "cos(2π·5n/6) = cos(2π·1n/6). The alias is |f₀ − k fs| = |5 − 6| = 1 Hz."
+- id: m15
+  tags: [sampling]
+  kind: trap
+  q: "When discretizing G(s) with c2d(..., 'zoh'), what maps by z = e^{sT}?"
+  choices:
+    - "The poles; the zeros generally do not"
+    - "The zeros; the poles generally do not"
+    - "Both poles and zeros"
+    - "Neither"
+  answer: 0
+  why: "Poles of the discretized system satisfy z = e^{sT}. Zeros depend on the hold and generally do not map this way."
+- id: m16
+  tags: [ortho, dft]
+  kind: recognize
+  q: "Why does the inverse DFT carry a 1/N?"
+  choices:
+    - "To make the transform unitary on both sides"
+    - "Because the DFT basis vectors are orthogonal with ⟨v_k, v_k⟩ = N"
+    - "Because of zero padding"
+    - "To remove aliasing"
+  answer: 1
+  why: "The exponentials are orthogonal but not normalized: ⟨v_k, v_ℓ⟩ = N δ_kℓ. All of the normalization sits on the inverse."

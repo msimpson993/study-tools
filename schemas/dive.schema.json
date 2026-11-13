@@ -1,0 +1,55 @@
+{
+  "$id": "dive.schema.json",
+  "type": "object",
+  "required": [
+    "id",
+    "title",
+    "category",
+    "chain",
+    "neighbors"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "id": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9_-]+$"
+    },
+    "title": {
+      "type": "string"
+    },
+    "category": {
+      "type": "string"
+    },
+    "chain": {
+      "type": "array",
+      "minItems": 2,
+      "items": {
+        "type": "object",
+        "required": [
+          "title"
+        ],
+        "properties": {
+          "title": {
+            "type": "string"
+          },
+          "detail": {
+            "type": "string"
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    "neighbors": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "matlab": {
+      "type": "string"
+    },
+    "order": {
+      "type": "integer"
+    }
+  }
+}

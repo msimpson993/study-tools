@@ -1,0 +1,64 @@
+- id: t1
+  tags: [eigenfn]
+  kind: recall
+  q: Why do exponentials turn convolution into multiplication?
+  a: An LTI system maps e^{st} to H(s) e^{st}, the same exponential scaled by a number. If you write x as a sum of exponentials, the system just scales each term, so Y(s) = H(s) X(s).
+- id: t2
+  tags: [alias]
+  kind: recall
+  q: Why can a 6.5 Hz tone sampled at 8 Hz look like a 1.5 Hz tone?
+  a: Sampling repeats the spectrum every fs, so 6.5 Hz and 6.5 − 8 = −1.5 Hz give the same samples. In the z-plane the pole angle wraps modulo 2π.
+- id: t3
+  tags: [map]
+  kind: recall
+  q: What does z = e^{sT} do to the left half of the s-plane?
+  a: It maps it to the inside of the unit circle (|z| = e^{σT} < 1 when σ < 0). The jω axis maps onto the circle, and s-values separated by j2π/T land on the same z.
+- id: t4
+  tags: [recon]
+  kind: recognize
+  q: Which reconstruction is causal and costs a delay of T/2?
+  choices: ["Zero-order hold", "Ideal sinc", "Both", "Neither"]
+  answer: 0
+  why: "The ZOH holds each sample for T, so it is causal; its centre of mass lags by T/2. The ideal sinc is non-causal and infinitely long."
+- id: t5
+  tags: [ft]
+  kind: trap
+  q: For x(t) = e^{+0.3t} cos(2πt) u(t), which transform fails to exist?
+  choices: ["Laplace", "Fourier", "Z (of the samples)", "None of them"]
+  answer: 1
+  why: "The pole is in the right half-plane, so the jω axis is outside the region of convergence. Laplace still exists for Re s > 0.3."
+- id: t6
+  tags: [leak]
+  kind: compute
+  q: A tone sits exactly half a bin off with a rectangular window. About how far does the peak drop?
+  choices: ["0 dB", "1 dB", "3.9 dB", "13 dB"]
+  answer: 2
+  why: "The bins sample the Dirichlet kernel at half a bin: 1/(N sin(π/2N)) ≈ 2/π ≈ 0.637, i.e. −3.9 dB."
+- id: t7
+  tags: [window]
+  kind: recognize
+  q: You need accurate tone amplitudes between bins, not low sidelobes. Which window?
+  choices: ["Rectangular", "Hann", "Blackman-Harris", "Flat-top"]
+  answer: 3
+  why: "Flat-top has scallop loss near 0 dB at the price of a very wide main lobe."
+- id: t8
+  tags: [resolution]
+  kind: trap
+  q: Two tones are 0.8 Hz apart, fs = 8 Hz, M = 8. Does N = 256 help separate them?
+  choices: ["Yes, more bins means more resolution", "No, resolution is set by the record length M", "Only with a Hann window", "Only if fs is raised"]
+  answer: 1
+  why: "The main lobe is about 2 fs/M = 2 Hz wide, wider than the gap. Zero-padding only interpolates the same DTFT."
+- id: t9
+  tags: [dft]
+  kind: compute
+  q: N = 32, fs = 8 Hz, f₀ = 1 Hz. Which DFT bins are non-zero for a whole-cycle record?
+  choices: ["k = 1 and 31", "k = 4 and 28", "k = 8 and 24", "All bins"]
+  answer: 1
+  why: "Δf = fs/N = 0.25 Hz, so f₀ is bin k₀ = 4, with the mirror at N − 4 = 28."
+- id: t10
+  tags: [stable]
+  kind: recognize
+  q: Poles at r = 1.04 in the z-plane for a causal system mean…
+  choices: ["Stable", "Marginally stable", "Unstable", "Cannot tell"]
+  answer: 2
+  why: "|z| > 1 corresponds to Re{s} > 0, a growing exponential."

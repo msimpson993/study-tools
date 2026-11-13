@@ -1,0 +1,24 @@
+/* Theme tokens. Dark (true black, OLED) is the default; [data-theme=light] overrides.
+   Variable names match the original six-domains board so ported CSS keeps working. */
+:root, [data-theme="dark"] {
+  color-scheme: dark;
+  --bg: #000; --board: #0d0d0d; --panel: #1b1b1b; --panel2: #262626; --elev: #141414;
+  --text: #ececec; --muted: #a3a3a3; --border: #2e2e2e; --border-strong: #4a4a4a;
+  --chalk: #f1f1f1; --accent: #8ab4ff; --accent-soft: rgba(138,180,255,.10); --on-accent: #0b1020;
+  --ok: #2fbf71; --bad: #ef5b5b; --warn: #f0b54a;
+  --yel: #f2e85a; --pink: #ff7eb9; --cyan: #4fc3f7; --grn: #6ee26e; --org: #ff8a5c; --vio: #b197fc;
+  --s0: #6ea8ff; --s1: #ff8a5c; --s2: #6ee26e; --s3: #b197fc;
+  --node-path: #12233f; --node-sel: #1c3358; --node-neigh: #232323; --node-dim: #0a0a0a;
+  --plot-bg: #232323;
+}
+[data-theme="light"] {
+  color-scheme: light;
+  --bg: #fafaf7; --board: #ffffff; --panel: #ffffff; --panel2: #f0f0ea; --elev: #ffffff;
+  --text: #1a1a1a; --muted: #5d5d5d; --border: #d8d8d0; --border-strong: #a8a8a0;
+  --chalk: #222; --accent: #1f5fd1; --accent-soft: rgba(31,95,209,.08); --on-accent: #fff;
+  --ok: #17803f; --bad: #c62828; --warn: #a86200;
+  --yel: #8a7d00; --pink: #c2185b; --cyan: #0277bd; --grn: #2e7d32; --org: #d84315; --vio: #5e35b1;
+  --s0: #1f5fd1; --s1: #d84315; --s2: #2e7d32; --s3: #5e35b1;
+  --node-path: #dce8ff; --node-sel: #c5d9ff; --node-neigh: #ececE4; --node-dim: #f4f4ef;
+  --plot-bg: #fbfbf8;
+}
