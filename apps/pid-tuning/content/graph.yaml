@@ -74,8 +74,8 @@ maps:
         detail: integrator windup, anti-windup
         series: 1
         short: "When the actuator is at its limit the integrator keeps charging, so after the error changes sign the stored area has to be unwound before the output moves: a long overshoot. Anti-windup (clamping or back-calculation) stops the integrator from charging while saturated."
-        addsToExample: If the cart's push is limited to |u| ≤ umax, a big position step saturates it; without anti-windup the integrator winds up and the cart overshoots badly.
-        accountsFor: Why a controller that works for small steps overshoots wildly on large ones, and the simple fix.
+        addsToExample: If the cart's push is limited to |u| ≤ umax, a big position step saturates it; without anti-windup the integrator keeps charging while u is clipped, so the cart overshoots more (about 31 % vs 24 % here; far worse on slower plants).
+        accountsFor: Why a controller that works for small steps overshoots more on large ones, and the simple fix.
         live: board:dd-windup
       - id: tuning
         label: What does tuning mean, and how do we measure good?
