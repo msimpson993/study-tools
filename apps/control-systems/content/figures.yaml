@@ -1,0 +1,22 @@
+- id: locus
+  title: "Root locus: what turning up the gain does to the cart's poles"
+  x: Re s (1/s)
+  y: Im s (rad/s)
+  legend:
+    - { label: "path the closed-loop poles take as K grows", color: "var(--accent)" }
+    - { label: "closed-loop poles now (stable)", color: "var(--grn)" }
+    - { label: "closed-loop poles now (unstable)", color: "var(--bad)" }
+    - { label: "settled value of the output", color: "var(--yel)", dash: true }
+  howToRead: "Left: the s-plane. The grey × are the open-loop poles of the cart, −1 and −2; the blue curves are where the closed-loop poles go as the gain K of the loop u = K(r − y) increases from 0; the green × are where they are at the current K (red in the shaded right half-plane would mean unstable). Right: the step response of the closed loop for a 1 m command, with the overshoot, 2 % settling time and final value printed. The dashed grey line is the command, the dotted yellow line is where the output actually settles."
+  lookFor: "Raise K from 0: the two real poles slide toward each other and meet at −1.5 (K = 0.25), then split up and down. From there the poles are complex, the response rings, and the final value creeps toward 1 but never reaches it with P alone."
+  height: 300
+  animate: { control: K, speed: 2, loop: true }
+  controls:
+    - { id: K, label: "loop gain K", type: range, min: 0.01, max: 30, step: 0.01, default: 7, group: primary }
+    - { id: ctrl, label: "controller", type: seg, default: p, group: primary, options: [{ value: p, label: "P: u = K·e" }, { value: pd, label: "P + zero at −1.5" }] }
+  presets:
+    - { id: open, label: "Almost open loop (K ≈ 0)", set: { K: 0.01, ctrl: p }, about: "The poles are still the cart's own: −1 and −2." }
+    - { id: critical, label: "Critically damped (K = 0.25)", set: { K: 0.25, ctrl: p }, about: "The two real poles have met at −1.5: the fastest response with no overshoot." }
+    - { id: k7, label: "The map's K = 7", set: { K: 7, ctrl: p }, about: "Poles −1.5 ± j2.6: ζ = 0.5, about 16 % overshoot, settles in about 2.7 s, stops at 7/9 of the command." }
+    - { id: high, label: "High gain (K = 30)", set: { K: 30, ctrl: p }, about: "Poles −1.5 ± j5.4: very fast ringing, still 6 % short of the command." }
+    - { id: zero, label: "Add a zero (K = 7)", set: { K: 7, ctrl: pd }, about: "A controller zero at −1.5 pulls the locus to the left: the same gain rings less." }

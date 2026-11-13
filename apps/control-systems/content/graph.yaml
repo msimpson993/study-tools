@@ -258,7 +258,7 @@ maps:
         short: "As the loop gain K grows, the closed-loop poles move along paths that start at the open-loop poles and end at its zeros. Watching those paths shows which gains are stable and how the response changes."
         addsToExample: "For the cart with P control, the two poles −1 and −2 slide together to −1.5, then split into −1.5 ± j√(K − 0.25): the poles at K = 7 are −1.5 ± j2.6."
         accountsFor: "Why more gain speeds the cart up and makes it ring, with the exact pole positions at each gain."
-        live: "board:sp8"
+        live: "figure:locus"
     edges:
       - { from: root, to: sp1, label: "draw them", question: "How do I mark poles and zeros?", idea: "× for roots of the denominator, ○ for roots of the numerator." }
       - { from: sp1, to: sp2, label: "which is which?", question: "What is the difference between a pole and a zero?", idea: "Poles are the modes; zeros set how strongly each mode is excited." }

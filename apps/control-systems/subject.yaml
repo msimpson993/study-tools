@@ -11,6 +11,7 @@ categories:
 sections:
   - { id: map, title: The question map, kind: map }
   - { id: board, title: Interactive course guide, kind: board }
+  - { id: figures, title: Live figures, kind: figures }
   - { id: quiz, title: Quiz & flashcards, kind: quiz }
   - { id: glossary, title: Variables & terms, kind: glossary }
 board:
