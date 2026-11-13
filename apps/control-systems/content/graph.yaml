@@ -12,6 +12,7 @@ maps:
         why: Control is the art of getting behaviour you can specify (settle in 2 s, overshoot under 10 %, ignore a push) from hardware you can only approximate.
       - id: model
         label: How do we describe a plant without re-solving its ODE?
+        dive: model
         detail: Laplace, LTI, zero initial conditions
         series: 0
         short: "For a linear time-invariant plant, the Laplace transform turns derivatives into multiplication by s and convolution into multiplication, so a plant becomes a transfer function G(s) = Y(s)/U(s) (zero initial conditions) and blocks in series simply multiply."
@@ -23,6 +24,7 @@ maps:
         live: "board:s1"
       - id: splane
         label: What is a pole or a zero, physically?
+        dive: splane
         detail: the s-plane as a map
         series: 0
         short: "Every complex number s = σ + jω is a point on the s-plane. Poles (×) are where |G(s)| blows up and mark the natural modes e^(pt); zeros (○) are where G = 0 and decide how strongly each mode is excited. σ is decay rate, ω is ringing frequency."
@@ -32,6 +34,7 @@ maps:
         live: "board:splane"
       - id: tf
         label: What can I read off any transfer function?
+        dive: tf
         detail: order, DC gain, time constants
         series: 0
         short: "Three numbers: the order (highest power of s in the denominator), the DC gain G(0) (final output per unit constant input), and the time constants 1/|p| of the poles. With those you can sketch the step response before computing anything."
@@ -41,6 +44,7 @@ maps:
         live: "board:s2"
       - id: order
         label: Why does a plant have the order it has?
+        dive: order
         detail: energy-storage elements
         series: 0
         short: "The order equals the number of independent energy-storage elements (inductors, capacitors, masses, springs): each stores energy in a state that must be tracked. Dampers and resistors dissipate energy and add no state."
@@ -50,6 +54,7 @@ maps:
         live: "board:s3"
       - id: blocks
         label: How does the plant sit in a loop with a controller and a disturbance?
+        dive: blocks
         detail: standard feedback loop, where the disturbance enters
         series: 1
         short: "Close the loop on the measured output: error E = R − Y feeds a controller C, the disturbance D adds somewhere in the loop, and the plant G produces Y. Closed-loop transfer functions follow from the series, parallel and feedback rules, and where D enters decides how it is transformed."
@@ -59,6 +64,7 @@ maps:
         live: "board:s4"
       - id: ctrl
         label: What can P, I and D each do about it?
+        dive: ctrl
         detail: controllers at a glance
         series: 1
         short: "Proportional acts on the present error (faster, leaves some error), integral accumulates past error (removes steady-state error, can add overshoot and windup), derivative anticipates (adds damping, amplifies noise). Parallel and standard forms use different symbols for the same controller."
@@ -68,6 +74,8 @@ maps:
         live: "board:s5"
       - id: pid-tuning
         label: How do I choose the gains?
+        dive: ctrl
+        quizTag: pid-tuning
         detail: the PID tuning map (separate page)
         series: 1
         short: "Choosing Kp, Ki and Kd is its own chain of questions: what each gain does, why I removes offset, what D costs, tuning methods (manual, Ziegler–Nichols, automatic), a worked project and a gallery of failures. It continues this map on its own page, with the interactive PID Lab."
@@ -76,6 +84,7 @@ maps:
         link: { href: "../pid-tuning/index.html", label: "Open the PID tuning map" }
       - id: sse
         label: Why does P leave an error and I remove it?
+        dive: sse
         detail: steady-state error, system type
         series: 1
         short: "With pure P the output needs a nonzero error to keep the controller output up, so it stops short: e_ss = 1/(1 + K·G(0)) for a step. An integrator keeps growing while any error remains, so at rest the error must be exactly zero (system type 1)."
@@ -85,6 +94,7 @@ maps:
         live: "board:s12"
       - id: fb
         label: What does feedback buy us, and what does it cost?
+        dive: fb
         detail: sensitivity, disturbance, transient, indices
         series: 1
         short: "Feedback reduces sensitivity to plant changes and to disturbances by roughly the factor 1 + CG, speeds the transient, and drives steady-state error down, at the cost of sensors, noise, hardware and the possibility of instability. S + T = 1 is the trade."
@@ -94,6 +104,7 @@ maps:
         live: "board:s13"
       - id: ss
         label: Is there a description that tracks the inside too?
+        dive: ss
         detail: state space ẋ = Ax + Bu, y = Cx + Du
         series: 2
         short: "State space writes the plant as first-order equations in the energy-storage variables, ẋ = Ax + Bu and y = Cx + Du. It keeps initial conditions and internal states that a transfer function hides, and handles several inputs and outputs naturally."
@@ -103,6 +114,7 @@ maps:
         live: "board:s6"
       - id: ss2tf
         label: How do the two descriptions connect?
+        dive: ss2tf
         detail: G(s) = C(sI − A)⁻¹B + D
         series: 2
         short: "Taking the Laplace transform of the state equations and eliminating x gives G(s) = C(sI − A)⁻¹B + D. The poles of G are the eigenvalues of A, so stability and modes can be read from either description."
@@ -112,6 +124,7 @@ maps:
         live: "board:s7"
       - id: circuits
         label: How do I get G(s) for real hardware?
+        dive: circuits
         detail: impedances, op-amp stages
         series: 0
         short: "Treat each element by its impedance (R, sL, 1/(sC)) and use voltage dividers; for an ideal inverting op-amp the stage gain is −Z_f/Z_in. The same second-order equation as the cart appears as a series RLC."
@@ -121,6 +134,7 @@ maps:
         live: "board:s8"
       - id: first
         label: How does the simplest plant respond?
+        dive: first
         detail: first-order, K/(τs + 1)
         series: 3
         short: "A first-order system K/(τs + 1) has a step response K(1 − e^(−t/τ)): 63 % of the way after τ, about 98 % after 4τ, with no overshoot. It is the shape to compare everything else against."
@@ -130,6 +144,7 @@ maps:
         live: "board:s9"
       - id: dominant
         label: Which poles matter?
+        dive: dominant
         detail: dominant poles
         series: 3
         short: "The pole closest to the imaginary axis decays slowest and dominates the response once the faster ones are gone. A pole about five times farther left is usually safe to ignore, provided the DC gain is kept."
@@ -139,6 +154,7 @@ maps:
         live: "board:s10"
       - id: second
         label: What do ζ and ωₙ say about two poles?
+        dive: second
         detail: second-order specs
         series: 3
         short: "A second-order system s² + 2ζωₙs + ωₙ² has overshoot %OS = 100·e^(−πζ/√(1 − ζ²)), settling time about 4/(ζωₙ), and peak time π/ω_d. ζ sets how much it rings, ωₙ how fast."
@@ -148,6 +164,7 @@ maps:
         live: "board:s11"
       - id: cheat
         label: What should I recognize on sight?
+        dive: cheat
         detail: cheat sheet and glossary
         series: 3
         short: "A one-page 'recognize this' list: which pole pattern, transfer function shape or block diagram means which behaviour, plus a glossary of every symbol. It is the review end of the chain."
@@ -156,12 +173,13 @@ maps:
         live: "board:cheatsec"
       - id: mini-exam
         label: Can I do it under exam conditions?
+        dive: cheat
+        quizTag: mini-exam
         detail: mini-exam 1 quiz (22 questions)
         series: 3
         short: "The 22-question mini-exam 1 review: transfer functions, order, block diagrams, disturbances, controllers, state space, circuits and op-amps, first-order response and dominant poles, with a question and a worked reason each."
         addsToExample: "Every question uses a plant like the cart (second order, two poles), so the recognition practice is the cart's story told on other systems."
         accountsFor: "Whether the cart's reasoning (poles, DC gain, loop) transfers to unseen plants."
-        quizTag: mini-exam
     edges:
       - { from: root, to: model, label: "describe it", question: "What do we need before we can predict anything?", idea: "A model we can manipulate algebraically. LTI plus the Laplace transform gives transfer functions, where series blocks multiply." }
       - { from: model, to: splane, label: "poles?", question: "What do the roots of G(s) mean?", idea: "Each pole is a natural mode e^(pt) and each zero a transmission null. Plotting them on the s-plane makes behaviour visible." }
@@ -194,6 +212,7 @@ maps:
         live: "board:sp-meaning"
       - id: sp1
         label: How are poles and zeros drawn?
+        dive: sp1
         detail: × and ○
         series: 0
         short: "A pole is drawn ×, a zero ○. A pole is a root of the denominator (|G| → ∞, a natural mode); a zero is a root of the numerator (G = 0, a transmission null). Complex ones come in conjugate pairs."
@@ -202,6 +221,7 @@ maps:
         live: "board:sp1"
       - id: sp2
         label: What is the difference between a pole and a zero?
+        dive: sp2
         detail: modes versus how much of each
         series: 0
         short: "Poles decide which exponentials appear; zeros decide how much of each. A zero creates no new mode but reshapes the residues; a right-half-plane zero (non-minimum phase) makes the response start in the wrong direction."
@@ -210,6 +230,7 @@ maps:
         live: "board:sp2"
       - id: sp3
         label: How do I read a location on the plane?
+        dive: sp3
         detail: left or right, near or far, up or down
         series: 0
         short: "Left of the imaginary axis decays, right grows. Farther left is faster. Higher up is faster oscillation. The angle from the negative real axis is cos⁻¹ ζ and the distance from the origin is ωₙ."
@@ -219,6 +240,7 @@ maps:
         live: "board:sp3"
       - id: sp4
         label: What happens if I move a pole pair and a zero?
+        dive: sp4
         detail: explorer
         series: 1
         short: "An interactive explorer: drag a pole pair and a zero and watch the pole-zero map, the step response and the |G(jω)| curve change together. It turns the rules of thumb above into feel."
@@ -227,6 +249,7 @@ maps:
         live: "board:sp4"
       - id: sp5
         label: Which time-domain operations are moves on the plane?
+        dive: sp5
         detail: operations dictionary
         series: 1
         short: "Differentiating multiplies by s (adds a zero at 0), integrating divides by s (a pole at 0), a delay multiplies by e^(−sT), a time shift or scaling moves the pattern. Each operation has a picture on the map."
@@ -235,6 +258,7 @@ maps:
         live: "board:sp5"
       - id: sp6
         label: How does the inverse Laplace transform look here?
+        dive: sp6
         detail: partial fractions and residues
         series: 1
         short: "Partial fractions write G(s) as a sum of terms A_k/(s − p_k); each pole contributes A_k e^(p_k t), with the residue A_k set by the zeros. The step response adds the input's own pole at 0."
@@ -244,6 +268,7 @@ maps:
         live: "board:sp6"
       - id: sp7
         label: What do the final- and initial-value theorems mean?
+        dive: sp7
         detail: FVT and IVT on the map
         series: 1
         short: "The final value is lim s→0 s·Y(s) (valid only if all other poles of sY are in the left half-plane); the initial value is lim s→∞ s·Y(s). They read the end points without inverting the transform."
@@ -253,6 +278,7 @@ maps:
         live: "board:sp7"
       - id: sp8
         label: What does closing the loop do on the map?
+        dive: sp8
         detail: root-locus preview
         series: 2
         short: "As the loop gain K grows, the closed-loop poles move along paths that start at the open-loop poles and end at its zeros. Watching those paths shows which gains are stable and how the response changes."
