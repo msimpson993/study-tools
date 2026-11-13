@@ -64,7 +64,40 @@ Default overlays: `forces`.
 | `hammer` | trace | A hammer strike: all the push arrives at once (1 N·s), so the velocity jumps to 1 m/s and then the cart rings down. |
 | `shaker` | trace | A sinusoidal force u = sin(ωt) with ω = 1.5 rad/s: after the transient the cart moves at the same frequency, scaled and delayed. |
 | `clock` | trace | A clock reads the position every T = 0.5 s and holds the value between ticks (zero-order hold). |
-| `poles` | poles | The eigenvalues of A (poles of G) in the s-plane. |
+| `poles` | poles | The eigenvalues of A (poles of G) in the s-plane. With a closed-loop overlay on: the closed-loop poles at the chosen gain, and the path they travel as the gain K grows. |
+| `loop` | trace | Close the loop: the sensor reads y = x, the error e = r − y goes into a controller C, and C pushes the cart with u = K·e. Offset, speed and ringing all come from K. |
+| `pid` | ctrl | The controller split into its three parts: P (K·e, like a spring), I (the running total of e) and D (the rate of change of e, like a damper), and the push u they add up to. (switches on `loop`) |
+| `disturb` | main picture | A steady shove d hits the cart at time t_d. The loop has to push back; the trace shows how far the cart is moved and whether it comes back. (switches on `loop`) |
+| `noise` | ctrl | The sensor reading is y plus random noise. The controller cannot tell, so the noise becomes a jittery push u. (switches on `loop`) |
+| `limit` | ctrl | The actuator cannot push harder than ±u_max: the demanded u is clipped, drawn as a flat-topped trace, and the cart answers the clipped push, not the demanded one. (switches on `loop`) |
+| `delay` | main picture | The sensor reports where the cart was T_d seconds ago. The controller acts on old news and rings. (switches on `loop`) |
+| `lag` | main picture | A slow sensor: its reading chases the true position with time constant τ, so the controller sees a smoothed, late y. (switches on `loop`) |
+
+#### Closed-loop overlays and `params`
+
+The overlays `loop`, `pid`, `disturb`, `noise`, `limit`, `delay` and `lag` draw the cart **inside a feedback loop**: a controller block C under the cart takes e = r − y and pushes the cart with u; the sensor returns y to the summing junction Σ. The motion, the u(t) trace and the poles come from the real closed-loop simulation (`simulatePid` in `dsp/pid.ts`, RK4, plant 1/(s² + 3s + 2); the cart's velocity is dx/dt of that y). `pid`, `disturb`, `noise`, `limit`, `delay` and `lag` each switch `loop` on, so `overlays: [limit]` alone is a complete loop with the actuator clipped. Closed-loop overlays cannot be combined with the open-loop ones (`push`, `hammer`, `shaker`, `clock`, `critical`, `modes`, `flow`, `reach`, `observe`): the build says which pair clashes. The panel cap still applies after the implied overlays are added (`pid`, `noise` and `limit` open the x(t) trace and the u(t) controller panel, so they leave no room for `poles` or `phase`; `loop`, `disturb`, `delay` and `lag` open only the trace and combine with one more panel such as `poles` or `phase`).
+
+```yaml
+exampleScene:
+  overlays: [pid, disturb]
+  params: { K: 8, Ki: 6, Kd: 1.5, d: 1, td: 4 }   # all optional; also on graph.yaml nodes and runningExample.scene
+```
+
+A param only takes effect with the overlay it belongs to (e.g. `umax` needs `limit`, `d`/`td` need `disturb`, `noise`/`seed` need `noise`); unknown names, non-numbers, values outside the range and params with no closed-loop overlay fail the build. `pid` defaults Ki = 6 and Kd = 1.5, other overlays Ki = Kd = 0.
+
+| param | meaning | range | default |
+|---|---|---|---|
+| `K` | Proportional gain: the push per metre of error, in N/m. | 0 … 60 | 6 N/m |
+| `Ki` | Integral gain, in N/(m·s). Default 0 (6 with the pid overlay). | 0 … 60 | 0 N/(m·s) |
+| `Kd` | Derivative gain, in N·s/m. Default 0 (1.5 with the pid overlay). | 0 … 20 | 0 N·s/m |
+| `r` | The commanded position, in m. | 0.2 … 2 | 1 m |
+| `umax` | Actuator limit ±u_max in N (limit overlay). | 0.2 … 20 | 2.5 N |
+| `d` | Size of the steady shove in N (disturb overlay; negative pushes the other way). | -5 … 5 | 1 N |
+| `td` | Time of the shove in s (disturb overlay). | 1 … 8 | 4 s |
+| `noise` | Standard deviation of the sensor noise in m (noise overlay). | 0 … 0.3 | 0.04 m |
+| `seed` | Seed of the noise generator, so the same picture comes back every time. | 1 … 1000000 | 7 |
+| `delay` | Pure sensor delay in s (delay overlay). | 0.02 … 1 | 0.3 s |
+| `lag` | Sensor time constant in s (lag overlay). | 0.02 … 2 | 0.4 s |
 
 ### `tine` — The plucked tine and its sampler
 

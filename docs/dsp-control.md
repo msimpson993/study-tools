@@ -41,6 +41,8 @@ Errors are `TFError` (non-finite coefficients, zero denominator, improper TF in 
 | `seededRng(seed)` | the legacy xorshift32 uniform generator (for reproducible noise) |
 
 `PidSimOptions`: `plant: 'p1' or 'p2' or 'p3' or TF` (must be **strictly proper**), `Kp,Ki,Kd,N=20`, `b=1` (setpoint weight, 0…1), `dOnMeasurement=false`, `T=20`, `dt=0.01`, `r=1`, `umax` (null/Infinity = none), `aw='none' or 'clamp' or 'backcalc'`, `Kt` (back-calc gain; default Ki/Kp, else 1), `dist={t,amp}` (step added at the **plant input**), `noise` (σ), `noiseTs=0.01`, `seed=12345`.
+**Sensor path** (`sensorLag` τ ≥ 0, `sensorDelay` ≥ 0, both default 0): the controller does not see y directly but y_m = lag(delay(y)) + noise, where delay is a pure transport delay (mid-step sample, second order), lag is the first-order filter 1/(τs + 1), and noise is added last. Negative values throw `TFError`. With both at 0 the results are bit-for-bit the previous ones (the legacy fixture still matches). The linear loop with a lag equals the step response of the loop with the plant augmented by 1/(τs+1) (tested). `ym` is the controller's reading; `y` stays the true output.
+
 `PidSim`: `t, r, y, u` (applied, saturated), `e` (true r−y), `ym` (measured), `up, ui, ud, d`, `unstable`, `substeps`, `dt`, `warnings`.
 
 ### Numerics

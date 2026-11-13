@@ -36,7 +36,7 @@ Rules enforced: unique ids per map, no dangling or duplicate edges, graph is a D
 YAML gotchas: quote any scalar containing `: `, `{`, `|`, `#` (labels like `Finite record: DFT` break).
 
 ## dives/<id>.md
-Front matter: `id, order, title, category, chain[{title,detail?}], neighbors[ids], matlab?, addsToExample?, accountsFor?, exampleScene?: {overlays[], caption?}` (the last three default to the linking node's; `exampleScene` also goes on graph.yaml nodes; overlays are validated, see [example-scenes.md](example-scenes.md)). Body is Markdown with:
+Front matter: `id, order, title, category, chain[{title,detail?}], neighbors[ids], matlab?, addsToExample?, accountsFor?, exampleScene?: {overlays[], caption?}` (the last three default to the linking node's; `exampleScene` also goes on graph.yaml nodes; overlays and numeric `params` (closed-loop cart: K, Ki, Kd, r, umax, d, td, noise, seed, delay, lag) are validated, see [example-scenes.md](example-scenes.md)). Body is Markdown with:
 - `$…$` / `$$…$$` KaTeX (build-time; a KaTeX error fails the build);
 - ```` ```eq ```` fence for plain Unicode equation lines;
 - ```` ```figure:<figure id> ```` embeds a figure from `figures.yaml` inline (its own controls, no URL sync). The id must exist (build fails otherwise). Put it right after the sentence that sets up what to watch.
