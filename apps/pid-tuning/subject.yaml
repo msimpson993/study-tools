@@ -18,7 +18,7 @@ sections:
 board:
   pairs: [overview, problem, feedback, pid, gains, dd-int, dd-der, tuning, lab, methods, dd-zn, dd-sliders, dd-windup, project, report, appendix, ap-lookup, cheat, glossary, ap-slow, ap-offset, ap-overshoot, ap-oscillation, ap-disturbance, ap-noise, ap-windup, ap-kick, ap-limits, ap-delay, ap-sensorlag, ap-nonlinear, ap-twodof, ap-limitcycle]
 runningExample:
-  scene: { id: cart, overlays: [forces, sensor] }
+  scene: { id: cart, overlays: [forces] }
   title: The 1 kg cart under a PID position loop
   summary: "The 1 kg cart (k = 2 N/m, c = 3 N·s/m) from the control-systems map, with the actuator gain normalised so that its DC gain is 1: the PID Lab's default plant p2 = 1/((s + 1)(0.5s + 1)) = 2/((s + 1)(s + 2)) is exactly twice G(s) = 1/(s² + 3s + 2). The task: command a position step r, hold it against a push d at the plant input and against sensor noise n. Alternates in the lab: p1 = 1/(s + 1) and p3 = 1/(s + 1)³ (used for Ziegler–Nichols)."
   details: |
