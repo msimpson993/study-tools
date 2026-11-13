@@ -64,7 +64,7 @@ const dives = (page: Page): Promise<Dv[]> => page.evaluate(() => (window as any)
 /** Hold the scene at a frame where its overlays have something to show, then repaint. */
 const freezeAt = async (page: Page, t: number) => { await page.evaluate((x) => { (window as any).__sceneFreeze = x; window.dispatchEvent(new Event('study-theme')); }, t); await page.waitForTimeout(120); };
 const restFor = (ov: string[]) => (ov.includes('hammer') ? 0.9 : ov.includes('shaker') ? 9 : ov.includes('push') ? 1.6 : ov.includes('window') || ov.includes('sampler') || ov.includes('envelope') ? 1.3 : 1.0);
-const SHOT_DIVES: Record<string, string[]> = { 'linear-systems': ['ss', 'eig', 'ctrl', 'obs', 'lti', 'sampling', 'jordan'], transforms: ['ring', 'sampled', 'zmap', 'leakage'], 'control-systems': ['model', 'sp8', 'ctrl', 'second'], 'pid-tuning': ['problem', 'windup', 'ap-kick', 'ap-delay'] };
+const SHOT_DIVES: Record<string, string[]> = { 'linear-systems': ['ss', 'eig', 'ctrl', 'obs', 'lti', 'sampling', 'jordan'], transforms: ['ring', 'sampled', 'zmap', 'leakage'], 'control-systems': ['model', 'sp8', 'blocks', 'sse'], 'pid-tuning': ['problem', 'windup', 'ap-kick', 'ap-delay', 'ap-noise'] };
 
 for (const app of ['linear-systems', 'transforms', 'control-systems', 'pid-tuning'] as const) {
   test.describe(`${app}: example scenes in dives and on the map`, () => {
