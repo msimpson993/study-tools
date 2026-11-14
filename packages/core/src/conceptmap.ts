@@ -146,7 +146,7 @@ export function mountConceptMap(host: HTMLElement, content: AppContent, progress
     const hl = mapHighlight(pick, m.edges);
     const ser = pick === null ? st.series : null;
     const selNode = hl.selected, selEdgeKey = pick?.kind === 'edge' && hl.edges.size ? pick.id : null;
-    const pathSet = hl.path, neigh = hl.neigh, ends = hl.ends, pathKeys = hl.edges;
+    const pathSet = hl.path, neigh = hl.neigh, pathKeys = hl.edges;
     labels = placeLabels(geom, m.edges, hl.priority);
     const recallHide = (id: string) => st.mode === 'review' && st.recall && !st.revealed.has(`${st.mapId}/${id}`);
 
@@ -181,12 +181,12 @@ export function mountConceptMap(host: HTMLElement, content: AppContent, progress
     }
     for (const id of geom.order) {
       const b = geom.boxes[id], n = byId[id];
-      const selected = selNode === id, onPath = pathSet.has(id), isNeigh = neigh.has(id) && !onPath, isEnd = ends.has(id);
+      const selected = selNode === id, onPath = pathSet.has(id), isNeigh = neigh.has(id) && !onPath;
       const inSer = ser !== null && n.series === ser;
-      const dim = (pick !== null && !selected && !onPath && !isNeigh && !isEnd) || (ser !== null && !inSer);
+      const dim = (pick !== null && !selected && !onPath && !isNeigh) || (ser !== null && !inSer);
       const status = st.mode === 'review' ? progress.status(m.id, n) : null;
       const hide = recallHide(id);
-      const cls = ['qm-node', selected ? 'n-sel' : isEnd ? 'n-end' : onPath ? 'n-path' : isNeigh ? 'n-neigh' : inSer ? 'n-ser' : dim ? 'n-dim' : '', status ? `st-${status}` : '', hide ? 'recall-hidden' : ''].filter(Boolean).join(' ');
+      const cls = ['qm-node', selected ? 'n-sel' : onPath ? 'n-path' : isNeigh ? 'n-neigh' : inSer ? 'n-ser' : dim ? 'n-dim' : '', status ? `st-${status}` : '', hide ? 'recall-hidden' : ''].filter(Boolean).join(' ');
       const act = () => toggleNode(id);
       const grp = s('g', {
         class: cls, role: 'button', tabindex: 0, 'aria-label': hide ? `Hidden box ${m.nodes.indexOf(n)}. Tap to reveal.` : `${n.label}${n.detail ? `. ${n.detail}` : ''}. Tap for more.`,

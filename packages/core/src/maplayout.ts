@@ -324,24 +324,23 @@ export interface MapHighlight {
   /** the tapped box (node pick only) */ selected: string | null;
   /** boxes on the chain back to the root (node pick only) */ path: Set<string>;
   /** direct neighbours of the tapped box (node pick only) */ neigh: Set<string>;
-  /** the two endpoint boxes of the tapped line (edge pick only) */ ends: Set<string>;
   /** keys of the lines drawn as active (the chain for a node pick; ONLY the tapped line for an edge pick) */ edges: Set<string>;
   /** line key to place its label first (edge pick) or the chain's labels (node pick) */ priority: string[];
 }
 /**
  * What the map highlights for a selection.
  *  - node pick: the box, the chain of questions back to the root, its neighbours (unchanged behaviour).
- *  - edge pick: ONLY that line (with its arrowhead and label) and its two endpoint boxes, in a lighter "endpoint" style.
- *    It never walks the ancestor chain: the line explains one step, the bubble beyond it explains another.
+ *  - edge pick: ONLY that line (with its arrowhead and label). No box is highlighted: not the endpoints, not the chain
+ *    (every box is dimmed like the other lines; the line explains one step, the bubble beyond it explains another).
  *  - no pick: nothing is highlighted and nothing is dimmed (the caller checks `pick !== null` for dimming).
  */
 export function mapHighlight(pick: { kind: 'node' | 'edge'; id: string } | null, edges: { from: string; to: string }[]): MapHighlight {
-  const out: MapHighlight = { selected: null, path: new Set(), neigh: new Set(), ends: new Set(), edges: new Set(), priority: [] };
+  const out: MapHighlight = { selected: null, path: new Set(), neigh: new Set(), edges: new Set(), priority: [] };
   if (!pick) return out;
   if (pick.kind === 'edge') {
     const e = edges.find((x) => edgeKey(x.from, x.to) === pick.id);
     if (!e) return out;
-    out.ends = new Set([e.from, e.to]); out.edges = new Set([pick.id]); out.priority = [pick.id];
+    out.edges = new Set([pick.id]); out.priority = [pick.id];
     return out;
   }
   out.selected = pick.id;
