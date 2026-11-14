@@ -2,7 +2,7 @@ import fs from 'node:fs';
 import { describe, it, expect } from 'vitest';
 import path from 'node:path';
 import { loadApp, listApps, repoRoot } from '../../build/src';
-import { computeGeometry, placeLabels, overlapReport, pathToRoot, edgeKey, mapHighlight } from '../src/maplayout';
+import { ACTUAL_MIN_WIDTH, layoutWidth, computeGeometry, placeLabels, overlapReport, pathToRoot, edgeKey, mapHighlight } from '../src/maplayout';
 
 const WIDTHS = [360, 390, 480, 640, 768, 900, 1024, 1150, 1280, 1400];
 
@@ -64,6 +64,19 @@ describe('mapHighlight: what a tap lights up', () => {
     for (const app of listApps()) for (const m of loadApp(path.join(repoRoot, 'apps', app)).content.maps) for (const e of m.edges) {
       const h = mapHighlight({ kind: 'edge', id: edgeKey(e.from, e.to) }, m.edges);
       expect([...h.edges]).toEqual([edgeKey(e.from, e.to)]); expect(h.selected).toBeNull(); expect(h.path.size + h.neigh.size).toBe(0);
+    }
+  });
+});
+
+describe('map view: Fit to screen vs Actual size', () => {
+  it('fit follows the container, actual never goes below the natural width', () => {
+    for (const w of [320, 390, 640, 980, 1400]) { expect(layoutWidth('fit', w)).toBe(w); expect(layoutWidth('actual', w)).toBe(Math.max(w, ACTUAL_MIN_WIDTH)); }
+  });
+  it('on a phone, actual size keeps the full 184 px boxes (fit squeezes them) and is wider than the screen', () => {
+    for (const app of listApps()) for (const m of loadApp(path.join(repoRoot, 'apps', app)).content.maps) {
+      const fit = computeGeometry(m.nodes, m.edges, layoutWidth('fit', 374)), act = computeGeometry(m.nodes, m.edges, layoutWidth('actual', 374));
+      expect(fit.nodeW).toBeLessThan(180); expect(act.nodeW).toBe(184); expect(act.width).toBeGreaterThan(374 * 2);
+      expect(overlapReport(act, placeLabels(act, m.edges, []))).toEqual({ nodeNode: 0, labelNode: 0, labelLabel: 0 });
     }
   });
 });

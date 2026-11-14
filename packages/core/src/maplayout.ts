@@ -46,6 +46,11 @@ export function overlaps(a: Rect, b: Rect, pad = 0): boolean {
   return a.x < b.x + b.w + pad && b.x < a.x + a.w + pad && a.y < b.y + b.h + pad && b.y < a.y + a.h + pad;
 }
 
+/** "Actual size" lays the map out at least this wide (4 columns of 184 px boxes with 52 px lanes + margins) so boxes keep their comfortable size; narrower screens pan. */
+export const ACTUAL_MIN_WIDTH = 980;
+export type MapView = 'fit' | 'actual';
+/** Layout width for a view mode: `fit` follows the container (current behaviour), `actual` never goes below ACTUAL_MIN_WIDTH. */
+export const layoutWidth = (view: MapView, containerWidth: number): number => (view === 'actual' ? Math.max(containerWidth, ACTUAL_MIN_WIDTH) : containerWidth);
 export function computeGeometry(nodes: InNode[], edges: InEdge[], containerWidth: number): Geometry {
   const narrow = containerWidth < 600;
   const margin = narrow ? 16 : 36;

@@ -1,6 +1,7 @@
 import { h, s, clear } from './dom';
 import type { AppContent, MapDef, MapNode, MapEdge } from './types';
-import { computeGeometry, placeLabels, roundedPath, arrowHead, edgeKey, pathToRoot, mapHighlight, type Geometry, type Label } from './maplayout';
+import { computeGeometry, layoutWidth, placeLabels, roundedPath, arrowHead, edgeKey, pathToRoot, mapHighlight, type Geometry, type Label, type MapView } from './maplayout';
+import { storeGet, storeSet } from './store';
 import { mountScene } from './scene';
 import { Progress, quizTagOf, subtree } from './progress';
 
@@ -22,12 +23,17 @@ export interface MapNav {
   onState?(): void;
 }
 
+/** localStorage key of the map view choice; shared by every app on the origin */
+export const MAP_VIEW_KEY = 'study-tools.mapView';
+export const readMapView = (): MapView => (storeGet<string>(MAP_VIEW_KEY, 'fit') === 'actual' ? 'actual' : 'fit');
+
 const SERIES = ['var(--s0)', 'var(--s1)', 'var(--s2)', 'var(--s3)'];
 
 /** The app's home screen: question-chain map with Explore / Review modes. */
 export function mountConceptMap(host: HTMLElement, content: AppContent, progress: Progress, st: MapState, nav: MapNav): () => void {
   const map = (): MapDef => content.maps.find((m) => m.id === st.mapId) ?? content.maps[0];
   let width = 960;
+  let view: MapView = readMapView();
   const root = h('div', { class: 'cm', dataset: { testid: 'concept-map' } });
   const scroll = h('div', { class: 'cm-scroll' });
   const panel = h('aside', { class: 'cm-panel idle', 'aria-live': 'polite', dataset: { testid: 'map-panel' } });
@@ -134,14 +140,52 @@ export function mountConceptMap(host: HTMLElement, content: AppContent, progress
       }
       legend.append(chips);
     }
+    const seg = h('span', { class: 'lg-view', role: 'group', 'aria-label': 'Map size', dataset: { testid: 'map-view' } });
+    for (const [v, label, hint] of [['fit', 'Fit to screen', 'Shrink the map to the screen width'], ['actual', 'Actual size', 'Natural box size: drag, scroll or swipe to move around']] as const) {
+      seg.append(h('button', { class: `lg-vbtn${view === v ? ' on' : ''}`, type: 'button', 'aria-pressed': String(view === v), title: hint, dataset: { view: v }, onclick: () => setView(v) }, label));
+    }
+    legend.append(seg);
   }
+  /** the map's boxes rarely span every column: start Actual size looking at them, not at the empty margin */
+  function centerOnBoxes() {
+    if (!geom) return; const xs = Object.values(geom.boxes); if (!xs.length) return;
+    const x0 = Math.min(...xs.map((b) => b.x)), x1 = Math.max(...xs.map((b) => b.x + b.w));
+    scroll.scrollLeft = Math.max(0, (x0 + x1) / 2 - scroll.clientWidth / 2);
+  }
+  function setView(v: MapView) {
+    if (v === view) return;
+    view = v; storeSet(MAP_VIEW_KEY, v); scroll.scrollLeft = 0; scroll.scrollTop = 0;
+    renderLegend(); renderSvg(); if (v === 'actual') centerOnBoxes();
+    const sel = scroll.querySelector('.qm-node.n-sel, .qm-edge.e-sel') as SVGGraphicsElement | null; // keep the tapped thing in view
+    if (sel && v === 'actual') { const a = sel.getBoundingClientRect(), b = scroll.getBoundingClientRect(); scroll.scrollLeft += a.left - b.left - (b.width - a.width) / 2; scroll.scrollTop += a.top - b.top - (b.height - a.height) / 2; }
+  }
+
+  // drag-to-pan with a mouse or pen in Actual size (touch pans natively); a drag never counts as a tap
+  let drag: { x: number; y: number; sl: number; st: number; id: number; moved: boolean } | null = null;
+  scroll.addEventListener('pointerdown', (ev) => {
+    if (view !== 'actual' || ev.pointerType === 'touch' || ev.button !== 0) return;
+    drag = { x: ev.clientX, y: ev.clientY, sl: scroll.scrollLeft, st: scroll.scrollTop, id: ev.pointerId, moved: false };
+  });
+  scroll.addEventListener('pointermove', (ev) => {
+    if (!drag || ev.pointerId !== drag.id) return;
+    const dx = ev.clientX - drag.x, dy = ev.clientY - drag.y;
+    if (!drag.moved && Math.hypot(dx, dy) < 5) return;
+    if (!drag.moved) { drag.moved = true; scroll.classList.add('panning'); try { scroll.setPointerCapture(ev.pointerId); } catch { /* ignore */ } }
+    scroll.scrollLeft = drag.sl - dx; scroll.scrollTop = drag.st - dy;
+  });
+  const endDrag = (ev: PointerEvent) => {
+    if (!drag || ev.pointerId !== drag.id) return;
+    const moved = drag.moved; drag = null; scroll.classList.remove('panning');
+    if (moved) { const eat = (e: Event) => { e.stopPropagation(); e.preventDefault(); }; scroll.addEventListener('click', eat, { capture: true, once: true }); setTimeout(() => scroll.removeEventListener('click', eat, true), 0); }
+  };
+  scroll.addEventListener('pointerup', endDrag); scroll.addEventListener('pointercancel', endDrag);
 
   let geom: Geometry | null = null;
   let labels: Label[] = [];
   function renderSvg() {
     const m = map();
     const byId: Record<string, MapNode> = Object.fromEntries(m.nodes.map((n) => [n.id, n]));
-    geom = computeGeometry(m.nodes, m.edges, width);
+    geom = computeGeometry(m.nodes, m.edges, layoutWidth(view, width));
     const pick = st.pick;
     const hl = mapHighlight(pick, m.edges);
     const ser = pick === null ? st.series : null;
@@ -205,7 +249,10 @@ export function mountConceptMap(host: HTMLElement, content: AppContent, progress
       if (status) grp.append(s('circle', { class: 'st', cx: b.x + b.w - 9, cy: b.y + 9, r: 6 }));
       svg.append(grp);
     }
+    const sl = scroll.scrollLeft, stp = scroll.scrollTop; // a re-render (a tap, a theme change) must not throw the reader back to the corner
+    scroll.classList.toggle('actual', view === 'actual');
     scroll.replaceChildren(svg);
+    scroll.scrollLeft = sl; scroll.scrollTop = stp;
   }
 
   function pathChips(ids: string[], m: MapDef) {
@@ -273,7 +320,7 @@ export function mountConceptMap(host: HTMLElement, content: AppContent, progress
   }
 
   function renderAll() { renderTop(); renderLegend(); renderReview(); renderSvg(); renderPanel(); }
-  renderAll();
+  renderAll(); if (view === 'actual') centerOnBoxes();
   const off = progress.onChange(() => { renderReview(); renderSvg(); renderPanel(); });
   const onKey = (ev: KeyboardEvent) => { if (ev.key === 'Escape' && (st.pick || st.series !== null) && !document.querySelector('.fig-overlay:not([hidden])')) { st.series = null; setPick(null); } };
   document.addEventListener('keydown', onKey);
