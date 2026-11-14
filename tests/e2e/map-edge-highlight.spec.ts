@@ -38,7 +38,7 @@ async function expectUpToArrow(page: Page, m: M, e: E, what: string) {
   expect(s.edgeOn, `${what}: the tapped line and the chain's lines are active`).toEqual([...new Set([key, ...chainEdges])].sort());
   expect(s.edgeSel, `${what}: the tapped line is the selected one`).toEqual([key]);
   expect(s.edgeDim.length, `${what}: other lines dim`).toBe(m.edges.length - new Set([key, ...chainEdges]).size);
-  expect(s.labelOn.every((k) => k === key || chainEdges.includes(k)), `${what}: only the chain's and this line's labels are active`).toBe(true);
+  expect(s.labelOn.every((k) => k !== null && (k === key || chainEdges.includes(k))), `${what}: only the chain's and this line's labels are active`).toBe(true);
 }
 /** computed paint of a box's outline shape */
 const paint = (page: Page, id: string) => page.locator(`[data-testid=map-node][data-node="${id}"] .shape`).evaluate((el) => { const c = getComputedStyle(el); return `${c.fill}|${c.stroke}|${c.strokeWidth}`; });
