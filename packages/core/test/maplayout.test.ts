@@ -2,7 +2,7 @@ import fs from 'node:fs';
 import { describe, it, expect } from 'vitest';
 import path from 'node:path';
 import { loadApp, listApps, repoRoot } from '../../build/src';
-import { ACTUAL_MIN_WIDTH, layoutWidth, computeGeometry, placeLabels, overlapReport, pathToRoot, edgeKey, mapHighlight } from '../src/maplayout';
+import { edgeCrossings, edgeOverlaps, ACTUAL_MIN_WIDTH, layoutWidth, computeGeometry, placeLabels, overlapReport, pathToRoot, edgeKey, mapHighlight } from '../src/maplayout';
 
 const WIDTHS = [360, 390, 480, 640, 768, 900, 1024, 1150, 1280, 1400];
 
@@ -85,5 +85,48 @@ describe('map view: Fit to screen vs Actual size', () => {
       expect(fit.nodeW).toBeLessThan(180); expect(act.nodeW).toBe(184); expect(act.width).toBeGreaterThan(374 * 2);
       expect(overlapReport(act, placeLabels(act, m.edges, []))).toEqual({ nodeNode: 0, labelNode: 0, labelLabel: 0 });
     }
+  });
+});
+
+/** crossings / overlapping line pieces of the shipped maps BEFORE the crossing-minimising layout (measured on the previous layout), at widths 362 560 775 980 1400 */
+const BEFORE: Record<string, [number, number][]> = {
+  'control-systems/chain': [[5, 13], [9, 11], [7, 2], [3, 1], [3, 1]], 'control-systems/splane': [[0, 0], [0, 0], [0, 0], [0, 0], [0, 0]],
+  'linear-systems/overview': [[0, 1], [0, 1], [2, 0], [2, 0], [2, 0]], 'linear-systems/ops': [[37, 71], [39, 68], [55, 5], [60, 6], [53, 4]],
+  'linear-systems/signals': [[28, 134], [29, 133], [24, 2], [34, 1], [15, 0]], 'pid-tuning/chain': [[21, 271], [21, 271], [47, 12], [30, 4], [39, 1]],
+  'transforms/chain': [[2, 1], [2, 1], [1, 0], [1, 0], [1, 0]],
+};
+const WIDTHS5 = [362, 560, 775, 980, 1400];
+const shipped = () => listApps().flatMap((app) => loadApp(path.join(repoRoot, 'apps', app)).content.maps.map((m) => ({ id: `${app}/${m.id}`, m })));
+describe('layout: fewer crossings, every line in its own lane', () => {
+  it('crossings never exceed the old layout at any width, and the busy maps lose most of them', () => {
+    let before = 0, after = 0;
+    for (const { id, m } of shipped()) WIDTHS5.forEach((w, i) => {
+      const c = edgeCrossings(computeGeometry(m.nodes, m.edges, w)).length; before += BEFORE[id][i][0]; after += c;
+      expect(c, `${id} @${w}`).toBeLessThanOrEqual(BEFORE[id][i][0]);
+    });
+    expect(after, `total ${after} vs ${before}`).toBeLessThan(before * 0.4);
+  });
+  it('lines no longer run on top of each other (the old layout stacked up to 271 pieces)', () => {
+    for (const { id, m } of shipped()) WIDTHS5.forEach((w) => {
+      const o = edgeOverlaps(computeGeometry(m.nodes, m.edges, w)); expect(o, `${id} @${w}`).toBeLessThanOrEqual(w < 600 ? 3 : 0);
+    });
+  });
+  it('is deterministic (same input, same drawing) and the node order is shared by widths with the same column count', () => {
+    for (const { m } of shipped()) {
+      const a = computeGeometry(m.nodes, m.edges, 775), b = computeGeometry(m.nodes, m.edges, 775); expect(JSON.stringify(a)).toBe(JSON.stringify(b));
+      const rowsOf = (w: number) => { const g = computeGeometry(m.nodes, m.edges, w); return g.order.map((id) => `${id}:${g.boxes[id].row}`).join(); };
+      expect(rowsOf(362)).toBe(rowsOf(560)); expect(rowsOf(775)).toBe(rowsOf(800));
+    }
+  });
+  it('boxes never overlap and every line goes down and ends on its boxes, at every width', () => {
+    for (const { id, m } of shipped()) for (const w of [320, 362, 600, 775, 980, 1200, 1400, 1800]) {
+      const g = computeGeometry(m.nodes, m.edges, w), r = overlapReport(g, placeLabels(g, m.edges, [])); expect(r, `${id} @${w}`).toEqual({ nodeNode: 0, labelNode: 0, labelLabel: 0 });
+      for (const e of g.edges) { const p = e.points, f = g.boxes[e.from], t = g.boxes[e.to]; expect(p[0].y).toBeCloseTo(f.y + f.h, 3); expect(p[p.length - 1].y).toBeCloseTo(t.y, 3); expect(p[0].x).toBeGreaterThan(f.x); expect(p[0].x).toBeLessThan(f.x + f.w); for (let i = 1; i < p.length; i++) expect(p[i].y).toBeGreaterThanOrEqual(p[i - 1].y - 0.01); }
+    }
+  });
+  it('a hand-made case: the order search uncrosses two chains that start crossed', () => {
+    const nodes = ['root', 'a', 'b', 'c', 'd'].map((id) => ({ id, label: id }));
+    const edges = [{ from: 'root', to: 'a' }, { from: 'root', to: 'b' }, { from: 'a', to: 'c' }, { from: 'b', to: 'd' }];
+    expect(edgeCrossings(computeGeometry(nodes, edges, 1000)).length).toBe(0);
   });
 });

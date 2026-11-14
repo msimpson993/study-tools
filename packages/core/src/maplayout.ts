@@ -51,164 +51,229 @@ export const ACTUAL_MIN_WIDTH = 980;
 export type MapView = 'fit' | 'actual';
 /** Layout width for a view mode: `fit` follows the container (current behaviour), `actual` never goes below ACTUAL_MIN_WIDTH. */
 export const layoutWidth = (view: MapView, containerWidth: number): number => (view === 'actual' ? Math.max(containerWidth, ACTUAL_MIN_WIDTH) : containerWidth);
-export function computeGeometry(nodes: InNode[], edges: InEdge[], containerWidth: number): Geometry {
-  const narrow = containerWidth < 600;
-  const margin = narrow ? 16 : 36;
-  const lane = narrow ? 30 : 52;
-  let nodeW = 184;
-  let cols = 2;
-  if (narrow) {
-    nodeW = Math.max(116, Math.min(176, Math.floor((containerWidth - 2 * margin - lane) / 2)));
-    cols = 2;
-  } else {
-    cols = Math.max(2, Math.min(5, Math.floor((containerWidth - 2 * margin + lane) / (nodeW + lane))));
-  }
-  const width = 2 * margin + cols * nodeW + (cols - 1) * lane;
+/* ───────────────────────────── layout ─────────────────────────────
+ * 1. ranks (longest path from the sources) and, inside every rank, a node order that minimises line crossings
+ *    (barycenter sweeps, then adjacent swaps judged on the real routed drawing; cached per map + column count, deterministic);
+ * 2. rows of at most `cols` boxes; 3. every line that passes a row gets its OWN vertical lane there (no two lines share a lane,
+ *    channels are widened by shrinking the boxes when they would be too tight); 4. ports on the boxes follow the lanes;
+ * 5. in every gap between rows the horizontal tracks are ordered to cross as little as possible. */
+interface Graph { nodes: InNode[]; edges: InEdge[]; topo: string[]; rank: Record<string, number>; maxRank: number; parents: Record<string, string[]>; children: Record<string, string[]>; byId: Record<string, InNode>; sig: string; sized: Map<number, Record<string, { lines: string[]; detailLines: string[]; h: number }>> }
+interface Params { nodeW: number; lane: number; margin: number; cols: number; width: number }
+interface Built { geom: Geometry; overfull: number; stacked: number; crossings: number; wire: number }
+const GRAPHS = new Map<string, Graph>();
+const ORDERS = new Map<string, string[][]>();
+const MIN_LANE_SP = 4, LANE_SP = 8;
 
-  const children: Record<string, string[]> = {};
-  const parents: Record<string, string[]> = {};
+function graphOf(nodes: InNode[], edges: InEdge[]): Graph {
+  const sig = `${nodes.map((n) => `${n.id}:${n.kind ?? ''}:${n.label}:${n.detail ?? ''}`).join('|')}#${edges.map((e) => `${e.from}>${e.to}`).join(',')}`;
+  const hit = GRAPHS.get(sig); if (hit) return hit;
+  const children: Record<string, string[]> = {}, parents: Record<string, string[]> = {};
   for (const n of nodes) { children[n.id] = []; parents[n.id] = []; }
   for (const e of edges) { children[e.from].push(e.to); parents[e.to].push(e.from); }
   const indeg: Record<string, number> = {};
   for (const n of nodes) indeg[n.id] = parents[n.id].length;
-  const topo: string[] = [];
-  const queue = nodes.filter((n) => indeg[n.id] === 0).map((n) => n.id);
-  while (queue.length) {
-    const u = queue.shift() as string;
-    topo.push(u);
-    for (const v of children[u]) { indeg[v] -= 1; if (indeg[v] === 0) queue.push(v); }
-  }
+  const topo: string[] = [], queue = nodes.filter((n) => indeg[n.id] === 0).map((n) => n.id);
+  while (queue.length) { const u = queue.shift() as string; topo.push(u); for (const v of children[u]) { indeg[v] -= 1; if (indeg[v] === 0) queue.push(v); } }
   if (topo.length !== nodes.length) throw new Error('question map has a cycle');
   const rank: Record<string, number> = {};
   for (const u of topo) rank[u] = parents[u].length ? Math.max(...parents[u].map((p) => rank[p] + 1)) : 0;
-  const maxRank = Math.max(...topo.map((u) => rank[u]));
-
-  const byId: Record<string, InNode> = {};
-  for (const n of nodes) byId[n.id] = n;
-  const sized: Record<string, { lines: string[]; detailLines: string[]; h: number }> = {};
-  for (const n of nodes) {
-    const kind = n.kind ?? 'box';
-    const inner = nodeW - (kind === 'decision' ? 44 : 26);
+  const byId: Record<string, InNode> = {}; for (const n of nodes) byId[n.id] = n;
+  const g: Graph = { nodes, edges, topo, rank, maxRank: Math.max(...topo.map((u) => rank[u])), parents, children, byId, sig, sized: new Map() };
+  if (GRAPHS.size > 40) GRAPHS.clear();
+  GRAPHS.set(sig, g); return g;
+}
+function sizesFor(G: Graph, nodeW: number) {
+  const hit = G.sized.get(nodeW); if (hit) return hit;
+  const out: Record<string, { lines: string[]; detailLines: string[]; h: number }> = {};
+  for (const n of G.nodes) {
+    const kind = n.kind ?? 'box', inner = nodeW - (kind === 'decision' ? 44 : 26);
     const lines = wrapText(n.label, Math.max(8, Math.floor(inner / QM_TITLE_CHAR)), 3);
     const detailLines = n.detail ? wrapText(n.detail, Math.max(8, Math.floor(inner / QM_DETAIL_CHAR)), 2) : [];
-    const hh = Math.max(kind === 'decision' ? 60 : 50, 20 + lines.length * 15 + detailLines.length * 14);
-    sized[n.id] = { lines, detailLines, h: hh };
+    out[n.id] = { lines, detailLines, h: Math.max(kind === 'decision' ? 60 : 50, 20 + lines.length * 15 + detailLines.length * 14) };
   }
+  G.sized.set(nodeW, out); return out;
+}
 
-  const rows: string[][] = [];
-  const centerX: Record<string, number> = {};
-  for (let r = 0; r <= maxRank; r++) {
-    const ids = topo.filter((u) => rank[u] === r);
-    const bary = (u: string) => {
-      const ps = parents[u].filter((p) => centerX[p] !== undefined);
-      return ps.length ? ps.reduce((sum, p) => sum + centerX[p], 0) / ps.length : width / 2;
-    };
-    ids.sort((a, b) => bary(a) - bary(b) || topo.indexOf(a) - topo.indexOf(b));
+/** Order the tracks of one gap: each line comes down at xt, runs along its track and goes on down at xb. Returns track index per line. */
+function orderTracks(items: { xt: number; xb: number }[]): { pos: number[]; crossings: number; overlaps: number } {
+  const n = items.length, lo = items.map((s) => Math.min(s.xt, s.xb)), hi = items.map((s) => Math.max(s.xt, s.xb));
+  // a line coming down at x (xt of j) and another line leaving its track downward at the same x (xb of i) run on top of each other when j's track is below i's
+  const stack = (i: number, j: number) => i !== j && Math.abs(items[j].xt - items[i].xb) < 1.5;
+  const parts = (pos: number[]) => {
+    let c = 0, o = 0;
+    for (let i = 0; i < n; i++) for (let j = 0; j < n; j++) {
+      if (i === j) continue;
+      if (pos[i] < pos[j] && items[j].xt > lo[i] + EPS && items[j].xt < hi[i] - EPS) c++;
+      else if (pos[i] > pos[j] && items[j].xb > lo[i] + EPS && items[j].xb < hi[i] - EPS) c++;
+      if (stack(i, j) && pos[i] < pos[j]) o++;
+    }
+    return { c, o };
+  };
+  const cost = (pos: number[]) => { const r = parts(pos); return r.c + 8 * r.o; };
+  let seq = items.map((_, i) => i).sort((p, q) => (items[p].xt + items[p].xb) - (items[q].xt + items[q].xb) || p - q);
+  const toPos = (s: number[]) => { const p = new Array<number>(n); s.forEach((k, i) => (p[k] = i)); return p; };
+  let best = cost(toPos(seq));
+  for (let pass = 0; pass < 8 && best > 0 && n > 1; pass++) {
+    let improved = false;
+    for (let i = 0; i < n; i++) for (let k = 0; k < n; k++) {
+      if (k === i) continue;
+      const t = seq.slice(); const [m] = t.splice(i, 1); t.splice(k, 0, m);
+      const c = cost(toPos(t)); if (c < best) { best = c; seq = t; improved = true; }
+    }
+    if (!improved) break;
+  }
+  const fin = parts(toPos(seq));
+  return { pos: toPos(seq), crossings: fin.c, overlaps: fin.o };
+}
+
+function build(G: Graph, p: Params, order: string[][]): Built {
+  const { nodeW, lane, margin, cols, width } = p, { edges, topo } = G, sized = sizesFor(G, nodeW);
+  const rows: string[][] = [], centerX: Record<string, number> = {}, rowOf: Record<string, number> = {};
+  for (let r = 0; r <= G.maxRank; r++) {
+    const ids = order[r];
     for (let i = 0; i < ids.length; i += cols) {
-      const chunk = ids.slice(i, i + cols);
-      const rowW = chunk.length * nodeW + (chunk.length - 1) * lane;
-      const startX = (width - rowW) / 2;
-      chunk.forEach((u, j) => { centerX[u] = startX + j * (nodeW + lane) + nodeW / 2; });
+      const chunk = ids.slice(i, i + cols), rowW = chunk.length * nodeW + (chunk.length - 1) * lane, startX = (width - rowW) / 2;
+      chunk.forEach((u, j) => { centerX[u] = startX + j * (nodeW + lane) + nodeW / 2; rowOf[u] = rows.length; });
       rows.push(chunk);
     }
   }
-  const rowOf: Record<string, number> = {};
-  rows.forEach((row, i) => row.forEach((u) => (rowOf[u] = i)));
-
-  const gapEdges: string[][] = rows.map(() => []);
-  const sortedEdges = [...edges].sort((p, q) => centerX[p.from] - centerX[q.from] || centerX[p.to] - centerX[q.to]);
-  for (const e of sortedEdges) {
-    const a = rowOf[e.from], b = rowOf[e.to];
-    if (b <= a) throw new Error(`edge ${e.from}->${e.to} does not go down`);
-    for (let g = a; g < b; g++) gapEdges[g].push(edgeKey(e.from, e.to));
-  }
-
-  const rowTop: number[] = [], rowH: number[] = [], gapTop: number[] = [], gapH: number[] = [];
+  const gapCount: number[] = rows.map(() => 0);
+  for (const e of edges) { const a = rowOf[e.from], b = rowOf[e.to]; if (b <= a) throw new Error(`edge ${e.from}->${e.to} does not go down`); for (let g = a; g < b; g++) gapCount[g]++; }
+  const rowTop: number[] = [], gapTop: number[] = [], gapH: number[] = [];
   let y = 16;
   rows.forEach((row, i) => {
-    rowTop[i] = y;
-    rowH[i] = Math.max(...row.map((u) => sized[u].h));
-    y += rowH[i];
-    gapTop[i] = y;
-    gapH[i] = i === rows.length - 1 ? 16 : Math.max(52, 26 + gapEdges[i].length * QM_TRACK);
-    y += gapH[i];
+    rowTop[i] = y; y += Math.max(...row.map((u) => sized[u].h)); gapTop[i] = y;
+    gapH[i] = i === rows.length - 1 ? 16 : Math.max(52, 26 + gapCount[i] * QM_TRACK); y += gapH[i];
   });
-  const height = y;
+  const height = y, boxes: Record<string, NodeBox> = {};
+  for (const u of topo) { const r = rowOf[u]; boxes[u] = { id: u, row: r, x: centerX[u] - nodeW / 2, y: rowTop[r], w: nodeW, h: sized[u].h, lines: sized[u].lines, detailLines: sized[u].detailLines, kind: G.byId[u].kind ?? 'box' }; }
 
-  const boxes: Record<string, NodeBox> = {};
-  for (const u of topo) {
-    const r = rowOf[u];
-    boxes[u] = { id: u, row: r, x: centerX[u] - nodeW / 2, y: rowTop[r], w: nodeW, h: sized[u].h, lines: sized[u].lines, detailLines: sized[u].detailLines, kind: byId[u].kind ?? 'box' };
-  }
-
-  const trackY = (g: number, key: string) => gapTop[g] + 13 + QM_TRACK / 2 + gapEdges[g].indexOf(key) * QM_TRACK;
-
-  const outPort: Record<string, number> = {};
-  const inPort: Record<string, number> = {};
-  for (const u of topo) {
-    const outs = edges.filter((e) => e.from === u).sort((p, q) => centerX[p.to] - centerX[q.to]);
-    outs.forEach((e, i) => { outPort[edgeKey(e.from, e.to)] = boxes[u].x + (boxes[u].w * (i + 1)) / (outs.length + 1); });
-    const ins = edges.filter((e) => e.to === u).sort((p, q) => centerX[p.from] - centerX[q.from]);
-    ins.forEach((e, i) => { inPort[edgeKey(e.from, e.to)] = boxes[u].x + (boxes[u].w * (i + 1)) / (ins.length + 1); });
-  }
-
-  const channelUse: Record<string, number> = {};
+  // ---- lanes: every line that passes a row gets its own vertical lane in a free interval of that row
+  const freeCache: Array<Array<[number, number]> | undefined> = [];
   const freeIntervals = (r: number): Array<[number, number]> => {
-    const xs = rows[r].map((u) => boxes[u]).sort((p, q) => p.x - q.x);
-    const out: Array<[number, number]> = [];
+    const hit = freeCache[r]; if (hit) return hit;
+    const xs = rows[r].map((u) => boxes[u]).sort((a, b) => a.x - b.x), out: Array<[number, number]> = [];
     let left = 2;
-    for (const b of xs) {
-      if (b.x - 6 - left >= 12) out.push([left, b.x - 6]);
-      left = b.x + b.w + 6;
-    }
+    for (const b of xs) { if (b.x - 6 - left >= 12) out.push([left, b.x - 6]); left = b.x + b.w + 6; }
     if (width - 2 - left >= 12) out.push([left, width - 2]);
-    return out;
+    if (!out.length) out.push([2, width - 2]);
+    freeCache[r] = out; return out;
   };
+  const keyOf = (e: InEdge) => edgeKey(e.from, e.to);
+  const laneIv: Record<string, number[]> = {}, members: Record<string, { key: string; sortKey: number }[]> = {};
+  for (const e of edges) {
+    const k = keyOf(e), a = rowOf[e.from], b = rowOf[e.to], tx = centerX[e.to]; let cx = centerX[e.from]; laneIv[k] = [];
+    for (let g = a + 1; g < b; g++) {
+      const ints = freeIntervals(g); let bi = 0, bc = Infinity;
+      ints.forEach((iv, i) => { const near = Math.min(Math.max(tx, iv[0]), iv[1]), c = Math.abs(near - tx) + 0.5 * Math.abs(near - cx); if (c < bc - 1e-9) { bc = c; bi = i; } });
+      laneIv[k].push(bi); (members[`${g}:${bi}`] ??= []).push({ key: k, sortKey: tx + 0.001 * centerX[e.from] }); cx = (ints[bi][0] + ints[bi][1]) / 2;
+    }
+  }
+  let overfull = 0; const laneX: Record<string, number[]> = {};
+  for (const e of edges) laneX[keyOf(e)] = [];
+  for (const [id, list] of Object.entries(members)) {
+    const [g, bi] = id.split(':').map(Number), iv = freeIntervals(g)[bi], n = list.length, span = iv[1] - iv[0];
+    const cap = Math.max(1, Math.floor((span - 8) / MIN_LANE_SP) + 1); if (n > cap) overfull += n - cap;
+    const sp = n > 1 ? Math.max(1.5, Math.min(LANE_SP, (span - 8) / (n - 1))) : 0;
+    list.sort((p1, p2) => p1.sortKey - p2.sortKey || p1.key.localeCompare(p2.key));
+    list.forEach((m, i) => { laneX[m.key][g] = Math.min(iv[1] - 3, Math.max(iv[0] + 3, iv[0] + span / 2 + (i - (n - 1) / 2) * sp)); });
+  }
+  // ---- ports follow the lanes (the first / last x a line has to reach)
+  const outPort: Record<string, number> = {}, inPort: Record<string, number> = {};
+  const firstX = (e: InEdge) => (rowOf[e.to] - rowOf[e.from] > 1 ? laneX[keyOf(e)][rowOf[e.from] + 1] : centerX[e.to]);
+  const lastX = (e: InEdge) => (rowOf[e.to] - rowOf[e.from] > 1 ? laneX[keyOf(e)][rowOf[e.to] - 1] : centerX[e.from]);
+  for (const u of topo) {
+    const outs = edges.filter((e) => e.from === u).sort((p1, q1) => firstX(p1) - firstX(q1) || centerX[p1.to] - centerX[q1.to] || keyOf(p1).localeCompare(keyOf(q1)));
+    outs.forEach((e, i) => { outPort[keyOf(e)] = boxes[u].x + (boxes[u].w * (i + 1)) / (outs.length + 1); });
+    const ins = edges.filter((e) => e.to === u).sort((p1, q1) => lastX(p1) - lastX(q1) || centerX[p1.from] - centerX[q1.from] || keyOf(p1).localeCompare(keyOf(q1)));
+    ins.forEach((e, i) => { inPort[keyOf(e)] = boxes[u].x + (boxes[u].w * (i + 1)) / (ins.length + 1); });
+  }
+  // ---- tracks: per gap, order the horizontal runs to cross as little as possible
+  const gapLines: Array<{ key: string; xt: number; xb: number }[]> = rows.map(() => []);
+  for (const e of edges) {
+    const k = keyOf(e), a = rowOf[e.from], b = rowOf[e.to];
+    for (let g = a; g < b; g++) gapLines[g].push({ key: k, xt: g === a ? outPort[k] : laneX[k][g], xb: g === b - 1 ? inPort[k] : laneX[k][g + 1] });
+  }
+  const trackIdx: Array<Record<string, number>> = [];
+  let crossings = 0, wire = 0, stacked = 0;
+  gapLines.forEach((items, g) => {
+    const res = items.length ? orderTracks(items) : { pos: [], crossings: 0, overlaps: 0 }; crossings += res.crossings; stacked += res.overlaps;
+    trackIdx[g] = {}; items.forEach((it, i) => { trackIdx[g][it.key] = res.pos[i]; wire += Math.abs(it.xb - it.xt); });
+  });
+  const trackY = (g: number, key: string) => gapTop[g] + 13 + QM_TRACK / 2 + trackIdx[g][key] * QM_TRACK;
 
   const geoms: EdgeGeom[] = [];
   for (const e of edges) {
-    const key = edgeKey(e.from, e.to);
-    const sBox = boxes[e.from], tBox = boxes[e.to];
-    const a = sBox.row, b = tBox.row;
-    const tx = inPort[key];
-    let cx = outPort[key];
-    const pts: Pt[] = [{ x: cx, y: sBox.y + sBox.h }];
+    const key = keyOf(e), sBox = boxes[e.from], tBox = boxes[e.to], a = sBox.row, b = tBox.row;
+    const pts: Pt[] = [{ x: outPort[key], y: sBox.y + sBox.h }];
     for (let g = a; g < b; g++) {
-      const ty = trackY(g, key);
-      pts.push({ x: cx, y: ty });
-      if (g === b - 1) {
-        pts.push({ x: tx, y: ty });
-        pts.push({ x: tx, y: tBox.y });
-      } else {
-        const ints = freeIntervals(g + 1);
-        let best = ints[0];
-        let bestCost = Infinity;
-        for (const iv of ints) {
-          const near = Math.min(Math.max(tx, iv[0]), iv[1]);
-          const cost = Math.abs(near - tx) + 0.5 * Math.abs(near - cx);
-          if (cost < bestCost) { bestCost = cost; best = iv; }
-        }
-        const ck = `${g + 1}:${best[0]}`;
-        const used = channelUse[ck] ?? 0;
-        channelUse[ck] = used + 1;
-        const slots = Math.max(1, Math.floor((best[1] - best[0] - 8) / 8));
-        const span = best[1] - best[0];
-        const nx = best[0] + span / 2 + (((used % slots) - (slots - 1) / 2) * Math.min(8, (span - 8) / slots));
-        pts.push({ x: nx, y: ty });
-        cx = nx;
-      }
+      const ty = trackY(g, key), it = gapLines[g].find((q) => q.key === key) as { xt: number; xb: number };
+      pts.push({ x: it.xt, y: ty }); pts.push({ x: it.xb, y: ty });
     }
-    const p1 = pts[1], p2 = pts[2];
-    const dot = { x: (p1.x + p2.x) / 2, y: p1.y };
+    pts.push({ x: inPort[key], y: tBox.y });
+    const p1 = pts[1], p2 = pts[2], dot = { x: (p1.x + p2.x) / 2, y: p1.y };
     const clean: Pt[] = [];
-    for (const p of pts) {
-      const last = clean[clean.length - 1];
-      if (!last || Math.abs(last.x - p.x) > 0.01 || Math.abs(last.y - p.y) > 0.01) clean.push(p);
-    }
+    for (const q of pts) { const last = clean[clean.length - 1]; if (!last || Math.abs(last.x - q.x) > 0.01 || Math.abs(last.y - q.y) > 0.01) clean.push(q); }
     geoms.push({ key, from: e.from, to: e.to, points: clean, dot, gapTop: gapTop[a], gapBottom: gapTop[a] + gapH[a] });
   }
-  return { width, height, nodeW, boxes, order: topo, edges: geoms };
+  void margin;
+  return { geom: { width, height, nodeW, boxes, order: topo, edges: geoms }, overfull, stacked, crossings, wire };
 }
+
+const score = (b: Built) => b.overfull * 1e6 + b.stacked * 1e4 + b.crossings * 1000 + b.wire / 100;
+
+/** A node order per rank with few crossings: barycenter sweeps for a start, then adjacent swaps kept only when the routed drawing gets better. */
+function searchOrder(G: Graph, cols: number, p: Params): string[][] {
+  const key = `${G.sig}@${cols}`, hit = ORDERS.get(key); if (hit) return hit;
+  const ranks: string[][] = Array.from({ length: G.maxRank + 1 }, () => []);
+  for (const u of G.topo) ranks[G.rank[u]].push(u);
+  const pos = (ord: string[][]) => { const m: Record<string, number> = {}; ord.forEach((r) => r.forEach((u, i) => (m[u] = (i + 0.5) / r.length))); return m; };
+  const sweep = (ord: string[][], down: boolean): string[][] => {
+    const next = ord.map((r) => r.slice()), m = pos(ord), idx = Object.fromEntries(ord.flatMap((r) => r.map((u, i) => [u, i])));
+    const seq = down ? Array.from({ length: G.maxRank }, (_, i) => i + 1) : Array.from({ length: G.maxRank }, (_, i) => G.maxRank - 1 - i);
+    for (const r of seq) {
+      const nb = (u: string) => { const l = (down ? G.parents[u] : G.children[u]).map((v) => m[v]); return l.length ? l.reduce((s, x) => s + x, 0) / l.length : m[u]; };
+      next[r].sort((a, b) => nb(a) - nb(b) || idx[a] - idx[b]);
+      next[r].forEach((u, i) => (m[u] = (i + 0.5) / next[r].length));
+    }
+    return next;
+  };
+  let cur = ranks, best = ranks, bestS = score(build(G, p, ranks));
+  for (let i = 0; i < 8; i++) { cur = sweep(cur, i % 2 === 0); const s = score(build(G, p, cur)); if (s < bestS - 1e-9) { bestS = s; best = cur; } }
+  best = best.map((r) => r.slice());
+  for (let pass = 0; pass < 4; pass++) {
+    let improved = false;
+    for (let r = 0; r <= G.maxRank; r++) for (let i = 0; i + 1 < best[r].length; i++) {
+      const t = best.map((x) => x.slice()); [t[r][i], t[r][i + 1]] = [t[r][i + 1], t[r][i]];
+      const s = score(build(G, p, t)); if (s < bestS - 1e-9) { bestS = s; best = t; improved = true; }
+    }
+    if (!improved) break;
+  }
+  if (ORDERS.size > 80) ORDERS.clear();
+  ORDERS.set(key, best); return best;
+}
+
+export function computeGeometry(nodes: InNode[], edges: InEdge[], containerWidth: number): Geometry {
+  const narrow = containerWidth < 600, margin = narrow ? 16 : 36, lane = narrow ? 30 : 52;
+  let nodeW = 184, cols = 2;
+  if (narrow) nodeW = Math.max(116, Math.min(176, Math.floor((containerWidth - 2 * margin - lane) / 2)));
+  else cols = Math.max(2, Math.min(5, Math.floor((containerWidth - 2 * margin + lane) / (nodeW + lane))));
+  const width = 2 * margin + cols * nodeW + (cols - 1) * lane, G = graphOf(nodes, edges);
+  // the order is searched once per map and column count on a reference drawing, then reused at every width
+  const refW = narrow ? 176 : 184, ref: Params = { nodeW: refW, lane: narrow ? 30 : 52, margin: narrow ? 16 : 36, cols, width: 2 * (narrow ? 16 : 36) + cols * refW + (cols - 1) * (narrow ? 30 : 52) };
+  const order = searchOrder(G, cols, ref);
+  // keep the usual spacing; when a row's channels are too tight for their lines, give the channels room by narrowing the boxes
+  const minW = narrow ? 116 : 150;
+  let best: Built | null = null;
+  for (let w = nodeW; w >= Math.min(nodeW, minW); w -= 6) {
+    const chan = (width - cols * w) / (cols + 1), p: Params = w === nodeW ? { nodeW, lane, margin, cols, width } : { nodeW: w, lane: chan, margin: chan, cols, width };
+    const b = build(G, p, order);
+    if (!best || b.overfull + b.stacked < best.overfull + best.stacked) best = b;
+    if (b.overfull === 0 && b.stacked === 0) break;
+  }
+  return (best as Built).geom;
+}
+
 
 export function placeLabels(geom: Geometry, edges: InEdge[], priority: string[]): Label[] {
   const labelOf: Record<string, string> = {};
