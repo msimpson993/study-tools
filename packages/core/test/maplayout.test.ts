@@ -50,20 +50,27 @@ describe('mapHighlight: what a tap lights up', () => {
     expect([...h.edges].sort()).toEqual([edgeKey('a', 'b'), edgeKey('b', 'c'), edgeKey('root', 'a')].sort());
     const m = mapHighlight({ kind: 'node', id: 'a' }, edges); expect([...m.neigh].sort()).toEqual(['b', 'd']);
   });
-  it('a line tap lights ONLY that line: no box at all (not the ends, not the chain, no selected box, no neighbours)', () => {
-    const h = mapHighlight({ kind: 'edge', id: edgeKey('b', 'c') }, edges);
-    expect('ends' in h).toBe(false); expect([...h.edges]).toEqual([edgeKey('b', 'c')]); expect(h.priority).toEqual([edgeKey('b', 'c')]);
-    expect(h.selected).toBeNull(); expect(h.path.size).toBe(0); expect(h.neigh.size).toBe(0);
+  it('a line tap lights everything up to the arrow: the source box and its chain exactly as a tap on the source does, plus the line; the target stays unlit', () => {
+    const h = mapHighlight({ kind: 'edge', id: edgeKey('b', 'c') }, edges), src = mapHighlight({ kind: 'node', id: 'b' }, edges);
+    expect([...h.path].sort()).toEqual(['a', 'b', 'root']); expect([...h.path].sort()).toEqual([...src.path].sort());
+    expect(h.path.has('c'), 'the target is not lit').toBe(false); expect(h.selected).toBeNull(); expect(h.neigh.size, 'no neighbours').toBe(0);
+    expect([...h.edges].sort()).toEqual([...src.edges, edgeKey('b', 'c')].sort()); expect(h.priority[0]).toBe(edgeKey('b', 'c'));
+    // a line out of a branch: only its own chain, not the sibling branch
+    const d = mapHighlight({ kind: 'edge', id: edgeKey('a', 'd') }, edges); expect([...d.path].sort()).toEqual(['a', 'root']); expect(d.path.has('d') || d.path.has('b')).toBe(false);
+    // the first line of the map: just the root and the line
+    const r = mapHighlight({ kind: 'edge', id: edgeKey('root', 'a') }, edges); expect([...r.path]).toEqual(['root']); expect([...r.edges]).toEqual([edgeKey('root', 'a')]);
   });
   it('an unknown line key (stale state) lights nothing instead of throwing', () => { const h = mapHighlight({ kind: 'edge', id: 'x__y' }, edges); expect(h.edges.size + h.path.size + h.neigh.size).toBe(0); expect(h.selected).toBeNull(); });
-  it('no box is styled for a line tap: the source has no endpoint style left', () => {
+  it('no endpoint style exists: the source has no `ends` field and the CSS has no n-end', () => {
     const src = (f: string) => fs.readFileSync(path.join(repoRoot, 'packages/core/src', f), 'utf8');
-    expect(src('conceptmap.ts')).not.toMatch(/n-end|isEnd|hl\.ends/); expect(src('styles/core.css')).not.toMatch(/n-end/);
+    expect('ends' in mapHighlight({ kind: 'edge', id: edgeKey('b', 'c') }, edges)).toBe(false); expect(src('conceptmap.ts')).not.toMatch(/n-end|isEnd|hl\.ends/); expect(src('styles/core.css')).not.toMatch(/n-end/);
   });
-  it('holds for every line of every shipped map', () => {
+  it('holds for every line of every shipped map: path = the source box\'s own path, target never lit, target is never on that path', () => {
     for (const app of listApps()) for (const m of loadApp(path.join(repoRoot, 'apps', app)).content.maps) for (const e of m.edges) {
-      const h = mapHighlight({ kind: 'edge', id: edgeKey(e.from, e.to) }, m.edges);
-      expect([...h.edges]).toEqual([edgeKey(e.from, e.to)]); expect(h.selected).toBeNull(); expect(h.path.size + h.neigh.size).toBe(0);
+      const h = mapHighlight({ kind: 'edge', id: edgeKey(e.from, e.to) }, m.edges), src = mapHighlight({ kind: 'node', id: e.from }, m.edges);
+      expect([...h.path].sort(), `${e.from}→${e.to}`).toEqual([...src.path].filter((id) => id !== e.to).sort());
+      expect(h.path.has(e.to)).toBe(false); expect(h.edges.has(edgeKey(e.from, e.to))).toBe(true); expect(h.selected).toBeNull(); expect(h.neigh.size).toBe(0);
+      for (const k of h.edges) if (k !== edgeKey(e.from, e.to)) expect(src.edges.has(k)).toBe(true);
     }
   });
 });

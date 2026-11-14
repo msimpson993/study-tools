@@ -327,16 +327,16 @@ export function overlapReport(geom: Geometry, labels: Label[]): { nodeNode: numb
 
 export interface MapHighlight {
   /** the tapped box (node pick only) */ selected: string | null;
-  /** boxes on the chain back to the root (node pick only) */ path: Set<string>;
+  /** boxes on the chain back to the root (a node pick: the box's own; an edge pick: the SOURCE box's, never the target) */ path: Set<string>;
   /** direct neighbours of the tapped box (node pick only) */ neigh: Set<string>;
-  /** keys of the lines drawn as active (the chain for a node pick; ONLY the tapped line for an edge pick) */ edges: Set<string>;
+  /** keys of the lines drawn as active (the chain for a node pick; the source's chain plus the tapped line for an edge pick) */ edges: Set<string>;
   /** line key to place its label first (edge pick) or the chain's labels (node pick) */ priority: string[];
 }
 /**
  * What the map highlights for a selection.
  *  - node pick: the box, the chain of questions back to the root, its neighbours (unchanged behaviour).
- *  - edge pick: ONLY that line (with its arrowhead and label). No box is highlighted: not the endpoints, not the chain
- *    (every box is dimmed like the other lines; the line explains one step, the bubble beyond it explains another).
+ *  - edge pick: everything up to the arrow: the source box and its chain back to the root (same `path` a tap on the source box gives,
+ *    no "selected" box, no neighbours), the lines of that chain, and the tapped line. The target box and anything downstream stay dimmed.
  *  - no pick: nothing is highlighted and nothing is dimmed (the caller checks `pick !== null` for dimming).
  */
 export function mapHighlight(pick: { kind: 'node' | 'edge'; id: string } | null, edges: { from: string; to: string }[]): MapHighlight {
@@ -345,7 +345,12 @@ export function mapHighlight(pick: { kind: 'node' | 'edge'; id: string } | null,
   if (pick.kind === 'edge') {
     const e = edges.find((x) => edgeKey(x.from, x.to) === pick.id);
     if (!e) return out;
-    out.edges = new Set([pick.id]); out.priority = [pick.id];
+    // everything up to the arrow: the source box and its chain back to the root, lit exactly as a tap on the source box lights it, plus the tapped line.
+    // The target box is NOT lit (it stays dimmed) and nothing downstream is.
+    const path = pathToRoot(e.from, edges).filter((id) => id !== e.to);
+    out.path = new Set(path);
+    out.edges = new Set([...pathEdgeKeys(path, edges), pick.id]);
+    out.priority = [pick.id, ...pathEdgeKeys(path, edges)];
     return out;
   }
   out.selected = pick.id;
