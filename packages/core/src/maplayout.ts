@@ -361,3 +361,39 @@ export function mapHighlight(pick: { kind: 'node' | 'edge'; id: string } | null,
   out.priority = [...out.edges];
   return out;
 }
+
+/* ───────────────────────────── crossings and hop-overs ───────────────────────────── */
+
+/** One place where two lines cross: the line with the horizontal piece (`over`, the one that hops) and the line with the vertical piece (`under`). */
+export interface Crossing { over: string; under: string; x: number; y: number; seg: number }
+const EPS = 0.5;
+interface Seg { key: string; i: number; h: boolean; a: number; b: number; c: number }
+/** Axis-aligned pieces of every line: horizontal pieces have `c` = y and span a..b (a < b); vertical ones have `c` = x. */
+function segmentsOf(edges: { key: string; points: Pt[] }[]): Seg[] {
+  const out: Seg[] = [];
+  for (const g of edges) for (let i = 0; i < g.points.length - 1; i++) {
+    const p = g.points[i], q = g.points[i + 1];
+    if (Math.abs(p.y - q.y) < 0.01 && Math.abs(p.x - q.x) >= 0.01) out.push({ key: g.key, i, h: true, a: Math.min(p.x, q.x), b: Math.max(p.x, q.x), c: p.y });
+    else if (Math.abs(p.x - q.x) < 0.01 && Math.abs(p.y - q.y) >= 0.01) out.push({ key: g.key, i, h: false, a: Math.min(p.y, q.y), b: Math.max(p.y, q.y), c: p.x });
+  }
+  return out;
+}
+/** Every crossing between two different lines. Orthogonal lines only ever cross horizontal-over-vertical, so the horizontal one is the one that hops. Touching at an end does not count. */
+export function edgeCrossings(geom: { edges: { key: string; points: Pt[] }[] }): Crossing[] {
+  const segs = segmentsOf(geom.edges), hs = segs.filter((s) => s.h), vs = segs.filter((s) => !s.h), out: Crossing[] = [];
+  for (const h of hs) for (const v of vs) {
+    if (h.key === v.key) continue;
+    if (v.c > h.a + EPS && v.c < h.b - EPS && h.c > v.a + EPS && h.c < v.b - EPS) out.push({ over: h.key, under: v.key, x: v.c, y: h.c, seg: h.i });
+  }
+  return out.sort((p, q) => p.over.localeCompare(q.over) || p.seg - q.seg || p.x - q.x);
+}
+/** Places where two different lines run on top of each other (same row or column, overlapping): they read as one line. */
+export function edgeOverlaps(geom: { edges: { key: string; points: Pt[] }[] }): number {
+  const segs = segmentsOf(geom.edges); let n = 0;
+  for (let i = 0; i < segs.length; i++) for (let j = i + 1; j < segs.length; j++) {
+    const p = segs[i], q = segs[j];
+    if (p.key === q.key || p.h !== q.h || Math.abs(p.c - q.c) > 1.5) continue;
+    if (Math.min(p.b, q.b) - Math.max(p.a, q.a) > 2) n++;
+  }
+  return n;
+}
