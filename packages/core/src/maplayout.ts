@@ -4,10 +4,17 @@ export interface Rect { x: number; y: number; w: number; h: number }
 export interface InNode { id: string; label: string; detail?: string; kind?: string }
 export interface InEdge { from: string; to: string; label?: string }
 export interface NodeBox extends Rect { id: string; row: number; lines: string[]; detailLines: string[]; kind: string }
-export interface EdgeGeom { key: string; from: string; to: string; points: Pt[]; dot: Pt; gapTop: number; gapBottom: number }
+export interface EdgeGeom { key: string; from: string; to: string; points: Pt[]; dot: Pt; gapTop: number; gapBottom: number; /** hop-overs: where this line's horizontal piece jumps over another line's vertical piece */ hops: Hop[] }
 export interface Label extends Rect { key: string; text: string }
 export interface Geometry { width: number; height: number; nodeW: number; boxes: Record<string, NodeBox>; order: string[]; edges: EdgeGeom[] }
 
+/** One small semicircular jump on a horizontal piece (segment `seg` = points[seg]→points[seg+1]): the arc runs from x0 to x1 (x0 < x1, in screen terms) and rises `ry` above the line. `n` crossings sit under it. */
+export interface Hop { seg: number; x0: number; x1: number; y: number; ry: number; n: number }
+export const QM_HOP_R = 7;
+export const QM_CORNER_R = 7;
+/** a hop may squeeze the corner next to it down to this, and shrink down to QM_HOP_MIN */
+const QM_HOP_CORNER = 3;
+const QM_HOP_MIN = 3.5;
 export const QM_TRACK = 14;
 export const QM_DOT_R = 6;
 export const QM_LABEL_H = 18;
@@ -214,7 +221,7 @@ function build(G: Graph, p: Params, order: string[][]): Built {
     const p1 = pts[1], p2 = pts[2], dot = { x: (p1.x + p2.x) / 2, y: p1.y };
     const clean: Pt[] = [];
     for (const q of pts) { const last = clean[clean.length - 1]; if (!last || Math.abs(last.x - q.x) > 0.01 || Math.abs(last.y - q.y) > 0.01) clean.push(q); }
-    geoms.push({ key, from: e.from, to: e.to, points: clean, dot, gapTop: gapTop[a], gapBottom: gapTop[a] + gapH[a] });
+    geoms.push({ key, from: e.from, to: e.to, points: clean, dot, gapTop: gapTop[a], gapBottom: gapTop[a] + gapH[a], hops: [] });
   }
   void margin;
   return { geom: { width, height, nodeW, boxes, order: topo, edges: geoms }, overfull, stacked, crossings, wire };
@@ -271,7 +278,7 @@ export function computeGeometry(nodes: InNode[], edges: InEdge[], containerWidth
     if (!best || b.overfull + b.stacked < best.overfull + best.stacked) best = b;
     if (b.overfull === 0 && b.stacked === 0) break;
   }
-  return (best as Built).geom;
+  const geom = (best as Built).geom; addHops(geom); return geom;
 }
 
 
@@ -320,19 +327,28 @@ export function placeLabels(geom: Geometry, edges: InEdge[], priority: string[])
   return placed;
 }
 
-export function roundedPath(points: Pt[], r = 7): string {
+export function roundedPath(points: Pt[], r = QM_CORNER_R, hops: Hop[] = []): string {
   if (points.length < 2) return '';
+  /** the arcs of segment i in travel order, drawn from the straight part of the line */
+  const hopPart = (i: number): string => {
+    const hs = hops.filter((h) => h.seg === i); if (!hs.length) return '';
+    const right = points[i + 1].x > points[i].x;
+    hs.sort((a, b) => (right ? a.x0 - b.x0 : b.x0 - a.x0));
+    return hs.map((h) => { const rx = (h.x1 - h.x0) / 2; return ` L ${right ? h.x0 : h.x1} ${h.y} A ${rx} ${h.ry} 0 0 ${right ? 1 : 0} ${right ? h.x1 : h.x0} ${h.y}`; }).join('');
+  };
   let d = `M ${points[0].x} ${points[0].y}`;
   for (let i = 1; i < points.length - 1; i++) {
     const p0 = points[i - 1], p1 = points[i], p2 = points[i + 1];
     const l1 = Math.hypot(p1.x - p0.x, p1.y - p0.y), l2 = Math.hypot(p2.x - p1.x, p2.y - p1.y);
-    const rr = Math.min(r, l1 / 2, l2 / 2);
+    // a hop close to a corner makes that corner a little tighter instead of being dropped
+    let rr = Math.min(r, l1 / 2, l2 / 2);
+    for (const h of hops) { if (h.seg === i - 1) rr = Math.min(rr, Math.max(1, Math.min(Math.abs(h.x0 - p1.x), Math.abs(h.x1 - p1.x)))); else if (h.seg === i) rr = Math.min(rr, Math.max(1, Math.min(Math.abs(h.x0 - p1.x), Math.abs(h.x1 - p1.x)))); }
     const ax = p1.x - ((p1.x - p0.x) / (l1 || 1)) * rr, ay = p1.y - ((p1.y - p0.y) / (l1 || 1)) * rr;
     const bx = p1.x + ((p2.x - p1.x) / (l2 || 1)) * rr, by = p1.y + ((p2.y - p1.y) / (l2 || 1)) * rr;
-    d += ` L ${ax} ${ay} Q ${p1.x} ${p1.y} ${bx} ${by}`;
+    d += `${hopPart(i - 1)} L ${ax} ${ay} Q ${p1.x} ${p1.y} ${bx} ${by}`;
   }
   const last = points[points.length - 1];
-  return `${d} L ${last.x} ${last.y}`;
+  return `${d}${hopPart(points.length - 2)} L ${last.x} ${last.y}`;
 }
 
 export function arrowHead(points: Pt[], size = 7): string {
@@ -462,3 +478,42 @@ export function edgeOverlaps(geom: { edges: { key: string; points: Pt[] }[] }): 
   }
   return n;
 }
+
+/**
+ * Hop-overs. Wherever two lines cross, the line with the HORIZONTAL piece jumps over the one with the vertical piece (orthogonal lines only ever cross that way, so the rule never depends on drawing order).
+ * Crossings closer than one arc width merge into one wider arc. A hop that would not fit on the straight part of its piece (the rounded corners and the dot are kept clear) is left as a plain crossing and counted by `unhoppedCrossings`.
+ */
+export function computeHops(edges: { key: string; points: Pt[] }[], R = QM_HOP_R): { hops: Record<string, Hop[]>; unhopped: Crossing[] } {
+  const hops: Record<string, Hop[]> = {}, unhopped: Crossing[] = [], byKey = new Map(edges.map((e) => [e.key, e]));
+  const groups = new Map<string, Crossing[]>();
+  for (const c of edgeCrossings({ edges })) { const k = `${c.over}|${c.seg}`; (groups.get(k) ?? groups.set(k, []).get(k)!).push(c); }
+  for (const list of groups.values()) {
+    const e = byKey.get(list[0].over)!, i = list[0].seg, a = e.points[i], b = e.points[i + 1], lo = Math.min(a.x, b.x) + QM_HOP_CORNER, hi = Math.max(a.x, b.x) - QM_HOP_CORNER;
+    const clusters: Crossing[][] = [];
+    for (const c of list.sort((p, q) => p.x - q.x)) { const cur = clusters[clusters.length - 1]; if (cur && c.x - cur[cur.length - 1].x < 2 * R + 2) cur.push(c); else clusters.push([c]); }
+    for (const cl of clusters) {
+      // full-size arc when it fits; near the end of a piece it shrinks (never below QM_HOP_MIN), and the corner next to it tightens
+      const r = Math.min(R, cl[0].x - lo, hi - cl[cl.length - 1].x);
+      if (r < QM_HOP_MIN) { unhopped.push(...cl); continue; }
+      (hops[e.key] ??= []).push({ seg: i, x0: cl[0].x - r, x1: cl[cl.length - 1].x + r, y: a.y, ry: r, n: cl.length });
+    }
+  }
+  return { hops, unhopped };
+}
+function addHops(geom: Geometry): void {
+  const { hops } = computeHops(geom.edges);
+  for (const e of geom.edges) {
+    e.hops = hops[e.key] ?? [];
+    if (!e.hops.length) continue;
+    // keep the dot (and so its label) clear of the arcs: slide it along its horizontal run to the nearest free spot
+    const i = e.points.findIndex((p, k) => k < e.points.length - 1 && Math.abs(p.y - e.dot.y) < 0.01 && Math.abs(e.points[k + 1].y - e.dot.y) < 0.01 && e.dot.x >= Math.min(p.x, e.points[k + 1].x) - 0.01 && e.dot.x <= Math.max(p.x, e.points[k + 1].x) + 0.01);
+    if (i < 0) continue;
+    const a = Math.min(e.points[i].x, e.points[i + 1].x) + QM_DOT_R + 4, b = Math.max(e.points[i].x, e.points[i + 1].x) - QM_DOT_R - 4, pad = QM_DOT_R + 2;
+    const busy = e.hops.filter((h) => h.seg === i).sort((p, q) => p.x0 - q.x0);
+    if (!busy.some((h) => e.dot.x + pad > h.x0 && e.dot.x - pad < h.x1)) continue;
+    const spots = [a, b, ...busy.flatMap((h) => [h.x0 - pad, h.x1 + pad])].filter((x) => x >= a && x <= b && !busy.some((h) => x + pad > h.x0 + 0.01 && x - pad < h.x1 - 0.01));
+    if (spots.length) e.dot = { x: spots.reduce((m, x) => (Math.abs(x - e.dot.x) < Math.abs(m - e.dot.x) ? x : m)), y: e.dot.y };
+  }
+}
+/** Crossings that stayed plain (no room for an arc). */
+export const unhoppedCrossings = (geom: Geometry): number => computeHops(geom.edges).unhopped.length;

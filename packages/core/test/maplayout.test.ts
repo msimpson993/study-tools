@@ -2,7 +2,7 @@ import fs from 'node:fs';
 import { describe, it, expect } from 'vitest';
 import path from 'node:path';
 import { loadApp, listApps, repoRoot } from '../../build/src';
-import { edgeCrossings, edgeOverlaps, ACTUAL_MIN_WIDTH, layoutWidth, computeGeometry, placeLabels, overlapReport, pathToRoot, edgeKey, mapHighlight } from '../src/maplayout';
+import { computeHops, unhoppedCrossings, QM_HOP_R, roundedPath, edgeCrossings, edgeOverlaps, ACTUAL_MIN_WIDTH, layoutWidth, computeGeometry, placeLabels, overlapReport, pathToRoot, edgeKey, mapHighlight } from '../src/maplayout';
 
 const WIDTHS = [360, 390, 480, 640, 768, 900, 1024, 1150, 1280, 1400];
 
@@ -128,5 +128,53 @@ describe('layout: fewer crossings, every line in its own lane', () => {
     const nodes = ['root', 'a', 'b', 'c', 'd'].map((id) => ({ id, label: id }));
     const edges = [{ from: 'root', to: 'a' }, { from: 'root', to: 'b' }, { from: 'a', to: 'c' }, { from: 'b', to: 'd' }];
     expect(edgeCrossings(computeGeometry(nodes, edges, 1000)).length).toBe(0);
+  });
+});
+
+describe('hop-overs', () => {
+  const line = (key: string, pts: [number, number][]) => ({ key, points: pts.map(([x, y]) => ({ x, y })) });
+  const H = line('h', [[0, 0], [0, 20], [200, 20], [200, 60]]), V = line('v', [[100, 0], [100, 60]]);
+  it('the line with the horizontal piece hops, whatever the drawing order', () => {
+    for (const edges of [[H, V], [V, H]]) {
+      const { hops, unhopped } = computeHops(edges); expect(unhopped).toEqual([]);
+      expect(Object.keys(hops)).toEqual(['h']); expect(hops.h).toEqual([{ seg: 1, x0: 100 - QM_HOP_R, x1: 100 + QM_HOP_R, y: 20, ry: QM_HOP_R, n: 1 }]);
+    }
+  });
+  it('the arc is a semicircle that rises above the line: sweep 1 going right, 0 going left', () => {
+    const r = computeHops([H, V]).hops.h;
+    expect(roundedPath(H.points, 7, r)).toContain(`L 93 20 A 7 7 0 0 1 107 20`);
+    const back = line('b', [[200, 0], [200, 20], [0, 20], [0, 60]]), rb = computeHops([back, V]).hops.b;
+    expect(roundedPath(back.points, 7, rb)).toContain(`L 107 20 A 7 7 0 0 0 93 20`);
+    expect(roundedPath(H.points, 7, [])).not.toContain(' A ');
+  });
+  it('close crossings merge into one wider arc; far ones stay separate', () => {
+    const v2 = line('v2', [[110, 0], [110, 60]]), v3 = line('v3', [[160, 0], [160, 60]]);
+    const h = computeHops([H, V, v2, v3]).hops.h;
+    expect(h.map((x) => [x.x0, x.x1, x.n])).toEqual([[93, 117, 2], [153, 167, 1]]);
+    expect(roundedPath(H.points, 7, h).match(/ A /g)).toHaveLength(2);
+  });
+  it('near the end of a piece the arc shrinks and the corner tightens; with no room at all the crossing stays plain and is counted', () => {
+    const near = line('n', [[8, 0], [8, 60]]), { hops } = computeHops([H, near]);
+    expect(hops.h[0].ry).toBeLessThan(7); expect(hops.h[0].ry).toBeGreaterThanOrEqual(3.5);
+    expect(roundedPath(H.points, 7, hops.h)).toMatch(/Q 0 20 /);
+    const tight = line('t', [[3, 0], [3, 60]]), r = computeHops([H, tight]); expect(r.hops.h).toBeUndefined(); expect(r.unhopped).toHaveLength(1);
+  });
+  it('a hop leaves the line\'s ends and length alone: the path starts and ends at the same points', () => {
+    const d = roundedPath(H.points, 7, computeHops([H, V]).hops.h);
+    expect(d.startsWith('M 0 0')).toBe(true); expect(d.endsWith('L 200 60')).toBe(true);
+  });
+  it('shipped maps: nearly every crossing gets an arc, arcs stay clear of the boxes, and the result is deterministic', () => {
+    let crossings = 0, plain = 0;
+    for (const { id, m } of shipped()) for (const w of WIDTHS5) {
+      const g = computeGeometry(m.nodes, m.edges, w), again = computeGeometry(m.nodes, m.edges, w);
+      expect(JSON.stringify(g.edges.map((e) => e.hops))).toBe(JSON.stringify(again.edges.map((e) => e.hops)));
+      crossings += edgeCrossings(g).length; plain += unhoppedCrossings(g);
+      for (const e of g.edges) for (const h of e.hops) {
+        expect(h.ry, `${id} @${w}`).toBeGreaterThanOrEqual(3.5); expect(h.ry).toBeLessThanOrEqual(QM_HOP_R);
+        for (const b of Object.values(g.boxes)) expect(h.x1 < b.x || h.x0 > b.x + b.w || h.y - h.ry > b.y + b.h || h.y < b.y, `${id} @${w} ${e.key} hop inside box ${b.id}`).toBe(true);
+      }
+      for (const e of g.edges) for (const h of e.hops) expect(Math.abs(e.dot.y - h.y) > 1 || e.dot.x + 6 < h.x0 || e.dot.x - 6 > h.x1, `${id} @${w} ${e.key} dot sits on its own hop`).toBe(true);
+    }
+    expect(plain, `${plain} of ${crossings} crossings stay plain`).toBeLessThan(crossings * 0.4);
   });
 });

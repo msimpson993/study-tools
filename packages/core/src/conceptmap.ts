@@ -201,7 +201,7 @@ export function mountConceptMap(host: HTMLElement, content: AppContent, progress
       const data = edgeData[g.key];
       const active = pathKeys.has(g.key);
       const dim = (pick !== null && !active) || (ser !== null && !(byId[g.from].series === ser && byId[g.to].series === ser));
-      const d = roundedPath(g.points);
+      const d = roundedPath(g.points), dHop = roundedPath(g.points, undefined, g.hops);
       const act = () => toggleEdge(g.key);
       const grp = s('g', {
         class: `qm-edge${data.dashed ? ' dashed' : ''}${active ? ' e-path' : ''}${dim ? ' e-dim' : ''}${selEdgeKey === g.key ? ' e-sel' : ''}`,
@@ -211,7 +211,7 @@ export function mountConceptMap(host: HTMLElement, content: AppContent, progress
       });
       grp.append(
         s('path', { d, fill: 'none', stroke: 'transparent', 'stroke-width': 26, 'stroke-linejoin': 'round', 'pointer-events': 'stroke' }),
-        s('path', { class: 'line', d }), s('path', { class: 'head', d: arrowHead(g.points) }),
+        s('path', { class: 'line', d: dHop }), s('path', { class: 'head', d: arrowHead(g.points) }),
         s('circle', { cx: g.dot.x, cy: g.dot.y, r: 14, fill: 'transparent' }),
         s('circle', { class: 'dot', cx: g.dot.x, cy: g.dot.y, r: 6 }),
       );
