@@ -46,8 +46,8 @@ maps:
         detail: rise time, overshoot, settling, error
         series: 1
         short: Raising Kp speeds the rise but increases overshoot and leaves less steady-state error; raising Ki removes steady-state error but adds overshoot and slow oscillation; raising Kd adds damping but amplifies noise. The table of cause and effect is the backbone of manual tuning.
-        addsToExample: "On the cart with Kp = 3 the loop is s² + 3s + 8 (ωₙ ≈ 2.83, ζ ≈ 0.53): about 14 % overshoot and a final value of only 0.75."
-        accountsFor: Why the cart with P control alone is quick but stops at 75 % of the command (error 1/(1 + Kp) = 0.25).
+        addsToExample: "On the unit-DC-gain cart 2/((s + 1)(s + 2)) with Kp = 3 the loop is s² + 3s + 8 (ωₙ ≈ 2.83, ζ ≈ 0.53): about 14 % overshoot and a final value of only 0.75."
+        accountsFor: Why the unit-DC-gain cart 2/((s + 1)(s + 2)) with P control alone is quick but stops at 75 % of the command (error 1/(1 + Kp) = 0.25).
         live: board:gains
       - id: integral
         label: Why does integral action give zero steady-state error?
@@ -56,7 +56,7 @@ maps:
         series: 1
         short: "The integral state keeps changing while any error remains, dx_i/dt = e, so at rest e must be 0. That is also why a load disturbance is cancelled in steady state. The price is a lower phase margin: more overshoot and slower ringing."
         eq: e_ss = 1/(1 + C(0)G(0)), C(0) → ∞ with an integrator
-        addsToExample: Adding Ki = 2 to the Kp = 3 cart loop brings the final value from 0.75 to exactly 1, at the cost of about 13 % overshoot and a settling time near 3.5 s.
+        addsToExample: Adding Ki = 2 to the Kp = 3 loop on the unit-DC-gain cart 2/((s + 1)(s + 2)) brings the final value from 0.75 to exactly 1, at the cost of about 13 % overshoot and a settling time near 3.5 s.
         accountsFor: Why the cart now ends exactly at the commanded position, and why a constant push is eventually fully rejected.
         live: board:dd-int
       - id: derivative
@@ -86,7 +86,7 @@ maps:
         series: 2
         short: "Tuning is a trade-off: faster response costs overshoot, effort, noise sensitivity and robustness. We measure it with step-response specs (percent overshoot, settling time, rise time) which, for a dominant second-order pair, come from ζ and ωₙ."
         eq: "%OS = 100·e^(−πζ/√(1 − ζ²))   Ts ≈ 4/(ζωₙ)"
-        addsToExample: The cart's closed loop s² + 3s + 8 has ζ = 3/(2√8) ≈ 0.53, so %OS ≈ 14 % and Ts ≈ 4/1.5 ≈ 2.7 s; the PID Lab lets you move Kp, Ki, Kd and watch those numbers change.
+        addsToExample: For the unit-DC-gain cart 2/((s + 1)(s + 2)) with Kp = 3, the closed loop s² + 3s + 8 has ζ = 3/(2√8) ≈ 0.53, so %OS ≈ 14 % and Ts ≈ 4/1.5 ≈ 2.7 s; the PID Lab lets you move Kp, Ki, Kd and watch those numbers change.
         accountsFor: How to turn a spec on the cart (settle in 3 s, under 10 % overshoot) into constraints on the gains.
         live: board:tuning
       - id: lab
@@ -95,7 +95,7 @@ maps:
         detail: the PID Lab
         series: 2
         short: The PID Lab runs a parallel PID with a filtered derivative on a choice of three teaching plants, with live sliders for Kp, Ki, Kd, N and the time window, and toggles for a load disturbance, sensor noise, an actuator limit, anti-windup, D on measurement, and a ghost of the previous run.
-        addsToExample: Run the cart (p2) with Kp = 3, then add Ki = 2, then Kd = 0.5 and watch the numbers on this map appear; switch on the push, the noise and the actuator limit to see each failure mode.
+        addsToExample: Run the unit-DC-gain cart (p2) with Kp = 3, then add Ki = 2, then Kd = 0.5 and watch the numbers on this map appear; switch on the push, the noise and the actuator limit to see each failure mode.
         accountsFor: Every claim on this map about the cart (offset, overshoot, noise, windup) can be reproduced by hand with visible controls.
         live: "figure:lab"
       - id: methods
