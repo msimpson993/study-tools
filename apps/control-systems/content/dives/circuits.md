@@ -55,7 +55,7 @@ Before you touch a slider, predict what it will do. Raise R: the poles are pulle
 - **G(s)**: the cart's transfer function from force u to position y: 1/((s + 1)(s + 2))
 - **poles**: the roots of the denominator: the exponentials e^(pt) the plant can make. The cart's are −1 and −2
 - **zeros**: the roots of the numerator: they set how much of each mode appears
-- **DC gain**: the steady output for a unit steady input, G(0) = 0.5 m per N for the cart
+- **DC gain**: the steady output for a unit steady input, G(0), if the plant is stable. For the cart, 0.5 m per N
 - **%OS, Ts**: overshoot and 2 % settling time of the step response
-- **C(s)**: the controller transfer function (PID: Kp + Ki/s + Kd·s)
+- **Gc(s)**: the controller transfer function (PID: Kp + Ki/s + Kd·s)
 ````

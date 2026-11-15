@@ -41,10 +41,10 @@
   meaning: Loop gain <i>G</i><sub>c</sub><i>G</i>(<i>H</i>). Large |<i>L</i>| ⇒ small <i>S</i>.
   section: Transfer functions & loop
 - term: T(s)
-  meaning: Closed-loop transfer function <i>Y</i>/<i>R</i> = <i>L</i>/(1+<i>L</i>) for unity feedback. (<i>T</i> is also used for the time constant of a first-order response.)
+  meaning: Closed-loop transfer function <i>Y</i>/<i>R</i> = <i>L</i>/(1+<i>L</i>) for unity feedback. (Also called the complementary sensitivity <i>C</i>(<i>s</i>) in the notes. <i>τ</i> is the time constant of a first-order response, not <i>T</i>.)
   section: Transfer functions & loop
 - term: K
-  meaning: "A gain. First order: DC gain of <i>K</i>/(<i>Ts</i>+1). Boring machine: controller gain in <i>K</i> + 11<i>s</i>."
+  meaning: "A gain. First order: DC gain of <i>K</i>/(<i>τs</i>+1). Boring machine: controller gain in <i>K</i> + 11<i>s</i>."
   section: Transfer functions & loop
 - term: n, m
   meaning: "Denominator degree (= order, # states) and numerator degree. Strictly proper: <i>m</i> &lt; <i>n</i>."
@@ -134,7 +134,7 @@
   meaning: "Sensitivity 1/(1+<i>L</i>): multiplies <i>R</i> in <i>E</i>, scales disturbances, and equals <i>S</i><sup><i>T</i></sup><sub><i>G</i></sub>."
   section: Feedback (LN2)
 - term: C(s) (LN2)
-  meaning: Complementary sensitivity <i>L</i>/(1+<i>L</i>). Multiplies noise <i>N</i>. <i>S</i> + <i>C</i> = 1. Not the C matrix.
+  meaning: Complementary sensitivity <i>L</i>/(1+<i>L</i>). Multiplies noise <i>N</i>. <i>S</i> + <i>C</i> = 1. Also called <i>T</i>(<i>s</i>) elsewhere; not the C matrix and not the controller (<i>G</i><sub>c</sub>).
   section: Feedback (LN2)
 - term: S^T_G
   meaning: "System sensitivity (∂<i>T</i>/<i>T</i>)/(∂<i>G</i>/<i>G</i>): 1 open loop, 1/(1+<i>G</i><sub>c</sub><i>G</i>) closed loop."
@@ -236,7 +236,7 @@
   meaning: "Linear time-invariant. Linear = superposition holds (no saturation or dead zones); time-invariant = the parameters (m, c, k, R, L, C) don't drift. Transfer functions are defined for LTI plants."
   section: Transfer functions & loop
 - term: DC gain
-  meaning: "G(0): the steady output per unit steady input. For the cart, a 1 N push settles at 0.5 m."
+  meaning: "G(0): the steady output per unit steady input, provided the plant is stable (otherwise the output never settles, so G(0) says nothing about it). For the cart, a 1 N push settles at 0.5 m."
   section: Time response
 - term: order
   meaning: "Highest power of s in the denominator of G, equal to the number of independent energy stores and the number of poles (and of states)."

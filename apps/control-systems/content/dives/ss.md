@@ -4,7 +4,7 @@ order: 13
 title: "State space: the cart as two states"
 category: state
 chain:
-  - title: "What if I also need the internal states and initial conditions?"
+  - title: "What if I also need the internal states, initial conditions, or several inputs and outputs?"
   - title: "Is there a description that tracks the inside too?"
   - title: "state space ẋ = Ax + Bu, y = Cx + Du"
     detail: "ẋ = Ax + Bu,  y = Cx + Du"
@@ -109,6 +109,10 @@ Same pattern as the mass–spring–damper (slides 26–27) with <i>m</i> ↔ <i
 A 2×2 <i>A</i> with [0 1] on top and [−<i>a</i>₀ −<i>a</i>₁] on the bottom <em>is</em> the denominator <i>s</i>² + <i>a</i>₁<i>s</i> + <i>a</i>₀, readable without any algebra. For the LRC: <i>s</i>² + (<i>R</i>/<i>L</i>)<i>s</i> + 1/(<i>LC</i>).
 ````
 
+````callout:note Notation: this dive versus Lecture Notes 1
+This dive writes the denominator in companion form, <i>s</i>² + <i>a</i>₁<i>s</i> + <i>a</i>₀, so <i>a</i>₀ is the <em>constant</em> term. Lecture Notes 1 (slide 3) use <i>a</i>₀ for the <em>leading</em> coefficient of the ODE, <i>a</i>₀<i>y</i><sup>(n)</sup> + … + <i>a</i><sub>n</sub><i>y</i>. The same slide calls output over input <i>C</i>(<i>s</i>)/<i>R</i>(<i>s</i>); here that is <i>Y</i>(<i>s</i>)/<i>U</i>(<i>s</i>).
+````
+
 ````callout:predict Predict
 Before you touch a slider, predict what it will do. Change c and k and watch the eigenvalues move: the same pole picture as the transfer function, now with the inside of the cart in view.
 ````
@@ -117,7 +121,7 @@ Before you touch a slider, predict what it will do. Change c and k and watch the
 - **G(s)**: the cart's transfer function from force u to position y: 1/((s + 1)(s + 2))
 - **poles**: the roots of the denominator: the exponentials e^(pt) the plant can make. The cart's are −1 and −2
 - **zeros**: the roots of the numerator: they set how much of each mode appears
-- **DC gain**: the steady output for a unit steady input, G(0) = 0.5 m per N for the cart
+- **DC gain**: the steady output for a unit steady input, G(0), if the plant is stable. For the cart, 0.5 m per N
 - **A, B, C, D**: the state-space matrices: ẋ = Ax + Bu, y = Cx + Du
-- **S, T**: sensitivity S = 1/(1 + CG) and complementary sensitivity T = CG/(1 + CG), with S + T = 1
+- **S, C**: sensitivity S = 1/(1 + GcG) and complementary sensitivity C = GcG/(1 + GcG), with S + C = 1 (the notes' C(s); many books call it T(s))
 ````

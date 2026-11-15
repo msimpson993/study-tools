@@ -56,17 +56,17 @@ A one-page 'recognize this' list: which pole pattern, transfer function shape or
 - Op-amp: −<i>Z</i><sub>f</sub>/<i>Z</i><sub>in</sub>
 - Pole at 0 = integrator; zero at 0 = differentiator
 
-#### First order K/(Ts+1)
+#### First order K/(τs+1)
 
-- 63% at <i>T</i>, 98% at 4<i>T</i>
+- 63% at <i>τ</i>, 98% at 4<i>τ</i>
 - No overshoot, ever
-- Initial slope <i>K</i>/<i>T</i>; impulse (<i>K</i>/<i>T</i>)<i>e</i><sup>−<i>t</i>/<i>T</i></sup>
+- Initial slope <i>K</i>/<i>τ</i>; impulse (<i>K</i>/<i>τ</i>)<i>e</i><sup>−<i>t</i>/<i>τ</i></sup>
 
 #### Second order
 
 - ω<sub>n</sub>²/(<i>s</i>²+2ζω<sub>n</sub><i>s</i>+ω<sub>n</sub>²)
 - %OS = 100<i>e</i><sup>−ζπ/√(1−ζ²)</sup> (ζ only)
-- <i>T</i><sub>s</sub> ≈ 4/(ζω<sub>n</sub>), <i>T</i><sub>p</sub> = π/ω<sub>d</sub>
+- <i>τ</i><sub>s</sub> ≈ 4/(ζω<sub>n</sub>), <i>τ</i><sub>p</sub> = π/ω<sub>d</sub>
 - cos θ = ζ; radius = ω<sub>n</sub>
 - Zeros add overshoot; extra poles slow it down
 
@@ -112,8 +112,8 @@ Before you touch a slider, predict what it will do. Take the damper away (c = 0)
 - **zeros**: the roots of the numerator: they set how much of each mode appears
 - **s = σ + jω**: a point on the s-plane: σ is the decay or growth rate, ω the oscillation frequency
 - **ζ, ωn**: damping ratio and natural frequency of a pole pair
-- **DC gain**: the steady output for a unit steady input, G(0) = 0.5 m per N for the cart
-- **T (time constant)**: time for a first-order response to cover 63 % of the way: T = 1/|p|
+- **DC gain**: the steady output for a unit steady input, G(0), if the plant is stable. For the cart, 0.5 m per N
+- **τ (time constant)**: time for a first-order response to cover 63 % of the way: τ = 1/|p|
 - **%OS, Ts**: overshoot and 2 % settling time of the step response
-- **S, T**: sensitivity S = 1/(1 + CG) and complementary sensitivity T = CG/(1 + CG), with S + T = 1
+- **S, C**: sensitivity S = 1/(1 + GcG) and complementary sensitivity C = GcG/(1 + GcG), with S + C = 1 (the notes' C(s); many books call it T(s))
 ````

@@ -7,7 +7,7 @@ chain:
   - title: "What does closing the loop buy and cost?"
   - title: "What does feedback buy us, and what does it cost?"
   - title: "sensitivity, disturbance, transient, indices"
-    detail: "S = 1/(1 + CG)   T = CG/(1 + CG)   S + T = 1"
+    detail: "S = 1/(1 + GcG)   C = GcG/(1 + GcG)   S + C = 1"
 neighbors:
   - blocks
   - cheat
@@ -15,12 +15,12 @@ exampleScene: { overlays: [loop, poles], params: { K: 20 }, diagram: noise, capt
 ---
 **What does feedback buy us, and what does it cost?**
 
-**Picture it first.** Gain is the price of speed: raise K on the open loop K/(s(s+1)(s+2)) and the loop speeds up, the margins shrink and the closed-loop step starts to ring.
+**Picture it first.** *Preview: the Bode and gain-margin picture is not yet covered in the lecture notes.* Gain is the price of speed: raise K on the open loop K/(s(s+1)(s+2)) and the loop speeds up, the margins shrink and the closed-loop step starts to ring.
 
 ```figure:bode
 ```
 
-Feedback reduces sensitivity to plant changes and to disturbances by roughly the factor 1 + CG, speeds the transient, and drives steady-state error down, at the cost of sensors, noise, hardware and the possibility of instability. S + T = 1 is the trade.
+Feedback reduces sensitivity to plant changes and to disturbances by roughly the factor 1 + GcG, speeds the transient, and drives steady-state error down, at the cost of sensors, noise, hardware and the possibility of instability. S + C = 1 is the trade (here C(s) is the complementary sensitivity, also called T(s)).
 
 ### Open loop vs closed loop: what changes when you add a sensor?
 
@@ -43,7 +43,7 @@ The way out is <b>frequency separation</b>. References and disturbances are usua
 It's a PLL loop filter. Inside the loop bandwidth the output follows the reference (and its noise); outside it, the VCO's own noise wins. Same S/C trade-off.
 
 ````callout:trap Trap: which C?
-In these slides, <i>C</i>(<i>s</i>) = <i>L</i>/(1+<i>L</i>) is the complementary sensitivity, which for unity feedback equals the closed-loop transfer function <i>T</i>(<i>s</i>) = <i>Y</i>/<i>R</i>. It's not the state-space output matrix <i>C</i>, and not the output signal <i>C</i> in <i>C</i>/<i>R</i>.
+In these slides, <i>C</i>(<i>s</i>) = <i>L</i>/(1+<i>L</i>) is the complementary sensitivity. <i>C</i>(<i>s</i>) here is also called <i>T</i>(<i>s</i>); for unity feedback it equals the closed-loop transfer function <i>Y</i>/<i>R</i>. The controller on this page is always <i>G</i><sub>c</sub>. It's not the state-space output matrix <i>C</i>, and not the output signal <i>C</i> in <i>C</i>/<i>R</i>.
 ````
 
 ### Sensitivity to parameter variations: why does feedback make a sloppy plant behave?
@@ -138,7 +138,7 @@ Large loop gain |<i>L</i>| ⇒ small <i>S</i> = 1/(1+<i>L</i>) ⇒ less tracking
 ````
 
 ````callout:predict Predict
-Before you touch a slider, predict what it will do. Slide K up until the gain-margin bar shrinks to zero at K = 6: that is the jω-axis crossing of the root locus, seen from the other side.
+Before you touch a slider, predict what it will do. (Preview: not yet covered in the lecture notes.) Slide K up until the gain-margin bar shrinks to zero at K = 6: that is the jω-axis crossing of the root locus, seen from the other side.
 ````
 
 ````callout:note Symbols used here
@@ -146,11 +146,11 @@ Before you touch a slider, predict what it will do. Slide K up until the gain-ma
 - **poles**: the roots of the denominator: the exponentials e^(pt) the plant can make. The cart's are −1 and −2
 - **zeros**: the roots of the numerator: they set how much of each mode appears
 - **ζ, ωn**: damping ratio and natural frequency of a pole pair
-- **DC gain**: the steady output for a unit steady input, G(0) = 0.5 m per N for the cart
+- **DC gain**: the steady output for a unit steady input, G(0), if the plant is stable. For the cart, 0.5 m per N
 - **K**: the proportional gain in u = K(r − y); K = 7 gives ζ = 0.5, ωn = 3
 - **e_ss**: the error r − y once everything has settled
 - **%OS, Ts**: overshoot and 2 % settling time of the step response
 - **A, B, C, D**: the state-space matrices: ẋ = Ax + Bu, y = Cx + Du
-- **C(s)**: the controller transfer function (PID: Kp + Ki/s + Kd·s)
-- **S, T**: sensitivity S = 1/(1 + CG) and complementary sensitivity T = CG/(1 + CG), with S + T = 1
+- **Gc(s)**: the controller transfer function (PID: Kp + Ki/s + Kd·s)
+- **S, C**: sensitivity S = 1/(1 + GcG) and complementary sensitivity C = GcG/(1 + GcG), with S + C = 1 (the notes' C(s); many books call it T(s))
 ````

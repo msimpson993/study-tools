@@ -72,6 +72,6 @@ Before you touch a slider, predict what it will do. Move q to the right of zero:
 - **G(s)**: the cart's transfer function from force u to position y: 1/((s + 1)(s + 2))
 - **poles**: the roots of the denominator: the exponentials e^(pt) the plant can make. The cart's are −1 and −2
 - **zeros**: the roots of the numerator: they set how much of each mode appears
-- **DC gain**: the steady output for a unit steady input, G(0) = 0.5 m per N for the cart
-- **T (time constant)**: time for a first-order response to cover 63 % of the way: T = 1/|p|
+- **DC gain**: the steady output for a unit steady input, G(0), if the plant is stable. For the cart, 0.5 m per N
+- **τ (time constant)**: time for a first-order response to cover 63 % of the way: τ = 1/|p|
 ````

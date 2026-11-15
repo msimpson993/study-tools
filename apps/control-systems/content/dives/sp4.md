@@ -43,6 +43,6 @@ Before you touch a slider, predict what it will do. Turn the zero on at −2 and
 - **poles**: the roots of the denominator: the exponentials e^(pt) the plant can make. The cart's are −1 and −2
 - **zeros**: the roots of the numerator: they set how much of each mode appears
 - **s = σ + jω**: a point on the s-plane: σ is the decay or growth rate, ω the oscillation frequency
-- **DC gain**: the steady output for a unit steady input, G(0) = 0.5 m per N for the cart
+- **DC gain**: the steady output for a unit steady input, G(0), if the plant is stable. For the cart, 0.5 m per N
 - **%OS, Ts**: overshoot and 2 % settling time of the step response
 ````

@@ -84,17 +84,17 @@
     - { label: "step response", color: "var(--cyan)" }
     - { label: "initial tangent", color: "var(--vio)", dash: true }
     - { label: "impulse response", color: "var(--grn)", dash: true }
-  howToRead: "Left: the single pole at −1/T. Right: the step response K(1 − e^(−t/T)): it reaches 63 % of K at t = T and 98 % at 4T; the dashed tangent at t = 0 meets the final value at t = T."
-  lookFor: "Double T: the pole moves toward the origin, everything takes twice as long, the final value K does not change."
+  howToRead: "Left: the single pole at −1/τ. Right: the step response K(1 − e^(−t/τ)): it reaches 63 % of K at t = τ and 98 % at 4τ; the dashed tangent at t = 0 meets the final value at t = τ."
+  lookFor: "Double τ: the pole moves toward the origin, everything takes twice as long, the final value K does not change."
   controls:
     - { id: K, label: "DC gain K", type: range, min: 0.2, max: 3, step: 0.1, default: 1, group: primary }
-    - { id: T, label: "Time constant T", type: range, min: 0.2, max: 4, step: 0.1, default: 1, group: primary, unit: s }
+    - { id: T, label: "Time constant τ", type: range, min: 0.2, max: 4, step: 0.1, default: 1, group: primary, unit: s }
     - { id: tan, label: "Show initial tangent", type: toggle, default: true, group: more }
     - { id: imp, label: "Show impulse response", type: toggle, default: false, group: more }
   presets:
-    - { id: t1, label: "T = 1 s", set: { K: 1, T: 1 } }
-    - { id: fast, label: "Fast (T = 0.3 s)", set: { K: 1, T: 0.3 } }
-    - { id: slow, label: "Slow (T = 3 s)", set: { K: 2, T: 3 } }
+    - { id: t1, label: "τ = 1 s", set: { K: 1, T: 1 } }
+    - { id: fast, label: "Fast (τ = 0.3 s)", set: { K: 1, T: 0.3 } }
+    - { id: slow, label: "Slow (τ = 3 s)", set: { K: 2, T: 3 } }
 - id: dominant
   title: "Dominant poles: which ones matter"
   x: "time (s) · σ (1/s)"
@@ -158,7 +158,7 @@
   legend:
     - { label: "with the chosen K", color: "var(--cyan)" }
     - { label: "K = 1 (ghost)", color: "var(--muted)", dash: true }
-  howToRead: "Close the loop with a gain K around the cart. Left: how the output follows the command, Y/R = CG/(1 + CG). Right: how the same loop answers a unit push on the cart, Y/D = G/(1 + CG). The same loop shapes both, but not in the same way."
+  howToRead: "Close the loop with a gain K around the cart. Left: how the output follows the command, Y/R = GcG/(1 + GcG). Right: how the same loop answers a unit push on the cart, Y/D = G/(1 + GcG). The same loop shapes both, but not in the same way."
   lookFor: "Raise K: the command path gets faster and its error smaller, and the push is held back harder, but the command path starts to ring."
   controls:
     - { id: K, label: "Loop gain K", type: range, min: 0, max: 30, step: 0.1, default: 7, group: primary }

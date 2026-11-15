@@ -68,6 +68,6 @@ Before you touch a slider, predict what it will do. Drag the pole straight up: t
 - **zeros**: the roots of the numerator: they set how much of each mode appears
 - **s = σ + jω**: a point on the s-plane: σ is the decay or growth rate, ω the oscillation frequency
 - **ζ, ωn**: damping ratio and natural frequency of a pole pair
-- **DC gain**: the steady output for a unit steady input, G(0) = 0.5 m per N for the cart
+- **DC gain**: the steady output for a unit steady input, G(0), if the plant is stable. For the cart, 0.5 m per N
 - **%OS, Ts**: overshoot and 2 % settling time of the step response
 ````

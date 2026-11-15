@@ -7,12 +7,12 @@ chain:
   - title: "How does G(s) sit in a loop with a controller and a disturbance?"
   - title: "How does the plant sit in a loop with a controller and a disturbance?"
   - title: "standard feedback loop, where the disturbance enters"
-    detail: "Y = CG/(1 + CG)·R + G/(1 + CG)·D"
+    detail: "Y = GcG/(1 + GcG)·R + G/(1 + GcG)·D"
 neighbors:
   - tf
   - ctrl
   - fb
-exampleScene: { overlays: [disturb], params: { K: 7, d: -2, td: 4 }, diagram: [loop, disturb], caption: "Panel 1 is the loop itself: command r, controller C, plant G and the sensor feeding y back. Panel 2 adds a 2 N shove d at the plant input at 4 s; with K = 7 the cart is at 0.78 m, then the shove pushes it back." }
+exampleScene: { overlays: [disturb], params: { K: 7, d: -2, td: 4 }, diagram: [loop, disturb], caption: "Panel 1 is the loop itself: command r, controller Gc, plant G and the sensor feeding y back. Panel 2 adds a 2 N shove d at the plant input at 4 s; with K = 7 the cart is at 0.78 m, then the shove pushes it back." }
 ---
 **How does the plant sit in a loop with a controller and a disturbance?**
 
@@ -21,14 +21,14 @@ exampleScene: { overlays: [disturb], params: { K: 7, d: -2, td: 4 }, diagram: [l
 ```figure:loop
 ```
 
-Close the loop on the measured output: error E = R − Y feeds a controller C, the disturbance D adds somewhere in the loop, and the plant G produces Y. Closed-loop transfer functions follow from the series, parallel and feedback rules, and where D enters decides how it is transformed.
+Close the loop on the measured output: error E = R − Y feeds a controller Gc, the disturbance D adds somewhere in the loop, and the plant G produces Y. Closed-loop transfer functions follow from the series, parallel and feedback rules, and where D enters decides how it is transformed.
 
 ### What does the standard feedback loop look like, and what is C/R?
 
 Reference <i>R</i> minus measured output gives error <i>E</i>. The controller <i>G</i><sub>c</sub> turns <i>E</i> into actuation, the plant <i>G</i> produces output <i>C</i> (or <i>Y</i>), and a disturbance <i>T</i><sub>d</sub> enters along the way. With unity feedback, <i>C</i>/<i>R</i> = <i>G</i><sub>c</sub><i>G</i>/(1 + <i>G</i><sub>c</sub><i>G</i>).
 
 ````callout:note Notation: the notes' symbols versus this page's
-Your lecture notes call the controller <i>G</i><sub>c</sub> and the output <i>C</i>(<i>s</i>), so they write <i>C</i>/<i>R</i>. The block diagram on this page (and MATLAB) call the controller <i>C</i> and the output <i>Y</i>. Read the notes' <i>C</i>/<i>R</i> as <i>Y</i>/<i>R</i> here and <i>G</i><sub>c</sub> as <i>C</i>. The glossary lists both.
+Your lecture notes call the controller <i>G</i><sub>c</sub> and the output <i>C</i>(<i>s</i>), so they write <i>C</i>/<i>R</i>. This page keeps the notes' <i>G</i><sub>c</sub> for the controller, and calls the output <i>Y</i> (as MATLAB does). Read the notes' <i>C</i>/<i>R</i> as <i>Y</i>/<i>R</i> here. In the feedback dive <i>C</i>(<i>s</i>) means the complementary sensitivity, and in state space <i>C</i> is the output matrix. The glossary lists all three.
 ````
 
 *From the guide's static figure: <b>The loop you'll see on every exam.</b> Two inputs (<i>R</i> and <i>T</i><sub>d</sub>), one output, one loop gain <i>L</i> = <i>G</i><sub>c</sub><i>G</i>.*
@@ -69,5 +69,5 @@ Before you touch a slider, predict what it will do. Raise K: the command path ge
 - **zeros**: the roots of the numerator: they set how much of each mode appears
 - **ζ, ωn**: damping ratio and natural frequency of a pole pair
 - **K**: the proportional gain in u = K(r − y); K = 7 gives ζ = 0.5, ωn = 3
-- **C(s)**: the controller transfer function (PID: Kp + Ki/s + Kd·s)
+- **Gc(s)**: the controller transfer function (PID: Kp + Ki/s + Kd·s)
 ````

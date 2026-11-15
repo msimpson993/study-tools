@@ -653,10 +653,10 @@
   kind: compute
   q: A step response rises to 63% of its final value at t = 2 s with no overshoot. What is the time constant, and roughly when does it settle within 2%?
   choices:
-    - T = 2 s; settles in about 8 s (4T)
-    - T = 2 s; settles in about 2 s
-    - T ≈ 3.2 s; settles in about 6 s
-    - T = 0.5 s; settles in about 2 s
+    - τ = 2 s; settles in about 8 s (4τ)
+    - τ = 2 s; settles in about 2 s
+    - τ ≈ 3.2 s; settles in about 6 s
+    - τ = 0.5 s; settles in about 2 s
   answer: 0
   why: |-
     For K/(Ts+1), y(T) = 0.632K. The 2% settling time is about 4T (98.2%).
@@ -1259,20 +1259,20 @@
     - ≈ 2.53
     - "4.00"
   answer: 2
-  why: K/(Ts + 1) with K = 4, T = 2 s, so y(t) = 4(1 − e^(−t/2)). At t = T, y = 0.632 × 4 ≈ 2.53 (63.2% of the final value); 1.47 is the 36.8% still remaining.
+  why: K/(τs + 1) with K = 4, τ = 2 s, so y(t) = 4(1 − e^(−t/2)). At t = τ, y = 0.632 × 4 ≈ 2.53 (63.2% of the final value); 1.47 is the 36.8% still remaining.
 - id: mini-19
   tags:
     - mini-exam
     - first
   kind: recognize
-  q: For G(s) = <span class="frac"><span>10</span><span>s + 5</span></span>, what are the time constant T and the DC gain?
+  q: For G(s) = <span class="frac"><span>10</span><span>s + 5</span></span>, what are the time constant τ and the DC gain?
   choices:
-    - T = 5 s, gain = 10
-    - T = 0.2 s, gain = 10
-    - T = 5 s, gain = 2
-    - T = 0.2 s, gain = 2
+    - τ = 5 s, gain = 10
+    - τ = 0.2 s, gain = 10
+    - τ = 5 s, gain = 2
+    - τ = 0.2 s, gain = 2
   answer: 3
-  why: 'Rewrite in K/(Ts + 1) form: <span class="frac"><span>10</span><span>s + 5</span></span> = <span class="frac"><span>2</span><span>0.2s + 1</span></span>. So K = G(0) = 2 and T = 1/5 = 0.2 s (pole at s = −5).'
+  why: 'Rewrite in K/(τs + 1) form: <span class="frac"><span>10</span><span>s + 5</span></span> = <span class="frac"><span>2</span><span>0.2s + 1</span></span>. So K = G(0) = 2 and τ = 1/5 = 0.2 s (pole at s = −5).'
 - id: mini-20
   tags:
     - mini-exam
@@ -1311,7 +1311,7 @@
     - Both equally — every pole contributes the same
     - Neither; only the zeros determine the transient
   answer: 1
-  why: "e^(−40t) dies out \\~20× faster, so the pole nearest the imaginary axis dominates; the system behaves roughly first-order with T = 0.5 s (rule of thumb: other poles ≳5× farther left)."
+  why: "e^(−40t) dies out \\~20× faster, so the pole nearest the imaginary axis dominates; the system behaves roughly first-order with τ = 0.5 s (rule of thumb: other poles ≳5× farther left)."
 
 - id: cs-69
   tags: [cc]

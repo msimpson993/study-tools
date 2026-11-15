@@ -5,7 +5,7 @@ title: "Full-state feedback and Ackermann's formula"
 category: state
 chain:
   - title: "When can we place every pole, and when can we work out states we don't measure?"
-  - title: "If we can measure every state, how do we put the poles exactly where we want?"
+  - title: "Output feedback can only slide the poles along a fixed path. If we can measure every state, how do we put the poles exactly where we want?"
   - title: "full-state feedback, Ackermann"
     detail: "u = −Kx,  ẋ = (A − BK)x"
 neighbors:

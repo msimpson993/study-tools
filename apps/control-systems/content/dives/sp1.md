@@ -224,5 +224,5 @@ Before you touch a slider, predict what it will do. Turn the zero on at −2 and
 - **ζ, ωn**: damping ratio and natural frequency of a pole pair
 - **K**: the proportional gain in u = K(r − y); K = 7 gives ζ = 0.5, ωn = 3
 - **%OS, Ts**: overshoot and 2 % settling time of the step response
-- **C(s)**: the controller transfer function (PID: Kp + Ki/s + Kd·s)
+- **Gc(s)**: the controller transfer function (PID: Kp + Ki/s + Kd·s)
 ````

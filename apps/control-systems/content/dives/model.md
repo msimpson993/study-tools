@@ -22,7 +22,7 @@ exampleScene: {  overlays: [forces, push], diagram: [ode, open], caption: "Newto
 ```figure:cart
 ```
 
-Physics states laws as rates of change, so every lumped plant is an ODE. For an LTI plant at rest, the Laplace transform rewrites that same ODE as G(s) = Y(s)/U(s): nothing is lost, but series blocks multiply and a loop becomes CG/(1 + CG).
+Physics states laws as rates of change, so every lumped plant is an ODE. For an LTI plant at rest, the Laplace transform rewrites that same ODE as G(s) = Y(s)/U(s): nothing is lost, but series blocks multiply and a loop becomes GcG/(1 + GcG).
 
 ### Why every plant is an ODE
 
@@ -43,7 +43,7 @@ Every later topic (poles, ζ, steady-state error, sensitivity) is a property <em
 
 ### Why Laplace transforms and transfer functions?
 
-For <b>linear time-invariant (LTI)</b> systems, Laplace rewrites the same ODE as algebra: d/dt becomes multiplication by <i>s</i>, and convolution becomes multiplication. Systems in series then simply multiply, and a loop becomes CG/(1 + CG).
+For <b>linear time-invariant (LTI)</b> systems, Laplace rewrites the same ODE as algebra: d/dt becomes multiplication by <i>s</i>, and convolution becomes multiplication. Systems in series then simply multiply, and a loop becomes GcG/(1 + GcG).
 
 Physical laws (KVL, Newton) give ODEs. That ODE is not discarded: the Laplace transform rewrites it so combining and closing loops is algebra instead of a new convolution or a new closed-loop ODE for every try. In the time domain chaining two systems is a convolution integral (Lecture 1: <i>y</i>(<i>t</i>) = ∫ <i>x</i>(τ)<i>h</i>(<i>t</i>−τ)dτ); in the <i>s</i>-domain the same chain is <i>Y</i> = <i>H</i>·<i>X</i>. That's why block diagrams work: each block is a multiplier.
 
