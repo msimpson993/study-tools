@@ -5,7 +5,7 @@ title: "Why model at all, and why Laplace"
 category: describe
 chain:
   - title: "What do we need before we can predict anything?"
-  - title: "How do we describe a plant without re-solving its ODE?"
+  - title: "How do we write the plant's ODE so it's easy to combine and close loops on?"
   - title: "Laplace, LTI, zero initial conditions"
     detail: "G(s) = Y(s) / U(s), zero initial conditions"
 neighbors:
@@ -15,14 +15,21 @@ neighbors:
   - circuits
 exampleScene: { overlays: [forces, push], caption: "Newton's law gives the model: spring, damper and push sum to m·ẍ, and a 1 N push produces this x(t)." }
 ---
-**How do we describe a plant without re-solving its ODE?**
+**How do we write the plant's ODE so it's easy to combine and close loops on?**
 
 **Picture it first.** Change the cart's mass, damper and spring and watch what the model predicts: the step response on the right is what the transfer function G(s) compresses, and the poles are its fingerprint.
 
 ```figure:cart
 ```
 
-For a linear time-invariant plant, the Laplace transform turns derivatives into multiplication by s and convolution into multiplication, so a plant becomes a transfer function G(s) = Y(s)/U(s) (zero initial conditions) and blocks in series simply multiply.
+Physics states laws as rates of change, so every lumped plant is an ODE. For an LTI plant at rest, the Laplace transform rewrites that same ODE as G(s) = Y(s)/U(s): nothing is lost, but series blocks multiply and a loop becomes CG/(1 + CG).
+
+### Why every plant is an ODE
+
+- **Laws are rates:** F = mẍ, i = C·dv/dt, v = L·di/dt, and a tank's level rate is inflow − outflow. Nature says how things change, not where they end up.
+- **Energy stores give memory:** the present depends on the past, and each independent store adds one order. The cart's mass and spring make it second order. A resistor stores nothing, so v = iR is plain algebra.
+- **Lumping gives ODEs, not PDEs:** one mass, one temperature, so time is the only variable.
+- **Near an operating point** these are linear with constant coefficients, which is what Laplace turns into polynomials in s.
 
 ### Why model at all?
 
@@ -36,9 +43,9 @@ Every later topic (poles, ζ, steady-state error, sensitivity) is a property <em
 
 ### Why Laplace transforms and transfer functions?
 
-For <b>linear time-invariant (LTI)</b> systems, Laplace turns differential equations into algebra: d/dt becomes multiplication by <i>s</i>, and convolution becomes multiplication. Systems in series then simply multiply.
+For <b>linear time-invariant (LTI)</b> systems, Laplace rewrites the same ODE as algebra: d/dt becomes multiplication by <i>s</i>, and convolution becomes multiplication. Systems in series then simply multiply, and a loop becomes CG/(1 + CG).
 
-Physical laws (KVL, Newton) give ODEs. Solving ODEs for every input is painful, and in the time domain chaining two systems means a convolution integral (Lecture 1: <i>y</i>(<i>t</i>) = ∫ <i>x</i>(τ)<i>h</i>(<i>t</i>−τ)dτ). In the <i>s</i>-domain the same chain is <i>Y</i> = <i>H</i>·<i>X</i>. That's why block diagrams work: each block is a multiplier.
+Physical laws (KVL, Newton) give ODEs. That ODE is not discarded: the Laplace transform rewrites it so combining and closing loops is algebra instead of a new convolution or a new closed-loop ODE for every try. In the time domain chaining two systems is a convolution integral (Lecture 1: <i>y</i>(<i>t</i>) = ∫ <i>x</i>(τ)<i>h</i>(<i>t</i>−τ)dτ); in the <i>s</i>-domain the same chain is <i>Y</i> = <i>H</i>·<i>X</i>. That's why block diagrams work: each block is a multiplier.
 
 The price: <b>linear</b> (superposition holds: no saturation, no dead zones) and <b>time-invariant</b> (constant coefficients: R, L, C, m don't drift). Real plants are approximately LTI around an operating point, and that approximation is good enough for most of the design.
 

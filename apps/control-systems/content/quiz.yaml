@@ -2,7 +2,7 @@
   tags:
     - model
   kind: recognize
-  q: Why does the course describe plants with Laplace-domain transfer functions instead of solving the ODE in time?
+  q: Why does the course rewrite a plant's ODE as a Laplace-domain transfer function?
   choices:
     - For LTI systems, Laplace turns derivatives into multiplication by s and convolution into multiplication, so blocks in series simply multiply
     - Laplace transforms make nonlinear plants linear
@@ -10,7 +10,7 @@
     - Time-domain ODEs can't describe electrical circuits
   answer: 0
   why: |-
-    That's the whole payoff: block diagrams become algebra. It only works for <b>linear time-invariant</b> systems, and transfer functions assume zero initial conditions.
+    The ODE is the same; Laplace rewrites it so block diagrams become algebra. It only works for <b>linear time-invariant</b> systems, and transfer functions assume zero initial conditions.
 
     <a class="rev" href="#/board?pair=s1&at=q2">Review this in the guide →</a>
 - id: cs-2

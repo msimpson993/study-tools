@@ -12,16 +12,16 @@ maps:
         short: "The whole course in one question. We only have a model of the plant, so we need (1) a way to describe it, (2) a way to predict its behaviour from that description (poles), and (3) a feedback loop that makes the real system follow the command even when the model is wrong."
         why: Control is the art of getting behaviour you can specify (settle in 2 s, overshoot under 10 %, ignore a push) from hardware you can only approximate.
       - id: model
-        label: How do we describe a plant without re-solving its ODE?
+        label: "How do we write the plant's ODE so it's easy to combine and close loops on?"
         dive: model
         detail: Laplace, LTI, zero initial conditions
         series: 0
-        short: "For a linear time-invariant plant, the Laplace transform turns derivatives into multiplication by s and convolution into multiplication, so a plant becomes a transfer function G(s) = Y(s)/U(s) (zero initial conditions) and blocks in series simply multiply."
+        short: "Physics states laws as rates of change, so every lumped plant is an ODE. For an LTI plant at rest, the Laplace transform rewrites that same ODE as G(s) = Y(s)/U(s): nothing is lost, but series blocks multiply and a loop becomes CG/(1 + CG)."
         eq: "G(s) = Y(s) / U(s), zero initial conditions"
-        addsToExample: "Turns the cart's equation ẍ + 3ẋ + 2x = u into the single fraction G(s) = 1/(s² + 3s + 2), force in, position out."
-        accountsFor: "Why we can chain, add and feed back blocks by algebra instead of solving a new differential equation for every controller we try."
+        addsToExample: "The cart's ẍ + 3ẋ + 2x = u (mass and spring: two stores, second order) and G(s) = 1/(s² + 3s + 2) are the same model, force in, position out. The denominator is the ODE's characteristic polynomial; its roots −1 and −2 are the e^(−t) and e^(−2t) you would get solving by hand."
+        accountsFor: "Design means trying many controllers on one plant. In the time domain each try is a new convolution or a new closed-loop ODE to solve; with G(s) it is a line of algebra, and the result can be predicted from where the roots move."
         recognize: "A polynomial ratio in s. Zeros of the denominator are poles; they decide which exponentials e^(pt) the free motion is made of."
-        trap: "G(s) only describes the response from rest. A pre-charged capacitor or a cart already moving needs the ODE or state space."
+        trap: "G(s) assumes the plant starts at rest and describes only input to output. A cart already moving or a pre-charged capacitor needs the full ODE or state space."
         live: "board:s1"
       - id: splane
         label: What is a pole or a zero, physically?
@@ -182,7 +182,7 @@ maps:
         addsToExample: "Every question uses a plant like the cart (second order, two poles), so the recognition practice is the cart's story told on other systems."
         accountsFor: "Whether the cart's reasoning (poles, DC gain, loop) transfers to unseen plants."
     edges:
-      - { from: root, to: model, label: "describe it", question: "What do we need before we can predict anything?", idea: "A model we can manipulate algebraically. LTI plus the Laplace transform gives transfer functions, where series blocks multiply." }
+      - { from: root, to: model, label: "describe it", question: "What do we need before we can predict anything?", idea: "A model. Physics hands us an ODE; the Laplace transform rewrites that same ODE as a transfer function, so wiring blocks together becomes algebra." }
       - { from: model, to: splane, label: "poles?", question: "What do the roots of G(s) mean?", idea: "Each pole is a natural mode e^(pt) and each zero a transmission null. Plotting them on the s-plane makes behaviour visible." }
       - { from: model, to: tf, label: "read G(s)", question: "What do I read off G(s) before simulating?", idea: "Order, DC gain and time constants are enough to sketch the step response." }
       - { from: model, to: ss, label: "inside?", question: "What if I also need the internal states and initial conditions?", idea: "State space tracks the energy-storage variables themselves; G(s) is its input-output summary." }
