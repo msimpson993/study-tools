@@ -88,7 +88,8 @@
               "quiz",
               "board",
               "glossary",
-              "figures"
+              "figures",
+              "review"
             ]
           },
           "file": {
@@ -141,6 +142,9 @@
           "type": "integer"
         },
         "examples": {
+          "type": "integer"
+        },
+        "review": {
           "type": "integer"
         }
       },

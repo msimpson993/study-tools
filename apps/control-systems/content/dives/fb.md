@@ -10,7 +10,8 @@ chain:
     detail: "S = 1/(1 + GcG)   C = GcG/(1 + GcG)   S + C = 1"
 neighbors:
   - blocks
-  - cheat
+  - sse
+  - cc
 exampleScene: { overlays: [loop, poles], params: { K: 20 }, diagram: noise, caption: "Raise K to 20: the cart is faster and the offset shrinks to 0.09 m, but the poles leave the real axis and it overshoots about 35 %. The diagram adds sensor noise n on the feedback path: the cost side of the trade." }
 ---
 **What does feedback buy us, and what does it cost?**

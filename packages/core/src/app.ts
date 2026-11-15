@@ -103,8 +103,9 @@ export function mountApp(content: AppContent, hooks: AppHooks = {}): void {
     clear(sidebar);
     const link = (href: string, text: string, on: boolean) => h('a', { href, class: on ? 'on' : '' }, text);
     for (const sec of subj.sections) {
-      const href = sec.kind === 'map' ? '#/' : sec.kind === 'quiz' ? '#/quiz' : sec.kind === 'board' ? '#/board' : `#/s/${sec.id}`;
-      sidebar.append(link(href, sec.title, active === (sec.kind === 'map' ? 'map' : sec.kind === 'quiz' ? 'quiz' : sec.kind === 'board' ? 'board' : sec.id)));
+      const key = sec.kind === 'map' ? 'map' : sec.kind === 'quiz' ? 'quiz' : sec.kind === 'board' ? 'board' : sec.kind === 'review' ? 'review' : sec.id;
+      const href = sec.kind === 'map' ? '#/' : sec.kind === 'quiz' ? '#/quiz' : sec.kind === 'board' ? '#/board' : sec.kind === 'review' ? '#/review' : `#/s/${sec.id}`;
+      sidebar.append(link(href, sec.title, active === key));
     }
     if (content.dives.length) {
       sidebar.append(h('h6', null, 'Deep dives'));
@@ -146,6 +147,9 @@ export function mountApp(content: AppContent, hooks: AppHooks = {}): void {
       const tags = (q.get('tags') ?? '').split(',').filter(Boolean);
       main.append(crumbs('Self-check'));
       cleanup = mountQuiz(main, content, progress, { figures: hooks.quizFigures, tags, title: q.get('title') ?? 'Self-check', openDive: (id) => go(`/dive/${id}`), back: () => history.length > 1 ? history.back() : go('/') });
+    } else if (a === 'review') {
+      renderSidebar('review');
+      if (b) renderReview(b); else renderReviewList();
     } else if (a === 'figure' && b) {
       renderSidebar('figures');
       renderFigure(b, q);
@@ -184,6 +188,50 @@ export function mountApp(content: AppContent, hooks: AppHooks = {}): void {
       for (const f of content.figures) wrap.append(h('p', null, h('a', { class: 'tbtn on', href: `#/figure/${f.id}` }, f.title)));
       main.append(wrap);
     }
+  }
+
+
+  /** The Review area: mini exams live here, outside the question map (which stays the landing view). */
+  function renderReviewList() {
+    const pages = content.review ?? [];
+    main.append(crumbs('Review'));
+    const wrap = h('div', { class: 'prose', dataset: { testid: 'review-list' } },
+      h('h2', null, 'Review'),
+      h('p', null, 'Exam preparation, kept apart from the map so the map stays a clean chain of ideas. Each mini exam has a topic checklist that links back to the map, a formula sheet, worked problems and a self-test.'));
+    for (const r of pages) {
+      const n = r.quizTag ? content.quiz.filter((q) => q.tags.includes(r.quizTag!)).length : 0;
+      wrap.append(h('a', { class: 'callout', href: `#/review/${r.id}`, style: 'text-decoration:none;color:inherit;display:block', dataset: { testid: 'review-card' } },
+        h('b', { class: 'lead' }, r.covers ?? 'Review'),
+        h('b', null, r.title),
+        h('div', { class: 'cb', html: `<p>${r.summary}</p>` }),
+        h('span', { class: 'ui', style: 'font-size:.78rem;color:var(--muted)' }, n ? `${n}-question self-test` : '')));
+    }
+    main.append(wrap);
+  }
+
+  function renderReview(id: string) {
+    const r = (content.review ?? []).find((x) => x.id === id);
+    if (!r) return go('/review');
+    main.append(crumbs(['Review', '#/review'], r.title));
+    const n = r.quizTag ? content.quiz.filter((q) => q.tags.includes(r.quizTag!)).length : 0;
+    const hasSheet = r.html.includes('formula-sheet');
+    const art = h('article', { class: 'prose review-page', dataset: { testid: 'review-page' } },
+      h('div', { class: 'dive-head' }, h('h2', null, r.title)),
+      r.covers ? h('p', { class: 'ui', style: 'color:var(--muted);margin-top:0' }, r.covers) : null,
+      h('div', { class: 'chips' },
+        n ? h('a', { class: 'tbtn on', dataset: { testid: 'review-quiz' }, href: `#/quiz?tags=${encodeURIComponent(r.quizTag!)}&title=${encodeURIComponent(r.title)}` }, `Take the self-test (${n})`) : null,
+        hasSheet ? h('button', { class: 'tbtn', dataset: { testid: 'review-print' }, onclick: () => {
+          document.body.dataset.print = 'sheet';
+          const done = () => { delete document.body.dataset.print; window.removeEventListener('afterprint', done); };
+          window.addEventListener('afterprint', done);
+          window.print();
+        } }, 'Print the formula sheet') : null));
+    const body = h('div', { class: 'review-body', html: r.html });
+    art.append(body);
+    const stops = embedFigures(body);
+    cleanup = () => stops.forEach((f) => f());
+    art.append(h('div', { class: 'chips' }, h('a', { class: 'tbtn', href: '#/review' }, '← All reviews'), h('a', { class: 'tbtn', href: '#/' }, '← Back to the map')));
+    main.append(art);
   }
 
   function renderDive(id: string, from: string | null) {

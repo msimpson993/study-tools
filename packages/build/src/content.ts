@@ -5,7 +5,7 @@ import { parse as parseYaml } from 'yaml';
 import Ajv from 'ajv';
 import { sceneProblems } from '../../core/src/scenedefs';
 import { createMarkdown, MathErrors } from './markdown';
-import type { AppContent, MapDef, Dive, Question, Term, FigureDef, Subject } from '../../core/src/types';
+import type { AppContent, MapDef, Dive, ReviewPage, Question, Term, FigureDef, Subject } from '../../core/src/types';
 
 export const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '..', '..');
 const schemaDir = path.join(repoRoot, 'schemas');
@@ -144,6 +144,23 @@ export function loadApp(appDir: string): { content: AppContent; warnings: string
 
   dives.sort((a, b) => (a.order ?? 999) - (b.order ?? 999) || a.id.localeCompare(b.id));
 
+  // ---------- review pages (mini exams: outside the map) ----------
+  const review: ReviewPage[] = [];
+  const reviewDir = path.join(cdir, 'review');
+  if (exists(reviewDir)) {
+    for (const f of fs.readdirSync(reviewDir).filter((x) => x.endsWith('.md')).sort()) {
+      try {
+        const { fm, body } = splitFrontMatter(fs.readFileSync(path.join(reviewDir, f), 'utf8'));
+        checkSchema(problems, 'review', fm, `review/${f}`);
+        const r = fm as any;
+        if (r.id !== f.replace(/\.md$/, '')) problems.push(`review/${f}: id "${r.id}" must equal the file name`);
+        if (body.trim().length < 80) problems.push(`review/${f}: body is empty`);
+        review.push({ id: r.id, order: r.order, title: r.title, summary: inline(r.summary, `review/${f}`), covers: r.covers, quizTag: r.quizTag, html: block(body, `review/${f}`) });
+      } catch (e) { problems.push(`review/${f}: ${(e as Error).message}`); }
+    }
+  }
+  review.sort((a, b) => (a.order ?? 999) - (b.order ?? 999) || a.id.localeCompare(b.id));
+
   // ---------- quiz / glossary / figures ----------
   const quizRaw = exists(path.join(cdir, 'quiz.yaml')) ? (readYaml(path.join(cdir, 'quiz.yaml')) as any[]) : [];
   checkSchema(problems, 'quiz', quizRaw, 'quiz.yaml');
@@ -273,16 +290,27 @@ export function loadApp(appDir: string): { content: AppContent; warnings: string
   }
   // quiz figures: when the subject lists its renderers, every figure.id must be one of them (otherwise ids are checked at runtime, with a visible fallback)
   for (const q of quiz) if (q.figure && subject.quizFigures && !subject.quizFigures.includes(q.figure.id)) problems.push(`quiz.yaml ${q.id}: figure "${q.figure.id}" is not in subject.yaml quizFigures [${subject.quizFigures.join(', ')}]`);
+  const reviewTags = new Set(review.map((r) => r.quizTag).filter(Boolean) as string[]);
   for (const q of quiz) {
-    for (const t of q.tags) if (!tags.has(t) && !diveIds.has(t)) problems.push(`quiz.yaml ${q.id}: tag "${t}" matches no node/dive`);
+    for (const t of q.tags) if (!tags.has(t) && !diveIds.has(t) && !reviewTags.has(t)) problems.push(`quiz.yaml ${q.id}: tag "${t}" matches no node/dive/review page`);
   }
+  // review pages: their self-test must exist, and in-page links to dives/nodes must resolve
+  const nodeIds = new Set(maps.flatMap((m) => m.nodes.map((n) => n.id)));
+  for (const r of review) {
+    if (r.quizTag && !quiz.some((q) => q.tags.includes(r.quizTag!))) problems.push(`review/${r.id}: quizTag "${r.quizTag}" has no questions`);
+    for (const m of r.html.matchAll(/href="#\/(dive|node)\/([A-Za-z0-9_-]+)/g)) {
+      if (m[1] === 'dive' && !diveIds.has(m[2])) problems.push(`review/${r.id}: link to unknown dive "${m[2]}"`);
+      if (m[1] === 'node' && !nodeIds.has(m[2])) problems.push(`review/${r.id}: link to unknown node "${m[2]}"`);
+    }
+  }
+  if (subject.sections.some((s) => s.kind === 'review') && !review.length) problems.push('subject.yaml has a review section but content/review/ has no pages');
 
   // ---------- porting guard ----------
   const exp = subject.expect;
   if (exp) {
     const got = {
       maps: maps.length, nodes: maps.reduce((a, m) => a + m.nodes.length, 0), edges: maps.reduce((a, m) => a + m.edges.length, 0),
-      dives: dives.length, quiz: quiz.length, examples: ((extra.examples as any)?.examples ?? []).length,
+      dives: dives.length, review: review.length, quiz: quiz.length, examples: ((extra.examples as any)?.examples ?? []).length,
     } as Record<string, number>;
     for (const [k, v] of Object.entries(exp)) if (got[k] !== v) problems.push(`subject.yaml expect.${k} = ${v} but found ${got[k]} (content was dropped or added; update expect deliberately)`);
   }
@@ -292,7 +320,7 @@ export function loadApp(appDir: string): { content: AppContent; warnings: string
 
   const content: AppContent = {
     subject: { ...subject, sections: sectionsR as any, runningExample: re ? { title: re.title, summary: inline(re.summary, 'runningExample'), details: re.details ? block(re.details, 'runningExample.details') : undefined, scene: re.scene } : undefined },
-    maps, dives, quiz, glossary: glossaryR as Term[], figures: figuresR as FigureDef[], extra,
+    maps, dives, review, quiz, glossary: glossaryR as Term[], figures: figuresR as FigureDef[], extra,
   };
   return { content, warnings };
 }

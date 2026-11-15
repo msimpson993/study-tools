@@ -1,0 +1,34 @@
+{
+  "$id": "review.schema.json",
+  "type": "object",
+  "required": [
+    "id",
+    "title",
+    "summary"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "id": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9_-]+$"
+    },
+    "title": {
+      "type": "string"
+    },
+    "order": {
+      "type": "number"
+    },
+    "summary": {
+      "type": "string",
+      "description": "One or two sentences on the review card: what it covers."
+    },
+    "covers": {
+      "type": "string",
+      "description": "Short source line, e.g. 'Lecture Notes 2, slides 1-34'."
+    },
+    "quizTag": {
+      "type": "string",
+      "description": "Quiz tag whose questions make up this review's self-test."
+    }
+  }
+}

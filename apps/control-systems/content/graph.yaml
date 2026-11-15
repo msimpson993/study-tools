@@ -214,22 +214,6 @@ maps:
         addsToExample: "Plain u = −Kx drives the cart back to 0. With u = −Kx + N̄ r and K = [23, 5], DC gain from r to x is N̄/25, so N̄ = 25 makes it track a 1 m step."
         accountsFor: "The difference between a regulator and a tracker, and the notes' M and N reference-gain structure (or feeding y − r to the observer)."
         live: "figure:refin"
-      - id: cheat
-        label: What should I recognize on sight?
-        dive: cheat
-        detail: cheat sheet and glossary
-        short: "A one-page 'recognize this' list: which pole pattern, transfer function shape or block diagram means which behaviour, plus a glossary of every symbol. It is the review end of the chain."
-        addsToExample: "Collects the cart's facts in one place: poles −1 and −2, G(0) = 0.5, ζ ≈ 1.06, and what each controller term does to them."
-        accountsFor: "How quickly the cart's behaviour can be read off by recognition when the same patterns appear on an exam or in a new plant."
-        live: "board:cheatsec"
-      - id: mini-exam
-        label: Can I do it under exam conditions?
-        dive: cheat
-        quizTag: mini-exam
-        detail: mini-exam 1 quiz (22 questions)
-        short: "The 22-question mini-exam 1 review: transfer functions, order, block diagrams, disturbances, controllers, state space, circuits and op-amps, first-order response and dominant poles, with a question and a worked reason each."
-        addsToExample: "Every question uses a plant like the cart (second order, two poles), so the recognition practice is the cart's story told on other systems."
-        accountsFor: "Whether the cart's reasoning (poles, DC gain, loop) transfers to unseen plants."
     edges:
       - { from: root, to: model, label: "describe it", question: "What do we need before we can predict anything?", idea: "A model. Physics hands us an ODE; the Laplace transform rewrites that same ODE as a transfer function, so wiring blocks together becomes algebra." }
       - { from: model, to: splane, label: "poles?", question: "G(s) is a ratio of polynomials. What do its roots mean?", idea: "Each pole is a natural mode e^(pt) and each zero a transmission null. Plotting them on the s-plane makes behaviour visible." }
@@ -251,8 +235,6 @@ maps:
       - { from: sf, to: obs, label: "missing states?", question: "How do we estimate the states we can't measure?", idea: "A Luenberger observer copies the plant and corrects the estimate with L(y − C x̂)." }
       - { from: obs, to: sep, label: "put them together", question: "How do we plug the estimate into the control law, and why can we design the two separately?", idea: "u = −K x̂. The closed-loop poles are those of A − BK and of A − LC, designed independently (separation)." }
       - { from: sep, to: refin, label: "a command", question: "How do we make it follow a command instead of just returning to zero?", idea: "A reference gain N̄ (or feeding y − r to the observer) turns the regulator into a tracker." }
-      - { from: refin, to: cheat, label: "review", question: "What should I be able to recognize on sight across the whole map?", idea: "Patterns: pole locations, transfer function shapes, loop structures and the state-feedback recipe, collected for review." }
-      - { from: cheat, to: mini-exam, label: "test myself", question: "Can I use these patterns under exam conditions?", idea: "A 22-question mini-exam with worked reasons and links back to the guide." }
   - id: splane
     title: The s-plane as a map
     caption: Section 1½ of the guide, as its own chain of questions. Start from "what is a point?" and follow what each idea lets you read from the plane.

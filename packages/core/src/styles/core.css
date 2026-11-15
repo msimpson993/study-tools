@@ -258,3 +258,16 @@ details.st-more .st-badge{display:inline-block;margin-left:.35rem;padding:0 .4re
 @media (min-width:900px){.ex-row.has-scene{grid-template-columns:minmax(0,1fr) minmax(300px,430px)}}
 .cm-hero{display:grid;grid-template-columns:minmax(0,1fr);gap:.5rem;align-items:center}
 @media (min-width:760px){.cm-hero.has-scene{grid-template-columns:minmax(0,1fr) 340px}}
+
+/* Review pages: the formula sheet prints alone, on one page */
+.formula-sheet{border:1px solid var(--border);border-radius:10px;padding:.6rem .9rem;margin:.8rem 0;background:var(--panel)}
+.formula-sheet h4{margin:.5rem 0 .2rem}.formula-sheet ul{margin:.2rem 0 .4rem}
+@media print{
+  body[data-print=sheet] .topbar,body[data-print=sheet] .sidebar,body[data-print=sheet] .drawer,body[data-print=sheet] .crumbs,body[data-print=sheet] .chips,body[data-print=sheet] .dive-head,
+  body[data-print=sheet] .review-page>*:not(.review-body){display:none!important}
+  body[data-print=sheet] .review-body>*:not(.formula-sheet){display:none!important}
+  body[data-print=sheet] .formula-sheet{border:0;font-size:9.5pt;columns:2;column-gap:1.2rem;background:#fff;color:#000}
+  body[data-print=sheet] .formula-sheet h4{break-after:avoid}
+  body[data-print=sheet] .frame{display:block}
+  body[data-print=sheet]{background:#fff;color:#000}
+}

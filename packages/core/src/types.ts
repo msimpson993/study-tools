@@ -76,6 +76,9 @@ export interface Dive {
   html: string;
 }
 
+/** A review page (mini exam): lives outside the map, listed under the Review section. */
+export interface ReviewPage { id: string; order?: number; title: string; summary: string; covers?: string; /** quiz tag of the self-test */ quizTag?: string; html: string }
+
 export type QuestionKind = 'recall' | 'recognize' | 'action' | 'compute' | 'trap';
 /** A small non-interactive plot shown under the question text. `id` names a renderer registered by the app (`quizFigures` hook); `params` are FIXED inputs for it. */
 export interface QuizFigureRef { id: string; params?: Record<string, number | string | boolean>; /** accessible description (required): what the plot shows */ alt: string; caption?: string }
@@ -121,7 +124,7 @@ export interface FigureDef {
   height?: number;
 }
 
-export interface SectionDef { id: string; title: string; kind: 'map' | 'dives' | 'md' | 'quiz' | 'board' | 'glossary' | 'figures'; html?: string }
+export interface SectionDef { id: string; title: string; kind: 'map' | 'dives' | 'md' | 'quiz' | 'board' | 'glossary' | 'figures' | 'review'; html?: string }
 export interface Subject {
   id: string;
   title: string;
@@ -141,6 +144,8 @@ export interface AppContent {
   subject: Subject;
   maps: MapDef[];
   dives: Dive[];
+  /** review pages (mini exams) reachable from the Review section, not from the map */
+  review?: ReviewPage[];
   quiz: Question[];
   glossary: Term[];
   figures: FigureDef[];

@@ -8,12 +8,12 @@ categories:
   - { id: loop, label: Close the loop }
   - { id: state, label: State space }
   - { id: time, label: Time response }
-  - { id: review, label: Review }
 sections:
   - { id: map, title: The question map, kind: map }
   - { id: board, title: Interactive course guide, kind: board }
   - { id: figures, title: Live figures, kind: figures }
   - { id: quiz, title: Quiz & flashcards, kind: quiz }
+  - { id: review, title: Review (mini exams), kind: review }
   - { id: glossary, title: Variables & terms, kind: glossary }
 board:
   pairs: [overview, s1, splane, sp1, sp-meaning, sp2, sp3, sp4, sp5, sp6, sp7, sp8, s2, s3, s4, s5, s6, s7, s8, s9, s10, s11, s12, s13, cheatsec, glossary]
@@ -39,10 +39,11 @@ runningExample:
     Every box of the map says what its idea **adds to this cart** and what it lets us **account for**.
 hub:
   order: 3
-# Porting guard: 2 maps (course chain + s-plane sub-chain), 27 boxes, 26 lines, the 68-question course quiz + the 22-question mini-exam
+# Porting guard: 2 maps (course chain + s-plane sub-chain), 30 boxes, 28 lines, 27 dives, 1 review page, the 83-question course quiz + the 22-question mini-exam 1 (mini-exam 2 questions are added on top)
 expect:
   maps: 2
-  nodes: 32
-  edges: 30
-  dives: 28
+  nodes: 30
+  edges: 28
+  dives: 27
+  review: 1
   quiz: 105
