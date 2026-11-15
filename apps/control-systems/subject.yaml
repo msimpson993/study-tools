@@ -45,5 +45,5 @@ expect:
   nodes: 30
   edges: 28
   dives: 27
-  review: 1
-  quiz: 105
+  review: 2
+  quiz: 116

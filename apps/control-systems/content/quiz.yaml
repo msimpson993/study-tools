@@ -844,6 +844,7 @@
     <a class="rev" href="#/board?pair=s12&at=q28">Review this in the guide →</a>
 - id: cs-41
   tags:
+    - mini-exam-2
     - sse
   kind: compute
   q: A type-1 loop (one integrator in L) is driven by a unit ramp. What is the steady-state error?
@@ -859,6 +860,7 @@
     <a class="rev" href="#/board?pair=s12&at=q28">Review this in the guide →</a>
 - id: cs-42
   tags:
+    - mini-exam-2
     - fb
   kind: recognize
   q: With unity feedback and L = G<sub>c</sub>G, which expression is the tracking error from Lecture Notes 2?
@@ -874,6 +876,7 @@
     <a class="rev" href="#/board?pair=s13&at=q34">Review this in the guide →</a>
 - id: cs-43
   tags:
+    - mini-exam-2
     - fb
   kind: recognize
   q: Why can't you make both S and C small at the same frequency?
@@ -889,6 +892,7 @@
     <a class="rev" href="#/board?pair=s13&at=q34">Review this in the guide →</a>
 - id: cs-44
   tags:
+    - mini-exam-2
     - fb
   kind: compute
   q: The plant gain drifts by 10%. In open loop, how much does the overall transfer function change? With closed-loop gain G<sub>c</sub>G = 100?
@@ -904,6 +908,7 @@
     <a class="rev" href="#/board?pair=s13&at=q35">Review this in the guide →</a>
 - id: cs-45
   tags:
+    - mini-exam-2
     - fb
   kind: recognize
   q: In the steel-mill speed control example, what does closing the loop with a tachometer do to the steady-state speed drop under a load-torque step?
@@ -919,6 +924,7 @@
     <a class="rev" href="#/board?pair=s13&at=q36">Review this in the guide →</a>
 - id: cs-46
   tags:
+    - mini-exam-2
     - fb
   kind: recognize
   q: With very large loop gain, what happens to sensor noise N at the output?
@@ -934,6 +940,7 @@
     <a class="rev" href="#/board?pair=s13&at=q36">Review this in the guide →</a>
 - id: cs-47
   tags:
+    - mini-exam-2
     - fb
   kind: recognize
   q: An open-loop motor speed response is K₁/(τ₁s + 1) with τ₁ = 10 s. Closing the loop with total loop gain K<sub>a</sub>K<sub>t</sub>K₁ = 19 gives what closed-loop time constant?
@@ -949,6 +956,7 @@
     <a class="rev" href="#/board?pair=s13&at=q37">Review this in the guide →</a>
 - id: cs-48
   tags:
+    - mini-exam-2
     - fb
   kind: recognize
   q: 'Boring machine: Y = <span class="frac"><span>K + 11s</span><span>s<sup>2</sup> + 12s + K</span></span>R + <span class="frac"><span>1</span><span>s<sup>2</sup> + 12s + K</span></span>T<sub>d</sub>. Steady-state output for a unit step disturbance at K = 100 and at K = 20?'
@@ -964,6 +972,7 @@
     <a class="rev" href="#/board?pair=s13&at=q38">Review this in the guide →</a>
 - id: cs-49
   tags:
+    - mini-exam-2
     - fb
   kind: recognize
   q: In the boring machine, what does raising K trade off?
@@ -979,6 +988,7 @@
     <a class="rev" href="#/board?pair=s13&at=q38">Review this in the guide →</a>
 - id: cs-50
   tags:
+    - mini-exam-2
     - fb
   kind: recognize
   q: Why would you pick ITAE (∫t|e|dt) over ISE (∫e²dt) as a performance index?
@@ -994,6 +1004,7 @@
     <a class="rev" href="#/board?pair=s13&at=q39">Review this in the guide →</a>
 - id: cs-51
   tags:
+    - mini-exam-2
     - fb
   kind: recognize
   q: When simplifying a high-order model to a lower-order one (Lecture Notes 2), what must you preserve?
@@ -1009,6 +1020,7 @@
     <a class="rev" href="#/board?pair=s13&at=q40">Review this in the guide →</a>
 - id: cs-52
   tags:
+    - mini-exam-2
     - fb
   kind: recognize
   q: Which is a genuine cost of closing the loop compared with open loop?
@@ -1478,3 +1490,124 @@
     - "N = K and M = L"
   answer: 2
   why: "With M = BN the r terms cancel in the error equation e' = (A − LC)e, so the observer does not 'see' the command. N̄ is then chosen so the DC gain from r to y is 1. The other listed choice, M = −L and N = 0, is the alternative of feeding the tracking error to the observer. r enters the error equation through (BN − M)r, so only M = BN cancels it while still letting r drive the plant."
+- id: me2-1
+  tags: [mini-exam-2, fb]
+  kind: compute
+  q: "Unity feedback with G<sub>c</sub> = 19 and G = 1/(s + 1). What are S(0) and C(0)?"
+  choices:
+    - "S(0) = 0.05 and C(0) = 0.95"
+    - "S(0) = 0.95 and C(0) = 0.05"
+    - "S(0) = 0.05 and C(0) = 0.05"
+    - "S(0) = 1/19 and C(0) = 19/20"
+  answer: 0
+  why: "L = 19/(s + 1), so L(0) = 19. S(0) = 1/(1 + 19) = 0.05 and C(0) = 19/20 = 0.95. Always check S + C = 1 (the last choice fails that check)."
+- id: me2-2
+  tags: [mini-exam-2, fb]
+  kind: compute
+  q: "T = G<sub>c</sub>G/(1 + G<sub>c</sub>GH). The sensor gain H drifts by +10 % while the loop gain G<sub>c</sub>GH is 99 at DC. About how much does T change?"
+  choices:
+    - "About −9.9 %: feedback does not protect against errors in the sensor"
+    - "About −0.1 %: the same 1/(1 + L) protection as for G"
+    - "About +9.9 %"
+    - "No change, because T depends on the loop gain only"
+  answer: 0
+  why: "S<sub>H</sub><sup>T</sup> = −GcGH/(1 + GcGH) = −99/100, which is nearly −1. A 10 % change in H gives about −9.9 % in T. The loop forces the output to follow what the sensor says, so a sensor error passes almost one to one. The protection 1/(1 + L) applies to G and G<sub>c</sub>, not to the feedback path."
+- id: me2-3
+  tags: [mini-exam-2, fb]
+  kind: compute
+  q: "Unity feedback, G<sub>c</sub> = 50, G = 1/(s + 1), a unit step disturbance T<sub>d</sub> at the plant input and R = 0. What is the steady-state output (the open-loop value is G(0) = 1)?"
+  choices:
+    - "1/51 ≈ 0.02"
+    - "50/51 ≈ 0.98"
+    - "1/50"
+    - "0, because the loop has gain"
+  answer: 0
+  why: "Y/T<sub>d</sub> = G/(1 + L) = 1/(s + 51). At DC, 1/51 ≈ 0.02, which is about 51 times smaller than the open-loop value of 1. It is not zero because there is no integrator in the loop."
+- id: me2-4
+  tags: [mini-exam-2, sse]
+  kind: compute
+  q: "Unity feedback with L(s) = 10(s + 3)/(s(s + 2)(s + 5)), stable closed loop. What is the steady-state error for a unit ramp?"
+  choices:
+    - "1/3"
+    - "3"
+    - "0"
+    - "∞"
+  answer: 0
+  why: "One pole at the origin: type 1. K<sub>v</sub> = lim sL = 10·3/(2·5) = 3, so the ramp error is 1/K<sub>v</sub> = 1/3. The step error is 0."
+- id: me2-5
+  tags: [mini-exam-2, fb]
+  kind: compute
+  q: "Boring machine (G<sub>c</sub> = K + 11s, G = 1/(s(s + 1))). The output to a unit step disturbance must be at most 0.02. What is the smallest K, and what damping ratio does it give?"
+  choices:
+    - "K = 50, ζ = 6/√50 ≈ 0.85"
+    - "K = 50, ζ = 0.5"
+    - "K = 100, ζ = 0.6"
+    - "K = 20, ζ = 1.34"
+  answer: 0
+  why: "y<sub>ss</sub> = 1/K ≤ 0.02 gives K ≥ 50. With ω<sub>n</sub> = √K and ζ = 6/√K, K = 50 gives ζ ≈ 0.85. K = 100 gives y<sub>ss</sub> = 0.01 (ζ = 0.6); K = 20 gives 0.05, which is too large."
+- id: me2-6
+  tags: [mini-exam-2, fb]
+  kind: compute
+  q: "A disturbance response is Y(s) = (s + K)/(s² + Ks + 4). Which K minimises ISE = ∫y² dt?"
+  choices:
+    - "K = 2 (ζ = 0.5), with ISE = (4 + K²)/(8K) = 1/2"
+    - "K = 4 (ζ = 1)"
+    - "K = 1"
+    - "The larger K is, the smaller ISE gets"
+  answer: 0
+  why: "ISE(K) = (4 + K²)/(8K) = 1/(2K) + K/8. Setting dI/dK = −1/(2K²) + 1/8 = 0 gives K = 2, and d²I/dK² = 1/K³ > 0 confirms a minimum. At K = 2, ζ = K/4 = 0.5. Very large K makes the slow term K/8 grow."
+- id: me2-7
+  tags: [mini-exam-2, fb]
+  kind: recognize
+  q: "In the space-telescope example, the ISE optimum is K<sub>3</sub> ≈ 3.2 (ζ = 0.5). Where is the IAE optimum?"
+  choices:
+    - "At a larger K<sub>3</sub> (about 4.2, ζ ≈ 0.665): IAE prefers more damping"
+    - "At the same K<sub>3</sub>, because every index agrees"
+    - "At a smaller K<sub>3</sub>, with less damping"
+    - "At K<sub>3</sub> = 0"
+  answer: 0
+  why: "ISE squares the error, so it tolerates small ringing but punishes a big early error; IAE weighs all error equally, so it prefers a more damped response: K<sub>3</sub> = 4.2, ζ = 0.665. Different indices give different 'best' gains, which is why you name the index."
+- id: me2-8
+  tags: [mini-exam-2, fb]
+  kind: compute
+  q: "Match M<sub>2</sub> = Δ<sub>2</sub> to reduce G = 6/((s + 1)(s + 2)(s + 3)) to a first-order model 1/(1 + d<sub>1</sub>s). Which model results?"
+  choices:
+    - "0.857/(s + 0.857), from d<sub>1</sub> = 7/6"
+    - "1/(s + 1), the slowest pole with unit DC gain"
+    - "6/(s + 6)"
+    - "1/(s + 2)"
+  answer: 0
+  why: "Write G = 1/(1 + (11/6)s + s² + s³/6). Then Δ<sub>2</sub> = (11/6)² − 2·1 = 49/36 and M<sub>2</sub> = d<sub>1</sub>² for the one-term model, so d<sub>1</sub> = 7/6 and G<sub>L</sub> = 0.857/(s + 0.857). All choices keep DC gain 1, but only the first matches the frequency-response moment."
+- id: me2-9
+  tags: [mini-exam-2, fb]
+  kind: trap
+  q: "A reduction gives G<sub>L</sub>(s) = (2s² + 1)/(s + 1). What is wrong with it?"
+  choices:
+    - "It has more zeros than poles, so it is not causal (it would have to differentiate the input)"
+    - "Its DC gain is wrong"
+    - "Its pole is in the right half-plane"
+    - "Nothing: any ratio of polynomials is a valid model"
+  answer: 0
+  why: "A realizable model needs at least as many poles as zeros. Here the numerator has degree 2 and the denominator degree 1, so the output would depend on the derivative of the input. In the matching method keep the numerator order p ≤ q, the denominator order."
+- id: me2-10
+  tags: [mini-exam-2, fb]
+  kind: compute
+  q: "Motor speed loop with a large amplifier gain K<sub>a</sub> and a tachometer K<sub>t</sub> = 0.25. About what final speed per unit command does the closed loop give?"
+  choices:
+    - "About 1/K<sub>t</sub> = 4"
+    - "About K<sub>a</sub>"
+    - "About K<sub>t</sub> = 0.25"
+    - "About 1, because feedback gives unit gain"
+  answer: 0
+  why: "ω/R = K<sub>a</sub>G/(1 + K<sub>a</sub>K<sub>t</sub>G). When K<sub>a</sub>K<sub>t</sub>G(0) is large this tends to 1/K<sub>t</sub> = 4. Speed and rejection came at the cost of DC gain, which is why the command is often scaled."
+- id: me2-11
+  tags: [mini-exam-2, sse]
+  kind: trap
+  q: "L(s) = 4/(s(s − 1)). The final-value theorem on E = R/(1 + L) with a unit step gives 0. Is the steady-state error 0?"
+  choices:
+    - "No: the closed loop s² − s + 4 is unstable, so the final-value theorem does not apply"
+    - "Yes: the loop has an integrator, so the error is 0"
+    - "Yes, for any loop with a pole at s = 0"
+    - "No: a type-1 loop has step error 1/K<sub>v</sub>"
+  answer: 0
+  why: "The theorem only holds when sE(s) has all its poles in the left half-plane. Here the characteristic polynomial s² − s + 4 has roots in the right half-plane, so the error grows. Check stability first, then use e<sub>ss</sub>."

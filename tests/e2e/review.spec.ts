@@ -1,8 +1,8 @@
 import { test, expect } from '@playwright/test';
 import { open, noHScroll, trackErrors } from './helpers';
 
-const REVIEWS = ['mini-exam-1'];
-const MIN_KATEX: Record<string, number> = { 'mini-exam-1': 0 };
+const REVIEWS = ['mini-exam-1', 'mini-exam-2'];
+const MIN_KATEX: Record<string, number> = { 'mini-exam-1': 0, 'mini-exam-2': 40 };
 
 test.describe('control-systems: the Review area (mini exams live outside the map)', () => {
   test('the map is still the landing view and no exam node is on it', async ({ page }) => {
