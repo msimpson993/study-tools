@@ -95,7 +95,11 @@
                 "disturb",
                 "pid",
                 "noise",
-                "gain"
+                "gain",
+                "sfb",
+                "observer",
+                "sep",
+                "refin"
               ]
             },
             {
@@ -110,7 +114,11 @@
                   "disturb",
                   "pid",
                   "noise",
-                  "gain"
+                  "gain",
+                  "sfb",
+                  "observer",
+                  "sep",
+                  "refin"
                 ]
               }
             }

@@ -9,7 +9,7 @@ import { sceneProblems } from '../src/scenedefs';
 
 describe('block-diagram catalogue', () => {
   it('every stage has parts, and new parts are a subset of them', () => {
-    expect(DIAGRAM_STAGES.length).toBe(7);
+    expect(DIAGRAM_STAGES.length).toBe(11);
     for (const s of DIAGRAM_STAGES) {
       expect(isDiagramStage(s)).toBe(true);
       const parts = partsOf(s), added = newPartsOf(s);
@@ -31,6 +31,10 @@ describe('block-diagram catalogue', () => {
     expect(newPartsOf('pid')).toEqual(['P', 'I', 'D']);
     expect(newPartsOf('noise')).toEqual(['n']);
     expect(newPartsOf('gain')).toEqual(['K']);
+    expect(partsOf('sfb')).toEqual(expect.arrayContaining(['K', 'G', 'x']));
+    expect(newPartsOf('sfb')).toEqual(['K']);
+    expect(newPartsOf('observer')).toEqual(expect.arrayContaining(['observer', 'L', 'xhat']));
+    expect(newPartsOf('refin')).toEqual(['r', 'Nbar']);
   });
   it('diagramStages normalises a single stage or a list; problems catch unknown and empty', () => {
     expect(diagramStages(undefined)).toEqual([]);

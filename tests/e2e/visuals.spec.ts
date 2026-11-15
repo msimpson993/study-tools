@@ -25,6 +25,8 @@ async function nudge(page: Page, f: Fig) {
   }
   const s = f.controls.find((c) => c.type === 'select');
   if (s) { const other = s.options!.find((o) => o.value !== s.default)!.value; await page.locator(`[data-testid=controls] select[data-k="${s.id}"]`).selectOption(other); return s.id; }
+  const tgl = f.controls.find((c) => c.type === 'toggle');
+  if (tgl) { await page.locator(`[data-testid=controls] input[type=checkbox][data-k="${tgl.id}"]`).click(); return tgl.id; }
   throw new Error(`figure ${f.id} has nothing to nudge`);
 }
 

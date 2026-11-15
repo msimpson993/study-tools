@@ -30,12 +30,14 @@ describe('seriesNames', () => {
     const { warnings } = loadApp(dir);
     expect(warnings.join('\n')).toMatch(/graph\.yaml chain: nodes use series 0, 1, 2, 3 but the map has no seriesNames/);
   });
-  it('a series index beyond the names is an error; too many names is a warning; more than four names is rejected', () => {
+  it('a series index beyond the names is an error; too many names is a warning; more than five names is rejected', () => {
     let dir = copyApp(APP); edit(path.join(dir, 'content/graph.yaml'), (y) => { y.maps[0].seriesNames = ['a name', 'b name']; });
     expect(() => loadApp(dir)).toThrow(ContentError); try { loadApp(dir); } catch (e) { expect((e as Error).message).toMatch(/series 2 is used but seriesNames has only 2 names/); }
     dir = copyApp(APP); edit(path.join(dir, 'content/graph.yaml'), (y) => { y.maps[0].seriesNames = ['n one', 'n two', 'n three', 'n four']; for (const n of y.maps[0].nodes) if (n.series === 3) n.series = 2; });
     expect(loadApp(dir).warnings.join('\n')).toMatch(/lists 4 names but only series 0, 1, 2 are used/);
     dir = copyApp(APP); edit(path.join(dir, 'content/graph.yaml'), (y) => { y.maps[0].seriesNames = ['aaa', 'bbb', 'ccc', 'ddd', 'eee']; });
+    expect(loadApp(dir).warnings.join('\n')).toMatch(/lists 5 names but only series 0, 1, 2, 3 are used/);
+    dir = copyApp(APP); edit(path.join(dir, 'content/graph.yaml'), (y) => { y.maps[0].seriesNames = ['aaa', 'bbb', 'ccc', 'ddd', 'eee', 'fff']; });
     expect(() => loadApp(dir)).toThrow(/seriesNames/);
   });
 });

@@ -33,10 +33,10 @@ test.describe('control-systems: the migrated interactive guide', () => {
     await expect(page.getByTestId('qcard').first()).toBeVisible();
   });
 
-  test('quizzes: 68 course + 22 mini-exam questions, tagged to map nodes; figure questions render their diagram', async ({ page }) => {
+  test('quizzes: 83 course + 22 mini-exam questions, tagged to map nodes; figure questions render their diagram', async ({ page }) => {
     await open(page, 'control-systems');
     const q = await page.evaluate(() => (window as any).__study.content.quiz);
-    expect(q.filter((x: any) => x.id.startsWith('cs-')).length).toBe(68);
+    expect(q.filter((x: any) => x.id.startsWith('cs-')).length).toBe(83);
     expect(q.filter((x: any) => x.id.startsWith('mini-')).length).toBe(22);
     expect(q.filter((x: any) => x.q.includes('<svg')).length).toBe(4);
     await page.goto('/control-systems/index.html#/quiz?tags=blocks&title=Block%20diagrams'); await page.reload();

@@ -41,7 +41,7 @@ hub:
 # Porting guard: 2 maps (course chain + s-plane sub-chain), 27 boxes, 26 lines, the 68-question course quiz + the 22-question mini-exam
 expect:
   maps: 2
-  nodes: 27
-  edges: 26
-  dives: 23
-  quiz: 90
+  nodes: 32
+  edges: 31
+  dives: 28
+  quiz: 105

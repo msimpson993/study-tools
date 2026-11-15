@@ -107,7 +107,7 @@ for (const app of APPS) {
           await expect(legend).toBeVisible();
           const box = (await legend.boundingBox())!;
           expect(box.x + box.width, 'legend inside viewport').toBeLessThanOrEqual(vp.width + 1);
-          expect(box.height, 'legend stays small').toBeLessThanOrEqual(vp.width < 600 ? 150 : 70);
+          expect(box.height, 'legend stays small').toBeLessThanOrEqual(vp.width < 600 ? 160 : 70);
           expect(await noHScroll(page)).toBe(true);
           const chip = page.locator('.lg-chip').first(); if (await chip.count()) await chip.click(); else await page.locator('[data-testid=map-edge]').first().dispatchEvent('click');
           await page.waitForTimeout(150);

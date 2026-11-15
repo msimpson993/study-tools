@@ -105,6 +105,7 @@ describe('staged block diagram field', () => {
     const want: Record<string, string | string[]> = {
       model: 'open', tf: 'open', first: 'open', order: 'open', second: 'open', dominant: 'open',
       ss: 'states', ss2tf: 'states', blocks: ['loop', 'disturb'], ctrl: 'pid', fb: 'noise', sse: 'noise', sp8: 'gain',
+      cc: 'states', sf: 'sfb', obs: 'observer', sep: 'sep', refin: 'refin',
     };
     for (const [id, d] of Object.entries(want)) {
       expect(content.dives.find((x) => x.id === id)?.exampleScene?.diagram, id).toEqual(d);

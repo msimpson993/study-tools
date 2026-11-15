@@ -28,7 +28,7 @@ export interface MapNav {
 export const MAP_VIEW_KEY = 'study-tools.mapView';
 export const readMapView = (): MapView => (storeGet<string>(MAP_VIEW_KEY, 'fit') === 'actual' ? 'actual' : 'fit');
 
-const SERIES = ['var(--s0)', 'var(--s1)', 'var(--s2)', 'var(--s3)'];
+const SERIES = ['var(--s0)', 'var(--s1)', 'var(--s2)', 'var(--s3)', 'var(--s4)'];
 
 /** The app's home screen: question-chain map with Explore / Review modes. */
 export function mountConceptMap(host: HTMLElement, content: AppContent, progress: Progress, st: MapState, nav: MapNav): () => void {

@@ -229,7 +229,7 @@ function build(G: Graph, p: Params, order: string[][]): Built {
 
 const score = (b: Built) => b.overfull * 1e6 + b.stacked * 1e4 + b.crossings * 1000 + b.wire / 100;
 
-/** A node order per rank with few crossings: barycenter sweeps for a start, then adjacent swaps kept only when the routed drawing gets better. */
+/** A node order per rank with few crossings: barycenter sweeps for a start, then pairwise swaps in each rank kept only when the routed drawing gets better. */
 function searchOrder(G: Graph, cols: number, p: Params): string[][] {
   const key = `${G.sig}@${cols}`, hit = ORDERS.get(key); if (hit) return hit;
   const ranks: string[][] = Array.from({ length: G.maxRank + 1 }, () => []);
@@ -250,8 +250,8 @@ function searchOrder(G: Graph, cols: number, p: Params): string[][] {
   best = best.map((r) => r.slice());
   for (let pass = 0; pass < 4; pass++) {
     let improved = false;
-    for (let r = 0; r <= G.maxRank; r++) for (let i = 0; i + 1 < best[r].length; i++) {
-      const t = best.map((x) => x.slice()); [t[r][i], t[r][i + 1]] = [t[r][i + 1], t[r][i]];
+    for (let r = 0; r <= G.maxRank; r++) for (let i = 0; i < best[r].length; i++) for (let j = i + 1; j < best[r].length; j++) {
+      const t = best.map((x) => x.slice()); [t[r][i], t[r][j]] = [t[r][j], t[r][i]];
       const s = score(build(G, p, t)); if (s < bestS - 1e-9) { bestS = s; best = t; improved = true; }
     }
     if (!improved) break;

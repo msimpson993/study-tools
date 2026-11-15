@@ -9,7 +9,7 @@ export interface MapNode {
   label: string;
   detail?: string;
   kind?: NodeKind;
-  /** colour series (0-3) */
+  /** colour series (0-4) */
   series?: number;
   /** rendered HTML (inline markdown) of the short answer */
   short: string;
@@ -53,7 +53,7 @@ export interface MapDef {
   id: string;
   title: string;
   caption?: string;
-  /** names of the colour families node.series 0..3 (legend chips) */
+  /** names of the colour families node.series 0..4 (legend chips) */
   seriesNames?: string[];
   nodes: MapNode[];
   edges: MapEdge[];

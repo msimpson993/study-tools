@@ -675,6 +675,10 @@ const DIAGRAM_SAYS: Record<string, string> = {
   pid: 'The controller C is expanded into P, I and D branches.',
   noise: 'Sensor noise n enters on the feedback path.',
   gain: 'The controller is shown as gain K, with a slider to change it.',
+  sfb: 'State-feedback block: the gain K acts on the full state (x, ẋ) to produce u = −Kx.',
+  observer: 'A Luenberger observer copies the plant and corrects the estimate with the position error through L.',
+  sep: 'The compensator: the observer estimate x̂ is multiplied by K to make the push u = −K x̂.',
+  refin: 'A reference input r enters through the gain N̄ so the cart can track a command, not only return to zero.',
 };
 
 /** Plain-language description (alt text and caption) of what a scene shows with these overlays (and optional staged diagram). */

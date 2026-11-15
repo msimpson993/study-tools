@@ -289,3 +289,83 @@
     - { id: k2, label: "K = 2", set: { K: 2 } }
     - { id: k6, label: "K = 6", set: { K: 6 }, about: "Gain margin 0 dB." }
     - { id: k9, label: "K = 9", set: { K: 9 } }
+- id: cc
+  title: "Can the force reach every state, and does position reveal them?"
+  x: "position (m)"
+  y: "velocity (m/s)"
+  legend:
+    - { label: "state trajectory", color: "var(--cyan)" }
+    - { label: "full rank (ok)", color: "var(--ok)" }
+    - { label: "cancelled mode (bad)", color: "var(--bad)" }
+  howToRead: "Left: the cart in the (x, ẋ) plane after a 1 N push. Every point in that plane is a state the force can reach when the plant is controllable. Right: the controllability and observability matrices of this plant. Switch to the cancelled-mode preset to see a system whose G(s) looks fine while an internal eigenvalue is hidden."
+  lookFor: "On the running cart both matrices are invertible (det Pc = −1, det Po = 1). On the hidden-mode preset both determinants vanish and G(s) = 1/(s+1) no longer mentions the unstable eigenvalue +1."
+  controls:
+    - { id: hidden, label: "Show a cancelled (hidden) mode", type: toggle, default: false, group: primary }
+  presets:
+    - { id: cart, label: "Running cart", set: { hidden: false }, about: "Pc and Po are both invertible." }
+    - { id: hide, label: "Cancelled unstable mode", set: { hidden: true }, about: "G(s) = 1/(s+1) hides an eigenvalue at +1." }
+- id: sf
+  title: "Place the cart's poles: state feedback vs the P-control locus"
+  x: "σ (1/s) · time (s)"
+  y: "jω (rad/s) · position (m)"
+  legend:
+    - { label: "state-feedback poles and step", color: "var(--grn)" }
+    - { label: "P-control locus / step at the comparison K", color: "var(--cyan)" }
+  howToRead: "Left: the s-plane. The grey curves are the P-control root locus of the cart (u = K(r − y)); the cyan rings are those closed-loop poles at the comparison gain; the green × are the eigenvalues of A − BK, which you can place anywhere. Right: a 1 m step under state feedback against that P-control response. Default K = [23, 5] puts the poles at −4 ± 3j (ζ = 0.8, 1 s settling)."
+  lookFor: "P control is stuck on the locus: at K = 7 the poles are −1.5 ± j2.6 and the cart stops short of 1 m. State feedback leaves the locus and sits on the target, and with N̄ = 25 the step settles at 1 m."
+  controls:
+    - { id: k1, label: "k₁ (on position)", type: range, min: 0, max: 40, step: 0.5, default: 23, group: primary }
+    - { id: k2, label: "k₂ (on velocity)", type: range, min: 0, max: 12, step: 0.1, default: 5, group: primary }
+    - { id: Kcmp, label: "P-control K to compare", type: range, min: 0.25, max: 20, step: 0.25, default: 7, group: more }
+  presets:
+    - { id: design, label: "Design: −4 ± 3j (K = [23, 5])", set: { k1: 23, k2: 5 }, about: "ζ = 0.8, Ts ≈ 1 s." }
+    - { id: match, label: "Same damping as K = 7, but placed", set: { k1: 7, k2: 3 }, about: "A − BK has the same ζ = 0.5 as P control at K = 7, but you chose both coefficients." }
+- id: obs
+  title: "A Luenberger observer recovers the velocity from position"
+  x: "time (s)"
+  y: "velocity (m/s) · position (m)"
+  legend:
+    - { label: "true state", color: "var(--cyan)" }
+    - { label: "observer estimate", color: "var(--org)" }
+  howToRead: "The cart's sensor reads position only. The observer runs a copy of the cart and corrects it with L(y − C x̂). Left: true velocity and the estimate, starting from a 0.2 m error in the position estimate. Right: position. The speed slider is how many times faster the observer poles are than the controller's −4 ± 3j (5× gives L = [37, 512]). Add noise to see the estimate get jumpy as L grows."
+  lookFor: "At 5× the estimate of velocity catches the true ẋ in a fraction of a second. Turn the speed up and add noise: the estimate gets faster and noisier. That is the trade the notes describe (2–10×, not 100×)."
+  controls:
+    - { id: speed, label: "Observer speed (× controller)", type: range, min: 2, max: 10, step: 0.5, default: 5, group: primary }
+    - { id: e0, label: "Initial estimate error (m)", type: range, min: 0, max: 0.5, step: 0.05, default: 0.2, group: primary, unit: m }
+    - { id: noise, label: "Sensor noise", type: range, min: 0, max: 0.05, step: 0.005, default: 0, group: more }
+  presets:
+    - { id: design, label: "Design: 5×, L = [37, 512]", set: { speed: 5, e0: 0.2, noise: 0 } }
+    - { id: slow, label: "Slower observer (2×)", set: { speed: 2, e0: 0.2 } }
+    - { id: noisy, label: "Fast observer plus noise", set: { speed: 10, noise: 0.03 } }
+- id: sep
+  title: "Separation: the same K, now using the estimate"
+  x: "time (s)"
+  y: "position (m) · |Δx| (m)"
+  legend:
+    - { label: "full-state feedback u = −Kx", color: "var(--cyan)" }
+    - { label: "compensator u = −K x̂", color: "var(--org)" }
+  howToRead: "Left: a 1 m step under u = −Kx (true state) against u = −K x̂ (the observer in the loop). Right: the difference between those two position traces. The initial estimate is wrong by e₀ (default 0.2 m). K and L are the design values [23, 5] and [37, 512] unless you change them."
+  lookFor: "With a 0.2 m initial error the two steps differ by about 7 cm around 0.3 s, then they match. The closed-loop poles are the controller's and the observer's, designed separately."
+  controls:
+    - { id: e0, label: "Initial estimate error (m)", type: range, min: 0, max: 0.5, step: 0.05, default: 0.2, group: primary, unit: m }
+    - { id: speed, label: "Observer speed (× controller)", type: range, min: 2, max: 10, step: 0.5, default: 5, group: more }
+  presets:
+    - { id: design, label: "Design, 0.2 m error", set: { e0: 0.2, speed: 5 } }
+    - { id: perfect, label: "Perfect estimate (e₀ = 0)", set: { e0: 0 }, about: "The two steps coincide: the observer starts on the true state." }
+- id: refin
+  title: "A reference gain turns the regulator into a tracker"
+  x: "time (s)"
+  y: "position (m) · u (N)"
+  legend:
+    - { label: "u = −Kx + N̄ r", color: "var(--cyan)" }
+    - { label: "regulator only (N̄ = 0)", color: "var(--org)" }
+  howToRead: "Left: a 1 m command. With N̄ = 25 the DC gain from r to x is 1, so the cart settles at 1 m. The ghost is the same K with N̄ = 0: a regulator, which drives every state back to 0 and ignores r. Right: the force u = −Kx + N̄ r."
+  lookFor: "N̄ = 25 is required by the DC gain of A − BK (s² + 8s + 25, so 25 at s = 0). Any other N̄ scales the final position: N̄/25 metres per metre of command."
+  controls:
+    - { id: Nbar, label: "Reference gain N̄", type: range, min: 0, max: 40, step: 1, default: 25, group: primary }
+    - { id: k1, label: "k₁", type: range, min: 0, max: 40, step: 0.5, default: 23, group: more }
+    - { id: k2, label: "k₂", type: range, min: 0, max: 12, step: 0.1, default: 5, group: more }
+  presets:
+    - { id: track, label: "Tracker (N̄ = 25)", set: { Nbar: 25 }, about: "Final value 1 m." }
+    - { id: reg, label: "Regulator (N̄ = 0)", set: { Nbar: 0 }, about: "The command is ignored; the cart stays at 0." }
+    - { id: half, label: "N̄ = 12.5 (half gain)", set: { Nbar: 12.5 }, about: "Settles at 0.5 m." }

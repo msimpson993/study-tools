@@ -40,6 +40,18 @@ A pole at −30 decays 15× faster than one at −2. By the time the slow mode h
 Before you touch a slider, predict what it will do. Slide p from 20 down to 1: the extra pole stops being negligible and slows the rise. Beyond about 5× the pair, you can drop it.
 ````
 
+
+
+### Second reduction method: match the frequency response
+
+Dropping a far-left pole while keeping G(0) is the first method, and the one this dive's figure is built around. There is a second, which the professor says you must know even though he will not use it in class: pick a lower-order model whose **frequency response** (the first few moments, i.e. the derivatives of G at s = 0) matches the original near s = 0.
+
+The worked numbers live in the [feedback dive](#/dive/fb), under "Simplification of linear systems": G_H = 6/((s+1)(s+2)(s+3)) is matched by G_L = 1.60/(s² + 2.590s + 1.60). Both have DC gain 1, and the reduced poles (−1.024, −1.565) give a slightly overdamped response with T_s ≈ 3 s, almost indistinguishable from the original on a step.
+
+````callout:trap Trap
+A reduced model with more zeros than poles is not causal and cannot be built. Match moments to a proper (or strictly proper) G_L; do not "fit" your way into a numerator of higher degree than the denominator.
+````
+
 ````callout:note Symbols used here
 - **poles**: the roots of the denominator: the exponentials e^(pt) the plant can make. The cart's are −1 and −2
 - **zeros**: the roots of the numerator: they set how much of each mode appears

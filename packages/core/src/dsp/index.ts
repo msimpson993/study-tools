@@ -6,3 +6,4 @@ export * from './lti';
 export * from './tf';
 export * from './pid';
 export * from './rlocus';
+export * from './ssdesign';

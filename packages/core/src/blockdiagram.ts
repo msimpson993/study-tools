@@ -4,7 +4,7 @@
  * places the strip and supplies live signal values. Content picks a stage with
  * `exampleScene.diagram` (see docs/example-scenes.md).
  */
-export const DIAGRAM_STAGES = ['open', 'states', 'loop', 'disturb', 'pid', 'noise', 'gain'] as const;
+export const DIAGRAM_STAGES = ['open', 'states', 'loop', 'disturb', 'pid', 'noise', 'gain', 'sfb', 'observer', 'sep', 'refin'] as const;
 export type DiagramStage = typeof DIAGRAM_STAGES[number];
 export type DiagramSpec = DiagramStage | DiagramStage[];
 
@@ -12,7 +12,8 @@ export type DiagramSpec = DiagramStage | DiagramStage[];
 export type DiagramPart =
   | 'u' | 'G' | 'y' | 'x' | 'xdot'
   | 'r' | 'sum' | 'e' | 'C' | 'fb'
-  | 'd' | 'P' | 'I' | 'D' | 'n' | 'K';
+  | 'd' | 'P' | 'I' | 'D' | 'n' | 'K'
+  | 'observer' | 'L' | 'xhat' | 'Nbar';
 
 const BASE: Record<DiagramStage, DiagramPart[]> = {
   open: ['u', 'G', 'y'],
@@ -22,6 +23,10 @@ const BASE: Record<DiagramStage, DiagramPart[]> = {
   pid: ['r', 'sum', 'e', 'C', 'P', 'I', 'D', 'u', 'G', 'y', 'fb'],
   noise: ['r', 'sum', 'e', 'C', 'u', 'G', 'y', 'fb', 'n'],
   gain: ['r', 'sum', 'e', 'C', 'K', 'u', 'G', 'y', 'fb'],
+  sfb: ['u', 'G', 'y', 'x', 'xdot', 'K'],
+  observer: ['u', 'G', 'y', 'observer', 'L', 'xhat'],
+  sep: ['u', 'G', 'y', 'observer', 'L', 'xhat', 'K'],
+  refin: ['r', 'Nbar', 'u', 'G', 'y', 'observer', 'L', 'xhat', 'K'],
 };
 
 /** Parts that first appear at this stage (highlighted, with a small "new" tag). */
@@ -33,6 +38,10 @@ const NEW: Record<DiagramStage, DiagramPart[]> = {
   pid: ['P', 'I', 'D'],
   noise: ['n'],
   gain: ['K'],
+  sfb: ['K'],
+  observer: ['observer', 'L', 'xhat'],
+  sep: ['K', 'observer'],
+  refin: ['r', 'Nbar'],
 };
 
 export const isDiagramStage = (s: string): s is DiagramStage => (DIAGRAM_STAGES as readonly string[]).includes(s);
@@ -65,6 +74,8 @@ export function diagramStageHeight(stage: DiagramStage, w: number): number {
   if (stage === 'open' || stage === 'states') return w < 340 ? 70 : 66;
   if (stage === 'pid') return w < 400 ? 128 : 120;
   if (stage === 'disturb') return w < 400 ? 124 : 116;
+  if (stage === 'observer' || stage === 'sep' || stage === 'refin') return w < 400 ? 136 : 128;
+  if (stage === 'sfb') return w < 400 ? 118 : 110;
   return w < 400 ? 112 : 104;
 }
 
@@ -126,6 +137,10 @@ const STAGE_TITLE: Record<DiagramStage, string> = {
   pid: 'C = P + I + D',
   noise: 'sensor noise',
   gain: 'gain K',
+  sfb: 'state feedback K',
+  observer: 'observer',
+  sep: 'compensator',
+  refin: 'reference input',
 };
 
 type G = CanvasRenderingContext2D;
@@ -235,6 +250,7 @@ export function drawBlockDiagram(
   title(g, rect, stage, P);
   if (stage === 'open' || stage === 'states') drawOpen(g, rect, stage, P, sig);
   else if (stage === 'pid') drawPid(g, rect, P, sig);
+  else if (stage === 'sfb' || stage === 'observer' || stage === 'sep' || stage === 'refin') drawSfb(g, rect, stage, P, sig);
   else drawLoop(g, rect, stage, P, sig);
   g.restore();
 }
@@ -376,4 +392,82 @@ function drawPid(g: G, r: Rect, P: DiagramPalette, sig: DiagramSignals) {
   g.beginPath(); g.moveTo(fbX, mid + 6); g.lineTo(fbX, bot); g.lineTo(xSum, bot); g.lineTo(xSum, mid + 8); g.stroke();
   arrow(g, xSum, mid + 16, xSum, mid + 8, fbCol, 1.6);
   text(g, 'y', (fbX + xSum) / 2, bot - 4, fbCol, { align: 'center', px: 9, wt: 700, optional: true });
+}
+
+function drawSfb(g: G, r: Rect, stage: DiagramStage, P: DiagramPalette, sig: DiagramSignals) {
+  const pad = 8, left = r.x + pad, right = r.x + r.w - pad, mid = r.y + (stage === 'sfb' ? 52 : 58);
+  const bot = r.y + r.h - 14, W = right - left, tight = W < 360;
+  const gW = tight ? 108 : 128, gH = 40, kW = tight ? 54 : 64, kH = 32, oW = tight ? 86 : 100, oH = 36;
+  if (stage === 'sfb') {
+    const xK = left + (tight ? 8 : 20), xG = xK + kW + 36, xY = right - 4;
+    const kCol = col(P, stage, 'K', P.accent), uCol = col(P, stage, 'u', P.s0), yCol = col(P, stage, 'y', P.ok);
+    box(g, xK, mid - kH / 2, kW, kH, P, hl(stage, 'K'));
+    text(g, 'K', xK + kW / 2, mid + 4, kCol, { align: 'center', px: 11, wt: 800 });
+    if (hl(stage, 'K')) tag(g, xK + kW - 22, mid - kH / 2 - 5, P);
+    arrow(g, xK + kW, mid, xG, mid, uCol);
+    text(g, 'u = −Kx', (xK + kW + xG) / 2, mid - 6, uCol, { align: 'center', px: 9, wt: 700 });
+    plantBox(g, xG, mid - gH / 2, Math.max(96, Math.min(gW, xY - 28 - xG)), gH, P, 'states');
+    const gR = xG + Math.max(96, Math.min(gW, xY - 28 - xG));
+    arrow(g, gR, mid, xY - 16, mid, yCol);
+    text(g, 'y = x', xY, mid - 8, yCol, { align: 'right', px: 10, wt: 700 });
+    // state feedback from the plant down to K
+    stroke(g, kCol, 2); g.beginPath(); g.moveTo((xG + gR) / 2, mid + gH / 2); g.lineTo((xG + gR) / 2, bot); g.lineTo(xK + kW / 2, bot); g.lineTo(xK + kW / 2, mid + kH / 2); g.stroke();
+    arrow(g, xK + kW / 2, mid + kH / 2 + 8, xK + kW / 2, mid + kH / 2, kCol, 2);
+    text(g, 'x, ẋ', (xG + xK) / 2, bot - 4, col(P, stage, 'x', P.s0), { align: 'center', px: 9, wt: 700, optional: true });
+    return;
+  }
+  // observer / sep / refin: plant on the top row, observer under it, K on the left
+  const xR = left + 2, showR = stage === 'refin';
+  const xN = showR ? left + (tight ? 36 : 48) : left;
+  const xK = (showR ? xN + 28 : left + 6);
+  const xG = xK + kW + 28, gw = Math.max(96, Math.min(gW, right - 50 - xG)), xY = Math.min(right - 4, xG + gw + 36);
+  const kCol = col(P, stage, 'K', P.text), oCol = col(P, stage, 'observer', P.accent);
+  const lCol = col(P, stage, 'L', P.accent), xhCol = col(P, stage, 'xhat', P.s2);
+  const uCol = col(P, stage, 'u', P.s0), yCol = col(P, stage, 'y', P.ok), rCol = col(P, stage, 'r', P.text);
+  const nCol = col(P, stage, 'Nbar', P.accent);
+
+  if (showR) {
+    text(g, 'r', xR, mid - 8, rCol, { px: 10, wt: 700 });
+    if (hl(stage, 'r')) tag(g, xR, r.y + 16, P);
+    arrow(g, xR + 14, mid, xN, mid, rCol);
+    box(g, xN, mid - 14, 24, 28, P, hl(stage, 'Nbar'));
+    text(g, 'N̄', xN + 12, mid + 4, nCol, { align: 'center', px: 9, wt: 800 });
+    if (hl(stage, 'Nbar')) tag(g, xN + 6, mid - 22, P);
+    arrow(g, xN + 24, mid, xK, mid, uCol);
+  }
+
+  if (stage !== 'observer') {
+    box(g, xK, mid - kH / 2, kW, kH, P, hl(stage, 'K'));
+    text(g, 'K', xK + kW / 2, mid + 4, kCol, { align: 'center', px: 11, wt: 800 });
+    if (hl(stage, 'K')) tag(g, xK + kW - 22, mid - kH / 2 - 5, P);
+    arrow(g, xK + kW, mid, xG, mid, uCol);
+    text(g, 'u = −K x̂', (xK + kW + xG) / 2, mid - 6, uCol, { align: 'center', px: 9, wt: 700, optional: true });
+  } else {
+    text(g, 'u', xK + 8, mid - 8, uCol, { px: 10, wt: 700 });
+    arrow(g, xK + 22, mid, xG, mid, uCol);
+  }
+  plantBox(g, xG, mid - gH / 2, gw, gH, P, 'loop');
+  const gR = xG + gw;
+  arrow(g, gR, mid, xY - 16, mid, yCol);
+  text(g, 'y', xY, mid - 8, yCol, { align: 'right', px: 10, wt: 700 });
+
+  const oX = xG, oY = bot - oH, oMid = oY + oH / 2;
+  box(g, oX, oY, oW, oH, P, hl(stage, 'observer') || hl(stage, 'L'));
+  text(g, stage === 'observer' ? 'observer  L' : 'observer', oX + oW / 2, oMid + 4, oCol, { align: 'center', px: 9, wt: 800 });
+  if (hl(stage, 'observer') || hl(stage, 'L')) tag(g, oX + oW - 22, oY - 6, P);
+  // y down into observer
+  const yDrop = Math.min(xY - 8, gR + 10);
+  stroke(g, yCol, 1.6); g.beginPath(); g.moveTo(yDrop, mid + 6); g.lineTo(yDrop, oMid); g.lineTo(oX + oW, oMid); g.stroke();
+  arrow(g, oX + oW + 8, oMid, oX + oW, oMid, yCol, 1.6);
+  // xhat from observer to K (or just labelled for observer-only)
+  stroke(g, xhCol, hl(stage, 'xhat') ? 2 : 1.6);
+  g.beginPath(); g.moveTo(oX, oMid); g.lineTo(xK + kW / 2, oMid); g.lineTo(xK + kW / 2, mid + kH / 2); g.stroke();
+  if (stage !== 'observer') arrow(g, xK + kW / 2, mid + kH / 2 + 8, xK + kW / 2, mid + kH / 2, xhCol, 1.6);
+  text(g, 'x̂', (oX + xK) / 2, oMid - 5, xhCol, { align: 'center', px: 10, wt: 800 });
+  // also feed u into the observer (copy of the plant)
+  const uDrop = xG - 10;
+  stroke(g, uCol, 1.2); g.setLineDash([3, 3]); g.beginPath(); g.moveTo(uDrop, mid + 4); g.lineTo(uDrop, oY); g.stroke(); g.setLineDash([]);
+  arrow(g, uDrop, oY - 6, uDrop, oY, uCol, 1.2);
+  text(g, 'u', uDrop + 6, (mid + oY) / 2, uCol, { px: 8, wt: 600, optional: true });
+  void sig; void lCol;
 }
