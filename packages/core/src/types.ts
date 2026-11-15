@@ -89,6 +89,8 @@ export interface Question {
   a?: string;         // HTML (recall)
   why?: string;       // HTML
   figure?: QuizFigureRef;
+  /** keep the choices in the authored order (they refer to each other by position or letter) */
+  fixedOrder?: boolean;
 }
 
 export interface Term { term: string; meaning: string; units?: string; section?: string }

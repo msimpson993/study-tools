@@ -151,7 +151,7 @@ export function loadApp(appDir: string): { content: AppContent; warnings: string
     id: q.id, tags: q.tags, kind: q.kind,
     q: inline(q.q, `quiz ${q.id}`), choices: q.choices?.map((c: string) => inline(c, `quiz ${q.id}`)), answer: q.answer,
     a: q.a ? block(q.a, `quiz ${q.id}`) : undefined, why: q.why ? block(q.why, `quiz ${q.id}`) : undefined,
-    figure: q.figure,
+    figure: q.figure, ...(q.fixedOrder ? { fixedOrder: true } : {}),
   }));
   const qids = new Set<string>();
   for (const q of quizRaw) {

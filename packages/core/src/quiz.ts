@@ -3,6 +3,7 @@ import type { AppContent, Question } from './types';
 import type { Progress } from './progress';
 import { mountQuizFigure, type QuizFigureRegistry } from './quizfig';
 import { copyRefButton, quizReference } from './copyref';
+import { choiceOrder } from './choiceorder';
 
 export interface QuizOpts {
   tags?: string[];
@@ -35,13 +36,16 @@ export function mountQuiz(host: HTMLElement, content: AppContent, progress: Prog
   let revealed = false;
   let graded: boolean | null = null;
   let session: { ok: number; bad: number } = { ok: 0, bad: 0 };
+  /** display order of each question's choices for this run: order[pos] = authored index. Fixed once per presentation so a re-render never reshuffles. */
+  let orders = new Map<string, number[]>();
+  const orderOf = (q: Question): number[] => { let o = orders.get(q.id); if (!o) { o = choiceOrder(q); orders.set(q.id, o); } return o; };
   const allTags = [...new Set(content.quiz.flatMap((q) => q.tags))];
 
   function rebuild() {
     let qs = content.quiz.filter((q) => !activeTags || q.tags.some((t) => activeTags!.has(t)));
     if (missedOnly) qs = qs.filter((q) => progress.answer(q.id) === 'm');
     list = shuffle ? shuffled(qs) : qs;
-    idx = 0; chosen = null; revealed = false; graded = null; session = { ok: 0, bad: 0 };
+    idx = 0; chosen = null; revealed = false; graded = null; session = { ok: 0, bad: 0 }; orders = new Map();
   }
 
   function grade(q: Question, ok: boolean) {
@@ -92,7 +96,7 @@ export function mountQuiz(host: HTMLElement, content: AppContent, progress: Prog
       // flashcard / recall: tap to flip, then self-grade
       const face = h('div', { class: 'flip', tabindex: 0, role: 'button', 'aria-label': 'Flip card', dataset: { testid: 'flip' }, onclick: () => { revealed = !revealed; render(); }, onkeydown: (e: KeyboardEvent) => { if (e.key === ' ' || e.key === 'Enter') { e.preventDefault(); revealed = !revealed; render(); } } });
       if (revealed) {
-        const ans = isMcq ? `<p><b>${String.fromCharCode(65 + q.answer!)}.</b> ${q.choices![q.answer!]}</p>${q.why ?? ''}` : (q.a ?? '');
+        const ans = isMcq ? `<p><b>${q.choices![q.answer!]}</b></p>${q.why ?? ''}` : (q.a ?? '');
         face.append(h('div', { class: 'why', html: ans }));
       } else face.append(h('div', { class: 'cm-sum' }, 'Tap or press Space to flip'));
       card.append(face);
@@ -100,9 +104,11 @@ export function mountQuiz(host: HTMLElement, content: AppContent, progress: Prog
         h('button', { class: 'tbtn on', dataset: { testid: 'got-it' }, onclick: () => { grade(q, true); next(); } }, 'I got it'),
         h('button', { class: 'tbtn', dataset: { testid: 'missed-it' }, onclick: () => { grade(q, false); next(); } }, 'Missed it')));
     } else {
-      q.choices!.forEach((c, i) => {
+      // `chosen` and data-choice are authored indices (grading is order-independent); the letter is the display position
+      orderOf(q).forEach((i, pos) => {
+        const c = q.choices![i];
         const cls = chosen === null ? '' : i === q.answer ? ' right' : i === chosen ? ' wrong' : '';
-        card.append(h('button', { class: `choice${cls}`, disabled: chosen !== null, dataset: { choice: String(i) }, onclick: () => { chosen = i; grade(q, i === q.answer); render(); } }, h('b', null, String.fromCharCode(65 + i)), h('span', { html: c })));
+        card.append(h('button', { class: `choice${cls}`, disabled: chosen !== null, dataset: { choice: String(i), pos: String(pos) }, onclick: () => { chosen = i; grade(q, i === q.answer); render(); } }, h('b', null, String.fromCharCode(65 + pos)), h('span', { html: c })));
       });
       if (chosen !== null) {
         const wrong = chosen !== q.answer;
@@ -124,7 +130,7 @@ export function mountQuiz(host: HTMLElement, content: AppContent, progress: Prog
     if (!flash && isMcq) {
       const k = e.key.toLowerCase();
       const i = /^[1-6]$/.test(k) ? +k - 1 : /^[a-f]$/.test(k) ? k.charCodeAt(0) - 97 : -1;
-      if (chosen === null && i >= 0 && i < q.choices!.length) { chosen = i; grade(q, i === q.answer); render(); }
+      if (chosen === null && i >= 0 && i < q.choices!.length) { const a = orderOf(q)[i]; chosen = a; grade(q, a === q.answer); render(); }
       else if (chosen !== null && (e.key === ' ' || e.key === 'Enter')) { e.preventDefault(); next(); }
     } else if (e.key === ' ' && !revealed) { e.preventDefault(); revealed = true; render(); }
   };

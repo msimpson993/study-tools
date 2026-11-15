@@ -45,6 +45,8 @@ Front matter: `id, order, title, category, chain[{title,detail?}], neighbors[ids
 ## quiz.yaml
 List of `{id, tags[], kind, q, …}`. `kind: recall` needs `a`; every other kind (`recognize|action|compute|trap`) needs `choices[2..6], answer (index), why`. Each tag must match a node `quizTag/dive/id` or a dive id. Subtree quizzes use these tags.
 
+**Choice order.** The engine shuffles the choices each time a question is shown (the answer index stays the authored one; the order is fixed for that presentation, so re-renders don't reshuffle). Choices that point at the others (a bare "Both", "Neither", "None of them", "All of the above", "A and B", "option C") are detected and kept after the shuffled ones, in authored order (`packages/core/src/choiceorder.ts`). Add `fixedOrder: true` to a question whose choices are order-dependent in some other way (e.g. a numbered sequence) to keep the whole list as authored. Never write "as above" or refer to choices by position in `why`.
+
 **Optional `figure`** (a small fixed plot under the question text, e.g. the legacy "scope" plots):
 ```yaml
 - id: pid-29
