@@ -146,6 +146,39 @@
                         "type": "number"
                       },
                       "description": "Closed-loop cart parameters (numbers): K, Ki, Kd, r, umax, d, td, noise, seed, delay, lag. Only valid with a closed-loop overlay (loop, pid, disturb, noise, limit, delay, lag); ranges are in docs/example-scenes.md and checked at build time."
+                    },
+                    "diagram": {
+                      "description": "Staged block diagram under the picture: a stage name or a list of stages (open, states, loop, disturb, pid, noise, gain). Newly added parts at each stage are highlighted. See docs/example-scenes.md.",
+                      "oneOf": [
+                        {
+                          "type": "string",
+                          "enum": [
+                            "open",
+                            "states",
+                            "loop",
+                            "disturb",
+                            "pid",
+                            "noise",
+                            "gain"
+                          ]
+                        },
+                        {
+                          "type": "array",
+                          "minItems": 1,
+                          "items": {
+                            "type": "string",
+                            "enum": [
+                              "open",
+                              "states",
+                              "loop",
+                              "disturb",
+                              "pid",
+                              "noise",
+                              "gain"
+                            ]
+                          }
+                        }
+                      ]
                     }
                   }
                 }

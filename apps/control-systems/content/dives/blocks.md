@@ -12,7 +12,7 @@ neighbors:
   - tf
   - ctrl
   - fb
-exampleScene: { overlays: [disturb], params: { K: 7, d: -2, td: 4 }, caption: "Two inputs, one loop: the command r takes the cart to 0.78 m with K = 7, then at 4 s a 2 N shove d pushes it back. The same loop answers both." }
+exampleScene: { overlays: [disturb], params: { K: 7, d: -2, td: 4 }, diagram: [loop, disturb], caption: "Panel 1 is the loop itself: command r, controller C, plant G and the sensor feeding y back. Panel 2 adds a 2 N shove d at the plant input at 4 s; with K = 7 the cart is at 0.78 m, then the shove pushes it back." }
 ---
 **How does the plant sit in a loop with a controller and a disturbance?**
 

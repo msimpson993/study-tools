@@ -7,7 +7,7 @@ vi.stubGlobal('getComputedStyle', () => ({ getPropertyValue: () => '#888' }));
 vi.stubGlobal('document', { documentElement: {} });
 
 interface Lab { s: string; x0: number; x1: number; y0: number; y1: number }
-function record(scene: string, overlays: string[], w: number, compact: boolean, t: number, params: Record<string, number> = {}) {
+function record(scene: string, overlays: string[], w: number, compact: boolean, t: number, params: Record<string, number> = {}, diagram?: string | string[]) {
   const labs: Lab[] = []; let px = 11;
   const state: any = { font: '', save() {}, restore() {} };
   const g: any = new Proxy(state, {
@@ -19,9 +19,9 @@ function record(scene: string, overlays: string[], w: number, compact: boolean, 
     },
     set(o, k, v) { o[k] = v; return true; },
   });
-  const L = sceneLayout(scene, overlays, w, compact);
+  const L = sceneLayout(scene, overlays, w, compact, diagram as any);
   drawSceneFrame(g, L, scene, overlays, t, params);
-  const panels = [L.main, ...L.insets.map((i) => i.rect)];
+  const panels = [L.main, ...L.diagrams.map((d) => d.rect), ...L.insets.map((i) => i.rect)];
   return { labs, panels, L };
 }
 const overlap = (a: Lab, b: Lab) => a.x0 < b.x1 - 0.5 && a.x1 > b.x0 + 0.5 && a.y0 < b.y1 - 0.5 && a.y1 > b.y0 + 0.5;
@@ -32,12 +32,27 @@ const SETS: [string, string[], Record<string, number>?][] = [
   ['tine', ['envelope', 'poles']], ['tine', ['spectrum']], ['tine', ['zpoles']],
 ];
 
+/** Overlay + diagram combinations used by control-systems (and a two-stage phone stack). */
+const DIAGRAM_SETS: [string, string[], Record<string, number> | undefined, string | string[]][] = [
+  ['cart', ['forces', 'push'], undefined, 'open'],
+  ['cart', ['forces', 'sensor', 'phase'], undefined, 'states'],
+  ['cart', ['loop'], { K: 7 }, 'loop'],
+  ['cart', ['disturb'], { K: 7, d: -2, td: 4 }, ['loop', 'disturb']],
+  ['cart', ['loop', 'poles'], { K: 7 }, 'pid'],
+  ['cart', ['loop'], { K: 7 }, 'noise'],
+  ['cart', ['loop', 'poles'], { K: 7 }, 'gain'],
+];
+
 describe('labels never collide (every panel, hero and phone widths, several moments)', () => {
-  for (const [scene, overlays, params] of SETS) {
+  const all: [string, string[], Record<string, number> | undefined, string | string[] | undefined][] = [
+    ...SETS.map(([s, o, p]) => [s, o, p, undefined] as [string, string[], Record<string, number> | undefined, string | string[] | undefined]),
+    ...DIAGRAM_SETS,
+  ];
+  for (const [scene, overlays, params, diagram] of all) {
     for (const [w, compact] of [[300, true], [340, false], [390, false], [760, false]] as const) {
-      it(`${scene}:${overlays.join('+')} at ${w}px${compact ? ' (hero)' : ''}`, () => {
+      it(`${scene}:${overlays.join('+')}${diagram ? ` diagram=${[].concat(diagram as any).join('+')}` : ''} at ${w}px${compact ? ' (hero)' : ''}`, () => {
         for (const frac of [0.02, 0.25, 0.6, 1]) {
-          const t = frac * Math.min(sceneDuration(scene, overlays), 10), { labs, panels } = record(scene, overlays, w, compact, t, params);
+          const t = frac * Math.min(sceneDuration(scene, overlays), 10), { labs, panels } = record(scene, overlays, w, compact, t, params, diagram);
           for (let i = 0; i < labs.length; i++) {
             const a = labs[i];
             expect(panels.some((p) => a.x0 >= p.x - 0.5 && a.x1 <= p.x + p.w + 0.5 && a.y0 >= p.y - 1 && a.y1 <= p.y + p.h + 1), `"${a.s}" stays inside its panel (t=${t})`).toBe(true);
@@ -52,6 +67,7 @@ describe('labels never collide (every panel, hero and phone widths, several mome
   }
   it('the catalogue sets above are all valid scene references', () => {
     for (const [scene, overlays, params] of SETS) expect(sceneProblems(scene, overlays, 'x', params), `${scene}:${overlays}`).toEqual([]);
+    for (const [scene, overlays, params, diagram] of DIAGRAM_SETS) expect(sceneProblems(scene, overlays, 'x', params, diagram), `${scene}:${overlays}:${diagram}`).toEqual([]);
     expect(Object.keys(SCENES)).toContain('cart');
   });
 });

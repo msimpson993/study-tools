@@ -105,8 +105,10 @@ for (const app of ['linear-systems', 'transforms', 'control-systems', 'pid-tunin
         const hero = page.getByTestId('map-hero'), sc = hero.getByTestId('example-scene'); await expect(sc).toBeVisible();
         const q = (await page.getByTestId('central-question').boundingBox())!, s = (await sc.boundingBox())!;
         expect(s.x + s.width, 'hero inside viewport').toBeLessThanOrEqual(vp.width + 1);
-        if (view === 'desktop') { expect(s.x, 'beside the question').toBeGreaterThan(q.x + q.width - 4); expect(s.height, 'small').toBeLessThanOrEqual(190); }
-        else { expect(s.y, 'under the question').toBeGreaterThanOrEqual(q.y + q.height - 2); expect(s.height, 'small').toBeLessThanOrEqual(170); }
+        const hasDiagram = !!(await sc.getAttribute('data-diagram'));
+        const maxH = hasDiagram ? (view === 'desktop' ? 440 : 420) : (view === 'desktop' ? 190 : 170);
+        if (view === 'desktop') { expect(s.x, 'beside the question').toBeGreaterThan(q.x + q.width - 4); expect(s.height, hasDiagram ? 'fits with diagram' : 'small').toBeLessThanOrEqual(maxH); }
+        else { expect(s.y, 'under the question').toBeGreaterThanOrEqual(q.y + q.height - 2); expect(s.height, hasDiagram ? 'fits with diagram' : 'small').toBeLessThanOrEqual(maxH); }
         expect((await ink(page, '[data-testid=map-hero] [data-testid=scene-canvas]')).n).toBeGreaterThan(800);
         expect(await noHScroll(page)).toBe(true);
         for (const th of ['light', 'dark'] as const) { await setTheme(page, th); await page.waitForTimeout(150); await page.screenshot({ path: path.join(OUT, `scene-hero-${app}-${view}-${th}.png`) }); }

@@ -13,7 +13,7 @@ neighbors:
   - tf
   - ss
   - circuits
-exampleScene: { overlays: [forces, push], caption: "Newton's law gives the model: spring, damper and push sum to m·ẍ, and a 1 N push produces this x(t)." }
+exampleScene: {  overlays: [forces, push], diagram: open, caption: "Newton's law gives the model: spring, damper and push sum to m·ẍ, and a 1 N push produces this x(t)."  }
 ---
 **How do we write the plant's ODE so it's easy to combine and close loops on?**
 

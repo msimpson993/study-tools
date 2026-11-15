@@ -16,6 +16,7 @@ import { h } from './dom';
 import { c2dZoh, tf, type TF } from './dsp/tf';
 import { simulatePid, pidClosedLoopPoles } from './dsp/pid';
 import { SCENES, insetsOf, expandOverlays, isLoopScene, type InsetKind } from './scenedefs';
+import { diagramStages, diagramStripHeight, layoutDiagrams, drawBlockDiagram, type DiagramSpec, type DiagramSignals } from './blockdiagram';
 
 /* ───────────────────────────── models (pure, unit-tested) ───────────────────────────── */
 
@@ -188,17 +189,25 @@ const clip = (g: G, r: Rect) => { g.beginPath(); g.rect(r.x, r.y, r.w, r.h); g.c
 
 /* ───────────────────────────── layout ───────────────────────────── */
 
-export interface SceneLayout { w: number; h: number; compact: boolean; main: Rect; insets: { kind: InsetKind; rect: Rect }[] }
-export function sceneLayout(scene: string, overlays: string[], w: number, compact: boolean): SceneLayout {
-  const loopMode = isLoopScene(scene, overlays);
+export interface SceneLayout { w: number; h: number; compact: boolean; main: Rect; insets: { kind: InsetKind; rect: Rect }[]; diagrams: { stage: import('./blockdiagram').DiagramStage; rect: Rect }[] }
+export function sceneLayout(scene: string, overlays: string[], w: number, compact: boolean, diagram?: DiagramSpec | null): SceneLayout {
+  const stages = diagramStages(diagram);
+  const hasDiagram = stages.length > 0;
+  // When a staged block diagram sits under the cart, don't reserve under-cart space for drawLoopDiagram.
+  const loopMode = isLoopScene(scene, overlays) && !hasDiagram;
   const mainH = loopMode ? Math.round(Math.min(250, Math.max(compact ? 192 : 200, w * 0.5))) + (overlays.includes('forces') ? 40 : 0) + (overlays.includes('pid') ? 8 : 0) : Math.round(Math.min(200, Math.max(compact ? 120 : 136, w * (compact ? 0.4 : 0.42))));
   const kinds = compact ? [] : insetsOf(scene, overlays);
   const gap = 8, insetH = Math.round(Math.min(210, Math.max(150, w * (kinds.length === 1 ? 0.5 : 0.52))));
+  const dH = hasDiagram ? diagramStripHeight(stages, w) : 0;
+  const dY = hasDiagram ? mainH + gap : mainH;
+  const diagrams = hasDiagram ? layoutDiagrams(stages, w, dY) : [];
+  const insetY = (hasDiagram ? dY + dH : mainH) + (kinds.length ? gap : 0);
   const insets: SceneLayout['insets'] = kinds.map((kind, i) => {
     const cw = (w - gap * (kinds.length - 1)) / kinds.length;
-    return { kind, rect: { x: i * (cw + gap), y: mainH + gap, w: cw, h: insetH } };
+    return { kind, rect: { x: i * (cw + gap), y: insetY, w: cw, h: insetH } };
   });
-  return { w, h: kinds.length ? mainH + gap + insetH : mainH, compact, main: { x: 0, y: 0, w, h: mainH }, insets };
+  const h = kinds.length ? insetY + insetH : (hasDiagram ? dY + dH : mainH);
+  return { w, h, compact, main: { x: 0, y: 0, w, h: mainH }, insets, diagrams };
 }
 
 /* ───────────────────────────── cart ───────────────────────────── */
@@ -256,10 +265,10 @@ function drawLoopDiagram(g: G, r: Rect, P: Pal, S: CartSim, st: ReturnType<CartS
   late.push(() => text(g, 'e = r − y: the gap C acts on', 6, r.h - 4, P.muted, { px: px - 1, wt: 600, optional: true }));
 }
 
-function drawCartMain(g: G, r: Rect, P: Pal, S: CartSim, ov: string[], t: number, small: boolean, compactHint = false) {
+function drawCartMain(g: G, r: Rect, P: Pal, S: CartSim, ov: string[], t: number, small: boolean, compactHint = false, skipLoopDiagram = false) {
   const px = small ? 9.5 : 10.5, st = S.at(t), late: (() => void)[] = [];
-  const loop = S.loop, w = r.w, yb = r.h - (loop ? (ov.includes('pid') ? 92 : 84) : ov.includes('sensor') ? 40 : ov.includes('forces') ? 44 : 34), xc0 = w * 0.5;
-  let scale = Math.min(88, Math.max(38, w * 0.2)); if (loop) scale = Math.min(scale, (w * 0.5 - 62) / Math.max(1.1, stats(S).xmax));
+  const loop = S.loop, w = r.w, wire = !!(loop && !skipLoopDiagram), yb = r.h - (wire ? (ov.includes('pid') ? 92 : 84) : ov.includes('sensor') ? 40 : ov.includes('forces') ? 44 : 34), xc0 = w * 0.5;
+  let scale = Math.min(88, Math.max(38, w * 0.2)); if (wire) scale = Math.min(scale, (w * 0.5 - 62) / Math.max(1.1, stats(S).xmax));
   const cw = 52, chh = 38, cx = xc0 + st.x * scale, cartL = cx - cw / 2, cartT = yb - 12 - chh;
   // ground and wall
   line(g, [[6, yb], [w - 6, yb]], P.strong, 2);
@@ -295,7 +304,7 @@ function drawCartMain(g: G, r: Rect, P: Pal, S: CartSim, ov: string[], t: number
   dot(g, cartL + 12, yb - 6, 6, P.panel, P.strong); dot(g, cartL + cw - 12, yb - 6, 6, P.panel, P.strong);
   text(g, 'm = 1 kg', cx, cartT + chh / 2 + 4, P.text, { align: 'center', px, wt: 700 });
   // displacement (or the sensor ruler)
-  if (loop) drawLoopDiagram(g, r, P, S, st, ov, { yb, cx, xc0, scale, cw, cartL, cartT, chh, px, compactHint, late });
+  if (loop && !skipLoopDiagram) drawLoopDiagram(g, r, P, S, st, ov, { yb, cx, xc0, scale, cw, cartL, cartT, chh, px, compactHint, late });
   else if (ov.includes('sensor')) {
     const ry = yb + 14;
     line(g, [[xc0 - scale * 1.1, ry], [xc0 + scale * 1.1, ry]], P.muted, 1.2);
@@ -633,11 +642,15 @@ function drawTineZ(g: G, r: Rect, P: Pal) {
 /** Draw one frame of a scene at animation time t into a canvas of CSS size (w, layout.h). `params` feed the closed-loop overlays. */
 export function drawSceneFrame(g: G, L: SceneLayout, scene: string, overlays: string[], t: number, params: Record<string, number> = {}): void {
   const P = palette(), small = L.w < 380, ov = expandOverlays(scene, overlays);
+  const DP = { ...P, accent: cssVar('--accent') };
   g.clearRect(0, 0, L.w, L.h);
   const region = (rect: Rect, f: () => void) => { g.save(); g.beginPath(); g.rect(rect.x, rect.y, rect.w, rect.h); g.clip(); beginPanel(rect); f(); g.restore(); };
   if (scene === 'cart') {
     const S = simFor(ov, params);
-    region(L.main, () => drawCartMain(g, L.main, P, S, ov, t, small, L.compact));
+    const st = S.at(t);
+    const sig: DiagramSignals = { u: st.u, y: st.x, e: st.e, d: st.d, up: st.up, ui: st.ui, ud: st.ud, ym: st.ym, r: S.loop?.P.r, K: S.loop?.P.K };
+    region(L.main, () => drawCartMain(g, L.main, P, S, ov, t, small, L.compact, L.diagrams.length > 0));
+    for (const { stage, rect } of L.diagrams) region(rect, () => drawBlockDiagram(g, rect, stage, DP, sig));
     for (const { kind, rect } of L.insets) region(rect, () => {
       if (kind === 'trace') drawCartTrace(g, rect, P, S, ov, t); else if (kind === 'phase') drawCartPhase(g, rect, P, S, ov, t); else if (kind === 'poles') drawCartPoles(g, rect, P, S, ov, t); else if (kind === 'ctrl' && S.loop) drawLoopCtrl(g, rect, P, S, ov, t);
     });
@@ -646,17 +659,30 @@ export function drawSceneFrame(g: G, L: SceneLayout, scene: string, overlays: st
     for (const { kind, rect } of L.insets) region(rect, () => {
       if (kind === 'poles') drawTinePoles(g, rect, P, ov, t); else if (kind === 'spectrum') drawTineSpectrum(g, rect, P, ov); else if (kind === 'zplane') drawTineZ(g, rect, P);
     });
+    for (const { stage, rect } of L.diagrams) region(rect, () => drawBlockDiagram(g, rect, stage, DP, {}));
   }
 }
 
-export interface SceneOptions { scene: string; overlays?: string[]; caption?: string; /** closed-loop parameters (see scenedefs SCENES.cart.params) */ params?: Record<string, number>; /** small hero: main picture only */ compact?: boolean }
+export interface SceneOptions { scene: string; overlays?: string[]; caption?: string; /** closed-loop parameters (see scenedefs SCENES.cart.params) */ params?: Record<string, number>; /** small hero: main picture only */ compact?: boolean; /** staged block diagram under the picture (see blockdiagram.ts) */ diagram?: DiagramSpec }
 export interface SceneHandle { el: HTMLElement; canvas: HTMLCanvasElement; setOverlays(o: string[]): void; destroy(): void; /** draw a fixed frame (animation time, s) */ drawAt(t: number): void }
 declare global { interface Window { __sceneFreeze?: number } }
 
-/** Plain-language description (alt text and caption) of what a scene shows with these overlays. */
-export function sceneAlt(scene: string, overlays: string[]): string {
+const DIAGRAM_SAYS: Record<string, string> = {
+  open: 'Open-loop block diagram: input u into the plant G(s) = 1/(s² + 3s + 2), output y.',
+  states: 'The plant block is labelled with its states x and ẋ.',
+  loop: 'Closed-loop block diagram: command r, summing junction, controller C, plant G, and the sensor feeding y back.',
+  disturb: 'A disturbance d enters at the plant input.',
+  pid: 'The controller C is expanded into P, I and D branches.',
+  noise: 'Sensor noise n enters on the feedback path.',
+  gain: 'The controller is shown as gain K, with a slider to change it.',
+};
+
+/** Plain-language description (alt text and caption) of what a scene shows with these overlays (and optional staged diagram). */
+export function sceneAlt(scene: string, overlays: string[], diagram?: DiagramSpec | null): string {
   const info = SCENES[scene]; if (!info) return '';
-  return `${info.physical} Shown: ${overlays.map((id) => info.overlays.find((o) => o.id === id)?.says ?? id).join(' ')}`;
+  const base = `${info.physical} Shown: ${overlays.map((id) => info.overlays.find((o) => o.id === id)?.says ?? id).join(' ')}`;
+  const stages = diagramStages(diagram);
+  return stages.length ? `${base} ${stages.map((s) => DIAGRAM_SAYS[s]).join(' ')}` : base;
 }
 
 export function mountScene(host: HTMLElement, opts: SceneOptions): SceneHandle {
@@ -664,17 +690,33 @@ export function mountScene(host: HTMLElement, opts: SceneOptions): SceneHandle {
   let overlays = (opts.overlays?.length ? opts.overlays : info?.defaults) ?? [];
   const canvas = h('canvas', { class: 'scene-cv', role: 'img', dataset: { testid: 'scene-canvas' } }) as HTMLCanvasElement;
   const cap = h('figcaption', { class: 'scene-cap' });
-  const el = h('figure', { class: `scene${opts.compact ? ' compact' : ''}`, dataset: { testid: 'example-scene', scene: opts.scene, overlays: overlays.join(',') } }, canvas, cap) as HTMLElement;
+  const stages = diagramStages(opts.diagram);
+  const el = h('figure', { class: `scene${opts.compact ? ' compact' : ''}${opts.caption ? ' has-caption' : ''}`, dataset: { testid: 'example-scene', scene: opts.scene, overlays: overlays.join(','), diagram: stages.join(',') } }, canvas, cap) as HTMLElement;
   host.append(el);
   if (!info) { el.replaceChildren(h('div', { class: 'scene-miss', dataset: { testid: 'scene-missing' } }, `Scene “${opts.scene}” is not available.`)); return { el, canvas, setOverlays() {}, destroy() { el.remove(); }, drawAt() {} }; }
+  let params: Record<string, number> = { ...(opts.params ?? {}) };
+  if (stages.includes('gain')) {
+    const k0 = Number.isFinite(params.K) ? params.K : 6;
+    params = { ...params, K: k0 };
+    const inp = h('input', { type: 'range', min: '0', max: '60', step: '0.5', value: String(k0), 'aria-label': 'controller gain K' }) as HTMLInputElement;
+    const val = h('span', { dataset: { testid: 'diagram-k-value' } }, String(k0));
+    const row = h('div', { class: 'scene-k', dataset: { testid: 'diagram-k' } }, 'gain K ', inp, ' ', val);
+    el.insertBefore(row, cap);
+    inp.addEventListener('input', () => {
+      params = { ...params, K: Number(inp.value) };
+      val.textContent = inp.value;
+      t0 = performance.now();
+      cancelAnimationFrame(raf); raf = 0; kick();
+    });
+  }
   const reduced = typeof matchMedia === 'function' && matchMedia('(prefers-reduced-motion: reduce)').matches;
   let raf = 0, visible = true, t0 = performance.now(), layout: SceneLayout | null = null;
   const frozen = () => (typeof window.__sceneFreeze === 'number' ? window.__sceneFreeze : reduced ? sceneRestTime(opts.scene, overlays) : null);
-  const render = (tt: number) => { const w = Math.floor(canvas.getBoundingClientRect().width || el.clientWidth - 12 || 340); layout = sceneLayout(opts.scene, overlays, w, !!opts.compact); canvas.style.height = `${layout.h}px`; const { g } = fitCanvas(canvas); drawSceneFrame(g, layout, opts.scene, overlays, tt, opts.params); };
+  const render = (tt: number) => { const w = Math.floor(canvas.getBoundingClientRect().width || el.clientWidth - 12 || 340); layout = sceneLayout(opts.scene, overlays, w, !!opts.compact, opts.diagram); canvas.style.height = `${layout.h}px`; const { g } = fitCanvas(canvas); drawSceneFrame(g, layout, opts.scene, overlays, tt, params); };
   const setCaption = () => {
     cap.replaceChildren(h('b', null, info.title), opts.caption ? ` — ${opts.caption}` : '');
     if (!opts.compact) cap.append(h('span', { class: 'scene-ov' }, ...overlays.map((id) => h('span', { class: 'scene-chip', title: info.overlays.find((o) => o.id === id)?.says ?? '' }, info.overlays.find((o) => o.id === id)?.label ?? id))));
-    canvas.setAttribute('aria-label', sceneAlt(opts.scene, overlays)); el.dataset.overlays = overlays.join(',');
+    canvas.setAttribute('aria-label', sceneAlt(opts.scene, overlays, opts.diagram)); el.dataset.overlays = overlays.join(','); el.dataset.diagram = stages.join(',');
   };
   const loop = () => {
     raf = 0; const fz = frozen();

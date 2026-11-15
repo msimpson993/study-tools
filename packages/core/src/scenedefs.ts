@@ -4,6 +4,7 @@
  * each overlay names one thing the node adds (forces, the state dot, the impulse hammer, the sample clock, …).
  * Drawing lives in scene.ts.
  */
+import { diagramProblems, type DiagramSpec } from './blockdiagram';
 export type InsetKind = 'trace' | 'phase' | 'poles' | 'spectrum' | 'zplane' | 'ctrl';
 export interface OverlayInfo {
   id: string;
@@ -91,9 +92,9 @@ export const SCENES: Record<string, SceneInfo> = {
 };
 
 /** What a content file may say: `exampleScene: { overlays: [...], caption?: "…" }` on a dive or a map node. */
-export interface ExampleSceneRef { overlays?: string[]; caption?: string; params?: Record<string, number> }
+export interface ExampleSceneRef { overlays?: string[]; caption?: string; params?: Record<string, number>; /** staged block diagram under the picture (see docs/example-scenes.md) */ diagram?: DiagramSpec }
 /** What subject.yaml may say: `runningExample.scene: { id: cart, overlays: [...] }` (overlays = the small hero on the map page). */
-export interface SubjectSceneRef { id: string; overlays?: string[]; params?: Record<string, number> }
+export interface SubjectSceneRef { id: string; overlays?: string[]; params?: Record<string, number>; caption?: string; diagram?: DiagramSpec }
 
 /** Closed-loop overlays (they replace the open-loop drive: push, hammer, shaker, clock … cannot be combined with them). */
 export const LOOP_OVERLAYS = ['loop', 'pid', 'disturb', 'noise', 'limit', 'delay', 'lag'] as const;
@@ -117,7 +118,7 @@ export const insetsOf = (scene: string, overlays: string[]): InsetKind[] => {
 };
 
 /** Human-readable problems with a scene reference (empty = fine). Used by the content builder. */
-export function sceneProblems(scene: string, overlays: string[] | undefined, where: string, params?: Record<string, unknown>): string[] {
+export function sceneProblems(scene: string, overlays: string[] | undefined, where: string, params?: Record<string, unknown>, diagram?: unknown): string[] {
   const info = SCENES[scene];
   if (!info) return [`${where}: unknown scene "${scene}" (known: ${Object.keys(SCENES).join(', ')})`];
   const p: string[] = [];
@@ -139,5 +140,6 @@ export function sceneProblems(scene: string, overlays: string[] | undefined, whe
     }
     if (!loop) p.push(`${where}: params only apply to the closed-loop overlays (${LOOP_OVERLAYS.join(', ')}); none is on`);
   }
+  p.push(...diagramProblems(diagram, where));
   return p;
 }

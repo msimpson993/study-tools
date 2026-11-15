@@ -78,3 +78,38 @@ describe('closed-loop params (cart)', () => {
     ['three panels via implied overlays', { overlays: ['limit', 'poles'] }, /at most 2/],
   ])('rejects %s', (_n, ex, re) => { const { dir, file } = cart(); front(file, (fm) => { fm.exampleScene = ex; }); expect(msg(dir)).toMatch(re); });
 });
+
+describe('staged block diagram field', () => {
+  it('passes a stage (and a list) through on the hero and a dive', () => {
+    const dir = copyApp('linear-systems');
+    const file = path.join(dir, 'content/dives', fs.readdirSync(path.join(dir, 'content/dives'))[0]);
+    const id = path.basename(file, '.md');
+    front(file, (fm) => { fm.exampleScene = { overlays: ['disturb'], params: { K: 7, d: -2, td: 4 }, diagram: ['loop', 'disturb'], caption: 'two stages' }; });
+    edit(path.join(dir, 'subject.yaml'), (y) => { y.runningExample.scene = { id: 'cart', overlays: ['loop'], diagram: 'loop', caption: 'where we are headed', params: { K: 7 } }; });
+    const { content } = loadApp(dir);
+    expect(content.subject.runningExample?.scene).toMatchObject({ id: 'cart', overlays: ['loop'], diagram: 'loop', caption: 'where we are headed', params: { K: 7 } });
+    expect(content.dives.find((d) => d.id === id)?.exampleScene).toEqual({ overlays: ['disturb'], params: { K: 7, d: -2, td: 4 }, diagram: ['loop', 'disturb'], caption: 'two stages' });
+  });
+  it.each([
+    ['unknown stage', { overlays: ['forces'], diagram: 'nope' }, /unknown diagram stage/],
+    ['empty list', { overlays: ['forces'], diagram: [] }, /diagram|empty|minItems/],
+  ])('rejects %s', (_n, ex, re) => {
+    const dir = copyApp('linear-systems');
+    const file = path.join(dir, 'content/dives', fs.readdirSync(path.join(dir, 'content/dives'))[0]);
+    front(file, (fm) => { fm.exampleScene = ex; });
+    expect(msg(dir)).toMatch(re);
+  });
+  it('control-systems ships a staged diagram on the hero and on the loop-building dives', () => {
+    const { content, warnings } = loadApp(path.join(repoRoot, 'apps', 'control-systems'));
+    expect(content.subject.runningExample?.scene).toMatchObject({ id: 'cart', overlays: ['loop'], diagram: 'loop' });
+    const want: Record<string, string | string[]> = {
+      model: 'open', tf: 'open', first: 'open', order: 'open', second: 'open', dominant: 'open',
+      ss: 'states', ss2tf: 'states', blocks: ['loop', 'disturb'], ctrl: 'pid', fb: 'noise', sse: 'noise', sp8: 'gain',
+    };
+    for (const [id, d] of Object.entries(want)) {
+      expect(content.dives.find((x) => x.id === id)?.exampleScene?.diagram, id).toEqual(d);
+    }
+    expect(warnings.filter((w) => /exampleScene|diagram/.test(w))).toEqual([]);
+  });
+});
+

@@ -12,28 +12,33 @@ runningExample:
   title: …
   summary: …
   scene: { id: cart, overlays: [forces] }     # which core scene, and the overlays of the small hero on the map page
+  # optional: diagram: loop, caption: "…"     # staged block diagram under the hero (see below)
 
 # dives/<id>.md front matter (or on a graph.yaml node; a dive inherits the overlays of the first node that links to it)
 exampleScene: { overlays: [push, reach], caption: "The push acts on the velocity (B) …" }
+# optional: diagram: open                     # or [loop, disturb] for two stages side by side / stacked
 ```
 
 - Scene id and overlay ids are validated against the catalogue (`packages/core/src/scenedefs.ts`) at build time. An unknown id, a duplicate, or overlays that open **more than two small panels** fail the build (some overlays share a panel: see the table).
 - A dive without `exampleScene` shows the scene's default overlays and the build warns.
 - `caption` is one line under the picture (optional). The overlay chips and the accessible description are generated from the catalogue.
+- `diagram` (optional) draws a **staged block diagram** under the physical picture, so a map can build the loop box by box. A single stage or a list of stages (two stages sit side by side from 700 px, stacked below). Stages are `open`, `states`, `loop`, `disturb`, `pid`, `noise`, `gain`. Newly added parts at that stage are highlighted in the accent colour and tagged "new". This is not an inset, so it does not count toward the two-panel cap. When `diagram` is set, the older under-cart wiring (`drawLoopDiagram`) is skipped so the two drawings are not duplicated. Leave `diagram` unset to keep that under-cart diagram (pid-tuning and linear-systems loop dives are unchanged). The `gain` stage also mounts a K slider (`data-testid="diagram-k"`) that updates the live simulation.
 - The field needs `runningExample.scene` in `subject.yaml` (without it the field is ignored, with a build warning); apps that declare no scene are unchanged.
 - Pick overlays the way you pick a figure: ask *what does this node add to the cart?* and switch on exactly that. Prefer 1–3 overlays.
 
 ## Component API (`@study/core`)
 
 ```ts
-mountScene(host: HTMLElement, { scene: 'cart' | 'tine', overlays?: string[], caption?: string, compact?: boolean }): SceneHandle
+mountScene(host: HTMLElement, { scene: 'cart' | 'tine', overlays?: string[], caption?: string, params?, compact?: boolean, diagram?: DiagramSpec }): SceneHandle
 // SceneHandle { el, canvas, setOverlays(ids), drawAt(t), destroy() }; compact = main picture only (the hero)
-SCENES, MAX_INSETS, insetsOf(scene, overlays), sceneProblems(scene, overlays, where)   // scenedefs.ts: pure data + validation
+// DiagramSpec = 'open' | 'states' | 'loop' | 'disturb' | 'pid' | 'noise' | 'gain' | an array of those
+SCENES, MAX_INSETS, insetsOf(scene, overlays), sceneProblems(scene, overlays, where, params?, diagram?)   // scenedefs.ts: pure data + validation
+DIAGRAM_STAGES, partsOf, newPartsOf, diagramStages, diagramProblems, drawBlockDiagram, layoutDiagrams     // blockdiagram.ts
 simulateCart(overlays): CartSim   // x, v, u arrays, at(t) → {x, v, u, a, b (modal coefficients)}, lam (eigenvalues), Ts, strike
-cartEigs(m, k, c), tineX(t), tineSpectrum(f), sceneLayout(...), sceneAlt(scene, overlays), sceneRestTime / sceneDuration
+cartEigs(m, k, c), tineX(t), tineSpectrum(f), sceneLayout(scene, overlays, w, compact, diagram?), sceneAlt(scene, overlays, diagram?), sceneRestTime / sceneDuration
 ```
 
-Test hook: `window.__sceneFreeze = seconds` (set before load, or set and dispatch `study-theme`) draws one fixed frame, so screenshots and e2e are deterministic. Test ids: `example-scene` (`data-scene`, `data-overlays`), `scene-canvas`, `map-hero`, `dive-example-row`.
+Test hook: `window.__sceneFreeze = seconds` (set before load, or set and dispatch `study-theme`) draws one fixed frame, so screenshots and e2e are deterministic. Test ids: `example-scene` (`data-scene`, `data-overlays`, `data-diagram`), `scene-canvas`, `map-hero`, `dive-example-row`, `diagram-k` (gain slider).
 
 Layout: on ≥ 900 px the callout and the scene sit side by side; below that the scene stacks under the callout (390 px phones: no horizontal scroll). The map hero sits beside the central question from 760 px, under it below.
 

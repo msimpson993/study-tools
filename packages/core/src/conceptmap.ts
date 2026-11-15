@@ -45,7 +45,7 @@ export function mountConceptMap(host: HTMLElement, content: AppContent, progress
   const heroScene = content.subject.runningExample?.scene;
   const hero = h('div', { class: `cm-hero${heroScene ? ' has-scene' : ''}`, dataset: { testid: 'map-hero' } },
     h('div', { class: 'cm-q', dataset: { testid: 'central-question' } }, content.subject.centralQuestion, h('small', null, 'Central question. Tap any box or line to open it.')));
-  const heroHandle = heroScene ? mountScene(hero, { scene: heroScene.id, overlays: heroScene.overlays, params: heroScene.params, compact: true }) : null;
+  const heroHandle = heroScene ? mountScene(hero, { scene: heroScene.id, overlays: heroScene.overlays, params: heroScene.params, caption: heroScene.caption, diagram: heroScene.diagram, compact: true }) : null;
   root.append(
     hero,
     top, reviewBar, caption, legend,

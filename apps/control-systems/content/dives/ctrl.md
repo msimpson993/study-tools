@@ -11,7 +11,7 @@ chain:
 neighbors:
   - blocks
   - sse
-exampleScene: { overlays: [loop, poles], params: { K: 7 }, caption: "u = K·e is the proportional part of a controller. With K = 7 the cart overshoots about 16 % and stops short of 1 m; the closed-loop poles are on the right." }
+exampleScene: { overlays: [loop, poles], params: { K: 7 }, diagram: pid, caption: "The block diagram expands C into its P, I and D branches. u = K·e is the proportional part: with K = 7 (I and D off) the cart overshoots about 16 % and stops short of 1 m; the closed-loop poles are on the right." }
 ---
 **What can P, I and D each do about it?**
 

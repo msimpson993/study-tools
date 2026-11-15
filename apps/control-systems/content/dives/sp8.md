@@ -9,7 +9,7 @@ chain:
   - title: "root-locus preview"
 neighbors:
   - sp6
-exampleScene: { overlays: [loop, poles], params: { K: 7 }, caption: "The closed-loop poles at K = 7 sit at −1.5 ± j2.6, on the path they travelled from the open-loop poles −1 and −2 as K grew from 0." }
+exampleScene: { overlays: [loop, poles], params: { K: 7 }, diagram: gain, caption: "The closed-loop poles at K = 7 sit at −1.5 ± j2.6, on the path they travelled from the open-loop poles −1 and −2 as K grew from 0. The slider changes K on the block diagram and on the cart." }
 ---
 **What does closing the loop do on the map?**
 

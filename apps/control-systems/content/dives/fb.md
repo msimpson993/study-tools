@@ -11,7 +11,7 @@ chain:
 neighbors:
   - blocks
   - cheat
-exampleScene: { overlays: [loop, poles], params: { K: 20 }, caption: "Raise K to 20: the cart is faster and the offset shrinks to 0.09 m, but the poles leave the real axis and it overshoots about 35 %." }
+exampleScene: { overlays: [loop, poles], params: { K: 20 }, diagram: noise, caption: "Raise K to 20: the cart is faster and the offset shrinks to 0.09 m, but the poles leave the real axis and it overshoots about 35 %. The diagram shows where sensor noise n would enter the loop." }
 ---
 **What does feedback buy us, and what does it cost?**
 
