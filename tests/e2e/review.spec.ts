@@ -56,12 +56,12 @@ test.describe('control-systems: the Review area (mini exams live outside the map
     await expect(pg.getByRole('heading', { name: /LN1 carry-over \(slides 50–72, not on Mini exam 1\)/ })).toBeVisible();
     await expect(pg.locator('.formula-sheet')).toHaveCount(2);
     await expect(pg.locator('.formula-sheet.page2')).toHaveCount(1);
-    await expect(pg.getByTestId('review-quiz')).toContainText('(35)');
+    await expect(pg.getByTestId('review-quiz')).toContainText('(37)');
     const sub = pg.getByTestId('review-quiz-subset');
-    await expect(sub).toContainText('LN1 carry-over only (13)');
+    await expect(sub).toContainText('LN1 carry-over only (15)');
     await sub.click();
     await expect(page.getByTestId('qcard').first()).toBeVisible();
-    await expect(page.locator('.cm-sum').first()).toContainText('of 13');
+    await expect(page.locator('.cm-sum').first()).toContainText('of 15');
     await expect(page.locator('.cm-sum').first()).toContainText('LN1 carry-over');
   });
 

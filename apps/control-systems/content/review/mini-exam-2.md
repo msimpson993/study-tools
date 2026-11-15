@@ -2,7 +2,7 @@
 id: mini-exam-2
 order: 2
 title: "Mini exam 2: feedback control system characteristics"
-summary: "Lecture Notes 2 start to finish (open versus closed loop, the error signal, sensitivity, disturbance and noise, transient and steady-state behaviour, performance indices, model reduction), plus a carry-over section for the part of Lecture Notes 1 that Mini exam 1 left out (second-order systems and P, I, D control, slides 50–72). Topic checklists with slide references, formula sheets, ten worked problems and a 35-question self-test."
+summary: "Lecture Notes 2 start to finish (open versus closed loop, the error signal, sensitivity, disturbance and noise, transient and steady-state behaviour, performance indices, model reduction), plus a carry-over section for the part of Lecture Notes 1 that Mini exam 1 left out (second-order systems and P, I, D control, slides 50–72). Topic checklists with slide references, formula sheets, eleven worked problems and a 37-question self-test."
 covers: "Lecture Notes 2, slides 1–34 (Dorf, ch. 4), and the LN1 carry-over, slides 50–72"
 quizTag: mini-exam-2
 quizSubsets:
@@ -229,14 +229,14 @@ A speed-control motor has $R_a = 1$, $J = 10$, $b = 1$, $K_b = K_m = 1$, so $G =
 
 | Slides | Topic: can you…? | Where it is on the map |
 |---|---|---|
-| 50–51 | write the servo model $J\ddot\theta + B\dot\theta = T$, its closed loop $\dfrac{K}{Js^2 + Bs + K}$ and read $\omega_n^2 = K/J$, $2\zeta\omega_n = B/J$, $\zeta = \dfrac{B}{2\sqrt{JK}}$ | [ζ and ωₙ](#/dive/second) |
+| 50–51 | write the servo model $J\ddot\theta + B\dot\theta = T$ (inertia and viscous friction), close it with proportional gain $K$ to get $\dfrac{C}{R} = \dfrac{K}{Js^2 + Bs + K}$, and read $\omega_n = \sqrt{K/J}$, $\zeta = \dfrac{B}{2\sqrt{JK}}$ and the attenuation $\sigma = \zeta\omega_n = \dfrac{B}{2J}$ | [ζ and ωₙ](#/dive/second) |
 | 52–55 | tell the damping cases apart and give each step response: underdamped $0 < \zeta < 1$ (poles $-\zeta\omega_n \pm j\omega_d$, $\omega_d = \omega_n\sqrt{1-\zeta^2}$), critically damped $\zeta = 1$ (a double pole at $-\omega_n$, $c = 1 - e^{-\omega_nt}(1 + \omega_nt)$), overdamped $\zeta > 1$ (two real poles). The undamped case $\zeta = 0$ (poles on the imaginary axis, rings forever) appears on slides 61 and 70 | [ζ and ωₙ](#/dive/second) |
-| 56–57 | read the family of step and impulse responses against ζ (small ζ rings, large ζ is sluggish) | [ζ and ωₙ](#/dive/second) |
-| 58–60 | define rise time $T_r$, peak time $T_p$, settling time $T_s$ and percent overshoot, and use $T_p = \dfrac{\pi}{\omega_n\sqrt{1-\zeta^2}}$, $\;\%OS = 100e^{-\zeta\pi/\sqrt{1-\zeta^2}}$, $\;T_s = \dfrac{4}{\zeta\omega_n}$, $\;T_{r1} = \dfrac{2.16\zeta + 0.60}{\omega_n}$ ($0.3 \le \zeta \le 0.8$); for an overdamped system use the 10–90 % rise time, there is no peak | [ζ and ωₙ](#/dive/second) |
+| 56–57 | read the family of step responses (slide 56) and impulse responses (slide 57) against ζ: small ζ rings for a long time, ζ = 1 and above is sluggish | [ζ and ωₙ](#/dive/second) |
+| 58–60 | define rise time $T_r$ (the 0–100 % rise time for an underdamped response with overshoot), peak time $T_p$, settling time $T_s$ (2 % criterion $e^{-\zeta\omega_nT_s} < 0.02$, so $\zeta\omega_nT_s \approx 4$) and percent overshoot, and use $T_p = \dfrac{\pi}{\omega_n\sqrt{1-\zeta^2}}$, $\;\%OS = 100e^{-\zeta\pi/\sqrt{1-\zeta^2}}$, $\;T_s = \dfrac{4}{\zeta\omega_n}$, $\;T_{r1} = \dfrac{2.16\zeta + 0.60}{\omega_n}$ ($0.3 \le \zeta \le 0.8$); for an overdamped system there is no peak, so use the 10–90 % rise time $T_{r1}$ | [ζ and ωₙ](#/dive/second) |
 | 61 | read an impulse response from pole location: left half-plane decays, imaginary axis oscillates forever, right half-plane grows; farther left is faster, farther from the real axis is a faster oscillation | [ζ and ωₙ](#/dive/second), [Poles and zeros](#/dive/splane) |
 | 62–64 | show that proportional control of $K/(Ts+1)$ leaves $e_{ss} = \dfrac{1}{K + 1}$ for a unit step, and that an integral term removes the offset ($e_{ss} = 0$) at the risk of oscillation | [Why P leaves an error and I removes it](#/dive/sse), [P, I and D](#/dive/ctrl) |
-| 65–68 | find the steady-state error from a step torque disturbance: P leaves $T_d/K_p$ (raising $K_p$ shrinks it but adds oscillation); PI makes it 0, and turns the second-order loop into a third-order one | [Why P leaves an error and I removes it](#/dive/sse) |
-| 69–72 | say what derivative action does (anticipates the error, adds damping); see that P on an inertia load $1/(Js^2)$ has imaginary poles and oscillates forever; for PD on $\dfrac{1}{s(Js+B)}$ get $\zeta = \dfrac{B + K_d}{2\sqrt{K_pJ}}$ and ramp error $B/K_p$, choosing $\zeta$ between 0.4 and 0.7 | [P, I and D](#/dive/ctrl), [ζ and ωₙ](#/dive/second) |
+| 65–68 | find the steady-state error from a step torque disturbance on an inertia load: P gives $e_{ss} = -T_d/K_p$ (raising $K_p$ shrinks it but adds oscillation); PI makes it 0, but the loop becomes third order, $Js^3 + Bs^2 + K_ps + K_p/T_i$, and can go unstable (the stability test $a_2a_1 > a_0a_3$ is *added practice, not on the slides*; Carry-over problem 4) | [Why P leaves an error and I removes it](#/dive/sse) |
+| 69–72 | say what derivative action does (anticipates the error, adds damping); see that P on an inertia load $1/(Js^2)$ has imaginary poles and oscillates forever; for PD on $\dfrac{1}{s(Js+B)}$ (slide 71 writes it $K_p(1 + T_ds)$, so $K_d = K_pT_d$) get $\zeta = \dfrac{B + K_d}{2\sqrt{K_pJ}}$ and ramp error $B/K_p$; the design advice is small $B$, large $K_p$, then pick $K_d$ for $\zeta$ between 0.4 and 0.7 | [P, I and D](#/dive/ctrl), [ζ and ωₙ](#/dive/second) |
 
 <div class="formula-sheet page2">
 
@@ -244,7 +244,7 @@ A speed-control motor has $R_a = 1$, $J = 10$, $b = 1$, $K_b = K_m = 1$, so $G =
 
 #### Second-order system
 
-- Standard form $\dfrac{C(s)}{R(s)} = \dfrac{\omega_n^2}{s^2 + 2\zeta\omega_ns + \omega_n^2}$; servo: $\dfrac{K}{Js^2 + Bs + K}$, $\omega_n^2 = \dfrac{K}{J}$, $2\zeta\omega_n = \dfrac{B}{J}$, $\zeta = \dfrac{B}{B_c} = \dfrac{B}{2\sqrt{JK}}$
+- Standard form $\dfrac{C(s)}{R(s)} = \dfrac{\omega_n^2}{s^2 + 2\zeta\omega_ns + \omega_n^2}$; servo with P control ($J\ddot\theta + B\dot\theta = T$): $\dfrac{C}{R} = \dfrac{K}{Js^2 + Bs + K}$, $\omega_n = \sqrt{\dfrac{K}{J}}$, $\dfrac{B}{J} = 2\zeta\omega_n = 2\sigma$, $\zeta = \dfrac{B}{B_c} = \dfrac{B}{2\sqrt{JK}}$, $\sigma = \zeta\omega_n$
 - Underdamped $0 < \zeta < 1$: poles $-\zeta\omega_n \pm j\omega_d$, $\omega_d = \omega_n\sqrt{1-\zeta^2}$; $c(t) = 1 - \dfrac{e^{-\zeta\omega_nt}}{\sqrt{1-\zeta^2}}\sin\!\left(\omega_dt + \tan^{-1}\dfrac{\sqrt{1-\zeta^2}}{\zeta}\right)$
 - Critically damped $\zeta = 1$: double pole at $-\omega_n$; $c(t) = 1 - e^{-\omega_nt}(1 + \omega_nt)$
 - Overdamped $\zeta > 1$: two real poles $s_{1,2} = (\zeta \pm \sqrt{\zeta^2-1})\,\omega_n$ (both negative), response is two decaying exponentials, no overshoot
@@ -253,9 +253,9 @@ A speed-control motor has $R_a = 1$, $J = 10$, $b = 1$, $K_b = K_m = 1$, so $G =
 #### Step-response specifications
 
 - $T_p = \dfrac{\pi}{\omega_d}$, $\;M_{pt} = 1 + e^{-\zeta\pi/\sqrt{1-\zeta^2}}$, $\;\%OS = 100\,e^{-\zeta\pi/\sqrt{1-\zeta^2}}$ (depends on $\zeta$ only)
-- $T_s = \dfrac{4}{\zeta\omega_n}$ (2 % band, from $e^{-\zeta\omega_nT_s} < 0.02$)
+- $T_s = \dfrac{4}{\zeta\omega_n}$ (slide 59: 2 % criterion $e^{-\zeta\omega_nT_s} < 0.02$, so $\zeta\omega_nT_s \approx 4$, i.e. $T_s = 4\tau$)
+- Rise time (slide 58): underdamped (with overshoot) use the **0–100 %** rise time $T_r$; overdamped has no peak, use the **10–90 %** rise time $T_{r1}$
 - $T_{r1} = \dfrac{2.16\zeta + 0.60}{\omega_n}$ (10–90 % rise time, $0.3 \le \zeta \le 0.8$)
-- Overdamped: no peak; use the 10–90 % rise time
 
 #### Pole location (slide 61)
 
@@ -265,9 +265,10 @@ A speed-control motor has $R_a = 1$, $J = 10$, $b = 1$, $K_b = K_m = 1$, so $G =
 
 - P on $\dfrac{K}{Ts+1}$: $e_{ss} = \dfrac{1}{K + 1}$ for a unit step (with a controller gain $K_p$ in front of a plant gain $K$, replace $K$ by $K_pK$)
 - Integral action: $e_{ss} = 0$ for a step, possibly oscillatory. PI on a step torque disturbance: $e_{ss} = 0$, but the loop is one order higher
-- P on a torque disturbance $T_d$ with plant $\dfrac{1}{s(Js+b)}$: $e_{ss} = -\dfrac{T_d}{K_p}$ (output offset $T_d/K_p$)
+- P on a step torque disturbance $T_d$, plant $\dfrac{1}{s(Js+b)}$ (slides 65–66): $\dfrac{C}{D} = \dfrac{1}{Js^2 + bs + K_p}$, $e_{ss} = -\dfrac{T_d}{K_p}$ (output offset $T_d/K_p$): larger $K_p$ gives less error but more oscillation
+- PI on the same disturbance (slides 67–68): $\dfrac{C}{D} = \dfrac{s}{Js^3 + bs^2 + K_ps + K_p/T_i}$, $e_{ss} = 0$, but the loop is third order and can go unstable. *Added, not on the slides:* for $a_3s^3 + a_2s^2 + a_1s + a_0$ (all $a_i > 0$) stable if $a_2a_1 > a_0a_3$, here $bK_p > JK_p/T_i$, i.e. $T_i > J/b$ (the $K_p$ cancels)
 - P on an inertia load $\dfrac{1}{Js^2}$: $\dfrac{K_p}{Js^2 + K_p}$, poles $\pm j\sqrt{K_p/J}$, oscillates forever
-- PD on an inertia load: $Js^2 + K_pT_ds + K_p = 0$, damping added. PD on $\dfrac{1}{s(Js+B)}$: $\zeta = \dfrac{B + K_d}{2\sqrt{K_pJ}}$, ramp $e_{ss} = \dfrac{B}{K_p}$
+- PD (slide 71 writes $K_p(1 + T_ds)$, so $K_d = K_pT_d$) on an inertia load: $Js^2 + K_pT_ds + K_p = 0$, damping added. PD on $\dfrac{1}{s(Js+B)}$ (slide 72): $\zeta = \dfrac{B + K_d}{2\sqrt{K_pJ}}$, ramp $e_{ss} = \dfrac{B}{K_p}$. Design advice: small $B$, large $K_p$ (small ramp error), then $K_d$ so that $\zeta$ is between 0.4 and 0.7 (small overshoot)
 
 </div>
 
@@ -323,6 +324,24 @@ The plant is $G(s) = \dfrac{4}{2s + 1}$ ($K = 4$, $\tau = 2$ s) in a unity-feedb
 
 </details>
 
+#### Carry-over problem 4: A torque disturbance on an inertia load, P versus PI (slides 65–68)
+
+A load with inertia $J = 1$ and viscous friction $B = 2$ has the plant $\dfrac{1}{s(Js + B)}$ (torque to position). A step torque disturbance $T_d = 1$ acts with $R = 0$. Find the steady-state error and $\zeta$ for (a) P control with $K_p = 4$ and (b) with $K_p = 16$. (c) Use PI control $G_c = K_p\left(1 + \dfrac{1}{T_is}\right)$ with $K_p = 4$, $T_i = 2$: find the closed-loop characteristic polynomial, check stability and the steady-state error. (d) For which $T_i$ is the PI loop stable? Check $T_i = 0.5$ and $T_i = 0.25$.
+
+<details class="fold">
+<summary>Solution</summary>
+
+1. (a) With P control, $\dfrac{C}{D} = \dfrac{1}{Js^2 + Bs + K_p} = \dfrac{1}{s^2 + 2s + 4}$, which is stable. For $E = -C$ and a step $D = 1/s$: $e_{ss} = -\lim_{s\to0} \dfrac{s}{s^2 + 2s + 4}\dfrac1s = -\dfrac14 = -\dfrac{T_d}{K_p}$ (the output sits at $0.25$ instead of $0$). Here $\omega_n = 2$ and $\zeta = \dfrac{B}{2\sqrt{JK_p}} = \dfrac{2}{4} = 0.5$ (%OS about 16 %).
+2. (b) With $K_p = 16$: $\dfrac{1}{s^2 + 2s + 16}$, $e_{ss} = -\dfrac{1}{16} = -0.0625$, $\omega_n = 4$ and $\zeta = \dfrac{2}{2\cdot4} = 0.25$ (%OS about 44 %). Four times the gain gives four times less error, but the response rings much more.
+3. (c) With PI, $L = K_p\dfrac{T_is + 1}{T_is}\cdot\dfrac{1}{s(Js + B)}$, so $1 + L = 0$ gives $Js^3 + Bs^2 + K_ps + \dfrac{K_p}{T_i} = 0$, which for the numbers is $s^3 + 2s^2 + 4s + 2 = 0$. The loop is now third order. The disturbance transfer function is $\dfrac{C}{D} = \dfrac{s}{s^3 + 2s^2 + 4s + 2}$.
+4. Stability of the cubic $a_3s^3 + a_2s^2 + a_1s + a_0$ with all coefficients positive: it is stable if $a_2a_1 > a_0a_3$. This test is *added practice, not in the notes* (it is the Routh condition for a cubic). Here $a_2a_1 = 2\cdot4 = 8 > a_0a_3 = 2$, so it is stable (the poles are $-0.64$ and $-0.68 \pm j1.63$).
+5. Then $e_{ss} = -\lim_{s\to0} s\cdot\dfrac{s}{s^3 + 2s^2 + 4s + 2}\dfrac1s = 0$. The integral action removes the disturbance error that P left (slide 68).
+6. (d) For the general cubic $Js^3 + Bs^2 + K_ps + K_p/T_i$: $a_2a_1 > a_0a_3$ reads $BK_p > J\dfrac{K_p}{T_i}$, so the loop is stable for $T_i > J/B = 0.5$. The $K_p$ cancels out of this condition. At $T_i = 0.5$ the cubic is $s^3 + 2s^2 + 4s + 8 = (s + 2)(s^2 + 4)$, with poles $-2$ and $\pm j2$: marginal, it rings forever. At $T_i = 0.25$ it is $s^3 + 2s^2 + 4s + 16$, where $8 < 16$, so it is unstable (poles $-2.71$ and $+0.35 \pm j2.41$) and the disturbance response grows.
+
+**Check and link:** P leaves $-T_d/K_p$, and raising $K_p$ cuts the error but adds oscillation (slides 65–66). PI gives 0 error but raises the order (slide 68, which warns the loop may become unstable); the cubic test shows where: too much integral action (here $T_i \le J/B$), not simply a large $K_p$.
+
+</details>
+
 ### Self-test
 
-The self-test has 35 questions. 22 are on Lecture Notes 2: the eleven already in the course quiz (feedback and the final-value theorem) plus eleven new ones on the problems above (one of them, the unit-ramp error, is added practice, not in LN2). The other 13 are the **LN1 carry-over**: eight existing questions on second-order systems and P, I, D, plus five new ones. The **LN1 carry-over only** button runs just those 13, and each of them is labelled "LN1 carry-over" on its card. Use the **Take the self-test** button above; each answer links back to the map.
+The self-test has 37 questions. 22 are on Lecture Notes 2: the eleven already in the course quiz (feedback and the final-value theorem) plus eleven new ones on the problems above (one of them, the unit-ramp error, is added practice, not in LN2). The other 15 are the **LN1 carry-over**: eight existing questions on second-order systems and P, I, D, plus seven new ones. The **LN1 carry-over only** button runs just those 15, and each of them is labelled "LN1 carry-over" on its card. Use the **Take the self-test** button above; each answer links back to the map.

@@ -1681,3 +1681,25 @@
     - "K<sub>d</sub> = 0.5"
   answer: 0
   why: "2√(K<sub>p</sub>J) = 2√4 = 4, so ζ = (1 + K<sub>d</sub>)/4 = 0.5 gives K<sub>d</sub> = 1. With K<sub>d</sub> = 0 the damping ratio would be 0.25, which rings a lot. The ramp error stays B/K<sub>p</sub> = 0.25 whatever K<sub>d</sub> is."
+- id: me2-17
+  tags: [mini-exam-2, ln1-carryover, sse]
+  kind: compute
+  q: "A load with plant 1/(s(Js + B)), J = 1 and B = 2, has a step torque disturbance and PI control K<sub>p</sub>(1 + 1/(T<sub>i</sub>s)) with K<sub>p</sub> = 4. Compared with P control alone (error −T<sub>d</sub>/K<sub>p</sub>), what does PI do, and for which T<sub>i</sub> is it stable?"
+  choices:
+    - "The disturbance error becomes 0, but the loop is third order (s³ + 2s² + 4s + 4/T<sub>i</sub>) and is stable only for T<sub>i</sub> &gt; J/B = 0.5"
+    - "The disturbance error becomes 0 and the loop stays second order and stable for every T<sub>i</sub>"
+    - "The disturbance error stays −T<sub>d</sub>/K<sub>p</sub> = −0.25, but the response is faster"
+    - "The disturbance error becomes 0 and the loop is stable for every T<sub>i</sub> as long as K<sub>p</sub> is small"
+  answer: 0
+  why: "Slides 67–68: C/D = s/(Js³ + Bs² + K<sub>p</sub>s + K<sub>p</sub>/T<sub>i</sub>), so the final-value theorem gives e<sub>ss</sub> = 0, and the loop is third order. The stability test for a cubic, a<sub>2</sub>a<sub>1</sub> &gt; a<sub>0</sub>a<sub>3</sub>, is added practice (not in the notes): BK<sub>p</sub> &gt; JK<sub>p</sub>/T<sub>i</sub>, so T<sub>i</sub> &gt; J/B = 0.5, whatever K<sub>p</sub> is. At T<sub>i</sub> = 0.5 the cubic is (s + 2)(s² + 4), so it rings forever; at 0.25 it is unstable."
+- id: me2-18
+  tags: [mini-exam-2, ln1-carryover, second]
+  kind: compute
+  q: "A servo J·θ'' + B·θ' = T (J = 0.5, B = 2) is closed with proportional gain K = 8, giving C/R = K/(Js² + Bs + K). What are ω<sub>n</sub>, ζ and the attenuation σ = ζω<sub>n</sub>?"
+  choices:
+    - "ω<sub>n</sub> = 4, ζ = 0.5, σ = 2"
+    - "ω<sub>n</sub> = 4, ζ = 1, σ = 4"
+    - "ω<sub>n</sub> = 16, ζ = 0.25, σ = 4"
+    - "ω<sub>n</sub> = 2, ζ = 0.5, σ = 1"
+  answer: 0
+  why: "ω<sub>n</sub> = √(K/J) = √16 = 4 and ζ = B/(2√(JK)) = 2/(2·2) = 0.5 (slide 51). Then σ = ζω<sub>n</sub> = 2, which also equals B/(2J). The poles are −2 ± j3.46."
