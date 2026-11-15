@@ -2,6 +2,7 @@ import { h, clear } from './dom';
 import type { AppContent, Question } from './types';
 import type { Progress } from './progress';
 import { mountQuizFigure, type QuizFigureRegistry } from './quizfig';
+import { copyRefButton, quizReference } from './copyref';
 
 export interface QuizOpts {
   tags?: string[];
@@ -84,7 +85,7 @@ export function mountQuiz(host: HTMLElement, content: AppContent, progress: Prog
     const q = list[idx];
     root.append(h('div', { class: 'prog' }, h('i', { style: `width:${(idx / list.length) * 100}%` })), h('div', { class: 'cm-sum' }, `Question ${idx + 1} of ${list.length} · ${q.kind}`));
     const card = h('div', { class: 'qcard', dataset: { testid: 'qcard', qid: q.id } });
-    card.append(h('div', { class: 'qtext', html: q.q }));
+    card.append(h('div', { class: 'qcard-head' }, copyRefButton(() => quizReference(content, q))), h('div', { class: 'qtext', html: q.q }));
     if (q.figure) { const mf = mountQuizFigure(q.figure, opts.figures); figCleanups.push(mf.destroy); card.append(mf.el); }
     const isMcq = q.kind !== 'recall' && !!q.choices;
     if (flash || !isMcq) {

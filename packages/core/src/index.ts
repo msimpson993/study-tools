@@ -10,6 +10,7 @@ export * from './quizfig';
 export * from './controls';
 export * from './plot';
 export * from './figure';
+export * from './copyref';
 export * from './app';
 export * from './viz';
 export * from './ctrlviz';

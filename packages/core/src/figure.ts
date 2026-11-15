@@ -2,6 +2,7 @@ import { h, clear } from './dom';
 import type { FigureDef } from './types';
 import type { ControlSet } from './controls';
 import { fitCanvas } from './plot';
+import { copyRefButton, figureRefWithControls, refContent } from './copyref';
 
 export interface FigurePanel {
   id: string;
@@ -54,7 +55,11 @@ export function mountFigure(host: HTMLElement, def: FigureDef, panels: FigurePan
   const stage = h('div', { class: 'fig-stage', dataset: { testid: 'fig-stage' } });
   const inline = h('div', { class: `pair2${panels.length === 1 ? ' one' : ''}` });
   const overlay = h('div', { class: 'fig-overlay', hidden: true, dataset: { testid: 'fig-overlay' } });
-  stage.append(h('h4', { style: 'margin:.1rem .2rem .4rem' }, def.title), inline);
+  const figRef = (prefix?: string) => {
+    const auto = prefix ?? (typeof location !== 'undefined' && location.hash.startsWith('#/dive/') ? 'deep dive' : undefined);
+    return figureRefWithControls(refContent(), def, controls.values, controls.serialize(), auto);
+  };
+  stage.append(h('div', { class: 'fig-stage-head' }, h('h4', null, def.title), copyRefButton(() => figRef())), inline);
   if (def.lookFor) stage.append(h('p', { class: 'fig-look', dataset: { testid: 'look-for' }, html: `<b>Look for:</b> ${def.lookFor}` }));
   // animation: play/pause drives one control (its own slider is the scrubber); reduced motion => explicit step button, no autoplay loop
   let stopAnim = () => {};
@@ -104,6 +109,7 @@ export function mountFigure(host: HTMLElement, def: FigureDef, panels: FigurePan
     const box = h('div', { class: 'fig-box', role: 'dialog', 'aria-label': def.title });
     box.append(h('div', { class: 'fig-head' }, h('h4', null, isPair && def.pair ? `${byId(openIds[0]).title} ⇄ ${byId(openIds[1]).title}` : byId(openIds[0]).title),
       def.pair && !isPair ? h('button', { class: 'tbtn', dataset: { testid: 'pair-open' }, onclick: () => api.open([def.pair!.forward, def.pair!.inverse]) }, 'Pair view') : null,
+      copyRefButton(() => figRef()),
       h('button', { class: 'tbtn', dataset: { testid: 'fig-close' }, 'aria-label': 'Close expanded plot', onclick: () => api.close() }, '✕')));
     if (isPair && def.pair) {
       box.append(h('div', { class: 'fig-strip', dataset: { testid: 'pair-strip' }, html: `<div><b>${def.pair.forwardName}</b> (${byId(def.pair.forward).title} → ${byId(def.pair.inverse).title})</div><div><b>${def.pair.inverseName}</b> (${byId(def.pair.inverse).title} → ${byId(def.pair.forward).title})</div>${def.pair.strip ? `<div>${def.pair.strip}</div>` : ''}` }));

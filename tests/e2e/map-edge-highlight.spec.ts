@@ -94,7 +94,10 @@ for (const app of APPS) {
       const dot = page.locator(`[data-testid=map-edge][data-edge="${key}"] circle.dot`).first(); await dot.scrollIntoViewIfNeeded();
       const bb = (await dot.boundingBox())!; await page.mouse.click(bb.x + bb.width / 2, bb.y + bb.height / 2);
       await expectUpToArrow(page, m, e, 'mouse tap on dot');
-      expect(await page.evaluate(() => location.hash), 'tapping a line does not navigate (no dive opens)').toBe(hash0);
+      const hash = await page.evaluate(() => location.hash);
+      expect(hash === hash0 || hash === `#/edge/${key}`, 'tapping a line stays on the map (deep link or unchanged; no dive opens)').toBe(true);
+      await expect(page.getByTestId('concept-map')).toBeVisible();
+      await expect(page.locator('[data-testid=dive]')).toHaveCount(0);
       const chain = pathToRoot(e.from, m.edges).filter((id) => id !== e.to);
       const other = m.nodes.map((n) => n.id).find((id) => !chain.includes(id) && id !== e.to)!;
       const base = await paint(page, other), lit = await paint(page, e.from);

@@ -1,5 +1,6 @@
 import { h, s, clear } from './dom';
 import type { AppContent, MapDef, MapNode, MapEdge } from './types';
+import { copyRefButton, nodeReference, edgeReference } from './copyref';
 import { computeGeometry, layoutWidth, placeLabels, roundedPath, arrowHead, edgeKey, pathToRoot, mapHighlight, type Geometry, type Label, type MapView } from './maplayout';
 import { storeGet, storeSet } from './store';
 import { mountScene } from './scene';
@@ -279,7 +280,8 @@ export function mountConceptMap(host: HTMLElement, content: AppContent, progress
     if (pick.kind === 'node') {
       const n = m.nodes.find((x) => x.id === pick.id);
       if (!n) return;
-      panel.append(close, h('h3', null, n.label), ...(n.detail ? [h('div', { class: 'st-hint' }, n.detail)] : []), h('div', { html: `<p>${n.short}</p>` }));
+      const head = h('div', { class: 'cm-head' }, h('h3', null, n.label), copyRefButton(() => nodeReference(content, n, m.id)), close);
+      panel.append(head, ...(n.detail ? [h('div', { class: 'st-hint' }, n.detail)] : []), h('div', { html: `<p>${n.short}</p>` }));
       if (n.eqHtml) panel.append(h('div', { class: 'st-eq', html: n.eqHtml })); else if (n.eq) panel.append(h('div', { class: 'st-eq' }, n.eq));
       if (n.addsToExample) panel.append(h('aside', { class: 'callout c-example', dataset: { testid: 'adds-to-example' } }, h('b', { class: 'lead' }, 'Adds to the running example'), h('div', { class: 'cb', html: `<p>${n.addsToExample}</p>` })));
       if (n.accountsFor) panel.append(h('aside', { class: 'callout c-account', dataset: { testid: 'accounts-for' } }, h('b', { class: 'lead' }, 'Lets us account for'), h('div', { class: 'cb', html: `<p>${n.accountsFor}</p>` })));
@@ -304,7 +306,8 @@ export function mountConceptMap(host: HTMLElement, content: AppContent, progress
       const e = m.edges.find((x) => edgeKey(x.from, x.to) === pick.id);
       if (!e) return;
       const f = m.nodes.find((x) => x.id === e.from)!, t = m.nodes.find((x) => x.id === e.to)!;
-      panel.append(close, h('h3', null, `${f.label} → ${t.label}`), h('div', { class: 'st-hint' }, e.dashed ? 'Dashed: the same idea in another language' : 'Next step in the chain of questions'),
+      const head = h('div', { class: 'cm-head' }, h('h3', null, `${f.label} → ${t.label}`), copyRefButton(() => edgeReference(content, e, f, t, m.id)), close);
+      panel.append(head, h('div', { class: 'st-hint' }, e.dashed ? 'Dashed: the same idea in another language' : 'Next step in the chain of questions'),
         h('aside', { class: 'callout c-predict' }, h('b', { class: 'lead' }, 'The question this line answers'), h('div', { class: 'cb', html: `<p>${e.question}</p>` })),
         h('div', { html: `<p>${e.idea}</p>` }));
       if (e.eq) panel.append(h('div', { class: 'st-eq' }, e.eq));

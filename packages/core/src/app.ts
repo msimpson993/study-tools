@@ -8,6 +8,7 @@ import { mountConceptMap, newMapState, type MapState } from './conceptmap';
 import { mountQuiz } from './quiz';
 import type { QuizFigureRegistry } from './quizfig';
 import { ControlSet } from './controls';
+import { setRefContent, pickFromHash, mapHashFor, isMapHash, copyRefButton, diveReference } from './copyref';
 
 export interface BoardHandle { destroy?(): void; show?(params: URLSearchParams): void; hide?(): void }
 export interface AppHooks {
@@ -28,6 +29,7 @@ function parseHash(): Route {
 const go = (hash: string) => { location.hash = hash; };
 
 export function mountApp(content: AppContent, hooks: AppHooks = {}): void {
+  setRefContent(content);
   initTheme();
   const subj = content.subject;
   document.title = subj.title;
@@ -83,6 +85,12 @@ export function mountApp(content: AppContent, hooks: AppHooks = {}): void {
       go(kind === 'figure' ? `/figure/${rest}` : `/board?pair=${rest.replace('?', '&')}`);
     },
     openQuiz: (tags: string[], title: string) => go(`/quiz?tags=${encodeURIComponent(tags.join(','))}&title=${encodeURIComponent(title)}`),
+    onState: () => {
+      if (!isMapHash(location.hash || '#/')) return;
+      const want = mapHashFor(mapState.pick);
+      const cur = location.hash || '#/';
+      if (cur !== want && cur !== want.replace(/^#/, '')) history.replaceState(null, '', want);
+    },
   };
 
   function crumbs(...items: (string | [string, string])[]) {
@@ -123,7 +131,11 @@ export function mountApp(content: AppContent, hooks: AppHooks = {}): void {
       return;
     }
     showMain();
-    if (!a || a === 'map') {
+    if (!a || a === 'map' || a === 'node' || a === 'edge') {
+      // #/node/<id> and #/edge/<from>__<to> select that box/line. Bare #/ keeps the in-memory pick so
+      // Explore → quiz → back to the map restores the panel (mapState lives across routes).
+      const picked = (a === 'node' || a === 'edge') ? pickFromHash(content, path) : null;
+      if (picked) { mapState.mapId = picked.mapId; mapState.pick = picked.pick; }
       renderSidebar('map');
       cleanup = mountConceptMap(main, content, progress, mapState, navMap);
     } else if (a === 'dive' && b) {
@@ -180,7 +192,8 @@ export function mountApp(content: AppContent, hooks: AppHooks = {}): void {
     if (from) { const [mid, nid] = from.split('/'); if (nid) progress.markSeen(mid, nid); }
     const catLabel = content.subject.categories?.find((c) => c.id === d.category)?.label;
     main.append(crumbs(['Deep dives', '#/s/dives'], catLabel ?? '', d.title));
-    const art = h('article', { class: 'prose', dataset: { testid: 'dive' } }, h('h2', null, d.title));
+    const art = h('article', { class: 'prose', dataset: { testid: 'dive' } },
+      h('div', { class: 'dive-head' }, h('h2', null, d.title), copyRefButton(() => diveReference(content, d))));
     art.append(h('details', { class: 'fold', open: true }, h('summary', null, 'Where are we? The chain of questions that leads here'),
       h('ol', { class: 'chain' }, ...d.chain.map((s) => h('li', null, s.title, s.detail ? h('small', null, s.detail) : null)))));
     let sceneStop: (() => void) | null = null;
