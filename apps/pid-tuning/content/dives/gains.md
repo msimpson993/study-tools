@@ -55,15 +55,15 @@ Suppose the loop settles to steady state. Then every signal is constant, includi
 
 Unity feedback, step reference R(s) = 1/s, closed loop stable:
 
-<div class="eqbox">e<sub>ss</sub> = lim<sub>s→0</sub> s · <span class="frac"><span>1</span><span>1 + C(s)G(s)</span></span> · <span class="frac"><span>1</span><span>s</span></span> = <span class="frac"><span>1</span><span>1 + C(0)G(0)</span></span></div>
+<div class="eqbox">e<sub>ss</sub> = lim<sub>s→0</sub> s · <span class="frac"><span>1</span><span>1 + Gc(s)G(s)</span></span> · <span class="frac"><span>1</span><span>s</span></span> = <span class="frac"><span>1</span><span>1 + Gc(0)G(0)</span></span></div>
 
 - P: e<sub>ss</sub> = 1/(1 + K<sub>p</sub>G(0)). Finite K<sub>p</sub> ⇒ finite but nonzero error (for a plant with no free integrator, i.e. “type 0”).
-- PI/PID: C(s) ∋ K<sub>i</sub>/s ⇒ C(0) → ∞ ⇒ <b>e<sub>ss</sub> = 0</b>.
+- PI/PID: Gc(s) ∋ K<sub>i</sub>/s ⇒ Gc(0) → ∞ ⇒ <b>e<sub>ss</sub> = 0</b>.
 - If the plant <em>itself</em> has an integrator (type 1, e.g. a position servo), P alone already gives zero step error, and I is then for rejecting constant <em>disturbances</em>.
 
 #### 3. Disturbances: the C/D view from class
 
-<div class="eqbox"><span class="frac"><span>Y</span><span>D</span></span>(0) = <span class="frac"><span>G(0)</span><span>1 + C(0)G(0)</span></span> → <span class="frac"><span>G(0)</span><span>1 + K<sub>p</sub>G(0)</span></span> (P) or 0 (with I)</div>
+<div class="eqbox"><span class="frac"><span>Y</span><span>D</span></span>(0) = <span class="frac"><span>G(0)</span><span>1 + Gc(0)G(0)</span></span> → <span class="frac"><span>G(0)</span><span>1 + K<sub>p</sub>G(0)</span></span> (P) or 0 (with I)</div>
 
 *From the guide's static figure: <b>Load disturbance step</b> (d = 1 at t = 1 s, r = 0, plant 1/(s+1)³). P-only (K<sub>p</sub> = 2) is left with a permanent deviation of G(0)/(1 + K<sub>p</sub>G(0)) = 1/3. PI (K<sub>p</sub> = 2, K<sub>i</sub> = 0.8) drives it back to zero. Think: a hill under cruise control.*
 
@@ -107,5 +107,5 @@ Before you touch a slider, predict what it will do. Raise Kp: faster, but the po
 - **ζ, ωn**: damping ratio and natural frequency of the dominant pole pair
 - **PM**: phase margin: how far the loop phase is from −180° at the 0 dB crossover
 - **%OS, Ts**: overshoot and 2 % settling time of the step response
-- **G, C**: plant transfer function G(s) and controller C(s)
+- **G, Gc**: plant transfer function G(s) and controller Gc(s)
 ````

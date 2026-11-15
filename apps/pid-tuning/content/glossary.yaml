@@ -22,14 +22,14 @@
 - term: G(s)
   meaning: Plant transfer function (the engine). <i>G</i>(0) = its DC gain.
   section: Plant & loop
-- term: C(s)
+- term: Gc(s)
   meaning: "Controller transfer function: <i>K</i><sub>p</sub> + <i>K</i><sub>i</sub>/<i>s</i> + <i>K</i><sub>d</sub><i>s</i>."
   section: Controller
 - term: H(s)
   meaning: Feedback / sensor path (= 1 for unity feedback).
   section: Plant & loop
 - term: L(s)
-  meaning: Loop gain <i>C</i>·<i>G</i>(·<i>H</i>). Its Bode plot sets margins. (In Z–N reaction curve, <i>L</i> is instead dead time, s.)
+  meaning: Loop gain <i>G</i><sub>c</sub>·<i>G</i>(·<i>H</i>). Its Bode plot sets margins. (In Z–N reaction curve, <i>L</i> is instead dead time, s.)
   section: Plant & loop
 - term: s
   meaning: Laplace variable (rad/s). 1/<i>s</i> = integrate, <i>s</i> = differentiate.
@@ -62,7 +62,7 @@
   meaning: "First-order plant <i>K</i>/(τ<i>s</i>+1): <i>K</i> = DC gain, τ = time constant (s)."
   section: Plant & loop
 - term: e_ss
-  meaning: "Steady-state error, lim<sub><i>t</i>→∞</sub> <i>e</i>(<i>t</i>). Step: 1/(1+<i>C</i>(0)<i>G</i>(0))."
+  meaning: "Steady-state error, lim<sub><i>t</i>→∞</sub> <i>e</i>(<i>t</i>). Step: 1/(1+<i>G</i><sub>c</sub>(0)<i>G</i>(0))."
   section: Step-response specs
 - term: "%OS"
   meaning: "Percent overshoot: peak above final value, % of final value."

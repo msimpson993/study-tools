@@ -9,16 +9,17 @@ permissions:
   pages: write
   id-token: write
 
+# Queue deployments instead of cancelling one that is mid-flight (GitHub's recommended Pages setting).
 concurrency:
   group: pages
-  cancel-in-progress: true
+  cancel-in-progress: false
 
 jobs:
-  deploy:
+  # Build and upload the artifact in one job, deploy in another. With both in a single job, "Re-run failed jobs"
+  # uploaded a second "github-pages" artifact to the same run and deploy-pages failed with "multiple artifacts".
+  # Split like this, a failed deploy can be re-run on its own and finds exactly one artifact.
+  build:
     runs-on: ubuntu-latest
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -33,5 +34,13 @@ jobs:
       - uses: actions/upload-pages-artifact@v3
         with:
           path: dist
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
       - id: deployment
         uses: actions/deploy-pages@v4

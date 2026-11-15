@@ -232,7 +232,7 @@ function drawLoopDiagram(g: G, r: Rect, P: Pal, S: CartSim, st: ReturnType<CartS
   const L = S.loop!, lp = L.P, { yb, cx, xc0, px, late } = o, w = r.w, pid = ov.includes('pid');
   const bw = Math.min(176, w * 0.52), bh = pid ? 58 : 34, bx0 = xc0 - bw / 2, bx1 = xc0 + bw / 2, top = yb + 26, ym = top + bh / 2, yr = yb + 16, sx = Math.max(24, bx0 - 24);
   const seen = lp.hasNoise || lp.delay > 0 || lp.lag > 0, sat = lp.hasLimit && Math.abs(st.uc) > lp.umax + 1e-9;
-  // controller block C
+  // controller block Gc
   g.fillStyle = P.elev; g.strokeStyle = P.strong; g.lineWidth = 1.6; g.beginPath(); g.roundRect(bx0, top, bw, bh, 7); g.fill(); g.stroke();
   if (!pid) {
     text(g, `u = K·e,  K = ${fmt(lp.K, lp.K % 1 ? 1 : 0)} N/m`, xc0, top + 14, P.text, { align: 'center', px, wt: 700 });

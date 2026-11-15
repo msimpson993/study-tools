@@ -36,8 +36,8 @@ maps:
         detail: parallel versus standard form
         series: 1
         short: u = Kp·e + Ki·∫e dt + Kd·de/dt. P reacts to the present error, I to the accumulated past error, D to the trend. Parallel form uses Kp, Ki, Kd; standard form uses Kp, Ti, Td with Ki = Kp/Ti and Kd = Kp·Td.
-        eq: C(s) = Kp + Ki/s + Kd·s = Kp(1 + 1/(Ti·s) + Td·s)
-        addsToExample: "Puts C(s) in front of the cart (p2 = 2/((s + 1)(s + 2))): the open loop is C(s)·2/((s + 1)(s + 2)) and the controller adds a pole at 0 (I) and a zero (D)."
+        eq: Gc(s) = Kp + Ki/s + Kd·s = Kp(1 + 1/(Ti·s) + Td·s)
+        addsToExample: "Puts Gc(s) in front of the cart (p2 = 2/((s + 1)(s + 2))): the open loop is Gc(s)·2/((s + 1)(s + 2)) and the controller adds a pole at 0 (I) and a zero (D)."
         accountsFor: "How the three terms are three different things the cart can use from the error: now, accumulated and rate."
         live: board:pid
       - id: gains
@@ -55,7 +55,7 @@ maps:
         detail: deep dive A
         series: 1
         short: "The integral state keeps changing while any error remains, dx_i/dt = e, so at rest e must be 0. That is also why a load disturbance is cancelled in steady state. The price is a lower phase margin: more overshoot and slower ringing."
-        eq: e_ss = 1/(1 + C(0)G(0)), C(0) → ∞ with an integrator
+        eq: e_ss = 1/(1 + Gc(0)G(0)), Gc(0) → ∞ with an integrator
         addsToExample: Adding Ki = 2 to the Kp = 3 loop on the unit-DC-gain cart 2/((s + 1)(s + 2)) brings the final value from 0.75 to exactly 1, at the cost of about 13 % overshoot and a settling time near 3.5 s.
         accountsFor: Why the cart now ends exactly at the commanded position, and why a constant push is eventually fully rejected.
         live: board:dd-int
@@ -292,7 +292,7 @@ maps:
         idea: "Measure and correct from the error. It works, with costs: sensors, delay, saturation, instability."
       - from: feedback
         to: pid
-        label: what is C?
+        label: what is Gc?
         question: What do we put in the controller?
         idea: "P (present), I (past), D (trend): three numbers to choose."
       - from: pid

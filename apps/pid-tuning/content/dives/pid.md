@@ -7,7 +7,7 @@ chain:
   - title: "What do we put in the controller?"
   - title: "What are P, I and D, and which form is this?"
   - title: "parallel versus standard form"
-    detail: "C(s) = Kp + Ki/s + Kd·s = Kp(1 + 1/(Ti·s) + Td·s)"
+    detail: "Gc(s) = Kp + Ki/s + Kd·s = Kp(1 + 1/(Ti·s) + Td·s)"
 neighbors:
   - feedback
   - gains
@@ -40,7 +40,7 @@ The figure below shows these three signals for an actual closed-loop step respon
 
 ### Why write it as u = K<sub>p</sub>e + K<sub>i</sub>∫e + K<sub>d</sub> de/dt, and what's its transfer function?
 
-The time-domain law is literally “present + past + future.” Laplace-transform it (zero ICs) and integration becomes 1/s and differentiation becomes s, so it drops straight into block-diagram algebra: <i>C</i>(s) = K<sub>p</sub> + K<sub>i</sub>/s + K<sub>d</sub>s.
+The time-domain law is literally “present + past + future.” Laplace-transform it (zero ICs) and integration becomes 1/s and differentiation becomes s, so it drops straight into block-diagram algebra: <i>G</i><sub>c</sub>(s) = K<sub>p</sub> + K<sub>i</sub>/s + K<sub>d</sub>s.
 
 <div class="eqbox">u(t) = K<sub>p</sub> e(t) + K<sub>i</sub> ∫<sub>0</sub><sup>t</sup> e(τ) dτ + K<sub>d</sub> <span class="frac"><span>de</span><span>dt</span></span> ⟹ <span class="frac"><span>U(s)</span><span>E(s)</span></span> = K<sub>p</sub> + <span class="frac"><span>K<sub>i</sub></span><span>s</span></span> + K<sub>d</sub>s = <span class="frac"><span>K<sub>d</sub>s² + K<sub>p</sub>s + K<sub>i</sub></span><span>s</span></span></div>
 
@@ -54,7 +54,7 @@ Special cases you've seen in class: <b>P</b> (K<sub>i</sub> = K<sub>d</sub> = 0)
 
 ### Parallel form vs. standard (ideal) form: what's the difference, and how do I convert?
 
-Same controller, different parameters. Standard form factors out K<sub>p</sub>: <i>C</i> = K<sub>p</sub>(1 + 1/(T<sub>i</sub>s) + T<sub>d</sub>s). Convert with <b>K<sub>i</sub> = K<sub>p</sub>/T<sub>i</sub></b> and <b>K<sub>d</sub> = K<sub>p</sub>T<sub>d</sub></b>.
+Same controller, different parameters. Standard form factors out K<sub>p</sub>: <i>G</i><sub>c</sub> = K<sub>p</sub>(1 + 1/(T<sub>i</sub>s) + T<sub>d</sub>s). Convert with <b>K<sub>i</sub> = K<sub>p</sub>/T<sub>i</sub></b> and <b>K<sub>d</sub> = K<sub>p</sub>T<sub>d</sub></b>.
 
 <div class="eqbox">Parallel: K<sub>p</sub> + <span class="frac"><span>K<sub>i</sub></span><span>s</span></span> + K<sub>d</sub>s ⟺ Standard (your class): K<sub>p</sub>(1 + <span class="frac"><span>1</span><span>T<sub>i</sub>s</span></span> + T<sub>d</sub>s)</div>
 

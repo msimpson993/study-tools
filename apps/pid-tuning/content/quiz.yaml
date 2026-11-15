@@ -70,7 +70,7 @@
     - The integrator makes the loop faster, so the error decays to zero sooner
   answer: 0
   why: |-
-    dx<sub>i</sub>/dt = e, so a settled x<sub>i</sub> forces e = 0. Equivalently, the pole at s = 0 makes C(0) → ∞ in e<sub>ss</sub> = 1/(1 + C(0)G(0)).
+    dx<sub>i</sub>/dt = e, so a settled x<sub>i</sub> forces e = 0. Equivalently, the pole at s = 0 makes Gc(0) → ∞ in e<sub>ss</sub> = 1/(1 + Gc(0)G(0)).
 
     <a class="rev" href="#/board?pair=gains&at=dd-int">Review this in the guide →</a>
 - id: pid-6
@@ -93,8 +93,8 @@
     - ap-disturbance
   kind: compute
   q: |-
-    <div class="qfig"><svg class="diagram" viewBox="0 0 360 118" role="img" aria-label="Feedback loop: R to summing junction, controller C, disturbance D added, plant G, output Y, unity feedback"> <defs><marker id="ah-x7" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="currentColor"/></marker></defs> <g stroke="currentColor" fill="none" stroke-width="1.5"> <line x1="22" y1="40" x2="44" y2="40" marker-end="url(#ah-x7)"/> <circle cx="55" cy="40" r="10"/> <line x1="65" y1="40" x2="88" y2="40" marker-end="url(#ah-x7)"/> <rect x="88" y="26" width="46" height="28" rx="4"/> <line x1="134" y1="40" x2="157" y2="40" marker-end="url(#ah-x7)"/> <circle cx="168" cy="40" r="10"/> <line x1="168" y1="6" x2="168" y2="29" marker-end="url(#ah-x7)"/> <line x1="178" y1="40" x2="200" y2="40" marker-end="url(#ah-x7)"/> <rect x="200" y="26" width="46" height="28" rx="4"/> <line x1="246" y1="40" x2="318" y2="40" marker-end="url(#ah-x7)"/> <polyline points="290,40 290,95 237,95" marker-end="url(#ah-x7)"/> <rect x="190" y="81" width="46" height="28" rx="4"/> <polyline points="190,95 55,95 55,51" marker-end="url(#ah-x7)"/> </g> <g fill="currentColor" font-size="14" font-family="Georgia,serif" text-anchor="middle"> <text x="11" y="45">R</text><text x="111" y="45">C</text><text x="223" y="45">G</text> <text x="213" y="100">1</text><text x="332" y="45">Y</text><text x="182" y="14">D</text> <text x="38" y="33" font-size="12">+</text><text x="66" y="63" font-size="13">−</text><text x="155" y="30" font-size="12">+</text> </g></svg></div>
-    In the loop above, G(0) = 1 and C is P-only with K<sub>p</sub> = 2. With r = 0, a unit step load disturbance D is applied. What is the steady-state output?
+    <div class="qfig"><svg class="diagram" viewBox="0 0 360 118" role="img" aria-label="Feedback loop: R to summing junction, controller Gc, disturbance D added, plant G, output Y, unity feedback"> <defs><marker id="ah-x7" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="currentColor"/></marker></defs> <g stroke="currentColor" fill="none" stroke-width="1.5"> <line x1="22" y1="40" x2="44" y2="40" marker-end="url(#ah-x7)"/> <circle cx="55" cy="40" r="10"/> <line x1="65" y1="40" x2="88" y2="40" marker-end="url(#ah-x7)"/> <rect x="88" y="26" width="46" height="28" rx="4"/> <line x1="134" y1="40" x2="157" y2="40" marker-end="url(#ah-x7)"/> <circle cx="168" cy="40" r="10"/> <line x1="168" y1="6" x2="168" y2="29" marker-end="url(#ah-x7)"/> <line x1="178" y1="40" x2="200" y2="40" marker-end="url(#ah-x7)"/> <rect x="200" y="26" width="46" height="28" rx="4"/> <line x1="246" y1="40" x2="318" y2="40" marker-end="url(#ah-x7)"/> <polyline points="290,40 290,95 237,95" marker-end="url(#ah-x7)"/> <rect x="190" y="81" width="46" height="28" rx="4"/> <polyline points="190,95 55,95 55,51" marker-end="url(#ah-x7)"/> </g> <g fill="currentColor" font-size="14" font-family="Georgia,serif" text-anchor="middle"> <text x="11" y="45">R</text><text x="106" y="45">Gc</text><text x="223" y="45">G</text> <text x="213" y="100">1</text><text x="332" y="45">Y</text><text x="182" y="14">D</text> <text x="38" y="33" font-size="12">+</text><text x="66" y="63" font-size="13">−</text><text x="155" y="30" font-size="12">+</text> </g></svg></div>
+    In the loop above, G(0) = 1 and Gc is P-only with K<sub>p</sub> = 2. With r = 0, a unit step load disturbance D is applied. What is the steady-state output?
   choices:
     - 1/3
     - 1/2
@@ -102,7 +102,7 @@
     - 2/3
   answer: 0
   why: |-
-    Y/D = G/(1 + CG), so at s = 0 you get 1/(1 + 2) = 1/3. With integral action C(0) → ∞ and the deviation goes to 0, which is the cruise-control-on-a-hill case.
+    Y/D = G/(1 + GcG), so at s = 0 you get 1/(1 + 2) = 1/3. With integral action Gc(0) → ∞ and the deviation goes to 0, which is the cruise-control-on-a-hill case.
 
     <a class="rev" href="#/board?pair=gains&at=dd-int">Review this in the guide →</a>
 - id: pid-8

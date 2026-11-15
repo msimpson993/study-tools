@@ -126,6 +126,15 @@ describe('performance indices (slides 23-28): the space-telescope example', () =
     expect(zeta(4.2)).toBeCloseTo(0.664, 3); // the slide rounds this to 0.665
   }, 60000);
   it('dI/dK3 = -1/K3^2 + 0.1 = 0 gives K3 = sqrt(10)', () => { expect(Math.sqrt(1 / 0.1)).toBeCloseTo(3.1623, 4); });
+  it('slide 27 time response y(t) = (sqrt10/beta) e^(-0.25 K3 t) sin(beta t/2 + psi), beta = sqrt(10 - K3^2/4), tan(psi) = 2 beta/K3, matches the model', () => {
+    for (const K3 of [1, 2, Math.sqrt(10), 4.2, 6]) {
+      const beta = Math.sqrt(10 - K3 * K3 / 4), psi = Math.atan2(2 * beta, K3);
+      const form = (t: number) => (Math.sqrt(10) / beta) * Math.exp(-0.25 * K3 * t) * Math.sin(beta * t / 2 + psi);
+      expect(form(0)).toBeCloseTo(1, 12); // y(0) = 1, the same initial value as the model
+      const ys = simulate([1, 0.5 * K3], [1, 0.5 * K3, 2.5], () => 0, [0, 1], 10, 0.0005);
+      for (const i of [0, 500, 2000, 6000, 20000]) expect(ys[i]).toBeCloseTo(form(i * 0.0005), 6);
+    }
+  });
 });
 
 describe('worked problem 4: ISE with an inverse Laplace transform', () => {

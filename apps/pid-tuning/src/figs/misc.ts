@@ -27,12 +27,12 @@ export const problemFigure = figureOf(() => {
   return [panel('ol', 'Open loop: u = r (no sensor)', 'ol'), panel('cl', 'Closed loop: PI on the measured y', 'cl')];
 });
 
-/** Loop shaping seen as Bode: gain and phase margin of C·G for the PID on a lag plant, next to the step it gives. */
+/** Loop shaping seen as Bode: gain and phase margin of Gc·G for the PID on a lag plant, next to the step it gives. */
 export const bodeFigure = figureOf(() => {
   const gains = (v: V) => ({ Kp: num(v, 'Kp'), Ki: num(v, 'Ki'), Kd: num(v, 'Kd'), N: 20 });
   const plant = (v: V) => String(v.plant ?? 'p3') as PlantId;
   return [
-    { id: 'bode', title: 'Loop L = C·G with its margins', x: 'ω (rad/s)', y: 'dB · degrees', height: 300, draw: (g: CanvasRenderingContext2D, w: number, h: number, v: V) => { drawBode(g, w, h, { L: pidLoopTF(plant(v), gains(v)), wmin: 0.02, wmax: 100 }); } },
+    { id: 'bode', title: 'Loop L = Gc·G with its margins', x: 'ω (rad/s)', y: 'dB · degrees', height: 300, draw: (g: CanvasRenderingContext2D, w: number, h: number, v: V) => { drawBode(g, w, h, { L: pidLoopTF(plant(v), gains(v)), wmin: 0.02, wmax: 100 }); } },
     {
       id: 'step', title: 'Closed-loop step response', x: 'time (s)', y: 'output', height: 300,
       draw: (g: CanvasRenderingContext2D, w: number, h: number, v: V) => {

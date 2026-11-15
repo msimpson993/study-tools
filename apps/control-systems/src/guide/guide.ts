@@ -149,7 +149,7 @@ function w4(){var Kp=+$("w4p").value,Ki=+$("w4i").value;$("w4pv").textContent=Kp
   $("w4plot").innerHTML=plot({w:640,h:260,xr:[0,10],yr:[0,stable?Math.max(1.3,Math.min(pk.v*1.08,2.5)):2.5],xlabel:"time t (s)",ylabel:"y(t)",series:[{x:r.t,y:r.y,cls:Ki>0?"s3":"s1"}],hl:[{y:1,label:"reference r = 1"}].concat(Ki>0||!stable?[]:[{y:fin,label:"P-only final value"}])});
   legend("w4leg",[{t:Ki>0?"PI response":"P-only response",c:Ki>0?"c3":"c1"}]);
   var st=$("w4st");
-  if(!stable){st.className="status bad";st.textContent="UNSTABLE: Ki > 6(1+Kp). No steady state exists, so the final-value theorem doesn't apply.";}
+  if(!stable){st.className="status bad";st.textContent="UNSTABLE for this lab plant 1/((s+1)(0.2s+1)): Ki > 6(1+Kp). No steady state exists, so the final-value theorem doesn't apply.";}
   else if(Ki>0){st.className="status ok";st.textContent="PI: integrator in L ⇒ step error → 0.";}
   else{st.className="status warn";st.textContent="P only: e_ss = 1/(1+Kp·G(0)) = "+f3(1/(1+Kp));}
   ro("w4ro",[{k:"predicted e_ss",v:stable?f3(Ki>0?0:1/(1+Kp)):"n/a",c:stable?(Ki>0?"ok":"warn"):"bad"},{k:"e at t = 10 s",v:f3(1-r.y[r.y.length-1])},{k:"overshoot",v:stable?f3(Math.max(0,(pk.v-fin)/fin*100))+"%":"—"}]);}

@@ -25,15 +25,15 @@ Feedback is robust to model error and disturbances because it reacts to what act
 
 Open loop only works if you know the plant exactly and nothing disturbs it. Feedback <b>measures the result</b> and corrects for whatever went wrong, whether that's model error or disturbances, without needing to know why.
 
-Open loop: “1200 rpm needs 18% throttle, so command 18%.” That fails as soon as the load changes or the engine is warmer than the day you calibrated. Closed loop: measure <i>y</i>, form the <b>error</b> <i>e</i> = <i>r</i> − <i>y</i>, and let a controller <i>C</i>(s) turn the error into a command.
+Open loop: “1200 rpm needs 18% throttle, so command 18%.” That fails as soon as the load changes or the engine is warmer than the day you calibrated. Closed loop: measure <i>y</i>, form the <b>error</b> <i>e</i> = <i>r</i> − <i>y</i>, and let a controller <i>G</i><sub>c</sub>(s) turn the error into a command.
 
 *From the guide's static figure: <b>The loop.</b> Everything in this guide lives in this picture. Tuning changes only the blue block; the orange inputs (<i>d</i>, <i>n</i>) are what the world throws at you. The actuator limit (saturation) matters later for windup.*
 
-From class: with forward path <i>CG</i> and unity feedback, superposition gives two transfer functions with the <b>same denominator</b>:
+From class: with forward path <i>G</i><sub>c</sub><i>G</i> and unity feedback, superposition gives two transfer functions with the <b>same denominator</b>:
 
-<div class="eqbox"><span class="frac"><span>Y</span><span>R</span></span> = <span class="frac"><span>C G</span><span>1 + C G</span></span><br><span class="frac"><span>Y</span><span>D</span></span> = <span class="frac"><span>G</span><span>1 + C G</span></span><br><span class="frac"><span>E</span><span>R</span></span> = <span class="frac"><span>1</span><span>1 + C G</span></span></div>
+<div class="eqbox"><span class="frac"><span>Y</span><span>R</span></span> = <span class="frac"><span>Gc G</span><span>1 + Gc G</span></span><br><span class="frac"><span>Y</span><span>D</span></span> = <span class="frac"><span>G</span><span>1 + Gc G</span></span><br><span class="frac"><span>E</span><span>R</span></span> = <span class="frac"><span>1</span><span>1 + Gc G</span></span></div>
 
-Read them like an engineer: wherever the loop gain |<i>CG</i>| is <b>large</b>, <i>Y</i>/<i>R</i> → 1 (good tracking) and <i>Y</i>/<i>D</i> → 0 (disturbance rejected). That one sentence is the reason feedback works, and it's the seed of why integral action (infinite gain at DC) gives zero steady-state error.
+Read them like an engineer: wherever the loop gain |<i>G</i><sub>c</sub><i>G</i>| is <b>large</b>, <i>Y</i>/<i>R</i> → 1 (good tracking) and <i>Y</i>/<i>D</i> → 0 (disturbance rejected). That one sentence is the reason feedback works, and it's the seed of why integral action (infinite gain at DC) gives zero steady-state error.
 
 ### So what goes wrong with feedback?
 

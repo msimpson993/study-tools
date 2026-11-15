@@ -781,7 +781,7 @@ Lay the s-plane flat and, above every point <i>s</i>, raise a surface to height 
 <label>K<sub>i</sub> (0 = P only) <output id="w4iv"></output></label><input type="range" id="w4i" min="0" max="25" step="0.1" value="0">
 <div class="presets"><button data-p="2" data-i="0">P only</button><button data-p="8" data-i="0">big P</button><button data-p="2" data-i="2">PI</button><button data-p="1" data-i="15">too much I</button></div>
 <div class="status" id="w4st"></div><div class="readout" id="w4ro"></div></div></div></div>
-<div class="recog"><b class="h">Recognize</b><ul><li>Flat line below the target with P only → that's 1/(1+<i>K</i><sub>p</sub><i>G</i>(0)) of error. Raising <i>K</i><sub>p</sub> shrinks it but adds overshoot.</li><li>Adding I: the output creeps up and lands exactly on target. Too much I: overshoot, oscillation, and eventually instability (here when <i>K</i><sub>i</sub> &gt; 6(1+<i>K</i><sub>p</sub>)).</li></ul></div>
+<div class="recog"><b class="h">Recognize</b><ul><li>Flat line below the target with P only → that's 1/(1+<i>K</i><sub>p</sub><i>G</i>(0)) of error. Raising <i>K</i><sub>p</sub> shrinks it but adds overshoot.</li><li>Adding I: the output creeps up and lands exactly on target. Too much I: overshoot, oscillation, and eventually instability (for this lab plant 1/((<i>s</i> + 1)(0.2<i>s</i> + 1)), when <i>K</i><sub>i</sub> &gt; 6(1+<i>K</i><sub>p</sub>); the cart 2/((<i>s</i> + 1)(<i>s</i> + 2)) in the steady-state-error dive has its own bound, <i>K</i><sub>i</sub> &gt; 3(2+<i>K</i><sub>p</sub>)).</li></ul></div>
 </div>
 </section>
 <!-- ================= 13 ================= -->

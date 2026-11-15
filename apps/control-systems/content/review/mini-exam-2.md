@@ -2,7 +2,7 @@
 id: mini-exam-2
 order: 2
 title: "Mini exam 2: feedback control system characteristics"
-summary: "Lecture Notes 2 start to finish: open versus closed loop, the error signal, sensitivity, disturbance and noise, transient and steady-state behaviour, performance indices and model reduction. A topic checklist with slide references, a one-page formula sheet, seven worked problems and a 23-question self-test."
+summary: "Lecture Notes 2 start to finish: open versus closed loop, the error signal, sensitivity, disturbance and noise, transient and steady-state behaviour, performance indices and model reduction. A topic checklist with slide references, a one-page formula sheet, seven worked problems and a 22-question self-test."
 covers: "Lecture Notes 2, slides 1–34 (Dorf, Modern Control Systems, ch. 4)"
 quizTag: mini-exam-2
 ---
@@ -25,7 +25,7 @@ Notation follows the slides: the controller is $G_c$, the plant $G$, the loop ga
 | 10–13 | derive $E = -S\,G\,T_d$ (disturbance rejection) and work the steel-mill speed loop: open loop, then with a tachometer, then the ratio (usually under 0.02) | [What feedback buys, and what it costs](#/dive/fb) |
 | 14 | state the noise flip side: $E = CN$, so $Y \approx -N$ for large $L$ (the lecture treats it briefly) | [What feedback buys, and what it costs](#/dive/fb) |
 | 15–18 | compare open-loop and closed-loop transient: time constant $\tau_1 \to \tau_1/(1+K_aK_tK_1)$ | [What feedback buys, and what it costs](#/dive/fb) |
-| 19–22 | get $e_{ss}$ with the final-value theorem for step and ramp by system type; work the boring machine | [Why P leaves an error and I removes it](#/dive/sse), [What feedback buys, and what it costs](#/dive/fb) |
+| 19–22 | define the steady-state error $e_{ss}$; write the open-loop error $E_0 = (1 - G_cG)R$ and the closed-loop error $E_c = R/(1 + G_cG)$; apply the final-value theorem; work the boring machine (step command: $e_{ss} = 0$; unit-step disturbance: $y_{ss} = 1/K$). *Added practice, not in LN2:* system type, error constants $K_p$, $K_v$ and ramp errors (Problem 5 and a self-test question) | [What feedback buys, and what it costs](#/dive/fb); added practice: [Why P leaves an error and I removes it](#/dive/sse) |
 | 23–28 | define ISE, IAE, ITAE, ITSE; minimise an index with $dI/dK = 0$; quote the telescope result (ISE: $K_3 = \sqrt{10} \approx 3.2$, $\zeta = 0.5$; IAE: $K_3 = 4.2$, $\zeta = 0.665$) | [What feedback buys, and what it costs](#/dive/fb) |
 | 29–34 | reduce a model two ways: drop a far pole and keep the DC gain, or match the frequency response ($M_{2q} = \Delta_{2q}$); know the $6/((s+1)(s+2)(s+3))$ example and that more zeros than poles is not causal | [Which poles matter](#/dive/dominant), [What feedback buys, and what it costs](#/dive/fb) |
 
@@ -59,8 +59,8 @@ Underlying ideas elsewhere on the map: [the loop](#/dive/blocks) (where a distur
 #### Transient and steady state
 
 - Open loop $G = \dfrac{K_1}{\tau_1 s + 1}$; closed loop $\dfrac{K_aG}{1 + K_aK_tG}$ has time constant $\dfrac{\tau_1}{1 + K_aK_tK_1}$
-- $e_{ss} = \lim_{s\to0} sE(s)$ (stable loop only); step: $\dfrac{1}{1+K_p}$, ramp: $\dfrac{1}{K_v}$, $K_v = \lim sL$
-- Type 0: step $\dfrac{1}{1+K_p}$, ramp $\infty$. Type 1: step $0$, ramp $\dfrac{1}{K_v}$. Type 2: step $0$, ramp $0$
+- $e_{ss} = \lim_{s\to0} sE(s)$ (stable loop only). Open loop $E_0 = (1 - G_cG)R$; closed loop $E_c = \dfrac{R}{1 + G_cG}$ (slides 19–22)
+- *Added practice, not in LN2:* step: $e_{ss} = \dfrac{1}{1+K_p}$ with $K_p = \lim_{s\to0}L(s)$; ramp: $e_{ss} = \dfrac{1}{K_v}$ with $K_v = \lim_{s\to0}sL(s)$. Type 0: step $\dfrac{1}{1+K_p}$, ramp $\infty$. Type 1: step $0$, ramp $\dfrac{1}{K_v}$. Type 2: step $0$, ramp $0$. This $K_p$ is the loop's position error constant, not the telescope's position-feedback gain $K_p$ (slides 26–27)
 
 #### Boring machine ($G_c = K + 11s$, $G = \dfrac{1}{s(s+1)}$)
 
@@ -73,6 +73,7 @@ Underlying ideas elsewhere on the map: [the loop](#/dive/blocks) (where a distur
 - ISE $\int_0^T e^2dt$, IAE $\int_0^T|e|dt$, ITAE $\int_0^T t|e|dt$, ITSE $\int_0^T te^2dt$ ($T$ about the settling time)
 - Minimise over a gain $K$: write $I(K)$, solve $dI/dK = 0$, check $d^2I/dK^2 > 0$
 - $\int_0^\infty y^2dt$ for $Y = \dfrac{b_1s + b_0}{s^2 + a_1s + a_0}$: $\dfrac{b_1^2a_0 + b_0^2}{2a_0a_1}$
+- Telescope time response (slide 27, unit step $T_d$): $y(t) = \dfrac{\sqrt{10}}{\beta}\,e^{-0.25K_3t}\sin\!\left(\dfrac{\beta}{2}t + \psi\right)$, $\beta = \sqrt{10 - K_3^2/4}$ (needs $K_3 < \sqrt{40}$). The slide does not define $\psi$; matching $Y = \dfrac{s + 0.5K_3}{s^2 + 0.5K_3s + 2.5}$ gives $\tan\psi = 2\beta/K_3$ and $y(0) = 1$
 - Telescope ($Y/T_d = \dfrac{s(s+K_1K_3)}{s^2 + K_1K_3s + K_1K_2K_p}$, $K_1 = 0.5$, $K_1K_2K_p = 2.5$): $I_{ISE} = \dfrac{1}{K_3} + 0.1K_3$, minimum at $K_3 = \sqrt{10} = 3.2$, $\zeta = 0.5$; IAE minimum at $K_3 = 4.2$, $\zeta = 0.665$
 
 #### Model reduction
@@ -139,7 +140,7 @@ $G_c = K + 11s$ and $G = \dfrac{1}{s(s+1)}$ in a unity-feedback loop.
 <summary>Solution</summary>
 
 1. (a) $L = \dfrac{K + 11s}{s(s+1)}$ and $1 + L = \dfrac{s^2 + 12s + K}{s(s+1)}$. So $\dfrac{Y}{R} = \dfrac{L}{1+L} = \dfrac{K + 11s}{s^2 + 12s + K}$ and $\dfrac{Y}{T_d} = \dfrac{G}{1 + L} = \dfrac{1}{s^2 + 12s + K}$.
-2. (b) $e_{ss} = \lim_{s\to0} \dfrac{s}{1 + L(s)}\dfrac{1}{s} = \dfrac{1}{1 + L(0)} = 0$, since $L$ has a pole at $s = 0$ (type 1).
+2. (b) $e_{ss} = \lim_{s\to0} \dfrac{s}{1 + L(s)}\dfrac{1}{s} = \dfrac{1}{1 + L(0)} = 0$, since $L(s) \to \infty$ as $s \to 0$ (the loop has an integrator).
 3. (c) $y_{ss} = \lim_{s\to0} s\,\dfrac{1}{s^2 + 12s + K}\dfrac{1}{s} = \dfrac{1}{K}$.
 4. (d) $s^2 + 12s + K$ matches $s^2 + 2\zeta\omega_ns + \omega_n^2$, so $\omega_n = \sqrt K$ and $\zeta = 6/\sqrt K$. For $K = 100$: $\omega_n = 10$, $\zeta = 0.6$, $y_{ss} = 0.01$. For $K = 20$: $\omega_n = 4.47$, $\zeta = 1.34$ (overdamped), $y_{ss} = 0.05$.
 5. (e) $1/K \le 0.02 \Rightarrow K \ge 50$, where $\zeta = 6/\sqrt{50} = 0.85$.
@@ -167,7 +168,7 @@ For a unit step disturbance the output of a loop is $Y(s) = \dfrac{s + K}{s^2 + 
 
 </details>
 
-#### Problem 5: Steady-state error by system type (slides 19–22)
+#### Problem 5: Steady-state error by system type (uses the final-value theorem from slides 19–22; system type and $K_v$ are not in LN2, included as practice)
 
 A unity-feedback loop has $L(s) = \dfrac{10(s + 3)}{s(s + 2)(s + 5)}$.
 
@@ -194,9 +195,9 @@ A unity-feedback loop has $L(s) = \dfrac{10(s + 3)}{s(s + 2)(s + 5)}$.
 
 1. (a) The pole at $-30$ is ten times farther left than the next one ($-3$), so its mode dies out much faster and can be dropped. Remove the factor $(s + 30)$ and divide the gain by 30 to keep the DC gain: $G_L = \dfrac{10}{(s+1)(s+3)}$. Check: $G_H(0) = 300/90 = 3.33$ and $G_L(0) = 10/3 = 3.33$.
 2. (b) Normalise so the constant terms are 1: $G_H = \dfrac{1}{1 + \frac{11}{6}s + s^2 + \frac16s^3}$. Take $G_L = \dfrac{1}{1 + d_1s + d_2s^2}$ and match $M_{2q} = \Delta_{2q}$.
-4. From the slide values $\Delta^{(0)} = 1$, $\Delta^{(1)} = \frac{11}{6}$, $\Delta^{(2)} = 2$, $\Delta^{(3)} = 1$ at $s = 0$: $\Delta_2 = -\dfrac{1\cdot2}{2} + \dfrac{(11/6)^2}{1} - \dfrac{2\cdot1}{2} = \dfrac{49}{36}$ and $\Delta_4 = -\dfrac{11}{36} + 1 - \dfrac{11}{36} = \dfrac{7}{18}$. For $M = 1 + d_1s + d_2s^2$: $M_2 = d_1^2 - 2d_2$ and $M_4 = d_2^2$.
-5. So $d_2^2 = \dfrac{7}{18} \Rightarrow d_2 = 0.624$, and $d_1^2 = \dfrac{49}{36} + 2d_2 \Rightarrow d_1 = 1.615$ (positive roots keep the poles in the left half-plane). Then $G_L = \dfrac{1}{1 + 1.615s + 0.624s^2} = \dfrac{1.60}{s^2 + 2.590s + 1.60}$, with poles $-1.02$ and $-1.57$ against the original $-1, -2, -3$.
-6. (c) With $G_L = \dfrac{1}{1 + d_1s}$ only one equation is needed: $M_2 = d_1^2 = \Delta_2 = \dfrac{49}{36}$, so $d_1 = \dfrac76$ and $G_L = \dfrac{1}{1 + \frac76 s} = \dfrac{0.857}{s + 0.857}$.
+3. From the coefficients $\Delta^{(0)} = 1$, $\Delta^{(1)} = \frac{11}{6}$, $\Delta^{(2)} = 2$, $\Delta^{(3)} = 1$ at $s = 0$: $\Delta_2 = -\dfrac{1\cdot2}{2} + \dfrac{(11/6)^2}{1} - \dfrac{2\cdot1}{2} = \dfrac{49}{36}$ and $\Delta_4 = -\dfrac{11}{36} + 1 - \dfrac{11}{36} = \dfrac{7}{18}$. For $M = 1 + d_1s + d_2s^2$: $M_2 = d_1^2 - 2d_2$ and $M_4 = d_2^2$.
+4. So $d_2^2 = \dfrac{7}{18} \Rightarrow d_2 = 0.624$, and $d_1^2 = \dfrac{49}{36} + 2d_2 \Rightarrow d_1 = 1.615$ (positive roots keep the poles in the left half-plane). Then $G_L = \dfrac{1}{1 + 1.615s + 0.624s^2} = \dfrac{1.60}{s^2 + 2.590s + 1.60}$, with poles $-1.02$ and $-1.57$ against the original $-1, -2, -3$.
+5. (c) With $G_L = \dfrac{1}{1 + d_1s}$ only one equation is needed: $M_2 = d_1^2 = \Delta_2 = \dfrac{49}{36}$, so $d_1 = \dfrac76$ and $G_L = \dfrac{1}{1 + \frac76 s} = \dfrac{0.857}{s + 0.857}$.
 
 **Checks:** all reduced models keep DC gain 1 (or $10/3$ in (a)). A reduced model with more zeros than poles would not be causal, so keep $p \le q$.
 
@@ -221,4 +222,4 @@ A speed-control motor has $R_a = 1$, $J = 10$, $b = 1$, $K_b = K_m = 1$, so $G =
 
 ### Self-test
 
-The self-test has 23 questions: the twelve Lecture Notes 2 questions already in the course quiz (feedback and steady-state error) plus eleven new ones on these problems. Use the **Take the self-test** button above; each answer links back to the map.
+The self-test has 22 questions: the eleven Lecture Notes 2 questions already in the course quiz (feedback and the final-value theorem) plus eleven new ones on these problems. One of the new ones (unit-ramp error) is added practice, not in LN2. Use the **Take the self-test** button above; each answer links back to the map.

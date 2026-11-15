@@ -844,7 +844,6 @@
     <a class="rev" href="#/board?pair=s12&at=q28">Review this in the guide →</a>
 - id: cs-41
   tags:
-    - mini-exam-2
     - sse
   kind: compute
   q: A type-1 loop (one integrator in L) is driven by a unit ramp. What is the steady-state error?
@@ -1533,7 +1532,7 @@
     - "0"
     - "∞"
   answer: 0
-  why: "One pole at the origin: type 1. K<sub>v</sub> = lim sL = 10·3/(2·5) = 3, so the ramp error is 1/K<sub>v</sub> = 1/3. The step error is 0."
+  why: "Added practice, not in LN2 (system type and K<sub>v</sub> are not in the lecture notes; the final-value theorem is). One pole at the origin: type 1. K<sub>v</sub> = lim sL = 10·3/(2·5) = 3, so the ramp error is 1/K<sub>v</sub> = 1/3. The step error is 0."
 - id: me2-5
   tags: [mini-exam-2, fb]
   kind: compute

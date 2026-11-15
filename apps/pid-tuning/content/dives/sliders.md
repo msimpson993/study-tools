@@ -25,7 +25,7 @@ MATLAB's PID Tuner sliders map to loop bandwidth (response time) and phase margi
 It linearizes your Simulink plant at the operating point, then computes gains that achieve a target <b>speed</b> (response time ≈ bandwidth) with a target <b>robustness</b> (transient behavior ≈ phase margin). You steer with two sliders instead of three gains.
 
 1. <b>Linearize.</b> Opening the tuner from the PID block makes Simulink compute a linear plant model seen by the controller at the current operating point. transfer function of the plant
-2. <b>Design.</b> It picks P, I (and D, N if present) so the open-loop L = C·G crosses 0 dB at a chosen frequency ω<sub>c</sub> with a chosen phase margin. Its initial design aims at a balance between performance and robustness. loop shaping
+2. <b>Design.</b> It picks P, I (and D, N if present) so the open-loop L = Gc·G crosses 0 dB at a chosen frequency ω<sub>c</sub> with a chosen phase margin. Its initial design aims at a balance between performance and robustness. loop shaping
 3. <b>Adjust.</b> <b>Time-domain</b> mode: <em>Response time</em> slider (Slower ↔ Faster) and <em>Transient behavior</em> slider (Aggressive ↔ Robust). <b>Frequency-domain</b> mode: <em>Bandwidth</em> and <em>Phase margin</em>. Same two degrees of freedom, different labels. trade-off map
 4. <b>Inspect.</b> “Show parameters” lists gains plus rise/settling time, overshoot, gain &amp; phase margins, closed-loop stability. specs
 5. <b>Update Block</b> writes the gains to the Simulink block; then simulate the <b>nonlinear</b> model. verification

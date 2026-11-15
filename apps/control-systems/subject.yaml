@@ -1,7 +1,7 @@
 id: control-systems
 title: Control systems (EECE5130)
 centralQuestion: How do we make a system we only know approximately do what we command, and predict how it will behave before we build it?
-blurb: A question-chain map of the course (Laplace and poles, the s-plane, transfer functions, block diagrams, state space, time response, steady-state error, feedback) over one running example, a 1 kg cart. Opens the full interactive guide, the 68-question course quiz and the mini-exam quiz.
+blurb: A question-chain map of the course (Laplace and poles, the s-plane, transfer functions, block diagrams, state space, time response, steady-state error, feedback) over one running example, a 1 kg cart. Opens the full interactive guide, a quiz with flashcards, and a Review area with two mini exams (topic checklists, formula sheets, worked problems and self-tests).
 archetype: guide
 categories:
   - { id: describe, label: Describe the plant }

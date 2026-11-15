@@ -46,7 +46,7 @@
 <div class="q" id="q2"><span class="badge">Q2</span><h3>Why use feedback instead of just computing the right throttle (open loop)?</h3></div>
 <div class="ansr">
 <div class="short">Open loop only works if you know the plant exactly and nothing disturbs it. Feedback <b>measures the result</b> and corrects for whatever went wrong, whether that's model error or disturbances, without needing to know why.</div>
-<p>Open loop: “1200 rpm needs 18% throttle, so command 18%.” That fails as soon as the load changes or the engine is warmer than the day you calibrated. Closed loop: measure <var>y</var>, form the <b>error</b> <var>e</var> = <var>r</var> − <var>y</var>, and let a controller <var>C</var>(s) turn the error into a command.</p>
+<p>Open loop: “1200 rpm needs 18% throttle, so command 18%.” That fails as soon as the load changes or the engine is warmer than the day you calibrated. Closed loop: measure <var>y</var>, form the <b>error</b> <var>e</var> = <var>r</var> − <var>y</var>, and let a controller <var>G</var><sub>c</sub>(s) turn the error into a command.</p>
 
 <figure id="fig-loop">
 <svg viewBox="0 0 700 220" role="img" aria-label="Feedback loop block diagram with PID controller, actuator, plant, disturbance and sensor noise">
@@ -58,7 +58,7 @@
 <line class="wire" x1="94" y1="72" x2="150" y2="72" marker-end="url(#arw)"/>
 <text class="txt" x="114" y="64">e</text>
 <rect class="blk2" x="150" y="40" width="150" height="64" rx="8"/>
-<text class="txb" x="160" y="62">PID controller C(s)</text>
+<text class="txb" x="160" y="62">PID controller Gc(s)</text>
 <text class="txs" x="160" y="80">K<tspan dy="3" font-size="9">p</tspan><tspan dy="-3">e + K</tspan><tspan dy="3" font-size="9">i</tspan><tspan dy="-3">∫e + K</tspan><tspan dy="3" font-size="9">d</tspan><tspan dy="-3"> de/dt</tspan></text>
 <text class="txs" x="160" y="96">(the part you tune)</text>
 <line class="wire" x1="300" y1="72" x2="338" y2="72" marker-end="url(#arw)"/>
@@ -85,13 +85,13 @@
 <figcaption><b>The loop.</b> Everything in this guide lives in this picture. Tuning changes only the blue block; the orange inputs (<var>d</var>, <var>n</var>) are what the world throws at you. The actuator limit (saturation) matters later for <a href="#dd-windup">windup</a>.</figcaption>
 </figure>
 
-<p>From class: with forward path <var>CG</var> and unity feedback, superposition gives two transfer functions with the <b>same denominator</b>:</p>
-<div class="eq box"><span class="frac"><span>Y</span><span>R</span></span> = <span class="frac"><span>C G</span><span>1 + C G</span></span>
+<p>From class: with forward path <var>G</var><sub>c</sub><var>G</var> and unity feedback, superposition gives two transfer functions with the <b>same denominator</b>:</p>
+<div class="eq box"><span class="frac"><span>Y</span><span>R</span></span> = <span class="frac"><span>Gc G</span><span>1 + Gc G</span></span>
  &nbsp;&nbsp;&nbsp;&nbsp;
- <span class="frac"><span>Y</span><span>D</span></span> = <span class="frac"><span>G</span><span>1 + C G</span></span>
+ <span class="frac"><span>Y</span><span>D</span></span> = <span class="frac"><span>G</span><span>1 + Gc G</span></span>
  &nbsp;&nbsp;&nbsp;&nbsp;
- <span class="frac"><span>E</span><span>R</span></span> = <span class="frac"><span>1</span><span>1 + C G</span></span></div>
-<p>Read them like an engineer: wherever the loop gain |<var>CG</var>| is <b>large</b>, <var>Y</var>/<var>R</var> → 1 (good tracking) and <var>Y</var>/<var>D</var> → 0 (disturbance rejected). That one sentence is the reason feedback works, and it's the seed of why integral action (infinite gain at DC) gives zero steady-state error.</p>
+ <span class="frac"><span>E</span><span>R</span></span> = <span class="frac"><span>1</span><span>1 + Gc G</span></span></div>
+<p>Read them like an engineer: wherever the loop gain |<var>G</var><sub>c</sub><var>G</var>| is <b>large</b>, <var>Y</var>/<var>R</var> → 1 (good tracking) and <var>Y</var>/<var>D</var> → 0 (disturbance rejected). That one sentence is the reason feedback works, and it's the seed of why integral action (infinite gain at DC) gives zero steady-state error.</p>
 </div>
 
 <div class="q" id="q3"><span class="badge">Q3</span><h3>So what goes wrong with feedback?</h3></div>
@@ -134,7 +134,7 @@
 
 <div class="q" id="q5"><span class="badge">Q5</span><h3>Why write it as u = K<sub>p</sub>e + K<sub>i</sub>∫e + K<sub>d</sub> de/dt, and what's its transfer function?</h3></div>
 <div class="ansr">
-<div class="short">The time-domain law is literally “present + past + future.” Laplace-transform it (zero ICs) and integration becomes 1/s and differentiation becomes s, so it drops straight into block-diagram algebra: <var>C</var>(s) = K<sub>p</sub> + K<sub>i</sub>/s + K<sub>d</sub>s.</div>
+<div class="short">The time-domain law is literally “present + past + future.” Laplace-transform it (zero ICs) and integration becomes 1/s and differentiation becomes s, so it drops straight into block-diagram algebra: <var>G</var><sub>c</sub>(s) = K<sub>p</sub> + K<sub>i</sub>/s + K<sub>d</sub>s.</div>
 <div class="eq box">u(t) = K<sub>p</sub> e(t) + K<sub>i</sub> <span class="int">∫</span><sub>0</sub><sup>t</sup> e(τ) dτ + K<sub>d</sub> <span class="frac"><span>de</span><span>dt</span></span>
 &nbsp;&nbsp;⟹&nbsp;&nbsp;
 <span class="frac"><span>U(s)</span><span>E(s)</span></span> = K<sub>p</sub> + <span class="frac"><span>K<sub>i</sub></span><span>s</span></span> + K<sub>d</sub>s = <span class="frac"><span>K<sub>d</sub>s² + K<sub>p</sub>s + K<sub>i</sub></span><span>s</span></span></div>
@@ -149,7 +149,7 @@
 
 <div class="q" id="q6"><span class="badge">Q6</span><h3>Parallel form vs. standard (ideal) form: what's the difference, and how do I convert?</h3></div>
 <div class="ansr">
-<div class="short">Same controller, different parameters. Standard form factors out K<sub>p</sub>: <var>C</var> = K<sub>p</sub>(1 + 1/(T<sub>i</sub>s) + T<sub>d</sub>s). Convert with <b>K<sub>i</sub> = K<sub>p</sub>/T<sub>i</sub></b> and <b>K<sub>d</sub> = K<sub>p</sub>T<sub>d</sub></b>.</div>
+<div class="short">Same controller, different parameters. Standard form factors out K<sub>p</sub>: <var>G</var><sub>c</sub> = K<sub>p</sub>(1 + 1/(T<sub>i</sub>s) + T<sub>d</sub>s). Convert with <b>K<sub>i</sub> = K<sub>p</sub>/T<sub>i</sub></b> and <b>K<sub>d</sub> = K<sub>p</sub>T<sub>d</sub></b>.</div>
 <div class="eq box">Parallel: K<sub>p</sub> + <span class="frac"><span>K<sub>i</sub></span><span>s</span></span> + K<sub>d</sub>s
 &nbsp;&nbsp;&nbsp;⟺&nbsp;&nbsp;&nbsp;
 Standard (your class): K<sub>p</sub><span style="font-size:1.3em">(</span>1 + <span class="frac"><span>1</span><span>T<sub>i</sub>s</span></span> + T<sub>d</sub>s<span style="font-size:1.3em">)</span></div>
@@ -193,18 +193,18 @@ Standard (your class): K<sub>p</sub><span style="font-size:1.3em">(</span>1 + <s
 <div class="deep" id="dd-int">
 <div class="dh"><span class="tag">Deep dive A</span><h3>Why does integral action give zero steady-state error?</h3></div>
 <div class="where" style="box-shadow:none"><div class="ic">🧭</div><div><b class="h">Mini big picture for this detail</b>This explains row 2 of the symptoms table (“offset”) and the Project 1 requirement “zero steady-state error to a step”. Three ways to see the same fact:</div></div>
-<div class="dmap"><div><b>Equilibrium argument</b>: an integrator's output can only stop changing if its input e is zero.</div><div><b>Final value theorem</b>: e<sub>ss</sub> = 1/(1 + C(0)G(0)), and an integrator makes C(0) = ∞.</div><div><b>Disturbances</b>: the same infinite DC gain wipes out constant loads.</div><div><b>Fine print</b>: only if the closed loop is stable. And it costs phase lag.</div></div>
+<div class="dmap"><div><b>Equilibrium argument</b>: an integrator's output can only stop changing if its input e is zero.</div><div><b>Final value theorem</b>: e<sub>ss</sub> = 1/(1 + Gc(0)G(0)), and an integrator makes Gc(0) = ∞.</div><div><b>Disturbances</b>: the same infinite DC gain wipes out constant loads.</div><div><b>Fine print</b>: only if the closed loop is stable. And it costs phase lag.</div></div>
 
 <h4>1. The equilibrium argument (the intuitive one)</h4>
 <p>Suppose the loop settles to steady state. Then every signal is constant, including the integrator output x<sub>i</sub> = ∫e dt. But <span class="mono">dx<sub>i</sub>/dt = e</span>. A constant x<sub>i</sub> requires <b>e = 0</b>. There is no other way for the loop to sit still. P-only control has no such constraint: it can sit still at any e that makes K<sub>p</sub>e equal to the needed throttle, which is why it needs an offset to “hold” the throttle open.</p>
 <h4>2. The final value theorem (the one for exams)</h4>
 <p>Unity feedback, step reference R(s) = 1/s, closed loop stable:</p>
-<div class="eq box">e<sub>ss</sub> = <span style="font-size:.9em">lim</span><sub>s→0</sub> s · <span class="frac"><span>1</span><span>1 + C(s)G(s)</span></span> · <span class="frac"><span>1</span><span>s</span></span> = <span class="frac"><span>1</span><span>1 + C(0)G(0)</span></span></div>
+<div class="eq box">e<sub>ss</sub> = <span style="font-size:.9em">lim</span><sub>s→0</sub> s · <span class="frac"><span>1</span><span>1 + Gc(s)G(s)</span></span> · <span class="frac"><span>1</span><span>s</span></span> = <span class="frac"><span>1</span><span>1 + Gc(0)G(0)</span></span></div>
 <ul><li>P: e<sub>ss</sub> = 1/(1 + K<sub>p</sub>G(0)). Finite K<sub>p</sub> ⇒ finite but nonzero error (for a plant with no free integrator, i.e. “type 0”).</li>
-<li>PI/PID: C(s) ∋ K<sub>i</sub>/s ⇒ C(0) → ∞ ⇒ <b>e<sub>ss</sub> = 0</b>.</li>
+<li>PI/PID: Gc(s) ∋ K<sub>i</sub>/s ⇒ Gc(0) → ∞ ⇒ <b>e<sub>ss</sub> = 0</b>.</li>
 <li>If the plant <em>itself</em> has an integrator (type 1, e.g. a position servo), P alone already gives zero step error, and I is then for rejecting constant <em>disturbances</em>.</li></ul>
 <h4>3. Disturbances: the C/D view from class</h4>
-<div class="eq box"><span class="frac"><span>Y</span><span>D</span></span>(0) = <span class="frac"><span>G(0)</span><span>1 + C(0)G(0)</span></span> &nbsp;→&nbsp; <span class="frac"><span>G(0)</span><span>1 + K<sub>p</sub>G(0)</span></span> (P) &nbsp;&nbsp;or&nbsp;&nbsp; 0 (with I)</div>
+<div class="eq box"><span class="frac"><span>Y</span><span>D</span></span>(0) = <span class="frac"><span>G(0)</span><span>1 + Gc(0)G(0)</span></span> &nbsp;→&nbsp; <span class="frac"><span>G(0)</span><span>1 + K<sub>p</sub>G(0)</span></span> (P) &nbsp;&nbsp;or&nbsp;&nbsp; 0 (with I)</div>
 <figure><div class="legend" id="lg-dist"></div><div id="fig-dist"></div>
 <figcaption><b>Load disturbance step</b> (d = 1 at t = 1 s, r = 0, plant 1/(s+1)³). P-only (K<sub>p</sub> = 2) is left with a permanent deviation of G(0)/(1 + K<sub>p</sub>G(0)) = 1/3. PI (K<sub>p</sub> = 2, K<sub>i</sub> = 0.8) drives it back to zero. Think: a hill under cruise control.</figcaption></figure>
 <div class="trap"><b class="h">Fine print</b>(i) Zero error requires the closed loop to be <b>stable</b>; the final value theorem is invalid otherwise. (ii) The integrator contributes −90° of phase at all frequencies, which is why too much K<sub>i</sub> adds overshoot and can destabilize. (iii) “Zero error” is for step references/constant disturbances; a ramp reference with a type-1 loop still leaves a finite error.</div>
@@ -297,7 +297,7 @@ Standard (your class): K<sub>p</sub><span style="font-size:1.3em">(</span>1 + <s
 <!-- LAB -->
 <div class="widget" id="lab">
 <h4 class="ui" style="font-size:1.1rem">🧪 PID Lab: drag the gains, watch the loop</h4>
-<p style="font-size:.9rem;margin:.1rem 0 .6rem;color:var(--muted)" class="ui">Controller: parallel PID, C(s) = K<sub>p</sub> + K<sub>i</sub>/s + K<sub>d</sub>·Ns/(s+N) (the Simulink block's form). Unit step in r at t = 0. Simulated live with 4th-order Runge–Kutta (dt = 0.01 s); checked against an exact matrix-exponential solution. Plants are teaching examples, <b>not</b> the Project 1 engine model.</p>
+<p style="font-size:.9rem;margin:.1rem 0 .6rem;color:var(--muted)" class="ui">Controller: parallel PID, Gc(s) = K<sub>p</sub> + K<sub>i</sub>/s + K<sub>d</sub>·Ns/(s+N) (the Simulink block's form). Unit step in r at t = 0. Simulated live with 4th-order Runge–Kutta (dt = 0.01 s); checked against an exact matrix-exponential solution. Plants are teaching examples, <b>not</b> the Project 1 engine model.</p>
 <div class="wgrid">
 <div>
   <div class="legend" id="lg-lab"></div>
@@ -374,7 +374,7 @@ Standard (your class): K<sub>p</sub><span style="font-size:1.3em">(</span>1 + <s
 <div class="short">It linearizes your Simulink plant at the operating point, then computes gains that achieve a target <b>speed</b> (response time ≈ bandwidth) with a target <b>robustness</b> (transient behavior ≈ phase margin). You steer with two sliders instead of three gains.</div>
 <ol class="steps">
 <li><b>Linearize.</b> Opening the tuner from the PID block makes Simulink compute a linear plant model seen by the controller at the current operating point. <span class="concept">transfer function of the plant</span></li>
-<li><b>Design.</b> It picks P, I (and D, N if present) so the open-loop L = C·G crosses 0 dB at a chosen frequency ω<sub>c</sub> with a chosen phase margin. Its initial design aims at a balance between performance and robustness. <span class="concept">loop shaping</span></li>
+<li><b>Design.</b> It picks P, I (and D, N if present) so the open-loop L = Gc·G crosses 0 dB at a chosen frequency ω<sub>c</sub> with a chosen phase margin. Its initial design aims at a balance between performance and robustness. <span class="concept">loop shaping</span></li>
 <li><b>Adjust.</b> <b>Time-domain</b> mode: <em>Response time</em> slider (Slower ↔ Faster) and <em>Transient behavior</em> slider (Aggressive ↔ Robust). <b>Frequency-domain</b> mode: <em>Bandwidth</em> and <em>Phase margin</em>. Same two degrees of freedom, different labels. <span class="concept">trade-off map</span></li>
 <li><b>Inspect.</b> “Show parameters” lists gains plus rise/settling time, overshoot, gain &amp; phase margins, closed-loop stability. <span class="concept">specs</span></li>
 <li><b>Update Block</b> writes the gains to the Simulink block; then simulate the <b>nonlinear</b> model. <span class="concept">verification</span></li>
@@ -417,7 +417,7 @@ Standard (your class): K<sub>p</sub><span style="font-size:1.3em">(</span>1 + <s
 <div class="ansr">
 <ol class="steps">
 <li><b>Open the model.</b> <code>open_system('scdspeedctrlpidblock')</code>. Find the loop: <em>Speed Reference</em> step → error → <em>PID Controller</em> block → engine dynamics → measured speed fed back.
-<span class="concept">Q2 block diagram, Y/R = CG/(1+CG)</span></li>
+<span class="concept">Q2 block diagram, Y/R = GcG/(1+GcG)</span></li>
 <li><b>Read the requirements.</b> (a) settling time &lt; 5 s; (b) zero steady-state error to the step reference. Requirement (b) tells you immediately that you need <b>integral action</b>, which is why the block is configured as <b>PI</b>.
 <span class="concept">Deep dive A</span></li>
 <li><b>Open PID Tuner</b> (double-click the block, Main tab → <em>Tune</em>). Simulink <b>linearizes</b> the engine model at the current operating point to get the plant the controller “sees,” and proposes an initial PI design.
@@ -503,9 +503,9 @@ Standard (your class): K<sub>p</sub><span style="font-size:1.3em">(</span>1 + <s
 <li>K<sub>i</sub> = K<sub>p</sub>/T<sub>i</sub> · K<sub>d</sub> = K<sub>p</sub>T<sub>d</sub></li>
 <li>Filtered D: K<sub>d</sub>Ns/(s+N), HF gain K<sub>d</sub>N</li></ul></div>
 <div><h4>Loop algebra</h4><ul>
-<li>Y/R = CG/(1+CG) · Y/D = G/(1+CG)</li>
-<li>E/R = 1/(1+CG)</li>
-<li>Step e<sub>ss</sub> = 1/(1 + C(0)G(0))</li>
+<li>Y/R = GcG/(1+GcG) · Y/D = G/(1+GcG)</li>
+<li>E/R = 1/(1+GcG)</li>
+<li>Step e<sub>ss</sub> = 1/(1 + Gc(0)G(0))</li>
 <li>P: 1/(1+K<sub>p</sub>G(0)) · with I: 0</li></ul></div>
 <div><h4>Gain effects (↑ gain)</h4><ul>
 <li>K<sub>p</sub>: faster, more OS, less (≠0) e<sub>ss</sub></li>
@@ -535,14 +535,14 @@ Standard (your class): K<sub>p</sub><span style="font-size:1.3em">(</span>1 + <s
 <dt>Reference / set-point r</dt><dd>The desired output value.</dd>
 <dt>Error e</dt><dd>e = r − y (measured). The PID controller's input.</dd>
 <dt>Disturbance d</dt><dd>An unwanted input (load torque, hill) that pushes the output away from r.</dd>
-<dt>Steady-state error e<sub>ss</sub></dt><dd>lim<sub>t→∞</sub> e(t). For a step: 1/(1 + C(0)G(0)) with unity feedback.</dd>
-<dt>System type</dt><dd>Number of free integrators (poles at s = 0) in the loop gain CG. Type ≥ 1 ⇒ zero step error.</dd>
+<dt>Steady-state error e<sub>ss</sub></dt><dd>lim<sub>t→∞</sub> e(t). For a step: 1/(1 + Gc(0)G(0)) with unity feedback.</dd>
+<dt>System type</dt><dd>Number of free integrators (poles at s = 0) in the loop gain GcG. Type ≥ 1 ⇒ zero step error.</dd>
 <dt>Overshoot (%OS)</dt><dd>How far the peak exceeds the final value, as a % of the final value.</dd>
 <dt>Rise time</dt><dd>Time to go from 10% to 90% of the final value (MATLAB default).</dd>
 <dt>Settling time</dt><dd>Time after which the response stays within ±2% of its final value (MATLAB <code>stepinfo</code> default).</dd>
 <dt>Damping ratio ζ</dt><dd>Second-order parameter: 0 &lt; ζ &lt; 1 underdamped (overshoot), ζ = 1 critically damped, ζ &gt; 1 overdamped.</dd>
 <dt>Natural frequency ω<sub>n</sub></dt><dd>Second-order “speed” parameter (rad/s); distance of the poles from the origin.</dd>
-<dt>Loop gain L(s)</dt><dd>C(s)G(s)H(s), the product around the loop. Its frequency response determines stability margins.</dd>
+<dt>Loop gain L(s)</dt><dd>Gc(s)G(s)H(s), the product around the loop. Its frequency response determines stability margins.</dd>
 <dt>Crossover frequency ω<sub>c</sub></dt><dd>Frequency where |L(jω)| = 1. Sets the loop's bandwidth/speed.</dd>
 <dt>Bandwidth</dt><dd>Frequency range over which the closed loop tracks well (≈ ω<sub>c</sub>). Higher ⇒ faster.</dd>
 <dt>Phase margin (PM)</dt><dd>180° + ∠L(jω<sub>c</sub>). Distance from the −180° oscillation condition; larger ⇒ more robust, less overshoot.</dd>

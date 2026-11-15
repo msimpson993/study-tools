@@ -167,7 +167,7 @@
     - { label: "|L(jω)| (dB)", color: "var(--cyan)" }
     - { label: "phase (°)", color: "var(--org)" }
     - { label: "PM / GM bars", color: "var(--grn)" }
-  howToRead: "Left: the Bode plot of the loop L = C·G for the PID on the chosen plant; the green bars are the phase margin (at the 0 dB crossover) and the gain margin (at the −180° crossover). Right: the step response that loop gives. More crossover means faster; more phase margin means less ringing. The MATLAB PID Tuner sliders move exactly these two numbers."
+  howToRead: "Left: the Bode plot of the loop L = Gc·G for the PID on the chosen plant; the green bars are the phase margin (at the 0 dB crossover) and the gain margin (at the −180° crossover). Right: the step response that loop gives. More crossover means faster; more phase margin means less ringing. The MATLAB PID Tuner sliders move exactly these two numbers."
   lookFor: "Raise Kp: the crossover moves right (faster) and the phase margin shrinks (more overshoot). Add Kd: the phase margin comes back."
   controls:
     - { id: plant, label: "Plant", type: select, options: [{ value: p3, label: "1/(s+1)³" }, { value: p2, label: "1/((s+1)(0.5s+1))" }, { value: p1, label: "1/(s+1)" }], default: p3, group: primary }
