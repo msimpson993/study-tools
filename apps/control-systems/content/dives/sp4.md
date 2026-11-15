@@ -1,6 +1,6 @@
 ---
 id: sp4
-order: 19
+order: 24
 title: "Moving a pole pair and a zero"
 category: describe
 chain:

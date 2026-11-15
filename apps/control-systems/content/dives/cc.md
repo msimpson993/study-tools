@@ -1,6 +1,6 @@
 ---
 id: cc
-order: 24
+order: 15
 title: "Controllability and observability"
 category: state
 chain:

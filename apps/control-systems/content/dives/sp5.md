@@ -1,6 +1,6 @@
 ---
 id: sp5
-order: 20
+order: 25
 title: "Time-domain operations as moves on the plane"
 category: describe
 chain:
@@ -40,7 +40,7 @@ Almost every Laplace property is a <b>move of the pole/zero pattern</b>: differe
 ````callout:recognize Recognize
 
 
-- An <b>integrator in the loop</b> = × at the origin = type 1 = zero step error (Q28). An integrator is literally “a pole at zero frequency.”
+- An <b>integrator in the loop</b> = × at the origin = type 1 = zero step error. An integrator is literally “a pole at zero frequency.”
 - A <b>D term</b> = ○ at the origin (pure <i>K</i><sub>d</sub><i>s</i>), which explains the noise boost. A filtered D adds a far-left × to stop the boost.
 - <b>Time delay</b> behaves like a RHP zero: it allows a wrong-way/late start and limits loop speed. Same lesson as non-minimum phase.
 ````
@@ -68,7 +68,5 @@ Before you touch a slider, predict what it will do. Set a negative: the poles mo
 - **zeros**: the roots of the numerator: they set how much of each mode appears
 - **s = σ + jω**: a point on the s-plane: σ is the decay or growth rate, ω the oscillation frequency
 - **ζ, ωn**: damping ratio and natural frequency of a pole pair
-- **K**: the proportional gain in u = K(r − y); K = 7 gives ζ = 0.5, ωn = 3
-- **T (time constant)**: time for a first-order response to cover 63 % of the way: T = 1/|p|
 - **%OS, Ts**: overshoot and 2 % settling time of the step response
 ````

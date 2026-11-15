@@ -1,6 +1,6 @@
 ---
 id: ss2tf
-order: 10
+order: 14
 title: "From state space to the transfer function"
 category: state
 chain:
@@ -32,11 +32,15 @@ Laplace-transform the state equation with <i>x</i>(0) = 0, solve for <i>X</i>, a
 
 #### Back to 3/(s² + 2s + 3)
 
-<i>sI</i> − <i>A</i> = <i>s</i>−13<i>s</i>+2, det = <i>s</i>² + 2<i>s</i> + 3.
+$$sI-A=\begin{bmatrix}s&-1\\3&s+2\end{bmatrix},\qquad \det(sI-A)=s^2+2s+3.$$
 
-2×2 inverse: <b>swap the diagonal, negate the off-diagonal, divide by det</b>: (<i>sI</i>−<i>A</i>)<sup>−1</sup> = <span class="frac"><span>1</span><span><i>s</i>²+2<i>s</i>+3</span></span><i>s</i>+21−3<i>s</i>
+2×2 inverse: <b>swap the diagonal, negate the off-diagonal, divide by det</b>: 
+
+$$(sI-A)^{-1}=\frac{1}{s^2+2s+3}\begin{bmatrix}s+2&1\\-3&s\end{bmatrix}$$
 
 <i>C</i>(·)<sup>−1</sup> picks the top row: [<i>s</i>+2 1]/det. Times <i>B</i> = [0; 3] gives 3/det. So <i>G</i> = 3/(<i>s</i>²+2<i>s</i>+3) ✓.
+
+On the running cart the same three steps give $C(sI-A)^{-1}B=\dfrac{1}{s^2+3s+2}$: with $A=\begin{bmatrix}0&1\\-2&-3\end{bmatrix}$ the determinant is $s^2+3s+2=(s+1)(s+2)$, so the eigenvalues −1 and −2 are the poles from the first dives.
 
 ### What should I recognize in that formula?
 

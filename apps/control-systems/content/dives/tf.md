@@ -73,6 +73,5 @@ Before you touch a slider, predict what it will do. Move q to the right of zero:
 - **poles**: the roots of the denominator: the exponentials e^(pt) the plant can make. The cart's are −1 and −2
 - **zeros**: the roots of the numerator: they set how much of each mode appears
 - **DC gain**: the steady output for a unit steady input, G(0) = 0.5 m per N for the cart
-- **K**: the proportional gain in u = K(r − y); K = 7 gives ζ = 0.5, ωn = 3
 - **T (time constant)**: time for a first-order response to cover 63 % of the way: T = 1/|p|
 ````

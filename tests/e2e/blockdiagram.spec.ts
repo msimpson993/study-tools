@@ -30,13 +30,14 @@ test.describe('control-systems: the block diagram builds with the example', () =
     expect(errs).toEqual([]);
   });
 
-  test('the model dive shows an open-loop plant block', async ({ page }) => {
+  test('the model dive shows the ODE and, beside it, the open-loop plant block G(s)', async ({ page }) => {
     await page.setViewportSize({ width: 390, height: 844 });
     await open(page, 'control-systems', '#/dive/model');
     const sc = page.getByTestId('example-scene');
     await expect(sc).toBeVisible();
-    await expect(sc).toHaveAttribute('data-diagram', 'open');
+    await expect(sc).toHaveAttribute('data-diagram', 'ode,open');
     const alt = await sc.getByTestId('scene-canvas').getAttribute('aria-label');
+    expect(alt).toMatch(/ordinary differential equation/);
     expect(alt).toMatch(/Open-loop block diagram/);
     expect(alt).toMatch(/G\(s\)/);
     const r = await ink(page, '[data-testid=dive-example-row] [data-testid=scene-canvas]');

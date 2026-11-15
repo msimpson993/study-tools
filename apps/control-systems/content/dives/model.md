@@ -13,7 +13,7 @@ neighbors:
   - tf
   - ss
   - circuits
-exampleScene: {  overlays: [forces, push], diagram: open, caption: "Newton's law gives the model: spring, damper and push sum to m·ẍ, and a 1 N push produces this x(t)."  }
+exampleScene: {  overlays: [forces, push], diagram: [ode, open], caption: "Newton's law gives the model, ẍ + 3ẋ + 2x = u (left). The Laplace transform rewrites that same equation as the block G(s) (right): the same plant, but blocks can now be wired together by multiplying."  }
 ---
 **How do we write the plant's ODE so it's easy to combine and close loops on?**
 
@@ -35,7 +35,7 @@ Physics states laws as rates of change, so every lumped plant is an ODE. For an 
 
 A controller is a bet on how the plant will react. A model is what makes that bet informed: it predicts the output for any input, so you can design and test on paper or in Simulink before touching hardware.
 
-Every design question in this course (“How much gain?”, “Will it overshoot?”, “Will it settle on target?”, “What happens when a load hits?”) is answered by running the model, not the machine. The model doesn't need to be perfect. Feedback (Stage 13) exists partly <em>because</em> models are never perfect. But it has to capture the dominant behavior.
+Every design question in this course (“How much gain?”, “Will it overshoot?”, “Will it settle on target?”, “What happens when a load hits?”) is answered by running the model, not the machine. The model doesn't need to be perfect. Feedback (later on this map) exists partly <em>because</em> models are never perfect. But it has to capture the dominant behavior.
 
 ````callout:why Why it matters
 Every later topic (poles, ζ, steady-state error, sensitivity) is a property <em>of a model</em>. If the model is wrong in the dominant dynamics, every number you compute from it is wrong too.
@@ -80,11 +80,4 @@ Before you touch a slider, predict what it will do. Take the damper away (c = 0)
 - **G(s)**: the cart's transfer function from force u to position y: 1/((s + 1)(s + 2))
 - **poles**: the roots of the denominator: the exponentials e^(pt) the plant can make. The cart's are −1 and −2
 - **zeros**: the roots of the numerator: they set how much of each mode appears
-- **s = σ + jω**: a point on the s-plane: σ is the decay or growth rate, ω the oscillation frequency
-- **ζ, ωn**: damping ratio and natural frequency of a pole pair
-- **e_ss**: the error r − y once everything has settled
-- **%OS, Ts**: overshoot and 2 % settling time of the step response
-- **A, B, C, D**: the state-space matrices: ẋ = Ax + Bu, y = Cx + Du
-- **C(s)**: the controller transfer function (PID: Kp + Ki/s + Kd·s)
-- **S, T**: sensitivity S = 1/(1 + CG) and complementary sensitivity T = CG/(1 + CG), with S + T = 1
 ````

@@ -1,6 +1,6 @@
 ---
 id: sp2
-order: 17
+order: 22
 title: "Pole versus zero, intuitively"
 category: describe
 chain:
@@ -39,12 +39,12 @@ A zero in the RHP (e.g. <i>G</i> = (1 − <i>s</i>)/((<i>s</i>+1)(<i>s</i>+2))·
 
 #### Pole–zero cancellation
 
-If a ○ lands exactly on a ×, that mode disappears from the <b>input→output</b> transfer function, but it still exists <b>inside</b> the system. The input can't excite it, or the output can't see it. An initial condition or a disturbance entering elsewhere can still excite it. Cancelling a stable, fast pole is harmless. “Cancelling” an unstable pole hides an internal instability that will still blow up (Q20).
+If a ○ lands exactly on a ×, that mode disappears from the <b>input→output</b> transfer function, but it still exists <b>inside</b> the system. The input can't excite it, or the output can't see it. An initial condition or a disturbance entering elsewhere can still excite it. Cancelling a stable, fast pole is harmless. “Cancelling” an unstable pole hides an internal instability that will still blow up (see the controllability dive, later on the map).
 
 ````callout:trap Trap
 
 
-- A zero doesn't make a system faster or slower in the sense of new modes. It only reweights existing modes. Still, a zero near the dominant poles can drastically change overshoot (the boring-machine PD zero, Q38).
+- A zero doesn't make a system faster or slower in the sense of new modes. It only reweights existing modes. Still, a zero near the dominant poles can drastically change overshoot (the tunnel-boring-machine PD zero in the feedback dive).
 - A near-cancellation (○ close to ×) leaves a small residue: a slow, small “tail” that can still matter for settling time.
 ````
 
@@ -53,9 +53,7 @@ Before you touch a slider, predict what it will do. Lower the damper c: the pole
 ````
 
 ````callout:note Symbols used here
-- **G(s)**: the cart's transfer function from force u to position y: 1/((s + 1)(s + 2))
 - **poles**: the roots of the denominator: the exponentials e^(pt) the plant can make. The cart's are −1 and −2
 - **zeros**: the roots of the numerator: they set how much of each mode appears
-- **s = σ + jω**: a point on the s-plane: σ is the decay or growth rate, ω the oscillation frequency
 - **%OS, Ts**: overshoot and 2 % settling time of the step response
 ````

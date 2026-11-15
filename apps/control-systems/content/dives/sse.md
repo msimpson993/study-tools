@@ -1,6 +1,6 @@
 ---
 id: sse
-order: 7
+order: 11
 title: "Why P leaves an error and I removes it"
 category: loop
 chain:
@@ -11,7 +11,7 @@ chain:
 neighbors:
   - ctrl
   - second
-exampleScene: { overlays: [loop], params: { K: 7 }, diagram: noise, caption: "With K = 7 the cart settles at 7/9 ≈ 0.78 m, not 1 m: the push K·e shrinks as the error shrinks, so a gap of 0.22 m is left. The diagram shows where sensor noise n would enter." }
+exampleScene: { overlays: [loop], params: { K: 7 }, diagram: error, caption: "With K = 7 the cart settles at 7/9 ≈ 0.78 m, not 1 m: the push K·e shrinks as the error e shrinks, so a gap of 0.22 m is left. The highlighted error e is what the controller needs to keep pushing." }
 ---
 **Why does P leave an error and I remove it?**
 

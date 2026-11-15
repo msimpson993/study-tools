@@ -1,6 +1,6 @@
 ---
 id: sp6
-order: 21
+order: 26
 title: "The inverse Laplace transform on the map"
 category: describe
 chain:

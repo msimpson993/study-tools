@@ -1,6 +1,6 @@
 ---
 id: fb
-order: 8
+order: 12
 title: "What feedback buys, and what it costs"
 category: loop
 chain:
@@ -11,7 +11,7 @@ chain:
 neighbors:
   - blocks
   - cheat
-exampleScene: { overlays: [loop, poles], params: { K: 20 }, diagram: noise, caption: "Raise K to 20: the cart is faster and the offset shrinks to 0.09 m, but the poles leave the real axis and it overshoots about 35 %. The diagram shows where sensor noise n would enter the loop." }
+exampleScene: { overlays: [loop, poles], params: { K: 20 }, diagram: noise, caption: "Raise K to 20: the cart is faster and the offset shrinks to 0.09 m, but the poles leave the real axis and it overshoots about 35 %. The diagram adds sensor noise n on the feedback path: the cost side of the trade." }
 ---
 **What does feedback buy us, and what does it cost?**
 
@@ -53,7 +53,7 @@ System sensitivity <i>S</i><sup><i>T</i></sup><sub><i>G</i></sub> = (∂<i>T</i>
 <div class="eqbox"><i>S</i><sup><i>T</i></sup><sub><i>G</i></sub> = <span class="frac"><span>∂<i>T</i></span><span>∂<i>G</i></span></span>·<span class="frac"><span><i>G</i></span><span><i>T</i></span></span> = <span class="frac"><span>1</span><span>1 + <i>G</i><sub>c</sub>(<i>s</i>)<i>G</i>(<i>s</i>)</span></span> with <i>T</i> = <span class="frac"><span><i>G</i><sub>c</sub><i>G</i></span><span>1 + <i>G</i><sub>c</sub><i>G</i></span></span></div>
 
 ````callout:predict Predict
-<i>G</i><sub>c</sub><i>G</i> = 100 at low frequency, and the plant gain drops 10% as it heats up. How much does the closed-loop gain change? ShowAbout 10% × 1/101 ≈ <b>0.1%</b>. The closed loop is ~100× less sensitive than the open loop.
+<i>G</i><sub>c</sub><i>G</i> = 100 at low frequency, and the plant gain drops 10% as it heats up. How much does the closed-loop gain change? Answer: about 10% × 1/101 ≈ <b>0.1%</b>. The closed loop is ~100× less sensitive than the open loop.
 ````
 
 This is Black's feedback amplifier (1927): an op-amp's gain varies wildly from part to part, but the closed-loop gain ≈ 1/β is set by precise resistors. Same 1/(1+<i>L</i>).
@@ -98,8 +98,8 @@ PD controller <i>G</i><sub>c</sub> = <i>K</i> + 11<i>s</i> on plant <i>G</i> = 1
 ````callout:recognize Recognize
 
 
-- Same denominator <i>s</i>² + 12<i>s</i> + <i>K</i> for both inputs (Q11 again). ω<sub>n</sub> = √<i>K</i>, ζ = 6/√<i>K</i>, so a bigger <i>K</i> is less damped.
-- The R-path numerator <i>K</i> + 11<i>s</i> is a zero at −<i>K</i>/11. That's why <i>K</i> = 20 (ζ &gt; 1, overdamped poles!) still overshoots: the zero does it (Q26 trap).
+- Same denominator <i>s</i>² + 12<i>s</i> + <i>K</i> for both inputs (as in the loop dive). ω<sub>n</sub> = √<i>K</i>, ζ = 6/√<i>K</i>, so a bigger <i>K</i> is less damped.
+- The R-path numerator <i>K</i> + 11<i>s</i> is a zero at −<i>K</i>/11. That's why <i>K</i> = 20 (ζ &gt; 1, overdamped poles!) still overshoots: the zero does it (a classic trap).
 - The disturbance enters <em>after</em> the controller, and the controller has no integrator, so the disturbance error only shrinks as 1/<i>K</i>.
 ````
 
@@ -127,15 +127,13 @@ Keep the dominant dynamics and the <b>DC gain</b>; drop or approximate the rest.
 
 Slide example: <i>G</i><sub>H</sub> = 6/((<i>s</i>+1)(<i>s</i>+2)(<i>s</i>+3)) → <i>G</i><sub>L</sub> = 1.60/(<i>s</i>² + 2.590<i>s</i> + 1.60). Both have DC gain 1. The reduced poles (−1.024, −1.565) give a slightly overdamped response with <i>T</i><sub>s</sub> ≈ 3 s.
 
-*From the guide's static figure: <b>Third-order original vs second-order approximation.</b> Nearly indistinguishable. The approximation is good enough to design with, and it brings back the Stage 11 formulas.*
+*From the guide's static figure: <b>Third-order original vs second-order approximation.</b> Nearly indistinguishable. The approximation is good enough to design with, and it brings back the second-order formulas.*
 
 ````callout:trap Trap
 Dropping a pole without fixing the gain: 6/((<i>s</i>+1)(<i>s</i>+2)) has DC gain 3, not 1. Divide by the dropped pole's constant (here 3) to keep <i>G</i>(0).
 ````
 
-#### Lecture Notes 2 in eight stops
-
-````callout:note One idea behind all eight
+````callout:note The one idea behind the whole dive
 Large loop gain |<i>L</i>| ⇒ small <i>S</i> = 1/(1+<i>L</i>) ⇒ less tracking error, less sensitivity, and less disturbance effect. But you can't make <i>L</i> large everywhere: noise, actuator limits, and stability push back. That tension is control design.
 ````
 
@@ -147,12 +145,10 @@ Before you touch a slider, predict what it will do. Slide K up until the gain-ma
 - **G(s)**: the cart's transfer function from force u to position y: 1/((s + 1)(s + 2))
 - **poles**: the roots of the denominator: the exponentials e^(pt) the plant can make. The cart's are −1 and −2
 - **zeros**: the roots of the numerator: they set how much of each mode appears
-- **s = σ + jω**: a point on the s-plane: σ is the decay or growth rate, ω the oscillation frequency
 - **ζ, ωn**: damping ratio and natural frequency of a pole pair
 - **DC gain**: the steady output for a unit steady input, G(0) = 0.5 m per N for the cart
 - **K**: the proportional gain in u = K(r − y); K = 7 gives ζ = 0.5, ωn = 3
 - **e_ss**: the error r − y once everything has settled
-- **T (time constant)**: time for a first-order response to cover 63 % of the way: T = 1/|p|
 - **%OS, Ts**: overshoot and 2 % settling time of the step response
 - **A, B, C, D**: the state-space matrices: ẋ = Ax + Bu, y = Cx + Du
 - **C(s)**: the controller transfer function (PID: Kp + Ki/s + Kd·s)

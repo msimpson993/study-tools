@@ -1,6 +1,6 @@
 ---
 id: sep
-order: 27
+order: 18
 title: "The compensator and the separation principle"
 category: state
 chain:

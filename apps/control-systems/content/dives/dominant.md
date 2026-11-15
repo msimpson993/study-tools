@@ -1,6 +1,6 @@
 ---
 id: dominant
-order: 13
+order: 7
 title: "Which poles matter"
 category: time
 chain:
@@ -11,7 +11,7 @@ chain:
 neighbors:
   - first
   - second
-exampleScene: {  overlays: [push, poles], diagram: open, caption: "The pole at −1 is only twice as slow as the pole at −2, so neither can be dropped: both show in the step response."  }
+exampleScene: {  overlays: [push, poles], diagram: poles, caption: "The pole at −1 is only twice as slow as the pole at −2, so neither can be dropped: both show in the step response."  }
 ---
 **Which poles matter?**
 
@@ -26,7 +26,7 @@ The pole closest to the imaginary axis decays slowest and dominates the response
 
 Each pole contributes a mode <i>e</i><sup><i>pt</i></sup>. Poles far to the left die out fast; the poles <b>closest to the imaginary axis</b> are still alive when everything else is gone, so they <em>dominate</em> what you see. If a pole is roughly 5–10× farther left than the dominant ones, you can usually drop it.
 
-A pole at −30 decays 15× faster than one at −2. By the time the slow mode has done anything visible, the fast one has disappeared. That's why design often uses a first- or second-order approximation and why the specs in Stage 11 are defined for the second-order template.
+A pole at −30 decays 15× faster than one at −2. By the time the slow mode has done anything visible, the fast one has disappeared. That's why design often uses a first- or second-order approximation and why the second-order specs (ζ, ωₙ, %OS) are defined for the second-order template.
 
 ````callout:recognize Recognize
 
@@ -56,5 +56,4 @@ A reduced model with more zeros than poles is not causal and cannot be built. Ma
 - **poles**: the roots of the denominator: the exponentials e^(pt) the plant can make. The cart's are −1 and −2
 - **zeros**: the roots of the numerator: they set how much of each mode appears
 - **DC gain**: the steady output for a unit steady input, G(0) = 0.5 m per N for the cart
-- **K**: the proportional gain in u = K(r − y); K = 7 gives ζ = 0.5, ωn = 3
 ````

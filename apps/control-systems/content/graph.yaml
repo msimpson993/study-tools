@@ -2,25 +2,25 @@ maps:
   - id: chain
     title: The question chain
     caption: Read top to bottom. Each box is the question the previous box leaves open; tap a box for its short answer and what it does for the cart, tap a line for the question that leads on. "Open the guide" shows the full interactive section.
-    seriesNames: ["Modeling and transfer functions", "Feedback and control", "State space", "Time response and review", "Designing with state feedback"]
+    seriesNames: ["Modeling and transfer functions", "Time response", "Feedback and control", "State space", "Designing with state feedback"]
     nodes:
       - id: root
         label: How do we make an approximately-known system do what we command?
         detail: quickly, smoothly, despite disturbances and noise, predicted from its poles
         kind: decision
         series: 0
-        short: "The whole course in one question. We only have a model of the plant, so we need (1) a way to describe it, (2) a way to predict its behaviour from that description (poles), and (3) a feedback loop that makes the real system follow the command even when the model is wrong."
+        short: "The whole course in one question. We only have a model of the plant, so we need (1) a way to describe it, (2) a way to predict its behaviour from that description (poles), and (3) a feedback loop that makes the real system follow the command even when the model is wrong. The map reads top to bottom in that order: model, poles, response, feedback, then the plant's inside (state space) and design with it."
         why: Control is the art of getting behaviour you can specify (settle in 2 s, overshoot under 10 %, ignore a push) from hardware you can only approximate.
       - id: model
         label: "How do we write the plant's ODE so it's easy to combine and close loops on?"
         dive: model
         detail: Laplace, LTI, zero initial conditions
         series: 0
-        short: "Physics states laws as rates of change, so every lumped plant is an ODE. For an LTI plant at rest, the Laplace transform rewrites that same ODE as G(s) = Y(s)/U(s): nothing is lost, but series blocks multiply and a loop becomes CG/(1 + CG)."
+        short: "Physics states laws as rates of change, so every lumped plant is an ODE. For a linear, time-invariant (LTI) plant starting at rest, the Laplace transform rewrites that same ODE as G(s) = Y(s)/U(s), output over input: nothing is lost, but blocks in series simply multiply, and later a feedback loop with controller C becomes CG/(1 + CG)."
         eq: "G(s) = Y(s) / U(s), zero initial conditions"
         addsToExample: "The cart's ẍ + 3ẋ + 2x = u (mass and spring: two stores, second order) and G(s) = 1/(s² + 3s + 2) are the same model, force in, position out. The denominator is the ODE's characteristic polynomial; its roots −1 and −2 are the e^(−t) and e^(−2t) you would get solving by hand."
         accountsFor: "Design means trying many controllers on one plant. In the time domain each try is a new convolution or a new closed-loop ODE to solve; with G(s) it is a line of algebra, and the result can be predicted from where the roots move."
-        recognize: "A polynomial ratio in s. Zeros of the denominator are poles; they decide which exponentials e^(pt) the free motion is made of."
+        recognize: "A ratio of polynomials in s. The roots of the denominator are the poles; they decide which exponentials e^(pt) the free motion is made of."
         trap: "G(s) assumes the plant starts at rest and describes only input to output. A cart already moving or a pre-charged capacitor needs the full ODE or state space."
         live: "board:s1"
       - id: splane
@@ -28,7 +28,7 @@ maps:
         dive: splane
         detail: the s-plane as a map
         series: 0
-        short: "Every complex number s = σ + jω is a point on the s-plane. Poles (×) are where |G(s)| blows up and mark the natural modes e^(pt); zeros (○) are where G = 0 and decide how strongly each mode is excited. σ is decay rate, ω is ringing frequency."
+        short: "A pole is one of the plant's built-in motions: something it does on its own when nothing pushes it, like the cart creeping back as e^(−t). Each pole is drawn as × at s = σ + jω on the s-plane: σ is the decay rate (left of the vertical jω axis it dies out, which is stable; right of it, it grows, which is unstable) and ω the ringing frequency. Zeros (○) are where G(s) = 0 and decide how strongly a given push excites each motion."
         eq: "pole p = σ + jω  →  mode e^(σt)·cos(ωt)"
         addsToExample: "Places two × on the negative real axis at −1 and −2 for the cart: no ω, so it can never ring, and the −1 pole is the slower, dominant one."
         accountsFor: "Why a pushed cart creeps back as a sum of e^(−t) and e^(−2t) without oscillating, and what moving a pole (stiffer spring, more damping) would do."
@@ -38,7 +38,7 @@ maps:
         dive: tf
         detail: order, DC gain, time constants
         series: 0
-        short: "Three numbers: the order (highest power of s in the denominator), the DC gain G(0) (final output per unit constant input), and the time constants 1/|p| of the poles. With those you can sketch the step response before computing anything."
+        short: "Three numbers: the order (highest power of s in the denominator), the DC gain G(0) (final output per unit constant input) and the time constants 1/|p| (how long each pole takes to cover 63 % of its way). With those, and the poles you just met, you can sketch the step response before computing anything."
         eq: "G(0) = lim s→0 G(s)   τ = 1/|p|"
         addsToExample: "For the cart: order 2, DC gain G(0) = 1/2 (a 1 N push settles at 0.5 m), time constants 1 s and 0.5 s."
         accountsFor: "How slow the unaided cart is (it needs about 4.6 s to settle within 2 % of 0.5 m) and why a 1 N push moves it only 0.5 m."
@@ -48,7 +48,7 @@ maps:
         dive: order
         detail: energy-storage elements
         series: 0
-        short: "The order equals the number of independent energy-storage elements (inductors, capacitors, masses, springs): each stores energy in a state that must be tracked. Dampers and resistors dissipate energy and add no state."
+        short: "The order equals the number of independent energy-storage elements (inductors, capacitors, masses, springs): each stores energy in a state, one number you must remember to predict the future, such as position or velocity. Dampers and resistors dissipate energy and add no state."
         eq: "order = number of independent energy stores"
         addsToExample: "The cart stores energy in two places, the spring (position) and the mass (velocity); the damper only burns energy. Hence second order and two poles."
         accountsFor: "Why the cart has exactly two poles and why careless counting (two masses with a rigid link, for example) gives the wrong order."
@@ -57,8 +57,8 @@ maps:
         label: How does the plant sit in a loop with a controller and a disturbance?
         dive: blocks
         detail: standard feedback loop, where the disturbance enters
-        series: 1
-        short: "Close the loop on the measured output: error E = R − Y feeds a controller C, the disturbance D adds somewhere in the loop, and the plant G produces Y. Closed-loop transfer functions follow from the series, parallel and feedback rules, and where D enters decides how it is transformed."
+        series: 2
+        short: "Measure the output y, subtract it from the command r to get the error e, and let a controller C turn that error into a push on the plant G; a disturbance d can hit somewhere along the way. The series, parallel and feedback rules give Y/R = CG/(1 + CG) and Y/D = G/(1 + CG); where d enters decides which one applies."
         eq: "Y = CG/(1 + CG)·R + G/(1 + CG)·D"
         addsToExample: "Wraps the cart in a position loop: r is the commanded position, d a push on the cart, y the measured position; gives the numbers CG/(1 + CG) and G/(1 + CG) to evaluate."
         accountsFor: "How a push on the cart shows up in the position, and why the same push enters differently if it hits the cart or the sensor."
@@ -67,7 +67,7 @@ maps:
         label: What can P, I and D each do about it?
         dive: ctrl
         detail: controllers at a glance
-        series: 1
+        series: 2
         short: "Proportional acts on the present error (faster, leaves some error), integral accumulates past error (removes steady-state error, can add overshoot and windup), derivative anticipates (adds damping, amplifies noise). Parallel and standard forms use different symbols for the same controller."
         eq: "C(s) = Kp + Ki/s + Kd·s"
         addsToExample: "Replaces the cart's open-loop push with u = K(r − y). With K = 7 the closed-loop denominator becomes s² + 3s + 9: faster, but now it rings."
@@ -78,7 +78,7 @@ maps:
         dive: ctrl
         quizTag: pid-tuning
         detail: the PID tuning map (separate page)
-        series: 1
+        series: 2
         short: "Choosing Kp, Ki and Kd is its own chain of questions: what each gain does, why I removes offset, what D costs, tuning methods (manual, Ziegler–Nichols, automatic), a worked project and a gallery of failures. It continues this map on its own page, with the interactive PID Lab."
         addsToExample: "Takes the cart's proportional loop (K = 7 rings 16 %, stops 22 % short) and tunes P, then PI, then PID until it tracks a position step despite a push and sensor noise."
         accountsFor: "How to pick the three numbers, not just recognize what each does."
@@ -87,8 +87,8 @@ maps:
         label: Why does P leave an error and I remove it?
         dive: sse
         detail: steady-state error, system type
-        series: 1
-        short: "With pure P the output needs a nonzero error to keep the controller output up, so it stops short: e_ss = 1/(1 + K·G(0)) for a step. An integrator keeps growing while any error remains, so at rest the error must be exactly zero (system type 1)."
+        series: 2
+        short: "With pure P the output needs a nonzero error to keep the controller output up, so it stops short: e_ss = 1/(1 + K·G(0)) for a step. An integrator keeps growing while any error remains, so at rest the error must be exactly zero (the loop then has one integrator: system type 1, the number of integrators in the loop)."
         eq: "e_ss = 1/(1 + Kp·G(0))   (P-only, step)"
         addsToExample: "For the cart with K = 7: e_ss = 1/(1 + 7·0.5) = 2/9, about 22 % short of the commanded position; adding I makes it 0."
         accountsFor: "Why the cart stops 0.22 m short of a 1 m command with proportional control, and what the integrator buys."
@@ -97,8 +97,8 @@ maps:
         label: What does feedback buy us, and what does it cost?
         dive: fb
         detail: sensitivity, disturbance, transient, indices
-        series: 1
-        short: "Feedback reduces sensitivity to plant changes and to disturbances by roughly the factor 1 + CG, speeds the transient, and drives steady-state error down, at the cost of sensors, noise, hardware and the possibility of instability. S + T = 1 is the trade."
+        series: 2
+        short: "Feedback makes the output insensitive to what we don't know (a drifting spring, a push) by roughly the factor 1 + CG, speeds the transient, and drives steady-state error down. The cost: a sensor whose noise now enters the loop, more hardware, and the risk of instability when the gain is pushed too far. The sensitivity S and complementary sensitivity T obey S + T = 1: that is the trade."
         eq: "S = 1/(1 + CG)   T = CG/(1 + CG)   S + T = 1"
         addsToExample: "With K = 7 the cart's loop gain at DC is 3.5, so a constant push is reduced by 1/(1 + 3.5) ≈ 0.22 and a 10 % spring change moves the output about 22 % as much."
         accountsFor: "Why the loop shrinks the effect of the push and of a drifting spring, and why the same loop passes sensor noise to the output (T is not zero)."
@@ -107,8 +107,8 @@ maps:
         label: Is there a description that tracks the inside too?
         dive: ss
         detail: state space ẋ = Ax + Bu, y = Cx + Du
-        series: 2
-        short: "State space writes the plant as first-order equations in the energy-storage variables, ẋ = Ax + Bu and y = Cx + Du. It keeps initial conditions and internal states that a transfer function hides, and handles several inputs and outputs naturally."
+        series: 3
+        short: "State space writes the plant as first-order equations in the energy-storage variables (the states x): ẋ = Ax + Bu and y = Cx + Du. It keeps initial conditions and internal motion that a transfer function hides, and it is the language of the design chapter that follows."
         eq: "ẋ = Ax + Bu,  y = Cx + Du"
         addsToExample: "For the cart, x = (position, velocity), A = [[0, 1], [−2, −3]], B = (0, 1)ᵀ, C = (1, 0), D = 0: the matrices of the linear-systems map."
         accountsFor: "How the cart behaves when released with an initial stretch or velocity (zero input), which G(s) alone could not say."
@@ -117,8 +117,8 @@ maps:
         label: How do the two descriptions connect?
         dive: ss2tf
         detail: G(s) = C(sI − A)⁻¹B + D
-        series: 2
-        short: "Taking the Laplace transform of the state equations and eliminating x gives G(s) = C(sI − A)⁻¹B + D. The poles of G are the eigenvalues of A, so stability and modes can be read from either description."
+        series: 3
+        short: "Taking the Laplace transform of the state equations and eliminating x gives G(s) = C(sI − A)⁻¹B + D. The poles of G are the eigenvalues of A (the roots of det(sI − A)), so stability and modes can be read from either description."
         eq: "G(s) = C(sI − A)⁻¹B + D"
         addsToExample: "Plugging the cart's A, B, C into C(sI − A)⁻¹B returns exactly 1/(s² + 3s + 2); eig(A) = −1, −2 are its poles."
         accountsFor: "Why state space and transfer function agree about the cart's modes, and why a cancelled mode could hide in G(s) but not in A."
@@ -129,7 +129,7 @@ maps:
         dive: cc
         detail: controllability, observability
         series: 4
-        short: "Pc = [B AB … A^(n−1)B] full rank ⇒ the input can reach every state and poles can be placed anywhere; Po = [C; CA; …] full rank ⇒ the states can be reconstructed from y."
+        short: "Two yes/no questions about the plant: can the input push every state (controllable), and can the output reveal every state (observable)? Both are rank tests. Pc = [B AB … A^(n−1)B] full rank ⇒ the input can reach every state and poles can be placed anywhere; Po = [C; CA; …] full rank ⇒ the states can be reconstructed from y."
         eq: "rank Pc = n  and  rank Po = n"
         addsToExample: "Cart: Pc=[[0,1],[1,−3]] (det −1) and Po=[[1,0],[0,1]] are both invertible, so the force can steer any position and velocity, and measuring position alone is enough to recover velocity."
         accountsFor: "Why a mode cancelled out of G(s) can be neither moved nor seen, and when the design steps that follow are possible at all."
@@ -140,7 +140,7 @@ maps:
         dive: sf
         detail: full-state feedback, Ackermann
         series: 4
-        short: "When every state is measured, u = −Kx places the closed-loop poles at the eigenvalues of A − BK. If the plant is controllable those poles can sit anywhere, not only on the output-feedback root locus. Ackermann's formula (or coefficient matching) produces K."
+        short: "When every state is measured, u = −Kx places the closed-loop poles at the eigenvalues of A − BK. If the plant is controllable those poles can sit anywhere, not only on the path a single output-feedback gain can reach (the root locus; see the s-plane map). Ackermann's formula (or coefficient matching) produces K."
         eq: "u = −Kx,   ẋ = (A − BK)x"
         addsToExample: "Pick ζ = 0.8 and 1 s settling: poles −4 ± 3j, desired s² + 8s + 25. A − BK gives s² + (3+k₂)s + (2+k₁), so K = [23, 5]: a spring-like gain on position and a damper-like gain on velocity."
         accountsFor: "Placing both poles independently, which P control (stuck on the root locus) cannot do."
@@ -160,7 +160,7 @@ maps:
         dive: sep
         detail: compensator, separation principle
         series: 4
-        short: "Using u = −K x̂, the closed-loop poles are the controller's and the observer's together: det(sI − (A−BK)) · det(sI − (A−LC)). K and L are designed independently. The compensator from y to u need not be stable on its own."
+        short: "Using u = −K x̂, the closed-loop poles are the controller's and the observer's together: det(sI − (A−BK)) · det(sI − (A−LC)). K and L are designed independently. The compensator (observer plus K, a controller from y to u) need not be stable on its own."
         eq: "det(sI − (A−BK)) · det(sI − (A−LC))"
         addsToExample: "u = −K x̂ on the cart: closed-loop poles are the controller's −4 ± 3j plus the observer's −20 ± 15j. With a 0.2 m initial error in the position estimate, a 1 m step differs from full-state feedback by about 7 cm around 0.3 s, then the two responses match."
         accountsFor: "Why K and L are designed independently, and that the resulting compensator U(s) = −K(sI − (A−BK−LC))⁻¹ L Y(s) need not be stable on its own."
@@ -189,7 +189,7 @@ maps:
         label: How does the simplest plant respond?
         dive: first
         detail: first-order, K/(τs + 1)
-        series: 3
+        series: 1
         short: "A first-order system K/(τs + 1) has a step response K(1 − e^(−t/τ)): 63 % of the way after τ, about 98 % after 4τ, with no overshoot. It is the shape to compare everything else against."
         eq: "y(t) = K(1 − e^(−t/τ))"
         addsToExample: "Squeezing the cart's two poles into the slow one gives G ≈ 0.5/(s + 1): K = 0.5, τ = 1 s, a rough picture of its step response once the faster mode has died out (after about 2 s)."
@@ -199,7 +199,7 @@ maps:
         label: Which poles matter?
         dive: dominant
         detail: dominant poles
-        series: 3
+        series: 1
         short: "The pole closest to the imaginary axis decays slowest and dominates the response once the faster ones are gone. A pole about five times farther left is usually safe to ignore, provided the DC gain is kept."
         eq: "keep the slowest poles, match the DC gain"
         addsToExample: "The cart's −1 pole is only 2× slower than −2, so the approximation 0.5/(s + 1) is rough (about 0.12 m of error at its worst on a 0.5 m step); it improves if the damper is made larger."
@@ -209,7 +209,7 @@ maps:
         label: What do ζ and ωₙ say about two poles?
         dive: second
         detail: second-order specs
-        series: 3
+        series: 1
         short: "A second-order system s² + 2ζωₙs + ωₙ² has overshoot %OS = 100·e^(−πζ/√(1 − ζ²)), settling time about 4/(ζωₙ), and peak time π/ω_d. ζ sets how much it rings, ωₙ how fast."
         eq: "%OS = 100·e^(−πζ/√(1 − ζ²))   Ts ≈ 4/(ζωₙ)"
         addsToExample: "Open-loop the cart has ζ = 3/(2√2) ≈ 1.06, so no overshoot; with K = 7 the loop has ωₙ = 3, ζ = 0.5, so %OS ≈ 16 % and Ts ≈ 2.7 s."
@@ -219,7 +219,6 @@ maps:
         label: What should I recognize on sight?
         dive: cheat
         detail: cheat sheet and glossary
-        series: 3
         short: "A one-page 'recognize this' list: which pole pattern, transfer function shape or block diagram means which behaviour, plus a glossary of every symbol. It is the review end of the chain."
         addsToExample: "Collects the cart's facts in one place: poles −1 and −2, G(0) = 0.5, ζ ≈ 1.06, and what each controller term does to them."
         accountsFor: "How quickly the cart's behaviour can be read off by recognition when the same patterns appear on an exam or in a new plant."
@@ -229,33 +228,31 @@ maps:
         dive: cheat
         quizTag: mini-exam
         detail: mini-exam 1 quiz (22 questions)
-        series: 3
         short: "The 22-question mini-exam 1 review: transfer functions, order, block diagrams, disturbances, controllers, state space, circuits and op-amps, first-order response and dominant poles, with a question and a worked reason each."
         addsToExample: "Every question uses a plant like the cart (second order, two poles), so the recognition practice is the cart's story told on other systems."
         accountsFor: "Whether the cart's reasoning (poles, DC gain, loop) transfers to unseen plants."
     edges:
       - { from: root, to: model, label: "describe it", question: "What do we need before we can predict anything?", idea: "A model. Physics hands us an ODE; the Laplace transform rewrites that same ODE as a transfer function, so wiring blocks together becomes algebra." }
-      - { from: model, to: splane, label: "poles?", question: "What do the roots of G(s) mean?", idea: "Each pole is a natural mode e^(pt) and each zero a transmission null. Plotting them on the s-plane makes behaviour visible." }
-      - { from: model, to: tf, label: "read G(s)", question: "What do I read off G(s) before simulating?", idea: "Order, DC gain and time constants are enough to sketch the step response." }
-      - { from: model, to: ss, label: "inside?", question: "What if I also need the internal states and initial conditions?", idea: "State space tracks the energy-storage variables themselves; G(s) is its input-output summary." }
+      - { from: model, to: splane, label: "poles?", question: "G(s) is a ratio of polynomials. What do its roots mean?", idea: "Each pole is a natural mode e^(pt) and each zero a transmission null. Plotting them on the s-plane makes behaviour visible." }
       - { from: model, to: circuits, label: "hardware", question: "How do I get G(s) for a circuit or op-amp stage?", idea: "Impedances turn circuits into algebra; the same second-order equation appears as mass-spring-damper and as RLC." }
+      - { from: splane, to: tf, label: "read G(s)", question: "With poles understood, what else can I read off G(s) before simulating?", idea: "Order, DC gain and time constants (from the poles) are enough to sketch the step response." }
       - { from: tf, to: order, label: "why order?", question: "Why is the order what it is?", idea: "One state per independent energy store; dampers and resistors only dissipate." }
-      - { from: tf, to: blocks, label: "close the loop", question: "How does G(s) sit in a loop with a controller and a disturbance?", idea: "Block-diagram algebra: series, parallel and feedback give CG/(1 + CG) and G/(1 + CG)." }
-      - { from: tf, to: first, label: "simplest plant", question: "How does the simplest plant respond, as a yardstick?", idea: "First order is an exponential with time constant τ; other plants are compared to it." }
+      - { from: tf, to: first, label: "simplest plant", question: "To sketch a response, what does the simplest plant (one pole) do, as a yardstick?", idea: "First order is an exponential with time constant τ; other plants are compared to it." }
+      - { from: first, to: dominant, label: "more poles", question: "With more poles, which ones matter?", idea: "The slowest stable pole dominates; far-left poles can be dropped if the DC gain is kept." }
+      - { from: dominant, to: second, label: "two poles", question: "When two poles dominate, what sets the shape?", idea: "Damping ratio ζ and natural frequency ωₙ give overshoot, settling time and peak time." }
+      - { from: second, to: blocks, label: "close the loop", question: "We can now predict how one plant responds. How do we make it do what we command instead?", idea: "Wrap it in a loop: a sensor measures y, a summing junction compares it with the command r, and a controller C acts on the error. Block-diagram algebra (series, parallel, feedback) gives CG/(1 + CG) and G/(1 + CG)." }
       - { from: blocks, to: ctrl, label: "what is C?", question: "What can the controller do?", idea: "P, I and D each trade speed, error, damping and noise; standard and parallel forms are the same controller." }
-      - { from: blocks, to: fb, label: "why bother?", question: "What does closing the loop buy and cost?", idea: "Lower sensitivity and disturbance effect and a faster transient, at the cost of noise, hardware and stability risk (S + T = 1)." }
       - { from: ctrl, to: pid-tuning, label: "tune it", question: "How do I choose the three gains?", idea: "Tune P, then I, then D against a spec: the PID tuning map continues from here." }
       - { from: ctrl, to: sse, label: "error?", question: "Why does proportional control leave an error and integral remove it?", idea: "A P controller needs an error to hold its output; an integrator forces zero error at rest (system type 1)." }
+      - { from: sse, to: fb, label: "worth it?", question: "P leaves an error and I removes it. Stepping back: what does closing the loop buy us overall, and what does it cost?", idea: "Lower sensitivity and disturbance effect and a faster transient, at the cost of noise, hardware and stability risk (S + T = 1)." }
+      - { from: fb, to: ss, label: "inside?", question: "Feedback from the output alone only slides the poles along a fixed path. Can we describe the plant's inside so we can act on it directly?", idea: "State space tracks the energy-storage variables themselves; G(s) is its input-output summary. It also keeps initial conditions, and it is the language of the design chapter that follows." }
       - { from: ss, to: ss2tf, label: "link back", question: "How are the two descriptions related?", idea: "G(s) = C(sI − A)⁻¹B + D; eigenvalues of A are the poles of G." }
       - { from: ss2tf, to: cc, label: "use the states?", question: "Can we use the states, not just G(s)?", idea: "First check whether the input reaches every state and the output reveals every state." }
       - { from: cc, to: sf, label: "place poles", question: "If we can measure every state, how do we put the poles exactly where we want?", idea: "u = −Kx places the poles of A − BK anywhere, if the plant is controllable. Output feedback cannot leave the root locus." }
       - { from: sf, to: obs, label: "missing states?", question: "How do we estimate the states we can't measure?", idea: "A Luenberger observer copies the plant and corrects the estimate with L(y − C x̂)." }
       - { from: obs, to: sep, label: "put them together", question: "How do we plug the estimate into the control law, and why can we design the two separately?", idea: "u = −K x̂. The closed-loop poles are those of A − BK and of A − LC, designed independently (separation)." }
       - { from: sep, to: refin, label: "a command", question: "How do we make it follow a command instead of just returning to zero?", idea: "A reference gain N̄ (or feeding y − r to the observer) turns the regulator into a tracker." }
-      - { from: first, to: dominant, label: "more poles", question: "With more poles, which ones matter?", idea: "The slowest stable pole dominates; far-left poles can be dropped if the DC gain is kept." }
-      - { from: dominant, to: second, label: "two poles", question: "When two poles dominate, what sets the shape?", idea: "Damping ratio ζ and natural frequency ωₙ give overshoot, settling time and peak time." }
-      - { from: second, to: sse, label: "and at rest", question: "After the transient, where does the output settle?", idea: "The final value; whether it equals the command depends on the loop type.", dashed: true }
-      - { from: fb, to: cheat, label: "review", question: "What do I need to recognize on sight?", idea: "Patterns: pole locations, transfer function shapes and loop structures, collected for review." }
+      - { from: refin, to: cheat, label: "review", question: "What should I be able to recognize on sight across the whole map?", idea: "Patterns: pole locations, transfer function shapes, loop structures and the state-feedback recipe, collected for review." }
       - { from: cheat, to: mini-exam, label: "test myself", question: "Can I use these patterns under exam conditions?", idea: "A 22-question mini-exam with worked reasons and links back to the guide." }
   - id: splane
     title: The s-plane as a map

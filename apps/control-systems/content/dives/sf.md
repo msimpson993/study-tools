@@ -1,6 +1,6 @@
 ---
 id: sf
-order: 25
+order: 16
 title: "Full-state feedback and Ackermann's formula"
 category: state
 chain:

@@ -1,6 +1,6 @@
 ---
 id: sp8
-order: 23
+order: 28
 title: "Closing the loop on the map: root locus"
 category: describe
 chain:
@@ -30,7 +30,7 @@ Closed-loop poles are the roots of <b>1 + <i>K</i>·<i>L</i>(<i>s</i>) = 0</b>. 
 
 - For <i>K</i>/(<i>s</i>(<i>s</i>+2)): the poles start at 0 and −2, meet at −1 when <i>K</i> = 1 (critical damping), then split vertically. More gain gives more ω<sub>n</sub> but less ζ, with σ stuck at −1. That's the boring machine's ζ = 6/√<i>K</i> story in pictures.
 - Adding a LHP zero <b>bends the locus left toward the ○</b>: more damping, better stability. That's why PD/lead control helps. A RHP zero would pull poles into the RHP.
-- This one picture ties together Stage 4 (one loop, one characteristic equation) and Stage 13 (high gain trades damping).
+- This one picture ties together the loop dive (one loop, one characteristic equation) and the feedback dive (high gain trades damping).
 ````
 
 ````callout:predict Predict

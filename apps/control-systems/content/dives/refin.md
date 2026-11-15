@@ -1,6 +1,6 @@
 ---
 id: refin
-order: 28
+order: 19
 title: "Reference inputs"
 category: state
 chain:

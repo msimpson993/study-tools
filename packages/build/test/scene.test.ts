@@ -103,8 +103,9 @@ describe('staged block diagram field', () => {
     const { content, warnings } = loadApp(path.join(repoRoot, 'apps', 'control-systems'));
     expect(content.subject.runningExample?.scene).toMatchObject({ id: 'cart', overlays: ['loop'], diagram: 'loop' });
     const want: Record<string, string | string[]> = {
-      model: 'open', tf: 'open', first: 'open', order: 'open', second: 'open', dominant: 'open',
-      ss: 'states', ss2tf: 'states', blocks: ['loop', 'disturb'], ctrl: 'pid', fb: 'noise', sse: 'noise', sp8: 'gain',
+      // map order: the plant (ODE → G(s) → poles → states), then the loop builds, then the inside opens up again
+      model: ['ode', 'open'], splane: 'poles', tf: 'open', order: 'states', first: 'open', dominant: 'poles', second: 'poles',
+      blocks: ['loop', 'disturb'], ctrl: 'pid', sse: 'error', fb: 'noise', ss: 'states', ss2tf: 'states', sp8: 'gain',
       cc: 'states', sf: 'sfb', obs: 'observer', sep: 'sep', refin: 'refin',
     };
     for (const [id, d] of Object.entries(want)) {

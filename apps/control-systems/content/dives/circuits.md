@@ -1,8 +1,8 @@
 ---
 id: circuits
-order: 11
+order: 5
 title: "Getting G(s) for real hardware: circuits and op-amps"
-category: state
+category: describe
 chain:
   - title: "How do I get G(s) for a circuit or op-amp stage?"
   - title: "How do I get G(s) for real hardware?"
@@ -32,7 +32,7 @@ Replace each element with its impedance (<i>R</i>, <i>sL</i>, 1/(<i>sC</i>)) and
 | Series RLC, output across C | 1/(<i>LCs</i>² + <i>RCs</i> + 1) | ω<sub>n</sub> = 1/√(<i>LC</i>), ζ = (<i>R</i>/2)√(<i>C</i>/<i>L</i>) |
 
 
-ζ = 1/(2<i>Q</i>) for the series RLC. A high-Q tank is a lightly damped second-order system that rings, and that's exactly the overshoot of Stage 11.
+ζ = 1/(2<i>Q</i>) for the series RLC. A high-Q tank is a lightly damped second-order system that rings, and that's exactly the overshoot of the second-order dive.
 
 ### How do I read an inverting op-amp stage?
 
@@ -55,8 +55,6 @@ Before you touch a slider, predict what it will do. Raise R: the poles are pulle
 - **G(s)**: the cart's transfer function from force u to position y: 1/((s + 1)(s + 2))
 - **poles**: the roots of the denominator: the exponentials e^(pt) the plant can make. The cart's are −1 and −2
 - **zeros**: the roots of the numerator: they set how much of each mode appears
-- **s = σ + jω**: a point on the s-plane: σ is the decay or growth rate, ω the oscillation frequency
-- **ζ, ωn**: damping ratio and natural frequency of a pole pair
 - **DC gain**: the steady output for a unit steady input, G(0) = 0.5 m per N for the cart
 - **%OS, Ts**: overshoot and 2 % settling time of the step response
 - **C(s)**: the controller transfer function (PID: Kp + Ki/s + Kd·s)

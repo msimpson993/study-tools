@@ -1,6 +1,6 @@
 ---
 id: sp7
-order: 22
+order: 27
 title: "The final- and initial-value theorems"
 category: describe
 chain:
@@ -29,7 +29,7 @@ The final value is lim s→0 s·Y(s) (valid only if all other poles of sY are in
 
 
 - FVT is a statement about the <b>neighborhood of the origin</b>: DC gain, integrators (× at 0 → ∞ gain), differentiators (○ at 0 → zero gain).
-- The validity check is a statement about the <b>whole plane</b>: any × of <i>sY</i> on the <i>j</i>ω axis or in the RHP ⇒ no final value (Q27 trap).
+- The validity check is a statement about the <b>whole plane</b>: any × of <i>sY</i> on the <i>j</i>ω axis or in the RHP ⇒ no final value (a classic trap).
 - IVT: step response of a strictly proper <i>G</i> starts at <i>y</i>(0⁺) = 0. Relative degree 1 ⇒ it starts with a nonzero slope; relative degree 2 ⇒ it starts flat. Far from all the marks, <i>G</i> looks like 1/<i>s</i><sup>(relative degree)</sup>.
 ````
 

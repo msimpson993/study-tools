@@ -1,6 +1,6 @@
 ---
 id: second
-order: 14
+order: 8
 title: "What ζ and ωn say about two poles"
 category: time
 chain:
@@ -11,7 +11,7 @@ chain:
 neighbors:
   - dominant
   - sse
-exampleScene: {  overlays: [critical, poles], diagram: open, caption: "Tighten the damper to c = 2√2 (ζ = 1) and the two poles meet. Less damping would split them into a complex pair."  }
+exampleScene: {  overlays: [critical, poles], diagram: poles, caption: "Tighten the damper to c = 2√2 (ζ = 1) and the two poles meet. Less damping would split them into a complex pair."  }
 ---
 **What do ζ and ωₙ say about two poles?**
 
@@ -52,11 +52,11 @@ A second-order system s² + 2ζωₙs + ωₙ² has overshoot %OS = 100·e^(−�
 
 
 ````callout:predict Predict
-3/(<i>s</i>²+2<i>s</i>+3): overshoot and settling time? Showζ = 0.577 → %OS ≈ 10.8%. ζω<sub>n</sub> = 1 → <i>T</i><sub>s</sub> ≈ 4 s. DC gain 3/3 = 1 → it settles at 1. Press the preset to check.
+3/(<i>s</i>²+2<i>s</i>+3): overshoot and settling time? Check: ζ = 0.577 → %OS ≈ 10.8%. ζω<sub>n</sub> = 1 → <i>T</i><sub>s</sub> ≈ 4 s. DC gain 3/3 = 1 → it settles at 1. Press the preset to check.
 ````
 
 ````callout:trap Trap
-These formulas are exact only for the <b>pure</b> two-pole, no-zero form. An added zero (like the PD controller in the boring machine, Q38) adds overshoot, and an extra pole slows things down. Treat them as estimates for dominant-pole systems. Also, ω<sub>n</sub> doesn't change %OS: two systems with the same ζ overshoot equally, one just does it faster.
+These formulas are exact only for the <b>pure</b> two-pole, no-zero form. An added zero (like the PD controller in the tunnel-boring-machine example, worked in the feedback dive) adds overshoot, and an extra pole slows things down. Treat them as estimates for dominant-pole systems. Also, ω<sub>n</sub> doesn't change %OS: two systems with the same ζ overshoot equally, one just does it faster.
 ````
 
 ````callout:predict Predict
@@ -69,7 +69,5 @@ Before you touch a slider, predict what it will do. Drag the pole straight up: t
 - **s = σ + jω**: a point on the s-plane: σ is the decay or growth rate, ω the oscillation frequency
 - **ζ, ωn**: damping ratio and natural frequency of a pole pair
 - **DC gain**: the steady output for a unit steady input, G(0) = 0.5 m per N for the cart
-- **T (time constant)**: time for a first-order response to cover 63 % of the way: T = 1/|p|
 - **%OS, Ts**: overshoot and 2 % settling time of the step response
-- **C(s)**: the controller transfer function (PID: Kp + Ki/s + Kd·s)
 ````

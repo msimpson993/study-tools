@@ -1,6 +1,6 @@
 ---
 id: ctrl
-order: 6
+order: 10
 title: "What P, I and D each do"
 category: loop
 chain:
@@ -65,7 +65,6 @@ Before you touch a slider, predict what it will do. P alone settles short of 1 (
 - **DC gain**: the steady output for a unit steady input, G(0) = 0.5 m per N for the cart
 - **K**: the proportional gain in u = K(r − y); K = 7 gives ζ = 0.5, ωn = 3
 - **e_ss**: the error r − y once everything has settled
-- **T (time constant)**: time for a first-order response to cover 63 % of the way: T = 1/|p|
 - **%OS, Ts**: overshoot and 2 % settling time of the step response
 - **C(s)**: the controller transfer function (PID: Kp + Ki/s + Kd·s)
 ````

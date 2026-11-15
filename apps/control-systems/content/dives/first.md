@@ -1,6 +1,6 @@
 ---
 id: first
-order: 12
+order: 6
 title: "The simplest plant: K/(Ts + 1)"
 category: time
 chain:
@@ -46,7 +46,6 @@ Before you touch a slider, predict what it will do. Double T: the pole moves tow
 ````callout:note Symbols used here
 - **poles**: the roots of the denominator: the exponentials e^(pt) the plant can make. The cart's are −1 and −2
 - **DC gain**: the steady output for a unit steady input, G(0) = 0.5 m per N for the cart
-- **K**: the proportional gain in u = K(r − y); K = 7 gives ζ = 0.5, ωn = 3
 - **T (time constant)**: time for a first-order response to cover 63 % of the way: T = 1/|p|
 - **%OS, Ts**: overshoot and 2 % settling time of the step response
 ````

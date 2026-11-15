@@ -10,7 +10,7 @@ chain:
     detail: "order = number of independent energy stores"
 neighbors:
   - tf
-exampleScene: {  overlays: [forces, phase], diagram: open, caption: "Two energy stores, two states: position (spring) and velocity (mass). The state is one dot in the (x, ẋ) plane."  }
+exampleScene: {  overlays: [forces, phase], diagram: states, caption: "Two energy stores, two states: position (spring) and velocity (mass). The plant block now shows its states x, ẋ; together they are one dot in the (x, ẋ) plane."  }
 ---
 **Why does a plant have the order it has?**
 

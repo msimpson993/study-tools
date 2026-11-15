@@ -1,8 +1,8 @@
 ---
 id: cheat
-order: 15
+order: 20
 title: "What to recognize on sight"
-category: time
+category: review
 chain:
   - title: "What do I need to recognize on sight?"
   - title: "What should I recognize on sight?"
@@ -108,13 +108,11 @@ Before you touch a slider, predict what it will do. Take the damper away (c = 0)
 ````
 
 ````callout:note Symbols used here
-- **G(s)**: the cart's transfer function from force u to position y: 1/((s + 1)(s + 2))
 - **poles**: the roots of the denominator: the exponentials e^(pt) the plant can make. The cart's are −1 and −2
 - **zeros**: the roots of the numerator: they set how much of each mode appears
 - **s = σ + jω**: a point on the s-plane: σ is the decay or growth rate, ω the oscillation frequency
 - **ζ, ωn**: damping ratio and natural frequency of a pole pair
 - **DC gain**: the steady output for a unit steady input, G(0) = 0.5 m per N for the cart
-- **K**: the proportional gain in u = K(r − y); K = 7 gives ζ = 0.5, ωn = 3
 - **T (time constant)**: time for a first-order response to cover 63 % of the way: T = 1/|p|
 - **%OS, Ts**: overshoot and 2 % settling time of the step response
 - **S, T**: sensitivity S = 1/(1 + CG) and complementary sensitivity T = CG/(1 + CG), with S + T = 1

@@ -1,6 +1,6 @@
 ---
 id: obs
-order: 26
+order: 17
 title: "The Luenberger observer"
 category: state
 chain:

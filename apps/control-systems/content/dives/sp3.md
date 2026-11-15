@@ -1,6 +1,6 @@
 ---
 id: sp3
-order: 18
+order: 23
 title: "Reading a location on the plane"
 category: describe
 chain:
@@ -90,6 +90,5 @@ Before you touch a slider, predict what it will do. Drag the pole straight up: t
 - **s = σ + jω**: a point on the s-plane: σ is the decay or growth rate, ω the oscillation frequency
 - **ζ, ωn**: damping ratio and natural frequency of a pole pair
 - **K**: the proportional gain in u = K(r − y); K = 7 gives ζ = 0.5, ωn = 3
-- **T (time constant)**: time for a first-order response to cover 63 % of the way: T = 1/|p|
 - **%OS, Ts**: overshoot and 2 % settling time of the step response
 ````

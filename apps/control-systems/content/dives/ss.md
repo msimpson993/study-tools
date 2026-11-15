@@ -1,6 +1,6 @@
 ---
 id: ss
-order: 9
+order: 13
 title: "State space: the cart as two states"
 category: state
 chain:
@@ -11,7 +11,7 @@ chain:
 neighbors:
   - model
   - ss2tf
-exampleScene: {  overlays: [forces, sensor, phase], diagram: states, caption: "The state (x, ẋ) is one point; A turns the forces into where it goes next; the sensor reads only x."  }
+exampleScene: {  overlays: [forces, sensor, phase], diagram: states, caption: "Opening the plant block: the same cart written with its inside (x, ẋ) in view. A turns the forces into where it goes next; the sensor reads only x."  }
 ---
 **Is there a description that tracks the inside too?**
 
@@ -29,7 +29,7 @@ Transfer functions only see input → output from rest. State space keeps the <e
 ````callout:why Why it matters
 
 
-- <b>Initial conditions</b>: <i>x</i>(0) is built in (compare Q3).
+- <b>Initial conditions</b>: <i>x</i>(0) is built in.
 - <b>MIMO</b>: two inputs and three outputs is just bigger <i>B</i> and <i>C</i>, not a 3×2 grid of transfer functions.
 - <b>Simulation</b>: ODE solvers (and Simulink) integrate first-order vector equations.
 - <b>Hidden modes</b>: internal states that a pole–zero cancellation would hide stay visible.
@@ -65,10 +65,10 @@ Transfer functions only see input → output from rest. State space keeps the <e
 
 Physics/ODE → <b>choose states</b> → write each state derivative → read off <b>A</b> and <b>B</b>. Then, separately, write the output you care about in terms of the states → read off <b>C</b> and <b>D</b>. You never derive C and D from the dynamics.
 
-1. <b>Write the physics</b> (KVL, Newton) as an ODE.model
-2. <b>Pick states</b>: one per energy store, or phase variables <i>x</i>₁ = <i>y</i>, <i>x</i>₂ = <i>ẏ</i>, …choice
-3. <b>Write ẋ<sub>i</sub></b> for each state using only states and <i>u</i>. The coefficients form <b>A</b>, and the <i>u</i>-coefficients form <b>B</b>.dynamics
-4. <b>Write y</b> in terms of states and <i>u</i>. The coefficients form <b>C</b> and <b>D</b>.measurement
+1. <b>Write the physics</b> (KVL, Newton) as an ODE.
+2. <b>Pick states</b>: one per energy store, or phase variables <i>x</i>₁ = <i>y</i>, <i>x</i>₂ = <i>ẏ</i>, …
+3. <b>Write ẋ<sub>i</sub></b> for each state using only states and <i>u</i>. The coefficients form <b>A</b>, and the <i>u</i>-coefficients form <b>B</b>.
+4. <b>Write y</b> in terms of states and <i>u</i>. The coefficients form <b>C</b> and <b>D</b>.
 
 ````callout:trap Trap
 Same circuit, different output → <b>same A and B, different C and D</b>. In a series RLC with states (<i>v</i><sub>C</sub>, <i>i</i>), the output “capacitor voltage” gives <i>C</i> = [1 0], while the output “resistor voltage” gives <i>C</i> = [0 <i>R</i>]. The dynamics didn't change, only what you're looking at.
@@ -78,48 +78,35 @@ Same circuit, different output → <b>same A and B, different C and D</b>. In a 
 
 For <i>G</i> = <i>b</i>₀/(<i>s</i><sup><i>n</i></sup> + <i>a</i><sub><i>n</i>−1</sub><i>s</i><sup><i>n</i>−1</sup> + … + <i>a</i>₀): write the ODE, set <i>x</i>₁ = <i>y</i>, <i>x</i>₂ = <i>ẏ</i>, …. A then has 1's on the superdiagonal and the <b>negated</b> denominator coefficients (constant term first) in the bottom row.
 
-<div class="eqbox">A = 010001−<i>a</i>₀−<i>a</i>₁−<i>a</i>₂ B = 00<i>b</i>₀ C = 100 D = 0 (n = 3 shown)</div>
+$$A=\begin{bmatrix}0&1&0\\0&0&1\\-a_0&-a_1&-a_2\end{bmatrix},\quad B=\begin{bmatrix}0\\0\\b_0\end{bmatrix},\quad C=\begin{bmatrix}1&0&0\end{bmatrix},\quad D=0\qquad(n=3\text{ shown})$$
+
+For the running cart, G = 1/(s² + 3s + 2) gives A = [[0, 1], [−2, −3]], B = (0, 1)ᵀ, C = (1, 0): exactly the matrices above, with the denominator's coefficients 2 and 3 negated in the bottom row.
 
 #### G(s) = 3/(s² + 2s + 3) → ODE → ABCD
 
 1. <b>Cross-multiply</b>: (<i>s</i>² + 2<i>s</i> + 3)<i>Y</i> = 3<i>U</i>.
 2. <b>Back to time</b> (<i>s</i> → d/dt, zero ICs): <i>ÿ</i> + 2<i>ẏ</i> + 3<i>y</i> = 3<i>u</i>.
 3. <b>States</b>: <i>x</i>₁ = <i>y</i>, <i>x</i>₂ = <i>ẏ</i>. So <i>ẋ</i>₁ = <i>x</i>₂ (that's the definition), and <i>ẋ</i>₂ = <i>ÿ</i> = −3<i>x</i>₁ − 2<i>x</i>₂ + 3<i>u</i> (solve the ODE for <i>ÿ</i>).
-4. <b>Read off</b>: A = 01−3−2 B = 03 C = 10 D = 0.
+4. <b>Read off</b>: $A=\begin{bmatrix}0&1\\-3&-2\end{bmatrix},\ B=\begin{bmatrix}0\\3\end{bmatrix},\ C=\begin{bmatrix}1&0\end{bmatrix},\ D=0$.
 
 ````callout:note Not unique
-B = [0; 1], C = [3 0] also works: the 3 moved from the input side to the output side. Both give the same <i>G</i>(<i>s</i>) (check with Q19). A state-space realization isn't unique, but the transfer function is.
+B = [0; 1], C = [3 0] also works: the 3 moved from the input side to the output side. Both give the same <i>G</i>(<i>s</i>) (check by computing <i>C</i>(<i>sI</i>−<i>A</i>)<sup>−1</sup><i>B</i>). A state-space realization isn't unique, but the transfer function is.
 ````
 
 ````callout:predict Predict
-Second element of B = 1 instead of 3, with C = [1 0] kept? Show<i>G</i> = 1/(<i>s</i>² + 2<i>s</i> + 3). Same poles, DC gain drops from 1 to 1/3. B scales the input's push, so it scales the whole response.
+Second element of B = 1 instead of 3, with C = [1 0] kept? Then <i>G</i> = 1/(<i>s</i>² + 2<i>s</i> + 3). Same poles, DC gain drops from 1 to 1/3. B scales the input's push, so it scales the whole response.
 ````
 
 #### LRC intuition (slide 40)
 
 Series LRC, output across C, states <i>x</i>₁ = <i>e</i><sub>o</sub>, <i>x</i>₂ = <i>ė</i><sub>o</sub>. KVL gives <i>LC</i><i>ë</i><sub>o</sub> + <i>RC</i><i>ė</i><sub>o</sub> + <i>e</i><sub>o</sub> = <i>e</i><sub>i</sub>, so:
 
-<div class="eqbox">A = 01−1/<i>LC</i>−<i>R</i>/<i>L</i> B = 01/<i>LC</i> C = 10 D = 0</div>
+$$A=\begin{bmatrix}0&1\\-1/LC&-R/L\end{bmatrix},\quad B=\begin{bmatrix}0\\1/LC\end{bmatrix},\quad C=\begin{bmatrix}1&0\end{bmatrix},\quad D=0$$
 
-Same pattern as the mass–spring–damper (slides 26–27) with <i>m</i> ↔ <i>L</i>, <i>b</i> ↔ <i>R</i>, <i>k</i> ↔ 1/<i>C</i>. Annotated slides (on this computer): slide 40 annotated · slide 28 (TF from ABCD) · LRC walkthrough board.
+Same pattern as the mass–spring–damper (slides 26–27) with <i>m</i> ↔ <i>L</i>, <i>b</i> ↔ <i>R</i>, <i>k</i> ↔ 1/<i>C</i>.
 
 ````callout:recognize Recognize the companion pattern
 A 2×2 <i>A</i> with [0 1] on top and [−<i>a</i>₀ −<i>a</i>₁] on the bottom <em>is</em> the denominator <i>s</i>² + <i>a</i>₁<i>s</i> + <i>a</i>₀, readable without any algebra. For the LRC: <i>s</i>² + (<i>R</i>/<i>L</i>)<i>s</i> + 1/(<i>LC</i>).
-````
-
-#### G(s) = 3/(s² + 2s + 3) → ODE → ABCD
-
-1. <b>Cross-multiply</b>: (<i>s</i>² + 2<i>s</i> + 3)<i>Y</i> = 3<i>U</i>.
-2. <b>Back to time</b> (<i>s</i> → d/dt, zero ICs): <i>ÿ</i> + 2<i>ẏ</i> + 3<i>y</i> = 3<i>u</i>.
-3. <b>States</b>: <i>x</i>₁ = <i>y</i>, <i>x</i>₂ = <i>ẏ</i>. So <i>ẋ</i>₁ = <i>x</i>₂ (that's the definition), and <i>ẋ</i>₂ = <i>ÿ</i> = −3<i>x</i>₁ − 2<i>x</i>₂ + 3<i>u</i> (solve the ODE for <i>ÿ</i>).
-4. <b>Read off</b>: A = 01−3−2 B = 03 C = 10 D = 0.
-
-````callout:note Not unique
-B = [0; 1], C = [3 0] also works: the 3 moved from the input side to the output side. Both give the same <i>G</i>(<i>s</i>) (check with Q19). A state-space realization isn't unique, but the transfer function is.
-````
-
-````callout:predict Predict
-Second element of B = 1 instead of 3, with C = [1 0] kept? Show<i>G</i> = 1/(<i>s</i>² + 2<i>s</i> + 3). Same poles, DC gain drops from 1 to 1/3. B scales the input's push, so it scales the whole response.
 ````
 
 ````callout:predict Predict

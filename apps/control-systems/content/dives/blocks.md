@@ -1,6 +1,6 @@
 ---
 id: blocks
-order: 5
+order: 9
 title: "The loop: command path and disturbance path"
 category: loop
 chain:
@@ -27,6 +27,10 @@ Close the loop on the measured output: error E = R − Y feeds a controller C, t
 
 Reference <i>R</i> minus measured output gives error <i>E</i>. The controller <i>G</i><sub>c</sub> turns <i>E</i> into actuation, the plant <i>G</i> produces output <i>C</i> (or <i>Y</i>), and a disturbance <i>T</i><sub>d</sub> enters along the way. With unity feedback, <i>C</i>/<i>R</i> = <i>G</i><sub>c</sub><i>G</i>/(1 + <i>G</i><sub>c</sub><i>G</i>).
 
+````callout:note Notation: the notes' symbols versus this page's
+Your lecture notes call the controller <i>G</i><sub>c</sub> and the output <i>C</i>(<i>s</i>), so they write <i>C</i>/<i>R</i>. The block diagram on this page (and MATLAB) call the controller <i>C</i> and the output <i>Y</i>. Read the notes' <i>C</i>/<i>R</i> as <i>Y</i>/<i>R</i> here and <i>G</i><sub>c</sub> as <i>C</i>. The glossary lists both.
+````
+
 *From the guide's static figure: <b>The loop you'll see on every exam.</b> Two inputs (<i>R</i> and <i>T</i><sub>d</sub>), one output, one loop gain <i>L</i> = <i>G</i><sub>c</sub><i>G</i>.*
 
 <div class="eqbox"><span class="frac"><span><i>C</i></span><span><i>R</i></span></span> = <span class="frac"><span><i>G</i><sub>c</sub><i>G</i></span><span>1 + <i>G</i><sub>c</sub><i>G</i></span></span> <span class="frac"><span><i>C</i></span><span><i>T</i><sub>d</sub></span></span> = <span class="frac"><span><i>G</i></span><span>1 + <i>G</i><sub>c</sub><i>G</i></span></span></div>
@@ -49,7 +53,7 @@ Rule of thumb for any input: <b>numerator = forward path from that input to the 
 It changes the numerator. A disturbance entering at the plant <em>input</em> is filtered by <i>G</i>, giving <i>G</i>/(1+<i>L</i>). One at the plant <em>output</em> gives 1/(1+<i>L</i>). In both cases, making the loop gain large where the disturbance lives is what suppresses it.
 
 ````callout:predict Predict
-<i>G</i><sub>c</sub> = <i>K</i> (P only), <i>G</i> = 1/(<i>s</i>+1), unit-step disturbance at the plant input, <i>R</i> = 0. Where does <i>C</i> settle?<br>ShowFVT: <i>C</i>(∞) = lim <i>s</i>·<span class="frac"><span>1/(<i>s</i>+1)</span><span>1 + <i>K</i>/(<i>s</i>+1)</span></span>·<span class="frac"><span>1</span><span><i>s</i></span></span> = 1/(1+<i>K</i>). Bigger <i>K</i> shrinks the effect but never removes it. For that you need integral action in <i>G</i><sub>c</sub> (Stage 12).
+<i>G</i><sub>c</sub> = <i>K</i> (P only), <i>G</i> = 1/(<i>s</i>+1), unit-step disturbance at the plant input, <i>R</i> = 0. Where does <i>C</i> settle?<br>Check with the final-value theorem: <i>C</i>(∞) = lim <i>s</i>·<span class="frac"><span>1/(<i>s</i>+1)</span><span>1 + <i>K</i>/(<i>s</i>+1)</span></span>·<span class="frac"><span>1</span><span><i>s</i></span></span> = 1/(1+<i>K</i>). Bigger <i>K</i> shrinks the effect but never removes it. For that you need integral action in <i>G</i><sub>c</sub> (see “Why does P leave an error and I remove it?” later on the map).
 ````
 
 ````callout:note Key takeaway
@@ -65,6 +69,5 @@ Before you touch a slider, predict what it will do. Raise K: the command path ge
 - **zeros**: the roots of the numerator: they set how much of each mode appears
 - **ζ, ωn**: damping ratio and natural frequency of a pole pair
 - **K**: the proportional gain in u = K(r − y); K = 7 gives ζ = 0.5, ωn = 3
-- **T (time constant)**: time for a first-order response to cover 63 % of the way: T = 1/|p|
 - **C(s)**: the controller transfer function (PID: Kp + Ki/s + Kd·s)
 ````

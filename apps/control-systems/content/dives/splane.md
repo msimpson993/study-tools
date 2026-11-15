@@ -10,7 +10,7 @@ chain:
     detail: "pole p = σ + jω  →  mode e^(σt)·cos(ωt)"
 neighbors:
   - model
-exampleScene: { overlays: [push, poles], caption: "The two poles at −1 and −2 are the two decaying exponentials inside the cart's step response." }
+exampleScene: { overlays: [push, poles], diagram: poles, caption: "The two poles at −1 and −2 are the roots of G(s)'s denominator, and the two decaying exponentials inside the cart's step response." }
 ---
 **What is a pole or a zero, physically?**
 
@@ -35,10 +35,8 @@ Where a pole sits in the <i>s</i>-plane tells you the shape of its mode at a gla
 - Real part of the pole → decay rate (envelope <i>e</i><sup>σ<i>t</i></sup>). Imaginary part → oscillation frequency.
 - Any pole with Re &gt; 0 means the system is unstable, no matter what the others do.
 - Complex poles always come in conjugate pairs for physical (real-coefficient) systems.
-- A zero right on top of a pole cancels it in <i>G</i>(<i>s</i>), but the mode can still exist internally (see Q20).
+- A zero right on top of a pole cancels it in <i>G</i>(<i>s</i>), but the mode can still exist internally (see the controllability dive, later on the map).
 ````
-
-#### This section in six stops
 
 ````callout:note The one-sentence version
 A transfer function is a pattern of × and ○ marks plus a gain. <b>Poles say what motions the system can make; zeros say how much of each motion a given input and output actually see.</b> Every Laplace operation is a simple move of that pattern: add a mark, slide it, stretch it, or merge two patterns.
