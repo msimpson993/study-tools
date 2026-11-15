@@ -1,6 +1,6 @@
 # control-systems
 
-EECE5130 control systems course page. Central question: how do we make a system we only know approximately do what we command, quickly, smoothly and despite disturbances and noise, and predict that from its poles before we build it?
+EECE5130 control systems course page. Central question: How do we make a system we only know approximately do what we command, and predict how it will behave before we build it?
 
 - 2 question maps (32 boxes, 31 lines): the question chain and the s-plane as a map. The chain has a fifth chapter, Designing with state feedback (controllability, full-state feedback, observer, separation, reference input).
 - 28 deep dives, each with a live figure, `addsToExample`/`accountsFor`, a Predict callout and symbols.

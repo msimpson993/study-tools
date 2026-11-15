@@ -41,11 +41,16 @@ export function mountQuiz(host: HTMLElement, content: AppContent, progress: Prog
   const orderOf = (q: Question): number[] => { let o = orders.get(q.id); if (!o) { o = choiceOrder(q); orders.set(q.id, o); } return o; };
   const allTags = [...new Set(content.quiz.flatMap((q) => q.tags))];
 
+  // a copied reference (#/quiz?qid=…) opens on that question, once
+  let pendingQid: string | null = typeof location !== 'undefined' ? new URLSearchParams(location.hash.split('?')[1] ?? '').get('qid') : null;
+
   function rebuild() {
     let qs = content.quiz.filter((q) => !activeTags || q.tags.some((t) => activeTags!.has(t)));
     if (missedOnly) qs = qs.filter((q) => progress.answer(q.id) === 'm');
     list = shuffle ? shuffled(qs) : qs;
-    idx = 0; chosen = null; revealed = false; graded = null; session = { ok: 0, bad: 0 }; orders = new Map();
+    idx = 0;
+    if (pendingQid) { const at = list.findIndex((q) => q.id === pendingQid); if (at >= 0) idx = at; pendingQid = null; }
+    chosen = null; revealed = false; graded = null; session = { ok: 0, bad: 0 }; orders = new Map();
   }
 
   function grade(q: Question, ok: boolean) {

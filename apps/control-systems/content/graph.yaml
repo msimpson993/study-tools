@@ -30,7 +30,7 @@ maps:
         series: 0
         short: "A pole is one of the plant's built-in motions: something it does on its own when nothing pushes it, like the cart creeping back as e^(−t). Each pole is drawn as × at s = σ + jω on the s-plane: σ is the decay rate (left of the vertical jω axis it dies out, which is stable; right of it, it grows, which is unstable) and ω the ringing frequency. Zeros (○) are where G(s) = 0 and decide how strongly a given push excites each motion."
         eq: "pole p = σ + jω  →  mode e^(σt)·cos(ωt)"
-        addsToExample: "Places two × on the negative real axis at −1 and −2 for the cart: no ω, so it can never ring, and the −1 pole is the slower, dominant one."
+        addsToExample: "Places two × on the negative real axis at −1 and −2 for the cart: no ω, so it can never ring, and the −1 pole is the slower one, so it decides how long the response takes."
         accountsFor: "Why a pushed cart creeps back as a sum of e^(−t) and e^(−2t) without oscillating, and what moving a pole (stiffer spring, more damping) would do."
         live: "board:splane"
       - id: tf
@@ -212,7 +212,7 @@ maps:
         series: 1
         short: "A second-order system s² + 2ζωₙs + ωₙ² has overshoot %OS = 100·e^(−πζ/√(1 − ζ²)), settling time about 4/(ζωₙ), and peak time π/ω_d. ζ sets how much it rings, ωₙ how fast."
         eq: "%OS = 100·e^(−πζ/√(1 − ζ²))   Ts ≈ 4/(ζωₙ)"
-        addsToExample: "Open-loop the cart has ζ = 3/(2√2) ≈ 1.06, so no overshoot; with K = 7 the loop has ωₙ = 3, ζ = 0.5, so %OS ≈ 16 % and Ts ≈ 2.7 s."
+        addsToExample: "Open-loop the cart has ζ = 3/(2√2) ≈ 1.06, so no overshoot. Once we feed it back with a gain of 7 (set up in the feedback steps), ωₙ = 3 and ζ = 0.5: about 16 % overshoot and a settling time of Ts ≈ 2.7 s."
         accountsFor: "Why raising K speeds up the cart but makes it overshoot, in numbers we can check."
         live: "board:s11"
       - id: cheat
@@ -243,7 +243,7 @@ maps:
       - { from: second, to: blocks, label: "close the loop", question: "We can now predict how one plant responds. How do we make it do what we command instead?", idea: "Wrap it in a loop: a sensor measures y, a summing junction compares it with the command r, and a controller C acts on the error. Block-diagram algebra (series, parallel, feedback) gives CG/(1 + CG) and G/(1 + CG)." }
       - { from: blocks, to: ctrl, label: "what is C?", question: "What can the controller do?", idea: "P, I and D each trade speed, error, damping and noise; standard and parallel forms are the same controller." }
       - { from: ctrl, to: pid-tuning, label: "tune it", question: "How do I choose the three gains?", idea: "Tune P, then I, then D against a spec: the PID tuning map continues from here." }
-      - { from: ctrl, to: sse, label: "error?", question: "Why does proportional control leave an error and integral remove it?", idea: "A P controller needs an error to hold its output; an integrator forces zero error at rest (system type 1)." }
+      - { from: ctrl, to: sse, label: "error?", question: "With a plain gain in the loop, does the output end up exactly at the command?", idea: "A P controller needs an error to hold its output; an integrator forces zero error at rest (system type 1)." }
       - { from: sse, to: fb, label: "worth it?", question: "P leaves an error and I removes it. Stepping back: what does closing the loop buy us overall, and what does it cost?", idea: "Lower sensitivity and disturbance effect and a faster transient, at the cost of noise, hardware and stability risk (S + T = 1)." }
       - { from: fb, to: ss, label: "inside?", question: "Feedback from the output alone only slides the poles along a fixed path. Can we describe the plant's inside so we can act on it directly?", idea: "State space tracks the energy-storage variables themselves; G(s) is its input-output summary. It also keeps initial conditions, and it is the language of the design chapter that follows." }
       - { from: ss, to: ss2tf, label: "link back", question: "How are the two descriptions related?", idea: "G(s) = C(sI − A)⁻¹B + D; eigenvalues of A are the poles of G." }

@@ -61,4 +61,11 @@ test.describe('quiz: choices are shuffled on display', () => {
       await page.reload(); await page.waitForFunction(() => !!(window as any).__study);
     }
   });
+
+  test('a copied reference (#/quiz?qid=…) opens on that question', async ({ page }) => {
+    await open(page, 'control-systems', '#/quiz');
+    const id = await page.evaluate(() => (window as any).__study.content.quiz[7].id);
+    await open(page, 'control-systems', `#/quiz?qid=${encodeURIComponent(id)}`);
+    await expect(page.getByTestId('qcard')).toHaveAttribute('data-qid', id);
+  });
 });

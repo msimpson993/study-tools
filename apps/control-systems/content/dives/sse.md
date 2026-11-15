@@ -4,7 +4,7 @@ order: 11
 title: "Why P leaves an error and I removes it"
 category: loop
 chain:
-  - title: "Why does proportional control leave an error and integral remove it?"
+  - title: "With a plain gain in the loop, does the output end up exactly at the command?"
   - title: "Why does P leave an error and I remove it?"
   - title: "steady-state error, system type"
     detail: "e_ss = 1/(1 + Kp·G(0))   (P-only, step)"
