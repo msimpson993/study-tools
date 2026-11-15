@@ -220,6 +220,7 @@ export function mountApp(content: AppContent, hooks: AppHooks = {}): void {
       r.covers ? h('p', { class: 'ui', style: 'color:var(--muted);margin-top:0' }, r.covers) : null,
       h('div', { class: 'chips' },
         n ? h('a', { class: 'tbtn on', dataset: { testid: 'review-quiz' }, href: `#/quiz?tags=${encodeURIComponent(r.quizTag!)}&title=${encodeURIComponent(r.title)}` }, `Take the self-test (${n})`) : null,
+        ...(r.quizSubsets ?? []).map((sub) => h('a', { class: 'tbtn', dataset: { testid: 'review-quiz-subset' }, href: `#/quiz?tags=${encodeURIComponent(sub.tag)}&title=${encodeURIComponent(`${r.title}: ${sub.label}`)}` }, `${sub.label} only (${content.quiz.filter((q) => q.tags.includes(sub.tag)).length})`)),
         hasSheet ? h('button', { class: 'tbtn', dataset: { testid: 'review-print' }, onclick: () => {
           document.body.dataset.print = 'sheet';
           const done = () => { delete document.body.dataset.print; window.removeEventListener('afterprint', done); };

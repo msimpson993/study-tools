@@ -2,11 +2,13 @@
 id: mini-exam-2
 order: 2
 title: "Mini exam 2: feedback control system characteristics"
-summary: "Lecture Notes 2 start to finish: open versus closed loop, the error signal, sensitivity, disturbance and noise, transient and steady-state behaviour, performance indices and model reduction. A topic checklist with slide references, a one-page formula sheet, seven worked problems and a 22-question self-test."
-covers: "Lecture Notes 2, slides 1–34 (Dorf, Modern Control Systems, ch. 4)"
+summary: "Lecture Notes 2 start to finish (open versus closed loop, the error signal, sensitivity, disturbance and noise, transient and steady-state behaviour, performance indices, model reduction), plus a carry-over section for the part of Lecture Notes 1 that Mini exam 1 left out (second-order systems and P, I, D control, slides 50–72). Topic checklists with slide references, formula sheets, ten worked problems and a 35-question self-test."
+covers: "Lecture Notes 2, slides 1–34 (Dorf, ch. 4), and the LN1 carry-over, slides 50–72"
 quizTag: mini-exam-2
+quizSubsets:
+  - { tag: ln1-carryover, label: "LN1 carry-over" }
 ---
-**How to use this page.** Tick through the checklist and open the map link for anything you cannot explain in a sentence. Then do the worked problems with the solution closed, compare step by step (an exam is graded by steps, so write the steps), and finish with the self-test. The formula sheet prints on its own page. No exam date is assumed here.
+**How to use this page.** The page has two parts: Lecture Notes 2 (the first checklist, the first formula sheet and problems 1–7), then a clearly marked **LN1 carry-over** (slides 50–72, not on Mini exam 1) in case the exam draws on it. Tick through the checklist and open the map link for anything you cannot explain in a sentence. Then do the worked problems with the solution closed, compare step by step (an exam is graded by steps, so write the steps), and finish with the self-test. The formula sheet prints on its own page. No exam date is assumed here.
 
 ````callout:trap Practise this one by hand
 A performance-index problem that also needs an inverse Laplace transform appeared on a prior-year exam. **Problem 4** below is that type (inverse Laplace, then $\int y^2\,dt$, then minimise over a gain). Do it with the solution closed.
@@ -220,6 +222,106 @@ A speed-control motor has $R_a = 1$, $J = 10$, $b = 1$, $K_b = K_m = 1$, so $G =
 
 </details>
 
+
+### LN1 carry-over (slides 50–72, not on Mini exam 1)
+
+[Mini exam 1](#/review/mini-exam-1) stops at the first-order impulse response (slide 49). Everything below is the rest of Lecture Notes 1: second-order systems and what P, I and D do. It sits on this page in case Mini exam 2 draws on it. In this section $K_p$ is the proportional gain of the controller, as on the slides. The question map covers these in [ζ and ωₙ](#/dive/second), [P, I and D](#/dive/ctrl) and [Why P leaves an error and I removes it](#/dive/sse).
+
+| Slides | Topic: can you…? | Where it is on the map |
+|---|---|---|
+| 50–51 | write the servo model $J\ddot\theta + B\dot\theta = T$, its closed loop $\dfrac{K}{Js^2 + Bs + K}$ and read $\omega_n^2 = K/J$, $2\zeta\omega_n = B/J$, $\zeta = \dfrac{B}{2\sqrt{JK}}$ | [ζ and ωₙ](#/dive/second) |
+| 52–55 | tell the damping cases apart and give each step response: underdamped $0 < \zeta < 1$ (poles $-\zeta\omega_n \pm j\omega_d$, $\omega_d = \omega_n\sqrt{1-\zeta^2}$), critically damped $\zeta = 1$ (a double pole at $-\omega_n$, $c = 1 - e^{-\omega_nt}(1 + \omega_nt)$), overdamped $\zeta > 1$ (two real poles). The undamped case $\zeta = 0$ (poles on the imaginary axis, rings forever) appears on slides 61 and 70 | [ζ and ωₙ](#/dive/second) |
+| 56–57 | read the family of step and impulse responses against ζ (small ζ rings, large ζ is sluggish) | [ζ and ωₙ](#/dive/second) |
+| 58–60 | define rise time $T_r$, peak time $T_p$, settling time $T_s$ and percent overshoot, and use $T_p = \dfrac{\pi}{\omega_n\sqrt{1-\zeta^2}}$, $\;\%OS = 100e^{-\zeta\pi/\sqrt{1-\zeta^2}}$, $\;T_s = \dfrac{4}{\zeta\omega_n}$, $\;T_{r1} = \dfrac{2.16\zeta + 0.60}{\omega_n}$ ($0.3 \le \zeta \le 0.8$); for an overdamped system use the 10–90 % rise time, there is no peak | [ζ and ωₙ](#/dive/second) |
+| 61 | read an impulse response from pole location: left half-plane decays, imaginary axis oscillates forever, right half-plane grows; farther left is faster, farther from the real axis is a faster oscillation | [ζ and ωₙ](#/dive/second), [Poles and zeros](#/dive/splane) |
+| 62–64 | show that proportional control of $K/(Ts+1)$ leaves $e_{ss} = \dfrac{1}{K + 1}$ for a unit step, and that an integral term removes the offset ($e_{ss} = 0$) at the risk of oscillation | [Why P leaves an error and I removes it](#/dive/sse), [P, I and D](#/dive/ctrl) |
+| 65–68 | find the steady-state error from a step torque disturbance: P leaves $T_d/K_p$ (raising $K_p$ shrinks it but adds oscillation); PI makes it 0, and turns the second-order loop into a third-order one | [Why P leaves an error and I removes it](#/dive/sse) |
+| 69–72 | say what derivative action does (anticipates the error, adds damping); see that P on an inertia load $1/(Js^2)$ has imaginary poles and oscillates forever; for PD on $\dfrac{1}{s(Js+B)}$ get $\zeta = \dfrac{B + K_d}{2\sqrt{K_pJ}}$ and ramp error $B/K_p$, choosing $\zeta$ between 0.4 and 0.7 | [P, I and D](#/dive/ctrl), [ζ and ωₙ](#/dive/second) |
+
+<div class="formula-sheet page2">
+
+#### Formula sheet: LN1 carry-over (slides 50–72)
+
+#### Second-order system
+
+- Standard form $\dfrac{C(s)}{R(s)} = \dfrac{\omega_n^2}{s^2 + 2\zeta\omega_ns + \omega_n^2}$; servo: $\dfrac{K}{Js^2 + Bs + K}$, $\omega_n^2 = \dfrac{K}{J}$, $2\zeta\omega_n = \dfrac{B}{J}$, $\zeta = \dfrac{B}{B_c} = \dfrac{B}{2\sqrt{JK}}$
+- Underdamped $0 < \zeta < 1$: poles $-\zeta\omega_n \pm j\omega_d$, $\omega_d = \omega_n\sqrt{1-\zeta^2}$; $c(t) = 1 - \dfrac{e^{-\zeta\omega_nt}}{\sqrt{1-\zeta^2}}\sin\!\left(\omega_dt + \tan^{-1}\dfrac{\sqrt{1-\zeta^2}}{\zeta}\right)$
+- Critically damped $\zeta = 1$: double pole at $-\omega_n$; $c(t) = 1 - e^{-\omega_nt}(1 + \omega_nt)$
+- Overdamped $\zeta > 1$: two real poles $s_{1,2} = (\zeta \pm \sqrt{\zeta^2-1})\,\omega_n$ (both negative), response is two decaying exponentials, no overshoot
+- Undamped $\zeta = 0$: poles $\pm j\omega_n$, oscillates forever
+
+#### Step-response specifications
+
+- $T_p = \dfrac{\pi}{\omega_d}$, $\;M_{pt} = 1 + e^{-\zeta\pi/\sqrt{1-\zeta^2}}$, $\;\%OS = 100\,e^{-\zeta\pi/\sqrt{1-\zeta^2}}$ (depends on $\zeta$ only)
+- $T_s = \dfrac{4}{\zeta\omega_n}$ (2 % band, from $e^{-\zeta\omega_nT_s} < 0.02$)
+- $T_{r1} = \dfrac{2.16\zeta + 0.60}{\omega_n}$ (10–90 % rise time, $0.3 \le \zeta \le 0.8$)
+- Overdamped: no peak; use the 10–90 % rise time
+
+#### Pole location (slide 61)
+
+- Left half-plane: decays; imaginary axis: oscillates forever; right half-plane: grows. Real part $= -\zeta\omega_n$ sets decay speed, imaginary part $\omega_d$ sets oscillation speed
+
+#### P, I and D actions (the slides' $K_p$ is the controller's proportional gain)
+
+- P on $\dfrac{K}{Ts+1}$: $e_{ss} = \dfrac{1}{K + 1}$ for a unit step (with a controller gain $K_p$ in front of a plant gain $K$, replace $K$ by $K_pK$)
+- Integral action: $e_{ss} = 0$ for a step, possibly oscillatory. PI on a step torque disturbance: $e_{ss} = 0$, but the loop is one order higher
+- P on a torque disturbance $T_d$ with plant $\dfrac{1}{s(Js+b)}$: $e_{ss} = -\dfrac{T_d}{K_p}$ (output offset $T_d/K_p$)
+- P on an inertia load $\dfrac{1}{Js^2}$: $\dfrac{K_p}{Js^2 + K_p}$, poles $\pm j\sqrt{K_p/J}$, oscillates forever
+- PD on an inertia load: $Js^2 + K_pT_ds + K_p = 0$, damping added. PD on $\dfrac{1}{s(Js+B)}$: $\zeta = \dfrac{B + K_d}{2\sqrt{K_pJ}}$, ramp $e_{ss} = \dfrac{B}{K_p}$
+
+</div>
+
+#### Carry-over problem 1: Second-order specifications (slides 50–60)
+
+For $T(s) = \dfrac{3}{s^2 + 2s + 3}$ find $\omega_n$, $\zeta$, the percent overshoot, the peak time, the 2 % settling time and the 10–90 % rise time.
+
+<details class="fold">
+<summary>Solution</summary>
+
+1. Match $s^2 + 2s + 3$ to $s^2 + 2\zeta\omega_ns + \omega_n^2$: $\omega_n^2 = 3$, so $\omega_n = \sqrt3 = 1.732$; $2\zeta\omega_n = 2$, so $\zeta = 1/\sqrt3 = 0.577$. Since $0 < \zeta < 1$ it is underdamped. The DC gain is $3/3 = 1$, so the step response settles at 1.
+2. The damped frequency is $\omega_d = \omega_n\sqrt{1-\zeta^2} = \sqrt3\cdot\sqrt{2/3} = \sqrt2 = 1.414$ rad/s.
+3. Overshoot: $\zeta/\sqrt{1-\zeta^2} = (1/\sqrt3)/\sqrt{2/3} = 1/\sqrt2$, so $\%OS = 100\,e^{-\pi/\sqrt2} = 100\,e^{-2.221} = 10.8\,\%$ (10.85 %); the peak value is $1.108$.
+4. Peak time: $T_p = \pi/\omega_d = \pi/\sqrt2 = 2.22$ s.
+5. Settling time: $\zeta\omega_n = 1$, so $T_s = 4/(\zeta\omega_n) = 4$ s.
+6. Rise time: $T_{r1} = (2.16\zeta + 0.60)/\omega_n = (1.247 + 0.60)/1.732 = 1.07$ s (valid because $0.3 \le \zeta \le 0.8$).
+
+**Check:** the poles are $-1 \pm j\sqrt2$. The real part $-1$ gives $T_s = 4$ s, and the imaginary part $\sqrt2$ gives the peak at $\pi/\sqrt2$.
+
+</details>
+
+#### Carry-over problem 2: The cart with proportional control (slides 50–62)
+
+The cart has $G(s) = \dfrac{1}{s^2 + 3s + 2}$ and the controller is a proportional gain $K = 7$ in a unity-feedback loop. Find the closed loop, $\omega_n$, $\zeta$, the steady-state error for a unit step, the percent overshoot and the settling time.
+
+<details class="fold">
+<summary>Solution</summary>
+
+1. Closed loop: $T = \dfrac{KG}{1 + KG} = \dfrac{K}{s^2 + 3s + 2 + K} = \dfrac{7}{s^2 + 3s + 9}$.
+2. $\omega_n^2 = 9$, so $\omega_n = 3$ rad/s; $2\zeta\omega_n = 3$, so $\zeta = 3/6 = 0.5$ (underdamped, poles $-1.5 \pm j2.60$).
+3. DC gain $T(0) = 7/9$, so for a unit step the output settles at $7/9$ and $e_{ss} = 1 - 7/9 = 2/9 = 0.222$. Check with $e_{ss} = \dfrac{1}{1 + KG(0)} = \dfrac{1}{1 + 7/2} = \dfrac29$ (the same pattern as slide 62).
+4. Overshoot: $\%OS = 100\,e^{-\pi(0.5)/\sqrt{0.75}} = 16.3\,\%$ of the final value, so the peak is $\tfrac79 \times 1.163 = 0.905$. The overshoot formula applies because $T$ is the standard second-order shape times the constant $7/9$.
+5. Settling time: $T_s = 4/(\zeta\omega_n) = 4/1.5 = 2.67$ s. (Also $T_p = \pi/(3\sqrt{0.75}) = 1.21$ s and $T_{r1} = (2.16\cdot0.5 + 0.6)/3 = 0.56$ s.)
+
+**Check and link:** the $2/9$ offset is the price of P-only control (slides 62–63). An integral term would remove it, as in the next problem.
+
+</details>
+
+#### Carry-over problem 3: P versus PI on a first-order plant (slides 62–64)
+
+The plant is $G(s) = \dfrac{4}{2s + 1}$ ($K = 4$, $\tau = 2$ s) in a unity-feedback loop with a unit-step command. Find the steady-state error with (a) the P controller $K_p = 2$ and (b) the PI controller $G_c = K_p + K_i/s = \dfrac{2s + 3}{s}$ ($K_p = 2$, $K_i = 3$).
+
+<details class="fold">
+<summary>Solution</summary>
+
+1. (a) $E(s) = \dfrac{R(s)}{1 + K_pG(s)} = \dfrac1s\cdot\dfrac{2s + 1}{2s + 1 + 8} = \dfrac{2s + 1}{s(2s + 9)}$. The closed loop $\dfrac{8}{2s + 9}$ is stable (pole at $-4.5$), so the final-value theorem applies: $e_{ss} = \lim_{s\to0} sE(s) = \dfrac{1}{9} = \dfrac{1}{1 + K_pK}$, which is the slide's $1/(K+1)$ with the loop gain $K_pK = 8$. The closed-loop time constant is also faster: $\tau/(1 + K_pK) = 2/9$ s.
+2. (b) $L = G_cG = \dfrac{(2s + 3)}{s}\cdot\dfrac{4}{2s + 1}$, so $1 + L = \dfrac{s(2s + 1) + 4(2s + 3)}{s(2s + 1)} = \dfrac{2s^2 + 9s + 12}{s(2s + 1)}$.
+3. Stability: $2s^2 + 9s + 12$ has all coefficients positive, so both poles are in the left half-plane (they are $-2.25 \pm j0.97$, with $\zeta \approx 0.92$). The final-value theorem is allowed.
+4. $E(s) = \dfrac1s\cdot\dfrac{s(2s + 1)}{2s^2 + 9s + 12} = \dfrac{2s + 1}{2s^2 + 9s + 12}$, so $e_{ss} = \lim_{s\to0} sE(s) = 0$.
+
+**Check:** the integrator in $G_c$ makes $L(0) \to \infty$, so $\dfrac{1}{1 + L(0)} = 0$. The price (slides 63 and 68) is that the first-order loop became second order, which can ring.
+
+</details>
+
 ### Self-test
 
-The self-test has 22 questions: the eleven Lecture Notes 2 questions already in the course quiz (feedback and the final-value theorem) plus eleven new ones on these problems. One of the new ones (unit-ramp error) is added practice, not in LN2. Use the **Take the self-test** button above; each answer links back to the map.
+The self-test has 35 questions. 22 are on Lecture Notes 2: the eleven already in the course quiz (feedback and the final-value theorem) plus eleven new ones on the problems above (one of them, the unit-ramp error, is added practice, not in LN2). The other 13 are the **LN1 carry-over**: eight existing questions on second-order systems and P, I, D, plus five new ones. The **LN1 carry-over only** button runs just those 13, and each of them is labelled "LN1 carry-over" on its card. Use the **Take the self-test** button above; each answer links back to the map.

@@ -155,7 +155,7 @@ export function loadApp(appDir: string): { content: AppContent; warnings: string
         const r = fm as any;
         if (r.id !== f.replace(/\.md$/, '')) problems.push(`review/${f}: id "${r.id}" must equal the file name`);
         if (body.trim().length < 80) problems.push(`review/${f}: body is empty`);
-        review.push({ id: r.id, order: r.order, title: r.title, summary: inline(r.summary, `review/${f}`), covers: r.covers, quizTag: r.quizTag, html: block(body, `review/${f}`) });
+        review.push({ id: r.id, order: r.order, title: r.title, summary: inline(r.summary, `review/${f}`), covers: r.covers, quizTag: r.quizTag, quizSubsets: r.quizSubsets, html: block(body, `review/${f}`) });
       } catch (e) { problems.push(`review/${f}: ${(e as Error).message}`); }
     }
   }
@@ -290,7 +290,7 @@ export function loadApp(appDir: string): { content: AppContent; warnings: string
   }
   // quiz figures: when the subject lists its renderers, every figure.id must be one of them (otherwise ids are checked at runtime, with a visible fallback)
   for (const q of quiz) if (q.figure && subject.quizFigures && !subject.quizFigures.includes(q.figure.id)) problems.push(`quiz.yaml ${q.id}: figure "${q.figure.id}" is not in subject.yaml quizFigures [${subject.quizFigures.join(', ')}]`);
-  const reviewTags = new Set(review.map((r) => r.quizTag).filter(Boolean) as string[]);
+  const reviewTags = new Set(review.flatMap((r) => [r.quizTag, ...(r.quizSubsets ?? []).map((x) => x.tag)]).filter(Boolean) as string[]);
   for (const q of quiz) {
     for (const t of q.tags) if (!tags.has(t) && !diveIds.has(t) && !reviewTags.has(t)) problems.push(`quiz.yaml ${q.id}: tag "${t}" matches no node/dive/review page`);
   }
@@ -298,6 +298,11 @@ export function loadApp(appDir: string): { content: AppContent; warnings: string
   const nodeIds = new Set(maps.flatMap((m) => m.nodes.map((n) => n.id)));
   for (const r of review) {
     if (r.quizTag && !quiz.some((q) => q.tags.includes(r.quizTag!))) problems.push(`review/${r.id}: quizTag "${r.quizTag}" has no questions`);
+    for (const sub of r.quizSubsets ?? []) {
+      const inSet = quiz.filter((q) => q.tags.includes(sub.tag));
+      if (!inSet.length) problems.push(`review/${r.id}: quizSubset "${sub.tag}" has no questions`);
+      if (r.quizTag && inSet.some((q) => !q.tags.includes(r.quizTag!))) problems.push(`review/${r.id}: quizSubset "${sub.tag}" has questions outside the "${r.quizTag}" self-test`);
+    }
     for (const m of r.html.matchAll(/href="#\/(dive|node)\/([A-Za-z0-9_-]+)/g)) {
       if (m[1] === 'dive' && !diveIds.has(m[2])) problems.push(`review/${r.id}: link to unknown dive "${m[2]}"`);
       if (m[1] === 'node' && !nodeIds.has(m[2])) problems.push(`review/${r.id}: link to unknown node "${m[2]}"`);

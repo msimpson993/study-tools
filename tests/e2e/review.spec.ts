@@ -29,7 +29,7 @@ test.describe('control-systems: the Review area (mini exams live outside the map
         await open(page, 'control-systems', `#/review/${id}`);
         const pg = page.getByTestId('review-page');
         await expect(pg).toBeVisible();
-        await expect(pg.locator('.formula-sheet')).toHaveCount(1);
+        expect(await pg.locator('.formula-sheet').count()).toBeGreaterThanOrEqual(1);
         await expect(pg.locator('table').first()).toBeVisible();
         await expect(pg.locator('.math-error, .katex-error')).toHaveCount(0);
         expect(await pg.locator('.katex').count()).toBeGreaterThanOrEqual(MIN_KATEX[id]);
@@ -49,6 +49,21 @@ test.describe('control-systems: the Review area (mini exams live outside the map
       expect(await page.evaluate(() => (window as any).__printed)).toBe('sheet');
     });
   }
+
+  test('Mini exam 2: the LN1 carry-over section is marked, has a second printed sheet, and its self-test subset runs on its own', async ({ page }) => {
+    await open(page, 'control-systems', '#/review/mini-exam-2');
+    const pg = page.getByTestId('review-page');
+    await expect(pg.getByRole('heading', { name: /LN1 carry-over \(slides 50–72, not on Mini exam 1\)/ })).toBeVisible();
+    await expect(pg.locator('.formula-sheet')).toHaveCount(2);
+    await expect(pg.locator('.formula-sheet.page2')).toHaveCount(1);
+    await expect(pg.getByTestId('review-quiz')).toContainText('(35)');
+    const sub = pg.getByTestId('review-quiz-subset');
+    await expect(sub).toContainText('LN1 carry-over only (13)');
+    await sub.click();
+    await expect(page.getByTestId('qcard').first()).toBeVisible();
+    await expect(page.locator('.cm-sum').first()).toContainText('of 13');
+    await expect(page.locator('.cm-sum').first()).toContainText('LN1 carry-over');
+  });
 
   test('in-page links on a review page resolve to real dives', async ({ page }) => {
     await open(page, 'control-systems', '#/review/mini-exam-1');

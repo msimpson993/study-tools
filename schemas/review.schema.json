@@ -29,6 +29,16 @@
     "quizTag": {
       "type": "string",
       "description": "Quiz tag whose questions make up this review's self-test."
+    },
+    "quizSubsets": {
+      "type": "array",
+      "description": "Optional named subsets of the self-test (a tag shared by some of its questions): shown as extra buttons and as a label on those questions.",
+      "items": {
+        "type": "object",
+        "required": ["tag", "label"],
+        "additionalProperties": false,
+        "properties": { "tag": { "type": "string" }, "label": { "type": "string" } }
+      }
     }
   }
 }

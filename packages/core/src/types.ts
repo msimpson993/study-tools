@@ -77,7 +77,7 @@ export interface Dive {
 }
 
 /** A review page (mini exam): lives outside the map, listed under the Review section. */
-export interface ReviewPage { id: string; order?: number; title: string; summary: string; covers?: string; /** quiz tag of the self-test */ quizTag?: string; html: string }
+export interface ReviewPage { id: string; order?: number; title: string; summary: string; covers?: string; /** quiz tag of the self-test */ quizTag?: string; /** named subsets of the self-test, by shared quiz tag */ quizSubsets?: { tag: string; label: string }[]; html: string }
 
 export type QuestionKind = 'recall' | 'recognize' | 'action' | 'compute' | 'trap';
 /** A small non-interactive plot shown under the question text. `id` names a renderer registered by the app (`quizFigures` hook); `params` are FIXED inputs for it. */

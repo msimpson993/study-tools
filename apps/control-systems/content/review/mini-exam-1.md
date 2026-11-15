@@ -20,9 +20,9 @@ quizTag: mini-exam
 | 28–32 | derive G(s) = C(sI − A)⁻¹B + D (and the transfer matrix for several inputs and outputs) | [From state space to the transfer function](#/dive/ss2tf) |
 | 33–38 | write the phase-variable (companion) form for an nth-order ODE, with and without input derivatives; know a realization is not unique | [State space: the cart as two states](#/dive/ss) |
 | 40–45 | get G(s) for an LRC circuit and cascaded RC sections; op-amp inverting and non-inverting stages, lag/lead networks, the op-amp PID | [Getting G(s) for real hardware](#/dive/circuits) |
-| (ties 38–41) | say how many states a plant needs (independent energy stores) | [Why a plant has the order it has](#/dive/order) |
+| 38–41 | say how many states a plant needs (independent energy stores) | [Why a plant has the order it has](#/dive/order) |
 | 47–49 | sketch the first-order step and impulse responses, and read K and τ off K/(τs + 1) (63.2 % at t = τ) | [The simplest plant](#/dive/first) |
-| (Lectures) | read ζ and ωₙ off two poles; decide which poles dominate | [ζ and ωₙ](#/dive/second), [Which poles matter](#/dive/dominant) |
+| (Lectures; slides 50–72 are in the [Mini exam 2 carry-over](#/review/mini-exam-2)) | read ζ and ωₙ off two poles; decide which poles dominate | [ζ and ωₙ](#/dive/second), [Which poles matter](#/dive/dominant) |
 
 Lecture Notes 1 writes the time constant as T and the output as C(s); this site writes τ and Y(s) so those letters stay free for the period and the complementary sensitivity. The slides are the authority for your exam's notation.
 

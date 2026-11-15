@@ -17,6 +17,7 @@ export function tagLabel(content: AppContent, tag: string): string {
   const d = content.dives.find((x) => x.id === tag);
   if (d) return d.title;
   for (const m of content.maps) { const n = m.nodes.find((x) => (x.quizTag ?? x.dive ?? x.id) === tag); if (n) return n.label; }
+  for (const r of content.review ?? []) { if (r.quizTag === tag) return r.title; const sub = r.quizSubsets?.find((x) => x.tag === tag); if (sub) return sub.label; }
   return tag;
 }
 
@@ -43,6 +44,8 @@ export function mountQuiz(host: HTMLElement, content: AppContent, progress: Prog
 
   // a copied reference (#/quiz?qid=…) opens on that question, once
   let pendingQid: string | null = typeof location !== 'undefined' ? new URLSearchParams(location.hash.split('?')[1] ?? '').get('qid') : null;
+
+  const subsetLabel = (q: Question) => (content.review ?? []).flatMap((r) => r.quizSubsets ?? []).find((x) => q.tags.includes(x.tag))?.label ?? '';
 
   function rebuild() {
     let qs = content.quiz.filter((q) => !activeTags || q.tags.some((t) => activeTags!.has(t)));
@@ -92,7 +95,7 @@ export function mountQuiz(host: HTMLElement, content: AppContent, progress: Prog
       return;
     }
     const q = list[idx];
-    root.append(h('div', { class: 'prog' }, h('i', { style: `width:${(idx / list.length) * 100}%` })), h('div', { class: 'cm-sum' }, `Question ${idx + 1} of ${list.length} · ${q.kind}`));
+    root.append(h('div', { class: 'prog' }, h('i', { style: `width:${(idx / list.length) * 100}%` })), h('div', { class: 'cm-sum' }, `Question ${idx + 1} of ${list.length} · ${q.kind}${subsetLabel(q) ? ` · ${subsetLabel(q)}` : ''}`));
     const card = h('div', { class: 'qcard', dataset: { testid: 'qcard', qid: q.id } });
     card.append(h('div', { class: 'qcard-head' }, copyRefButton(() => quizReference(content, q))), h('div', { class: 'qtext', html: q.q }));
     if (q.figure) { const mf = mountQuizFigure(q.figure, opts.figures); figCleanups.push(mf.destroy); card.append(mf.el); }

@@ -439,6 +439,8 @@
     <a class="rev" href="#/board?pair=s4&at=q12">Review this in the guide →</a>
 - id: cs-14
   tags:
+    - mini-exam-2
+    - ln1-carryover
     - ctrl
   kind: recognize
   q: Your cruise control is asked for 70 mph and settles at 72 mph forever. Which term is missing, and why?
@@ -454,6 +456,8 @@
     <a class="rev" href="#/board?pair=s5&at=q13">Review this in the guide →</a>
 - id: cs-15
   tags:
+    - mini-exam-2
+    - ln1-carryover
     - ctrl
   kind: recognize
   q: Which term mainly adds damping (reduces overshoot) but amplifies sensor noise?
@@ -724,6 +728,8 @@
     <a class="rev" href="#/board?pair=s13&at=q40">Review this in the guide →</a>
 - id: cs-33
   tags:
+    - mini-exam-2
+    - ln1-carryover
     - second
   kind: recognize
   q: For <span class="frac"><span>3</span><span>s<sup>2</sup> + 2s + 3</span></span>, what are ω<sub>n</sub> and ζ?
@@ -739,6 +745,8 @@
     <a class="rev" href="#/board?pair=s11&at=q25">Review this in the guide →</a>
 - id: cs-34
   tags:
+    - mini-exam-2
+    - ln1-carryover
     - second
   kind: recognize
   q: Two standard second-order systems have the same ζ = 0.5 but ω<sub>n</sub> = 1 and ω<sub>n</sub> = 5. How do their step responses compare?
@@ -754,6 +762,8 @@
     <a class="rev" href="#/board?pair=s11&at=q26">Review this in the guide →</a>
 - id: cs-35
   tags:
+    - mini-exam-2
+    - ln1-carryover
     - second
   kind: compute
   q: A measured step response overshoots by about 16%. What is the damping ratio?
@@ -769,6 +779,8 @@
     <a class="rev" href="#/board?pair=s11&at=q26">Review this in the guide →</a>
 - id: cs-36
   tags:
+    - mini-exam-2
+    - ln1-carryover
     - second
   kind: recognize
   q: In the s-plane, what sets the settling time of an underdamped pair −σ ± jω<sub>d</sub>?
@@ -814,6 +826,8 @@
     <a class="rev" href="#/board?pair=s12&at=q27">Review this in the guide →</a>
 - id: cs-39
   tags:
+    - mini-exam-2
+    - ln1-carryover
     - sse
   kind: compute
   q: Unity feedback, P control K<sub>p</sub> = 4, plant G(s) = <span class="frac"><span>1</span><span>(s + 1)(0.2s + 1)</span></span>, unit step. What is e<sub>ss</sub>?
@@ -829,6 +843,8 @@
     <a class="rev" href="#/board?pair=s12&at=q28">Review this in the guide →</a>
 - id: cs-40
   tags:
+    - mini-exam-2
+    - ln1-carryover
     - sse
   kind: recognize
   q: Why does adding integral action make the step steady-state error exactly zero (in a stable loop)?
@@ -1610,3 +1626,58 @@
     - "No: a type-1 loop has step error 1/K<sub>v</sub>"
   answer: 0
   why: "The theorem only holds when sE(s) has all its poles in the left half-plane. Here the characteristic polynomial s² − s + 4 has roots in the right half-plane, so the error grows. Check stability first, then use e<sub>ss</sub>."
+- id: me2-12
+  tags: [mini-exam-2, ln1-carryover, second]
+  kind: recognize
+  q: "Which statement about the critically damped case (ζ = 1) is correct?"
+  choices:
+    - "The poles are a double real pole at −ω<sub>n</sub> and the step response c(t) = 1 − e<sup>−ω<sub>n</sub>t</sup>(1 + ω<sub>n</sub>t) has no overshoot"
+    - "The poles are complex with real part −ω<sub>n</sub>, and it overshoots slightly"
+    - "The poles are on the imaginary axis, so it oscillates forever"
+    - "It has two different real poles, one at −ω<sub>n</sub> and one at 0"
+  answer: 0
+  why: "At ζ = 1 the two poles of ω<sub>n</sub>²/(s² + 2ζω<sub>n</sub>s + ω<sub>n</sub>²) coincide at −ω<sub>n</sub> (slide 54). The response is the fastest one that does not overshoot. Poles on the imaginary axis are the undamped case, ζ = 0."
+- id: me2-13
+  tags: [mini-exam-2, ln1-carryover, second]
+  kind: trap
+  q: "Why does the lecture use the 10–90 % rise time, and not the peak time, for an overdamped system (ζ > 1)?"
+  choices:
+    - "An overdamped step response never exceeds its final value, so there is no peak and no peak time"
+    - "The peak time of an overdamped system is infinite because it never settles"
+    - "The peak time formula π/ω<sub>d</sub> only holds for ζ > 1"
+    - "Overdamped systems have no rise time"
+  answer: 0
+  why: "Slide 58: for an overdamped system the peak time is not defined, because there is no overshoot, so the 10–90 % rise time T<sub>r1</sub> is used. The formula T<sub>p</sub> = π/ω<sub>d</sub> needs a damped frequency, which only exists for 0 &lt; ζ &lt; 1."
+- id: me2-14
+  tags: [mini-exam-2, ln1-carryover, sse]
+  kind: compute
+  q: "The cart G(s) = 1/(s² + 3s + 2) is in a unity-feedback loop with a proportional gain K = 7. What are ζ and the steady-state error for a unit step?"
+  choices:
+    - "ζ = 0.5 and e<sub>ss</sub> = 2/9"
+    - "ζ = 0.5 and e<sub>ss</sub> = 0"
+    - "ζ = 1 and e<sub>ss</sub> = 2/9"
+    - "ζ = 0.5 and e<sub>ss</sub> = 7/9"
+  answer: 0
+  why: "Closed loop 7/(s² + 3s + 9): ω<sub>n</sub> = 3 and 2ζω<sub>n</sub> = 3, so ζ = 0.5. The DC gain is 7/9, so e<sub>ss</sub> = 1 − 7/9 = 2/9 (equivalently 1/(1 + 7/2)). P-only control leaves an offset."
+- id: me2-15
+  tags: [mini-exam-2, ln1-carryover, ctrl]
+  kind: recognize
+  q: "Proportional control K<sub>p</sub> of a pure inertia load 1/(Js²), with no damping, gives K<sub>p</sub>/(Js² + K<sub>p</sub>). What does the step response do, and what does derivative action change?"
+  choices:
+    - "The poles are ±j√(K<sub>p</sub>/J), so it oscillates forever; PD adds a term K<sub>p</sub>T<sub>d</sub>s that supplies damping"
+    - "It settles with an offset; PD removes the offset"
+    - "It is unstable and grows; PD turns it into an integrator"
+    - "It is overdamped; PD makes it faster"
+  answer: 0
+  why: "Js² + K<sub>p</sub> = 0 has purely imaginary roots (slide 70), the undamped case. With PD the characteristic equation becomes Js² + K<sub>p</sub>T<sub>d</sub>s + K<sub>p</sub> = 0, which has roots with negative real parts (slide 71), so derivative action adds damping."
+- id: me2-16
+  tags: [mini-exam-2, ln1-carryover, ctrl]
+  kind: compute
+  q: "A servo with plant 1/(s(Js + B)), J = 1 and B = 1, uses PD control with K<sub>p</sub> = 4. Which K<sub>d</sub> gives ζ = 0.5? (Use ζ = (B + K<sub>d</sub>)/(2√(K<sub>p</sub>J)).)"
+  choices:
+    - "K<sub>d</sub> = 1"
+    - "K<sub>d</sub> = 0"
+    - "K<sub>d</sub> = 3"
+    - "K<sub>d</sub> = 0.5"
+  answer: 0
+  why: "2√(K<sub>p</sub>J) = 2√4 = 4, so ζ = (1 + K<sub>d</sub>)/4 = 0.5 gives K<sub>d</sub> = 1. With K<sub>d</sub> = 0 the damping ratio would be 0.25, which rings a lot. The ramp error stays B/K<sub>p</sub> = 0.25 whatever K<sub>d</sub> is."

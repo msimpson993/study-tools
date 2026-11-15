@@ -268,6 +268,8 @@ details.st-more .st-badge{display:inline-block;margin-left:.35rem;padding:0 .4re
   body[data-print=sheet] .review-body>*:not(.formula-sheet){display:none!important}
   body[data-print=sheet] .formula-sheet{border:0;font-size:9.5pt;columns:2;column-gap:1.2rem;background:#fff;color:#000}
   body[data-print=sheet] .formula-sheet h4{break-after:avoid}
+  body[data-print=sheet] .formula-sheet.page2{break-before:page}
   body[data-print=sheet] .frame{display:block}
   body[data-print=sheet]{background:#fff;color:#000}
+  html:has(body[data-print=sheet]){background:#fff}
 }
