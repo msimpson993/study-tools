@@ -32,6 +32,7 @@ maps:
       - id: pid
         label: What are P, I and D, and which form is this?
         dive: pid
+        link: { href: "../control-systems/index.html#/dive/ctrl", label: "P, I and D in the control-systems map" }
         detail: parallel versus standard form
         series: 1
         short: u = Kp·e + Ki·∫e dt + Kd·de/dt. P reacts to the present error, I to the accumulated past error, D to the trend. Parallel form uses Kp, Ki, Kd; standard form uses Kp, Ti, Td with Ki = Kp/Ti and Kd = Kp·Td.
@@ -80,6 +81,7 @@ maps:
       - id: tuning
         label: What does tuning mean, and how do we measure good?
         dive: tuning
+        link: { href: "../control-systems/index.html#/dive/second", label: "ζ and ωₙ: what the specs mean (control-systems)" }
         detail: speed vs overshoot vs effort, second-order specs
         series: 2
         short: "Tuning is a trade-off: faster response costs overshoot, effort, noise sensitivity and robustness. We measure it with step-response specs (percent overshoot, settling time, rise time) which, for a dominant second-order pair, come from ζ and ωₙ."
@@ -156,7 +158,7 @@ maps:
         dive: ap-slow
         detail: It gets there, but takes far too long to rise and settle.
         series: 3
-        short: "It gets there, but takes far too long to rise and settle. Symptoms: Long rise time; smooth, no overshoot; Output creeps toward r and the error shrinks slowly; Control signal u stays small — the controller is barely pushing. Open the card for the simulated picture, the cause and what to try."
+        short: "It gets there, but takes far too long to rise and settle. Symptoms: Long rise time; smooth, no overshoot; Output creeps toward r and the error shrinks slowly; Control signal u stays small — the controller is barely pushing."
         addsToExample: Runs this failure on a cart-like teaching plant and shows the fixed loop dashed for contrast. Teaching plant 1/((s+1)(0.5s+1))
         accountsFor: "Which knob to turn when the cart does this: ↑ Kp (and Ki) — until overshoot or effort says stop."
         live: board:ap-slow
@@ -165,7 +167,7 @@ maps:
         dive: ap-offset
         detail: It settles calmly, but not at the target.
         series: 3
-        short: "It settles calmly, but not at the target. Symptoms: Flat, steady line that stays below (or above) r; Error never decays to zero however long you wait; Often appears with P-only control or after a constant load appears. Open the card for the simulated picture, the cause and what to try."
+        short: "It settles calmly, but not at the target. Symptoms: Flat, steady line that stays below (or above) r; Error never decays to zero however long you wait; Often appears with P-only control or after a constant load appears."
         addsToExample: Runs this failure on a cart-like teaching plant and shows the fixed loop dashed for contrast. Teaching plant 1/((s+1)(0.5s+1)); P-only vs PI.
         accountsFor: "Which knob to turn when the cart does this: Add / increase Ki (I action). Kp only shrinks the offset."
         live: board:ap-offset
@@ -174,7 +176,7 @@ maps:
         dive: ap-overshoot
         detail: The output shoots past the target, then comes back.
         series: 3
-        short: "The output shoots past the target, then comes back. Symptoms: Peak above r (%OS), then a return, possibly with a small undershoot; Often caused by an integral term that is too strong for the plant speed; Lower phase margin ⇒ more overshoot (Deep dive D). Open the card for the simulated picture, the cause and what to try."
+        short: "The output shoots past the target, then comes back. Symptoms: Peak above r (%OS), then a return, possibly with a small undershoot; Often caused by an integral term that is too strong for the plant speed; Lower phase margin ⇒ more overshoot (Deep dive D)."
         addsToExample: Runs this failure on a cart-like teaching plant and shows the fixed loop dashed for contrast. Teaching plant 1/((s+1)(0.5s+1))
         accountsFor: "Which knob to turn when the cart does this: ↓ Ki (first), or ↓ Kp / ↑ Kd."
         live: board:ap-overshoot
@@ -183,7 +185,7 @@ maps:
         dive: ap-oscillation
         detail: The loop rings forever or the amplitude grows.
         series: 3
-        short: "The loop rings forever or the amplitude grows. Symptoms: Constant-amplitude ringing = loop sits right at the stability edge (P-only gain = Ku); Growing swing, often hitting actuator limits = unstable; Period roughly the ultimate period Tu (Ziegler–Nichols). Open the card for the simulated picture, the cause and what to try."
+        short: "The loop rings forever or the amplitude grows. Symptoms: Constant-amplitude ringing = loop sits right at the stability edge (P-only gain = Ku); Growing swing, often hitting actuator limits = unstable; Period roughly the ultimate period Tu (Ziegler–Nichols)."
         addsToExample: Runs this failure on a cart-like teaching plant and shows the fixed loop dashed for contrast. Teaching plant 1/(s+1)³ (ultimate gain Ku = 8).
         accountsFor: "Which knob to turn when the cart does this: ↓ Kp (and Ki); more robustness / phase margin."
         live: board:ap-oscillation
@@ -192,7 +194,7 @@ maps:
         dive: ap-disturbance
         detail: A load hits and the output is knocked far away, recovering slowly.
         series: 3
-        short: "A load hits and the output is knocked far away, recovering slowly. Symptoms: Big excursion of y right after the load arrives; Slow return (or a permanent offset if there is no I); The set-point response may look fine: this is a separate requirement. Open the card for the simulated picture, the cause and what to try."
+        short: "A load hits and the output is knocked far away, recovering slowly. Symptoms: Big excursion of y right after the load arrives; Slow return (or a permanent offset if there is no I); The set-point response may look fine: this is a separate requirement."
         addsToExample: Runs this failure on a cart-like teaching plant and shows the fixed loop dashed for contrast. Teaching plant 1/((s+1)(0.5s+1)); disturbance d = +1 at the plant input at t = 1 s, r = 0.
         accountsFor: "Which knob to turn when the cart does this: ↑ Kp and Ki; feedforward if the disturbance is measurable."
         live: board:ap-disturbance
@@ -201,7 +203,7 @@ maps:
         dive: ap-noise
         detail: Measurement noise is amplified into a chattering control signal.
         series: 3
-        short: "Measurement noise is amplified into a chattering control signal. Symptoms: y looks fine but u is fuzzy / chattering (the plant filters the noise, the actuator doesn't); Heard or felt as buzzing valves, hot motors, wear; Worse with large Kd and large derivative-filter N. Open the card for the simulated picture, the cause and what to try."
+        short: "Measurement noise is amplified into a chattering control signal. Symptoms: y looks fine but u is fuzzy / chattering (the plant filters the noise, the actuator doesn't); Heard or felt as buzzing valves, hot motors, wear; Worse with large Kd and large derivative-filter N."
         addsToExample: Runs this failure on a cart-like teaching plant and shows the fixed loop dashed for contrast. Teaching plant 1/((s+1)(0.5s+1)); PID with sensor noise σ = 0.02.
         accountsFor: "Which knob to turn when the cart does this: ↓ N (filter D harder) or ↓ Kd."
         live: board:ap-noise
@@ -210,7 +212,7 @@ maps:
         dive: ap-windup
         detail: The integrator keeps charging while the actuator is pinned at its limit.
         series: 3
-        short: "The integrator keeps charging while the actuator is pinned at its limit. Symptoms: u flat at the limit for a while; Output overshoots far more than the linear design predicted, then recovers slowly; Gets worse for large steps or long saturation. Open the card for the simulated picture, the cause and what to try."
+        short: "The integrator keeps charging while the actuator is pinned at its limit. Symptoms: u flat at the limit for a while; Output overshoots far more than the linear design predicted, then recovers slowly; Gets worse for large steps or long saturation."
         addsToExample: Runs this failure on a cart-like teaching plant and shows the fixed loop dashed for contrast. Teaching plant 1/(s+1); PI (Kp = 2, Ki = 4); actuator limit |u| ≤ 1.2 (same as Deep dive E).
         accountsFor: "Which knob to turn when the cart does this: Not a gain: add anti-windup (clamp / back-calculation) or avoid saturating."
         live: board:ap-windup
@@ -219,7 +221,7 @@ maps:
         dive: ap-kick
         detail: A set-point step makes D produce a huge one-sample spike in u.
         series: 3
-        short: "A set-point step makes D produce a huge one-sample spike in u. Symptoms: Sharp spike in u exactly when r jumps (≈ Kd·N on top of the normal P kick); Output barely changes, but actuator slams (and may saturate); No spike for slow set-point changes. Open the card for the simulated picture, the cause and what to try."
+        short: "A set-point step makes D produce a huge one-sample spike in u. Symptoms: Sharp spike in u exactly when r jumps (≈ Kd·N on top of the normal P kick); Output barely changes, but actuator slams (and may saturate); No spike for slow set-point changes."
         addsToExample: Runs this failure on a cart-like teaching plant and shows the fixed loop dashed for contrast. Teaching plant 1/((s+1)(0.5s+1)); PID, Kd = 0.5, N = 20; r steps 0 → 1 at t = 0.
         accountsFor: "Which knob to turn when the cart does this: Not a gain: D on measurement (or set-point filter)."
         live: board:ap-kick
@@ -228,7 +230,7 @@ maps:
         dive: ap-limits
         detail: The actuator can only deliver so much (amplitude) and so fast (rate).
         series: 3
-        short: "The actuator can only deliver so much (amplitude) and so fast (rate). Symptoms: Amplitude limit: response is slower than the linear design promised for big steps (rise set by umax, not by the gains); Rate limit: extra lag ⇒ more overshoot / ringing than the linear model predicts; u is straight-line (ramp) or flat-topped instead of smooth. Open the card for the simulated picture, the cause and what to try."
+        short: "The actuator can only deliver so much (amplitude) and so fast (rate). Symptoms: Amplitude limit: response is slower than the linear design promised for big steps (rise set by umax, not by the gains); Rate limit: extra lag ⇒ more overshoot / ringing than the linear model predicts; u is straight-line (ramp) or flat-topped instead of smooth."
         addsToExample: "Runs this failure on a cart-like teaching plant and shows the fixed loop dashed for contrast. Left: plant 1/((s+1)(0.5s+1)), PI, step r = 2, |u| ≤ 2.5 with clamping anti-windup. Right: plant 1/(s+1)³, PI, step r = 1, rate limit 0.5 u/s. Top plot = amplitude limit, bottom plot = rate limit."
         accountsFor: "Which knob to turn when the cart does this: ↓ aggressiveness; ramp the set-point; anti-windup."
         live: board:ap-limits
@@ -237,7 +239,7 @@ maps:
         dive: ap-delay
         detail: Nothing happens for a while after u changes, so feedback acts on old news.
         series: 3
-        short: "Nothing happens for a while after u changes, so feedback acts on old news. Symptoms: Flat start: the output ignores u for the delay; Gains that were fine without delay now ring or go unstable. Open the card for the simulated picture, the cause and what to try."
+        short: "Nothing happens for a while after u changes, so feedback acts on old news. Symptoms: Flat start: the output ignores u for the delay; Gains that were fine without delay now ring or go unstable."
         addsToExample: Runs this failure on a cart-like teaching plant and shows the fixed loop dashed for contrast. Teaching plant 1/(s+1) with 1 s dead time
         accountsFor: "Which knob to turn when the cart does this: ↓↓ Kp and Ki; Smith predictor if delay dominates."
         live: board:ap-delay
@@ -246,7 +248,7 @@ maps:
         dive: ap-sensorlag
         detail: The sensor is slow, so the controller sees an old, smoothed copy of y.
         series: 3
-        short: "The sensor is slow, so the controller sees an old, smoothed copy of y. Symptoms: True y overshoots and rings; the measured signal is a delayed, smoother copy; Behaves like extra phase lag/delay (compare A10) — gains too high for the real loop; Derivative acts on the lagged signal, so it helps less than expected. Open the card for the simulated picture, the cause and what to try."
+        short: "The sensor is slow, so the controller sees an old, smoothed copy of y. Symptoms: True y overshoots and rings; the measured signal is a delayed, smoother copy; Behaves like extra phase lag/delay (compare A10) — gains too high for the real loop; Derivative acts on the lagged signal, so it helps less than expected."
         addsToExample: Runs this failure on a cart-like teaching plant and shows the fixed loop dashed for contrast. Teaching plant 1/((s+1)(0.5s+1)); sensor 1/(1.5s+1)
         accountsFor: "Which knob to turn when the cart does this: ↓ Kp and Ki; fix/replace the sensor if you can."
         live: board:ap-sensorlag
@@ -255,7 +257,7 @@ maps:
         dive: ap-nonlinear
         detail: The plant's gain depends on where it is operating, so one set of gains is right only near one point.
         series: 3
-        short: "The plant's gain depends on where it is operating, so one set of gains is right only near one point. Symptoms: Same controller: fine for a small step, increasingly oscillatory for a bigger one (here incremental gain grows as 2√r); Behaviour differs with load/speed/temperature; PID Tuner linearizes at one operating point — that is its blind spot (Project 1: verify on the nonlinear model). Open the card for the simulated picture, the cause and what to try."
+        short: "The plant's gain depends on where it is operating, so one set of gains is right only near one point. Symptoms: Same controller: fine for a small step, increasingly oscillatory for a bigger one (here incremental gain grows as 2√r); Behaviour differs with load/speed/temperature; PID Tuner linearizes at one operating point — that is its blind spot (Project 1: verify on the nonlinear model)."
         addsToExample: "Runs this failure on a cart-like teaching plant and shows the fixed loop dashed for contrast. Teaching plant: static curve v² followed by 1/((s+1)(0.5s+1)), PI (Kp = 2, Ki = 1.5), plotted as y/r."
         accountsFor: "Which knob to turn when the cart does this: ↓ gains for the high-gain point, or schedule them with operating point."
         live: board:ap-nonlinear
@@ -264,7 +266,7 @@ maps:
         dive: ap-twodof
         detail: Gains tuned to reject disturbances fast make the set-point step overshoot.
         series: 3
-        short: "Gains tuned to reject disturbances fast make the set-point step overshoot. Symptoms: Strong integral action: quick recovery from the load, but big overshoot on the set-point step; Lowering gains fixes the step but slows the load recovery — a conflict with one controller. Open the card for the simulated picture, the cause and what to try."
+        short: "Gains tuned to reject disturbances fast make the set-point step overshoot. Symptoms: Strong integral action: quick recovery from the load, but big overshoot on the set-point step; Lowering gains fixes the step but slows the load recovery — a conflict with one controller."
         addsToExample: Runs this failure on a cart-like teaching plant and shows the fixed loop dashed for contrast. Teaching plant 1/((s+1)(0.5s+1)); PI Kp = 1.5, Ki = 4; load disturbance −1 at t = 15 s.
         accountsFor: "Which knob to turn when the cart does this: Not a gain: set-point filter / weight (2-DOF)."
         live: board:ap-twodof
@@ -273,7 +275,7 @@ maps:
         dive: ap-limitcycle
         detail: Integral action plus a sticky actuator makes the loop hunt forever around the target.
         series: 3
-        short: "Integral action plus a sticky actuator makes the loop hunt forever around the target. Symptoms: Slow, constant-amplitude swing around r that never dies out; u creeps through the dead zone, nothing moves, then it jumps; The integrator keeps winding up inside the dead zone, then the actuator suddenly moves and overshoots. Open the card for the simulated picture, the cause and what to try."
+        short: "Integral action plus a sticky actuator makes the loop hunt forever around the target. Symptoms: Slow, constant-amplitude swing around r that never dies out; u creeps through the dead zone, nothing moves, then it jumps; The integrator keeps winding up inside the dead zone, then the actuator suddenly moves and overshoots."
         addsToExample: Runs this failure on a cart-like teaching plant and shows the fixed loop dashed for contrast. Teaching plant 1/(s(s+1)) (integrating, like a position servo); actuator dead zone ±0.3
         accountsFor: "Which knob to turn when the cart does this: ↓ Ki (or I off); fix the actuator."
         live: board:ap-limitcycle
