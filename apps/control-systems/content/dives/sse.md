@@ -49,7 +49,7 @@ In transfer-function terms, the integrator puts a pole at <i>s</i> = 0 in <i>L</
 
 
 - Flat line below the target with P only → that's 1/(1+<i>K</i><sub>p</sub><i>G</i>(0)) of error. Raising <i>K</i><sub>p</sub> shrinks it but adds overshoot.
-- Adding I: the output creeps up and lands exactly on target. Too much I: overshoot, oscillation, and eventually instability (here when <i>K</i><sub>i</sub> &gt; 6(1+<i>K</i><sub>p</sub>)).
+- Adding I: the output creeps up and lands exactly on target. Too much I: overshoot, oscillation, and eventually instability (for the cart, the closed-loop polynomial is <i>s</i>³ + 3<i>s</i>² + (2 + <i>K</i><sub>p</sub>)<i>s</i> + <i>K</i><sub>i</sub>, which goes unstable once <i>K</i><sub>i</sub> &gt; 3(2 + <i>K</i><sub>p</sub>) = 6 + 3<i>K</i><sub>p</sub>).
 ````
 
 ````callout:predict Predict
@@ -59,9 +59,9 @@ Before you touch a slider, predict what it will do. Raise Kp: the predicted erro
 ````callout:note Symbols used here
 - **poles**: the roots of the denominator: the exponentials e^(pt) the plant can make. The cart's are −1 and −2
 - **zeros**: the roots of the numerator: they set how much of each mode appears
-- **DC gain**: the steady output for a unit steady input, G(0) = 0.5 m per N for the cart
+- **DC gain**: the steady output for a unit steady input, G(0), if the plant is stable. For the cart, 0.5 m per N
 - **K**: the proportional gain in u = K(r − y); K = 7 gives ζ = 0.5, ωn = 3
 - **e_ss**: the error r − y once everything has settled
 - **%OS, Ts**: overshoot and 2 % settling time of the step response
-- **C(s)**: the controller transfer function (PID: Kp + Ki/s + Kd·s)
+- **Gc(s)**: the controller transfer function (PID: Kp + Ki/s + Kd·s)
 ````

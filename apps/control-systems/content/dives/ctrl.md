@@ -7,11 +7,11 @@ chain:
   - title: "What can the controller do?"
   - title: "What can P, I and D each do about it?"
   - title: "controllers at a glance"
-    detail: "C(s) = Kp + Ki/s + Kd·s"
+    detail: "Gc(s) = Kp + Ki/s + Kd·s"
 neighbors:
   - blocks
   - sse
-exampleScene: { overlays: [loop, poles], params: { K: 7 }, diagram: pid, caption: "The block diagram expands C into its P, I and D branches. u = K·e is the proportional part: with K = 7 (I and D off) the cart overshoots about 16 % and stops short of 1 m; the closed-loop poles are on the right." }
+exampleScene: { overlays: [loop, poles], params: { K: 7 }, diagram: pid, caption: "The block diagram expands Gc into its P, I and D branches. u = K·e is the proportional part: with K = 7 (I and D off) the cart overshoots about 16 % and stops short of 1 m; the closed-loop poles are in the right-hand plot." }
 ---
 **What can P, I and D each do about it?**
 
@@ -62,9 +62,9 @@ Before you touch a slider, predict what it will do. P alone settles short of 1 (
 ````callout:note Symbols used here
 - **poles**: the roots of the denominator: the exponentials e^(pt) the plant can make. The cart's are −1 and −2
 - **zeros**: the roots of the numerator: they set how much of each mode appears
-- **DC gain**: the steady output for a unit steady input, G(0) = 0.5 m per N for the cart
+- **DC gain**: the steady output for a unit steady input, G(0), if the plant is stable. For the cart, 0.5 m per N
 - **K**: the proportional gain in u = K(r − y); K = 7 gives ζ = 0.5, ωn = 3
 - **e_ss**: the error r − y once everything has settled
 - **%OS, Ts**: overshoot and 2 % settling time of the step response
-- **C(s)**: the controller transfer function (PID: Kp + Ki/s + Kd·s)
+- **Gc(s)**: the controller transfer function (PID: Kp + Ki/s + Kd·s)
 ````
