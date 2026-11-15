@@ -348,7 +348,7 @@ function drawLoop(g: G, r: Rect, stage: DiagramStage, P: DiagramPalette, sig: Di
   if (hl(stage, 'e')) { arrow(g, xSum + sumR, mid, xC, mid, P.accent, 2.4); tag(g, xSum + sumR - 2, mid + 7, P); }
 
   const cHigh = hl(stage, 'C') || hl(stage, 'K');
-  const cLab = stage === 'gain' ? (sig.K !== undefined ? `C: K = ${fmt(sig.K, sig.K % 1 ? 1 : 0)}` : 'C: u = K·e') : 'C';
+  const cLab = stage === 'gain' ? (sig.K !== undefined ? `Gc: K = ${fmt(sig.K, sig.K % 1 ? 1 : 0)}` : 'Gc: u = K·e') : 'Gc';
   box(g, xC, mid - cH / 2, cW, cH, P, cHigh);
   text(g, cLab, xC + cW / 2, mid + 4, hl(stage, 'K') ? kCol : cCol, { align: 'center', px: tight ? 9 : 10, wt: 800 });
   if (cHigh) tag(g, xC + cW - 22, mid - cH / 2 - 5, P);
@@ -416,7 +416,7 @@ function drawPid(g: G, r: Rect, P: DiagramPalette, sig: DiagramSignals) {
 
   box(g, xC, mid - cH / 2, cW, cH, P, true);
   tag(g, xC + cW - 22, mid - cH / 2 + 2, P);
-  text(g, 'C', xC + cW / 2, mid - cH / 2 + 14, P.text, { align: 'center', px: 10, wt: 800 });
+  text(g, 'Gc', xC + cW / 2, mid - cH / 2 + 14, P.text, { align: 'center', px: 10, wt: 800 });
   const rows: [DiagramPart, string, number | undefined, string][] = [
     ['P', 'P', sig.up, P.s1], ['I', 'I', sig.ui, P.s2], ['D', 'D', sig.ud, P.s3],
   ];

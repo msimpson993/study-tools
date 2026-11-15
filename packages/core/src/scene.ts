@@ -235,10 +235,10 @@ function drawLoopDiagram(g: G, r: Rect, P: Pal, S: CartSim, st: ReturnType<CartS
   // controller block C
   g.fillStyle = P.elev; g.strokeStyle = P.strong; g.lineWidth = 1.6; g.beginPath(); g.roundRect(bx0, top, bw, bh, 7); g.fill(); g.stroke();
   if (!pid) {
-    text(g, `C: u = K·e,  K = ${fmt(lp.K, lp.K % 1 ? 1 : 0)} N/m`, xc0, top + 14, P.text, { align: 'center', px, wt: 700 });
+    text(g, `u = K·e,  K = ${fmt(lp.K, lp.K % 1 ? 1 : 0)} N/m`, xc0, top + 14, P.text, { align: 'center', px, wt: 700 });
     text(g, `e = r − y${seen ? '_m' : ''} = ${fmt(st.e)} m`, xc0, top + 27, P.muted, { align: 'center', px: px - 0.5, wt: 600 });
   } else {
-    text(g, `C = P + I + D    e = ${fmt(st.e)} m`, xc0, top + 11, P.text, { align: 'center', px: px - 0.5, wt: 700 });
+    text(g, `u = P + I + D    e = ${fmt(st.e)} m`, xc0, top + 11, P.text, { align: 'center', px: px - 0.5, wt: 700 });
     const rows: [string, number, string][] = [['P', st.up, P.s1], ['I', st.ui, P.s2], ['D', st.ud, P.s3]], bx = bx0 + 20, bwid = bw - 20 - 44, mid = bx + bwid / 2, sc = (bwid / 2) / Math.max(1, stats(S).pidMax);
     rows.forEach(([nm, v, col], i) => {
       const y = top + 21 + i * 12;
@@ -261,8 +261,8 @@ function drawLoopDiagram(g: G, r: Rect, P: Pal, S: CartSim, st: ReturnType<CartS
   g.save(); g.fillStyle = P.ok; g.translate(xs, o.cartT + o.chh); g.rotate(Math.PI / 4); g.fillRect(-3, -3, 6, 6); g.restore();
   text(g, pick(g, px, 700, w - (xu + 6) - 4, `u = ${fmt(st.u)} N${sat ? ` (clipped, asked ${fmt(st.uc)})` : ''}`, `u = ${fmt(st.u)} N${sat ? ' (clipped)' : ''}`, `u = ${fmt(st.u)} N`), xu + 6, yb + 18, uCol, { px, wt: 700 });
   text(g, pick(g, px, 700, xs - 5 - 6, ...(seen ? [`sensor: y = ${fmt(st.x)}, reads y_m = ${fmt(st.ym)} m`, `y = ${fmt(st.x)}, y_m = ${fmt(st.ym)} m`, `y_m = ${fmt(st.ym)} m`] : [`sensor: y = x = ${fmt(st.x)} m`, `y = x = ${fmt(st.x)} m`, `y = ${fmt(st.x)} m`])), xs - 5, yr - 3, P.ok, { align: 'right', px, wt: 700 });
-  if (seen) late.push(() => text(g, 'dashed ghost: what C sees (y_m)', w - 6, 14, P.ok, { align: 'right', px: px - 0.5, wt: 700, optional: true }));
-  late.push(() => text(g, 'e = r − y: the gap C acts on', 6, r.h - 4, P.muted, { px: px - 1, wt: 600, optional: true }));
+  if (seen) late.push(() => text(g, 'dashed ghost: what the controller sees (y_m)', w - 6, 14, P.ok, { align: 'right', px: px - 0.5, wt: 700, optional: true }));
+  late.push(() => text(g, 'e = r − y: the gap the controller acts on', 6, r.h - 4, P.muted, { px: px - 1, wt: 600, optional: true }));
 }
 
 function drawCartMain(g: G, r: Rect, P: Pal, S: CartSim, ov: string[], t: number, small: boolean, compactHint = false, skipLoopDiagram = false) {
@@ -506,7 +506,7 @@ function drawLoopTrace(g: G, r: Rect, P: Pal, S: CartSim, t: number) {
   g.restore();
   text(g, `target r = ${fmt(lp.r, 1)} m`, r.x + r.w - 8, Y(lp.r) - 4, P.text, { align: 'right', px: 10, wt: 700 });
   if (lp.hasDisturb) text(g, `shove d at t = ${fmt(lp.td, 1)} s`, X(lp.td) + 4, r.y + 12, P.bad, { px: 10, wt: 700 });
-  if (seen) text(g, 'green: what C sees (y_m)', r.x + r.w - 8, r.y + r.h - 40, P.ok, { align: 'right', px: 10, wt: 700, optional: true });
+  if (seen) text(g, 'green: what the controller sees (y_m)', r.x + r.w - 8, r.y + r.h - 40, P.ok, { align: 'right', px: 10, wt: 700, optional: true });
   text(g, 'blue: true x', r.x + r.w - 8, r.y + r.h - (seen ? 52 : 40), P.s0, { align: 'right', px: 10, wt: 700, optional: true });
 }
 
@@ -673,9 +673,9 @@ const DIAGRAM_SAYS: Record<string, string> = {
   error: 'The closed loop again, with the error e = r − y on the line into the controller highlighted: it is what a proportional controller needs to keep pushing.',
   open: 'Open-loop block diagram: input u into the plant G(s) = 1/(s² + 3s + 2), output y.',
   states: 'The plant block is labelled with its states x and ẋ.',
-  loop: 'Closed-loop block diagram: command r, summing junction, controller C, plant G, and the sensor feeding y back.',
+  loop: 'Closed-loop block diagram: command r, summing junction, controller Gc, plant G, and the sensor feeding y back.',
   disturb: 'A disturbance d enters at the plant input.',
-  pid: 'The controller C is expanded into P, I and D branches.',
+  pid: 'The controller Gc is expanded into P, I and D branches.',
   noise: 'Sensor noise n enters on the feedback path.',
   gain: 'The controller is shown as gain K, with a slider to change it.',
   sfb: 'State-feedback block: the gain K acts on the full state (x, ẋ) to produce u = −Kx.',
