@@ -106,7 +106,7 @@ for (const app of ['linear-systems', 'transforms', 'control-systems', 'pid-tunin
         const q = (await page.getByTestId('central-question').boundingBox())!, s = (await sc.boundingBox())!;
         expect(s.x + s.width, 'hero inside viewport').toBeLessThanOrEqual(vp.width + 1);
         const hasDiagram = !!(await sc.getAttribute('data-diagram'));
-        const maxH = hasDiagram ? (view === 'desktop' ? 440 : 420) : (view === 'desktop' ? 190 : 170);
+        const maxH = hasDiagram ? (view === 'desktop' ? 440 : 420) : 190; // 190 covers the compact cart with forces+sensor (18px reserved under the ticks)
         if (view === 'desktop') { expect(s.x, 'beside the question').toBeGreaterThan(q.x + q.width - 4); expect(s.height, hasDiagram ? 'fits with diagram' : 'small').toBeLessThanOrEqual(maxH); }
         else { expect(s.y, 'under the question').toBeGreaterThanOrEqual(q.y + q.height - 2); expect(s.height, hasDiagram ? 'fits with diagram' : 'small').toBeLessThanOrEqual(maxH); }
         expect((await ink(page, '[data-testid=map-hero] [data-testid=scene-canvas]')).n).toBeGreaterThan(800);

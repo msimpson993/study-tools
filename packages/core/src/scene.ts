@@ -195,7 +195,7 @@ export function sceneLayout(scene: string, overlays: string[], w: number, compac
   const hasDiagram = stages.length > 0;
   // When a staged block diagram sits under the cart, don't reserve under-cart space for drawLoopDiagram.
   const loopMode = isLoopScene(scene, overlays) && !hasDiagram;
-  const mainH = loopMode ? Math.round(Math.min(250, Math.max(compact ? 192 : 200, w * 0.5))) + (overlays.includes('forces') ? 40 : 0) + (overlays.includes('pid') ? 8 : 0) : Math.round(Math.min(200, Math.max(compact ? 120 : 136, w * (compact ? 0.4 : 0.42))));
+  const mainH = loopMode ? Math.round(Math.min(250, Math.max(compact ? 192 : 200, w * 0.5))) + (overlays.includes('forces') ? 40 : 0) + (overlays.includes('pid') ? 8 : 0) : Math.round(Math.min(200, Math.max(compact ? 120 : 136, w * (compact ? 0.4 : 0.42)))) + (!loopMode && overlays.includes('forces') && overlays.includes('sensor') ? 18 : 0);
   const kinds = compact ? [] : insetsOf(scene, overlays);
   const gap = 8, insetH = Math.round(Math.min(210, Math.max(150, w * (kinds.length === 1 ? 0.5 : 0.52))));
   const dH = hasDiagram ? diagramStripHeight(stages, w) : 0;
@@ -267,7 +267,7 @@ function drawLoopDiagram(g: G, r: Rect, P: Pal, S: CartSim, st: ReturnType<CartS
 
 function drawCartMain(g: G, r: Rect, P: Pal, S: CartSim, ov: string[], t: number, small: boolean, compactHint = false, skipLoopDiagram = false) {
   const px = small ? 9.5 : 10.5, st = S.at(t), late: (() => void)[] = [];
-  const loop = S.loop, w = r.w, wire = !!(loop && !skipLoopDiagram), yb = r.h - (wire ? (ov.includes('pid') ? 92 : 84) : ov.includes('sensor') ? 40 : ov.includes('forces') ? 44 : 34), xc0 = w * 0.5;
+  const loop = S.loop, w = r.w, wire = !!(loop && !skipLoopDiagram), yb = r.h - (wire ? (ov.includes('pid') ? 92 : 84) : ov.includes('sensor') && ov.includes('forces') ? 58 : ov.includes('sensor') ? 40 : ov.includes('forces') ? 44 : 34), xc0 = w * 0.5;
   let scale = Math.min(88, Math.max(38, w * 0.2)); if (wire) scale = Math.min(scale, (w * 0.5 - 62) / Math.max(1.1, stats(S).xmax));
   const cw = 52, chh = 38, cx = xc0 + st.x * scale, cartL = cx - cw / 2, cartT = yb - 12 - chh;
   // ground and wall
@@ -650,7 +650,7 @@ export function drawSceneFrame(g: G, L: SceneLayout, scene: string, overlays: st
     const st = S.at(t);
     const sig: DiagramSignals = { u: st.u, y: st.x, e: st.e, d: st.d, up: st.up, ui: st.ui, ud: st.ud, ym: st.ym, r: S.loop?.P.r, K: S.loop?.P.K };
     region(L.main, () => drawCartMain(g, L.main, P, S, ov, t, small, L.compact, L.diagrams.length > 0));
-    for (const { stage, rect } of L.diagrams) region(rect, () => drawBlockDiagram(g, rect, stage, DP, sig));
+    for (const { stage, rect } of L.diagrams) region(rect, () => drawBlockDiagram(g, rect, stage, DP, sig, { highlight: !L.compact }));
     for (const { kind, rect } of L.insets) region(rect, () => {
       if (kind === 'trace') drawCartTrace(g, rect, P, S, ov, t); else if (kind === 'phase') drawCartPhase(g, rect, P, S, ov, t); else if (kind === 'poles') drawCartPoles(g, rect, P, S, ov, t); else if (kind === 'ctrl' && S.loop) drawLoopCtrl(g, rect, P, S, ov, t);
     });
@@ -659,7 +659,7 @@ export function drawSceneFrame(g: G, L: SceneLayout, scene: string, overlays: st
     for (const { kind, rect } of L.insets) region(rect, () => {
       if (kind === 'poles') drawTinePoles(g, rect, P, ov, t); else if (kind === 'spectrum') drawTineSpectrum(g, rect, P, ov); else if (kind === 'zplane') drawTineZ(g, rect, P);
     });
-    for (const { stage, rect } of L.diagrams) region(rect, () => drawBlockDiagram(g, rect, stage, DP, {}));
+    for (const { stage, rect } of L.diagrams) region(rect, () => drawBlockDiagram(g, rect, stage, DP, {}, { highlight: !L.compact }));
   }
 }
 

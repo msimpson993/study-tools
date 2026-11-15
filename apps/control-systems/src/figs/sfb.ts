@@ -26,7 +26,7 @@ const sim = (v: V, o: { useEstimate: boolean; xh0?: number[]; noise?: number; r?
   });
 
 /* ── controllability / observability: phase plane + the two matrices ── */
-export const ccFigure = figureOf(() => [
+export const ccPanels = (): FigurePanel[] => [
   {
     id: 'phase', title: 'The cart in the (x, ẋ) plane after a 1 N push', x: 'position x (m)', y: 'velocity ẋ (m/s)',
     draw(g, w, h, v) {
@@ -60,10 +60,11 @@ export const ccFigure = figureOf(() => [
       lines.forEach((s, i) => text(g, s, 16, 28 + i * 22, i === 0 ? col.text() : colr, 'left', 13));
     },
   },
-] as FigurePanel[]);
+];
+export const ccFigure = figureOf(ccPanels);
 
 /* ── full-state feedback vs output-feedback locus ── */
-export const sfFigure = figureOf(() => [
+export const sfPanels = (): FigurePanel[] => [
   {
     id: 'plane', title: 'P-control locus vs state-feedback poles', x: 'σ (1/s)', y: 'jω (rad/s)',
     draw(g, w, h, v) {
@@ -76,13 +77,26 @@ export const sfFigure = figureOf(() => [
       const a1 = 3 + k2, a0 = 2 + k1, d2 = a1 * a1 - 4 * a0;
       const pK: Cx[] = d2 >= 0 ? [C((-a1 + Math.sqrt(d2)) / 2, 0), C((-a1 - Math.sqrt(d2)) / 2, 0)] : [C(-a1 / 2, Math.sqrt(-d2) / 2), C(-a1 / 2, -Math.sqrt(-d2) / 2)];
       void poles;
-      const f = drawSPlane(g, w, h, {
+      // leave a legend band under the plane so the key does not sit on the axis or the locus
+      const legendH = 32;
+      const f = drawSPlane(g, w, h - legendH, {
         range: 8, reCenter: -2,
-        poles: pK, labels: true, locus: rl.branches,
+        poles: pK, labels: false, locus: rl.branches,
         marks: pP.map((s) => ({ s, shape: 'ring' as const, color: col.c() })),
       });
-      text(g, `grey path / cyan rings: P control at K = ${f2(K, 1)}`, f.box.l + 6, f.box.b - 22, col.c(), 'left', 10);
-      text(g, `green ×: state feedback, K = [${f2(k1, 1)}, ${f2(k2, 1)}]`, f.box.l + 6, f.box.b - 8, col.ok(), 'left', 10);
+      // label the upper (or real) closed-loop pole above/left of the ×, clear of the marker
+      const lab = pK.find((s) => s.im >= -1e-9) ?? pK[0];
+      if (lab) {
+        const n = (x: number) => String(+x.toFixed(2)).replace('-', '−');
+        const str = Math.abs(lab.im) < 1e-9 ? n(lab.re) : `${n(lab.re)} ± j${n(Math.abs(lab.im))}`;
+        const ly = f.Y(lab.im) - 12;
+        const left = f.X(lab.re) - 10;
+        // prefer the left of the ×; if that would run off the frame, put it to the right
+        if (left - str.length * 6 > f.box.l + 2) text(g, str, left, ly, col.ok(), 'right', 10);
+        else text(g, str, f.X(lab.re) + 10, ly, col.ok(), 'left', 10);
+      }
+      text(g, `grey path / cyan rings: P control at K = ${f2(K, 1)}`, 8, h - 20, col.c(), 'left', 10);
+      text(g, `green ×: state feedback, K = [${f2(k1, 1)}, ${f2(k2, 1)}]`, 8, h - 8, col.ok(), 'left', 10);
     },
   },
   {
@@ -98,10 +112,11 @@ export const sfFigure = figureOf(() => [
       });
     },
   },
-] as FigurePanel[]);
+];
+export const sfFigure = figureOf(sfPanels);
 
 /* ── observer: true vs estimated velocity, speed and noise sliders ── */
-export const obsFigure = figureOf(() => [
+export const obsPanels = (): FigurePanel[] => [
   {
     id: 'vel', title: 'Velocity: true ẋ and the observer’s estimate', x: 'time (s)', y: 'velocity (m/s)',
     draw(g, w, h, v) {
@@ -114,7 +129,7 @@ export const obsFigure = figureOf(() => [
       curve(g, f, s.t, yv, col.a(), 2.4); curve(g, f, s.t, ev, col.b(), 2, [5, 3]);
       text(g, 'true ẋ', f.box.r - 6, f.box.t + 14, col.a(), 'right', 11);
       text(g, 'estimate ẋ̂', f.box.r - 6, f.box.t + 30, col.b(), 'right', 11);
-      text(g, `observer ${f2(num(v, 'speed', 5), 1)}× the controller,  L ≈ [${f2(Lp(v)[0], 0)}, ${f2(Lp(v)[1], 0)}]`, f.box.l + 6, f.box.b - 8, col.text(), 'left', 10);
+      text(g, `L ≈ [${f2(Lp(v)[0], 0)}, ${f2(Lp(v)[1], 0)}]  (${f2(num(v, 'speed', 5), 1)}×)`, f.box.l + 6, f.box.t + 14, col.text(), 'left', 10);
     },
   },
   {
@@ -128,10 +143,11 @@ export const obsFigure = figureOf(() => [
       });
     },
   },
-] as FigurePanel[]);
+];
+export const obsFigure = figureOf(obsPanels);
 
 /* ── separation: true-state vs estimated-state feedback ── */
-export const sepFigure = figureOf(() => [
+export const sepPanels = (): FigurePanel[] => [
   {
     id: 'step', title: 'Step to 1 m: true-state vs estimated-state feedback', x: 'time (s)', y: 'position (m)',
     draw(g, w, h, v) {
@@ -159,10 +175,11 @@ export const sepFigure = figureOf(() => [
       text(g, `peak ${f2(peak, 3)} m at t = ${f2(tp, 2)} s   (e₀ = ${f2(num(v, 'e0', 0.2), 2)} m)`, f.box.l + 6, f.box.t + 14, col.text(), 'left', 10.5);
     },
   },
-] as FigurePanel[]);
+];
+export const sepFigure = figureOf(sepPanels);
 
 /* ── reference input: regulator vs tracker ── */
-export const refinFigure = figureOf(() => [
+export const refinPanels = (): FigurePanel[] => [
   {
     id: 'step', title: 'A 1 m command: with and without N̄', x: 'time (s)', y: 'position (m)',
     draw(g, w, h, v) {
@@ -185,7 +202,8 @@ export const refinFigure = figureOf(() => [
       graphAxes(g, f, [0, 3], yr, 'time (s)', 'u (N)');
       tline(g, f, [0, 0], [3, 0], col.muted(), 1, [3, 3]);
       curve(g, f, s.t, s.u, col.b(), 2.2);
-      text(g, `N̄ = ${f2(num(v, 'Nbar', 25), 1)}   (N̄ = 25 → DC gain 1)`, f.box.l + 6, f.box.t + 14, col.text(), 'left', 11);
+      text(g, `N̄ = ${f2(num(v, 'Nbar', 25), 1)}   (N̄ = 25 → DC gain 1)`, f.box.r - 6, f.box.t + 14, col.text(), 'right', 11);
     },
   },
-] as FigurePanel[]);
+];
+export const refinFigure = figureOf(refinPanels);

@@ -75,7 +75,7 @@ export function diagramStageHeight(stage: DiagramStage, w: number): number {
   if (stage === 'pid') return w < 400 ? 128 : 120;
   if (stage === 'disturb') return w < 400 ? 124 : 116;
   if (stage === 'observer' || stage === 'sep' || stage === 'refin') return w < 400 ? 136 : 128;
-  if (stage === 'sfb') return w < 400 ? 118 : 110;
+  if (stage === 'sfb') return w < 400 ? 128 : 118;
   return w < 400 ? 112 : 104;
 }
 
@@ -196,22 +196,47 @@ function box(g: G, x: number, y: number, w: number, h: number, P: DiagramPalette
 }
 function tag(g: G, x: number, y: number, P: DiagramPalette) {
   const lab = 'new', px = 8, w = 22, h = 11;
-  if (BND) {
-    x = Math.min(Math.max(x, BND.x + 2), BND.x + BND.w - w - 2);
-    y = Math.min(Math.max(y, BND.y + 1), BND.y + BND.h - h - 1);
+  const clamp = (xx: number, yy: number) => {
+    if (!BND) return { x: xx, y: yy };
+    return {
+      x: Math.min(Math.max(xx, BND.x + 2), BND.x + BND.w - w - 2),
+      y: Math.min(Math.max(yy, BND.y + 1), BND.y + BND.h - h - 1),
+    };
+  };
+  const boxOf = (xx: number, yy: number) => ({ x0: xx, y0: yy, x1: xx + w, y1: yy + h });
+  const fits = (xx: number, yy: number) => {
+    const b = boxOf(xx, yy);
+    if (hits(b)) return false;
+    if (BND && (b.x0 < BND.x + 1 || b.x1 > BND.x + BND.w - 1 || b.y0 < BND.y + 1 || b.y1 > BND.y + BND.h - 1)) return false;
+    return true;
+  };
+  let { x: xx, y: yy } = clamp(x, y);
+  if (!fits(xx, yy)) {
+    const tries: [number, number][] = [
+      [x, y - h - 3], [x - w - 2, y], [x, y + h + 3], [x + 8, y - h - 3],
+      [x - 12, y - h - 3], [x - w, y - h - 3], [x + w + 2, y], [x, y - 2 * h - 4],
+      [x - 16, y], [x + 4, y + 2],
+    ];
+    let placed = false;
+    for (const [tx, ty] of tries) {
+      const c = clamp(tx, ty);
+      if (fits(c.x, c.y)) { xx = c.x; yy = c.y; placed = true; break; }
+    }
+    void placed;
   }
   g.fillStyle = P.accent;
   g.beginPath();
-  if (typeof g.roundRect === 'function') g.roundRect(x, y, w, h, 4); else g.rect(x, y, w, h);
+  if (typeof g.roundRect === 'function') g.roundRect(xx, yy, w, h, 4); else g.rect(xx, yy, w, h);
   g.fill();
-  // left-aligned at the ink origin so collision tests see the true box
   g.font = `800 ${px}px system-ui,sans-serif`;
   const tw = g.measureText(lab).width;
   g.fillStyle = '#0b1020'; g.textAlign = 'left'; g.textBaseline = 'alphabetic';
-  g.fillText(lab, x + (w - tw) / 2, y + 9);
-  LB.push({ x0: x, y0: y, x1: x + w, y1: y + h });
+  g.fillText(lab, xx + (w - tw) / 2, yy + 9);
+  LB.push(boxOf(xx, yy));
 }
-const hl = (stage: DiagramStage, p: DiagramPart) => NEW[stage].includes(p);
+/** When false (the compact map hero), the diagram is drawn as a finished loop: no accent and no "new" tags. */
+let HIGHLIGHT = true;
+const hl = (stage: DiagramStage, p: DiagramPart) => HIGHLIGHT && NEW[stage].includes(p);
 const col = (P: DiagramPalette, stage: DiagramStage, p: DiagramPart, fallback: string) => hl(stage, p) ? P.accent : fallback;
 
 function plantBox(g: G, x: number, y: number, w: number, h: number, P: DiagramPalette, stage: DiagramStage) {
@@ -240,7 +265,9 @@ export function drawBlockDiagram(
   stage: DiagramStage,
   P: DiagramPalette,
   sig: DiagramSignals = {},
+  opts: { highlight?: boolean } = {},
 ): void {
+  HIGHLIGHT = opts.highlight !== false;
   g.save();
   g.beginPath(); g.rect(rect.x, rect.y, rect.w, rect.h); g.clip();
   g.fillStyle = P.panel; g.fillRect(rect.x, rect.y, rect.w, rect.h);
@@ -399,14 +426,16 @@ function drawSfb(g: G, r: Rect, stage: DiagramStage, P: DiagramPalette, sig: Dia
   const bot = r.y + r.h - 14, W = right - left, tight = W < 360;
   const gW = tight ? 108 : 128, gH = 40, kW = tight ? 54 : 64, kH = 32, oW = tight ? 86 : 100, oH = 36;
   if (stage === 'sfb') {
+    const gHs = tight ? 52 : 54;
     const xK = left + (tight ? 8 : 20), xG = xK + kW + 36, xY = right - 4;
     const kCol = col(P, stage, 'K', P.accent), uCol = col(P, stage, 'u', P.s0), yCol = col(P, stage, 'y', P.ok);
     box(g, xK, mid - kH / 2, kW, kH, P, hl(stage, 'K'));
     text(g, 'K', xK + kW / 2, mid + 4, kCol, { align: 'center', px: 11, wt: 800 });
-    if (hl(stage, 'K')) tag(g, xK + kW - 22, mid - kH / 2 - 5, P);
+    // tag sits above the K box, not on the u = −Kx arrow label
+    if (hl(stage, 'K')) tag(g, xK + 2, mid - kH / 2 - 13, P);
     arrow(g, xK + kW, mid, xG, mid, uCol);
     text(g, 'u = −Kx', (xK + kW + xG) / 2, mid - 6, uCol, { align: 'center', px: 9, wt: 700 });
-    plantBox(g, xG, mid - gH / 2, Math.max(96, Math.min(gW, xY - 28 - xG)), gH, P, 'states');
+    plantBox(g, xG, mid - gHs / 2, Math.max(96, Math.min(gW, xY - 28 - xG)), gHs, P, 'states');
     const gR = xG + Math.max(96, Math.min(gW, xY - 28 - xG));
     arrow(g, gR, mid, xY - 16, mid, yCol);
     text(g, 'y = x', xY, mid - 8, yCol, { align: 'right', px: 10, wt: 700 });
@@ -439,7 +468,7 @@ function drawSfb(g: G, r: Rect, stage: DiagramStage, P: DiagramPalette, sig: Dia
   if (stage !== 'observer') {
     box(g, xK, mid - kH / 2, kW, kH, P, hl(stage, 'K'));
     text(g, 'K', xK + kW / 2, mid + 4, kCol, { align: 'center', px: 11, wt: 800 });
-    if (hl(stage, 'K')) tag(g, xK + kW - 22, mid - kH / 2 - 5, P);
+    if (hl(stage, 'K')) tag(g, xK + 2, mid - kH / 2 - 13, P);
     arrow(g, xK + kW, mid, xG, mid, uCol);
     text(g, 'u = −K x̂', (xK + kW + xG) / 2, mid - 6, uCol, { align: 'center', px: 9, wt: 700, optional: true });
   } else {

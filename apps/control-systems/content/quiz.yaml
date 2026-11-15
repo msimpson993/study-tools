@@ -1318,21 +1318,21 @@
   kind: compute
   q: For the running cart A = [[0, 1], [−2, −3]], B = (0, 1)<sup>T</sup>, what is det Pc, and is the cart completely controllable?
   choices:
-    - "det Pc = 0, so it is not completely controllable"
     - "det Pc = −1, so it is completely controllable"
+    - "det Pc = 0, so it is not completely controllable"
     - "det Pc = 1, so it is completely observable but we cannot tell about controllability"
     - "det Pc = 3, because the damper coefficient is 3"
-  answer: 1
+  answer: 0
   why: "Pc = [B AB] = [[0, 1], [1, −3]], so det Pc = 0·(−3) − 1·1 = −1 ≠ 0. Full rank means completely controllable: the force can steer any (x, ẋ)."
 - id: cs-70
   tags: [cc]
   kind: recognize
   q: The cart's C = (1, 0) (a position sensor). What does det Po = 1 tell you?
   choices:
-    - Velocity cannot be recovered, because C never looks at ẋ
-    - Position alone is enough to reconstruct the full state (the plant is completely observable)
-    - The transfer function has a cancelled zero
-    - We must add a tachometer before any observer can work
+    - "Velocity cannot be recovered, because C never looks at ẋ"
+    - "Position alone is enough to reconstruct the full state (the plant is completely observable)"
+    - "The transfer function has a cancelled zero"
+    - "We must add a tachometer before any observer can work"
   answer: 1
   why: "Po = [C; CA] = [[1, 0], [0, 1]], the identity. Full rank means the state can be reconstructed from y; a position sensor is enough, which is why a Luenberger observer can recover ẋ."
 - id: cs-71
@@ -1340,11 +1340,11 @@
   kind: trap
   q: A design uses G(s) = 1/(s + 1), which looks stable, but the underlying A has an eigenvalue at +1 that does not appear in G. What happened?
   choices:
-    - The pole at +1 was cancelled by a zero, so it is harmless
-    - A pole-zero cancellation hid an uncontrollable or unobservable mode; G(s) looks fine while an internal state can misbehave
-    - The system must be first order, so A cannot have two eigenvalues
-    - This only occurs if det Pc and det Po are both nonzero
-  answer: 1
+    - "The pole at +1 was cancelled by a zero, so it is harmless"
+    - "The system must be first order, so A cannot have two eigenvalues"
+    - "A pole-zero cancellation hid an uncontrollable or unobservable mode; G(s) looks fine while an internal state can misbehave"
+    - "This only occurs if det Pc and det Po are both nonzero"
+  answer: 2
   why: "If a mode is unreachable from u or unseen at y, it cancels out of G(s) = C(sI − A)⁻¹B. The transfer function can look stable while that hidden eigenvalue sits in the right half-plane. Always check Pc and Po."
 - id: cs-72
   tags: [sf]
@@ -1352,21 +1352,21 @@
   q: "For the cart, A − BK has characteristic polynomial s² + (3 + k₂)s + (2 + k₁). The desired poles are −4 ± 3j (s² + 8s + 25). What is K?"
   choices:
     - "K = [8, 25]"
-    - "K = [23, 5]"
     - "K = [5, 23]"
     - "K = [7, 0], the map's P-control gain"
-  answer: 1
+    - "K = [23, 5]"
+  answer: 3
   why: "Match coefficients: 3 + k₂ = 8 ⇒ k₂ = 5, and 2 + k₁ = 25 ⇒ k₁ = 23. So K = [23, 5]: a spring-like gain on position and a damper-like gain on velocity."
 - id: cs-73
   tags: [sf]
   kind: action
   q: Why can state feedback place both of the cart's poles independently, while P control (u = K(r − y)) cannot?
   choices:
-    - State feedback uses more sensors, but the closed-loop poles still have to lie on the root locus
-    - Output feedback can only slide poles along the locus of 1 + KG(s) = 0; u = −Kx has two gains, and if det Pc ≠ 0 they can put A − BK's eigenvalues anywhere
-    - P control can place them too, if you pick K large enough
-    - State feedback changes G(s), so the locus itself moves
-  answer: 1
+    - "Output feedback can only slide poles along the locus of 1 + KG(s) = 0; u = −Kx has two gains, and if det Pc ≠ 0 they can put A − BK's eigenvalues anywhere"
+    - "State feedback uses more sensors, but the closed-loop poles still have to lie on the root locus"
+    - "P control can place them too, if you pick K large enough"
+    - "State feedback changes G(s), so the locus itself moves"
+  answer: 0
   why: "A single output-feedback gain has one degree of freedom, so the poles are constrained to the root locus (for the cart, they meet at −1.5 and then go up and down). K = [k₁, k₂] has two numbers, enough to set both closed-loop coefficients, and controllability guarantees a K exists for any desired pair."
 - id: cs-74
   tags: [sf]
@@ -1384,11 +1384,11 @@
   kind: recognize
   q: A Luenberger observer for ẋ = Ax + Bu, y = Cx is
   choices:
-    - x̂' = A x̂ + L(y − C x̂), with no copy of the input
-    - x̂' = A x̂ + Bu + L(y − C x̂), and the error obeys e' = (A − LC)e
-    - x̂' = (A − BK) x̂ + L y
-    - x̂ = C⁺ y, a static inverse of the sensor
-  answer: 1
+    - "x̂' = A x̂ + L(y − C x̂), with no copy of the input"
+    - "x̂' = (A − BK) x̂ + L y"
+    - "x̂' = A x̂ + Bu + L(y − C x̂), and the error obeys e' = (A − LC)e"
+    - "x̂ = C⁺ y, a static inverse of the sensor"
+  answer: 2
   why: "The observer is a copy of the plant (A x̂ + Bu) plus a correction L(y − C x̂). Subtracting the plant from this copy produces e' = (A − LC)e, so the error dies out if those poles are stable."
 - id: cs-76
   tags: [obs]
@@ -1396,31 +1396,31 @@
   q: "The cart's observer is designed with poles −20 ± 15j (5× the controller's −4 ± 3j). A − LC has characteristic polynomial s² + (3 + ℓ₁)s + (3ℓ₁ + 2 + ℓ₂). What is L?"
   choices:
     - "L = [20, 15]"
-    - "L = [37, 512]"
     - "L = [23, 5], the same as K"
     - "L = [17, 25]"
-  answer: 1
+    - "L = [37, 512]"
+  answer: 3
   why: "Desired polynomial s² + 40s + 625. Then 3 + ℓ₁ = 40 ⇒ ℓ₁ = 37, and 3·37 + 2 + ℓ₂ = 625 ⇒ ℓ₂ = 512. Ackermann on the dual plant (Aᵀ, Cᵀ) returns the same L."
 - id: cs-77
   tags: [obs]
   kind: action
   q: Why are observer poles usually placed only 2–10× faster than the controller poles, not 100×?
   choices:
-    - Faster poles would violate the separation principle
-    - A larger L makes the estimate track sooner, but it also amplifies sensor noise; 2–10× is a working compromise
-    - The observer cannot be faster than the plant's open-loop poles
-    - At 100× the matrix A − LC is always unstable
-  answer: 1
+    - "A larger L makes the estimate track sooner, but it also amplifies sensor noise; 2–10× is a working compromise"
+    - "Faster poles would violate the separation principle"
+    - "The observer cannot be faster than the plant's open-loop poles"
+    - "At 100× the matrix A − LC is always unstable"
+  answer: 0
   why: "The correction term is L(y − C x̂). Large L (fast poles) tightens the error loop and also multiplies whatever noise is in y. The notes treat 2–10× as the usual range; the figure's noise slider makes the trade visible."
 - id: cs-78
   tags: [sep]
   kind: recognize
   q: The separation principle says that with u = −K x̂ the closed-loop characteristic polynomial is
   choices:
-    - det(sI − (A − BK − LC)) only
-    - det(sI − (A − BK)) · det(sI − (A − LC))
-    - det(sI − A) · det(sI − (A − BK − LC))
-    - det(sI − (A − BK)) only; the observer poles cancel
+    - "det(sI − (A − BK − LC)) only"
+    - "det(sI − (A − BK)) · det(sI − (A − LC))"
+    - "det(sI − A) · det(sI − (A − BK − LC))"
+    - "det(sI − (A − BK)) only; the observer poles cancel"
   answer: 1
   why: "A change of coordinates to (x, e) with e = x − x̂ block-triangularizes the closed-loop matrix, so the characteristic polynomial factors into the controller part and the observer part. K and L can be designed independently."
 - id: cs-79
@@ -1428,43 +1428,43 @@
   kind: trap
   q: The compensator U(s) = −K(sI − (A − BK − LC))⁻¹ L Y(s) is found to have a right-half-plane pole, even though A − BK and A − LC are both stable. What is true?
   choices:
-    - The design is wrong; A − BK − LC must be stable if the two factors are
-    - The compensator need not be stable on its own; the overall closed loop can still be stable (it is a stabilizing controller)
-    - Separation has failed, so K and L must be redesigned together
-    - The observer gain L is too small
-  answer: 1
+    - "The design is wrong; A − BK − LC must be stable if the two factors are"
+    - "Separation has failed, so K and L must be redesigned together"
+    - "The compensator need not be stable on its own; the overall closed loop can still be stable (it is a stabilizing controller)"
+    - "The observer gain L is too small"
+  answer: 2
   why: "A − BK − LC is not the closed-loop matrix. Stability of A − BK and of A − LC is what the loop needs. The compensator, viewed as a system from y to u, may itself be unstable; the notes call this a stabilizing controller."
 - id: cs-80
   tags: [sep]
   kind: compute
   q: On the cart with K = [23, 5], L = [37, 512], N̄ = 25 and a 0.2 m initial error in the position estimate, a 1 m step with u = −K x̂ compared with u = −Kx
   choices:
-    - is identical from t = 0, because of separation
-    - differs by about 7 cm around 0.3 s, then the two responses match and both settle at 1 m
-    - never settles, because the compensator is unstable
-    - overshoots about 35 %, like P control at K = 20
-  answer: 1
+    - "is identical from t = 0, because of separation"
+    - "never settles, because the compensator is unstable"
+    - "overshoots about 35 %, like P control at K = 20"
+    - "differs by about 7 cm around 0.3 s, then the two responses match and both settle at 1 m"
+  answer: 3
   why: "A simulation of that exact case shows a peak difference of about 0.07 m near t = 0.3 s; by about 1 s the difference is a centimetre or less. Separation says the poles are the designed ones; it does not say the transients are identical while the estimate is still catching up."
 - id: cs-81
   tags: [refin]
   kind: compute
   q: "With K = [23, 5] the cart's A − BK has characteristic polynomial s² + 8s + 25. What N̄ makes u = −Kx + N̄ r track a 1 m step (DC gain 1)?"
   choices:
-    - "N̄ = 8"
     - "N̄ = 25"
+    - "N̄ = 8"
     - "N̄ = 1/25"
     - "N̄ = 0, because state feedback already goes to the command"
-  answer: 1
+  answer: 0
   why: "The DC gain from the force to x is 1/25, so the DC gain from r to x is N̄/25. N̄ = 25 makes that gain 1. Plain u = −Kx is a regulator and drives the cart to 0, ignoring r."
 - id: cs-82
   tags: [refin]
   kind: recognize
   q: What is the difference between a regulator and a tracker in this chapter?
   choices:
-    - There is no difference once the poles are in the left half-plane
-    - A regulator (u = −Kx) drives the state to zero; a tracker (for example u = −Kx + N̄ r) follows a command
-    - A tracker uses output feedback; a regulator uses state feedback
-    - A regulator is always unstable; a tracker is always stable
+    - "There is no difference once the poles are in the left half-plane"
+    - "A regulator (u = −Kx) drives the state to zero; a tracker (for example u = −Kx + N̄ r) follows a command"
+    - "A tracker uses output feedback; a regulator uses state feedback"
+    - "A regulator is always unstable; a tracker is always stable"
   answer: 1
   why: "u = −Kx was designed to send every state to the origin. A command r has to enter somehow: the simplest is the reference gain N̄, and the notes also describe feeding y − r to the observer (M = −L, N = 0)."
 - id: cs-83
@@ -1473,8 +1473,8 @@
   q: The notes also allow a more general input of r into both the control law and the observer (gains N and M). Which choice makes the estimation error independent of r, so N̄ can be designed from the DC gain alone?
   choices:
     - "N = 0 and M = −L (feed y − r to the observer)"
+    - "M = 0 with N = N̄ (r enters the control law only)"
     - "M = BN (on the cart, M = B N̄)"
-    - "M = 0 and N = 0"
     - "N = K and M = L"
-  answer: 1
-  why: "With M = BN the r terms cancel in the error equation e' = (A − LC)e, so the observer does not 'see' the command. N̄ is then chosen so the DC gain from r to y is 1. The other listed choice, M = −L and N = 0, is the alternative of feeding the tracking error to the observer."
+  answer: 2
+  why: "With M = BN the r terms cancel in the error equation e' = (A − LC)e, so the observer does not 'see' the command. N̄ is then chosen so the DC gain from r to y is 1. The other listed choice, M = −L and N = 0, is the alternative of feeding the tracking error to the observer. r enters the error equation through (BN − M)r, so only M = BN cancels it while still letting r drive the plant."

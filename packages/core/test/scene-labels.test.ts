@@ -41,6 +41,10 @@ const DIAGRAM_SETS: [string, string[], Record<string, number> | undefined, strin
   ['cart', ['loop', 'poles'], { K: 7 }, 'pid'],
   ['cart', ['loop'], { K: 7 }, 'noise'],
   ['cart', ['loop', 'poles'], { K: 7 }, 'gain'],
+  ['cart', ['forces', 'sensor'], undefined, 'sfb'],
+  ['cart', ['forces', 'sensor'], undefined, 'observer'],
+  ['cart', ['forces', 'sensor'], undefined, 'sep'],
+  ['cart', ['forces', 'sensor'], undefined, 'refin'],
 ];
 
 describe('labels never collide (every panel, hero and phone widths, several moments)', () => {
