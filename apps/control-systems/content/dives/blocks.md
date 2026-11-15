@@ -1,6 +1,6 @@
 ---
 id: blocks
-order: 9
+order: 11
 title: "The loop: command path and disturbance path"
 category: loop
 chain:

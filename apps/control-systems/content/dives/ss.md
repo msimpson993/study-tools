@@ -1,10 +1,10 @@
 ---
 id: ss
-order: 13
+order: 5
 title: "State space: the cart as two states"
 category: state
 chain:
-  - title: "What if I also need the internal states, initial conditions, or several inputs and outputs?"
+  - title: "A transfer function only relates input to output, starting from rest. What if I also need the internal states, initial conditions, or several inputs and outputs?"
   - title: "Is there a description that tracks the inside too?"
   - title: "state space ẋ = Ax + Bu, y = Cx + Du"
     detail: "ẋ = Ax + Bu,  y = Cx + Du"

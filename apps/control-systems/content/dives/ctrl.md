@@ -1,6 +1,6 @@
 ---
 id: ctrl
-order: 10
+order: 12
 title: "What P, I and D each do"
 category: loop
 chain:

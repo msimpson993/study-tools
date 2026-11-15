@@ -1,16 +1,16 @@
 ---
 id: dominant
-order: 7
+order: 10
 title: "Which poles matter"
 category: time
 chain:
-  - title: "With more poles, which ones matter?"
+  - title: "Real plants have more than two poles. Which ones decide the response?"
   - title: "Which poles matter?"
   - title: "dominant poles"
     detail: "keep the slowest poles, match the DC gain"
 neighbors:
-  - first
   - second
+  - blocks
 exampleScene: {  overlays: [push, poles], diagram: poles, caption: "The pole at −1 is only twice as slow as the pole at −2, so neither can be dropped: both show in the step response."  }
 ---
 **Which poles matter?**

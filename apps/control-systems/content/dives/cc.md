@@ -4,14 +4,15 @@ order: 15
 title: "Controllability and observability"
 category: state
 chain:
-  - title: "Can we use the states, not just G(s)?"
+  - title: "Output feedback can only slide the poles along a fixed path. To place them anywhere we would have to act on the plant's internal states. When is that possible?"
   - title: "When can we place every pole, and when can we work out states we don't measure?"
   - title: "controllability, observability"
     detail: "rank Pc = n and rank Po = n"
 neighbors:
+  - fb
   - ss2tf
   - sf
-exampleScene: { overlays: [forces, sensor, phase], diagram: states, caption: "The state (x, ẋ) is the plane the force must be able to reach, and that a position sensor must be able to reconstruct." }
+exampleScene: { overlays: [forces, sensor, phase], diagram: states, caption: "The plant block opened up (from the state-space box): the state (x, ẋ) is the plane the force must be able to reach, and that a position sensor must be able to reconstruct." }
 addsToExample: "Cart: Pc=[[0,1],[1,−3]] (det −1) and Po=[[1,0],[0,1]] are both invertible, so the force can steer any position and velocity, and measuring position alone is enough to recover velocity."
 accountsFor: "Why a mode cancelled out of G(s) can be neither moved nor seen, and when the design steps that follow are possible at all."
 ---
@@ -21,6 +22,8 @@ accountsFor: "Why a mode cancelled out of G(s) can be neither moved nor seen, an
 
 ```figure:cc
 ```
+
+**Why now, and what it needs.** The feedback chapter ended on a limit: one gain on the output can only slide the poles along a fixed path. To place them anywhere we have to act on the plant's internal states, which is why this box uses the state-space model (the side branch off the model box: the matrices A, B and C, and G = C(sI − A)⁻¹B + D). The question here is whether that is possible at all.
 
 If the system is **controllable** and **observable**, the design steps that follow are possible: we can place every closed-loop pole, and we can reconstruct the states we do not measure. Both tests are rank tests on a matrix built from A, B and C.
 

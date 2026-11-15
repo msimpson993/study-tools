@@ -1,6 +1,6 @@
 ---
 id: first
-order: 6
+order: 8
 title: "The simplest plant: K/(τs + 1)"
 category: time
 chain:
@@ -10,7 +10,7 @@ chain:
     detail: "y(t) = K(1 − e^(−t/τ))"
 neighbors:
   - tf
-  - dominant
+  - second
 exampleScene: {  overlays: [push, trace], diagram: open, caption: "The −1 pole is the slow one: after the first half second the cart's step response looks first-order with τ ≈ 1 s."  }
 ---
 **How does the simplest plant respond?**

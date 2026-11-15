@@ -1,6 +1,6 @@
 ---
 id: ss2tf
-order: 14
+order: 6
 title: "From state space to the transfer function"
 category: state
 chain:

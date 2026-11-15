@@ -1,16 +1,16 @@
 ---
 id: second
-order: 8
+order: 9
 title: "What ζ and ωn say about two poles"
 category: time
 chain:
-  - title: "When two poles dominate, what sets the shape?"
+  - title: "One pole gives a plain exponential. With two poles, like the cart, can the response ring, and what sets how much?"
   - title: "What do ζ and ωₙ say about two poles?"
   - title: "second-order specs"
     detail: "%OS = 100·e^(−πζ/√(1 − ζ²))   Ts ≈ 4/(ζωₙ)"
 neighbors:
+  - first
   - dominant
-  - sse
 exampleScene: {  overlays: [critical, poles], diagram: poles, caption: "Tighten the damper to c = 2√2 (ζ = 1) and the two poles meet. Less damping would split them into a complex pair."  }
 ---
 **What do ζ and ωₙ say about two poles?**

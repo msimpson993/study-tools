@@ -1,6 +1,6 @@
 ---
 id: sse
-order: 11
+order: 13
 title: "Why P leaves an error and I removes it"
 category: loop
 chain:

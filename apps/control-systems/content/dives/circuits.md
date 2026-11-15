@@ -1,6 +1,6 @@
 ---
 id: circuits
-order: 5
+order: 7
 title: "Getting G(s) for real hardware: circuits and op-amps"
 category: describe
 chain:

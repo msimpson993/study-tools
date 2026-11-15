@@ -1,6 +1,6 @@
 ---
 id: fb
-order: 12
+order: 14
 title: "What feedback buys, and what it costs"
 category: loop
 chain:
