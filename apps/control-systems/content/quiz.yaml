@@ -1691,7 +1691,7 @@
     - "The disturbance error stays −T<sub>d</sub>/K<sub>p</sub> = −0.25, but the response is faster"
     - "The disturbance error becomes 0 and the loop is stable for every T<sub>i</sub> as long as K<sub>p</sub> is small"
   answer: 0
-  why: "Slides 67–68: C/D = s/(Js³ + Bs² + K<sub>p</sub>s + K<sub>p</sub>/T<sub>i</sub>), so the final-value theorem gives e<sub>ss</sub> = 0, and the loop is third order. The stability test for a cubic, a<sub>2</sub>a<sub>1</sub> &gt; a<sub>0</sub>a<sub>3</sub>, is added practice (not in the notes): BK<sub>p</sub> &gt; JK<sub>p</sub>/T<sub>i</sub>, so T<sub>i</sub> &gt; J/B = 0.5, whatever K<sub>p</sub> is. At T<sub>i</sub> = 0.5 the cubic is (s + 2)(s² + 4), so it rings forever; at 0.25 it is unstable."
+  why: "Slides 67–68: C/D = s/(Js³ + Bs² + K<sub>p</sub>s + K<sub>p</sub>/T<sub>i</sub>), so the final-value theorem gives e<sub>ss</sub> = 0, and the loop is third order. The stability test for a cubic, a<sub>2</sub>a<sub>1</sub> &gt; a<sub>0</sub>a<sub>3</sub>, is added practice (not in the notes): BK<sub>p</sub> &gt; JK<sub>p</sub>/T<sub>i</sub>, so T<sub>i</sub> &gt; J/B = 0.5, whatever K<sub>p</sub> is. At T<sub>i</sub> = 0.5 the cubic is (s + 2)(s² + 4), so it rings forever; at 0.25 it is unstable. (Slide 68 says PI \"may become unstable for a large K<sub>p</sub>\": for this exact model it is too much integral action, T<sub>i</sub> ≤ J/B, that destabilizes it; extra lags in a real loop would make a large K<sub>p</sub> hurt too.)"
 - id: me2-18
   tags: [mini-exam-2, ln1-carryover, second]
   kind: compute
