@@ -317,8 +317,9 @@ The plant is $G(s) = \dfrac{4}{2s + 1}$ ($K = 4$, $\tau = 2$ s) in a unity-feedb
 2. (b) $L = G_cG = \dfrac{(2s + 3)}{s}\cdot\dfrac{4}{2s + 1}$, so $1 + L = \dfrac{s(2s + 1) + 4(2s + 3)}{s(2s + 1)} = \dfrac{2s^2 + 9s + 12}{s(2s + 1)}$.
 3. Stability: $2s^2 + 9s + 12$ has all coefficients positive, so both poles are in the left half-plane (they are $-2.25 \pm j0.97$, with $\zeta \approx 0.92$). The final-value theorem is allowed.
 4. $E(s) = \dfrac1s\cdot\dfrac{s(2s + 1)}{2s^2 + 9s + 12} = \dfrac{2s + 1}{2s^2 + 9s + 12}$, so $e_{ss} = \lim_{s\to0} sE(s) = 0$.
+5. Overshoot: the closed loop is $T = \dfrac{L}{1 + L} = \dfrac{8s + 12}{2s^2 + 9s + 12}$, which has a **zero at $s = -1.5$** (from the PI controller). With $\zeta \approx 0.92$ the overshoot formula would predict almost nothing (0.07 %), but the simulated step response peaks at $1.098$ (about 9.8 % overshoot, at $t \approx 0.94$ s). The PI zero adds roughly 10 % overshoot, so $\%OS = 100e^{-\zeta\pi/\sqrt{1-\zeta^2}}$ holds only for a pure second-order system with no zeros.
 
-**Check:** the integrator in $G_c$ makes $L(0) \to \infty$, so $\dfrac{1}{1 + L(0)} = 0$. The price (slides 63 and 68) is that the first-order loop became second order, which can ring.
+**Check:** the integrator in $G_c$ makes $L(0) \to \infty$, so $\dfrac{1}{1 + L(0)} = 0$. The price (slides 63 and 68) is that the first-order loop became second order, which can ring, and the PI zero makes it overshoot more than its $\zeta$ suggests.
 
 </details>
 

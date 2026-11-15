@@ -94,3 +94,76 @@ describe('slides 62-72 formulas used in the quiz', () => {
     expect(Math.max(...ys.slice(-8000))).toBeGreaterThan(1.99);
   });
 });
+
+describe('carry-over problem 3(b) correction: the PI zero', () => {
+  // T = L/(1 + L) with L = 4(2s+3)/(s(2s+1)) is (8s + 12)/(2s^2 + 9s + 12): a zero at -1.5
+  const ys = stepResponse([8, 12], [2, 9, 12], 20, DT), z = 4.5 / (2 * Math.sqrt(6));
+  it('closed loop numerator 8s + 12 = 4(2s + 3): zero at -1.5; DC gain 12/12 = 1', () => {
+    // L/(1+L) = 4(2s+3) / (s(2s+1) + 4(2s+3)); expand the denominator
+    expect(2 * 1 * 1).toBe(2); expect(1 + 8).toBe(9); expect(4 * 3).toBe(12); // s(2s+1) + 8s + 12 = 2s^2 + 9s + 12
+    expect(-12 / 8).toBe(-1.5);
+  });
+  it('simulated overshoot is 9.8 % (peak 1.098 near 0.94 s) although the zeta = 0.92 formula predicts only 0.07 %', () => {
+    const pk = peak(ys); expect(pk.v).toBeCloseTo(1.098, 3); expect((pk.v - 1) * 100).toBeCloseTo(9.8, 1); expect(pk.t).toBeCloseTo(0.94, 2);
+    expect(os(z)).toBeLessThan(0.1); expect(os(z)).toBeCloseTo(0.067, 2);
+    // the same denominator with no zero (12/(2s^2 + 9s + 12)) really does barely overshoot
+    expect(peak(stepResponse([12], [2, 9, 12], 20, DT)).v).toBeLessThan(1.002);
+  });
+});
+
+describe('slides 58-59: rise-time and settling-time definitions', () => {
+  it('2 % criterion exp(-zeta wn Ts) < 0.02 gives zeta wn Ts = ln 50 = 3.91, rounded to 4', () => {
+    expect(Math.log(50)).toBeCloseTo(3.912, 3); expect(Math.exp(-4)).toBeLessThan(0.02); expect(Math.exp(-3.9)).toBeGreaterThan(0.02 - 0.0001);
+  });
+  it('underdamped 0-100 % rise time is the first crossing of the final value; for zeta = 0.5, wn = 3 it is 0.81 s (not the 10-90 % 0.56 s)', () => {
+    const ys = stepResponse([9], [1, 3, 9], 5, DT), t100 = ys.findIndex((v) => v >= 1) * DT;
+    const wd = 3 * Math.sqrt(0.75), beta = Math.acos(0.5); expect(t100).toBeCloseTo((Math.PI - beta) / wd, 3); expect(t100).toBeCloseTo(0.806, 2);
+  });
+});
+
+describe('slides 50-51: servo with P control', () => {
+  it('J = 0.5, B = 2, K = 8: wn = sqrt(K/J) = 4, zeta = B/(2 sqrt(JK)) = 0.5, sigma = zeta wn = 2 = B/(2J)', () => {
+    const J = 0.5, B = 2, K = 8, wn = Math.sqrt(K / J), z = B / (2 * Math.sqrt(J * K));
+    expect(wn).toBe(4); expect(z).toBe(0.5); expect(z * wn).toBe(2); expect(B / (2 * J)).toBe(2);
+    expect((peak(stepResponse([K / J], [1, B / J, K / J], 10, DT)).v - 1) * 100).toBeCloseTo(os(0.5), 1);
+  });
+});
+
+describe('slides 65-68, 71: torque disturbance on an inertia load, worked problem 4', () => {
+  const J = 1, B = 2;
+  // plant 1/(s(Js + B)), controller Kp(1 + 1/(Ti s)); C/D = s/(J s^3 + B s^2 + Kp s + Kp/Ti); P only: C/D = 1/(J s^2 + B s + Kp)
+  it('P only: output offset Td/Kp (0.25 for Kp = 4, 0.0625 for Kp = 16), and zeta falls from 0.5 to 0.25 (more oscillation)', () => {
+    for (const [Kp, off, zeta, osv] of [[4, 0.25, 0.5, 16.3], [16, 0.0625, 0.25, 44.4]] as const) {
+      const ys = stepResponse([1], [J, B, Kp], 20, DT);
+      expect(ys[ys.length - 1]).toBeCloseTo(off, 6); expect(B / (2 * Math.sqrt(J * Kp))).toBe(zeta);
+      expect((peak(ys).v / off - 1) * 100).toBeCloseTo(osv, 0);
+    }
+  });
+  it('PI, Kp = 4, Ti = 2: cubic s^3 + 2s^2 + 4s + 2, a2 a1 = 8 > a0 a3 = 2, disturbance error goes to 0', () => {
+    expect(2 * 4).toBeGreaterThan(2 * 1);
+    const ys = stepResponse([1, 0], [1, 2, 4, 2], 80, DT); expect(Math.abs(ys[ys.length - 1])).toBeLessThan(1e-6);
+  });
+  it('the cubic condition: B*Kp > J*Kp/Ti, i.e. Ti > J/B = 0.5, independent of Kp', () => {
+    const stable = (Kp: number, Ti: number) => B * Kp > J * (Kp / Ti);
+    for (const Kp of [1, 4, 100]) { expect(stable(Kp, 0.6)).toBe(true); expect(stable(Kp, 0.4)).toBe(false); }
+  });
+  it('Ti = 0.5 (Kp = 4): s^3 + 2s^2 + 4s + 8 = (s + 2)(s^2 + 4), poles -2, +-j2: marginal, rings forever', () => {
+    expect((s: number) => (s + 2) * (s * s + 4)).toBeTypeOf('function');
+    const p = (s: number) => (s + 2) * (s * s + 4), q = (s: number) => s ** 3 + 2 * s ** 2 + 4 * s + 8;
+    for (const s of [0, 1, -3, 2.5]) expect(p(s)).toBeCloseTo(q(s), 12);
+    const ys = stepResponse([1, 0], [1, 2, 4, 8], 60, DT); expect(Math.max(...ys.slice(-8000).map(Math.abs))).toBeGreaterThan(0.1);
+  });
+  it('Ti = 0.25 (Kp = 4): s^3 + 2s^2 + 4s + 16, a2 a1 = 8 < 16, unstable: the disturbance response grows', () => {
+    expect(2 * 4).toBeLessThan(16);
+    const ys = stepResponse([1, 0], [1, 2, 4, 16], 40, DT), early = Math.max(...ys.slice(0, 20000).map(Math.abs)), late = Math.max(...ys.slice(-20000).map(Math.abs));
+    expect(late).toBeGreaterThan(5 * early);
+  });
+  it('slide 71: PD = Kp(1 + Td s) = Kp + (Kp Td) s, so Kd = Kp Td; slide 72 ramp e_ss = B/Kp, zeta = (B + Kd)/(2 sqrt(Kp J))', () => {
+    const Kp = 4, Td = 0.25, Kd = Kp * Td; expect(Kd).toBe(1);
+    // ramp error of PD on 1/(s(Js+B)), simulated: T = (Kd s + Kp)/(J s^2 + (B + Kd) s + Kp); e(t) = t - integral of the step response
+    const Jj = 1, Bb = 1, ys = stepResponse([Kd, Kp], [Jj, Bb + Kd, Kp], 40, DT);
+    let ramp = 0; for (let i = 1; i < ys.length; i++) ramp += (ys[i] + ys[i - 1]) / 2 * DT;
+    expect(40 - ramp).toBeCloseTo(Bb / Kp, 3); expect(Bb / Kp).toBe(0.25);
+    for (const z of [0.4, 0.7]) expect((Bb + (2 * z * Math.sqrt(Kp * Jj) - Bb)) / (2 * Math.sqrt(Kp * Jj))).toBeCloseTo(z, 12);
+  });
+});
