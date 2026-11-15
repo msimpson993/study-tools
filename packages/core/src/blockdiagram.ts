@@ -4,7 +4,7 @@
  * places the strip and supplies live signal values. Content picks a stage with
  * `exampleScene.diagram` (see docs/example-scenes.md).
  */
-export const DIAGRAM_STAGES = ['open', 'states', 'loop', 'disturb', 'pid', 'noise', 'gain', 'sfb', 'observer', 'sep', 'refin'] as const;
+export const DIAGRAM_STAGES = ['ode', 'open', 'poles', 'states', 'loop', 'error', 'disturb', 'pid', 'noise', 'gain', 'sfb', 'observer', 'sep', 'refin'] as const;
 export type DiagramStage = typeof DIAGRAM_STAGES[number];
 export type DiagramSpec = DiagramStage | DiagramStage[];
 
@@ -16,6 +16,9 @@ export type DiagramPart =
   | 'observer' | 'L' | 'xhat' | 'Nbar';
 
 const BASE: Record<DiagramStage, DiagramPart[]> = {
+  ode: ['u', 'G', 'y'],
+  poles: ['u', 'G', 'y'],
+  error: ['r', 'sum', 'e', 'C', 'u', 'G', 'y', 'fb'],
   open: ['u', 'G', 'y'],
   states: ['u', 'G', 'y', 'x', 'xdot'],
   loop: ['r', 'sum', 'e', 'C', 'u', 'G', 'y', 'fb'],
@@ -31,6 +34,9 @@ const BASE: Record<DiagramStage, DiagramPart[]> = {
 
 /** Parts that first appear at this stage (highlighted, with a small "new" tag). */
 const NEW: Record<DiagramStage, DiagramPart[]> = {
+  ode: ['G'],
+  poles: ['G'],
+  error: ['e'],
   open: ['G'],
   states: ['x', 'xdot'],
   loop: ['r', 'sum', 'e', 'C', 'fb'],
@@ -71,7 +77,7 @@ export const newPartsOf = (stage: DiagramStage): DiagramPart[] => NEW[stage].sli
 
 /** Height of one stage's drawing (px). */
 export function diagramStageHeight(stage: DiagramStage, w: number): number {
-  if (stage === 'open' || stage === 'states') return w < 340 ? 70 : 66;
+  if (stage === 'open' || stage === 'states' || stage === 'ode' || stage === 'poles') return w < 340 ? 70 : 66;
   if (stage === 'pid') return w < 400 ? 128 : 120;
   if (stage === 'disturb') return w < 400 ? 124 : 116;
   if (stage === 'observer' || stage === 'sep' || stage === 'refin') return w < 400 ? 136 : 128;
@@ -130,6 +136,9 @@ const fmt = (v: number, d = 2) => {
 };
 
 const STAGE_TITLE: Record<DiagramStage, string> = {
+  ode: 'the model as an ODE',
+  poles: 'the poles of G(s)',
+  error: 'the error e that is left',
   open: 'open loop',
   states: 'plant with states',
   loop: 'closed loop',
@@ -241,13 +250,21 @@ const col = (P: DiagramPalette, stage: DiagramStage, p: DiagramPart, fallback: s
 
 function plantBox(g: G, x: number, y: number, w: number, h: number, P: DiagramPalette, stage: DiagramStage) {
   const high = hl(stage, 'G');
+  const tall = stage === 'states' || stage === 'poles';
   box(g, x, y, w, h, P, high);
-  text(g, 'G(s)', x + w / 2, y + (stage === 'states' ? 15 : 16), P.text, { align: 'center', px: 11, wt: 800 });
-  text(g, G_EQ, x + w / 2, y + (stage === 'states' ? 28 : 29), P.muted, { align: 'center', px: w >= 140 ? 9.5 : 8.5, wt: 600 });
+  const px = w >= 140 ? 9.5 : 8.5;
+  if (stage === 'ode') {
+    text(g, 'plant: Newton\'s law', x + w / 2, y + 16, P.text, { align: 'center', px: 10.5, wt: 800 });
+    text(g, 'ẍ + 3ẋ + 2x = u', x + w / 2, y + 30, P.muted, { align: 'center', px: w >= 140 ? 10 : 9, wt: 700 });
+  } else {
+    text(g, 'G(s)', x + w / 2, y + (tall ? 15 : 16), P.text, { align: 'center', px: 11, wt: 800 });
+    text(g, stage === 'poles' ? '1/((s + 1)(s + 2))' : G_EQ, x + w / 2, y + (tall ? 28 : 29), P.muted, { align: 'center', px, wt: 600 });
+  }
   if (stage === 'states') {
     text(g, 'states x, ẋ', x + w / 2, y + h - 7, col(P, stage, 'x', P.s0), { align: 'center', px: 10, wt: 700 });
     if (hl(stage, 'x')) tag(g, x + 4, y + h - 14, P);
   }
+  if (stage === 'poles') text(g, 'poles −1, −2', x + w / 2, y + h - 7, hl(stage, 'G') ? P.accent : P.s0, { align: 'center', px: 10, wt: 700 });
   if (high) tag(g, x + w - 24, y + 2, P);
 }
 
@@ -275,7 +292,7 @@ export function drawBlockDiagram(
   g.strokeRect(rect.x + 0.5, rect.y + 0.5, rect.w - 1, rect.h - 1);
   begin(rect);
   title(g, rect, stage, P);
-  if (stage === 'open' || stage === 'states') drawOpen(g, rect, stage, P, sig);
+  if (stage === 'open' || stage === 'states' || stage === 'ode' || stage === 'poles') drawOpen(g, rect, stage, P, sig);
   else if (stage === 'pid') drawPid(g, rect, P, sig);
   else if (stage === 'sfb' || stage === 'observer' || stage === 'sep' || stage === 'refin') drawSfb(g, rect, stage, P, sig);
   else drawLoop(g, rect, stage, P, sig);
@@ -290,7 +307,7 @@ function drawOpen(g: G, r: Rect, stage: DiagramStage, P: DiagramPalette, sig: Di
   text(g, uTxt, left, mid - 8, uCol, { px: 10, wt: 700 });
   // reserve a consistent plant width so the arrows stay readable at 390 px
   const uW = 56, yW = 56;
-  const bx = left + uW, bw = Math.max(120, right - yW - bx), by = mid - (stage === 'states' ? 24 : 20), bh = stage === 'states' ? 48 : 40;
+  const bx = left + uW, bw = Math.max(120, right - yW - bx), by = mid - (stage === 'states' || stage === 'poles' ? 24 : 20), bh = stage === 'states' || stage === 'poles' ? 48 : 40;
   arrow(g, left + 28, mid, bx, mid, uCol);
   plantBox(g, bx, by, bw, bh, P, stage);
   arrow(g, bx + bw, mid, right - 28, mid, yCol);
@@ -328,6 +345,7 @@ function drawLoop(g: G, r: Rect, stage: DiagramStage, P: DiagramPalette, sig: Di
 
   arrow(g, xSum + sumR, mid, xC, mid, eCol);
   text(g, 'e', (xSum + sumR + xC) / 2, mid - 5, eCol, { align: 'center', px: 9, wt: 700, optional: true });
+  if (hl(stage, 'e')) { arrow(g, xSum + sumR, mid, xC, mid, P.accent, 2.4); tag(g, xSum + sumR - 2, mid + 7, P); }
 
   const cHigh = hl(stage, 'C') || hl(stage, 'K');
   const cLab = stage === 'gain' ? (sig.K !== undefined ? `C: K = ${fmt(sig.K, sig.K % 1 ? 1 : 0)}` : 'C: u = K·e') : 'C';

@@ -153,9 +153,12 @@
                         {
                           "type": "string",
                           "enum": [
+                            "ode",
                             "open",
+                            "poles",
                             "states",
                             "loop",
+                            "error",
                             "disturb",
                             "pid",
                             "noise",
@@ -172,9 +175,12 @@
                           "items": {
                             "type": "string",
                             "enum": [
+                              "ode",
                               "open",
+                              "poles",
                               "states",
                               "loop",
+                              "error",
                               "disturb",
                               "pid",
                               "noise",

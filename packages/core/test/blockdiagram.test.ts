@@ -9,7 +9,7 @@ import { sceneProblems } from '../src/scenedefs';
 
 describe('block-diagram catalogue', () => {
   it('every stage has parts, and new parts are a subset of them', () => {
-    expect(DIAGRAM_STAGES.length).toBe(11);
+    expect(DIAGRAM_STAGES.length).toBe(14);
     for (const s of DIAGRAM_STAGES) {
       expect(isDiagramStage(s)).toBe(true);
       const parts = partsOf(s), added = newPartsOf(s);
@@ -19,6 +19,8 @@ describe('block-diagram catalogue', () => {
     }
   });
   it('open is just the plant; later stages keep G and add the loop around it', () => {
+    for (const s of ['ode', 'poles'] as const) expect(partsOf(s)).toEqual(['u', 'G', 'y']);
+    expect(newPartsOf('error')).toEqual(['e']);
     expect(partsOf('open')).toEqual(['u', 'G', 'y']);
     expect(newPartsOf('open')).toEqual(['G']);
     expect(partsOf('states')).toEqual(expect.arrayContaining(['x', 'xdot', 'G']));

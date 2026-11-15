@@ -668,6 +668,9 @@ export interface SceneHandle { el: HTMLElement; canvas: HTMLCanvasElement; setOv
 declare global { interface Window { __sceneFreeze?: number } }
 
 const DIAGRAM_SAYS: Record<string, string> = {
+  ode: 'The plant block holds the cart\'s model as an ordinary differential equation, ẍ + 3ẋ + 2x = u.',
+  poles: 'The plant block shows G(s) factored, 1/((s + 1)(s + 2)), with its poles at −1 and −2.',
+  error: 'The closed loop again, with the error e = r − y on the line into the controller highlighted: it is what a proportional controller needs to keep pushing.',
   open: 'Open-loop block diagram: input u into the plant G(s) = 1/(s² + 3s + 2), output y.',
   states: 'The plant block is labelled with its states x and ẋ.',
   loop: 'Closed-loop block diagram: command r, summing junction, controller C, plant G, and the sensor feeding y back.',

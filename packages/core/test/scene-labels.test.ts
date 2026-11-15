@@ -36,6 +36,10 @@ const SETS: [string, string[], Record<string, number>?][] = [
 const DIAGRAM_SETS: [string, string[], Record<string, number> | undefined, string | string[]][] = [
   ['cart', ['forces', 'push'], undefined, 'open'],
   ['cart', ['forces', 'sensor', 'phase'], undefined, 'states'],
+  ['cart', ['forces', 'push'], undefined, 'ode'],
+  ['cart', ['push', 'poles'], undefined, 'poles'],
+  ['cart', ['loop'], { K: 7 }, 'error'],
+  ['cart', ['forces', 'push'], undefined, ['ode', 'open']],
   ['cart', ['loop'], { K: 7 }, 'loop'],
   ['cart', ['disturb'], { K: 7, d: -2, td: 4 }, ['loop', 'disturb']],
   ['cart', ['loop', 'poles'], { K: 7 }, 'pid'],
