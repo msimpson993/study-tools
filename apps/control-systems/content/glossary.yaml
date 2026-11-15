@@ -41,7 +41,7 @@
   meaning: Loop gain <i>G</i><sub>c</sub><i>G</i>(<i>H</i>). Large |<i>L</i>| ⇒ small <i>S</i>.
   section: Transfer functions & loop
 - term: T(s)
-  meaning: Closed-loop transfer function <i>Y</i>/<i>R</i> = <i>L</i>/(1+<i>L</i>) for unity feedback. (In Stage 9, <i>T</i> is the time constant.)
+  meaning: Closed-loop transfer function <i>Y</i>/<i>R</i> = <i>L</i>/(1+<i>L</i>) for unity feedback. (<i>T</i> is also used for the time constant of a first-order response.)
   section: Transfer functions & loop
 - term: K
   meaning: "A gain. First order: DC gain of <i>K</i>/(<i>Ts</i>+1). Boring machine: controller gain in <i>K</i> + 11<i>s</i>."
@@ -226,3 +226,33 @@
 - term: reference gain
   meaning: N̄ in u = −Kx + N̄ r, chosen so the DC gain from r to y is 1. For the cart with K = [23, 5], N̄ = 25. The notes also write a more general (M, N) structure, or feed y − r to the observer.
   section: State feedback
+- term: pole, zero
+  meaning: "A pole is a root of G's denominator (G → ∞): a built-in motion e^(pt) the plant makes on its own. A zero is a root of the numerator (G = 0): an input shape the plant blocks. Drawn × and ○ on the s-plane."
+  section: Transfer functions & loop
+- term: stable / unstable
+  meaning: "Stable = every pole in the left half-plane (Re p < 0), so every free motion dies out. A pole in the right half-plane grows without bound, however small the input. On the jω axis the motion never dies (borderline)."
+  section: Transfer functions & loop
+- term: LTI
+  meaning: "Linear time-invariant. Linear = superposition holds (no saturation or dead zones); time-invariant = the parameters (m, c, k, R, L, C) don't drift. Transfer functions are defined for LTI plants."
+  section: Transfer functions & loop
+- term: DC gain
+  meaning: "G(0): the steady output per unit steady input. For the cart, a 1 N push settles at 0.5 m."
+  section: Time response
+- term: order
+  meaning: "Highest power of s in the denominator of G, equal to the number of independent energy stores and the number of poles (and of states)."
+  section: Transfer functions & loop
+- term: open loop, closed loop
+  meaning: "Open loop applies an input and hopes. Closed loop measures the output, compares it with the command and acts on the error, so it can notice disturbances and plant changes."
+  section: Transfer functions & loop
+- term: state
+  meaning: "The smallest set of numbers you must remember to predict the future of the plant when you know the input (cart: position and velocity). One state per independent energy store."
+  section: State space
+- term: eigenvalue
+  meaning: "A number λ with det(λI − A) = 0. The eigenvalues of A are the poles of G(s) (unless cancelled): the same two numbers −1 and −2 for the cart."
+  section: State space
+- term: root locus
+  meaning: "The paths the closed-loop poles follow as one loop gain K grows from 0. They start at the open-loop poles and end at the zeros (or infinity). With output feedback the poles can only sit on this path; state feedback can place them anywhere."
+  section: Feedback (LN2)
+- term: dominant pole
+  meaning: "The pole closest to the jω axis: it decays slowest, so it shapes the response once the faster modes have died out. A pole about 5× farther left can usually be dropped, provided the DC gain is kept."
+  section: Time response
