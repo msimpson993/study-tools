@@ -8,6 +8,7 @@ import { mountConceptMap, newMapState, type MapState } from './conceptmap';
 import { mountQuiz } from './quiz';
 import type { QuizFigureRegistry } from './quizfig';
 import { ControlSet } from './controls';
+import { createFullscreen, replaceUrl } from './fullscreen';
 import { setRefContent, pickFromHash, mapHashFor, isMapHash, copyRefButton, diveReference } from './copyref';
 
 export interface BoardHandle { destroy?(): void; show?(params: URLSearchParams): void; hide?(): void }
@@ -48,12 +49,27 @@ export function mountApp(content: AppContent, hooks: AppHooks = {}): void {
   let onBoard = false, boardSb = false;
   const applySb = () => { const open = onBoard ? boardSb : sbOpen; sidebar.hidden = !open; frame.classList.toggle('nosb', !open); if (!onBoard) storeSet('study-tools:sidebar', sbOpen); };
   const hub = '../index.html';
+  // full-screen toggle (hidden where the browser has no element full screen, e.g. iPhone Safari)
+  const fs = createFullscreen();
+  const FS_ICON_IN = '<svg viewBox="0 0 16 16" width="16" height="16" aria-hidden="true" focusable="false"><path d="M1.5 6V1.5H6M10 1.5h4.5V6M14.5 10v4.5H10M6 14.5H1.5V10" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+  const FS_ICON_OUT = '<svg viewBox="0 0 16 16" width="16" height="16" aria-hidden="true" focusable="false"><path d="M6 1.5V6H1.5M14.5 6H10V1.5M10 14.5V10h4.5M1.5 10H6v4.5" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+  const fsBtn = h('button', { class: 'tbtn icon', type: 'button', dataset: { testid: 'fullscreen-toggle' }, 'aria-pressed': 'false', 'aria-label': 'Enter full screen', title: 'Full screen (swipe back to leave)', hidden: !fs.supported, onclick: () => { void fs.toggle(); } });
+  const paintFs = (full: boolean) => {
+    fsBtn.innerHTML = full ? FS_ICON_OUT : FS_ICON_IN;
+    fsBtn.classList.toggle('on', full);
+    fsBtn.setAttribute('aria-pressed', String(full));
+    fsBtn.setAttribute('aria-label', full ? 'Exit full screen' : 'Enter full screen');
+    fsBtn.title = full ? 'Exit full screen (or swipe back)' : 'Full screen (swipe back to leave)';
+  };
+  paintFs(fs.isFull());
+  fs.onChange(paintFs);
   const topbar = h('header', { class: 'topbar ui' }, h('div', { class: 'in' },
     h('button', { class: 'tbtn', 'aria-label': 'Toggle sidebar', title: 'Toggle sidebar', dataset: { testid: 'sidebar-toggle' }, onclick: () => { if (onBoard) boardSb = !boardSb; else sbOpen = !sbOpen; applySb(); } }, '☰'),
     h('span', { class: 'ttl' }, subj.title),
     h('span', { class: 'q' }, subj.centralQuestion),
     content.glossary.length ? h('button', { class: 'tbtn', dataset: { testid: 'glossary-btn' }, onclick: () => { glossary.hidden = !glossary.hidden; } }, 'Variables') : null,
     h('a', { class: 'tbtn', href: hub, title: 'All study pages' }, 'Hub'),
+    fsBtn,
     h('button', { class: 'tbtn', dataset: { testid: 'theme-toggle' }, 'aria-label': 'Toggle light/dark theme', onclick: () => { toggleTheme(); themeBtn.textContent = currentTheme() === 'dark' ? '☾' : '☀'; } }, '☾')));
   const themeBtn = topbar.querySelector('[data-testid=theme-toggle]') as HTMLButtonElement;
   themeBtn.textContent = currentTheme() === 'dark' ? '☾' : '☀';
@@ -89,7 +105,7 @@ export function mountApp(content: AppContent, hooks: AppHooks = {}): void {
       if (!isMapHash(location.hash || '#/')) return;
       const want = mapHashFor(mapState.pick);
       const cur = location.hash || '#/';
-      if (cur !== want && cur !== want.replace(/^#/, '')) history.replaceState(null, '', want);
+      if (cur !== want && cur !== want.replace(/^#/, '')) replaceUrl(want);
     },
   };
 
@@ -293,7 +309,7 @@ export function mountApp(content: AppContent, hooks: AppHooks = {}): void {
     const stop = mounter(main, def, controls);
     if (q.toString()) controls.restore(q.toString());
     // keep the URL in sync so a setup is shareable
-    controls.onChange(() => { const s = controls.serialize(); history.replaceState(null, '', `#/figure/${id}${s ? `?${s}` : ''}`); });
+    controls.onChange(() => { const s = controls.serialize(); replaceUrl(`#/figure/${id}${s ? `?${s}` : ''}`); });
     cleanup = typeof stop === 'function' ? stop : null;
     if (def.presets.length) main.append(h('div', { class: 'prose' }, ...def.presets.filter((p) => p.about).map((p) => h('details', { class: 'fold' }, h('summary', null, `About: ${p.label}`), h('div', { html: `<p>${p.about}</p>` })))));
   }

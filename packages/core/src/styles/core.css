@@ -19,6 +19,10 @@ button{color:var(--text)}
 .tbtn:hover,.tbtn:focus-visible{border-color:var(--accent)}
 .tbtn.on{background:var(--accent);border-color:var(--accent);color:var(--on-accent)}
 .tbtn[disabled]{opacity:.45;cursor:not-allowed}
+.tbtn.icon{display:inline-flex;align-items:center;justify-content:center;padding:.3rem .45rem;line-height:0}
+.tbtn.icon[hidden]{display:none}
+:root:fullscreen{background:var(--bg)}
+:root:-webkit-full-screen{background:var(--bg)}
 .frame{max-width:1600px;margin:0 auto;display:grid;grid-template-columns:210px minmax(0,1fr);gap:0}
 .frame.nosb{grid-template-columns:minmax(0,1fr)}
 .sidebar{position:sticky;top:44px;align-self:start;height:calc(100vh - 44px);overflow:auto;padding:.7rem .6rem;border-right:1px solid var(--border);font:.84rem system-ui,sans-serif}
