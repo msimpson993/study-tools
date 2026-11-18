@@ -28,7 +28,9 @@ y = T{u}
 
 ### The tests: additivity, homogeneity, time invariance
 
-$$\text{Additivity: } T\{u_1+u_2\}=T\{u_1\}+T\{u_2\}\qquad \text{Homogeneity: } T\{a\,u\}=a\,T\{u\}$$
+$$\text{Additivity: } T\{u_1+u_2\}=T\{u_1\}+T\{u_2\}$$
+
+$$\text{Homogeneity: } T\{a\,u\}=a\,T\{u\}$$
 
 A system that passes both is **linear**; the two together say $T\{a u_1 + b u_2\} = a\,T\{u_1\} + b\,T\{u_2\}$. A separate property, **time invariance**, says that delaying the input only delays the output: if $y = T\{u\}$ then $T\{u(t-\tau)\} = y(t-\tau)$ for every delay τ. Linear and time-invariant together is **LTI**.
 
@@ -43,12 +45,13 @@ Non-examples, and one example:
 
 **Picture it first.** Run the three tests on the earbud and five other systems. At a quiet drive the earbud's two curves lie on top of each other; turn the drive up and the cone runs into its limit.
 
-```figure:lintest
-```
-
 ```callout:predict Before you move the slider
 Play the earbud quietly, then 10 times louder. Does the diaphragm move exactly 10 times as far both times?
 ```
+
+```figure:lintest
+```
+
 
 ### Why we care
 
