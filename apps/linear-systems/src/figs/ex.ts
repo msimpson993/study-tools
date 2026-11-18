@@ -179,3 +179,46 @@ export function simHouse(A: M2, B: V2, u: (t: number) => number, x0: V2, T: numb
 export const thermostatA = (kp: number): M2 => { const A = houseA(); return [[A[0][0] - HB * kp, A[0][1]], [A[1][0], A[1][1]]]; };
 /** The gain below which the loop is unstable: det(A − BkpC) = 0 ⇒ kp = (1/1.2 − 1.2)/3.6. */
 export const KP_UNSTABLE = (1 / 1.2 - 1.2) / HB;
+
+/* ── lintest: which systems pass the linearity and time-invariance tests (t in ms) ── */
+export type Tone = { A: number; f: number; ph: number }; // A·cos(2π f t + ph), f in kHz
+export type Sig = Tone[];
+export const sigAt = (u: Sig, t: number) => u.reduce((s, k) => s + k.A * Math.cos(TAU * k.f * t + k.ph), 0);
+export const sigAdd = (a: Sig, b: Sig): Sig => [...a, ...b];
+export const sigScale = (u: Sig, k: number): Sig => u.map((x) => ({ ...x, A: x.A * k }));
+export const sigDelay = (u: Sig, tau: number): Sig => u.map((x) => ({ ...x, ph: x.ph - TAU * x.f * tau }));
+/** Illustrative excursion limit for the earbud (not a datasheet value): soft clip x = Xmax·tanh(x_lin/Xmax). */
+export const XMAX_UM = 100;
+export const LT_MIX_KHZ = 1, LT_DELAY_MS = 0.5, LT_SHIFT_MS = 0.3;
+export type LtSys = 'spk' | 'square' | 'offset' | 'mixer' | 'scale' | 'delay';
+/** y = T{u}: returns y(t). spk = steady-state cone motion 42.8·H(f) µm/V per tone, then the soft limit. */
+export function ltSystem(sys: LtSys, u: Sig): (t: number) => number {
+  switch (sys) {
+    case 'spk': {
+      const lin = u.map((k) => { const H = Hf(k.f * 1000); return { A: k.A * UM_PER_V * cabs(H), f: k.f, ph: k.ph + Math.atan2(H[1], H[0]) }; });
+      return (t) => XMAX_UM * Math.tanh(sigAt(lin, t) / XMAX_UM);
+    }
+    case 'square': return (t) => sigAt(u, t) ** 2;
+    case 'offset': return (t) => 2 * sigAt(u, t) + 1;
+    case 'mixer': return (t) => sigAt(u, t) * Math.cos(TAU * LT_MIX_KHZ * t);
+    case 'scale': return (t) => sigAt(u, 2 * t);
+    case 'delay': return (t) => sigAt(u, t - LT_DELAY_MS);
+  }
+}
+/** The two test inputs: a 200 Hz tone and a 0.6× 690 Hz tone, both scaled by the drive a (V). */
+export const ltInputs = (a: number): [Sig, Sig] => [[{ A: a, f: 0.2, ph: 0 }], [{ A: 0.6 * a, f: 0.69, ph: 0 }]];
+export type LtTest = 'add' | 'hom' | 'shift';
+/** lhs = T{combined input}, rhs = the same combination of responses. Error = rms(lhs − rhs)/max rms, on 0–10 ms. */
+export function ltCompare(sys: LtSys, test: LtTest, a: number, T = 10, n = 801) {
+  const [u1, u2] = ltInputs(a);
+  let lhs: (t: number) => number, rhs: (t: number) => number;
+  if (test === 'add') { const y1 = ltSystem(sys, u1), y2 = ltSystem(sys, u2); lhs = ltSystem(sys, sigAdd(u1, u2)); rhs = (t) => y1(t) + y2(t); }
+  else if (test === 'hom') { const y = ltSystem(sys, u1); lhs = ltSystem(sys, sigScale(u1, 2)); rhs = (t) => 2 * y(t); }
+  else { const y = ltSystem(sys, u1); lhs = ltSystem(sys, sigDelay(u1, LT_SHIFT_MS)); rhs = (t) => y(t - LT_SHIFT_MS); }
+  let e = 0, l = 0, r = 0;
+  for (let i = 0; i < n; i++) { const t = (T * i) / (n - 1), L = lhs(t), R = rhs(t); e += (L - R) ** 2; l += L * L; r += R * R; }
+  const err = Math.sqrt(e / Math.max(l, r, 1e-300));
+  return { lhs, rhs, err, pass: err < 0.01 };
+}
+/** Peak |T{a·u1}| over one 200 Hz period: a straight line through 0 against a is what homogeneity needs. */
+export function ltPeak(sys: LtSys, a: number, n = 400) { const y = ltSystem(sys, ltInputs(a)[0]); let m = 0; for (let i = 0; i < n; i++) m = Math.max(m, Math.abs(y((5 * i) / n))); return m; }

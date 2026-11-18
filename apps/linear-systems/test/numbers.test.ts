@@ -437,3 +437,19 @@ describe('tutor round 2 (TF/DTFT/DFT peaks and decay)', () => {
     const s = ex.spk(); expect(8 / s.sigma).toBeCloseTo(6.32, 1); expect((Math.log(100) / s.sigma) * 8).toBeCloseTo(29.1, 0); expect(Math.log(100) / s.sigma).toBeLessThan(4);
   });
 });
+
+describe('lintest figure model: which systems pass the linearity and time-invariance tests', () => {
+  const r = (s: ex.LtSys, t: ex.LtTest, a: number) => ex.ltCompare(s, t, a);
+  it('earbud: linear at 0.2 V, clips at 1–2 V, always time-invariant', () => {
+    expect(r('spk', 'add', 0.2).err).toBeCloseTo(0.0052, 3); expect(r('spk', 'hom', 0.2).err).toBeCloseTo(0.0066, 3);
+    expect(r('spk', 'add', 1).err).toBeCloseTo(0.103, 2); expect(r('spk', 'hom', 1).err).toBeCloseTo(0.126, 2); expect(r('spk', 'hom', 2).err).toBeCloseTo(0.293, 2);
+    for (const a of [0.2, 1, 5]) expect(r('spk', 'shift', a).pass).toBe(true);
+    expect(ex.ltPeak('spk', 0.2)).toBeCloseTo(0.2 * ex.UM_PER_V * ex.cabs(ex.Hf(200)), 0); expect(ex.ltPeak('spk', 5)).toBeLessThan(ex.XMAX_UM);
+  });
+  it('square and offset fail both linearity tests; mixer and u(2t) are linear but time-varying; a delay is LTI', () => {
+    for (const s of ['square', 'offset'] as const) { expect(r(s, 'add', 1).pass).toBe(false); expect(r(s, 'hom', 1).pass).toBe(false); expect(r(s, 'shift', 1).pass).toBe(true); }
+    for (const s of ['mixer', 'scale'] as const) { expect(r(s, 'add', 1).pass).toBe(true); expect(r(s, 'hom', 1).pass).toBe(true); expect(r(s, 'shift', 1).pass).toBe(false); }
+    for (const t of ['add', 'hom', 'shift'] as const) expect(r('delay', t, 1).pass).toBe(true);
+    expect(ex.ltPeak('offset', 1)).toBeCloseTo(3, 6); expect(ex.ltPeak('square', 2)).toBeCloseTo(4, 6);
+  });
+});

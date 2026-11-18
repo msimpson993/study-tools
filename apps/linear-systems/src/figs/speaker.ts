@@ -1,6 +1,6 @@
 /** Live figures on the earbud speaker: time in ms, s in 1/ms (= krad/s), frequency in Hz. H(s) = X/V normalised to 1 at DC. */
 import { figureOf, planeFrame, spanLine, arrow, dot, cross, polyline, text, tline, axes2, wipe, curve, fillBetween, heat, clipBox, col, linspace, type V2 } from '@study/core';
-import { spk, hImp, hTerms, residue, Hs, Hf, cabs, dB, peakBand, ringDigital, ringSample, ringDTFT, ringDFT, humDFT, aliasOf, squareCoef, squarePowerShare, UM_PER_V, DAMP_CRIT, TAU } from './ex';
+import { spk, hImp, hTerms, residue, Hs, Hf, cabs, dB, peakBand, ringDigital, ringSample, ringDTFT, ringDFT, humDFT, aliasOf, squareCoef, squarePowerShare, UM_PER_V, DAMP_CRIT, TAU, ltCompare, ltPeak, XMAX_UM, type LtSys, type LtTest } from './ex';
 import { num, fmt, graph, note } from './util';
 
 const stems = (g: CanvasRenderingContext2D, f: ReturnType<typeof graph>, xs: number[], ys: number[], color: string, base = 0, r = 3) => xs.forEach((x, i) => { tline(g, f, [x, base], [x, ys[i]], color, 1.5); dot(g, f, [x, ys[i]], color, r); });
@@ -417,3 +417,39 @@ export const ssFigure = figureOf((c) => {
 });
 /** Snap the damping factor onto critical when the slider is within a step of it, so the repeated-pole case is exact. */
 const snapD = (d: number) => (Math.abs(d - DAMP_CRIT) < 0.006 ? DAMP_CRIT : d);
+
+/* ───────────── lintest: does the system pass additivity, homogeneity, time invariance? ───────────── */
+const LT_NAME: Record<string, string> = { spk: 'earbud (soft limit ±100 µm)', square: 'y = u²', offset: 'y = 2u + 1', mixer: 'y = u·cos(2π·1 kHz·t)', scale: 'y(t) = u(2t)', delay: 'y(t) = u(t − 0.5 ms)' };
+const LT_TEST: Record<string, [string, string]> = { add: ['T{u₁ + u₂}', 'T{u₁} + T{u₂}'], hom: ['T{2u₁}', '2·T{u₁}'], shift: ['T{u₁(t − 0.3 ms)}', 'y₁(t − 0.3 ms)'] };
+export const lintestFigure = figureOf((c) => {
+  const sys = () => String(c.values.sys) as LtSys, test = () => String(c.values.test) as LtTest, unit = () => (sys() === 'spk' ? 'µm' : 'V');
+  return [
+    {
+      id: 'test', title: 'The test: system of the combined input vs the combination of responses', x: 'time t (ms)', y: 'output',
+      draw(g, w, h) {
+        wipe(g, w, h);
+        const a = num(c.values, 'a'), r = ltCompare(sys(), test(), a), ts = linspace(0, 10, 401), L = ts.map(r.lhs), R = ts.map(r.rhs);
+        const m = Math.max(1e-9, ...L.map(Math.abs), ...R.map(Math.abs)), lo = Math.min(0, ...L, ...R) < 0 ? -1.1 * m : -0.08 * m;
+        const f = graph(g, w, h, [0, 10], [lo, 1.75 * m], 'time t (ms)', `output (${unit()})`, 2);
+        if (sys() === 'spk') { tline(g, f, [0, XMAX_UM], [10, XMAX_UM], col.muted(), 1, [2, 4]); tline(g, f, [0, -XMAX_UM], [10, -XMAX_UM], col.muted(), 1, [2, 4]); }
+        curve(g, f, ts, L, col.c(), 2.6); curve(g, f, ts, R, col.e(), 2, [6, 4]);
+        const [l1, l2] = LT_TEST[test()];
+        note(g, `${l1} (solid)  vs  ${l2} (dashed)`, f.box.l + 6, f.box.t + 10, col.text(), 'left', 11);
+        note(g, `${LT_NAME[sys()]}: mismatch ${fmt(r.err * 100, r.err < 0.1 ? 2 : 0)}%  ${r.pass ? 'PASS' : 'FAIL'}`, f.box.l + 6, f.box.t + 26, r.pass ? col.ok() : col.bad(), 'left', 11);
+      },
+    },
+    {
+      id: 'peak', title: 'Output peak against drive: homogeneity needs a straight line through 0', x: 'drive a (V)', y: 'peak |y|',
+      draw(g, w, h) {
+        wipe(g, w, h);
+        const a = num(c.values, 'a'), as = linspace(0, 5, 101), pk = as.map((x) => ltPeak(sys(), x)), slope = (ltPeak(sys(), 2e-3) - ltPeak(sys(), 1e-3)) / 1e-3;
+        const hi = Math.max(...pk, 1e-9) * 1.12, f = graph(g, w, h, [0, 5], [0, hi], 'drive a (V)', `peak |y| (${unit()})`, 1);
+        const xe = Math.min(5, hi / Math.max(slope, 1e-9)); tline(g, f, [0, 0], [xe, slope * xe], col.muted(), 1.4, [5, 4]);
+        if (sys() === 'spk') tline(g, f, [0, XMAX_UM], [5, XMAX_UM], col.muted(), 1, [2, 4]);
+        curve(g, f, as, pk, col.a(), 2.6); dot(g, f, [a, ltPeak(sys(), a)], col.e(), 5);
+        note(g, `dashed: linear, slope ${fmt(slope, 1)} ${unit()}/V from small a`, f.box.l + 6, f.box.t + 10, col.muted(), 'left', 10);
+        note(g, `a = ${fmt(a, 2)} V: peak ${fmt(ltPeak(sys(), a), 1)} ${unit()}`, f.box.l + 6, f.box.t + 26, col.e(), 'left', 11);
+      },
+    },
+  ];
+});
