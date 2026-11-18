@@ -1,4 +1,4 @@
-# Question maps (rebuilt Nov 2026): Big picture (14 boxes) and Full detail (30 boxes, the same 14 plus the exam detail).
+# Question maps (rebuilt Nov 2026): Big picture (15 boxes) and Full detail (34 boxes, the same 15 plus the exam detail).
 # `dive` links a node to dives/<id>.md, `live` to a figure, `link` to another page. Node/edge ids are per map.
 maps:
 - id: big
@@ -13,19 +13,32 @@ maps:
   nodes:
   - id: root
     label: "Inputs in, outputs out"
-    detail: Predict the output for any input
+    detail: Predict y for any u
     kind: terminal
     short: "The class's one question. A linear system is fully known once you know what it does to a few simple pieces; everything else is splitting an input into those pieces and adding the answers back up. The signals view uses tones and exponentials as the pieces, the state view uses the modes of A, and the last boxes ask which modes an input can affect and a measurement can reveal. The same tools run RF filters and amplifiers, channels, audio, circuits, structures, buildings, optics and control: see Where this shows up on the central-question page."
     eq: "y = h ∗ u,    ẋ = Ax + Bu,  y = Cx + Du"
     addsToExample: "Sets up both running examples: an earbud speaker (voltage in, diaphragm motion out) and a two-room house (heater power in, room temperatures out)."
     accountsFor: Why the same handful of ideas predicts a 717 Hz speaker resonance and a 5-hour house warm-up.
+  - id: SYS
+    label: What is a linear system?
+    detail: "y = T{u} keeps + and ×"
+    kind: decision
+    series: 0
+    short: "A system is a rule that turns an input signal into an output, y = T{u}. It is linear when it respects sums and scaling, T{u₁ + u₂} = T{u₁} + T{u₂} and T{au} = aT{u}, and time-invariant when delaying the input only delays the output. We care because superposition then splits any input into pieces, almost every real system is close to linear for small signals, and linear systems have closed-form tools that work the same in every field."
+    eq: "T{a u₁ + b u₂} = a T{u₁} + b T{u₂},   T{u(t − τ)} = y(t − τ)"
+    trap: Linear and time-invariant are two separate properties. Convolution needs both; a time-varying linear system has an h that depends on when you kick it.
+    predict: "Play the earbud quietly, then 10 times louder. Does the diaphragm move exactly 10 times as far both times?"
+    addsToExample: "Tests the earbud: at a quiet 0.2 V drive the response to two tones is the sum of the two responses, and doubling the drive doubles the motion; at a loud 2 V the cone runs into its (illustrative ±100 µm) excursion limit and both tests fail."
+    accountsFor: "Why every tool in the course applies to the earbud at normal volume, and stops applying when it is driven into clipping."
+    dive: linsys
+    quizTag: linsys
   - id: L
-    label: Linearity
-    detail: "Split, respond, add: y = h ∗ u"
+    label: "Split, respond, add"
+    detail: "Linearity at work: y = h ∗ u"
     series: 0
     short: "If doubling the input doubles the output and the response to a sum is the sum of the responses, you only need the response to one sharp kick, the impulse response h. Any input is a row of scaled, shifted kicks, so the output is the same row of scaled, shifted copies of h, added up: convolution."
     eq: y(t) = ∫ h(τ) u(t − τ) dτ
-    trap: Linear and time-invariant are two separate properties. Convolution needs both; a time-varying linear system has an h that depends on when you kick it.
+    trap: "y = h ∗ u is only the zero-state response. If the system starts with stored energy (a moving diaphragm, a warm room), add the zero-input response from those initial conditions."
     predict: "Feed the speaker a tone plus a click. Before looking: is the motion the tone's response plus the click's response, or something new?"
     addsToExample: "Clicks the speaker: one voltage click makes the diaphragm ring at about 690 Hz for a few milliseconds. That ring is h(t)."
     accountsFor: "Why the speaker's response to music, or to anti-noise, can be predicted from that one ring."
@@ -147,7 +160,7 @@ maps:
     quizTag: stab
   - id: CO
     label: Reachable and observable?
-    detail: "Which modes u excites, y reveals"
+    detail: "What u excites, y reveals"
     kind: decision
     series: 3
     short: "Which modes can the input excite, and which can the output reveal? Controllability asks whether the input can push every mode; observability asks whether the output shows every mode. Rank tests on [B AB …] and [C; CA; …] answer both. They are duals (swap A→Aᵀ, B↔Cᵀ), and the Kalman decomposition splits the state into the four reached/seen combinations."
@@ -172,7 +185,7 @@ maps:
     quizTag: realize
   - id: OPT
     label: "Application: optimal control"
-    detail: "Best input: Pontryagin, costate λ"
+    detail: "Best u: Pontryagin, λ"
     series: 4
     short: "To minimise a cost ∫L dt, form the Hamiltonian H = L + λᵀ(Ax + Bu), set ∂H/∂u = 0, and run the costate backwards: λ̇ = −∂H/∂x. State and costate together form a linear system with the Hamiltonian matrix M; with x fixed at both ends, the unknown λ(0) comes from Φ_M(T)."
     eq: "∂H/∂u = 0,   λ̇ = −∂H/∂x,   (x, λ)(t) = e^(Mt)(x, λ)(0)"
@@ -185,10 +198,15 @@ maps:
   edges:
   - &id001
     from: root
+    to: SYS
+    label: start here
+    question: "Before predicting anything: what kind of system can we predict this way?"
+    idea: "Every tool in the course needs the system to be linear, and most need it time-invariant too. So the first question is what those words mean and why they matter."
+  - from: SYS
     to: L
-    label: start simple
-    question: What is the cheapest thing to know about a system that tells you everything?
-    idea: "If the system is linear and time-invariant, its response to one impulse is enough: every input is a sum of shifted impulses."
+    label: superposition
+    question: "If the system is linear and time-invariant, what is the cheapest thing to know about it?"
+    idea: "Linearity lets us split any input into pieces and add the responses; time invariance makes every piece's response a shifted copy of one. That one response is the impulse response h, and the output is h ∗ u."
   - &id002
     from: L
     to: E
@@ -272,7 +290,7 @@ maps:
     idea: "When every e^(λᵢt) decays: all eigenvalues in the open left half-plane."
 - id: full
   title: Full detail
-  caption: "The same map with every box the exams use: ROC rules, poles and zeros, orthogonality, Parseval, windowing, Jordan form, Cayley–Hamilton, PBH, Gramians and the Kalman split. The application box (optimal control) has its own colour. Dashed lines join the same idea seen from the two sides."
+  caption: "The same map with every box the exams use: what makes a system linear and time-invariant, ROC rules, poles and zeros, orthogonality, Parseval, windowing, Jordan form, Cayley–Hamilton, PBH, Gramians and the Kalman split. The application box (optimal control) has its own colour. Dashed lines join the same idea seen from the two sides."
   seriesNames:
   - Linearity and the eigen idea
   - "Signals view: transforms and Fourier"
@@ -282,19 +300,32 @@ maps:
   nodes:
   - id: root
     label: "Inputs in, outputs out"
-    detail: Predict the output for any input
+    detail: Predict y for any u
     kind: terminal
     short: "The class's one question. A linear system is fully known once you know what it does to a few simple pieces; everything else is splitting an input into those pieces and adding the answers back up. The signals view uses tones and exponentials as the pieces, the state view uses the modes of A, and the last boxes ask which modes an input can affect and a measurement can reveal. The same tools run RF filters and amplifiers, channels, audio, circuits, structures, buildings, optics and control: see Where this shows up on the central-question page."
     eq: "y = h ∗ u,    ẋ = Ax + Bu,  y = Cx + Du"
     addsToExample: "Sets up both running examples: an earbud speaker (voltage in, diaphragm motion out) and a two-room house (heater power in, room temperatures out)."
     accountsFor: Why the same handful of ideas predicts a 717 Hz speaker resonance and a 5-hour house warm-up.
+  - id: SYS
+    label: What is a linear system?
+    detail: "y = T{u} keeps + and ×"
+    kind: decision
+    series: 0
+    short: "A system is a rule that turns an input signal into an output, y = T{u}. It is linear when it respects sums and scaling, T{u₁ + u₂} = T{u₁} + T{u₂} and T{au} = aT{u}, and time-invariant when delaying the input only delays the output. We care because superposition then splits any input into pieces, almost every real system is close to linear for small signals, and linear systems have closed-form tools that work the same in every field."
+    eq: "T{a u₁ + b u₂} = a T{u₁} + b T{u₂},   T{u(t − τ)} = y(t − τ)"
+    trap: Linear and time-invariant are two separate properties. Convolution needs both; a time-varying linear system has an h that depends on when you kick it.
+    predict: "Play the earbud quietly, then 10 times louder. Does the diaphragm move exactly 10 times as far both times?"
+    addsToExample: "Tests the earbud: at a quiet 0.2 V drive the response to two tones is the sum of the two responses, and doubling the drive doubles the motion; at a loud 2 V the cone runs into its (illustrative ±100 µm) excursion limit and both tests fail."
+    accountsFor: "Why every tool in the course applies to the earbud at normal volume, and stops applying when it is driven into clipping."
+    dive: linsys
+    quizTag: linsys
   - id: L
-    label: Linearity
-    detail: "Split, respond, add: y = h ∗ u"
+    label: "Split, respond, add"
+    detail: "Linearity at work: y = h ∗ u"
     series: 0
     short: "If doubling the input doubles the output and the response to a sum is the sum of the responses, you only need the response to one sharp kick, the impulse response h. Any input is a row of scaled, shifted kicks, so the output is the same row of scaled, shifted copies of h, added up: convolution."
     eq: y(t) = ∫ h(τ) u(t − τ) dτ
-    trap: Linear and time-invariant are two separate properties. Convolution needs both; a time-varying linear system has an h that depends on when you kick it.
+    trap: "y = h ∗ u is only the zero-state response. If the system starts with stored energy (a moving diaphragm, a warm room), add the zero-input response from those initial conditions."
     predict: "Feed the speaker a tone plus a click. Before looking: is the motion the tone's response plus the click's response, or something new?"
     addsToExample: "Clicks the speaker: one voltage click makes the diaphragm ring at about 690 Hz for a few milliseconds. That ring is h(t)."
     accountsFor: "Why the speaker's response to music, or to anti-noise, can be predicted from that one ring."
@@ -441,7 +472,7 @@ maps:
     quizTag: realize
   - id: OPT
     label: "Application: optimal control"
-    detail: "Best input: Pontryagin, costate λ"
+    detail: "Best u: Pontryagin, λ"
     series: 4
     short: "To minimise a cost ∫L dt, form the Hamiltonian H = L + λᵀ(Ax + Bu), set ∂H/∂u = 0, and run the costate backwards: λ̇ = −∂H/∂x. State and costate together form a linear system with the Hamiltonian matrix M; with x fixed at both ends, the unknown λ(0) comes from Φ_M(T)."
     eq: "∂H/∂u = 0,   λ̇ = −∂H/∂x,   (x, λ)(t) = e^(Mt)(x, λ)(0)"
@@ -451,6 +482,39 @@ maps:
     accountsFor: "Why the cheapest warm-up rises for two hours and then eases off (late heat would mostly widen the gap between the rooms), and how much energy any target costs."
     dive: optimal
     quizTag: optimal
+  - id: SYSOP
+    label: A system is an operator
+    detail: "y = T{u}: input → output"
+    series: 0
+    short: "A system is any rule T that takes a whole input signal u and returns a whole output signal y = T{u}. The earbud takes a voltage V(t) and returns the diaphragm motion x(t); the house takes heater power and returns two room temperatures."
+    eq: "y = T{u}"
+    addsToExample: "Names the two running examples as operators: V(t) ↦ x(t) for the earbud, heater power ↦ (T₁, T₂)(t) for the house."
+    accountsFor: "What “the system” means in every later box: the rule, not any one input or output."
+    dive: linsys
+    quizTag: linsys
+  - id: SYSTEST
+    label: Linear? Time-invariant?
+    detail: "Sums, scales, delays pass"
+    kind: decision
+    series: 0
+    short: "Additivity: T{u₁ + u₂} = T{u₁} + T{u₂}. Homogeneity: T{au} = aT{u}. Together they are linearity. Time invariance: delaying the input by τ only delays the output by τ. Non-examples: y = u² fails both linearity tests; clipping fails them at large signals; y = 2u + 1 is affine (zero in gives 1 out); an AM mixer y = u·cos ω₀t is linear but time-varying; y(t) = u(2t) is linear but not time-invariant; y(t) = u(t − 1) is LTI."
+    eq: "T{u₁ + u₂} = T{u₁} + T{u₂},   T{au} = aT{u},   T{u(t − τ)} = y(t − τ)"
+    trap: "Zero in must give zero out. y = 2u + 1 draws a straight line, but it is affine, not linear: T{u₁ + u₂} has one +1 and T{u₁} + T{u₂} has two."
+    predict: "Is y(t) = u(2t), playing the input at double speed, linear? Is it time-invariant?"
+    addsToExample: "Runs the three tests on the earbud: it passes additivity and homogeneity at 0.2 V (mismatch under 1%), fails them at 2 V when the cone clips, and passes time invariance at every drive."
+    accountsFor: "Which systems the rest of the course applies to, and how to check a new one in three lines."
+    dive: linsys
+    quizTag: linsys
+  - id: SYSWHY
+    label: Why do we care?
+    detail: Superposition + tools
+    series: 0
+    short: "Four reasons. Superposition lets you split any input into pieces and add the responses, which is the whole course. Almost every real system is about linear for small signals around an operating point (a transistor amplifier about its bias, a pendulum with sin θ ≈ θ, a speaker at normal volume), and the linear model is the Jacobian there. Linear systems have closed-form general tools (convolution, transforms, e^(At), eigenvalues) that nonlinear systems mostly lack. And the same math works across fields."
+    eq: "δẋ = (∂f/∂x)|₀ δx + (∂f/∂u)|₀ δu"
+    addsToExample: "The earbud at normal listening levels moves only a few micrometres, well inside its range, so its small-signal model is linear; the house's heat flows are proportional to temperature differences, so it is linear at any size."
+    accountsFor: "Why one course of linear tools covers speakers, houses, RF amplifiers and structures alike, and when to distrust it (large signals)."
+    dive: linsys
+    quizTag: linsys
   - id: ROC
     label: Region of convergence
     detail: Poles bound it; it picks x(t)
@@ -613,7 +677,7 @@ maps:
     quizTag: gramian
   - id: KAL
     label: Kalman decomposition
-    detail: Only reached + seen shows in H(s)
+    detail: H(s) shows only CO part
     series: 3
     short: "Split the system into reachable/observable parts; only the reachable-and-observable part shows in H(s). Change coordinates so the state splits into four parts: controllable and observable, controllable only, observable only, neither. Only the first part shows up in the transfer function; the rest cancel as pole–zero pairs."
     eq: G(s) = C_co(sI − A_co)⁻¹B_co + D
@@ -634,6 +698,31 @@ maps:
   - *id010
   - *id011
   - *id012
+  - from: SYS
+    to: SYSOP
+    label: what is a system?
+    question: What exactly is “the system” we are testing?
+    idea: "Before testing linearity we need the object: a rule T that maps a whole input signal to a whole output signal."
+  - from: SYSOP
+    to: SYSTEST
+    label: test it
+    question: "Given a rule y = T{u}, how do we check whether it is linear and time-invariant?"
+    idea: "Feed it sums, scaled inputs and delayed inputs and compare: linear means sums and scaling pass through, time-invariant means delays pass through."
+  - from: SYSTEST
+    to: L
+    label: "split, respond, add"
+    question: A system passes all three tests. What does that buy us?
+    idea: "Additivity and homogeneity give superposition; time invariance makes every click's response a shifted copy of h. Together: y = h ∗ u."
+  - from: SYS
+    to: SYSWHY
+    label: why care?
+    question: Real systems are never exactly linear. Why build a course on linear ones?
+    idea: "Because almost everything is linear for small signals, superposition makes prediction easy, and linear systems have closed-form tools that work across fields."
+  - from: SYSWHY
+    to: L
+    label: use it
+    question: We have a linear model. What is the first thing superposition lets us do?
+    idea: "Split any input into clicks, find the response to one click, and add the shifted copies back up: convolution."
   - from: TR
     to: ROC
     label: where it converges
