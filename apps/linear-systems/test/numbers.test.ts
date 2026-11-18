@@ -328,3 +328,61 @@ describe('house difference mode (Φ wording)', () => {
     expect(1 - Math.exp(-2.2)).toBeCloseTo(0.889, 3);
   });
 });
+
+import * as ex from '../src/figs/ex';
+describe('figure models (src/figs/ex.ts): numbers the live figures draw', () => {
+  it('speaker in ms units: a₀ = 20.28 (1/ms)², a₁ = 2.533 /ms, ζ = 0.281, ring 688 Hz, poles −1.266 ± 4.32j /ms', () => {
+    const p = ex.spk();
+    expect(p.a0).toBeCloseTo(20.28, 2); expect(p.a1).toBeCloseTo(2.533, 3); expect(p.zeta).toBeCloseTo(0.281, 3);
+    expect(p.fd).toBeCloseTo(687.8, 1); expect(p.poles[0][0]).toBeCloseTo(-1.266, 3); expect(p.poles[0][1]).toBeCloseTo(4.322, 3);
+    expect(ex.DAMP_CRIT).toBeCloseTo(3.556, 3); expect(ex.UM_PER_V).toBeCloseTo(42.8, 1);
+  });
+  it('h(t) integrates to the DC gain 1 and matches its two pole terms; the residue is a₀/(2j ω_d)', () => {
+    let s = 0; for (let t = 0; t < 12; t += 0.001) s += ex.hImp(t) * 0.001; expect(s).toBeCloseTo(1, 2);
+    for (const d of [1, ex.DAMP_CRIT, 5]) for (const t of [0.3, 1, 2.5]) { const [a, b] = ex.hTerms(t, d); expect(a + b).toBeCloseTo(ex.hImp(t, d), 9); }
+    const c = ex.residue(); expect(c[0]).toBeCloseTo(0, 9); expect(c[1]).toBeCloseTo(-20.28 / (2 * 4.3216), 3);
+  });
+  it('|H| peaks near 658 Hz, −3 dB band ≈ 394–842 Hz; at 690 Hz (just below the 717 Hz natural frequency) the cone lags by about 82°', () => {
+    const b = ex.peakBand(); expect(b.fPeak).toBeCloseTo(657.5, 0); expect(b.lo).toBeCloseTo(394, -1); expect(b.hi).toBeCloseTo(842, -1);
+    const H = ex.Hf(690); expect((Math.atan2(H[1], H[0]) * 180) / Math.PI).toBeCloseTo(-82.3, 0);
+  });
+  it('digital model at 8 kHz: r = 0.854, θ = 0.540 rad (688 Hz); the difference equation reproduces T·h(nT) and its DTFT closed form', () => {
+    const d = ex.ringDigital(8); expect(d.r).toBeCloseTo(0.8536, 4); expect(d.th).toBeCloseTo(0.5402, 4);
+    const imp = [1, ...Array(30).fill(0)], y = ex.diffEq(imp);
+    for (let n = 0; n < 30; n++) expect(y[n]).toBeCloseTo(ex.ringSample(n), 9);
+    for (const Om of [0.2, 0.54, 1.5]) { let re = 0, im = 0; for (let n = 0; n < 400; n++) { const x = ex.ringSample(n); re += x * Math.cos(Om * n); im -= x * Math.sin(Om * n); } const X = ex.ringDTFT(Om); expect(X[0]).toBeCloseTo(re, 6); expect(X[1]).toBeCloseTo(im, 6); }
+  });
+  it('steady hum DFT, 64 samples at 8 kHz: 750 Hz is one 0 dB spike; 690 Hz reads −4.7 / −3.2 dB in bins 5 / 6', () => {
+    const on = ex.humDFT(750); expect(on[6]).toBeCloseTo(1, 6); expect(on[5]).toBeLessThan(1e-9);
+    const off = ex.humDFT(690); expect(ex.dB(off[5])).toBeCloseTo(-4.70, 1); expect(ex.dB(off[6])).toBeCloseTo(-3.24, 1);
+    const hn = ex.humDFT(690, 64, 8000, true); expect(ex.dB(hn[12])).toBeLessThan(ex.dB(off[12]) - 20); // Hann: far skirts much lower
+  });
+  it('aliasing at 8 kHz and the square wave’s Parseval shares', () => {
+    expect(ex.aliasOf(6500, 8000)).toBe(1500); expect(ex.aliasOf(690, 8000)).toBe(690); expect(ex.aliasOf(7310, 8000)).toBe(690);
+    expect(ex.squarePowerShare(1)).toBeCloseTo(0.8106, 4); expect(ex.squarePowerShare(3)).toBeCloseTo(0.9006, 4); expect(ex.squarePowerShare(2001)).toBeCloseTo(1, 3);
+  });
+  it('house: B = (3.6, 0) K/h per kW, modes −0.2 and −2.2 /h, Cayley–Hamilton e^{At} = α₀I + α₁A equals the modal form', () => {
+    expect(ex.heaterB(1)).toEqual([3.6, 0]); expect(ex.houseEig()).toEqual({ avg: -0.2, diff: -2.2 });
+    for (const t of [0, 0.5, 1, 3]) { const P = ex.expm2(ex.houseA(), t), Q = ex.houseExpm(t); for (const i of [0, 1]) for (const j of [0, 1]) expect(P[i][j]).toBeCloseTo(Q[i][j], 10); }
+    const c = ex.cayley(ex.houseA(), 1); expect(c.a1).toBeCloseTo((Math.exp(-0.2) - Math.exp(-2.2)) / 2, 10); expect(c.a0).toBeCloseTo((-0.2 * Math.exp(-2.2) + 2.2 * Math.exp(-0.2)) / 2, 10);
+    const cx = ex.expm2([[0, 1], [-4, 0]], Math.PI / 4); expect(cx[0][1]).toBeCloseTo(0.5, 10); // complex branch: sin(2t)/2
+  });
+  it('house controllability/observability: heater split ½ or sensor ½ loses the difference mode; det [B, AB] = 12.96(1 − 2s)·… ', () => {
+    expect(ex.ctrb(1).det).toBeCloseTo(12.96, 6); expect(ex.ctrb(0.5).det).toBeCloseTo(0, 10);
+    expect(ex.obsv(1).det).toBeCloseTo(1, 10); expect(ex.obsv(0.5).det).toBeCloseTo(0, 10);
+    const m = ex.modeWeights(0.5, 0.5); expect(m.bDiff).toBe(0); expect(m.cDiff).toBe(0); expect(ex.modeWeights(1, 1).bDiff).toBeCloseTo(1.8, 10);
+  });
+  it('house Gramian and least energy (in kW): W(3 h) eigenvalues 0.782 / 12.01, thin axis (0.51, −0.86); (10, 7) K costs 13.43 kW²·h', () => {
+    const W = ex.gramian(3); expect(W[0][0]).toBeCloseTo(9.0947, 3); expect(W[0][1]).toBeCloseTo(4.924, 3); expect(W[1][1]).toBeCloseTo(3.6987, 3);
+    const e = ex.symEig(W); expect(e.l[0]).toBeCloseTo(0.782, 3); expect(e.l[1]).toBeCloseTo(12.011, 2);
+    expect(Math.abs(e.v[0][0])).toBeCloseTo(0.51, 2); expect(Math.abs(e.v[0][1])).toBeCloseTo(0.86, 2); expect(e.v[0][0] * e.v[0][1]).toBeLessThan(0);
+    expect(ex.reachCost([10, 7], 3)).toBeCloseTo(13.43, 2); expect(ex.reachCost([10, 10], 3)).toBeCloseTo(31.36, 1); expect(ex.reachCost([5, -5], 3)).toBeCloseTo(60.26, 1);
+    const u = ex.leastEnergyU([10, 7], 3); expect(u(0)).toBeCloseTo(1.7787, 3); expect(u(3)).toBeCloseTo(0.9655, 3);
+    const s = ex.simHouse(ex.houseA(), ex.heaterB(1), u, [0, 0], 3, 600), xT = s.x[s.x.length - 1]; expect(xT[0]).toBeCloseTo(10, 3); expect(xT[1]).toBeCloseTo(7, 3);
+  });
+  it('thermostat loop u = −kp·T₁ is unstable for kp < −0.102 kW/K (a heater wired backwards)', () => {
+    expect(ex.KP_UNSTABLE).toBeCloseTo(-0.1019, 4);
+    expect(ex.eigs(ex.thermostatA(-0.09))[0][0]).toBeLessThan(0); expect(ex.eigs(ex.thermostatA(-0.11))[0][0]).toBeGreaterThan(0);
+    expect(ex.eigs(ex.thermostatA(0.5)).map((l) => +l[0].toFixed(3))).toEqual([-0.755, -3.445]);
+  });
+});

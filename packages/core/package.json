@@ -9,6 +9,7 @@
     ".": "./src/index.ts",
     "./dsp": "./src/dsp/index.ts",
     "./theme.css": "./src/styles/theme.css",
-    "./styles.css": "./src/styles/core.css"
+    "./styles.css": "./src/styles/core.css",
+    "./models": "./src/sceneLsModels.ts"
   }
 }
