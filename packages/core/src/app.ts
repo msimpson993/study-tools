@@ -82,8 +82,13 @@ export function mountApp(content: AppContent, hooks: AppHooks = {}): void {
     const dl = h('dl');
     const render = (q: string) => {
       clear(dl);
-      for (const t of content.glossary.filter((x) => !q || (x.term + x.meaning).toLowerCase().includes(q.toLowerCase())))
+      let last: string | undefined;
+      for (const t of content.glossary.filter((x) => !q || (x.term + x.meaning + (x.section ?? '')).toLowerCase().includes(q.toLowerCase()))) {
+        // a heading each time the section changes (terms stay in file order)
+        if (t.section && t.section !== last) dl.append(h('div', { class: 'gloss-sec', role: 'heading', 'aria-level': '3' }, t.section));
+        last = t.section;
         dl.append(h('dt', null, t.term), h('dd', { html: t.meaning + (t.units ? ` <i>[${t.units}]</i>` : '') }));
+      }
     };
     const inp = h('input', { type: 'search', placeholder: 'Search symbols and terms', 'aria-label': 'Search glossary' });
     inp.addEventListener('input', () => render(inp.value));
@@ -197,7 +202,12 @@ export function mountApp(content: AppContent, hooks: AppHooks = {}): void {
       main.append(wrap);
     } else if (sec.kind === 'glossary') {
       const dl = h('dl', { class: 'prose' });
-      for (const t of content.glossary) dl.append(h('dt', { style: 'font-weight:700;margin-top:.6rem' }, t.term), h('dd', { html: t.meaning + (t.units ? ` <i>[${t.units}]</i>` : '') }));
+      let last: string | undefined;
+      for (const t of content.glossary) {
+        if (t.section && t.section !== last) dl.append(h('h3', null, t.section));
+        last = t.section;
+        dl.append(h('dt', { style: 'font-weight:700;margin-top:.6rem' }, t.term), h('dd', { html: t.meaning + (t.units ? ` <i>[${t.units}]</i>` : '') }));
+      }
       main.append(dl);
     } else if (sec.kind === 'figures') {
       const wrap = h('div', { class: 'prose' }, h('p', null, 'Live figures. Each is also reachable from a map box.'));

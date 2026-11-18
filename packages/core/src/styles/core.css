@@ -202,6 +202,8 @@ details.st-more .st-badge{display:inline-block;margin-left:.35rem;padding:0 .4re
 .drawer[hidden]{display:none}
 .drawer dt{font:700 .9rem Charter,Georgia,serif;margin-top:.55rem}
 .drawer dd{margin:.1rem 0 0;color:var(--muted)}
+.drawer .gloss-sec{margin:1rem 0 .1rem;padding-top:.5rem;border-top:1px solid var(--border);font:700 .72rem system-ui,sans-serif;letter-spacing:.06em;text-transform:uppercase;color:var(--accent)}
+.drawer .gloss-sec:first-child{margin-top:.3rem;border-top:0;padding-top:0}
 .drawer input[type=search]{width:100%;padding:.35rem .5rem;border-radius:8px;border:1px solid var(--border);background:var(--panel2);color:var(--text)}
 
 /* ---- concept-map svg states ---- */

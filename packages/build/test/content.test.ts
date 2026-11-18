@@ -27,6 +27,16 @@ describe('shipped content', () => {
     expect(content.maps.reduce((n, m) => n + m.nodes.length, 0)).toBe(43);
     expect(content.maps.reduce((n, m) => n + m.edges.length, 0)).toBe(47);
     expect(content.dives.length).toBe(29);
+    expect((content.review ?? []).map((r) => r.id)).toEqual(['part-a', 'part-b', 'formula-sheet', 'self-test']);
+    expect(content.quiz.length).toBe(87);
+    expect(content.quiz.filter((q) => q.tags?.includes('variants')).length).toBe(21);
+  });
+  it('linear-systems glossary: 89 terms, every one in a section, no raw ^{…} outside math', () => {
+    const { content } = loadApp(path.join(repoRoot, 'apps', 'linear-systems'));
+    expect(content.glossary.length).toBe(89);
+    expect(content.glossary.every((t) => !!t.section)).toBe(true);
+    expect(new Set(content.glossary.map((t) => t.section)).size).toBe(8);
+    for (const t of content.glossary) expect(t.meaning.replace(/<span class="katex[\s\S]*?<\/math>/g, '')).not.toMatch(/\^\{/);
   });
   it('transforms keeps all 20 examples and 9 transform pairs', () => {
     const { content } = loadApp(path.join(repoRoot, 'apps', 'transforms'));

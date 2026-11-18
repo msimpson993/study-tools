@@ -1,19 +1,282 @@
-- { term: "A", meaning: "The linear operator under study: a matrix acting on states, or convolution acting on signals." }
-- { term: "λ (eigenvalue)", meaning: "Scale factor an eigenvector picks up: A v = λ v. In a linear system it sets one mode, e^{λt} (or λ^k in discrete time)." }
-- { term: "v, w (right / left eigenvector)", meaning: "A v = λ v and wᵀ A = λ wᵀ. PBH uses left eigenvectors for controllability and right for observability." }
-- { term: "V, Λ", meaning: "V has eigenvectors as columns; Λ is the diagonal matrix of eigenvalues, so A = V Λ V⁻¹." }
-- { term: "ξ (xi)", meaning: "Modal coordinates: x = V ξ, so ξ = V⁻¹ x. In ξ each mode evolves independently." }
-- { term: "x, u, y", meaning: "State, input, output of the state-space model ẋ = Ax + Bu, y = Cx + Du." }
-- { term: "e^{At}, Φ(t)", meaning: "State transition matrix: x(t) = e^{At} x(0) when u = 0. Equals V e^{Λt} V⁻¹ when A is diagonalizable." }
-- { term: "Ctrb, Obsv", meaning: "Controllability matrix [B AB … Aⁿ⁻¹B] and observability matrix [C; CA; …; CAⁿ⁻¹]. Full rank n means controllable / observable." }
-- { term: "PBH", meaning: "Popov-Belevitch-Hautus test: rank[λI − A, B] = n (controllable) and rank[λI − A; C] = n (observable) for every eigenvalue λ." }
-- { term: "G(s), H(s)", meaning: "Transfer function: G(s) = C(sI − A)⁻¹B + D. The eigenvalue an LTI system assigns to e^{st}." }
-- { term: "LTI", meaning: "Linear time-invariant system; its output is the convolution y = h ∗ x." }
-- { term: "ROC", meaning: "Region of convergence of a Laplace or Z transform. The transform is only meaningful together with its ROC." }
-- { term: "FT, FS, DTFT, DFT", meaning: "Fourier transform, Fourier series, discrete-time Fourier transform, discrete Fourier transform: expansions in complex exponentials for the four combinations of continuous/discrete and aperiodic/periodic time." }
-- { term: "ω, Ω", meaning: "Angular frequency: ω in rad/s (continuous time), Ω = ωT in rad/sample (discrete time).", units: "rad/s, rad/sample" }
-- { term: "T, fs", meaning: "Sample period and sample rate, fs = 1/T. Nyquist frequency is fs/2.", units: "s, Hz" }
-- { term: "z = e^{sT}", meaning: "Map from the s-plane to the z-plane. Left half-plane → inside the unit circle; many-to-one (aliasing)." }
-- { term: "BIBO", meaning: "Bounded-input bounded-output stability: poles of G(s) in the open left half-plane. Weaker than internal stability when modes are hidden." }
-- { term: "Minimal realization", meaning: "A state-space model that is both controllable and observable; deg G = n and poles = eig(A)." }
-- { term: "Jordan block", meaning: "λI plus a superdiagonal of ones; arises when a repeated eigenvalue lacks enough eigenvectors. Produces t e^{λt} terms." }
+# Glossary (rebuilt Nov 2026): 89 terms in 8 sections. The original 19 terms are kept (wording unchanged except e^(...) notation).
+- term: Linear
+  meaning: "Superposition holds: the response to $a x_1 + b x_2$ is $a y_1 + b y_2$. Doubling the input doubles the output."
+  section: Systems and the eigen idea
+- term: Time-invariant
+  meaning: Delaying the input only delays the output; the system does not change with time.
+  section: Systems and the eigen idea
+- term: LTI
+  meaning: "Linear time-invariant system; its output is the convolution $y = h * x$."
+  section: Systems and the eigen idea
+- term: "h(t), h[n] (impulse response)"
+  meaning: Output when the input is a unit impulse. It fully describes an LTI system.
+  section: Systems and the eigen idea
+- term: "Convolution, ∗"
+  meaning: "$y(t) = \\int h(\\tau)\\,x(t-\\tau)\\,d\\tau$: every past input, weighted by how much the system still remembers it."
+  section: Systems and the eigen idea
+- term: A
+  meaning: "The linear operator under study: a matrix acting on states, or convolution acting on signals."
+  section: Systems and the eigen idea
+- term: λ (eigenvalue)
+  meaning: "Scale factor an eigenvector picks up: $Av = \\lambda v$. In a linear system it sets one mode, $e^{\\lambda t}$ (or $\\lambda^k$ in discrete time)."
+  section: Systems and the eigen idea
+- term: "v, w (right / left eigenvector)"
+  meaning: $Av = \lambda v$ and $w^\top A = \lambda w^\top$. PBH uses left eigenvectors for controllability and right for observability.
+  section: Systems and the eigen idea
+- term: Eigenfunction
+  meaning: "A signal an LTI system only scales. $e^{st}$ (and $z^n$) go in and come out as $H(s)\\,e^{st}$."
+  section: Systems and the eigen idea
+- term: Mode
+  meaning: "One eigen-direction of the system together with its time shape $e^{\\lambda t}$. The free response is a sum of modes."
+  section: Systems and the eigen idea
+- term: Causal
+  meaning: Output depends only on present and past input; $h(t) = 0$ for $t < 0$.
+  section: Systems and the eigen idea
+- term: BIBO
+  meaning: "Bounded-input bounded-output stability: poles of $G(s)$ in the open left half-plane (inside the unit circle for $z$). Weaker than internal stability when modes are hidden."
+  section: Systems and the eigen idea
+- term: Internal stability
+  meaning: "Every eigenvalue of $A$ has negative real part, so every mode, seen or not, dies out."
+  section: Systems and the eigen idea
+- term: τ (time constant)
+  meaning: "$\\tau = -1/\\lambda$ for a real eigenvalue: the time for that mode to fall to 1/e ≈ 37 %."
+  units: "s, h"
+  section: Systems and the eigen idea
+- term: s
+  meaning: "Laplace variable, $s = \\sigma + j\\omega$. Multiplying by $s$ ↔ $d/dt$ (zero initial conditions)."
+  units: 1/s
+  section: "Laplace, Z and inverses"
+- term: z
+  meaning: "Z-transform variable; $z^{-1}$ is a one-sample delay."
+  section: "Laplace, Z and inverses"
+- term: Laplace transform
+  meaning: "$X(s) = \\int x(t)\\,e^{-st}\\,dt$: how much of each $e^{st}$ the signal contains."
+  section: "Laplace, Z and inverses"
+- term: Z-transform
+  meaning: "$X(z) = \\sum x[n]\\,z^{-n}$: the discrete-time Laplace transform."
+  section: "Laplace, Z and inverses"
+- term: ROC
+  meaning: Region of convergence of a Laplace or Z transform. The transform is only meaningful together with its ROC; the same formula with a different ROC is a different signal.
+  section: "Laplace, Z and inverses"
+- term: Right-sided / left-sided
+  meaning: Zero before some time / zero after some time. Right-sided ↔ ROC to the right of (outside) all poles; left-sided ↔ left of (inside) them.
+  section: "Laplace, Z and inverses"
+- term: "Pole, zero"
+  meaning: Root of the denominator (a mode the system can show) and root of the numerator (a frequency it blocks).
+  section: "Laplace, Z and inverses"
+- term: "G(s), H(s)"
+  meaning: "Transfer function: $G(s) = C(sI - A)^{-1}B + D$. The eigenvalue an LTI system assigns to $e^{st}$."
+  section: "Laplace, Z and inverses"
+- term: Partial fractions
+  meaning: Splitting $X(s)$ into $\sum c_p/(s-p)$ so each term inverts to one exponential.
+  section: "Laplace, Z and inverses"
+- term: Cover-up rule
+  meaning: "Residue of a simple pole: $c_p = (s-p)X(s)$ evaluated at $s = p$."
+  section: "Laplace, Z and inverses"
+- term: Residue
+  meaning: Coefficient that a pole contributes to the inverse. For a pole of order $m$ use the $(m-1)$-th derivative formula.
+  section: "Laplace, Z and inverses"
+- term: Bromwich / contour inverse
+  meaning: "$x(t) = \\frac{1}{2\\pi j}\\int X(s)e^{st}ds$ along a line in the ROC, closed left for $t>0$ (sum of residues)."
+  section: "Laplace, Z and inverses"
+- term: Zero-state / zero-input response
+  meaning: "Part driven by the input from rest, and part due to initial conditions alone. Total = both."
+  section: "Laplace, Z and inverses"
+- term: Characteristic equation
+  meaning: Denominator set to zero; its roots are the natural modes of a difference or differential equation.
+  section: "Laplace, Z and inverses"
+- term: "FT, FS, DTFT, DFT"
+  meaning: "Fourier transform, Fourier series, discrete-time Fourier transform, discrete Fourier transform: expansions in complex exponentials for the four combinations of continuous/discrete and aperiodic/periodic time."
+  section: Fourier and sampling
+- term: "ω, Ω"
+  meaning: "Angular frequency: ω in rad/s (continuous time), Ω = ωT in rad/sample (discrete time)."
+  units: "rad/s, rad/sample"
+  section: Fourier and sampling
+- term: Orthogonal
+  meaning: "Two signals with zero inner product. Complex exponentials at different frequencies are orthogonal over a period, which is why each Fourier coefficient can be read off alone."
+  section: Fourier and sampling
+- term: Inner product
+  meaning: "$\\langle x, y\\rangle = \\int x\\,\\bar y\\,dt$: how much of $y$ is in $x$."
+  section: Fourier and sampling
+- term: Fourier coefficient $c_k$
+  meaning: "$c_k = \\frac1T\\int_T x(t)\\,e^{-jk\\omega_0 t}\\,dt$: the share of the $k$-th harmonic."
+  section: Fourier and sampling
+- term: Frequency response
+  meaning: "$H(j\\omega)$: transfer function on the imaginary axis; gain and phase at each frequency. Drawn as a Bode plot."
+  section: Fourier and sampling
+- term: Parseval
+  meaning: "Energy is the same in time and frequency: $\\int |x|^2 dt = \\frac1{2\\pi}\\int |X|^2 d\\omega$."
+  section: Fourier and sampling
+- term: "T, fs"
+  meaning: "Sample period and sample rate, fs = 1/T. Nyquist frequency is fs/2."
+  units: "s, Hz"
+  section: Fourier and sampling
+- term: Aliasing
+  meaning: Frequencies above fs/2 fold back and look like lower ones after sampling.
+  section: Fourier and sampling
+- term: Nyquist rate
+  meaning: Sample faster than twice the highest frequency present to avoid aliasing.
+  section: Fourier and sampling
+- term: z = e^(sT)
+  meaning: Map from the s-plane to the z-plane. Left half-plane → inside the unit circle; many-to-one (aliasing).
+  section: Fourier and sampling
+- term: Bin spacing
+  meaning: DFT bins are fs/N apart. A tone between bins spreads over several (leakage).
+  units: Hz
+  section: Fourier and sampling
+- term: Leakage
+  meaning: Energy of a tone that is not a whole number of cycles in the record smearing into nearby bins.
+  section: Fourier and sampling
+- term: Window
+  meaning: "A taper (Hann, Hamming, …) applied before the DFT to cut leakage, at the cost of a wider main lobe."
+  section: Fourier and sampling
+- term: "x, u, y"
+  meaning: "State, input, output of the state-space model ẋ = Ax + Bu, y = Cx + Du."
+  section: State space
+- term: State
+  meaning: "The smallest set of numbers that, with future inputs, fixes the future: positions and velocities, temperatures, currents."
+  section: State space
+- term: "B, C, D"
+  meaning: "Input matrix (where the input pushes), output matrix (what the sensor reads) and feedthrough (direct input to output)."
+  section: State space
+- term: "V, Λ"
+  meaning: "V has eigenvectors as columns; Λ is the diagonal matrix of eigenvalues, so A = V Λ V⁻¹."
+  section: State space
+- term: ξ (xi)
+  meaning: "Modal coordinates: x = V ξ, so ξ = V⁻¹ x. In ξ each mode evolves independently."
+  section: State space
+- term: "e^(At), Φ(t)"
+  meaning: "State transition matrix: x(t) = e^(At) x(0) when u = 0. Equals V e^(Λt) V⁻¹ when A is diagonalizable."
+  section: State space
+- term: Variation of constants
+  meaning: "$x(t) = \\Phi(t)x_0 + \\int_0^t \\Phi(t-\\tau)Bu(\\tau)\\,d\\tau$: free response plus every past push carried forward."
+  section: State space
+- term: Diagonalizable
+  meaning: "Has n independent eigenvectors, so A = VΛV⁻¹. Always true when the eigenvalues are distinct."
+  section: State space
+- term: Jordan block
+  meaning: λI plus a superdiagonal of ones; arises when a repeated eigenvalue lacks enough eigenvectors. Produces t e^(λt) terms.
+  section: State space
+- term: Algebraic / geometric multiplicity
+  meaning: How many times λ is a root of the characteristic polynomial / how many independent eigenvectors it has. A gap means a Jordan block.
+  section: State space
+- term: Cayley–Hamilton
+  meaning: "Every matrix satisfies its own characteristic polynomial, so $A^n$ (and $e^{At}$) is a combination of $I, A, \\dots, A^{n-1}$."
+  section: State space
+- term: Realization
+  meaning: "A state-space model (A, B, C, D) whose transfer function is a given G(s)."
+  section: State space
+- term: Phase-variable / controllable canonical form
+  meaning: Realization with A a companion matrix (last row −a₀ … −aₙ₋₁) and B = eₙ; read straight off the denominator.
+  section: State space
+- term: Companion matrix
+  meaning: Matrix whose characteristic polynomial can be read off one row (or column).
+  section: State space
+- term: Controllable
+  meaning: Any state can be reached from any other in finite time by some input. Every mode feels u.
+  section: Reach and see
+- term: Observable
+  meaning: The initial state can be worked out from the output over a finite time. Every mode shows up in y.
+  section: Reach and see
+- term: "Ctrb, Obsv"
+  meaning: "Controllability matrix [B AB … Aⁿ⁻¹B] and observability matrix [C; CA; …; CAⁿ⁻¹]. Full rank n means controllable / observable."
+  section: Reach and see
+- term: PBH
+  meaning: "Popov–Belevitch–Hautus test: rank[λI − A, B] = n (controllable) and rank[λI − A; C] = n (observable) for every eigenvalue λ."
+  section: Reach and see
+- term: Duality
+  meaning: "(A, B) controllable ⇔ (Aᵀ, Bᵀ) observable. Every controllability fact has an observability twin."
+  section: Reach and see
+- term: "W_c, W_o (Gramians)"
+  meaning: "$W_c = \\int_0^T e^{A t}BB^\\top e^{A^\\top t}dt$ (and $W_o$ with $C$). Invertible ⇔ controllable / observable; eigenvalues show which directions are cheap."
+  section: Reach and see
+- term: Minimum energy
+  meaning: "Cheapest input to reach $x_f$ from rest in time $T$ costs $x_f^\\top W_c^{-1} x_f$."
+  section: Reach and see
+- term: Kalman decomposition
+  meaning: Change of coordinates that splits the state into controllable/uncontrollable × observable/unobservable parts. Only the controllable-and-observable part appears in G(s).
+  section: Reach and see
+- term: Hidden mode
+  meaning: A mode that is uncontrollable or unobservable; its pole cancels in G(s) but it still lives in A.
+  section: Reach and see
+- term: Pole–zero cancellation
+  meaning: "A zero lands on a pole, so the transfer function loses that pole: a sign of a hidden mode."
+  section: Reach and see
+- term: Minimal realization
+  meaning: A state-space model that is both controllable and observable; deg G = n and poles = eig(A).
+  section: Reach and see
+- term: J (cost)
+  meaning: "Number to minimise, e.g. $J = \\int (x^2 + 2u^2)\\,dt$: weighs state error against effort."
+  section: Optimal control
+- term: L (running cost)
+  meaning: The integrand of J.
+  section: Optimal control
+- term: Hamiltonian H
+  meaning: $H = L + \lambda^\top(Ax + Bu)$. The best input makes H stationary in u at every instant.
+  section: Optimal control
+- term: λ(t) (costate)
+  meaning: "Lagrange multiplier on the dynamics, obeying $\\dot\\lambda = -\\partial H/\\partial x$. Not an eigenvalue here."
+  section: Optimal control
+- term: Pontryagin minimum principle
+  meaning: "Necessary conditions for an optimal u: state and costate equations, $\\partial H/\\partial u = 0$ (or u minimises H), and boundary conditions."
+  section: Optimal control
+- term: u°(t)
+  meaning: The optimal input.
+  section: Optimal control
+- term: Transversality
+  meaning: "Boundary condition on λ at a free endpoint, e.g. λ(T) = 0 when x(T) is free. Not needed when both ends are fixed."
+  section: Optimal control
+- term: Two-point boundary value problem
+  meaning: "State known at the start, costate (or state) fixed at the end; solved with the transition matrix of the Hamiltonian system."
+  section: Optimal control
+- term: Mms
+  meaning: Moving mass of the diaphragm and coil.
+  units: g (0.084)
+  section: Earbud speaker
+- term: Rms
+  meaning: Mechanical damping of the suspension.
+  units: kg/s (0.173)
+  section: Earbud speaker
+- term: Cms
+  meaning: Compliance (inverse stiffness) of the suspension; k = 1/Cms ≈ 1704 N/m.
+  units: mm/N (0.587)
+  section: Earbud speaker
+- term: Bl
+  meaning: "Force factor: force per amp of coil current, and back-voltage per m/s of velocity."
+  units: T·m (0.545)
+  section: Earbud speaker
+- term: "Re, Le"
+  meaning: "Coil resistance and inductance. Their ratio gives the fast coil pole −Re/Le ≈ −186,000 rad/s."
+  units: "Ω (7.47), mH (0.04)"
+  section: Earbud speaker
+- term: fs (resonance)
+  meaning: "Mechanical resonance $f_s = \\frac{1}{2\\pi\\sqrt{M_{ms}C_{ms}}}$ ≈ 717 Hz. Not the sample rate fs (same letters, context tells)."
+  units: Hz
+  section: Earbud speaker
+- term: ζ (damping ratio)
+  meaning: "$\\zeta = R/(2\\sqrt{kM})$: ≈ 0.23 from Rms alone, ≈ 0.28 when the voltage-driven coil adds Bl²/Re of electrical damping."
+  section: Earbud speaker
+- term: ANC
+  meaning: "Active noise cancelling: play anti-noise so the sum at the ear is small. Feedforward (outer mic), feedback (inner mic) or hybrid."
+  section: Earbud speaker
+- term: FxLMS
+  meaning: "Filtered-x least mean squares: adaptive ANC filter update that filters the reference through a model of the speaker path first."
+  section: Earbud speaker
+- term: "T₁, T₂"
+  meaning: Temperatures of room 1 and room 2 above outdoors; the house state.
+  units: K
+  section: Two-room house
+- term: C_th
+  meaning: Heat capacity of one room (assumed 1 MJ/K in the drawn numbers). Written C_th so it is not confused with the output matrix C.
+  units: J/K
+  section: Two-room house
+- term: Average and difference modes
+  meaning: (T₁+T₂)/2 decays at λ = −0.2 /h (τ = 5 h); T₁−T₂ at λ = −2.2 /h (τ ≈ 27 min).
+  units: 1/h
+  section: Two-room house
+- term: Heating both rooms equally
+  meaning: "B = (b, b)ᵀ never moves the difference mode: the house becomes uncontrollable."
+  section: Two-room house
+- term: Average thermostat
+  meaning: "C = [½ ½] cannot see the difference mode: the house becomes unobservable."
+  section: Two-room house
