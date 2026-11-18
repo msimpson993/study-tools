@@ -1,10 +1,10 @@
 ---
 id: ss
-order: 5
+order: 17
 title: State space
-addsToExample: "Writes the cart's physics as ẋ = Ax + Bu with x = (position, velocity), B = (0, 1)ᵀ for a force on the mass, y = Cx with C = (1, 0) for a position sensor."
-accountsFor: "The cart's full dynamics, inputs and measurement in one standard form."
-category: time
+addsToExample: "Writes the house as ẋ = Ax + Bu with x = (T₁, T₂) above outdoors: A = [[−1.2, 1], [1, −1.2]] per hour (shared wall 1/h, leak 0.2/h), B = (3600/C_th, 0)ᵀ for a heater in room 1, C = [1, 0] for a thermostat in room 1."
+accountsFor: "Why room 1 warms first and room 2 follows through the wall, from three small matrices."
+category: state
 chain:
   - title: What if A acts over time?
   - title: How do I write the dynamics as a first-order vector equation?
@@ -16,12 +16,12 @@ neighbors:
   - ctrl
   - diag
 matlab: sys = ss(A, B, C, D)
-exampleScene: { overlays: [forces, sensor, phase], caption: "The state (x, ẋ) is one point; A turns the forces into where it goes next; the sensor reads only x." }
+exampleScene: { scene: house, overlays: [heat, flows, trace], diagram: house-open, caption: "Heat flows through the wall and out to the cold; the state is the two temperatures." }
 ---
 
 The state is a finite list of numbers that, together with the future input, determines the future output. A first-order vector ODE (or recurrence) makes the operator over time into a matrix A, so everything about bases and modes applies directly. Different state coordinates are just a change of basis: they do not change the input-output map.
 
-**Picture it first.** Here is the running cart, moving. The two numbers we track (position and velocity) are exactly the *state*; push it with a force and watch both.
+**Picture it first.** Here is a mass on a spring with a damper, moving. The two numbers we track (position and velocity) are exactly the *state*; push it with a force and watch both. The house in the picture beside this works the same way, with the two room temperatures as its state.
 
 ```figure:ss
 ```
@@ -35,7 +35,7 @@ x[k + 1] = A x[k] + B u[k],    y[k] = C x[k] + D u[k]
 ```
 
 ````callout:note What this answers
-A common language for dynamics, modes, inputs, and outputs — the setting in which e^{At}, controllability, observability, and G(s) are defined.
+A common language for dynamics, modes, inputs, and outputs — the setting in which e^(At), controllability, observability, and G(s) are defined.
 ````
 
 ````callout:note What it raises
@@ -49,5 +49,5 @@ The scalar ODE ÿ + 3ẏ + 2y = u, with phase variables x₁ = y and x₂ = ẏ,
 ### Common pitfalls
 
 - State coordinates are not unique. Eigenvalues, G(s), controllability, and observability are invariant under similarity; the entries of A, B, C are not.
-- Do not mix continuous A (from x′ = Ax) with discrete A (from x[k+1] = Ax). Discretizing with period T replaces A by e^{AT}, not by T A.
+- Do not mix continuous A (from x′ = Ax) with discrete A (from x[k+1] = Ax). Discretizing with period T replaces A by e^(AT), not by T A.
 - D is the direct feedthrough. Many mechanical and filter models have D = 0; an RF path with an algebraic path from u to y does not.

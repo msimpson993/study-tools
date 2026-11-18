@@ -21,12 +21,12 @@ describe('shipped content', () => {
     const { content } = loadApp(path.join(repoRoot, 'apps', app));
     expect(content.maps.length).toBeGreaterThan(0);
   });
-  it('linear-systems keeps all 3 maps / 64 nodes / 80 edges / 18 dives', () => {
+  it('linear-systems keeps its 2 maps / 43 nodes / 47 edges / 29 dives (Big picture + Full detail rebuild)', () => {
     const { content } = loadApp(path.join(repoRoot, 'apps', 'linear-systems'));
-    expect(content.maps.length).toBe(3);
-    expect(content.maps.reduce((n, m) => n + m.nodes.length, 0)).toBe(64);
-    expect(content.maps.reduce((n, m) => n + m.edges.length, 0)).toBe(80);
-    expect(content.dives.length).toBe(18);
+    expect(content.maps.map((m) => m.id)).toEqual(['big', 'full']);
+    expect(content.maps.reduce((n, m) => n + m.nodes.length, 0)).toBe(43);
+    expect(content.maps.reduce((n, m) => n + m.edges.length, 0)).toBe(47);
+    expect(content.dives.length).toBe(29);
   });
   it('transforms keeps all 20 examples and 9 transform pairs', () => {
     const { content } = loadApp(path.join(repoRoot, 'apps', 'transforms'));
@@ -91,7 +91,8 @@ describe('running example (visual-first / central-example schema)', () => {
   const ls = () => copyApp('linear-systems');
   it('linear-systems declares a running example and every node says what it adds and what it accounts for', () => {
     const { content, warnings } = loadApp(path.join(repoRoot, 'apps', 'linear-systems'));
-    expect(content.subject.runningExample?.title).toMatch(/spring/i);
+    expect(content.subject.runningExample?.title).toMatch(/speaker/i);
+    expect(content.subject.runningExample?.moreScenes?.map((m) => m.id)).toEqual(['house']);
     for (const m of content.maps) for (const n of m.nodes) if (n.id !== 'root') expect(n.addsToExample?.length ?? 0, `${m.id}/${n.id}`).toBeGreaterThan(14);
     expect(warnings.filter((w) => /addsToExample/.test(w))).toEqual([]);
   });

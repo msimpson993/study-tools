@@ -1,0 +1,62 @@
+---
+id: optimal
+order: 29
+title: "The best input: Pontryagin's principle"
+addsToExample: "Finds the heater profile with the least energy ∫u² dt that warms the house from outdoor temperature to (10, 7) K above it in 3 hours. The costate obeys λ̇ = −Aᵀλ, so u(t) = −bᵀλ(t)/2 is a mix of e^(0.2(t−3)) and e^(2.2(t−3)) shapes: about 1.8 kW at first, rising to 2.4 kW after 2 hours, then easing to about 1 kW at the end so room 1 does not overshoot while room 2 catches up."
+accountsFor: "Why the cheapest warm-up is not a constant power: it leans on the slow average mode early and trims the fast difference mode at the end, and how much energy any target costs (the Gramian gives the same answer)."
+category: steer
+chain:
+  - title: We can predict the response to any input. Which input is best?
+  - title: Add a cost and a costate λ
+    detail: H = L + λᵀ(Ax + Bu); ∂H/∂u = 0 gives u in terms of λ.
+  - title: Solve the two-point problem with Φ of the Hamiltonian matrix
+    detail: x is known at both ends, λ(0) is not; Φ_M(T) supplies it.
+neighbors:
+  - gramian
+  - expm
+  - ctrl
+  - cayley
+matlab: "% sol = bvp4c(@(t,y) M*y, @(ya,yb) [ya(1)-x0; yb(1)-xT], solinit)"
+exampleScene: { scene: house, overlays: [optimal, trace], caption: "The least-energy heater profile for a 3-hour warm-up, and the two room temperatures it produces." }
+---
+
+Minimise J = ∫₀ᵀ L(x, u) dt subject to ẋ = f(x, u), with x(0) given and x(T) either fixed or free.
+
+1. **Hamiltonian:** H = L + λᵀf (this page's convention; with ½L or −L the costate is scaled or sign-flipped, but u°(t) is the same).
+2. **Stationarity:** ∂H/∂u = 0 (no constraint on u), and ∂²H/∂u² > 0 for a minimum.
+3. **Canonical equations:** ẋ = ∂H/∂λ, λ̇ = −∂H/∂x.
+4. **Boundary conditions:** x(0) given; x(T) given *or* λ(T) = 0 if x(T) is free (transversality).
+
+For a linear system with a quadratic cost, steps 2–3 give a linear system in (x, λ) with the Hamiltonian matrix M, whose eigenvalues come in ± pairs. Then
+
+$$\begin{bmatrix}x(T)\\\lambda(T)\end{bmatrix}=\Phi_M(T)\begin{bmatrix}x(0)\\\lambda(0)\end{bmatrix},\qquad \Phi_M(t)=e^{Mt},$$
+
+and the unknown λ(0) is solved from the known end condition.
+
+**Picture it first.** The two-point problem is solved with a state transition matrix, the same object as e^(At), applied to the Hamiltonian matrix M.
+
+```figure:expm
+```
+
+````callout:note What this answers
+How to turn "best" into equations you can solve with the tools you already have: another state transition matrix, this time of the Hamiltonian system.
+````
+
+````callout:note What it raises
+With cost ∫uᵀu only, λ̇ = −Aᵀλ on its own, and the answer is the Gramian formula u = Bᵀe^(Aᵀ(T−t))W(T)⁻¹(x_f − e^(AT)x₀). Adding a state cost xᵀQx couples x and λ, and an infinite horizon leads to LQR.
+````
+
+````callout:note Mini example
+ẋ = 6x + u, J = ∫₀¹(x² + 2u²)dt, x(0) = 1, x(1) = 2. H = x² + 2u² + λ(6x + u), so u° = −λ/4 and
+
+$$\begin{bmatrix}\dot x\\\dot\lambda\end{bmatrix}=\underbrace{\begin{bmatrix}6&-\tfrac14\\-2&-6\end{bmatrix}}_{M}\begin{bmatrix}x\\\lambda\end{bmatrix},\quad \omega=\tfrac{\sqrt{146}}{2}\approx6.04,\quad \Phi_M(t)=\cosh\omega t\,I+\frac{\sinh\omega t}{\omega}M.$$
+
+x(1) = φ₁₁(1)·1 + φ₁₂(1)λ(0) = 2 gives λ(0) ≈ 47.94, and u°(0) ≈ −11.98: push hard down first, then let the instability carry x up to 2. The full walkthrough is in the Review area (A4).
+````
+
+### Common pitfalls
+
+- λ̇ = −∂H/∂x, with the minus sign.
+- λ(T) = 0 only for a free endpoint. With x(T) fixed, λ(0) is the unknown you solve for.
+- The factor in u°: 2u² gives ∂H/∂u = 4u + λ, so u° = −λ/4.
+- Building e^(Mt) entry by entry from e^(±ωt). Use the full matrix (Cayley–Hamilton or the modes).

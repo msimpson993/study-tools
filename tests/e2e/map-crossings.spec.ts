@@ -6,7 +6,7 @@ import { open, selectMap, measureOverlaps } from './helpers';
 // Crossing clarity: fewer crossings, and where two lines still cross the one with the horizontal piece hops over the other with a small arc.
 const OUT = path.resolve(import.meta.dirname, '..', '..', 'shots');
 fs.mkdirSync(OUT, { recursive: true });
-const PICK: Record<string, string> = { 'linear-systems': 'ops', 'control-systems': 'chain' };
+const PICK: Record<string, string> = { 'linear-systems': 'full', 'control-systems': 'chain' };
 const pickView = (page: Page, v: 'fit' | 'actual') => page.locator(`[data-testid=map-view] [data-view=${v}]`).click();
 const maps = (page: Page): Promise<{ id: string; title: string }[]> => page.evaluate(() => (window as any).__study.content.maps);
 const arcs = (page: Page) => page.evaluate(() => [...document.querySelectorAll('.qm-edge')].map((g) => ({ key: g.getAttribute('data-edge')!, d: g.querySelector('.line')!.getAttribute('d')!, plain: g.querySelector('path:not(.line):not(.head)')!.getAttribute('d')!, cls: g.getAttribute('class')! })).filter((e) => / A /.test(e.d)));
@@ -50,9 +50,9 @@ for (const app of Object.keys(PICK)) for (const [view, vp] of [['desktop', { wid
   });
 }
 
-test('dashed cross-links hop too (linear-systems ops)', async ({ page }) => {
+test('dashed cross-links hop too (linear-systems full, Actual size)', async ({ page }) => {
   await page.setViewportSize({ width: 1400, height: 900 }); await open(page, 'linear-systems');
-  await selectMap(page, (await maps(page)).find((m) => m.id === 'ops')!.title); await page.waitForTimeout(250);
+  await selectMap(page, (await maps(page)).find((m) => m.id === 'full')!.title); await pickView(page, 'actual'); await page.waitForTimeout(250);
   const n = await page.evaluate(() => [...document.querySelectorAll('.qm-edge.dashed .line')].filter((l) => / A /.test(l.getAttribute('d')!)).length);
   expect(n).toBeGreaterThan(0);
 });

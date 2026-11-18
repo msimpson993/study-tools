@@ -513,6 +513,8 @@ function addHops(geom: Geometry): void {
     if (!busy.some((h) => e.dot.x + pad > h.x0 && e.dot.x - pad < h.x1)) continue;
     const spots = [a, b, ...busy.flatMap((h) => [h.x0 - pad, h.x1 + pad])].filter((x) => x >= a && x <= b && !busy.some((h) => x + pad > h.x0 + 0.01 && x - pad < h.x1 - 0.01));
     if (spots.length) e.dot = { x: spots.reduce((m, x) => (Math.abs(x - e.dot.x) < Math.abs(m - e.dot.x) ? x : m)), y: e.dot.y };
+    // no free spot on a short, busy run: keep the dot and draw the crossing under it plain rather than hop through the dot
+    else e.hops = e.hops.filter((h) => !(h.seg === i && e.dot.x + pad > h.x0 && e.dot.x - pad < h.x1));
   }
 }
 /** Crossings that stayed plain (no room for an arc). */

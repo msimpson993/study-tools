@@ -1,12 +1,12 @@
 ---
 id: ft
-order: 13
+order: 9
 title: Fourier transform
-addsToExample: "Evaluates the cart on s = jω: its frequency response, a resonance-free low-pass for this damping."
-accountsFor: "How much a vibration at each frequency moves the cart."
-category: transforms
+addsToExample: "Plots the speaker's frequency response |H(j2πf)|: flat in the bass, a peak near 660 Hz, then falling at 40 dB per decade."
+accountsFor: "Why earbuds sound the way they do across the band, and which frequencies the ANC has to fight."
+category: signals
 chain:
-  - title: Eigenfunctions of continuous-time LTI systems are e^{jω t} (and e^{st}).
+  - title: Eigenfunctions of continuous-time LTI systems are e^(jω t) (and e^(st)).
   - title: How do I write an aperiodic continuous-time signal in that basis?
   - title: The Fourier transform
     detail: Time continuous and aperiodic → frequency continuous and aperiodic.
@@ -16,10 +16,10 @@ neighbors:
   - laplace
   - lti
 matlab: X = fourier(x, t, w)    % Symbolic Math Toolbox; or fft of a sampled record as an approximation
-exampleScene: { overlays: [shaker, trace], caption: "Shake at one frequency and the cart answers at that frequency, scaled and delayed." }
+exampleScene: { overlays: [tone, bode], caption: "A 500 Hz tone comes out scaled by |H| at 500 Hz: one point on the frequency response." }
 ---
 
-The Fourier transform is the analysis formula for a continuous aperiodic time signal against the basis {e^{jω t}}. The transform is a function of a continuous frequency ω, and (unlike the DTFT) it is not periodic in ω, because a continuous-time exponential e^{jω t} does not repeat when you add 2π to ω. Convention here: radian frequency ω in rad/s, with the 1/2π factor on the inverse.
+The Fourier transform is the analysis formula for a continuous aperiodic time signal against the basis {e^(jω t)}. The transform is a function of a continuous frequency ω, and (unlike the DTFT) it is not periodic in ω, because a continuous-time exponential e^(jω t) does not repeat when you add 2π to ω. Convention here: radian frequency ω in rad/s, with the 1/2π factor on the inverse.
 
 **Picture it first.** Wind the signal around a circle at some rate. If the signal has a component at that rate, its bumps pile up on one side; otherwise they cancel. The pile's size, as a function of the winding rate, is the Fourier transform.
 
@@ -39,7 +39,7 @@ What if x is periodic? Then only discrete harmonics fit, and you want a Fourier 
 ````
 
 ````callout:note Mini example
-For x(t) = e^{−t} u(t), the integral gives X(jω) = 1/(1 + jω). This is the restriction of the Laplace transform 1/(s+1) to s = jω, which is legal because the jω axis lies in the ROC Re(s) &gt; −1. At DC, X(j0) = 1. At ω = 1, |X(j1)| = 1/√2. As ω → ∞, |X| falls as 1/ω — a single pole, one order of rolloff.
+For x(t) = e^(−t) u(t), the integral gives X(jω) = 1/(1 + jω). This is the restriction of the Laplace transform 1/(s+1) to s = jω, which is legal because the jω axis lies in the ROC Re(s) &gt; −1. At DC, X(j0) = 1. At ω = 1, |X(j1)| = 1/√2. As ω → ∞, |X| falls as 1/ω — a single pole, one order of rolloff.
 ````
 
 ### Common pitfalls

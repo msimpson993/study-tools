@@ -1,13 +1,13 @@
 id: linear-systems
 title: Linear systems class dashboard
-centralQuestion: Given a linear operator A, what is the best basis in which to understand it, and what does that basis make easy?
-blurb: A question-chain map of the whole class (eigenvectors, state space, controllability, Fourier / Laplace / Z) with 18 deep dives, a live e^{At} figure and a self-check.
+centralQuestion: How does a linear system turn inputs into outputs, and how do we predict and steer it?
+blurb: "A map-first review of the whole class: linearity and the eigen idea, Laplace/Z and Fourier, state space, controllability, realization and optimal control, drawn on two running examples (a noise-cancelling earbud speaker and a two-room house), with 29 deep dives, live figures, worked exam problems and a self-test."
 archetype: guide
 categories:
-  - { id: basis, label: Basis }
-  - { id: time, label: Time & state }
-  - { id: control, label: Steer & see }
-  - { id: transforms, label: LTI & transforms }
+  - { id: foundations, label: "Linearity & eigen idea" }
+  - { id: signals, label: Signals view }
+  - { id: state, label: State view }
+  - { id: steer, label: "Reach, see & optimise" }
 sections:
   - { id: map, title: The question map, kind: map }
   - { id: central, title: The central question, kind: md }
@@ -17,27 +17,44 @@ sections:
   - { id: quiz, title: Self-check, kind: quiz }
   - { id: glossary, title: Variables & terms, kind: glossary }
 runningExample:
-  scene: { id: cart, overlays: [forces] }
-  title: A mass on a spring with a damper
-  summary: "A 1 kg cart on a spring (k = 2 N/m) and a damper (c = 3 N·s/m). You push it with a force u(t) and a sensor reads only its position y(t). With state x = (position, velocity) it is ẋ = Ax + Bu, y = Cx, where A = [[0, 1], [−2, −3]] is the matrix that runs through every deep dive."
+  scene: { id: speaker, title: Earbud speaker, overlays: [forces], caption: "Coil force in, diaphragm motion out." }
+  title: A noise-cancelling earbud speaker and a two-room house
+  moreScenes:
+    - { id: house, overlays: [heat, flows], title: Two-room house, caption: "Heater in room 1; rooms share a wall." }
+  summary: "Two drawn systems run through the page. The signals boxes use an earbud speaker: voltage in, diaphragm motion out, resonating at about 717 Hz. The state-space boxes use a two-room house: heater power in, two room temperatures out, with one slow mode (the average, τ = 5 h) and one fast mode (the difference, τ ≈ 27 min). Use the switch on the map to see either one."
   details: |
-    | piece | in the cart | numbers |
-    |---|---|---|
-    | state **x** | (position, velocity) | x₁ = x, x₂ = ẋ |
-    | **A** | spring and damper | [[0, 1], [−2, −3]]: ẍ = −2x − 3ẋ |
-    | **B** | the push acts on the velocity | (0, 1)ᵀ, force per unit mass |
-    | **C** | a position sensor | (1, 0) |
-    | modes | two decaying exponentials | e^(−t) along (1, −1) and e^(−2t) along (1, −2) |
-    | transfer function | force → position | G(s) = 1/(s² + 3s + 2) |
+    **Earbud speaker** (Thiele–Small values of a micro-speaker)
 
-    Every box of the map says what its idea **adds to this cart** and what it lets us **account for** that we could not explain before.
+    | piece | value | what it gives |
+    |---|---|---|
+    | moving mass M_ms | 0.084 g | with the suspension: ω_s = 1/√(M_ms C_ms) ≈ 4,503 rad/s, f_s ≈ 717 Hz |
+    | suspension compliance C_ms | 0.587 mm/N | stiffness k = 1/C_ms ≈ 1,704 N/m |
+    | mechanical damping R_ms | 0.173 kg/s | ζ ≈ 0.23 on its own |
+    | force factor Bl, coil resistance R_e | 0.545 T·m, 7.47 Ω | back-EMF damping Bl²/R_e ≈ 0.040 kg/s, so ζ ≈ 0.28 when voltage-driven |
+    | coil inductance L_e | 0.04 mH | coil pole −R_e/L_e ≈ −186,750 rad/s: far faster, so 2 states (x, ẋ) suffice |
+    | poles | −1,267 ± j4,322 rad/s | ring at ≈ 690 Hz, decay time ≈ 0.8 ms |
+
+    Noise cancelling comes as feedforward (outside microphone), feedback (in-ear microphone) or hybrid, with an adaptive FxLMS filter running at low latency.
+
+    **Two-room house** (temperatures measured above outdoors, time in hours)
+
+    | piece | value | what it means |
+    |---|---|---|
+    | A | [[−1.2, 1], [1, −1.2]] /h | the shared wall (1/h) plus a leak outdoors (0.2/h) per room |
+    | B | (3600/C_th, 0)ᵀ | a heater in room 1; C_th is the room's heat capacity (J/K) |
+    | C | [1, 0] | a thermostat in room 1 |
+    | modes | (1, 1): λ = −0.2/h, τ = 5 h; (1, −1): λ = −2.2/h, τ ≈ 27 min | the average and the difference of the two rooms |
+
+    Heating both rooms equally makes the difference uncontrollable; a thermostat that reads the average makes it unobservable.
+
+    Every box of the map says what its idea **adds to one of these examples** and what it lets us **account for**.
 hub:
   order: 2
-# Porting guard: counts carried over from the Canvas dashboard (3 maps, 64 boxes, 80 lines, 18 dives, 8 self-check
-# questions) plus 16 new multiple-choice questions. The build fails if content is dropped or added without updating this.
+# Porting guard (rebuilt Nov 2026): 2 maps (Big picture 13 boxes / 13 lines, Full detail 30 boxes / 34 lines),
+# 29 dives. Update deliberately when content is added or dropped.
 expect:
-  maps: 3
-  nodes: 64
-  edges: 80
-  dives: 18
+  maps: 2
+  nodes: 43
+  edges: 47
+  dives: 29
   quiz: 24

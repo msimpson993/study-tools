@@ -1,14 +1,14 @@
 ---
 id: dtft
-order: 15
+order: 14
 title: DTFT
-addsToExample: "Gives the spectrum of the cart's sampled position log: periodic with period 2π."
-accountsFor: "What the sampled data say about the cart's frequency content, and where the copies overlap."
-category: transforms
+addsToExample: "Maps the speaker's two poles to the z-plane after sampling at 8 kHz: radius e^(−σT) ≈ 0.85, angle ω_dT ≈ 31°."
+accountsFor: "Where the digital filter's peak sits on the unit circle, and why the sampled speaker is still stable."
+category: signals
 chain:
   - title: What if time is already a sequence?
     detail: A discrete-time signal, or samples of a continuous one.
-  - title: How do I write it in the exponential basis z^n at z = e^{jΩ}?
+  - title: How do I write it in the exponential basis z^n at z = e^(jΩ)?
   - title: The DTFT
     detail: Time discrete and aperiodic → frequency continuous and 2π-periodic.
 neighbors:
@@ -17,10 +17,10 @@ neighbors:
   - laplace
   - sampling
 matlab: "[H, w] = freqz(b, a)    % or fft(x, Nfft) as samples of the DTFT of a finite x"
-exampleScene: { overlays: [clock, shaker, poles], caption: "Read the shaken cart every 0.5 s: the sequence of samples is what the DTFT sees." }
+exampleScene: { overlays: [sampler, zplane], caption: "Sampled at 8 kHz, the poles land inside the unit circle at radius 0.85, angle 31°." }
 ---
 
-The DTFT is the analysis of a discrete-time, typically aperiodic, sequence against e^{j Ω n}. Sampling in time periodizes frequency: e^{j(Ω + 2π) n} = e^{j Ω n}, so X(e^{jΩ}) is always 2π-periodic in the radian frequency Ω (radians per sample). The inverse still has a 1/2π, now integrating over any 2π interval. The DTFT of an LTI system's impulse response is its frequency response.
+The DTFT is the analysis of a discrete-time, typically aperiodic, sequence against e^(j Ω n). Sampling in time periodizes frequency: e^(j(Ω + 2π) n) = e^(j Ω n), so X(e^(jΩ)) is always 2π-periodic in the radian frequency Ω (radians per sample). The inverse still has a 1/2π, now integrating over any 2π interval. The DTFT of an LTI system's impulse response is its frequency response.
 
 **Picture it first.** Sample a signal and its spectrum copies itself every 2π. The DTFT is that periodic spectrum, the sum of all the copies.
 
@@ -40,11 +40,11 @@ In practice you compute only finitely many samples of this continuous function o
 ````
 
 ````callout:note Mini example
-For x[n] = (1/2)^n u[n], the DTFT is X(e^{jΩ}) = 1 / (1 − ½ e^{−jΩ}), which is the Z-transform 1 / (1 − ½ z^{−1}) evaluated on the unit circle (legal because the ROC is |z| &gt; 1/2). At Ω = 0, X = 2. At Ω = π, X = 2/3. At Ω = π/2, X = 0.8 − 0.4j, with magnitude 2/√5 ≈ 0.894.
+For x[n] = (1/2)^n u[n], the DTFT is X(e^(jΩ)) = 1 / (1 − ½ e^(−jΩ)), which is the Z-transform 1 / (1 − ½ z^(−1)) evaluated on the unit circle (legal because the ROC is |z| &gt; 1/2). At Ω = 0, X = 2. At Ω = π, X = 2/3. At Ω = π/2, X = 0.8 − 0.4j, with magnitude 2/√5 ≈ 0.894.
 ````
 
 ### Common pitfalls
 
 - Ω is radians per sample, not rad/s. To convert, Ω = ω T = 2π f / f\_s. Nyquist is Ω = π, not π/T, in these units.
 - The DTFT is not the DFT. The DFT is samples of a DTFT (of a finite or periodically extended record).
-- Writing X(Ω) instead of X(e^{jΩ}) is common and harmless, but the argument really lives on the unit circle in the z-plane.
+- Writing X(Ω) instead of X(e^(jΩ)) is common and harmless, but the argument really lives on the unit circle in the z-plane.

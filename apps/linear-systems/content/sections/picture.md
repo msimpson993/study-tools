@@ -20,20 +20,20 @@ The same dictionary relates matrix diagonalization to Fourier analysis of LTI sy
 
 | Question | Matrices | LTI systems |
 |---|---|---|
-| What is invariant? | A v = λ v | H{e^{st}} = H(s) e^{st} |
-| Best coordinates | Columns of V (eigenbasis) | Complex exponentials e^{st}, z^n |
+| What is invariant? | A v = λ v | H{e^(st)} = H(s) e^(st) |
+| Best coordinates | Columns of V (eigenbasis) | Complex exponentials e^(st), z^n |
 | The operator becomes | Multiplication by λ_i | Multiplication by H(s) or H(jω) |
 | Change of basis | x = V ξ,  Λ = V⁻¹ A V | Analysis / synthesis transform |
 | Composition | Polynomials and powers of A | Convolution ↔ product of transforms |
-| Evolution in time | e^{At} = V e^{Λt} V⁻¹ | Each mode × e^{λt};  Y(s) = H(s) X(s) |
-| Incomplete basis | Jordan blocks, t^k e^{λt} | Repeated poles, t^k e^{λt} u(t) |
+| Evolution in time | e^(At) = V e^(Λt) V⁻¹ | Each mode × e^(λt);  Y(s) = H(s) X(s) |
+| Incomplete basis | Jordan blocks, t^k e^(λt) | Repeated poles, t^k e^(λt) u(t) |
 | Reach / see every mode | Range of Ctrb,  null space of O | No cancelled poles in a minimal G(s) |
 
 | State space | Transfer function |
 |---|---|
 | (A, B, C, D) | G(s) = C(sI − A)⁻¹ B + D |
 | Eigenvalues of A | Poles of G, after cancelling hidden modes |
-| Impulse response C e^{At} B + D δ(t) | G(s) = Laplace transform of that h(t) |
+| Impulse response C e^(At) B + D δ(t) | G(s) = Laplace transform of that h(t) |
 | Controllable and observable | Minimal: deg G = n, poles = eig(A) |
 | Uncontrollable or unobservable mode | Pole-zero cancellation; mode still lives in A |
 | Internal stability: all Re(λ) < 0 | BIBO: poles of G in the open left half-plane |

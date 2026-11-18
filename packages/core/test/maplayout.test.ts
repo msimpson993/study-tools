@@ -92,8 +92,9 @@ describe('map view: Fit to screen vs Actual size', () => {
     control-systems/chain narrow ceilings were raised from 5/9 to 12/12 when the Designing-with-state-feedback chapter was added; wide ceilings are unchanged. */
 const BEFORE: Record<string, [number, number][]> = {
   'control-systems/chain': [[12, 13], [12, 11], [7, 2], [3, 1], [3, 1]], 'control-systems/splane': [[0, 0], [0, 0], [0, 0], [0, 0], [0, 0]],
-  'linear-systems/overview': [[0, 1], [0, 1], [2, 0], [2, 0], [2, 0]], 'linear-systems/ops': [[37, 71], [39, 68], [55, 5], [60, 6], [53, 4]],
-  'linear-systems/signals': [[28, 134], [29, 133], [24, 2], [34, 1], [15, 0]], 'pid-tuning/chain': [[21, 271], [21, 271], [47, 12], [30, 4], [39, 1]],
+  // linear-systems was rebuilt (Nov 2026) as Big picture + Full detail; these maps never had the old layout, so their ceilings are what the current layout draws.
+  'linear-systems/big': [[2, 0], [2, 0], [2, 0], [2, 0], [2, 0]], 'linear-systems/full': [[15, 1], [15, 1], [5, 0], [6, 0], [3, 0]],
+  'pid-tuning/chain': [[21, 271], [21, 271], [47, 12], [30, 4], [39, 1]],
   'transforms/chain': [[2, 1], [2, 1], [1, 0], [1, 0], [1, 0]],
 };
 const WIDTHS5 = [362, 560, 775, 980, 1400];

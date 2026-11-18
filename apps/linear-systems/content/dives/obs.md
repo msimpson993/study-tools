@@ -1,10 +1,10 @@
 ---
 id: obs
-order: 9
+order: 25
 title: Observability
-addsToExample: "Checks that watching the position y(t) alone is enough to reconstruct both position and velocity of the cart: rank of [C; CA] = [[1, 0], [0, 1]] is 2."
-accountsFor: "That a position sensor can recover the velocity too, so a state estimator for the cart is possible."
-category: control
+addsToExample: "Tries two thermostats: one in room 1 (C = [1, 0]) sees both modes; one reading the average (C = [½, ½]) is blind to the difference mode."
+accountsFor: "Why the thermostat's placement decides whether you can work out room 2's temperature."
+category: steer
 chain:
   - title: Can the input reach every mode?
     detail: Controllability.
@@ -17,7 +17,7 @@ neighbors:
   - tf
   - eig
 matlab: "rank(obsv(A, C)) == size(A, 1)    % PBH: rank([lam*eye(n)-A; C]) == n"
-exampleScene: { overlays: [sensor, observe], caption: "The sensor sees x only. The velocity hides, but it shows in how x changes." }
+exampleScene: { scene: house, overlays: [avg, modes], caption: "A thermostat reading the average cannot tell the two rooms apart." }
 ---
 
 The system (A, C) is observable when the initial state can be recovered from a finite record of the output (and the known input). Equivalently, the observability matrix O has trivial null space: if y is identically zero with u = 0, then x(0) = 0. In the eigenbasis this is: does every mode appear in y? PBH: no right eigenvector of A may lie in the kernel of C. Observability is dual to controllability: (A, C) is observable iff (Aᵀ, Cᵀ) is controllable.
@@ -28,7 +28,7 @@ The system (A, C) is observable when the initial state can be recovered from a f
 ```
 
 ```eq
-O = [C;  CA;  CA²;  …;  CA^{n−1}],    rank(O) = n
+O = [C;  CA;  CA²;  …;  CA^(n−1)],    rank(O) = n
 ```
 
 ```eq

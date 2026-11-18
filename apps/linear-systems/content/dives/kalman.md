@@ -1,10 +1,10 @@
 ---
 id: kalman
-order: 10
+order: 28
 title: Kalman decomposition & minimal realization
-addsToExample: "Splits a state into the parts the force can push and the sensor can see. For the cart, both modes are controllable and observable, so nothing hides."
-accountsFor: "Why G(s) is the cart's complete description (and what would be missing if a mode were hidden)."
-category: control
+addsToExample: "Splits the house with both rooms heated equally and an average thermostat: the average is reached and seen, the difference neither. The transfer function keeps only the 5-hour pole."
+accountsFor: "Why that house looks like a first-order system from outside, even though it has two states."
+category: steer
 chain:
   - title: Some modes may be unreachable, or invisible, or both.
   - title: Can I split the state into those four kinds of mode?
@@ -16,7 +16,7 @@ neighbors:
   - tf
   - stab
 matlab: sys_min = minreal(ss(A, B, C, D))    % or ctrbf / obsvf for the split
-exampleScene: { overlays: [sensor, observe, reach], caption: "Everything the push can reach is also visible to the sensor: no state is wasted, so the realization is minimal." }
+exampleScene: { scene: house, overlays: [both, avg, modes], diagram: house-kalman, caption: "Reached and seen: the average. Neither: the difference, which just decays on its own." }
 ---
 
 A change of basis (the Kalman decomposition) splits the state into four invariant pieces: controllable and observable (CO), controllable but unobservable, uncontrollable but observable, and neither. The transfer function depends only on the CO part. A realization is minimal when it is both controllable and observable; then dim(A) equals the degree of G(s), and the poles of G are exactly the eigenvalues of A.

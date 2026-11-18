@@ -1,10 +1,10 @@
 ---
 id: dft
-order: 16
+order: 15
 title: DFT
-addsToExample: "Computes N frequency samples of a finite log of the cart's position, which is what a spectrum analyser does."
-accountsFor: "The cart's spectrum from a real record; why a tone between bins leaks."
-category: transforms
+addsToExample: "Analyses a 64-sample block of the speaker's ring: bins every 125 Hz at 8 kHz."
+accountsFor: "How the ANC chip can see which frequencies are loud right now."
+category: signals
 chain:
   - title: In practice the record is finite — or the sequence is periodic.
   - title: What happens if I also sample the DTFT in frequency?
@@ -16,7 +16,7 @@ neighbors:
   - ortho
   - sampling
 matlab: "X = fft(x, N)    % inverse: x = ifft(X)"
-exampleScene: { overlays: [clock, shaker, trace], caption: "Keep a finite stretch of those samples: that stretch is all the DFT sees." }
+exampleScene: { overlays: [dft, sampler], caption: "N = 64 samples in, 64 frequency bins out, 125 Hz apart." }
 ---
 
 The N-point DFT is the discrete Fourier series of a length-N sequence viewed as one period of a periodic signal. Equivalently, it is the DTFT of that finite record, sampled at Ω = 2π k / N. Frequency is now discrete and periodic with period N. This is the one you actually compute, via the FFT. Convention here, and in MATLAB: the forward transform is the unnormalized sum, and the inverse carries 1/N.
@@ -39,7 +39,7 @@ How does this sit next to the other three Fourier tools? See the 2×2 table in B
 ````
 
 ````callout:note Mini example
-Take N = 4 and x[n] = cos(π n / 2) = [1, 0, −1, 0], which is exactly one period of a bin-1 cosine. Then X[k] = fft(x) = [0, 2, 0, 2]: the energy sits at k = 1 and k = 3 (≡ −1 mod 4), each with amplitude N/2 = 2, as the analysis of (e^{j π n / 2} + e^{−j π n / 2})/2 predicts. A tone whose frequency is not an integer number of cycles in N still has a DTFT peaked at that Ω, but the DFT samples miss the peak and you see leakage into every bin.
+Take N = 4 and x[n] = cos(π n / 2) = [1, 0, −1, 0], which is exactly one period of a bin-1 cosine. Then X[k] = fft(x) = [0, 2, 0, 2]: the energy sits at k = 1 and k = 3 (≡ −1 mod 4), each with amplitude N/2 = 2, as the analysis of (e^(j π n / 2) + e^(−j π n / 2))/2 predicts. A tone whose frequency is not an integer number of cycles in N still has a DTFT peaked at that Ω, but the DFT samples miss the peak and you see leakage into every bin.
 ````
 
 ### Common pitfalls

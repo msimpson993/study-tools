@@ -36,14 +36,15 @@ for (const v of VIEWS) {
         // map with an open node popup
         const node = page.locator('[data-testid=map-node]').nth(2);
         await node.dispatchEvent('click'); await snap(page, `${app}-map-popup-${tag}`);
-        // review mode
+        // review mode (close the popup first: on a phone its bottom sheet can sit over the mode buttons)
+        await page.getByTestId('panel-close').click();
         await page.getByRole('button', { name: 'Review', exact: true }).click();
         for (let i = 0; i < 4; i++) await page.locator('[data-testid=map-node]').nth(i).dispatchEvent('click');
         await snap(page, `${app}-map-review-${tag}`);
         await page.evaluate(() => { localStorage.clear(); });
         if (maps.length > 1) {
           await open(page, app); await setTheme(page, theme);
-          await page.locator('[data-testid=concept-map] [role=tab]').nth(2).click();
+          await page.locator('[data-testid=concept-map] [role=tab]').nth(Math.min(2, maps.length - 1)).click();
           await snap(page, `${app}-map-3-${tag}`);
         }
         await open(page, app, '#/quiz'); await setTheme(page, theme);

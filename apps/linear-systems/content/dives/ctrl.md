@@ -1,10 +1,10 @@
 ---
 id: ctrl
-order: 8
+order: 24
 title: Controllability
-addsToExample: "Asks whether the force u can steer both position and velocity anywhere, and whether the position sensor tells us both."
-accountsFor: "Whether pushing and watching can reach and see everything about this cart."
-category: control
+addsToExample: "Asks whether the room-1 heater can reach every state: B points along room 1 and AB has a room-2 part (the wall), so [B AB] has rank 2. Heating both rooms equally, B ∝ (1, 1), gives rank 1: the difference mode is uncontrollable."
+accountsFor: "Which heater placements can set both room temperatures, and which can only set their average."
+category: steer
 chain:
   - title: The state has modes, each along an eigenvector.
   - title: Can I steer every mode with the input u?
@@ -16,10 +16,10 @@ neighbors:
   - tf
   - eig
 matlab: "rank(ctrb(A, B)) == size(A, 1)    % PBH: rank([lam*eye(n)-A, B]) == n"
-exampleScene: { overlays: [push, reach], caption: "The push acts on the velocity (B); the spring turns velocity into position (AB). Together they reach the whole plane." }
+exampleScene: { scene: house, overlays: [heat, reach], caption: "B pushes room 1, the wall turns it into AB: together they span the plane." }
 ---
 
-The system (A, B) is controllable when the input can move the state from any x(0) to any x(T) in finite time (or, discretely, in at most n steps). Equivalently, the range of the controllability matrix Ctrb = [B AB … A^{n−1} B] is the whole state space. In the eigenbasis this is: can u write into every mode? The PBH test makes that literal: no left eigenvector of A may be orthogonal to the columns of B.
+The system (A, B) is controllable when the input can move the state from any x(0) to any x(T) in finite time (or, discretely, in at most n steps). Equivalently, the range of the controllability matrix Ctrb = [B AB … A^(n−1) B] is the whole state space. In the eigenbasis this is: can u write into every mode? The PBH test makes that literal: no left eigenvector of A may be orthogonal to the columns of B.
 
 **Picture it first.** Imagine every state you could reach by pushing with a bounded input for a time T. That blob is the reachable set, and controllability asks whether it fills the plane.
 
@@ -27,7 +27,7 @@ The system (A, B) is controllable when the input can move the state from any x(0
 ```
 
 ```eq
-Ctrb = [B,  AB,  A²B,  …,  A^{n−1}B],    rank(Ctrb) = n
+Ctrb = [B,  AB,  A²B,  …,  A^(n−1)B],    rank(Ctrb) = n
 ```
 
 ```eq
@@ -55,4 +55,4 @@ For the running A, B = [0, 1]ᵀ gives Ctrb = [B, AB] = [[0, 1], [1, −3]], wit
 - PBH for controllability uses left eigenvectors (w\* A = λ w\*). Using a right eigenvector here is the usual mix-up with observability.
 - For several inputs, Ctrb is n × (n m) and you need rank n, not a nonzero determinant.
 - Controllable is stronger than stabilizable. Stabilizable means every unstable mode is controllable; the stable ones may be left alone.
-- Why stop at A^{n−1}? Cayley–Hamilton: higher powers of A are linear combinations of I, A, …, A^{n−1}.
+- Why stop at A^(n−1)? Cayley–Hamilton: higher powers of A are linear combinations of I, A, …, A^(n−1).

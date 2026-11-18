@@ -1,10 +1,10 @@
 ---
 id: tf
-order: 11
+order: 8
 title: Transfer functions
-addsToExample: "Collapses the cart's A, B, C into one function G(s) = 1/(s² + 3s + 2): force to position."
-accountsFor: "The cart's whole input-output behaviour, with its poles at −1 and −2, in one line."
-category: control
+addsToExample: "Reads the speaker's peak from its pole pair: ζ ≈ 0.28, so the poles sit fairly close to the jω axis and |H| peaks near 660 Hz, a little below fs = 717 Hz."
+accountsFor: "Why lighter damping would make a sharper, louder resonance, and why the peak is below fs."
+category: signals
 chain:
   - title: I have a state realization (A, B, C, D).
   - title: How do I write the input-output map without the state?
@@ -16,12 +16,12 @@ neighbors:
   - kalman
   - laplace
 matlab: G = tf(ss(A, B, C, D))    % or [b, a] = ss2tf(A, B, C, D)
-exampleScene: { overlays: [push, poles], caption: "A 1 N push gives the step response; G(s) = 1/(s² + 3s + 2) has its poles at −1 and −2." }
+exampleScene: { overlays: [poles, bode], caption: "Stand on the jω axis: the closer you are to a pole, the bigger |H|." }
 ---
 
 Taking the (zero-state) Laplace transform of the state equations and eliminating X(s) produces G(s). This is the same object as the Laplace transform of the impulse response. In the best-basis language, each mode contributes a term r / (s − λ), unless that mode is uncontrollable or unobservable, in which case its residue is zero and the pole cancels.
 
-**Picture it first.** To find how the cart responds to a sine of frequency ω, stand at the point jω on the s-plane and measure the distance to each pole. The response is the product of those distances, inverted.
+**Picture it first.** To find how a system responds to a sine of frequency ω, stand at the point jω on the s-plane and measure the distance to each pole. The response is the product of those distances, inverted.
 
 ```figure:tf
 ```
@@ -43,7 +43,7 @@ G(s) forgets hidden modes and initial conditions. If you need the full natural r
 ````
 
 ````callout:note Mini example
-For the running (A, B, C) with B = [0, 1]ᵀ and C = [1, 0], (sI − A)⁻¹ = 1/(s² + 3s + 2) · [[s + 3, 1], [−2, s]], so G(s) = 1/((s + 1)(s + 2)). Partial fractions: 1/(s+1) − 1/(s+2), hence h(t) = (e^{−t} − e^{−2t}) u(t), matching C e^{At} B. With the uncontrollable B = [1, −2]ᵀ the same algebra yields (s+1)/((s+1)(s+2)) = 1/(s+2): the cancelled pole is exactly the hidden eigenvalue.
+For the running (A, B, C) with B = [0, 1]ᵀ and C = [1, 0], (sI − A)⁻¹ = 1/(s² + 3s + 2) · [[s + 3, 1], [−2, s]], so G(s) = 1/((s + 1)(s + 2)). Partial fractions: 1/(s+1) − 1/(s+2), hence h(t) = (e^(−t) − e^(−2t)) u(t), matching C e^(At) B. With the uncontrollable B = [1, −2]ᵀ the same algebra yields (s+1)/((s+1)(s+2)) = 1/(s+2): the cancelled pole is exactly the hidden eigenvalue.
 ````
 
 ### Common pitfalls

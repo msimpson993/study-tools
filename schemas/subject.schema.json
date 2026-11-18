@@ -269,7 +269,7 @@
             },
             "title": {
               "type": "string",
-              "description": "Short name on the hero switch (with moreScenes)."
+              "description": "Short name for the hero switch and the dive callout when there are moreScenes, e.g. 'Earbud speaker'."
             }
           }
         },

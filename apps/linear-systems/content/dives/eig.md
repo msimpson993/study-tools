@@ -1,10 +1,10 @@
 ---
 id: eig
-order: 1
+order: 2
 title: Eigenvectors & eigenvalues
-addsToExample: "Solves Av = λv for the cart: λ = −1 with v = (1, −1) and λ = −2 with v = (1, −2)."
-accountsFor: "The two decay rates of the cart and the shape of each mode: position and velocity move together."
-category: basis
+addsToExample: "Solves Av = λv for the house: v = (1, 1) with λ = −0.2 per hour (the average temperature) and v = (1, −1) with λ = −2.2 per hour (the difference between the rooms)."
+accountsFor: "Why the house has one slow way of cooling (τ = 5 h) and one fast way (τ ≈ 27 min), and what each looks like."
+category: foundations
 chain:
   - title: What does a linear operator A do to a vector?
   - title: Are there directions A only stretches?
@@ -17,12 +17,12 @@ neighbors:
   - ctrl
   - obs
 matlab: "[V, D] = eig(A)"
-exampleScene: { overlays: [modes, trace], caption: "Released from x = 1, the state splits into two eigen-directions, and each fades on its own." }
+exampleScene: { scene: house, overlays: [modes, trace], caption: "The state splits into the average (slow) and the difference (fast); each fades on its own." }
 ---
 
 An eigenvector is a line that A leaves invariant: the output is a scalar multiple of the input. That scalar is the eigenvalue, and it is the whole story of A along that line. In a linear system those lines are the modes.
 
-**Picture it first.** Think of A as an instruction to move the whole plane. Most vectors get turned as well as stretched, but a few special directions only stretch. Try it on the running cart.
+**Picture it first.** Think of A as an instruction to move the whole plane. Most vectors get turned as well as stretched, but a few special directions only stretch. Try it on A = [[0, 1], [−2, −3]] (the textbook pair of modes −1 and −2), then picture the house: its eigen-directions are the average (1, 1) and the difference (1, −1).
 
 ```figure:eig
 ```
@@ -36,7 +36,7 @@ det(λI − A) = 0
 ```
 
 ````callout:note What this answers
-Which directions are already simple for A, and what gain each one sees. For the running example, the modes of ÿ + 3ẏ + 2y = u live at λ = −1 and λ = −2.
+Which directions are already simple for A, and what gain each one sees. For the house, λ = −0.2/h along (1, 1) and λ = −2.2/h along (1, −1); for ÿ + 3ẏ + 2y = u, λ = −1 and λ = −2.
 ````
 
 ````callout:note What it raises

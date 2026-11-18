@@ -1,12 +1,12 @@
 ---
 id: stab
-order: 7
+order: 22
 title: Stability
-addsToExample: "Checks the cart's eigenvalues −1 and −2 are in the left half-plane, so every motion decays to rest."
-accountsFor: "Why the cart settles instead of oscillating forever or running away."
-category: time
+addsToExample: "Checks the house: eigenvalues −0.2 and −2.2 per hour, both negative, so with the heater off it always returns to the outdoor temperature."
+accountsFor: "Why the house always cools down, and why the slow mode decides how long it takes."
+category: state
 chain:
-  - title: The modes evolve as e^{λt} (or λ^k in discrete time).
+  - title: The modes evolve as e^(λt) (or λ^k in discrete time).
   - title: Do those modes decay?
   - title: Stability
     detail: A condition on where the eigenvalues sit.
@@ -16,7 +16,7 @@ neighbors:
   - laplace
   - sampling
 matlab: "max(real(eig(A)))    % discrete: max(abs(eig(A)))"
-exampleScene: { overlays: [forces, poles, flow], caption: "Both poles are left of the axis, so every path slides into the origin." }
+exampleScene: { scene: house, overlays: [poles, trace], caption: "Both eigenvalues are negative: every start returns to the outdoor temperature." }
 ---
 
 Asymptotic (internal) stability of x′ = Ax is equivalent to every eigenvalue of A sitting in the open left half-plane. In discrete time, every eigenvalue of A must sit inside the open unit disk. The same geometry appears in Laplace and Z: decaying natural responses are left-half-plane poles, or poles inside the unit circle. BIBO stability is a statement about G(s) (or G(z)), and can hide an unstable mode that cancelled.
@@ -43,11 +43,11 @@ If a mode is unstable, can the input still stabilize it? That is stabilizability
 ````
 
 ````callout:note Mini example
-The running A has λ = −1, −2, both with negative real part, so ẋ = Ax is asymptotically stable. Sampled with period T = 0.1, the discrete matrix e^{AT} has eigenvalues e^{−0.1} ≈ 0.9048 and e^{−0.2} ≈ 0.8187, both inside the unit circle, so the sampled system is stable too. If one eigenvalue were +1, the continuous system would be unstable; if a discrete eigenvalue were −1, that mode would alternate and not decay (marginally stable only if the Jordan block is 1×1).
+The running A has λ = −1, −2, both with negative real part, so ẋ = Ax is asymptotically stable. Sampled with period T = 0.1, the discrete matrix e^(AT) has eigenvalues e^(−0.1) ≈ 0.9048 and e^(−0.2) ≈ 0.8187, both inside the unit circle, so the sampled system is stable too. If one eigenvalue were +1, the continuous system would be unstable; if a discrete eigenvalue were −1, that mode would alternate and not decay (marginally stable only if the Jordan block is 1×1).
 ````
 
 ### Common pitfalls
 
 - Re(λ) ≤ 0 is not enough for asymptotic stability. A simple jω-axis eigenvalue is Lyapunov (marginally) stable; a Jordan block of size 2 or more on the axis is unstable (terms t sin, t cos).
 - Internal stability looks at every eigenvalue of A. BIBO looks at the poles of G(s). A cancelled unstable mode can make G(s) look fine while the state blows up.
-- The left half-plane mapping inside the unit circle is not a styling choice. Sampling gives |z| = e^{σ T}, so σ &lt; 0 if and only if |z| &lt; 1.
+- The left half-plane mapping inside the unit circle is not a styling choice. Sampling gives |z| = e^(σ T), so σ &lt; 0 if and only if |z| &lt; 1.

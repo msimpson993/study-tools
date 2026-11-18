@@ -1,10 +1,10 @@
 ---
 id: diag
-order: 2
+order: 18
 title: Diagonalization & change of basis
-addsToExample: "Rewrites the cart as A = VΛV⁻¹ with Λ = diag(−1, −2): in mode coordinates the cart is two independent decays."
-accountsFor: "The cart's behaviour decouples: one coordinate falls at rate 1, the other at rate 2."
-category: basis
+addsToExample: "Rewrites the house in average and difference coordinates, ξ = V⁻¹x with V = [[1, 1], [1, −1]]: two separate one-room problems with rates 0.2/h and 2.2/h."
+accountsFor: "Why the warm-up curve is exactly one slow exponential plus one fast one."
+category: state
 chain:
   - title: Are there directions A only stretches?
     detail: Eigenvectors.
@@ -17,7 +17,7 @@ neighbors:
   - ortho
   - expm
 matlab: "D = inv(V) * A * V    % equivalent: A = V * D * inv(V)"
-exampleScene: { overlays: [modes, flow], caption: "In the eigenbasis the cart is two independent scalar decays, one per mode." }
+exampleScene: { scene: house, overlays: [modes, poles], diagram: house-modal, caption: "In modal coordinates the house is two independent first-order systems." }
 ---
 
 If the eigenvectors form a basis, stack them as the columns of V and write x = V ξ. In the ξ-coordinates A does nothing but scale each axis: Λ = V⁻¹ A V is diagonal. Solving, iterating, and exponentiating A all become scalar operations on those coordinates.
@@ -40,7 +40,7 @@ How to pick coordinates so the operator is as simple as possible: independent sc
 ````
 
 ````callout:note What it raises
-What if there are not enough independent eigenvectors? (Jordan.) And if A acts over time, what is the solution of x′ = Ax in this basis? (e^{At}.)
+What if there are not enough independent eigenvectors? (Jordan.) And if A acts over time, what is the solution of x′ = Ax in this basis? (e^(At).)
 ````
 
 ````callout:note Mini example

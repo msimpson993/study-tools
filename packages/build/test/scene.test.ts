@@ -47,7 +47,7 @@ describe('example scene content field', () => {
     expect(msg(dir)).toBe(''); expect(loadApp(dir).warnings.join('\n')).toMatch(/dives\/ring: exampleScene is ignored/);
   });
   it('shipped: linear-systems and transforms give every dive an exampleScene that validates', () => {
-    for (const [app, scene] of [['linear-systems', 'cart'], ['transforms', 'tine']] as const) {
+    for (const [app, scene] of [['linear-systems', 'speaker'], ['transforms', 'tine']] as const) {
       const { content, warnings } = loadApp(path.join(repoRoot, 'apps', app));
       expect(content.subject.runningExample?.scene?.id).toBe(scene);
       for (const d of content.dives) expect(d.exampleScene?.overlays?.length, `${app}/${d.id}`).toBeGreaterThan(0);
@@ -58,7 +58,7 @@ describe('example scene content field', () => {
 
 describe('closed-loop params (cart)', () => {
   const cart = () => {
-    const dir = copyApp('linear-systems'); const f = fs.readdirSync(path.join(dir, 'content/dives'))[0];
+    const dir = copyApp('control-systems'); const f = fs.readdirSync(path.join(dir, 'content/dives'))[0];
     return { dir, file: path.join(dir, 'content/dives', f), id: f.replace(/\.md$/, '') };
   };
   it('accepts overlays + params on a dive, a map node and the hero, and passes them through', () => {
@@ -81,7 +81,7 @@ describe('closed-loop params (cart)', () => {
 
 describe('staged block diagram field', () => {
   it('passes a stage (and a list) through on the hero and a dive', () => {
-    const dir = copyApp('linear-systems');
+    const dir = copyApp('control-systems');
     const file = path.join(dir, 'content/dives', fs.readdirSync(path.join(dir, 'content/dives'))[0]);
     const id = path.basename(file, '.md');
     front(file, (fm) => { fm.exampleScene = { overlays: ['disturb'], params: { K: 7, d: -2, td: 4 }, diagram: ['loop', 'disturb'], caption: 'two stages' }; });
@@ -94,7 +94,7 @@ describe('staged block diagram field', () => {
     ['unknown stage', { overlays: ['forces'], diagram: 'nope' }, /unknown diagram stage/],
     ['empty list', { overlays: ['forces'], diagram: [] }, /diagram|empty|minItems/],
   ])('rejects %s', (_n, ex, re) => {
-    const dir = copyApp('linear-systems');
+    const dir = copyApp('control-systems');
     const file = path.join(dir, 'content/dives', fs.readdirSync(path.join(dir, 'content/dives'))[0]);
     front(file, (fm) => { fm.exampleScene = ex; });
     expect(msg(dir)).toMatch(re);

@@ -146,7 +146,7 @@ export interface SceneLayout { w: number; h: number; compact: boolean; main: Rec
 /** Layout for the linear-systems scenes: main picture, chain-diagram strip, then up to two panels. */
 function chainLayout(scene: string, overlays: string[], w: number, compact: boolean, diagram?: unknown): SceneLayout {
   const ids = (Array.isArray(diagram) ? diagram : diagram ? [diagram] : []).filter((s): s is string => typeof s === 'string' && !!CHAIN_STAGES[s]);
-  const mainH = Math.round(Math.min(210, Math.max(compact ? 126 : 150, w * (compact ? 0.4 : 0.44)))) + (scene === 'house' && !compact ? 10 : 0);
+  const mainH = Math.round(Math.min(210, Math.max(compact ? 126 : 150, w * (compact ? 0.37 : 0.44)))) + (scene === 'house' && !compact ? 10 : 0);
   const kinds = compact ? [] : insetsOf(scene, overlays), gap = 8, insetH = Math.round(Math.min(210, Math.max(150, w * 0.5)));
   const showChain = ids.length > 0 && !compact, dH = showChain ? chainStripHeight(ids, w) : 0, dY = mainH + gap;
   const chains = showChain ? layoutChain(ids, w, dY) : [];

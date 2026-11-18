@@ -21,7 +21,7 @@ export const ssFigure = figureOf((c) => {
   const sim = () => simulate(num(c.values, 'k'), num(c.values, 'cd'), num(c.values, 'x0'), String(c.values.input), num(c.values, 'amp'), TMAX_SS);
   return [
     {
-      id: 'cart', title: 'The running example: a cart on a spring and damper', x: 'position x (m)', y: 'schematic',
+      id: 'cart', title: 'The textbook cart on a spring and damper', x: 'position x (m)', y: 'schematic',
       draw(g, w, h) {
         wipe(g, w, h);
         const t = num(c.values, 't'), s = sim(), i = Math.min(s.ts.length - 1, Math.round(t / 0.01));

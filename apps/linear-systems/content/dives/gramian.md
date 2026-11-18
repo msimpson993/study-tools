@@ -1,0 +1,52 @@
+---
+id: gramian
+order: 27
+title: Gramians
+addsToExample: "Computes the house's 3-hour controllability Gramian W(3) for the room-1 heater. Its ellipse is about 4 times longer than it is wide, tilted about 31° up from the room-1 axis. Warming both rooms by 10 K costs ∫u² ≈ 3.1 × 10⁷ W²·h; holding them 10 K apart costs about 6.0 × 10⁷ W²·h, nearly twice as much."
+accountsFor: "Why some targets are cheap and others expensive even though the house is controllable, and where the least-energy warm-up comes from."
+category: steer
+chain:
+  - title: Controllable, yes. But how hard is each direction?
+  - title: The controllability Gramian W(T)
+    detail: ∫ e^(Aτ)BBᵀe^(Aᵀτ)dτ; invertible iff controllable.
+  - title: Minimum energy and the hard directions
+    detail: E_min = x_fᵀW⁻¹x_f; small eigenvalues of W are expensive directions.
+neighbors:
+  - ctrl
+  - optimal
+  - obs
+  - kalman
+matlab: "W = gram(ss(A, B, C, 0), 'c')    % infinite-horizon; or integral(...) for finite T"
+exampleScene: { scene: house, overlays: [gramian, heat], caption: "States reachable with the same heating energy in 3 hours: a long, thin, tilted ellipse." }
+---
+
+$$W_c(T)=\int_0^T e^{A\tau}BB^{\mathsf T}e^{A^{\mathsf T}\tau}\,d\tau,\qquad W_o(T)=\int_0^T e^{A^{\mathsf T}\tau}C^{\mathsf T}Ce^{A\tau}\,d\tau$$
+
+W_c(T) is positive definite exactly when (A, B) is controllable. The least energy ∫‖u‖²dt that takes the state from 0 to x_f in time T is x_fᵀW_c(T)⁻¹x_f, and the input that does it is
+
+$$u(t)=B^{\mathsf T}e^{A^{\mathsf T}(T-t)}W_c(T)^{-1}\big(x_f-e^{AT}x_0\big).$$
+
+**Picture it first.** The set of states you can reach with one unit of energy is an ellipse (an ellipsoid in n dimensions) whose axes are the eigenvectors of W_c, with half-lengths √(eigenvalues). A long axis is a cheap direction; a short axis is an expensive one. If some eigenvalue is zero, the ellipse is flat: that direction is unreachable.
+
+**Picture it first.** B and AB are the directions the input can push in; the Gramian weighs how far each one gets per unit of energy.
+
+```figure:ctrl
+```
+
+````callout:note What this answers
+How controllable a system is, not just whether. The observability Gramian answers the dual question: how much output energy each initial state produces, so which states are hard to see.
+````
+
+````callout:note What it raises
+Balanced truncation: change coordinates until W_c = W_o is diagonal, then drop the states that are both hard to reach and hard to see.
+````
+
+````callout:note Mini example
+For ẋ = u (one integrator), W(T) = T and the cheapest way from 0 to 1 in time T is u = 1/T, with energy 1/T. Halving the time doubles the energy. That is review variant P2.
+````
+
+### Common pitfalls
+
+- The order is e^(Aτ)B, not Be^(Aτ).
+- The infinite-horizon Gramian (from the Lyapunov equation AW + WAᵀ + BBᵀ = 0) exists only for stable A.
+- A Gramian that is nearly singular means "controllable on paper, impractical in reality".

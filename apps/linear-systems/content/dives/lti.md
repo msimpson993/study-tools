@@ -1,10 +1,10 @@
 ---
 id: lti
-order: 12
+order: 1
 title: Convolution, LTI & eigenfunctions
-addsToExample: "Looks at the same cart as a black box: force u(t) in, position y(t) out. Doubling the push doubles the motion, and a push today does the same thing tomorrow."
-accountsFor: "How we can predict the response to any push if we know the response to one sharp tap."
-category: transforms
+addsToExample: "Clicks the speaker with a short voltage pulse: the diaphragm rings at about 690 Hz and dies away within a few milliseconds. That ring is the impulse response h(t), and any input is a row of scaled, shifted clicks."
+accountsFor: "Why the speaker's response to music, or to anti-noise, can be predicted from that one ring."
+category: foundations
 chain:
   - title: What if the operator A is an LTI system on signals?
   - title: What are its eigenfunctions?
@@ -16,12 +16,12 @@ neighbors:
   - tf
   - diag
 matlab: y = lsim(sys, u, t)    % or y = conv(h, x)
-exampleScene: { overlays: [hammer, trace], caption: "One hammer blow gives the impulse response; any input is a stream of such blows." }
+exampleScene: { overlays: [conv], caption: "Any input is a row of clicks; the output is the same row of rings, added up." }
 ---
 
-A system is linear and time-invariant if and only if it is convolution with a fixed impulse response h. The signals that pass through a convolution unchanged in shape are the eternal exponentials e^{st} (or z^n in discrete time): they are eigenfunctions, and the eigenvalue is the transfer function H(s) (or H(z)). Expanding an input in that basis is what the Laplace, Z, and Fourier transforms do, and it diagonalizes convolution — that is the convolution theorem.
+A system is linear and time-invariant if and only if it is convolution with a fixed impulse response h. The signals that pass through a convolution unchanged in shape are the eternal exponentials e^(st) (or z^n in discrete time): they are eigenfunctions, and the eigenvalue is the transfer function H(s) (or H(z)). Expanding an input in that basis is what the Laplace, Z, and Fourier transforms do, and it diagonalizes convolution — that is the convolution theorem.
 
-**Picture it first.** Convolution is a flip-and-slide: flip the cart's impulse response, slide it along the input, and take the area of the overlap.
+**Picture it first.** Convolution is a flip-and-slide: flip the impulse response, slide it along the input, and take the area of the overlap.
 
 ```figure:lti
 ```
@@ -41,7 +41,7 @@ How do I actually write a given signal in the exponential basis? That splits by 
 ````
 
 ````callout:note Mini example
-For the running system, H(s) = 1/((s+1)(s+2)). Feeding the eternal exponential e^{st} (with Re(s) &gt; −1, so the expression converges) returns H(s) e^{st}. Along the jω axis, a phasor e^{jω t} comes back multiplied by H(jω). At ω = 0, H(0) = 1/2: a constant input of 1 produces the constant output 1/2, which is the DC gain. The same H is the Laplace transform of h(t) = (e^{−t} − e^{−2t}) u(t).
+For the running system, H(s) = 1/((s+1)(s+2)). Feeding the eternal exponential e^(st) (with Re(s) &gt; −1, so the expression converges) returns H(s) e^(st). Along the jω axis, a phasor e^(jω t) comes back multiplied by H(jω). At ω = 0, H(0) = 1/2: a constant input of 1 produces the constant output 1/2, which is the DC gain. The same H is the Laplace transform of h(t) = (e^(−t) − e^(−2t)) u(t).
 ````
 
 ### Common pitfalls

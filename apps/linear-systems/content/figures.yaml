@@ -15,7 +15,7 @@
     - { id: x2, label: "x₂(0)", type: range, min: -2, max: 2, step: 0.05, default: 0, group: primary }
     - { id: tmax, label: "Time span", type: range, min: 1, max: 12, step: 0.5, default: 6, group: more, unit: s }
   presets:
-    - { id: running, label: "Running example (−1, −2)", set: { a1: 3, a0: 2, x1: 1, x2: 0 }, about: "A = [[0, 1], [−2, −3]]: eigenvalues −1 and −2 with eigenvectors [1, −1]ᵀ and [1, −2]ᵀ. Both modes decay; the slow one (−1) dominates." }
+    - { id: running, label: "Textbook cart (−1, −2)", set: { a1: 3, a0: 2, x1: 1, x2: 0 }, about: "A = [[0, 1], [−2, −3]]: eigenvalues −1 and −2 with eigenvectors [1, −1]ᵀ and [1, −2]ᵀ. Both modes decay; the slow one (−1) dominates." }
     - { id: pure-mode, label: "Excite one mode", set: { a1: 3, a0: 2, x1: 1, x2: -1 }, about: "Starting on the eigenvector [1, −1]ᵀ excites only the −1 mode: ξ₂ stays at zero and x moves along a line." }
     - { id: critical, label: "Critically damped (Jordan)", set: { a1: 2, a0: 1, x1: 1, x2: 0 }, about: "Repeated eigenvalue −1 and a single Jordan block: e^{At} contains t e^{−t}. No real eigen-coordinates exist." }
     - { id: oscillating, label: "Underdamped", set: { a1: 0.6, a0: 4, x1: 1, x2: 0 }, about: "Complex eigenvalues −0.3 ± 1.95j: a decaying rotation. Real picture: A rotates and scales a plane." }
@@ -37,7 +37,7 @@
     - { label: "eigen-direction 1 (dashed)", color: "var(--grn)", dash: true }
     - { label: "eigen-direction 2 (dashed)", color: "var(--org)", dash: true }
     - { label: "image of the unit grid", color: "var(--accent)" }
-  howToRead: "Left: the faint grid is the plane before, the blue grid is where A sends it (drag the morph slider or press Play to watch it happen). The cyan arrow is a probe v, the yellow arrow is Av. Right: for every direction of v, how far Av is turned away from v. It touches zero exactly at the eigenvectors, the dashed lines on the left. Edit the four entries of A, or start from the running cart."
+  howToRead: "Left: the faint grid is the plane before, the blue grid is where A sends it (drag the morph slider or press Play to watch it happen). The cyan arrow is a probe v, the yellow arrow is Av. Right: for every direction of v, how far Av is turned away from v. It touches zero exactly at the eigenvectors, the dashed lines on the left. Edit the four entries of A, or start from the textbook cart."
   lookFor: "Turn the probe angle: Av swings around, but when v lies on a dashed line Av stays on that same line. Now pick Rotation: the dashed lines vanish and the right plot never touches zero."
   animate: { control: t, speed: 0.25, loop: true }
   controls:
@@ -48,7 +48,7 @@
     - { id: th, label: "probe direction of v", type: range, min: 0, max: 360, step: 1, default: 30, group: primary, unit: "°" }
     - { id: t, label: "morph: identity → A", type: range, min: 0, max: 1, step: 0.01, default: 1, group: primary }
   presets:
-    - { id: cart, label: "Running cart", set: { a: 0, b: 1, c: -2, d: -3, th: 30, t: 1 }, about: "A = [[0, 1], [−2, −3]]: eigenvalues −1 and −2, eigen-directions (1, −1) and (1, −2)." }
+    - { id: cart, label: "Textbook cart", set: { a: 0, b: 1, c: -2, d: -3, th: 30, t: 1 }, about: "A = [[0, 1], [−2, −3]]: eigenvalues −1 and −2, eigen-directions (1, −1) and (1, −2)." }
     - { id: stretch, label: "Symmetric stretch", set: { a: 2, b: 1, c: 1, d: 2, th: 30, t: 1 }, about: "A symmetric matrix: perpendicular eigen-directions (1, 1) and (1, −1), stretching by 3 and 1." }
     - { id: rotation, label: "Rotation", set: { a: 0, b: -1, c: 1, d: 0, th: 30, t: 1 }, about: "A quarter turn: no direction keeps its line, eigenvalues ±j." }
     - { id: shear, label: "Shear", set: { a: 1, b: 1, c: 0, d: 1, th: 30, t: 1 }, about: "Repeated eigenvalue 1 and only one eigen-direction (the x-axis)." }
@@ -72,7 +72,7 @@
     - { id: th1, label: "direction of v₁", type: range, min: -90, max: 90, step: 1, default: -45, group: more, unit: "°" }
     - { id: th2, label: "direction of v₂", type: range, min: -90, max: 90, step: 1, default: -63, group: more, unit: "°" }
   presets:
-    - { id: cart, label: "Running cart", set: { l1: -1, l2: -2, th1: -45, th2: -63, phi: 20 }, about: "Eigenvalues −1, −2 with eigenvectors (1, −1) and (1, −2): a skewed, not perpendicular, basis." }
+    - { id: cart, label: "Textbook cart", set: { l1: -1, l2: -2, th1: -45, th2: -63, phi: 20 }, about: "Eigenvalues −1, −2 with eigenvectors (1, −1) and (1, −2): a skewed, not perpendicular, basis." }
     - { id: symmetric, label: "Perpendicular basis", set: { l1: 3, l2: 1, th1: 45, th2: -45, phi: 20 }, about: "A symmetric matrix: orthogonal eigenvectors, the skew disappears." }
     - { id: nearly, label: "Nearly parallel", set: { l1: -1, l2: -2, th1: -45, th2: -50, phi: 20 }, about: "Eigenvectors almost on top of each other: the basis is ill-conditioned, coordinates become huge." }
     - { id: defective, label: "Parallel (defective)", set: { l1: -1, l2: -1, th1: -45, th2: -45, phi: 20 }, about: "One eigen-direction only: there is no eigenbasis, so no diagonal form." }
@@ -119,7 +119,7 @@
     - { id: same, label: "Parallel, m = n", set: { alpha: 0, m: 2, n: 2 }, about: "Full shadow; a sinusoid is not orthogonal to itself (area π)." }
 
 - id: ss
-  title: "The running example in motion: force in, state and sensor out"
+  title: "A cart on a spring and damper in motion: force in, state and sensor out"
   x: time t (s)
   y: position, velocity, force
   legend:
@@ -138,7 +138,7 @@
     - { id: t, label: "time t", type: range, min: 0, max: 10, step: 0.02, default: 0, group: primary, unit: s }
     - { id: x0, label: "initial position x(0)", type: range, min: -1, max: 1, step: 0.05, default: 0, group: more }
   presets:
-    - { id: step, label: "Step push (running cart)", set: { input: step, amp: 1, cd: 3, k: 2, t: 0, x0: 0 }, about: "Overdamped (poles −1, −2): the position creeps to 1/k = 0.5 m without overshoot." }
+    - { id: step, label: "Step push (textbook cart)", set: { input: step, amp: 1, cd: 3, k: 2, t: 0, x0: 0 }, about: "Overdamped (poles −1, −2): the position creeps to 1/k = 0.5 m without overshoot." }
     - { id: pulse, label: "Push then release", set: { input: pulse, amp: 1, cd: 3, k: 2, t: 0, x0: 0 }, about: "After the pulse ends the force is zero: the state decays by A alone." }
     - { id: bouncy, label: "Underdamped", set: { input: step, amp: 1, cd: 0.6, k: 4, t: 0, x0: 0 }, about: "Complex poles: the cart rings (oscillates) while it settles." }
     - { id: free, label: "Released from x = 1", set: { input: none, amp: 0, cd: 3, k: 2, t: 0, x0: 1 }, about: "No force: the free response x(t) = e^{At}x(0)." }
@@ -164,7 +164,7 @@
     - { id: x2, label: "x₂(0)", type: range, min: -2, max: 2, step: 0.05, default: 0.5, group: primary }
     - { id: t, label: "time t", type: range, min: 0, max: 8, step: 0.02, default: 0, group: primary, unit: s }
   presets:
-    - { id: cart, label: "Running cart (−1, −2)", set: { a1: 3, a0: 2, x1: 1, x2: 0.5, t: 0 }, about: "Two real decaying modes: the plane collapses onto the slow direction." }
+    - { id: cart, label: "Textbook cart (−1, −2)", set: { a1: 3, a0: 2, x1: 1, x2: 0.5, t: 0 }, about: "Two real decaying modes: the plane collapses onto the slow direction." }
     - { id: spiral, label: "Underdamped spiral", set: { a1: 0.6, a0: 4, x1: 1, x2: 0.5, t: 0 }, about: "Complex eigenvalues −0.3 ± 1.95j: the plane spirals inward, no eigen-directions." }
     - { id: unstable, label: "Unstable", set: { a1: -0.5, a0: 2, x1: 0.5, x2: 0, t: 0 }, about: "Right half-plane eigenvalues: the plane spirals outward." }
 
@@ -209,7 +209,7 @@
     - { id: a1, label: "a₁", type: range, min: 0, max: 6, step: 0.05, default: 3, group: more }
     - { id: a0, label: "a₀", type: range, min: 0.5, max: 8, step: 0.05, default: 2, group: more }
   presets:
-    - { id: cart, label: "Running cart: force on the mass", set: { beta: 90, T: 2, a1: 3, a0: 2 }, about: "B = (0, 1): the force changes velocity. B and AB are independent: fully controllable." }
+    - { id: cart, label: "Textbook cart: force on the mass", set: { beta: 90, T: 2, a1: 3, a0: 2 }, about: "B = (0, 1): the force changes velocity. B and AB are independent: fully controllable." }
     - { id: slow, label: "B along the slow mode", set: { beta: -45, T: 2, a1: 3, a0: 2 }, about: "B ∥ (1, −1), the −1 eigenvector: the input can only excite that mode." }
     - { id: fast, label: "B along the fast mode", set: { beta: -63, T: 2, a1: 3, a0: 2 }, about: "B nearly ∥ (1, −2): almost only the −2 mode is excited." }
 
@@ -225,13 +225,13 @@
     - { label: "eigen-direction 1", color: "var(--grn)", dash: true }
     - { label: "eigen-direction 2", color: "var(--org)", dash: true }
   howToRead: "Left: the state plane. The sensor reads y = Cx, the component of the state along C (grey lines are states with the same reading). P and Q are two starting states that differ by a push along an eigenvector. Right: the output the sensor records from P and from Q. If the sensor is blind to the mode that separates them (C · v = 0), the two records coincide forever and you can never tell P from Q. That mode is unobservable."
-  lookFor: "Set the sensor angle so that C is perpendicular to the dashed direction P and Q differ along: the two curves land exactly on top of each other. A position-only sensor on the running cart (angle 0) never has this problem."
+  lookFor: "Set the sensor angle so that C is perpendicular to the dashed direction P and Q differ along: the two curves land exactly on top of each other. A position-only sensor on the textbook cart (angle 0) never has this problem."
   controls:
     - { id: gamma, label: "sensor direction C", type: range, min: -90, max: 90, step: 1, default: 0, group: primary, unit: "°" }
     - { id: s, label: "offset of Q from P", type: range, min: -1.5, max: 1.5, step: 0.05, default: 1, group: primary }
     - { id: along, label: "offset runs along", type: seg, default: "1", group: primary, options: [{ value: "1", label: "mode −1" }, { value: "2", label: "mode −2" }] }
   presets:
-    - { id: pos, label: "Position sensor (running cart)", set: { gamma: 0, s: 1, along: "1" }, about: "C = (1, 0): sees both modes, so any difference shows up." }
+    - { id: pos, label: "Position sensor (textbook cart)", set: { gamma: 0, s: 1, along: "1" }, about: "C = (1, 0): sees both modes, so any difference shows up." }
     - { id: vel, label: "Velocity sensor", set: { gamma: 90, s: 1, along: "1" }, about: "C = (0, 1): also sees both modes (the cart is observable from velocity too)." }
     - { id: blind1, label: "Blind to the −1 mode", set: { gamma: 45, s: 1, along: "1" }, about: "C = (1, 1)/√2 is perpendicular to (1, −1): the slow mode is invisible." }
     - { id: blind2, label: "Blind to the −2 mode", set: { gamma: 27, s: 1, along: "2" }, about: "C ∝ (2, 1) is perpendicular to (1, −2): the fast mode is invisible." }
@@ -279,7 +279,7 @@
     - { id: hasZero, label: "add a zero", type: toggle, default: false, group: more }
     - { id: zr, label: "zero position", type: range, min: -5, max: 5, step: 0.1, default: -3, group: more }
   presets:
-    - { id: cart, label: "Running cart: poles −1, −2", set: { a1: 3, a0: 2, w: 1, hasZero: false, zr: -3 }, about: "G(s) = 2/((s+1)(s+2)): a smooth low-pass, no resonance." }
+    - { id: cart, label: "Textbook cart: poles −1, −2", set: { a1: 3, a0: 2, w: 1, hasZero: false, zr: -3 }, about: "G(s) = 2/((s+1)(s+2)): a smooth low-pass, no resonance." }
     - { id: ring, label: "Lightly damped", set: { a1: 0.4, a0: 4, w: 1, hasZero: false, zr: -3 }, about: "Poles −0.2 ± 2j sit near the axis: a resonance near ω = 2." }
     - { id: zero, label: "Cart with a zero at −3", set: { a1: 3, a0: 2, w: 1, hasZero: true, zr: -3 }, about: "A left-half-plane zero lifts the high-frequency end." }
 
@@ -296,7 +296,7 @@
   animate: { control: t, speed: 0.9, loop: true }
   controls:
     - { id: input, label: "input force", type: seg, default: pulse, group: primary, options: [{ value: pulse, label: "pulse" }, { value: step, label: "step" }, { value: two, label: "up-down" }, { value: sine, label: "sine" }] }
-    - { id: sys, label: "system", type: seg, default: cart, group: primary, options: [{ value: cart, label: "running cart" }, { value: ring, label: "underdamped" }] }
+    - { id: sys, label: "system", type: seg, default: cart, group: primary, options: [{ value: cart, label: "textbook cart" }, { value: ring, label: "underdamped" }] }
     - { id: t, label: "output time t", type: range, min: 0, max: 9, step: 0.02, default: 2, group: primary, unit: s }
   presets:
     - { id: pulse, label: "Cart, 1.5 s push", set: { input: pulse, sys: cart, t: 2 }, about: "h(t) = e^{−t} − e^{−2t}: a smooth bump, so the response to a pulse is a smoothed bump." }
@@ -310,7 +310,7 @@
   legend:
     - { label: "x(t) e^{−j2πft}, the wound-up signal", color: "var(--accent)" }
     - { label: "centre of mass of the wound-up signal", color: "var(--yel)" }
-  howToRead: "Pick a winding frequency f. Left: the signal x(t) is multiplied by e^{−j2πft}, which wraps it around the origin f times per second. If the signal has a component at f, its bumps line up on one side and the centre of mass (yellow) moves away from the origin; otherwise they cancel. Right: the distance of the centre of mass from the origin, as a function of f, is |X(f)|, the Fourier transform. Switch to the cart's impulse response to see the transform of the running example: at f = 0 it sums to G(0)."
+  howToRead: "Pick a winding frequency f. Left: the signal x(t) is multiplied by e^{−j2πft}, which wraps it around the origin f times per second. If the signal has a component at f, its bumps line up on one side and the centre of mass (yellow) moves away from the origin; otherwise they cancel. Right: the distance of the centre of mass from the origin, as a function of f, is |X(f)|, the Fourier transform. Switch to the cart's impulse response to see the transform of the textbook cart: at f = 0 it sums to G(0)."
   lookFor: "Press Play and sweep f. For the two-tone signal the centre of mass lights up at exactly 1 Hz and 2.5 Hz and stays near zero elsewhere. For the cart it is largest at f = 0 and shrinks smoothly: a low-pass system."
   animate: { control: f, speed: 0.25, loop: true }
   controls:
@@ -337,7 +337,7 @@
     - { id: N, label: "harmonics included", type: range, min: 1, max: 25, step: 1, default: 3, group: primary }
     - { id: th, label: "phase θ", type: range, min: 0, max: 6.2832, step: 0.01, default: 0.8, group: primary, unit: rad }
   presets:
-    - { id: square3, label: "Square wave, 3 terms", set: { wave: square, N: 3, th: 0.8 }, about: "A periodic push force from the running example." }
+    - { id: square3, label: "Square wave, 3 terms", set: { wave: square, N: 3, th: 0.8 }, about: "A periodic push force on the textbook cart." }
     - { id: square25, label: "Square wave, 25 terms", set: { wave: square, N: 25, th: 0.8 }, about: "Sharper edges, but a Gibbs overshoot stays." }
     - { id: tri, label: "Triangle wave", set: { wave: tri, N: 3, th: 0.8 }, about: "Harmonics fall like 1/k²: converges fast." }
 
