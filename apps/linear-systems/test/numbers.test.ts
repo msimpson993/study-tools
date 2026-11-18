@@ -303,3 +303,21 @@ describe('house: least-energy warm-up to the illustrative (10, 7) K target in 3 
     expect(E([10, 10])).toBeCloseTo(31.36, 1); expect(E([5, -5])).toBeCloseTo(60.26, 1); expect(E([10, 7])).toBeCloseTo(13.43, 2);
   });
 });
+
+describe('leakage vs damping (window and DFT dives)', () => {
+  const k = 1 / 0.587e-3, m = 0.084e-3, R = 0.173 + 0.545 ** 2 / 7.47;
+  it('the click ring has died to ≈ 4 × 10⁻⁵ after 64 samples at 8 kHz, and its spectrum is ≈ 400–850 Hz wide (peak ≈ 660 Hz)', () => {
+    expect(Math.exp((-R / (2 * m)) * 0.008)).toBeCloseTo(3.98e-5, 6);
+    const mag = (f: number) => { const w = 2 * Math.PI * f; return k / Math.hypot(k - m * w * w, R * w); };
+    let pk = 0, fp = 0; for (let f = 1; f < 3000; f += 0.5) if (mag(f) > pk) { pk = mag(f); fp = f; }
+    expect(fp).toBeCloseTo(657.6, 0);
+    let lo = 0, hi = 0; for (let f = 1; f < 3000; f += 0.5) if (mag(f) >= pk / Math.SQRT2) { if (!lo) lo = f; hi = f; }
+    expect(lo).toBeGreaterThan(390); expect(lo).toBeLessThan(410); expect(hi).toBeGreaterThan(835); expect(hi).toBeLessThan(850);
+  });
+  it('a steady 690 Hz hum, 64 samples at 8 kHz: bins 5 and 6 read −4.7 and −3.2 dB; exactly halfway (687.5 Hz) both read −3.9 dB', () => {
+    const bins = (f: number) => [5, 6].map((kk) => { let re = 0, im = 0; for (let n = 0; n < 64; n++) { const x = Math.cos((2 * Math.PI * f * n) / 8000), a = (-2 * Math.PI * kk * n) / 64; re += x * Math.cos(a); im += x * Math.sin(a); } return 20 * Math.log10(Math.hypot(re, im) / 32); });
+    const [b5, b6] = bins(690); expect(b5).toBeCloseTo(-4.7, 1); expect(b6).toBeCloseTo(-3.24, 1);
+    // one-sided (complex) tone exactly halfway: sinc(½) = 2/π → −3.92 dB on both bins
+    expect(20 * Math.log10(2 / Math.PI)).toBeCloseTo(-3.92, 2);
+  });
+});

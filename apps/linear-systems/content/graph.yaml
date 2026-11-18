@@ -545,7 +545,7 @@ maps:
     series: 1
     short: "Cutting a block out of a signal multiplies it by a window, which convolves the spectrum with the window's transform. A tone that does not fit a whole number of periods leaks into neighbouring bins; tapered windows trade a wider peak for lower leakage."
     eq: "x[n]w[n] ↔ (1/2π) X ⊛ W"
-    addsToExample: "Shows why a 690 Hz ring, which falls between 125 Hz bins, smears over several bins."
+    addsToExample: "Shows why a steady 690 Hz hum near the resonance, 64 samples at 8 kHz, falls between bins 5 and 6 (125 Hz apart): its peak reads about 4 dB low on both and smears."
     accountsFor: Why the DFT of a pure tone is not a single spike.
     dive: window
     quizTag: window

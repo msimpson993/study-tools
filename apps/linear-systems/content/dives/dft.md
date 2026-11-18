@@ -2,7 +2,7 @@
 id: dft
 order: 15
 title: DFT
-addsToExample: "Analyses a 64-sample block of the speaker's ring: bins every 125 Hz at 8 kHz."
+addsToExample: "Analyses a 64-sample block of the speaker's ring: bins every 125 Hz at 8 kHz. The click ring's own spectrum is ≈400 Hz wide because it decays in under 1 ms, so it covers several bins whatever the bin spacing."
 accountsFor: "How the ANC chip can see which frequencies are loud right now."
 category: signals
 neighbors:

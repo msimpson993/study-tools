@@ -2,7 +2,7 @@
 id: window
 order: 16
 title: Windowing and leakage
-addsToExample: "Takes a 64-sample block of the speaker's 690 Hz ring at 8 kHz. The bins are 125 Hz apart and 690 Hz falls between them, so the peak smears over several bins; a tapered (Hann) window narrows the smear's skirts at the cost of a wider peak."
+addsToExample: "Takes a steady 690 Hz hum near the resonance, 64 samples at 8 kHz. The bins are 125 Hz apart and 690 Hz falls between bins 5 and 6, so its peak reads about 4 dB low on both and smears over the neighbours; a tapered (Hann) window lowers the far skirts at the cost of a wider peak. (The click ring itself is no test of leakage: it has died out, to 4 × 10⁻⁵, well before 64 samples, and its spectrum is wide because of damping.)"
 accountsFor: "Why the DFT of a pure tone is not one clean spike, and why the ANC chip's frequency estimates need a window."
 category: signals
 neighbors:
@@ -11,7 +11,7 @@ neighbors:
   - parseval
   - sampling
 matlab: "X = fft(x .* hann(N))"
-exampleScene: { overlays: [dft], caption: "64 samples at 8 kHz, bins 125 Hz apart: the 688 Hz ring falls between bins, so its peak reads low and smears (leakage)." }
+exampleScene: { overlays: [dft], caption: "The click ring's DFT is wide because the ring dies out in under 1 ms (damping, not leakage); leakage is a steady tone falling between bins." }
 ---
 
 **The question:** what does cutting out a finite block do to the spectrum? It follows *DFT / FFT*: a block is the signal times a window, so the spectrum is smeared by the window's own spectrum, and a tone between bins leaks into its neighbours.
@@ -32,7 +32,7 @@ Zero-padding samples the same smeared spectrum more finely; it does not add reso
 ````
 
 ````callout:note Mini example
-N = 64 at 8 kHz gives bins every 125 Hz. A 750 Hz tone sits exactly on bin 6 and shows a single spike; a 690 Hz tone sits at bin 5.52 and spreads, with the two nearest bins both about 4 dB below the true peak and a long tail of side lobes.
+N = 64 at 8 kHz gives bins every 125 Hz. A steady 750 Hz hum sits exactly on bin 6 and shows a single spike. A steady 690 Hz hum near the resonance sits at bin 5.52 and spreads: bins 5 and 6 both read about 4 dB below the true peak (−4.7 and −3.2 dB; −3.9 dB each for a hum exactly halfway, at 687.5 Hz), with a long tail of side lobes.
 ````
 
 ### Common pitfalls
