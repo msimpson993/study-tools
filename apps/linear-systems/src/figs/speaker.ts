@@ -198,7 +198,7 @@ export const dtftFigure = figureOf((c) => {
         const f = graph(g, w, h, [-2 * Math.PI, 2 * Math.PI], [0, Math.max(...ms) * 1.15], 'Ω (rad/sample)', '|X(e^(jΩ))|', Math.PI / 2);
         g.fillStyle = 'rgba(110,226,110,.10)'; g.fillRect(f.X(-Math.PI), f.box.t, f.X(Math.PI) - f.X(-Math.PI), f.box.b - f.box.t);
         curve(g, f, os, ms, col.a(), 2.5); dot(g, f, [Om, cabs(ringDTFT(Om, fs))], col.e(), 5);
-        const d = ringDigital(fs); note(g, `Ω = ${fmt(Om, 2)} ↔ ${fmt((Om * fs * 1000) / TAU, 0)} Hz · ring peak Ω ≈ ${fmt(d.th, 2)}`, f.box.r - 4, f.box.t + 10, col.text(), 'right', 10);
+        const d = ringDigital(fs); note(g, `Ω = ${fmt(Om, 2)} ↔ ${fmt((Om * fs * 1000) / TAU, 0)} Hz · pole angle θ = ${fmt(d.th, 3)}`, f.box.r - 4, f.box.t + 10, col.text(), 'right', 10);
       },
     },
   ];
@@ -410,7 +410,7 @@ export const ssFigure = figureOf((c) => {
         const s = sim(), t = num(c.values, 't'), top = Math.max(5, ...s.xs.map(Math.abs)) * 1.15, f = graph(g, w, h, [0, 6], [-top, top], 'time t (ms)', 'cone position x (µm)');
         const amp = Math.max(1e-6, num(c.values, 'amp')); curve(g, f, s.ts, s.us.map((u) => (u / amp) * top * 0.4), col.d(), 1.2, [3, 3]);
         curve(g, f, s.ts, s.xs, col.a(), 2.5); tline(g, f, [t, -top], [t, top], col.e(), 1.2, [4, 3]);
-        note(g, `ẋ = Ax + Bu, A = [[0, 1], [−${fmt(spk().a0, 2)}, −${fmt(spk().a1, 3)}]] /ms`, f.box.r - 4, f.box.t + 10, col.text(), 'right', 10);
+        note(g, `a₀ = ${fmt(spk().a0, 2)} ms⁻², a₁ = ${fmt(spk().a1, 3)} ms⁻¹`, f.box.r - 4, f.box.t + 10, col.text(), 'right', 10);
       },
     },
   ];

@@ -423,3 +423,17 @@ describe('least-energy profiles that need cooling', () => {
     expect(ends([10, 7], 3).min).toBeGreaterThan(0);
   });
 });
+
+describe('tutor round 2 (TF/DTFT/DFT peaks and decay)', () => {
+  it('|H| peaks at 658 Hz (×1.85, +5.4 dB) below the 688 Hz pole frequency; ×1.83 at 690 Hz', () => {
+    const b = ex.peakBand(); expect(b.fPeak).toBeCloseTo(657.5, 0); expect(b.peak).toBeCloseTo(1.85, 2); expect(ex.cabs(ex.Hf(690))).toBeCloseTo(1.83, 2); expect(ex.spk().fd).toBeCloseTo(688, 0);
+  });
+  it('8 kHz: pole angle θ = 0.540 rad, DTFT peak at Ω ≈ 0.52 rad (≈ 660 Hz); 3 kHz θ ≈ 1.44, 16 kHz θ ≈ 0.27', () => {
+    let pk = 0, op = 0; for (let o = 0; o < 3.14; o += 0.0005) { const v = ex.cabs(ex.ringDTFT(o)); if (v > pk) { pk = v; op = o; } }
+    expect(ex.ringDigital(8).th).toBeCloseTo(0.540, 3); expect(op).toBeCloseTo(0.519, 2); expect((op * 8000) / (2 * Math.PI)).toBeCloseTo(661, -1);
+    expect(ex.ringDigital(3).th).toBeCloseTo(1.441, 3); expect(ex.ringDigital(16).th).toBeCloseTo(0.270, 3);
+  });
+  it('ring time constant ≈ 6.3 samples at 8 kHz; below 1% after ≈ 29 samples (3.6 ms)', () => {
+    const s = ex.spk(); expect(8 / s.sigma).toBeCloseTo(6.32, 1); expect((Math.log(100) / s.sigma) * 8).toBeCloseTo(29.1, 0); expect(Math.log(100) / s.sigma).toBeLessThan(4);
+  });
+});

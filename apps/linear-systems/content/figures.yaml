@@ -22,7 +22,7 @@
   presets:
     - { id: house, label: "House: room 1 10 K warmer", set: { kw: 1, leak: 0.2, x1: 10, x2: 0 }, about: "ξ(0) = (5, 5): half of each mode. The difference dies at −2.2 /h, the average at −0.2 /h." }
     - { id: avg, label: "Average mode only (10, 10)", set: { kw: 1, leak: 0.2, x1: 10, x2: 10 }, about: "Starting on the eigenvector (1, 1): both rooms cool together at e^(−0.2t)." }
-    - { id: diff, label: "Difference mode only (5, −5)", set: { kw: 1, leak: 0.2, x1: 5, x2: -5 }, about: "Starting on (1, −1): the rooms meet at zero within the hour, at e^(−2.2t)." }
+    - { id: diff, label: "Difference mode only (5, −5)", set: { kw: 1, leak: 0.2, x1: 5, x2: -5 }, about: "Starting on (1, −1): the gap is about 90% gone within the hour, at e^(−2.2t)." }
     - { id: wall, label: "No shared wall", set: { kw: 0, leak: 0.2, x1: 10, x2: 0 }, about: "kw = 0: A = −0.2·I, both eigenvalues equal and every direction is an eigenvector; the rooms cool independently." }
   pair:
     forward: x
@@ -237,7 +237,7 @@
     - { label: "state path so far", color: "var(--cyan)" }
     - { label: "state at time t", color: "var(--yel)" }
     - { label: "drive voltage (scaled)", color: "var(--vio)", dash: true }
-  howToRead: "The two states are cone position x and velocity ẋ; the coil current follows the voltage almost instantly and is left out. ẋ = Ax + Bu with A = [[0, 1], [−20.28, −2.533]] per ms and a DC gain of 42.8 µm per volt. Left: the state moving through the (x, ẋ) plane (axes scaled to fit). Right: the cone position against time with the drive. Play runs the clock."
+  howToRead: "The two states are cone position x and velocity ẋ; the coil current follows the voltage almost instantly and is left out. ẍ = −a₀x − a₁ẋ + a₀·(DC gain)·V with a₀ = 20.28 ms⁻², a₁ = 2.533 ms⁻¹ and a DC gain of 42.8 µm per volt. Left: the state moving through the (x, ẋ) plane (axes scaled to fit). Right: the cone position against time with the drive. Play runs the clock."
   lookFor: "A click (a short pulse) starts the state on the velocity axis; it spirals in two or three turns (688 turns a second) before it is gone. A step spirals in to the new rest position 42.8 µm per volt out."
   animate: { control: t, speed: 1, loop: true }
   controls:
@@ -300,7 +300,7 @@
   controls:
     - { id: f, label: "winding frequency f", type: range, min: 0, max: 2000, step: 5, default: 300, group: primary, unit: Hz }
   presets:
-    - { id: dc, label: "f = 0", set: { f: 0 }, about: "No winding: X(0) = ∫h dt = 1 (the DC gain)." }
+    - { id: dc, label: "f = 0", set: { f: 0 }, about: "No winding: X(0) = ∫h dt = 1, the DC gain (normalised: 1 ≡ 42.8 µm/V)." }
     - { id: peak, label: "Peak, 658 Hz", set: { f: 658 }, about: "|X| ≈ 1.85 (+5.4 dB)." }
     - { id: high, label: "1.5 kHz", set: { f: 1500 }, about: "The winding averages out: |X| is small." }
 
@@ -368,15 +368,15 @@
     - { label: "|X(e^(jΩ))|", color: "var(--cyan)" }
     - { label: "the chosen Ω", color: "var(--yel)" }
   howToRead: "Left: three milliseconds of the click ring sampled at fs (dashed: the continuous ring). Right: its DTFT magnitude from −2π to 2π, in closed form b₁e^(−jΩ)/(1 − 2r cos θ e^(−jΩ) + r²e^(−2jΩ)) with r = e^(−σT) and θ = ω_d T. The green band is one period, −π to π; Ω converts to hertz as Ω·fs/2π. Play sweeps Ω."
-  lookFor: "At 8 kHz the peak sits at Ω ≈ 0.54 rad (688 Hz) and repeats every 2π. Lower fs and the same ring moves to larger Ω, closer to π."
+  lookFor: "At 8 kHz the pole angle is θ = ω_dT ≈ 0.540 rad (688 Hz); the DTFT peak sits a little lower, at Ω ≈ 0.52 rad (≈660 Hz), like the analogue peak, and repeats every 2π. Lower fs and the same ring moves to larger Ω, closer to π."
   animate: { control: Om, speed: 0.5, loop: true }
   controls:
     - { id: Om, label: "Ω", type: range, min: 0, max: 3.14, step: 0.01, default: 0.54, group: primary, unit: rad }
     - { id: fs, label: "sampling rate fs", type: range, min: 2, max: 16, step: 0.5, default: 8, group: primary, unit: kHz }
   presets:
-    - { id: base, label: "8 kHz", set: { fs: 8, Om: 0.54 }, about: "r = 0.854, θ = 0.540." }
-    - { id: slow, label: "3 kHz", set: { fs: 3, Om: 1.44 }, about: "The ring is now at Ω ≈ 1.44 rad." }
-    - { id: fast, label: "16 kHz", set: { fs: 16, Om: 0.27 }, about: "More samples per ring: Ω ≈ 0.27 rad." }
+    - { id: base, label: "8 kHz", set: { fs: 8, Om: 0.54 }, about: "r = 0.854; the pole angle is θ = ω_dT ≈ 0.540 rad (688 Hz); the DTFT peak sits a little lower, at Ω ≈ 0.52 rad (≈660 Hz), like the analogue peak." }
+    - { id: slow, label: "3 kHz", set: { fs: 3, Om: 1.44 }, about: "Pole angle θ ≈ 1.44 rad." }
+    - { id: fast, label: "16 kHz", set: { fs: 16, Om: 0.27 }, about: "More samples per ring: pole angle θ ≈ 0.27 rad." }
 
 - id: dft
   title: "DFT of a block of the click ring: N bins on the DTFT"
@@ -386,7 +386,7 @@
     - { label: "samples / DFT bins", color: "var(--cyan)" }
     - { label: "the DTFT it samples", color: "var(--muted)", dash: true }
   howToRead: "Left: N samples of the click ring at 8 kHz. Right: the DFT magnitudes |X[k]| at frequencies k·fs/N (bins), sitting exactly on the DTFT of the same samples (dashed). More samples means closer bins on the same curve."
-  lookFor: "The ring has died out within about 8 samples, so 64 samples are mostly zeros; its spectrum is about 400 Hz wide because of damping, so it covers several bins whatever N is."
+  lookFor: "The ring decays with a time constant of about 6 samples and is under 1% after about 30 samples (under 4 ms), so most of the 64 samples are near zero; its spectrum is about 400 Hz wide because of damping, so it covers several bins whatever N is."
   controls:
     - { id: N, label: "block length N", type: range, min: 16, max: 128, step: 16, default: 64, group: primary }
   presets:
@@ -476,7 +476,7 @@
     - { label: "the point jω = j2πf", color: "var(--yel)" }
     - { label: "|H(j2πf)|", color: "var(--cyan)" }
   howToRead: "|H(jω)| = a₀ divided by the product of the distances from the two poles to the point jω on the imaginary axis (ω in 1/ms: 2πf/1000). Left: the poles and those distances. Right: |H| in dB against frequency. Play sweeps f."
-  lookFor: "As jω passes the upper pole near 4.32j (688 Hz) its distance is smallest and |H| peaks at about +5.4 dB (×1.85). Increase the damping and the poles move left: the peak flattens."
+  lookFor: "Near 4.32j (688 Hz) jω is closest to the upper pole, but |H| = a₀/(d₁d₂) peaks a little lower, at 658 Hz (+5.4 dB, ×1.85), because d₂ keeps growing (at 690 Hz it is ×1.83). Increase the damping and the poles move left: the peak flattens."
   animate: { control: f, speed: 250, loop: true }
   controls:
     - { id: f, label: "frequency f", type: range, min: 0, max: 2500, step: 5, default: 300, group: primary, unit: Hz }
