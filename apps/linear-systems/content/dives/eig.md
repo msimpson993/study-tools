@@ -5,12 +5,6 @@ title: Eigenvectors & eigenvalues
 addsToExample: "Solves Av = λv for the house: v = (1, 1) with λ = −0.2 per hour (the average temperature) and v = (1, −1) with λ = −2.2 per hour (the difference between the rooms)."
 accountsFor: "Why the house has one slow way of cooling (τ = 5 h) and one fast way (τ ≈ 27 min), and what each looks like."
 category: foundations
-chain:
-  - title: What does a linear operator A do to a vector?
-  - title: Are there directions A only stretches?
-    detail: No rotation of that line — just a scale factor.
-  - title: Eigenvectors and eigenvalues
-    detail: Those directions, and the factors they pick up.
 neighbors:
   - diag
   - jordan
@@ -19,6 +13,8 @@ neighbors:
 matlab: "[V, D] = eig(A)"
 exampleScene: { scene: house, overlays: [modes, trace], caption: "The state splits into the average (slow) and the difference (fast); each fades on its own." }
 ---
+
+**The question:** clicks work, but is there a set of pieces the system does not even reshape? It follows on from *Linearity*: if the input is split into the right pieces, each piece comes out only scaled. Those pieces are eigenvectors (for a matrix) and eigenfunctions (for a signal system), and the scale factors are eigenvalues.
 
 An eigenvector is a line that A leaves invariant: the output is a scalar multiple of the input. That scalar is the eigenvalue, and it is the whole story of A along that line. In a linear system those lines are the modes.
 

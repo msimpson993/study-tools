@@ -5,12 +5,6 @@ title: Gramians
 addsToExample: "Computes the house's 3-hour controllability Gramian W(3) for the room-1 heater. Its ellipse is about 4 times longer than it is wide, tilted about 31° up from the room-1 axis. Warming both rooms by 10 K costs ∫u² ≈ 3.1 × 10⁷ W²·h; holding them 10 K apart costs about 6.0 × 10⁷ W²·h, nearly twice as much."
 accountsFor: "Why some targets are cheap and others expensive even though the house is controllable, and where the least-energy warm-up comes from."
 category: steer
-chain:
-  - title: Controllable, yes. But how hard is each direction?
-  - title: The controllability Gramian W(T)
-    detail: ∫ e^(Aτ)BBᵀe^(Aᵀτ)dτ; invertible iff controllable.
-  - title: Minimum energy and the hard directions
-    detail: E_min = x_fᵀW⁻¹x_f; small eigenvalues of W are expensive directions.
 neighbors:
   - ctrl
   - optimal
@@ -19,6 +13,8 @@ neighbors:
 matlab: "W = gram(ss(A, B, C, 0), 'c')    % infinite-horizon; or integral(...) for finite T"
 exampleScene: { scene: house, overlays: [gramian, heat], caption: "States reachable with the same heating energy in 3 hours: a long, thin, tilted ellipse." }
 ---
+
+**The question:** controllable, yes, but how much effort does each direction take? It follows *Controllability*: the Gramian W measures how much each direction of the state can be pushed per unit of input energy.
 
 $$W_c(T)=\int_0^T e^{A\tau}BB^{\mathsf T}e^{A^{\mathsf T}\tau}\,d\tau,\qquad W_o(T)=\int_0^T e^{A^{\mathsf T}\tau}C^{\mathsf T}Ce^{A\tau}\,d\tau$$
 

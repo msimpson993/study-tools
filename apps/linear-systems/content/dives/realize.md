@@ -5,12 +5,6 @@ title: "Realization: from H(s) to A, B, C"
 addsToExample: "Builds the speaker's state model. The full model has three states (current i, position x, velocity ẋ), but the coil's own pole −Re/Le ≈ −186,750 rad/s is about 40 times faster than the mechanical poles, so i follows V almost instantly and two states (x, ẋ) are enough. In phase-variable form A = [[0, 1], [−k/Mms, −R/Mms]], B = (0, 1)ᵀ, C = [(Bl/Re)/Mms, 0]."
 accountsFor: "Why two numbers, position and velocity, describe the speaker across the audio band, and where each Thiele–Small value sits in A, B and C."
 category: state
-chain:
-  - title: Given a transfer function, can we build a state model for it?
-  - title: Chain n integrators
-    detail: The states are an internal signal and its derivatives.
-  - title: Phase-variable form
-    detail: The denominator is A's last row, the numerator is C; minimal if controllable and observable.
 neighbors:
   - ss
   - kalman
@@ -19,6 +13,8 @@ neighbors:
 matlab: "[A, B, C, D] = tf2ss(b, a)    % note: MATLAB's ordering is reversed"
 exampleScene: { overlays: [coil, state], diagram: [spk-chain, spk-model], caption: "Voltage to motion, block by block; the fast coil pole drops out and two states remain." }
 ---
+
+**The question:** a transfer function and a state model: are they the same thing? It comes from *Laplace and Z* (the dashed line says it is the same system seen from two sides): read A, B, C straight off H(s), and the poles of H become the eigenvalues of A.
 
 Write H(s) = N(s)/D(s), strictly proper, with D monic of degree n. Introduce an internal signal w with W/U = 1/D(s). Its derivatives w, ẇ, …, w^((n−1)) are the states, the ODE D(d/dt)w = u is the last row of A, and the output y = N(d/dt)w is a fixed combination of the states.
 

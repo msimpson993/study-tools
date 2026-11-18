@@ -5,11 +5,6 @@ title: Fourier series
 addsToExample: "Plays a 200 Hz square-wave buzz through the speaker: harmonics at 200, 600, 1000 Hz, … each scaled by |H| at its own frequency."
 accountsFor: "Why the 600 Hz harmonic is boosted near the resonance and the high harmonics fade."
 category: signals
-chain:
-  - title: What if the continuous-time signal is periodic?
-  - title: Which exponentials actually fit in one period?
-  - title: Fourier series
-    detail: Time continuous and periodic → frequency discrete and aperiodic (a line spectrum).
 neighbors:
   - ft
   - dft
@@ -18,6 +13,8 @@ neighbors:
 matlab: c = fft(x) / N    % x = one period, N samples; this is a DFS / sampled-period approximation
 exampleScene: { overlays: [series, forces], caption: "A buzz is a sum of harmonics; the speaker scales each by |H| at its own frequency." }
 ---
+
+**The question:** how do you find each harmonic of a periodic signal? It follows *Orthogonality*: project the signal onto each harmonic e^(jkω₀t) in turn, and the projections are the Fourier series coefficients.
 
 A period-T signal is already a discrete superposition of harmonics e^(j k ω₀ t) with ω₀ = 2π / T. The coefficients are inner products over one period. Periodicity in time is what makes frequency discrete; the spectrum is a train of lines, and it is not periodic in k. Convention here: analysis carries the 1/T, synthesis is the unweighted sum.
 

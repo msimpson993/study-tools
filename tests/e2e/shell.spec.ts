@@ -64,14 +64,15 @@ for (const app of APPS) {
   });
 }
 
-test('linear-systems: a deep dive renders chain, MATLAB fold collapsed, math and neighbours', async ({ page }) => {
+test('linear-systems: a deep dive opens on its map question (no chain fold), MATLAB fold collapsed, math and neighbours', async ({ page }) => {
   const errs = trackErrors(page);
   await open(page, 'linear-systems', '#/dive/dtft');
   await expect(page.locator('[data-testid=dive] h2')).toContainText(/DTFT/);
   await expect(page.locator('.katex').first()).toBeVisible();
   const fold = page.locator('details', { hasText: /MATLAB/ }).first();
   await expect(fold).not.toHaveAttribute('open', '');
-  await expect(page.locator('[data-testid=dive] ol.chain')).toBeVisible();
+  await expect(page.locator('[data-testid=dive] ol.chain')).toHaveCount(0);
+  await expect(page.locator('[data-testid=dive] p', { hasText: 'The question:' }).first()).toContainText('sampled signal');
   expect(errs).toEqual([]);
 });
 

@@ -5,12 +5,6 @@ title: DTFT
 addsToExample: "Maps the speaker's two poles to the z-plane after sampling at 8 kHz: radius e^(−σT) ≈ 0.85, angle ω_dT ≈ 31°."
 accountsFor: "Where the digital filter's peak sits on the unit circle, and why the sampled speaker is still stable."
 category: signals
-chain:
-  - title: What if time is already a sequence?
-    detail: A discrete-time signal, or samples of a continuous one.
-  - title: How do I write it in the exponential basis z^n at z = e^(jΩ)?
-  - title: The DTFT
-    detail: Time discrete and aperiodic → frequency continuous and 2π-periodic.
 neighbors:
   - dft
   - ft
@@ -19,6 +13,8 @@ neighbors:
 matlab: "[H, w] = freqz(b, a)    % or fft(x, Nfft) as samples of the DTFT of a finite x"
 exampleScene: { overlays: [sampler, zplane], caption: "Sampled at 8 kHz, the poles land inside the unit circle at radius 0.85, angle 31°." }
 ---
+
+**The question:** what is the spectrum of a sampled signal? It follows *Sampling*: it is the Z-transform on the unit circle, z = e^(jΩ), periodic in Ω with period 2π.
 
 The DTFT is the analysis of a discrete-time, typically aperiodic, sequence against e^(j Ω n). Sampling in time periodizes frequency: e^(j(Ω + 2π) n) = e^(j Ω n), so X(e^(jΩ)) is always 2π-periodic in the radian frequency Ω (radians per sample). The inverse still has a 1/2π, now integrating over any 2π interval. The DTFT of an LTI system's impulse response is its frequency response.
 

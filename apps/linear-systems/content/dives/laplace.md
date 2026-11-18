@@ -5,11 +5,6 @@ title: Laplace & Z transforms
 addsToExample: "Gives the speaker's transfer function from voltage to motion, H(s) = (Bl/Re)/(Mms s² + R s + 1/Cms) with R = Rms + Bl²/Re, read block by block off the signal chain. Its poles are −1,267 ± j4,322 rad/s."
 accountsFor: "The ring frequency (≈ 690 Hz) and decay time (≈ 0.8 ms) of the click response, from two numbers."
 category: signals
-chain:
-  - title: The Fourier axis jω (or the unit circle) is only part of the eigenfunction family.
-  - title: What if I need transients, growth or decay, and a region of convergence?
-  - title: Laplace and Z transforms
-    detail: The same exponentials e^(st) and z^n, now with a plane and an ROC.
 neighbors:
   - ft
   - dtft
@@ -18,6 +13,8 @@ neighbors:
 matlab: "X = laplace(x)    % or ztrans(x);  for systems: tf(sys), tf(sysd)"
 exampleScene: { overlays: [forces, poles], diagram: spk-chain, caption: "Voltage → current → force → motion: multiply the blocks to get H(s)." }
 ---
+
+**The question:** what if we allow every complex s (or z), not just pure tones? It comes from *Signals view*: there e^(st) was only scaled by H(s); measuring how much of every e^(st) a signal contains is the Laplace transform (the Z-transform for sampled signals), and the transfer function becomes the ratio of output to input.
 
 Laplace (continuous time) and Z (discrete time) are the natural transforms for control and for transient analysis. They use the full eigenfunctions e^(st) and z^n, not just the eternal phasors e^(jω t) and e^(jΩ n). The ROC is part of the transform: the same formal expression 1/(s+a) can belong to a causal decaying exponential or to an anti-causal growing one. When the ROC contains the jω axis (or the unit circle), restricting the transform recovers the FT (or DTFT). Transfer functions live in these planes, and their poles are the system modes.
 

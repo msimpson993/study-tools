@@ -5,12 +5,6 @@ title: "Signals view: eˢᵗ and zⁿ are only scaled"
 addsToExample: "Plays a 500 Hz tone into the speaker: after a brief transient the diaphragm moves at exactly 500 Hz, only scaled by |H(j2π·500)| and delayed by its phase."
 accountsFor: "Why a speaker (or any LTI system) never changes the pitch of a tone, only its loudness and timing."
 category: signals
-chain:
-  - title: Which signals does convolution not reshape?
-  - title: Try x(t) = e^(st)
-    detail: The integral pulls out a factor that depends only on s.
-  - title: That factor is H(s), the transfer function
-    detail: One eigenvalue per exponential; in discrete time zⁿ and H(z).
 neighbors:
   - lti
   - laplace
@@ -19,6 +13,8 @@ neighbors:
 matlab: "H = tf(b, a); [mag, ph] = bode(H, 2*pi*500)"
 exampleScene: { overlays: [tone], caption: "A 500 Hz tone in, a 500 Hz tone out: the speaker only scales and delays it." }
 ---
+
+**The question:** which signals does convolution only scale? This is the signals branch of *Which pieces are only scaled?*. For any LTI system the answer is the exponentials e^(st) (and zⁿ in discrete time): they come out as H(s) e^(st), the same shape times one complex number.
 
 Put an exponential e^(st) into a convolution and look at what comes out:
 

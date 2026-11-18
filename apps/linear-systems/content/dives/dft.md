@@ -5,11 +5,6 @@ title: DFT
 addsToExample: "Analyses a 64-sample block of the speaker's ring: bins every 125 Hz at 8 kHz."
 accountsFor: "How the ANC chip can see which frequencies are loud right now."
 category: signals
-chain:
-  - title: In practice the record is finite — or the sequence is periodic.
-  - title: What happens if I also sample the DTFT in frequency?
-  - title: The DFT
-    detail: Time discrete and finite (periodically extended) → frequency discrete and periodic.
 neighbors:
   - dtft
   - fs
@@ -18,6 +13,8 @@ neighbors:
 matlab: "X = fft(x, N)    % inverse: x = ifft(X)"
 exampleScene: { overlays: [dft, sampler], caption: "N = 64 samples in, 64 frequency bins out, 125 Hz apart." }
 ---
+
+**The question:** a computer has only N samples and can only list N numbers; what does it compute? It follows the *DTFT*: the DFT samples the DTFT at N equally spaced frequencies, fs/N apart.
 
 The N-point DFT is the discrete Fourier series of a length-N sequence viewed as one period of a periodic signal. Equivalently, it is the DTFT of that finite record, sampled at Ω = 2π k / N. Frequency is now discrete and periodic with period N. This is the one you actually compute, via the FFT. Convention here, and in MATLAB: the forward transform is the unnormalized sum, and the inverse carries 1/N.
 

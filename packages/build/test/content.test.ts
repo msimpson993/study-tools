@@ -31,6 +31,13 @@ describe('shipped content', () => {
     expect(content.quiz.length).toBe(87);
     expect(content.quiz.filter((q) => q.tags?.includes('variants')).length).toBe(21);
   });
+  it('linear-systems dives open on their map question and parent box (no chain fold)', () => {
+    const { content } = loadApp(path.join(repoRoot, 'apps', 'linear-systems'));
+    for (const d of content.dives) {
+      expect(d.chain, d.id).toEqual([]);
+      expect(d.html.trimStart().startsWith('<p><strong>The question:</strong>'), d.id).toBe(true);
+    }
+  });
   it('linear-systems glossary: 89 terms, every one in a section, no raw ^{…} outside math', () => {
     const { content } = loadApp(path.join(repoRoot, 'apps', 'linear-systems'));
     expect(content.glossary.length).toBe(89);

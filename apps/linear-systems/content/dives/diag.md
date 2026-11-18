@@ -5,12 +5,6 @@ title: Diagonalization & change of basis
 addsToExample: "Rewrites the house in average and difference coordinates, ξ = V⁻¹x with V = [[1, 1], [1, −1]]: two separate one-room problems with rates 0.2/h and 2.2/h."
 accountsFor: "Why the warm-up curve is exactly one slow exponential plus one fast one."
 category: state
-chain:
-  - title: Are there directions A only stretches?
-    detail: Eigenvectors.
-  - title: Can every vector be written in those directions?
-  - title: If yes, A is diagonalizable
-    detail: A change of basis makes A a diagonal matrix of eigenvalues.
 neighbors:
   - eig
   - jordan
@@ -19,6 +13,8 @@ neighbors:
 matlab: "D = inv(V) * A * V    % equivalent: A = V * D * inv(V)"
 exampleScene: { scene: house, overlays: [modes, poles], diagram: house-modal, caption: "In modal coordinates the house is two independent first-order systems." }
 ---
+
+**The question:** what does the system look like in eigenvector coordinates? It follows *State view*: change basis to the eigenvectors, A becomes the diagonal Λ, and each mode evolves on its own.
 
 If the eigenvectors form a basis, stack them as the columns of V and write x = V ξ. In the ξ-coordinates A does nothing but scale each axis: Λ = V⁻¹ A V is diagonal. Solving, iterating, and exponentiating A all become scalar operations on those coordinates.
 

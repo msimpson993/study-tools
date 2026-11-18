@@ -5,11 +5,6 @@ title: State space
 addsToExample: "Writes the house as ẋ = Ax + Bu with x = (T₁, T₂) above outdoors: A = [[−1.2, 1], [1, −1.2]] per hour (shared wall 1/h, leak 0.2/h), B = (3600/C_th, 0)ᵀ for a heater in room 1, C = [1, 0] for a thermostat in room 1."
 accountsFor: "Why room 1 warms first and room 2 follows through the wall, from three small matrices."
 category: state
-chain:
-  - title: What if A acts over time?
-  - title: How do I write the dynamics as a first-order vector equation?
-  - title: State space
-    detail: x′ = Ax + Bu, y = Cx + Du (or the discrete analog).
 neighbors:
   - expm
   - tf
@@ -18,6 +13,8 @@ neighbors:
 matlab: sys = ss(A, B, C, D)
 exampleScene: { scene: house, overlays: [heat, flows, trace], diagram: house-open, caption: "Heat flows through the wall and out to the cold; the state is the two temperatures." }
 ---
+
+**The question:** which states does ẋ = Ax keep on a straight line? This is the state branch of *Which pieces are only scaled?* (and *Realization* arrives here from the transfer-function side). Write the system as ẋ = Ax + Bu, y = Cx; the eigenvectors of A are its modes.
 
 The state is a finite list of numbers that, together with the future input, determines the future output. A first-order vector ODE (or recurrence) makes the operator over time into a matrix A, so everything about bases and modes applies directly. Different state coordinates are just a change of basis: they do not change the input-output map.
 

@@ -5,11 +5,6 @@ title: Stability
 addsToExample: "Checks the house: eigenvalues −0.2 and −2.2 per hour, both negative, so with the heater off it always returns to the outdoor temperature."
 accountsFor: "Why the house always cools down, and why the slow mode decides how long it takes."
 category: state
-chain:
-  - title: The modes evolve as e^(λt) (or λ^k in discrete time).
-  - title: Do those modes decay?
-  - title: Stability
-    detail: A condition on where the eigenvalues sit.
 neighbors:
   - expm
   - tf
@@ -18,6 +13,8 @@ neighbors:
 matlab: "max(real(eig(A)))    % discrete: max(abs(eig(A)))"
 exampleScene: { scene: house, overlays: [poles, trace], caption: "Both eigenvalues are negative: every start returns to the outdoor temperature." }
 ---
+
+**The question:** when does every starting state die out? It follows *How does it evolve?*: each mode goes as e^(λt), so the state settles exactly when every eigenvalue has Re λ < 0 (|λ| < 1 for sampled systems).
 
 Asymptotic (internal) stability of x′ = Ax is equivalent to every eigenvalue of A sitting in the open left half-plane. In discrete time, every eigenvalue of A must sit inside the open unit disk. The same geometry appears in Laplace and Z: decaying natural responses are left-half-plane poles, or poles inside the unit circle. BIBO stability is a statement about G(s) (or G(z)), and can hide an unstable mode that cancelled.
 

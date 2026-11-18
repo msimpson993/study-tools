@@ -5,11 +5,6 @@ title: Kalman decomposition & minimal realization
 addsToExample: "Splits the house with both rooms heated equally and an average thermostat: the average is reached and seen, the difference neither. The transfer function keeps only the 5-hour pole."
 accountsFor: "Why that house looks like a first-order system from outside, even though it has two states."
 category: steer
-chain:
-  - title: Some modes may be unreachable, or invisible, or both.
-  - title: Can I split the state into those four kinds of mode?
-  - title: Kalman decomposition and minimal realization
-    detail: Only the controllable-and-observable part appears in G(s).
 neighbors:
   - ctrl
   - obs
@@ -18,6 +13,8 @@ neighbors:
 matlab: sys_min = minreal(ss(A, B, C, D))    % or ctrbf / obsvf for the split
 exampleScene: { scene: house, overlays: [both, avg, modes], diagram: house-kalman, caption: "Reached and seen: the average. Neither: the difference, which just decays on its own." }
 ---
+
+**The question:** what do you do with the modes that fail? It follows *PBH test* (and answers *Realization*'s "is this the smallest model?"): split the state into reached-and-seen, reached-only, seen-only and neither; only the first part shows up in H(s).
 
 A change of basis (the Kalman decomposition) splits the state into four invariant pieces: controllable and observable (CO), controllable but unobservable, uncontrollable but observable, and neither. The transfer function depends only on the CO part. A realization is minimal when it is both controllable and observable; then dim(A) equals the degree of G(s), and the poles of G are exactly the eigenvalues of A.
 

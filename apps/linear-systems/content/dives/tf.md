@@ -5,11 +5,6 @@ title: Transfer functions
 addsToExample: "Reads the speaker's peak from its pole pair: ζ ≈ 0.28, so the poles sit fairly close to the jω axis and |H| peaks near 660 Hz, a little below fs = 717 Hz."
 accountsFor: "Why lighter damping would make a sharper, louder resonance, and why the peak is below fs."
 category: signals
-chain:
-  - title: I have a state realization (A, B, C, D).
-  - title: How do I write the input-output map without the state?
-  - title: The transfer function
-    detail: G(s) = C(sI − A)⁻¹ B + D, whose poles are the eigenvalues of A once hidden modes are cancelled.
 neighbors:
   - ss
   - expm
@@ -18,6 +13,8 @@ neighbors:
 matlab: G = tf(ss(A, B, C, D))    % or [b, a] = ss2tf(A, B, C, D)
 exampleScene: { overlays: [poles, bode], caption: "Stand on the jω axis: the closer you are to a pole, the bigger |H|." }
 ---
+
+**The question:** what do the poles and zeros of H(s) tell you directly? It comes from *Laplace and Z*: factor H(s), and the gain at any frequency is a ratio of distances from the point jω to the zeros and to the poles.
 
 Taking the (zero-state) Laplace transform of the state equations and eliminating X(s) produces G(s). This is the same object as the Laplace transform of the impulse response. In the best-basis language, each mode contributes a term r / (s − λ), unless that mode is uncontrollable or unobservable, in which case its residue is zero and the pole cancels.
 

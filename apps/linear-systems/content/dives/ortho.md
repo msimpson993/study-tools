@@ -5,11 +5,6 @@ title: Orthogonality & inner products
 addsToExample: "Splits a 200 Hz buzz into harmonics by projecting it onto each one in turn: the projections do not interfere because the harmonics are orthogonal."
 accountsFor: "Why each harmonic's strength can be measured on its own."
 category: signals
-chain:
-  - title: We have a basis of modes.
-  - title: Can that basis also be orthonormal?
-  - title: Inner products give the coordinates
-    detail: And they are why Fourier analysis formulas look the way they do.
 neighbors:
   - diag
   - fs
@@ -18,6 +13,8 @@ neighbors:
 matlab: W = dftmtx(N);  W' * W    % equals N * eye(N)
 exampleScene: { overlays: [series], caption: "Each harmonic is found by one projection; the others contribute nothing to it." }
 ---
+
+**The question:** why can a signal be split into tones without the pieces interfering? It comes from *Fourier*: tones at different frequencies are orthogonal, so each coefficient is a projection that can be read off on its own.
 
 Once you have a basis, coordinates are the expansion coefficients. If the basis is orthogonal, each coefficient is an inner product — no matrix inverse needed. Fourier series, the FT, the DTFT, and the DFT are all 'compute inner products against complex exponentials.' For a general (non-normal) matrix A, eigenvectors need not be orthogonal, which is why V can be ill-conditioned even when A is diagonalizable.
 

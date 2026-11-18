@@ -195,7 +195,7 @@ export function mountApp(content: AppContent, hooks: AppHooks = {}): void {
         clear(chips); clear(list);
         for (const c of cats) chips.append(h('button', { class: `chip${c.id === cat ? ' on' : ''}`, onclick: () => { cat = c.id; draw(); } }, c.label));
         for (const d of content.dives.filter((x) => !cat || x.category === cat))
-          list.append(h('a', { class: 'callout', href: `#/dive/${d.id}`, style: 'text-decoration:none;color:inherit;display:block', dataset: { testid: 'dive-card' } }, h('b', { class: 'lead' }, d.title), h('span', { class: 'ui', style: 'font-size:.85rem' }, d.chain[d.chain.length - 1].title)));
+          list.append(h('a', { class: 'callout', href: `#/dive/${d.id}`, style: 'text-decoration:none;color:inherit;display:block', dataset: { testid: 'dive-card' } }, h('b', { class: 'lead' }, d.title), h('span', { class: 'ui', style: 'font-size:.85rem' }, d.chain.length ? d.chain[d.chain.length - 1].title : (content.maps.flatMap((m) => m.nodes).find((n) => n.dive === d.id)?.detail ?? ''))));
       };
       draw();
       wrap.append(h('p', null, 'Every deep dive opens with the chain of questions that leads there. You can also reach them from any map box.'), chips, list);
@@ -269,7 +269,7 @@ export function mountApp(content: AppContent, hooks: AppHooks = {}): void {
     main.append(crumbs(['Deep dives', '#/s/dives'], catLabel ?? '', d.title));
     const art = h('article', { class: 'prose', dataset: { testid: 'dive' } },
       h('div', { class: 'dive-head' }, h('h2', null, d.title), copyRefButton(() => diveReference(content, d))));
-    art.append(h('details', { class: 'fold', open: true }, h('summary', null, 'Where are we? The chain of questions that leads here'),
+    if (d.chain.length) art.append(h('details', { class: 'fold', open: true }, h('summary', null, 'Where are we? The chain of questions that leads here'),
       h('ol', { class: 'chain' }, ...d.chain.map((s) => h('li', null, s.title, s.detail ? h('small', null, s.detail) : null)))));
     let sceneStop: (() => void) | null = null;
     if (content.subject.runningExample && d.addsToExample) {

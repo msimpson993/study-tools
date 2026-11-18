@@ -137,7 +137,7 @@ export function loadApp(appDir: string): { content: AppContent; warnings: string
         const d = fm as any;
         if (d.id !== f.replace(/\.md$/, '')) problems.push(`dives/${f}: id "${d.id}" must equal the file name`);
         if (body.trim().length < 80) problems.push(`dives/${f}: body is empty`);
-        dives.push({ id: d.id, order: d.order, title: d.title, category: d.category, chain: d.chain, neighbors: d.neighbors ?? [], matlab: d.matlab, addsToExample: d.addsToExample ? inline(d.addsToExample, `dives/${f}`) : undefined, accountsFor: d.accountsFor ? inline(d.accountsFor, `dives/${f}`) : undefined, exampleScene: d.exampleScene, html: block(body, `dives/${f}`) });
+        dives.push({ id: d.id, order: d.order, title: d.title, category: d.category, chain: d.chain ?? [], neighbors: d.neighbors ?? [], matlab: d.matlab, addsToExample: d.addsToExample ? inline(d.addsToExample, `dives/${f}`) : undefined, accountsFor: d.accountsFor ? inline(d.accountsFor, `dives/${f}`) : undefined, exampleScene: d.exampleScene, html: block(body, `dives/${f}`) });
       } catch (e) { problems.push(`dives/${f}: ${(e as Error).message}`); }
     }
   }

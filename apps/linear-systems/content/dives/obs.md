@@ -5,12 +5,6 @@ title: Observability
 addsToExample: "Tries two thermostats: one in room 1 (C = [1, 0]) sees both modes; one reading the average (C = [½, ½]) is blind to the difference mode."
 accountsFor: "Why the thermostat's placement decides whether you can work out room 2's temperature."
 category: steer
-chain:
-  - title: Can the input reach every mode?
-    detail: Controllability.
-  - title: Can the output y see every mode?
-  - title: Observability
-    detail: A null-space question about the observability matrix, or a test on right eigenvectors (PBH).
 neighbors:
   - ctrl
   - kalman
@@ -19,6 +13,8 @@ neighbors:
 matlab: "rank(obsv(A, C)) == size(A, 1)    % PBH: rank([lam*eye(n)-A; C]) == n"
 exampleScene: { scene: house, overlays: [avg, modes], caption: "A thermostat reading the average cannot tell the two rooms apart." }
 ---
+
+**The question:** with an output y = Cx, can you tell what the state is? It follows *State view*, and is the dual of *Controllability*: every mode has to show up in y, rank [C; CA; ⋯] = n.
 
 The system (A, C) is observable when the initial state can be recovered from a finite record of the output (and the known input). Equivalently, the observability matrix O has trivial null space: if y is identically zero with u = 0, then x(0) = 0. In the eigenbasis this is: does every mode appear in y? PBH: no right eigenvector of A may lie in the kernel of C. Observability is dual to controllability: (A, C) is observable iff (Aᵀ, Cᵀ) is controllable.
 

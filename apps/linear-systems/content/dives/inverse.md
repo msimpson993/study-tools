@@ -5,12 +5,6 @@ title: "Going back: partial fractions, residues and the ROC"
 addsToExample: "Recovers the speaker's click response from its two poles: h(t) = (Bl/Re)/(Mms ω_d) · e^(−σt) sin(ω_d t) u(t), with σ ≈ 1,267 /s and ω_d ≈ 4,322 rad/s."
 accountsFor: "Why the click response is a decaying sine at about 690 Hz that has died away within a few milliseconds."
 category: signals
-chain:
-  - title: How do we get x(t) or x[n] back from X(s) or X(z)?
-  - title: One term per pole
-    detail: Partial fractions (cover-up), or close the inverse contour and add residues.
-  - title: The ROC says which way each term runs
-    detail: Poles inside the ROC's inner edge give right-sided terms; outside, left-sided.
 neighbors:
   - roc
   - laplace
@@ -19,6 +13,8 @@ neighbors:
 matlab: "[r, p, k] = residue(b, a)    % residuez for z⁻¹ polynomials"
 exampleScene: { overlays: [click], caption: "Two complex poles give one decaying sine: the click response." }
 ---
+
+**The question:** how do you get the signal back, and how does the ROC change the answer? It follows *Region of convergence*: split X into partial fractions, invert each pole term, and let the ROC decide whether each term is right-sided or left-sided.
 
 Every rational transform splits into first-order pieces, one per pole. Each piece has a known inverse, and the ROC says whether it is the right-sided or the left-sided version.
 

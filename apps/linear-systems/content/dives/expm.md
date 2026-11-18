@@ -5,13 +5,6 @@ title: State transition matrix
 addsToExample: "Gives the house's e^(At) = ½[[e₁ + e₂, e₁ − e₂], [e₁ − e₂, e₁ + e₂]] with e₁ = e^(−0.2t), e₂ = e^(−2.2t)."
 accountsFor: "The two time scales: the rooms even out in about 27 minutes, and the whole house cools over about 5 hours."
 category: state
-chain:
-  - title: In state space, what if u = 0?
-    detail: x′ = Ax.
-  - title: In the eigenbasis, what happens to each coordinate?
-    detail: It simply multiplies by e^(λt).
-  - title: The state transition matrix
-    detail: x(t) = e^(At) x(0), and e^(At) is easy once A is diagonalized.
 neighbors:
   - diag
   - jordan
@@ -20,6 +13,8 @@ neighbors:
 matlab: Phi = expm(A * t)
 exampleScene: { scene: house, overlays: [flow, trace], caption: "e^(At) carries the temperatures along the arrows: first onto the average line, then home." }
 ---
+
+**The question:** given the modes, how does any starting state evolve? It follows *Diagonalization* (in the Big picture, *State view*): x(t) = e^(At) x(0), the state transition matrix Φ(t), which in the eigenbasis is just one exponential per mode.
 
 The unique solution of x′ = Ax is x(t) = e^(At) x(0), where e^(At) is the matrix exponential (not the elementwise one). If A = V Λ V⁻¹, then e^(At) = V e^(Λt) V⁻¹ and e^(Λt) is diagonal with entries e^(λ\_i t). That is the payoff of the best-basis question for dynamics. In discrete time the same role is played by A^k = V Λ^k V⁻¹.
 

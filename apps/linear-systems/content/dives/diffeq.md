@@ -5,12 +5,6 @@ title: Solving ODEs and difference equations as algebra
 addsToExample: "Runs the earbud's noise cancelling: a digital filter on the ANC chip is a difference equation, y[n] = Σ bₖu[n − k] − Σ aₖy[n − k], and the Z-transform turns it into H(z). Feedforward ANC filters the outside microphone; feedback ANC filters the in-ear microphone."
 accountsFor: "How the chip makes anti-noise one sample at a time, and why its filters are designed as H(z) in the z-plane."
 category: signals
-chain:
-  - title: How do you solve an ODE or a recursion without guessing?
-  - title: Transform it
-    detail: Derivatives become s, delays become z⁻¹, initial conditions become extra terms.
-  - title: Solve for Y, then invert
-    detail: The answer is the input's modes plus the system's natural modes.
 neighbors:
   - inverse
   - laplace
@@ -19,6 +13,8 @@ neighbors:
 matlab: "y = filter(b, a, x)    % runs the difference equation"
 exampleScene: { overlays: [anc], diagram: [anc-ff, anc-fb], caption: "Feedforward and feedback noise cancelling: each filter is a difference equation. Illustrative waveforms, not a simulated FxLMS." }
 ---
+
+**The question:** what does the transform buy you for differential and difference equations? It comes from *Laplace and Z*: derivatives become multiplication by s and delays become z⁻¹, so an equation in time turns into algebra, and the initial conditions come along as extra terms.
 
 The shift rule makes a difference equation into algebra: y(n − k) ↔ z⁻ᵏY(z) when the initial conditions are zero, and y(n − 1) ↔ z⁻¹Y(z) + y(−1) in the one-sided transform when they are not. For ODEs, ẏ ↔ sY − y(0⁻).
 

@@ -5,12 +5,6 @@ title: Region of convergence
 addsToExample: "Puts the speaker's ROC to the right of both poles, Re s > −1,267 rad/s: the click response is causal, and the ROC contains the jω axis, so the speaker is stable and has a frequency response."
 accountsFor: "Why the speaker's frequency response exists at all, and why its ring dies away instead of growing."
 category: signals
-chain:
-  - title: Where does the Laplace integral (or Z sum) converge?
-  - title: In a region bounded by poles
-    detail: Half-plane or strip in s; disc, ring or exterior in z.
-  - title: The region encodes sidedness and stability
-    detail: Right-sided ⇒ right of all poles; stable ⇔ contains the jω axis or |z| = 1.
 neighbors:
   - laplace
   - inverse
@@ -19,6 +13,8 @@ neighbors:
 matlab: "% no single command: list the pole radii with abs(roots(a)) and pick the ring"
 exampleScene: { overlays: [click, poles], caption: "The click response starts at t = 0, so its ROC is everything right of the two poles." }
 ---
+
+**The question:** where does the transform actually exist? It comes from *Laplace and Z*: the integral or sum only converges for some s or z, and that region, bounded by the poles, is part of the answer. The same formula with a different region is a different signal.
 
 The Laplace integral ∫x(t)e^(−st)dt converges only for some s, because e^(−σt) has to tame x(t) at both ends. The Z sum Σx[n]z⁻ⁿ is the same story with |z| playing the role of e^(σ). That region of convergence (ROC) is part of the transform.
 

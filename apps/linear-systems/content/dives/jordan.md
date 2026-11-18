@@ -5,11 +5,6 @@ title: Jordan form
 addsToExample: "Damps the speaker critically (R = 2√(k·Mms) ≈ 0.76 kg/s): the two poles merge at −ωs ≈ −4,503 rad/s and A keeps only one eigen-direction."
 accountsFor: "Why the critically damped click response is (a + bt)e^(−ωs t), the fastest response that does not ring."
 category: state
-chain:
-  - title: Do the eigenvectors span the space?
-  - title: If not, what is the simplest form still available?
-  - title: Jordan form
-    detail: Blocks with λ on the diagonal and 1s on the superdiagonal; generalized eigenvectors.
 neighbors:
   - eig
   - diag
@@ -18,6 +13,8 @@ neighbors:
 matlab: J = jordan(sym(A))
 exampleScene: { overlays: [critical, poles], caption: "Critical damping: the two poles meet, and only one eigen-direction is left." }
 ---
+
+**The question:** what if a repeated eigenvalue has only one eigenvector? It follows *Diagonalization*, which needs n independent eigenvectors: without them the best you can do is a Jordan block, and t e^(λt) terms appear.
 
 When a repeated eigenvalue does not have enough independent eigenvectors, A is not diagonalizable. The next-best basis puts A into Jordan form: each block is λI plus a single superdiagonal of 1s. The missing pure mode is replaced by a chain, and time response picks up polynomial factors t^k e^(λt).
 

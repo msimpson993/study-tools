@@ -5,12 +5,6 @@ title: The PBH test
 addsToExample: "Tests the house mode by mode. With the heater in room 1, B ∝ (1, 0) is not orthogonal to either left eigenvector, (1, 1) or (1, −1): both modes are reached. Heating both rooms equally, B ∝ (1, 1), is orthogonal to (1, −1): the difference mode is missed. A thermostat reading the average, C = [½, ½], gives Cv = 0 for v = (1, −1): the difference is unseen."
 accountsFor: "Exactly which mode a heater or sensor placement loses, not just that one is lost."
 category: steer
-chain:
-  - title: The rank test says something is uncontrollable. Which mode?
-  - title: Test each eigenvalue separately
-    detail: rank[A − λI, B] = n and rank[A − λI; C] = n.
-  - title: In eigenvector language
-    detail: wᵢᵀB ≠ 0 (left eigenvector) and Cvᵢ ≠ 0 (right eigenvector).
 neighbors:
   - ctrl
   - obs
@@ -19,6 +13,8 @@ neighbors:
 matlab: "for l = eig(A).', rank([A - l*eye(n), B]), end"
 exampleScene: { scene: house, overlays: [both, modes], caption: "Heat both rooms equally and the input is perpendicular to the difference mode: that mode is out of reach." }
 ---
+
+**The question:** which mode, exactly, does the input miss (or the output)? It follows *Controllability* and *Observability*: test one eigenvalue at a time, wᵀB for the input and Cv for the output.
 
 The Popov–Belevitch–Hautus test checks modes one at a time.
 

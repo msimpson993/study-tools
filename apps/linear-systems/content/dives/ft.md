@@ -5,11 +5,6 @@ title: Fourier transform
 addsToExample: "Plots the speaker's frequency response |H(j2πf)|: flat in the bass, a peak near 660 Hz, then falling at 40 dB per decade."
 accountsFor: "Why earbuds sound the way they do across the band, and which frequencies the ANC has to fight."
 category: signals
-chain:
-  - title: Eigenfunctions of continuous-time LTI systems are e^(jω t) (and e^(st)).
-  - title: How do I write an aperiodic continuous-time signal in that basis?
-  - title: The Fourier transform
-    detail: Time continuous and aperiodic → frequency continuous and aperiodic.
 neighbors:
   - fs
   - dtft
@@ -18,6 +13,8 @@ neighbors:
 matlab: X = fourier(x, t, w)    % Symbolic Math Toolbox; or fft of a sampled record as an approximation
 exampleScene: { overlays: [tone, bode], caption: "A 500 Hz tone comes out scaled by |H| at 500 Hz: one point on the frequency response." }
 ---
+
+**The question:** what happens on the jω axis (or the unit circle)? It is the other signals branch from *Signals view*: setting s = jω keeps only pure tones, and H(jω) says how much each tone is scaled and shifted. The Fourier series, Fourier transform, DTFT and DFT are the four versions of that idea.
 
 The Fourier transform is the analysis formula for a continuous aperiodic time signal against the basis {e^(jω t)}. The transform is a function of a continuous frequency ω, and (unlike the DTFT) it is not periodic in ω, because a continuous-time exponential e^(jω t) does not repeat when you add 2π to ω. Convention here: radian frequency ω in rad/s, with the 1/2π factor on the inverse.
 

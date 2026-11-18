@@ -5,12 +5,6 @@ title: "The best input: Pontryagin's principle"
 addsToExample: "Finds the heater profile with the least energy ∫u² dt that warms the house from outdoor temperature to (10, 7) K above it in 3 hours. The costate obeys λ̇ = −Aᵀλ, so u(t) = −bᵀλ(t)/2 is a mix of e^(0.2(t−3)) and e^(2.2(t−3)) shapes: about 1.8 kW at first, rising to 2.4 kW after 2 hours, then easing to about 1 kW at the end so room 1 does not overshoot while room 2 catches up."
 accountsFor: "Why the cheapest warm-up is not a constant power: it leans on the slow average mode early and trims the fast difference mode at the end, and how much energy any target costs (the Gramian gives the same answer)."
 category: steer
-chain:
-  - title: We can predict the response to any input. Which input is best?
-  - title: Add a cost and a costate λ
-    detail: H = L + λᵀ(Ax + Bu); ∂H/∂u = 0 gives u in terms of λ.
-  - title: Solve the two-point problem with Φ of the Hamiltonian matrix
-    detail: x is known at both ends, λ(0) is not; Φ_M(T) supplies it.
 neighbors:
   - gramian
   - expm
@@ -19,6 +13,8 @@ neighbors:
 matlab: "% sol = bvp4c(@(t,y) M*y, @(ya,yb) [ya(1)-x0; yb(1)-xT], solinit)"
 exampleScene: { scene: house, overlays: [optimal, trace], caption: "The least-energy heater profile to an illustrative target, (10, 7) K above outdoors in 3 h, and the room temperatures it produces." }
 ---
+
+**The question:** we can predict the response to any input; which input is best? It follows *How does it evolve?* and *Gramians*: add a cost J, form the Hamiltonian, and Pontryagin's conditions turn the choice of u(t) into a two-point boundary value problem.
 
 Minimise J = ∫₀ᵀ L(x, u) dt subject to ẋ = f(x, u), with x(0) given and x(T) either fixed or free.
 

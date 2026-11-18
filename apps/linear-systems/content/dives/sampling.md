@@ -5,11 +5,6 @@ title: Sampling
 addsToExample: "Samples the earbud's microphones in the ANC chip (drawn at 8 kHz so the samples show; real ANC converters run much faster to keep the delay small). Hybrid ANC uses both an outside and an in-ear microphone."
 accountsFor: "Why the chip needs an anti-alias filter and a high sample rate, and why delay matters for cancelling noise."
 category: signals
-chain:
-  - title: I have a continuous-time picture (s-plane, FT) and a discrete-time one (z-plane, DTFT).
-  - title: How do they relate when x[n] = x(n T)?
-  - title: Sampling
-    detail: z = e^(s T); sampling in time periodizes frequency, which is aliasing.
 neighbors:
   - laplace
   - dtft
@@ -18,6 +13,8 @@ neighbors:
 matlab: sysd = c2d(sys, T, 'zoh')    % poles of sysd satisfy z = exp(s*T)
 exampleScene: { overlays: [sampler], diagram: [spk-digital, anc-hybrid], caption: "Sample, filter, hold: the digital path inside a hybrid noise-cancelling earbud." }
 ---
+
+**The question:** a periodic signal gave a discrete spectrum; what does the reverse, discrete time, do to the spectrum? It comes from *Fourier series*: sampling makes the spectrum periodic, with copies every fs, and anything above fs/2 folds back.
 
 Sampling a mode e^(s t) at t = n T produces (e^(s T))^n = z^n, so the planes are related by z = e^(s T). This map is many-to-one: s and s + j 2π k / T land on the same z, which is aliasing. Equivalently, sampling in time periodizes the spectrum with period 2π / T (or f\_s). The left half-plane maps to the interior of the unit circle because |z| = e^(σ T), not because someone chose to draw it that way. Pole mapping of a continuous system under exact discretization is z = e^(s T); a ZOH equivalent also inserts the hold's dynamics, so G\_d(z) is not simply G(s) evaluated at s = (ln z)/T.
 

@@ -5,12 +5,6 @@ title: Parseval's theorem
 addsToExample: "Adds up the energy in the speaker's click response two ways: ∫h(t)²dt in time, and (1/2π)∫|H(jω)|²dω in frequency. Most of it sits near the resonance, where |H| peaks."
 accountsFor: "Why cancelling the strongest few frequencies removes most of the noise energy, which is why ANC focuses on the low, loud part of the band."
 category: signals
-chain:
-  - title: If the Fourier pieces are perpendicular, how does energy split among them?
-  - title: Like Pythagoras
-    detail: The total energy is the sum of the energies of the pieces.
-  - title: Energy in time = energy in frequency
-    detail: ∫|x|²dt = (1/2π)∫|X|²dω; for a series, power = Σ|cₖ|².
 neighbors:
   - ortho
   - fs
@@ -19,6 +13,8 @@ neighbors:
 matlab: "sum(abs(x).^2) - sum(abs(fft(x)).^2)/numel(x)    % ≈ 0"
 exampleScene: { overlays: [click, bode], caption: "The click's energy in time equals the area under |H|² in frequency." }
 ---
+
+**The question:** if the pieces are perpendicular, how does the energy split among them? It is the second step from *Orthogonality*: like Pythagoras, the energy of the signal is the sum of the energies of its harmonics, in time or in frequency.
 
 Orthogonal pieces add their energies, so the Fourier transform preserves energy (up to the 2π convention):
 

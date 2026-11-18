@@ -5,11 +5,6 @@ title: Convolution, LTI & eigenfunctions
 addsToExample: "Clicks the speaker with a short voltage pulse: the diaphragm rings at about 690 Hz and dies away within a few milliseconds. That ring is the impulse response h(t), and any input is a row of scaled, shifted clicks."
 accountsFor: "Why the speaker's response to music, or to anti-noise, can be predicted from that one ring."
 category: foundations
-chain:
-  - title: What if the operator A is an LTI system on signals?
-  - title: What are its eigenfunctions?
-  - title: Complex exponentials; convolution becomes multiplication
-    detail: The same best-basis idea, now for convolution.
 neighbors:
   - ft
   - laplace
@@ -18,6 +13,8 @@ neighbors:
 matlab: y = lsim(sys, u, t)    % or y = conv(h, x)
 exampleScene: { overlays: [conv], caption: "Any input is a row of clicks; the output is the same row of rings, added up." }
 ---
+
+**The question:** what is the cheapest thing to know about a system that still tells you everything? This is the first box below the root, *Inputs in, outputs out*: if the system is linear and time-invariant, one response is enough, the response to a click. Split any input into clicks, let each one ring, and add the rings: y = h ∗ u.
 
 A system is linear and time-invariant if and only if it is convolution with a fixed impulse response h. The signals that pass through a convolution unchanged in shape are the eternal exponentials e^(st) (or z^n in discrete time): they are eigenfunctions, and the eigenvalue is the transfer function H(s) (or H(z)). Expanding an input in that basis is what the Laplace, Z, and Fourier transforms do, and it diagonalizes convolution — that is the convolution theorem.
 

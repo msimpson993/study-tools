@@ -5,7 +5,6 @@
     "id",
     "title",
     "category",
-    "chain",
     "neighbors"
   ],
   "additionalProperties": false,
@@ -37,7 +36,8 @@
           }
         },
         "additionalProperties": false
-      }
+      },
+      "description": "Optional 'Where are we?' chain shown above the dive. Leave it out when the dive's opening paragraph names its map question and parent box."
     },
     "neighbors": {
       "type": "array",

@@ -5,11 +5,6 @@ title: Controllability
 addsToExample: "Asks whether the room-1 heater can reach every state: B points along room 1 and AB has a room-2 part (the wall), so [B AB] has rank 2. Heating both rooms equally, B ∝ (1, 1), gives rank 1: the difference mode is uncontrollable."
 accountsFor: "Which heater placements can set both room temperatures, and which can only set their average."
 category: steer
-chain:
-  - title: The state has modes, each along an eigenvector.
-  - title: Can I steer every mode with the input u?
-  - title: Controllability
-    detail: A range question about the controllability matrix, or a test on left eigenvectors (PBH).
 neighbors:
   - obs
   - kalman
@@ -18,6 +13,8 @@ neighbors:
 matlab: "rank(ctrb(A, B)) == size(A, 1)    % PBH: rank([lam*eye(n)-A, B]) == n"
 exampleScene: { scene: house, overlays: [heat, reach], caption: "B pushes room 1, the wall turns it into AB: together they span the plane." }
 ---
+
+**The question:** once B is there, can the input push every mode? It follows *State view*: B pushes some directions, A carries those pushes into new ones, and together they must span the state space: rank [B AB ⋯] = n.
 
 The system (A, B) is controllable when the input can move the state from any x(0) to any x(T) in finite time (or, discretely, in at most n steps). Equivalently, the range of the controllability matrix Ctrb = [B AB … A^(n−1) B] is the whole state space. In the eigenbasis this is: can u write into every mode? The PBH test makes that literal: no left eigenvector of A may be orthogonal to the columns of B.
 
