@@ -20,6 +20,8 @@ Asymptotic (internal) stability of x′ = Ax is equivalent to every eigenvalue o
 
 **Picture it first.** Stability is not mysterious: it is the location of the eigenvalues. Left half-plane, the mode decays; right half-plane, it grows.
 
+The figure below is an application: feedback. A thermostat that sets the heater from room 1's temperature, u = −kp·T₁, changes A and so moves the eigenvalues; the stability test is the same eigenvalue test.
+
 ```figure:stab
 ```
 

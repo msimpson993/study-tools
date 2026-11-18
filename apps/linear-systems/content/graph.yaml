@@ -8,7 +8,7 @@ maps:
   - Linearity and the eigen idea
   - "Signals view: transforms and Fourier"
   - "State view: A, B, C"
-  - "What can an input affect, a measurement reveal?"
+  - "What can inputs affect, outputs reveal?"
   - Application
   nodes:
   - id: root
@@ -295,7 +295,7 @@ maps:
   - Linearity and the eigen idea
   - "Signals view: transforms and Fourier"
   - "State view: A, B, C"
-  - "What can an input affect, a measurement reveal?"
+  - "What can inputs affect, outputs reveal?"
   - Application
   nodes:
   - id: root
