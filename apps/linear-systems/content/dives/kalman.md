@@ -40,7 +40,7 @@ If a cancelled mode is unstable, G(s) can be BIBO stable while the realization i
 ````
 
 ````callout:note Mini example
-Keep the running A and C = [1, 0]. The full controllable choice B = [0, 1]ᵀ gives G(s) = 1/((s+1)(s+2)). The uncontrollable choice B = [1, −2]ᵀ — which cannot touch the −1 mode — gives C(sI − A)⁻¹ B = (s+1)/((s+1)(s+2)) = 1/(s+2). The same cancellation appears if B is the good one but C = [1, 1] (the −1 mode unobservable): again G(s) = 1/(s+2). In both cases the realization is still 2-dimensional and still has an eigenvalue at −1; it just no longer shows up as a pole of G.
+For A = [[0, 1], [−2, −3]] (ÿ + 3ẏ + 2y = u), take C = [1, 0]. The full controllable choice B = [0, 1]ᵀ gives G(s) = 1/((s+1)(s+2)). The uncontrollable choice B = [1, −2]ᵀ — which cannot touch the −1 mode — gives C(sI − A)⁻¹ B = (s+1)/((s+1)(s+2)) = 1/(s+2). The same cancellation appears if B is the good one but C = [1, 1] (the −1 mode unobservable): again G(s) = 1/(s+2). In both cases the realization is still 2-dimensional and still has an eigenvalue at −1; it just no longer shows up as a pole of G.
 ````
 
 ### Common pitfalls

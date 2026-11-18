@@ -45,7 +45,7 @@ Do those modes decay? (Stability.) And with an input, x(t) = e^(At) x(0) + ∫ e
 ````
 
 ````callout:note Mini example
-For the running A, V Λ V⁻¹ gives the closed form
+For A = [[0, 1], [−2, −3]] (ÿ + 3ẏ + 2y = u), eigenvalues −1 and −2, V Λ V⁻¹ gives the closed form
 
 ```eq
 e^(At) = [[2e^(−t) − e^(−2t), e^(−t) − e^(−2t)], [−2e^(−t) + 2e^(−2t), −e^(−t) + 2e^(−2t)]]

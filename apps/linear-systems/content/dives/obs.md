@@ -44,7 +44,7 @@ What is the input-output map after you discard modes that u cannot reach or y ca
 ````
 
 ````callout:note Mini example
-With C = [1, 0] (output = y in the phase-variable model), C v₁ = 1 and C v₂ = 1, both nonzero. The observability matrix is O = [C; CA] = I, rank 2 — observable. Now take C = [1, 1]. Then C v₁ = [1, 1] · [1, −1]ᵀ = 0, so the −1 mode is invisible in y. Indeed CA = [−2, −2] and O = [[1, 1], [−2, −2]] has rank 1. PBH at λ = −1: the stacked matrix has rows [−1, −1], [2, 2], [1, 1], which are all multiples of one row, so rank 1.
+For A = [[0, 1], [−2, −3]] (ÿ + 3ẏ + 2y = u), eigenvectors v₁ = [1, −1]ᵀ and v₂ = [1, −2]ᵀ: with C = [1, 0] (output y), C v₁ = 1 and C v₂ = 1, both nonzero. The observability matrix is O = [C; CA] = I, rank 2 — observable. Now take C = [1, 1]. Then C v₁ = [1, 1] · [1, −1]ᵀ = 0, so the −1 mode is invisible in y. Indeed CA = [−2, −2] and O = [[1, 1], [−2, −2]] has rank 1. PBH at λ = −1: the stacked matrix has rows [−1, −1], [2, 2], [1, 1], which are all multiples of one row, so rank 1.
 ````
 
 ### Common pitfalls

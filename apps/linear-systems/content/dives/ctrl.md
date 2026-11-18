@@ -44,7 +44,7 @@ Even if I can reach every mode, can I see every mode in y? That is observability
 ````
 
 ````callout:note Mini example
-For the running A, B = [0, 1]ᵀ gives Ctrb = [B, AB] = [[0, 1], [1, −3]], with det = −1 and rank 2 — controllable (as a companion form should be). The left eigenvector at λ = −1 is w₁ = [2, 1]ᵀ, and w₁ᵀ B = 1 ≠ 0. Now take B = [1, −2]ᵀ, which is actually v₂. Then w₁ᵀ B = 0, so the −1 mode is invisible to u. Indeed AB = −2 B, so Ctrb = [[1, −2], [−2, 4]] has rank 1. PBH at λ = −1: [λI − A, B] = [[−1, −1, 1], [2, 2, −2]] has rank 1, not 2; at λ = −2 the same test still has rank 2. Only the −1 mode is uncontrollable.
+For A = [[0, 1], [−2, −3]] (ÿ + 3ẏ + 2y = u), B = [0, 1]ᵀ gives Ctrb = [B, AB] = [[0, 1], [1, −3]], with det = −1 and rank 2 — controllable (as a companion form should be). The left eigenvector at λ = −1 is w₁ = [2, 1]ᵀ, and w₁ᵀ B = 1 ≠ 0. Now take B = [1, −2]ᵀ, which is actually v₂. Then w₁ᵀ B = 0, so the −1 mode is invisible to u. Indeed AB = −2 B, so Ctrb = [[1, −2], [−2, 4]] has rank 1. PBH at λ = −1: [λI − A, B] = [[−1, −1, 1], [2, 2, −2]] has rank 1, not 2; at λ = −2 the same test still has rank 2. Only the −1 mode is uncontrollable.
 ````
 
 ### Common pitfalls

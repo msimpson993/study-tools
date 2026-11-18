@@ -40,7 +40,7 @@ What if there are not enough independent eigenvectors? (Jordan.) And if A acts o
 ````
 
 ````callout:note Mini example
-For the same A, V = [[1, 1], [−1, −2]] and V⁻¹ = [[2, 1], [−1, −1]]. A vector x = [3, −4]ᵀ has eigen-coordinates ξ = V⁻¹ x = [2, 1]ᵀ, because 2 v₁ + 1 v₂ = [3, −4]ᵀ. In these coordinates A just multiplies by −1 and −2: Λ ξ = [−2, −2]ᵀ, and V(Λ ξ) = A x.
+For A = [[0, 1], [−2, −3]] (ÿ + 3ẏ + 2y = u), with eigenvalues −1, −2 and eigenvectors v₁ = [1, −1]ᵀ, v₂ = [1, −2]ᵀ: V = [[1, 1], [−1, −2]] and V⁻¹ = [[2, 1], [−1, −1]]. A vector x = [3, −4]ᵀ has eigen-coordinates ξ = V⁻¹ x = [2, 1]ᵀ, because 2 v₁ + 1 v₂ = [3, −4]ᵀ. In these coordinates A just multiplies by −1 and −2: Λ ξ = [−2, −2]ᵀ, and V(Λ ξ) = A x.
 ````
 
 ### Common pitfalls

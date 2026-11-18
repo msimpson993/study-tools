@@ -38,7 +38,7 @@ How do I actually write a given signal in the exponential basis? That splits by 
 ````
 
 ````callout:note Mini example
-For the running system, H(s) = 1/((s+1)(s+2)). Feeding the eternal exponential e^(st) (with Re(s) &gt; −1, so the expression converges) returns H(s) e^(st). Along the jω axis, a phasor e^(jω t) comes back multiplied by H(jω). At ω = 0, H(0) = 1/2: a constant input of 1 produces the constant output 1/2, which is the DC gain. The same H is the Laplace transform of h(t) = (e^(−t) − e^(−2t)) u(t).
+For A = [[0, 1], [−2, −3]] (ÿ + 3ẏ + 2y = u), with B = [0, 1]ᵀ and C = [1, 0], H(s) = 1/((s+1)(s+2)). Feeding the eternal exponential e^(st) (with Re(s) &gt; −1, so the expression converges) returns H(s) e^(st). Along the jω axis, a phasor e^(jω t) comes back multiplied by H(jω). At ω = 0, H(0) = 1/2: a constant input of 1 produces the constant output 1/2, which is the DC gain. The same H is the Laplace transform of h(t) = (e^(−t) − e^(−2t)) u(t).
 ````
 
 ### Common pitfalls
