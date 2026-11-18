@@ -493,7 +493,7 @@ maps:
     dive: linsys
     quizTag: linsys
   - id: SYSTEST
-    label: Linear? Time-invariant?
+    label: Is it LTI?
     detail: "Sums, scales, delays pass"
     kind: decision
     series: 0
