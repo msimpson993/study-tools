@@ -34,7 +34,7 @@ Cutting out a block of a signal changes its spectrum (windowing), so measured en
 ````
 
 ````callout:note Mini example
-A square wave of amplitude 1 has power 1. Its harmonics are cₖ = 2/(jπk) for odd k, so the fundamental pair carries 2·(2/π)² = 8/π² ≈ 0.81 of the power, and the first three odd harmonics about 0.93.
+A square wave of amplitude 1 has power 1. Its harmonics are cₖ = 2/(jπk) for odd k, so the fundamental pair carries 2·(2/π)² = 8/π² ≈ 0.81 of the power. Harmonics 1–3 (only 1 and 3 are nonzero) carry 0.90; adding the 5th gives 0.93.
 ````
 
 ### Common pitfalls

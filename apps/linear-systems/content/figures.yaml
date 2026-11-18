@@ -314,14 +314,14 @@
     - { label: "drive harmonic 4/(πk)", color: "var(--cyan)" }
     - { label: "same harmonic at the cone, ×|H(kf₀)|", color: "var(--org)" }
   howToRead: "A zero-mean ±1 V square wave at f₀ is a sum of odd sine harmonics with amplitudes 4/(πk). Left: the sum of the first N harmonics over two periods; the note gives the share of the power (mean square 1) they carry, which by Parseval is Σ(4/(πk))²/2. Right: the harmonic amplitudes in the drive (blue) and after the speaker’s |H| (orange); grey bars are harmonics left out."
-  lookFor: "The first harmonic alone already carries 81% of the power, three harmonics 90%. At f₀ = 230 Hz the third harmonic lands on the 690 Hz resonance and is boosted at the cone."
+  lookFor: "The first harmonic alone already carries 81% of the power; harmonics 1–3 (only 1 and 3 are nonzero) carry 90%; adding the 5th gives 93%. At f₀ = 230 Hz the third harmonic (690 Hz) lands near the resonance peak and is boosted at the cone."
   controls:
-    - { id: N, label: "harmonics N", type: range, min: 1, max: 25, step: 1, default: 5, group: primary }
+    - { id: N, label: "harmonics up to k = N", type: range, min: 1, max: 25, step: 1, default: 5, group: primary }
     - { id: f0, label: "fundamental f₀", type: range, min: 100, max: 800, step: 10, default: 200, group: primary, unit: Hz }
   presets:
     - { id: buzz, label: "200 Hz buzz", set: { N: 5, f0: 200 }, about: "Odd harmonics at 200, 600, 1000 Hz…" }
     - { id: one, label: "First harmonic only", set: { N: 1, f0: 200 }, about: "8/π² ≈ 81% of the power." }
-    - { id: third, label: "230 Hz: 3rd on resonance", set: { N: 7, f0: 230 }, about: "690 Hz is the third harmonic." }
+    - { id: third, label: "230 Hz: 3rd on resonance", set: { N: 7, f0: 230 }, about: "The third harmonic, 690 Hz, sits near the resonance peak." }
 
 - id: ortho
   title: "Orthogonality: measuring one harmonic of the buzz at a time"

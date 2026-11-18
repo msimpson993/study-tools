@@ -32,7 +32,7 @@ Zero-padding samples the same smeared spectrum more finely; it does not add reso
 ````
 
 ````callout:note Mini example
-N = 64 at 8 kHz gives bins every 125 Hz. A steady 750 Hz hum sits exactly on bin 6 and shows a single spike. A steady 690 Hz hum near the resonance sits at bin 5.52 and spreads: bins 5 and 6 both read about 4 dB below the true peak (−4.7 and −3.2 dB; −3.9 dB each for a hum exactly halfway, at 687.5 Hz), with a long tail of side lobes.
+N = 64 at 8 kHz gives bins every 125 Hz. A steady 750 Hz hum sits exactly on bin 6 and shows a single spike. A steady 690 Hz hum near the resonance sits at bin 5.52 and spreads: bins 5 and 6 both read about 4 dB below the true peak (−4.7 and −3.2 dB for a cosine; a real tone's split depends on its phase, for example a sine reads about −3.9 dB in both), with a long tail of side lobes.
 ````
 
 ### Common pitfalls

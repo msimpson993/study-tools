@@ -97,13 +97,13 @@ export const ftFigure = figureOf((c) => {
 export const fsFigure = figureOf((c) => {
   return [
     {
-      id: 'sum', title: 'A ±1 V square-wave drive and its first N harmonics', x: 'time t (ms)', y: 'drive (V)',
+      id: 'sum', title: 'A ±1 V square-wave drive and its harmonics up to k = N', x: 'time t (ms)', y: 'drive (V)',
       draw(g, w, h) {
         wipe(g, w, h);
         const f0 = num(c.values, 'f0'), N = num(c.values, 'N'), P = 1000 / f0, ts = linspace(0, 2 * P, 601), f = graph(g, w, h, [0, 2 * P], [-1.5, 1.5], 'time t (ms)', 'drive (V)', 0, 0.5);
         curve(g, f, ts, ts.map((t) => (Math.sin((TAU * t) / P) >= 0 ? 1 : -1)), col.muted(), 1.5, [4, 3]);
         curve(g, f, ts, ts.map((t) => { let s = 0; for (let k = 1; k <= N; k++) s += squareCoef(k) * Math.sin((TAU * k * t) / P); return s; }), col.a(), 2.5);
-        note(g, `${N} harmonic${N > 1 ? 's' : ''} carry ${fmt(100 * squarePowerShare(N), 1)}% of the power (Parseval)`, f.box.r - 4, f.box.t + 10, col.text(), 'right', 11);
+        note(g, `harmonics up to k = ${N} carry ${fmt(100 * squarePowerShare(N), 1)}% of the power (Parseval)`, f.box.r - 4, f.box.t + 10, col.text(), 'right', 11);
       },
     },
     {

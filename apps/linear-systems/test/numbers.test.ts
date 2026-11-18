@@ -401,3 +401,16 @@ describe('figure captions (figures.yaml) state these', () => {
     expect(ex.aliasOf(690, 1200)).toBe(510); expect(ex.residue()[1]).toBeCloseTo(-2.346, 3); expect(ex.spk(-0.3).poles[0][0]).toBeCloseTo(0.38, 2);
   });
 });
+
+describe('tutor round 2 (window phase, square-wave shares)', () => {
+  const bins = (f: number, ph: number) => [5, 6].map((k) => { let re = 0, im = 0; for (let n = 0; n < 64; n++) { const x = Math.cos((2 * Math.PI * f * n) / 8000 + ph), a = (-2 * Math.PI * k * n) / 64; re += x * Math.cos(a); im += x * Math.sin(a); } return 20 * Math.log10(Math.hypot(re, im) / 32); });
+  it('690 Hz, 64 samples at 8 kHz: cosine −4.7/−3.2 dB, sine ≈ −3.9 dB in both; a real cosine at 687.5 Hz reads −4.3/−3.6', () => {
+    const c = bins(690, 0), s = bins(690, -Math.PI / 2), h = bins(687.5, 0);
+    expect(c[0]).toBeCloseTo(-4.70, 1); expect(c[1]).toBeCloseTo(-3.24, 1);
+    expect(s[0]).toBeCloseTo(-3.88, 1); expect(s[1]).toBeCloseTo(-3.94, 1);
+    expect(h[0]).toBeCloseTo(-4.30, 1); expect(h[1]).toBeCloseTo(-3.58, 1);
+  });
+  it('square wave: harmonics up to 3 carry 90.1%, up to 5 carry 93.3%', () => {
+    expect(ex.squarePowerShare(3)).toBeCloseTo(0.9006, 4); expect(ex.squarePowerShare(4)).toBeCloseTo(0.9006, 4); expect(ex.squarePowerShare(5)).toBeCloseTo(0.9331, 4);
+  });
+});
