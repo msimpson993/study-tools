@@ -7,7 +7,7 @@
   q: Why is choosing the eigenbasis of A the same idea as taking a Fourier, Laplace, or Z transform?
   a: In both cases you change to a basis of invariant directions so the operator becomes a set of
     independent scalar multiplies. For a matrix those directions are eigenvectors (A v = λ v). For
-    an LTI system they are the eigenfunctions e^{st} or z^n, and the scalar is H(s) or H(z).
+    an LTI system they are the eigenfunctions e^(st) or z^n, and the scalar is H(s) or H(z).
     Expanding a signal in that basis is the transform, and it is what turns convolution into
     multiplication.
 - id: q2
@@ -36,18 +36,18 @@
     - ft
   kind: recall
   q: Why is the DTFT 2π-periodic in Ω, while the CTFT is not periodic in ω?
-  a: "Because time is discrete, e^{j(Ω+2π)n} = e^{jΩ n} e^{j 2π n} = e^{jΩ n}. Two frequencies 2π
-    apart are the same sequence, so the DTFT must repeat every 2π. In continuous time, e^{j(ω+2π)t}
-    is not e^{jω t}, so the CTFT has no such period. This is the general rule: discreteness in one
+  a: "Because time is discrete, e^(j(Ω+2π)n) = e^(jΩ n) e^(j 2π n) = e^(jΩ n). Two frequencies 2π
+    apart are the same sequence, so the DTFT must repeat every 2π. In continuous time, e^(j(ω+2π)t)
+    is not e^(jω t), so the CTFT has no such period. This is the general rule: discreteness in one
     domain ⇔ periodicity in the other."
 - id: q5
   tags:
     - expm
     - diag
   kind: recall
-  q: If A = V Λ V⁻¹, what is e^{At}, and why does that make x′ = Ax easy?
-  a: e^{At} = V e^{Λt} V⁻¹, and e^{Λt} is diagonal with entries e^{λ\_i t}. In the eigenbasis each
-    coordinate just multiplies by e^{λ\_i t} (or, if a Jordan block is present, by e^{λt} times a
+  q: If A = V Λ V⁻¹, what is e^(At), and why does that make x′ = Ax easy?
+  a: e^(At) = V e^(Λt) V⁻¹, and e^(Λt) is diagonal with entries e^(λ\_i t). In the eigenbasis each
+    coordinate just multiplies by e^(λ\_i t) (or, if a Jordan block is present, by e^(λt) times a
     small polynomial in t). The vector ODE becomes n scalar ones. In discrete time the same fact is
     A^k = V Λ^k V⁻¹.
 - id: q6
@@ -55,19 +55,19 @@
     - sampling
   kind: recall
   q: A 5 Hz cosine is sampled at 6 Hz. What frequency do you actually see, and what does that say
-    about z = e^{s T}?
-  a: "You see a 1 Hz discrete-time cosine: cos(2π · 5 n / 6) = cos(2π · 1 n / 6). The map z = e^{s T}
-    is many-to-one — s and s + j 2π k / T share a z — so the poles e^{± j 2π · 5 / 6} are the same
-    unit-circle points as e^{∓ j 2π · 1 / 6}. That many-to-one geometry is aliasing."
+    about z = e^(s T)?
+  a: "You see a 1 Hz discrete-time cosine: cos(2π · 5 n / 6) = cos(2π · 1 n / 6). The map z = e^(s T)
+    is many-to-one — s and s + j 2π k / T share a z — so the poles e^(± j 2π · 5 / 6) are the same
+    unit-circle points as e^(∓ j 2π · 1 / 6). That many-to-one geometry is aliasing."
 - id: q7
   tags:
     - jordan
     - expm
   kind: recall
-  q: A 2×2 system has a repeated pole at λ = −α. Does e^{At} contain a t e^{−α t} term?
+  q: A 2×2 system has a repeated pole at λ = −α. Does e^(At) contain a t e^(−α t) term?
   a: Only if A is not diagonalizable — that is, only if it is a single Jordan block, not −α I. The
-    companion matrix of (s+α)² does produce t e^{−α t}. If A is already −α I, both modes are
-    independent and e^{At} = e^{−α t} I, with no factor of t. A repeated pole in G(s) does not, by
+    companion matrix of (s+α)² does produce t e^(−α t). If A is already −α I, both modes are
+    independent and e^(At) = e^(−α t) I, with no factor of t. A repeated pole in G(s) does not, by
     itself, tell you which of the two you have.
 - id: q8
   tags:
@@ -115,36 +115,36 @@
 - id: m4
   tags: [jordan]
   kind: recognize
-  q: "A 2×2 system has a repeated eigenvalue −α but only one independent eigenvector. What shows up in e^{At}?"
+  q: "A 2×2 system has a repeated eigenvalue −α but only one independent eigenvector. What shows up in e^(At)?"
   choices:
-    - "Only e^{−αt}"
-    - "A term t e^{−αt}"
+    - "Only e^(−αt)"
+    - "A term t e^(−αt)"
     - "A growing exponential"
     - "A sinusoid at α rad/s"
   answer: 1
-  why: "A Jordan block is λI + N with N² = 0, so e^{Jt} = e^{λt}(I + Nt). The off-diagonal t is the fingerprint."
+  why: "A Jordan block is λI + N with N² = 0, so e^(Jt) = e^(λt)(I + Nt). The off-diagonal t is the fingerprint."
 - id: m5
   tags: [jordan, expm]
   kind: trap
-  q: "A 2×2 A has a repeated eigenvalue −α. Does e^{At} necessarily contain t e^{−αt}?"
+  q: "A 2×2 A has a repeated eigenvalue −α. Does e^(At) necessarily contain t e^(−αt)?"
   choices:
     - "Yes, a repeated eigenvalue always does that"
     - "No, never"
     - "Only if A is not diagonalizable (a single Jordan block)"
     - "Only if α < 0"
   answer: 2
-  why: "If A = −αI the two modes are independent and e^{At} = e^{−αt} I. The companion matrix of (s+α)² is a single Jordan block and does produce t e^{−αt}."
+  why: "If A = −αI the two modes are independent and e^(At) = e^(−αt) I. The companion matrix of (s+α)² is a single Jordan block and does produce t e^(−αt)."
 - id: m6
   tags: [expm]
   kind: compute
-  q: "For A = [[0, 1], [−2, −3]], the (1,1) entry of e^{At} is"
+  q: "For A = [[0, 1], [−2, −3]], the (1,1) entry of e^(At) is"
   choices:
-    - "e^{−t} + e^{−2t}"
-    - "2e^{−t} − e^{−2t}"
-    - "e^{−t} − e^{−2t}"
-    - "2e^{−2t} − e^{−t}"
+    - "e^(−t) + e^(−2t)"
+    - "2e^(−t) − e^(−2t)"
+    - "e^(−t) − e^(−2t)"
+    - "2e^(−2t) − e^(−t)"
   answer: 1
-  why: "e^{At} = V e^{Λt} V⁻¹. The (1,1) entry is 2e^{−t} − e^{−2t}, which equals 1 at t = 0, as it must."
+  why: "e^(At) = V e^(Λt) V⁻¹. The (1,1) entry is 2e^(−t) − e^(−2t), which equals 1 at t = 0, as it must."
 - id: m7
   tags: [stab]
   kind: action
@@ -218,7 +218,7 @@
   choices:
     - "Because the signal is real"
     - "Because the signal is causal"
-    - "Because e^{j(Ω+2π)n} = e^{jΩn} for integer n"
+    - "Because e^(j(Ω+2π)n) = e^(jΩn) for integer n"
     - "Because the sampling rate is fixed"
   answer: 2
   why: "Two frequencies 2π apart are the same sequence. Discreteness in one domain gives periodicity in the other."
@@ -236,14 +236,14 @@
 - id: m15
   tags: [sampling]
   kind: trap
-  q: "When discretizing G(s) with c2d(..., 'zoh'), what maps by z = e^{sT}?"
+  q: "When discretizing G(s) with c2d(..., 'zoh'), what maps by z = e^(sT)?"
   choices:
     - "The poles; the zeros generally do not"
     - "The zeros; the poles generally do not"
     - "Both poles and zeros"
     - "Neither"
   answer: 0
-  why: "Poles of the discretized system satisfy z = e^{sT}. Zeros depend on the hold and generally do not map this way."
+  why: "Poles of the discretized system satisfy z = e^(sT). Zeros depend on the hold and generally do not map this way."
 - id: m16
   tags: [ortho, dft]
   kind: recognize
@@ -255,3 +255,842 @@
     - "To remove aliasing"
   answer: 1
   why: "The exponentials are orthogonal but not normalized: ⟨v_k, v_ℓ⟩ = N δ_kℓ. All of the normalization sits on the inverse."
+
+# ---- Practice variants (review self-tests) and per-node concept questions, added Nov 2026 ----
+- id: v-z1
+  tags:
+  - inverse
+  - roc
+  - variants
+  - part-a
+  - v-zinv
+  kind: compute
+  q: "Z1. $X(z) = \\dfrac{z}{(z-\\frac13)(z-2)}$ with ROC $\\frac13<|z|<2$. What is $x(n)$?"
+  choices:
+  - "$-\\frac35(\\frac13)^n u(n) - \\frac35\\,2^n u(-n-1)$"
+  - "$-\\frac35(\\frac13)^n u(n) + \\frac35\\,2^n u(n)$"
+  - "$\\frac35(\\frac13)^n u(-n-1) - \\frac35\\,2^n u(n)$"
+  - "$-\\frac35(\\frac13)^{n-1} u(n-1) - \\frac35\\,2^{n-1} u(-n)$"
+  answer: 0
+  why: "Expand $X/z = \\frac{1}{(z-\\frac13)(z-2)}$: residues $-\\frac35$ at $\\frac13$ and $\\frac35$ at $2$, so $X = -\\frac35\\frac{z}{z-\\frac13} + \\frac35\\frac{z}{z-2}$. The pole $\\frac13$ is inside the ring (right-sided); $2$ is outside (left-sided, $\\frac{z}{z-2} \\leftrightarrow -2^n u(-n-1)$). The ROC contains $|z| = 1$, so this two-sided sequence is stable. The last choice uses the delayed pairs, which belong to an expansion of $X$ itself, not $X/z$."
+- id: v-z2
+  tags:
+  - inverse
+  - roc
+  - variants
+  - part-a
+  - v-zinv
+  kind: compute
+  q: "Z2. $X(z) = \\dfrac{1}{(z+\\frac12)(z-4)}$ with ROC $|z|<\\frac12$. What is $x(n)$?"
+  choices:
+  - "$\\big[\\frac29(-\\frac12)^{n-1} - \\frac29\\,4^{n-1}\\big]u(-n)$"
+  - "$\\big[-\\frac29(-\\frac12)^{n-1} + \\frac29\\,4^{n-1}\\big]u(n-1)$"
+  - "$-\\frac29(-\\frac12)^{n-1}u(n-1) - \\frac29\\,4^{n-1}u(-n)$"
+  - "$\\big[\\frac29(-\\frac12)^{n} - \\frac29\\,4^{n}\\big]u(-n-1)$"
+  answer: 0
+  why: "Cover-up: $-\\frac29$ at $-\\frac12$ and $\\frac29$ at $4$. The ROC is inside both poles, so both terms are left-sided: $\\frac{1}{z-a} \\leftrightarrow -a^{n-1}u(-n)$. That flips both signs: $x(n) = [\\frac29(-\\frac12)^{n-1} - \\frac29 4^{n-1}]u(-n)$, entirely left-sided."
+- id: v-z3
+  tags:
+  - inverse
+  - roc
+  - variants
+  - part-a
+  - v-zinv
+  kind: compute
+  q: "Z3. $X(z) = \\dfrac{z^2}{(z-\\frac12)(z+3)}$ with ROC $\\frac12<|z|<3$. What is $x(n)$?"
+  choices:
+  - $\frac17(\frac12)^n u(n) - \frac67(-3)^n u(-n-1)$
+  - $\frac17(\frac12)^n u(n) + \frac67(-3)^n u(n)$
+  - $-\frac17(\frac12)^n u(-n-1) + \frac67(-3)^n u(n)$
+  - $\frac67(\frac12)^n u(n) - \frac17(-3)^n u(-n-1)$
+  answer: 0
+  why: "$X/z = \\frac{z}{(z-\\frac12)(z+3)}$ has residues $\\frac17$ at $\\frac12$ and $\\frac67$ at $-3$. The ring puts $\\frac12$ inside (right-sided) and $-3$ outside (left-sided, with the minus sign): $x(n) = \\frac17(\\frac12)^n u(n) - \\frac67(-3)^n u(-n-1)$."
+- id: v-l1
+  tags:
+  - inverse
+  - laplace
+  - variants
+  - part-a
+  - v-lap
+  kind: compute
+  q: "L1. $h = e^{-2t}u(t)$ and $x = e^{-5t}u(t)$. What are $Y(s)$, its ROC, and $y(t) = (h*x)(t)$?"
+  choices:
+  - "$Y = \\frac{1}{(s+2)(s+5)}$, Re $s>-2$; $y = \\frac13(e^{-2t}-e^{-5t})u(t)$"
+  - "$Y = \\frac{1}{(s+2)(s+5)}$, Re $s>-5$; $y = \\frac13(e^{-2t}-e^{-5t})u(t)$"
+  - "$Y = \\frac{1}{(s+2)(s+5)}$, Re $s>-2$; $y = (e^{-2t}-e^{-5t})u(t)$"
+  - "$Y = \\frac{1}{s+2}+\\frac{1}{s+5}$, Re $s>-2$; $y = (e^{-2t}+e^{-5t})u(t)$"
+  answer: 0
+  why: "Convolution multiplies transforms, and the ROC is the intersection, Re $s>-2$ (not the union). Residues of $Ye^{st}$: $\\frac{e^{-2t}}{3}$ at $-2$ and $-\\frac{e^{-5t}}{3}$ at $-5$."
+- id: v-l2
+  tags:
+  - inverse
+  - laplace
+  - variants
+  - part-a
+  - v-lap
+  kind: compute
+  q: "L2. $h = te^{-t}u(t)$ and $x = e^{-t}u(t)$. What is $y(t)$?"
+  choices:
+  - "$\\frac12t^2e^{-t}u(t)$"
+  - "$t^2e^{-t}u(t)$"
+  - "$te^{-t}u(t)$"
+  - "$\\frac12te^{-t}u(t)$"
+  answer: 0
+  why: "$Y = \\frac{1}{(s+1)^3}$, a triple pole. Residue: $\\frac{1}{2!}\\frac{d^2}{ds^2}e^{st}\\big|_{s=-1} = \\frac{t^2}{2}e^{-t}$. Dropping the $\\frac{1}{2!}$ gives $t^2e^{-t}$."
+- id: v-l3
+  tags:
+  - roc
+  - inverse
+  - variants
+  - part-a
+  - v-lap
+  kind: compute
+  q: "L3. $h = e^{-t}u(t)$ and $x = e^{2t}u(-t)$. What are the ROC of $Y$ and $y(t)$?"
+  choices:
+  - "$-1<$ Re $s<2$; $y = \\frac13e^{-t}u(t) + \\frac13e^{2t}u(-t)$"
+  - "Re $s>2$; $y = \\frac13(e^{2t}-e^{-t})u(t)$"
+  - "$-1<$ Re $s<2$; $y = \\frac13e^{-t}u(t) - \\frac13e^{2t}u(-t)$"
+  - "Re $s>-1$; $y = -\\frac13(e^{-t}-e^{2t})u(t)$"
+  answer: 0
+  why: "$X = -\\frac{1}{s-2}$ with Re $s<2$, so $Y = -\\frac{1}{(s+1)(s-2)}$ lives in the strip $-1<$ Re $s<2$. For $t>0$ close left and pick up $-1$: $\\frac13e^{-t}$. For $t<0$ close right (clockwise, minus sign) around $2$: $-(-\\frac13e^{2t}) = \\frac13e^{2t}$."
+- id: v-d1
+  tags:
+  - diffeq
+  - variants
+  - part-a
+  - v-deq
+  kind: compute
+  q: "D1. $y(n) = \\frac56y(n-1) - \\frac16y(n-2) + u(n)$ (unit step input), zero initial conditions. What is $y(n)$?"
+  choices:
+  - "$[3 - 3(\\frac12)^n + (\\frac13)^n]u(n)$"
+  - "$[3 + 3(\\frac12)^n - (\\frac13)^n]u(n)$"
+  - "$[1 - (\\frac12)^n + (\\frac13)^n]u(n)$"
+  - "$[3 - 2(\\frac12)^n + (\\frac13)^n]u(n)$"
+  answer: 0
+  why: "$Y/z = \\frac{z^2}{(z-1)(z-\\frac12)(z-\\frac13)}$: residues $3$, $-3$, $1$. The DC gain is $\\frac{1}{1-\\frac56+\\frac16} = 3$, and $y(0) = 1$: only the first choice gives $3-3+1 = 1$."
+- id: v-d2
+  tags:
+  - diffeq
+  - jordan
+  - variants
+  - part-a
+  - v-deq
+  kind: compute
+  q: "D2. $y(n) = y(n-1) - \\frac14y(n-2) + \\delta(n)$, zero initial conditions. What is $y(n)$?"
+  choices:
+  - $(n+1)(\frac12)^n u(n)$
+  - $(\frac12)^n u(n)$
+  - $n(\frac12)^n u(n)$
+  - $2(\frac12)^n - (\frac14)^n$ for $n \ge 0$
+  answer: 0
+  why: "$H(z) = \\frac{z^2}{(z-\\frac12)^2}$, a repeated root. The pair $\\frac{z^2}{(z-a)^2} \\leftrightarrow (n+1)a^n u(n)$. Check: $y(0) = 1$, $y(1) = 1$, $y(2) = 1 - \\frac14 = \\frac34 = 3\\cdot\\frac14$ ✓."
+- id: v-d3
+  tags:
+  - diffeq
+  - variants
+  - part-a
+  - v-deq
+  kind: compute
+  q: "D3. $y(n) = \\frac12y(n-1) + u(n)$ (unit step) with $y(-1) = 1$. Using the one-sided Z-transform, what is $y(n)$ for $n \\ge 0$?"
+  choices:
+  - "$2 - (\\frac12)^{n+1}$"
+  - "$2 - 2(\\frac12)^{n}$"
+  - "$2 + (\\frac12)^{n+1}$"
+  - "$2 - (\\frac12)^{n}$"
+  answer: 0
+  why: "One-sided shift: $y(n-1) \\leftrightarrow z^{-1}Y + y(-1)$. So $Y(1-\\frac12z^{-1}) = \\frac12 + \\frac{z}{z-1}$, giving $Y = \\frac{z(3z-1)}{(z-1)(2z-1)}$ and $y(n) = 2 - (\\frac12)^{n+1}$. Check: $y(0) = \\frac12\\cdot1 + 1 = 1.5$ ✓. The second choice is the zero-initial-condition answer."
+- id: v-p1
+  tags:
+  - optimal
+  - variants
+  - part-a
+  - v-pmp
+  kind: compute
+  q: "P1. $\\dot x = -x + u$, $J = \\int_0^1(x^2+u^2)dt$, $x(0) = 1$, $x(1) = 0$, $H = L + \\lambda f$. Which set is right?"
+  choices:
+  - "$u^\\circ = -\\lambda/2$, $M = \\begin{bmatrix}-1&-\\frac12\\\\-2&1\\end{bmatrix}$, $\\omega = \\sqrt2$, $u^\\circ(0) \\approx -0.592$"
+  - "$u^\\circ = -\\lambda$, $M = \\begin{bmatrix}-1&-1\\\\-2&1\\end{bmatrix}$, $\\omega = \\sqrt3$, $u^\\circ(0) \\approx -0.59$"
+  - "$u^\\circ = -\\lambda/2$, $M = \\begin{bmatrix}-1&-\\frac12\\\\2&1\\end{bmatrix}$, $\\omega = 0$, $u^\\circ(0) = 0$"
+  - "$u^\\circ = -\\lambda/2$, $\\lambda(1) = 0$, so $u^\\circ(1) = 0$"
+  answer: 0
+  why: "$\\partial H/\\partial u = 2u + \\lambda = 0$. Costate: $\\dot\\lambda = -\\partial H/\\partial x = -2x + \\lambda$. So $M = \\begin{bmatrix}-1&-\\frac12\\\\-2&1\\end{bmatrix}$, $\\omega^2 = 1 + 1 = 2$. With $x(1)$ fixed, $\\lambda(1)$ is not zero; $\\lambda(0) = 2\\sqrt2\\coth\\sqrt2 - 2 \\approx 1.184$ and $u^\\circ(0) \\approx -0.592$."
+- id: v-p2
+  tags:
+  - optimal
+  - gramian
+  - variants
+  - part-a
+  - v-pmp
+  kind: compute
+  q: "P2. $\\dot x = u$, $J = \\frac12\\int_0^T u^2dt$, $x(0) = 0$, $x(T) = 1$. What is the minimum-energy input?"
+  choices:
+  - "$u^\\circ = 1/T$, constant"
+  - "$u^\\circ = 2t/T^2$, a ramp"
+  - "$u^\\circ = 1/T$ for $t<T/2$, then $0$"
+  - "$u^\\circ = e^{-t}/(1-e^{-T})$"
+  answer: 0
+  why: "$H = \\frac12u^2 + \\lambda u$, $\\dot\\lambda = -\\partial H/\\partial x = 0$, so $\\lambda$ and $u = -\\lambda$ are constant; $x(T) = uT = 1$. Same as the Gramian answer: $W = T$, energy $1/T$."
+- id: v-p3
+  tags:
+  - optimal
+  - variants
+  - part-a
+  - v-pmp
+  kind: compute
+  q: "P3. $\\dot x = 2x + u$, $J = \\int_0^1(3x^2+u^2)dt$, $x(0) = 1$, **$x(1)$ free**. Which boundary condition fixes $\\lambda(0)$, and what is $u^\\circ(1)$?"
+  choices:
+  - "$\\lambda(1) = 0$ (transversality), so $u^\\circ(1) = 0$; $\\lambda(0) \\approx 8.92$"
+  - "$\\lambda(0) = 0$, so $u^\\circ(0) = 0$"
+  - "$x(1) = 0$, so $u^\\circ(1) \\approx -4.46$"
+  - "$\\lambda(1) = x(1)$, so $u^\\circ(1) = -x(1)/2$"
+  answer: 0
+  why: "With a free endpoint, transversality gives $\\lambda(1) = 0$, so $u^\\circ(1) = -\\lambda(1)/2 = 0$. $M = \\begin{bmatrix}2&-\\frac12\\\\-6&-2\\end{bmatrix}$, $\\omega = \\sqrt7$, and $\\lambda(0) = -\\varphi_{21}(1)/\\varphi_{22}(1) \\approx 8.9216$, so $u^\\circ(0) \\approx -4.461$."
+- id: v-r1
+  tags:
+  - realize
+  - variants
+  - part-b
+  - v-real
+  kind: compute
+  q: "R1. Phase-variable form of $\\dfrac{10(s+4)}{s^3+6s^2+11s+6}$: what are the last row of $A$ and $C$?"
+  choices:
+  - "last row $[-6\\ -11\\ -6]$, $C = [40\\ 10\\ 0]$"
+  - "last row $[-6\\ -11\\ -6]$, $C = [0\\ 10\\ 40]$"
+  - "last row $[6\\ 11\\ 6]$, $C = [40\\ 10\\ 0]$"
+  - "last row $[-6\\ -11\\ -6]$, $C = [10\\ 4\\ 0]$"
+  answer: 0
+  why: "Numerator $10s + 40$, so $b = (40, 10, 0)$ and $C = [b_0\\ b_1\\ b_2] = [40\\ 10\\ 0]$; the last row is $[-a_0\\ -a_1\\ -a_2] = [-6\\ -11\\ -6]$, $B = e_3$."
+- id: v-r2
+  tags:
+  - realize
+  - variants
+  - part-b
+  - v-real
+  kind: compute
+  q: "R2. $G = \\dfrac{s^2+3s+1}{s^2+4s+5}$ (biproper). Which phase-variable realization is right?"
+  choices:
+  - "$A = \\begin{bmatrix}0&1\\\\-5&-4\\end{bmatrix}$, $C = [-4\\ -1]$, $D = 1$"
+  - "$A = \\begin{bmatrix}0&1\\\\-5&-4\\end{bmatrix}$, $C = [1\\ 3]$, $D = 0$"
+  - "$A = \\begin{bmatrix}0&1\\\\-5&-4\\end{bmatrix}$, $C = [-4\\ -1]$, $D = 0$"
+  - "$A = \\begin{bmatrix}0&1\\\\5&4\\end{bmatrix}$, $C = [1\\ 3]$, $D = 1$"
+  answer: 0
+  why: "Divide first: $G = 1 + \\frac{-s-4}{s^2+4s+5}$. The quotient is $D = 1$; the remainder gives $C = [-4\\ -1]$."
+- id: v-r3
+  tags:
+  - realize
+  - variants
+  - part-b
+  - v-real
+  kind: compute
+  q: R3. $\dddot y + 4\ddot y + 5\dot y + 2y = 3\ddot u + u$. What are $G(s)$ and $C$ in phase-variable form?
+  choices:
+  - "$G = \\frac{3s^2+1}{s^3+4s^2+5s+2}$, $C = [1\\ 0\\ 3]$"
+  - "$G = \\frac{3s^2+1}{s^3+4s^2+5s+2}$, $C = [3\\ 0\\ 1]$"
+  - "$G = \\frac{3s+1}{s^3+4s^2+5s+2}$, $C = [1\\ 3\\ 0]$"
+  - "$G = \\frac{1}{s^3+4s^2+5s+2}$, $C = [1\\ 0\\ 0]$"
+  answer: 0
+  why: "Transform with zero initial conditions: $(s^3+4s^2+5s+2)Y = (3s^2+1)U$. $b = (1, 0, 3)$, so $C = [1\\ 0\\ 3]$; $A$ has last row $[-2\\ -5\\ -4]$, $B = e_3$."
+- id: v-co1
+  tags:
+  - ctrl
+  - obs
+  - pbh
+  - variants
+  - part-b
+  - v-co
+  kind: compute
+  q: "CO1. $A = \\begin{bmatrix}-1&0\\\\1&-2\\end{bmatrix}$, $B = \\begin{bmatrix}1\\\\b\\end{bmatrix}$, $C = [c_1\\ c_2]$. When is the pair controllable, and when observable?"
+  choices:
+  - controllable ⇔ $b \ne 1$; observable ⇔ $c_2 \ne 0$ and $c_1 + c_2 \ne 0$
+  - controllable ⇔ $b \ne 0$; observable ⇔ $c_1 \ne 0$
+  - controllable for every $b$; observable ⇔ $c_2 \ne 0$
+  - controllable ⇔ $b \ne -1$; observable ⇔ $c_1 \ne c_2$
+  answer: 0
+  why: "$AB = (-1,\\ 1-2b)$, so $\\det[B\\ AB] = 1 - 2b + b = 1 - b$. Right eigenvectors $(1,1)$ for $-1$ and $(0,1)$ for $-2$: $Cv = c_1 + c_2$ and $c_2$."
+- id: v-co2
+  tags:
+  - obs
+  - kalman
+  - tf
+  - variants
+  - part-b
+  - v-co
+  kind: compute
+  q: "CO2. $A = \\begin{bmatrix}0&1\\\\-2&-3\\end{bmatrix}$, $B = \\begin{bmatrix}0\\\\1\\end{bmatrix}$, $C = [c_1\\ 1]$. For which $c_1$ is the pair unobservable, and why?"
+  choices:
+  - "$c_1 = 1$ or $2$: $G = \\frac{s+c_1}{(s+1)(s+2)}$ and the zero cancels a pole"
+  - "$c_1 = 0$: the sensor misses the position"
+  - "$c_1 = -1$ or $-2$: the zero lands on the right half-plane"
+  - "Never: $C$ always has a 1 in it"
+  answer: 0
+  why: "$G = C(sI-A)^{-1}B = \\frac{s + c_1}{(s+1)(s+2)}$. A pole–zero cancellation is exactly a hidden mode; here it is unobservable (the pair is controllable). PBH: $Cv$ with $v = (1, \\lambda)$ gives $c_1 + \\lambda = 0$ at $\\lambda = -1, -2$."
+- id: v-co3
+  tags:
+  - ctrl
+  - jordan
+  - pbh
+  - variants
+  - part-b
+  - v-co
+  kind: compute
+  q: "CO3. $A = \\begin{bmatrix}-1&1\\\\0&-1\\end{bmatrix}$ (a Jordan block), $B = \\begin{bmatrix}1\\\\b\\end{bmatrix}$. When is it controllable?"
+  choices:
+  - "$b \\ne 0$: only the input to the last state of the chain matters"
+  - "always: the eigenvalue is stable"
+  - $b \ne 1$
+  - "never: a repeated eigenvalue cannot be controlled with one input"
+  answer: 0
+  why: "$AB = (-1+b,\\ -b)$, so $\\det[B\\ AB] = -b - b(b-1) = -b^2$. The left eigenvector is $(0, 1)$, and $w^{\\mathsf T}B = b$. A single input can control a Jordan block, as long as it reaches the end of the chain."
+- id: v-e1
+  tags:
+  - expm
+  - eig
+  - variants
+  - part-b
+  - v-eig
+  kind: compute
+  q: "E1. $A = \\begin{bmatrix}0&1\\\\-2&-3\\end{bmatrix}$, $B = \\begin{bmatrix}0\\\\1\\end{bmatrix}$, $C = [1\\ 0]$. What is the impulse response $h(t)$?"
+  choices:
+  - "$(e^{-t} - e^{-2t})u(t)$"
+  - "$(2e^{-t} - e^{-2t})u(t)$"
+  - "$(e^{-t} + e^{-2t})u(t)$"
+  - "$(-e^{-t} + 2e^{-2t})u(t)$"
+  answer: 0
+  why: "$h = C\\Phi(t)B = \\Phi_{12}(t) = e^{-t} - e^{-2t}$. Check: $h(0^+) = CB = 0$; the other choices are other entries of $\\Phi$."
+- id: v-e2
+  tags:
+  - kalman
+  - expm
+  - obs
+  - variants
+  - part-b
+  - v-eig
+  kind: compute
+  q: "E2. Companion $A$ with last row $[-6\\ -11\\ -6]$, $B = e_3$, $C = [1\\ 1\\ 0]$. What is $h(t)$?"
+  choices:
+  - "$(e^{-2t} - e^{-3t})u(t)$"
+  - "$(\\frac12e^{-t} - e^{-2t} + \\frac12e^{-3t})u(t)$"
+  - "$(e^{-t} - e^{-3t})u(t)$"
+  - "$(e^{-t} + e^{-2t} + e^{-3t})u(t)$"
+  answer: 0
+  why: "$G = \\frac{s+1}{(s+1)(s+2)(s+3)} = \\frac{1}{(s+2)(s+3)}$. The zero at $-1$ cancels that pole, so the $-1$ mode is unobservable and $h = e^{-2t} - e^{-3t}$."
+- id: v-e3
+  tags:
+  - expm
+  - eig
+  - variants
+  - part-b
+  - v-eig
+  kind: compute
+  q: "E3. $A = \\begin{bmatrix}0&1\\\\-5&-2\\end{bmatrix}$ (eigenvalues $-1 \\pm 2j$). What is $\\Phi_{11}(t)$?"
+  choices:
+  - "$e^{-t}(\\cos2t + \\frac12\\sin2t)$"
+  - "$e^{-t}\\cos2t$"
+  - "$e^{-t}(\\cos2t - \\frac12\\sin2t)$"
+  - "$e^{-2t}(\\cos t + \\frac12\\sin t)$"
+  answer: 0
+  why: "$\\Phi = e^{-t}\\begin{bmatrix}\\cos2t + \\frac12\\sin2t & \\frac12\\sin2t\\\\ -\\frac52\\sin2t & \\cos2t - \\frac12\\sin2t\\end{bmatrix}$. Check $\\Phi(0) = I$ and $\\dot\\Phi_{11}(0) = A_{11} = 0$: $-1 + 1 = 0$ ✓ for the first choice, $-1$ for the second."
+- id: c-lti-1
+  tags:
+  - lti
+  kind: recognize
+  q: "Doubling the input of a system doubles its output, but the response to a click at t = 1 s is not the response to a click at t = 0 shifted by 1 s. What is the system?"
+  choices:
+  - "Linear but time-varying, so it is not described by one impulse response h(t)"
+  - "LTI, because it is linear"
+  - Nonlinear
+  - Time-invariant but nonlinear
+  answer: 0
+  why: Convolution with a single h needs both linearity and time invariance. A linear time-varying system has an impulse response that depends on when you kick it.
+- id: c-lti-2
+  tags:
+  - lti
+  - eigfn
+  kind: trap
+  q: The earbud speaker gets a 500 Hz tone plus a click. What comes out (ignoring distortion)?
+  choices:
+  - The response to the tone plus the response to the click
+  - A tone at a new frequency where the two interact
+  - "Only the click's ring, because the click is louder"
+  - The product of the two responses
+  answer: 0
+  why: "Linearity: the response to a sum is the sum of the responses. That is also why anti-noise can simply be added to the music."
+- id: c-eig-1
+  tags:
+  - eig
+  kind: compute
+  q: "The house has A = [[−1.2, 1], [1, −1.2]] per hour. What are its eigenvalues and eigenvectors?"
+  choices:
+  - "−0.2 along (1, 1) and −2.2 along (1, −1)"
+  - "−1.2 along (1, 0) and −1.2 along (0, 1)"
+  - "−0.2 along (1, −1) and −2.2 along (1, 1)"
+  - "0.2 along (1, 1) and 2.2 along (1, −1)"
+  answer: 0
+  why: "A(1, 1) = (−0.2, −0.2) and A(1, −1) = (−2.2, 2.2). The average of the two rooms decays slowly (τ = 5 h); their difference decays fast (τ = 1/2.2 h ≈ 27 min)."
+- id: c-eig-2
+  tags:
+  - eig
+  - stab
+  kind: compute
+  q: "Room 1 starts 10 K warmer than room 2, with the average at the outdoor temperature and the heater off. Roughly how big is the difference after one hour?"
+  choices:
+  - About 1 K (10·e^(−2.2))
+  - About 8 K (10·e^(−0.2))
+  - About 3.7 K (10·e^(−1))
+  - "Still 10 K: nothing drives it"
+  answer: 0
+  why: "The start is pure difference mode, which decays as e^(−2.2t): after 1 h, 10·e^(−2.2) ≈ 1.1 K."
+- id: c-eigfn-1
+  tags:
+  - eigfn
+  kind: recall
+  q: Why is H(s) called the eigenvalue of an LTI system?
+  a: "Because e^(st) is an eigenfunction of convolution: h ∗ e^(st) = H(s)e^(st), with H(s) = ∫h(τ)e^(−sτ)dτ. The output is the same exponential times one complex number, and that number, H(s), plays exactly the role λ plays in Av = λv."
+- id: c-eigfn-2
+  tags:
+  - eigfn
+  - ft
+  kind: trap
+  q: A 500 Hz tone is switched on at t = 0 into the speaker. What does the diaphragm do at first?
+  choices:
+  - "A short transient at the speaker's own ring frequency, then a steady 500 Hz motion scaled by |H|"
+  - Exactly H(j2π·500)e^(jωt) from t = 0
+  - Nothing until the tone has run for one period
+  - It moves at 717 Hz forever
+  answer: 0
+  why: "e^(jωt) is an eigenfunction only as an eternal signal. A tone that starts at t = 0 also excites the natural modes; they die out in a few milliseconds (decay rate σ ≈ 1,267 /s)."
+- id: c-laplace-1
+  tags:
+  - laplace
+  - tf
+  kind: compute
+  q: "The speaker's H(s) = (Bl/Re)/(Mms s² + R s + 1/Cms) has poles at −1,267 ± j4,322 rad/s. What ring frequency and decay time does a click show?"
+  choices:
+  - "About 690 Hz, decaying with time constant ≈ 0.8 ms"
+  - "About 717 Hz, decaying with time constant ≈ 4.3 ms"
+  - "About 1,267 Hz, decaying with time constant ≈ 0.23 ms"
+  - "About 4,322 Hz, with no decay"
+  answer: 0
+  why: "Ring at ω_d/2π = 4,322/2π ≈ 688 Hz; envelope e^(−σt) with 1/σ = 1/1,267 s ≈ 0.79 ms. fs = 717 Hz is the undamped frequency."
+- id: c-roc-1
+  tags:
+  - roc
+  kind: recognize
+  q: X(s) has poles at −1 and +2. Which ROC belongs to a stable signal?
+  choices:
+  - −1 < Re s < 2 (it contains the jω axis)
+  - "Re s > 2"
+  - Re s < −1
+  - "None: a pole at +2 always means unstable"
+  answer: 0
+  why: Stable means the ROC contains the jω axis. The strip −1 < Re s < 2 does; that signal is two-sided (the +2 pole gives a left-sided term).
+- id: c-roc-2
+  tags:
+  - roc
+  - stab
+  kind: trap
+  q: "True or false: a right-sided sequence is always stable."
+  choices:
+  - "False: right-sided only says the ROC is outside the outermost pole; it is stable only if that ROC still contains |z| = 1"
+  - "True: right-sided sequences start at a finite time"
+  - "True for Z, false for Laplace"
+  - "False: right-sided sequences are never stable"
+  answer: 0
+  why: "Sidedness and stability are different questions. 2ⁿu(n) is right-sided (ROC |z| > 2) and unstable."
+- id: c-roc-3
+  tags:
+  - roc
+  - inverse
+  kind: compute
+  q: "X(z) has poles at ½, −2 and −3. How many different sequences share this X(z)?"
+  choices:
+  - "Four, one for each ROC: |z| < ½, ½ < |z| < 2, 2 < |z| < 3, |z| > 3"
+  - One
+  - "Three, one per pole"
+  - "Eight, one per choice of side for each pole"
+  answer: 0
+  why: "The ROC is a ring with no poles inside it, so it sits between two consecutive pole radii (or inside the smallest, or outside the largest)."
+- id: c-inv-1
+  tags:
+  - inverse
+  kind: trap
+  q: Y(s) = 1/(s + 3)². A student takes the residue (s + 3)Y e^(st) at −3. What goes wrong?
+  choices:
+  - "That is the simple-pole formula; for a double pole you differentiate (s + 3)²Y e^(st) once, giving t e^(−3t)"
+  - "Nothing: the answer is e^(−3t)"
+  - The contour must be closed to the right
+  - The ROC is wrong
+  answer: 0
+  why: "Order-m residue: (1/(m − 1)!)·d^(m−1)/ds^(m−1)[(s − p)^m Y e^(st)] at s = p. For m = 2 that is d/ds e^(st) = t e^(st)."
+- id: c-inv-2
+  tags:
+  - inverse
+  kind: recognize
+  q: When is it convenient to expand X(z)/z rather than X(z)?
+  choices:
+  - "When X(z) has a factor z upstairs, so the terms come out as z/(z − a) pairs"
+  - Always
+  - Only for left-sided sequences
+  - Only when the ROC contains the unit circle
+  answer: 0
+  why: "z/(z − a) ↔ aⁿu(n) is the standard pair. Without a z upstairs, expand X directly and use the delayed pair 1/(z − a) ↔ a^(n−1)u(n − 1)."
+- id: c-deq-1
+  tags:
+  - diffeq
+  kind: compute
+  q: y(n) = −¾y(n − 1) − ⅛y(n − 2) + x(n). What is the characteristic polynomial (denominator of H(z) in z)?
+  choices:
+  - z² + ¾z + ⅛
+  - z² − ¾z − ⅛
+  - z² + ⅛z + ¾
+  - 1 − ¾z⁻¹ − ⅛z⁻²
+  answer: 0
+  why: "Move the y terms to the left: y(n) + ¾y(n − 1) + ⅛y(n − 2) = x(n), so H(z) = z²/(z² + ¾z + ⅛) = z²/((z + ¼)(z + ½))."
+- id: c-deq-2
+  tags:
+  - diffeq
+  - sampling
+  kind: action
+  q: "Feedforward or feedback ANC: which microphone does each use?"
+  choices:
+  - "Feedforward: an outside reference microphone; feedback: an error microphone inside the ear (hybrid uses both)"
+  - "Feedforward: the in-ear microphone; feedback: the outside one"
+  - Both use only the outside microphone
+  - Neither uses a microphone; they filter the music
+  answer: 0
+  why: "Feedforward predicts the noise from outside before it reaches the ear; feedback cancels what is left at the ear. Hybrid combines them, with an adaptive (FxLMS) filter."
+- id: c-ft-1
+  tags:
+  - ft
+  - tf
+  kind: compute
+  q: "The speaker's undamped resonance is fs ≈ 717 Hz with ζ ≈ 0.28. Where is the peak of |X/V|?"
+  choices:
+  - "A little below fs, near 660 Hz (ω_s√(1 − 2ζ²))"
+  - Exactly at 717 Hz
+  - "Above fs, near 780 Hz"
+  - "At 0 Hz: a speaker is a low-pass filter with no peak"
+  answer: 0
+  why: For a second-order low-pass the magnitude peak is at ω_s√(1 − 2ζ²) = 717·√(1 − 0.157) ≈ 658 Hz.
+- id: c-ft-2
+  tags:
+  - ft
+  - roc
+  kind: trap
+  q: An unstable system has a pole at s = +1. Does it have a frequency response H(jω)?
+  choices:
+  - "No: its causal ROC (Re s > 1) does not contain the jω axis, so H(s) at s = jω is not its Fourier transform"
+  - "Yes, just substitute s = jω"
+  - "Yes, but only above 1 rad/s"
+  - Only if the pole is cancelled by a zero
+  answer: 0
+  why: "The formula can be evaluated, but it is not the transform of the (growing) impulse response. Fourier needs the jω axis inside the ROC."
+- id: c-fs-1
+  tags:
+  - fs
+  - ortho
+  kind: compute
+  q: A 200 Hz square-wave buzz goes into the speaker. Which harmonics does it contain?
+  choices:
+  - "200, 600, 1000, 1400 Hz, … (odd harmonics only)"
+  - "200, 400, 600, 800 Hz, …"
+  - Only 200 Hz
+  - 717 Hz and its harmonics
+  answer: 0
+  why: "A symmetric square wave has only odd harmonics, with amplitudes falling as 1/k. The 600 Hz harmonic lands near the speaker's peak and is boosted."
+- id: c-pars-1
+  tags:
+  - parseval
+  kind: compute
+  q: "What fraction of a square wave's power is in its fundamental?"
+  choices:
+  - "8/π² ≈ 81 %"
+  - "50 %"
+  - "100 %"
+  - "4/π ≈ 127 %"
+  answer: 0
+  why: "Parseval: power = Σ|cₖ|². The fundamental pair has |c₁|² + |c₋₁|² = 2(2/π)² = 8/π² of the total power 1."
+- id: c-samp-1
+  tags:
+  - sampling
+  - dtft
+  kind: compute
+  q: "The speaker's poles −1,267 ± j4,322 rad/s are sampled at 8 kHz. Where do they land in the z-plane?"
+  choices:
+  - "Radius e^(−1267/8000) ≈ 0.85, angle ±4322/8000 rad ≈ ±31°"
+  - "Radius 1, angle ±31°"
+  - "Radius 0.85, angle ±4322°"
+  - Outside the unit circle
+  answer: 0
+  why: "z = e^(pT): |z| = e^(σT·(−1)) and ∠z = ω_d T. Stable continuous poles map inside the unit circle."
+- id: c-dtft-1
+  tags:
+  - dtft
+  kind: recall
+  q: Why is the DTFT periodic in Ω with period 2π?
+  a: "Because e^(j(Ω + 2π)n) = e^(jΩn) for every integer n: two frequencies 2π apart give the same samples, so the spectrum must repeat. Equivalently, the DTFT is the Z-transform on the unit circle z = e^(jΩ), and going once round the circle brings you back."
+- id: c-dft-1
+  tags:
+  - dft
+  kind: compute
+  q: N = 64 samples at 8 kHz. How far apart are the DFT bins?
+  choices:
+  - 125 Hz
+  - 64 Hz
+  - 8 kHz
+  - 62.5 Hz
+  answer: 0
+  why: Bin spacing f_s/N = 8000/64 = 125 Hz.
+- id: c-win-1
+  tags:
+  - window
+  - dft
+  kind: recognize
+  q: "A 690 Hz tone, 64 samples at 8 kHz: why does its DFT spread over several bins?"
+  choices:
+  - "690 Hz is not a whole number of cycles in the block (5.52 bins), so the rectangular window leaks"
+  - Because of aliasing
+  - Because the speaker is nonlinear
+  - Because the FFT is approximate
+  answer: 0
+  why: "Leakage comes from the finite record. A 750 Hz tone (exactly bin 6) would give a single spike. Aliasing is a different effect, from sampling too slowly."
+- id: c-win-2
+  tags:
+  - window
+  kind: trap
+  q: "Does zero-padding the 64-sample block to 1,024 samples improve frequency resolution?"
+  choices:
+  - "No: it samples the same smeared spectrum more finely; only a longer record narrows the main lobe"
+  - "Yes, by a factor of 16"
+  - "Yes, it removes leakage"
+  - It halves the bin spacing only
+  answer: 0
+  why: Resolution is set by the record length (main lobe width ≈ 4π/N for the rectangular window); zero-padding interpolates.
+- id: c-ss-1
+  tags:
+  - ss
+  kind: compute
+  q: "In the house, B = (3600/C_th, 0)ᵀ with C_th = 1 MJ/K. A 1.5 kW heater runs in room 1 for a long time. What are the steady room temperatures above outdoors?"
+  choices:
+  - About 14.7 K in room 1 and 12.3 K in room 2
+  - About 5.4 K in both rooms
+  - About 27 K in room 1 and 0 K in room 2
+  - They rise forever
+  answer: 0
+  why: "Bu = 3600·1500/10⁶ = 5.4 K/h. Steady state x = −A⁻¹Bu = (1/0.44)·(1.2·5.4, 5.4) ≈ (14.7, 12.3) K."
+- id: c-ss-2
+  tags:
+  - ss
+  - realize
+  kind: trap
+  q: "Why does the earbud model use only two states (x, ẋ) when the coil current is also an energy store?"
+  choices:
+  - "The coil's pole −Re/Le ≈ −186,750 rad/s is about 40× faster than the mechanical poles, so the current follows the voltage almost instantly"
+  - Because the coil has no inductance
+  - Because current is not a state variable
+  - Because only two states are ever allowed
+  answer: 0
+  why: "Le = 0.04 mH and Re = 7.47 Ω give a time constant Le/Re ≈ 5 µs, far shorter than the 0.8 ms mechanical decay. Dropping it changes the audio-band response very little."
+- id: c-diag-1
+  tags:
+  - diag
+  kind: recognize
+  q: "In the house's modal coordinates ξ = V⁻¹x with V = [[1, 1], [1, −1]], what does ξ̇ = Λξ + V⁻¹Bu look like?"
+  choices:
+  - "Two independent first-order systems, ξ̇₁ = −0.2ξ₁ + …, ξ̇₂ = −2.2ξ₂ + …"
+  - A Jordan block
+  - The same coupled system
+  - A single first-order system
+  answer: 0
+  why: "Diagonalising decouples the modes: one slow (the average), one fast (the difference), each driven by its share of the input."
+- id: c-expm-1
+  tags:
+  - expm
+  kind: trap
+  q: "A student writes e^(At) for A = [[−1.2, 1], [1, −1.2]] as [[e^(−1.2t), e^(t)], [e^(t), e^(−1.2t)]]. What is wrong?"
+  choices:
+  - "The matrix exponential is not entry-wise; the right answer is ½[[e₁ + e₂, e₁ − e₂], [e₁ − e₂, e₁ + e₂]] with e₁ = e^(−0.2t), e₂ = e^(−2.2t)"
+  - Nothing
+  - Only the off-diagonal entries are wrong
+  - It should be e^(−At)
+  answer: 0
+  why: "Use the modes (Ve^(Λt)V⁻¹), the inverse Laplace transform of (sI − A)⁻¹, or Cayley–Hamilton. Check Φ(0) = I."
+- id: c-ch-1
+  tags:
+  - cayley
+  kind: compute
+  q: "For the house, s² + 2.4s + 0.44 is the characteristic polynomial. What does Cayley–Hamilton give for A²?"
+  choices:
+  - A² = −2.4A − 0.44I
+  - A² = 2.4A + 0.44I
+  - A² = 0
+  - A² = −0.44A − 2.4I
+  answer: 0
+  why: "p(A) = A² + 2.4A + 0.44I = 0. So e^(At) = α₀(t)I + α₁(t)A, with α's fixed by e^(−0.2t) and e^(−2.2t)."
+- id: c-ch-2
+  tags:
+  - cayley
+  - optimal
+  kind: compute
+  q: A 2×2 matrix M has trace 0 and determinant −ω². What is e^(Mt)?
+  choices:
+  - cosh(ωt)I + (sinh(ωt)/ω)M
+  - e^(ωt)I
+  - cos(ωt)I + (sin(ωt)/ω)M
+  - I + Mt
+  answer: 0
+  why: "Cayley–Hamilton: M² − (tr M)M + (det M)I = 0, so M² = ω²I. The even powers give cosh, the odd powers give sinh/ω times M."
+- id: c-jor-1
+  tags:
+  - jordan
+  kind: compute
+  q: "The speaker is damped critically, R = 2√(k·Mms) ≈ 0.76 kg/s. What does its click response look like?"
+  choices:
+  - "(a + bt)e^(−ωs t) with ωs ≈ 4,503 rad/s: no ringing"
+  - A decaying sine at 690 Hz
+  - A pure exponential e^(−ωs t)
+  - A growing oscillation
+  answer: 0
+  why: "The two poles merge at −ωs; A has a Jordan block with one eigenvector, and e^(At) gets a t·e^(λt) term."
+- id: c-stab-1
+  tags:
+  - stab
+  - kalman
+  kind: trap
+  q: A transfer function has all its poles in the left half-plane. Is the state model necessarily internally stable?
+  choices:
+  - "No: an unstable mode can be cancelled (uncontrollable or unobservable) and missing from H(s)"
+  - "Yes, always"
+  - "Yes, if the system is second order"
+  - "No, transfer functions never say anything about stability"
+  answer: 0
+  why: "Poles of H are eigenvalues of A, but not always all of them. Internal stability needs every eigenvalue of A in the left half-plane."
+- id: c-real-1
+  tags:
+  - realize
+  kind: trap
+  q: "MATLAB's tf2ss returns A with first row [−8 −19 −2] and C = [24 22 3] for (24s² + 22s + 3)/(s³ + 8s² + 19s + 2). The phase-variable form has last row [−2 −19 −8] and C = [3 22 24]. Which is right?"
+  choices:
+  - "Both: they are the same system with the states in reverse order"
+  - "Only MATLAB's"
+  - Only the phase-variable form
+  - "Neither: C should equal the denominator"
+  answer: 0
+  why: A realization is not unique. Just do not mix the two orderings in one answer.
+- id: c-ctrl-1
+  tags:
+  - ctrl
+  - pbh
+  kind: compute
+  q: "The heater power is split equally between the two rooms, B ∝ (1, 1). Is the house controllable?"
+  choices:
+  - "No: B is an eigenvector, so [B AB] has rank 1; the difference mode cannot be changed"
+  - "Yes: two rooms, two heaters"
+  - "Yes, if you heat long enough"
+  - Only if the thermostat reads room 1
+  answer: 0
+  why: "AB = −0.2B, so B and AB are parallel. PBH: the left eigenvector (1, −1) is orthogonal to (1, 1)."
+- id: c-ctrl-2
+  tags:
+  - ctrl
+  kind: recognize
+  q: "With the heater in room 1 only, B ∝ (1, 0), why is the house controllable?"
+  choices:
+  - "AB ∝ (−1.2, 1) has a room-2 part through the wall, so B and AB span the plane"
+  - Because room 1 is the bigger room
+  - Because the eigenvalues are distinct
+  - It is not controllable
+  answer: 0
+  why: "det[B AB] = det[[1, −1.2], [0, 1]] = 1 ≠ 0."
+- id: c-obs-1
+  tags:
+  - obs
+  - pbh
+  kind: compute
+  q: "A thermostat reads the average, C = [½, ½]. Which mode can it not see?"
+  choices:
+  - "The difference (1, −1): C·(1, −1) = 0"
+  - "The average (1, 1)"
+  - "Neither: it sees both"
+  - Both
+  answer: 0
+  why: "PBH for observability: Cv = 0 for v = (1, −1). Two houses with the same average but different room temperatures give identical readings."
+- id: c-pbh-1
+  tags:
+  - pbh
+  kind: recall
+  q: "State the PBH test in eigenvector form, and say which eigenvectors go with which test."
+  a: "Controllable ⇔ wᵢᵀB ≠ 0 for every left eigenvector wᵢ (wᵢᵀA = λᵢwᵢᵀ); equivalently rank[A − λI, B] = n at every eigenvalue. Observable ⇔ Cvᵢ ≠ 0 for every right eigenvector vᵢ; equivalently rank[A − λI; C] = n. Left eigenvectors for controllability, right ones for observability."
+- id: c-gram-1
+  tags:
+  - gramian
+  kind: compute
+  q: The house is controllable from the room-1 heater. Why does holding the rooms 10 K apart still cost about twice the energy of warming both by 10 K?
+  choices:
+  - "The Gramian's reachable ellipse is thin across the direction (1, −1): that direction has a small Gramian eigenvalue, and E_min = x_fᵀW⁻¹x_f is large there"
+  - Because the system is not controllable in that direction
+  - Because the outdoor temperature changes
+  - It does not; the cost is the same in every direction
+  answer: 0
+  why: W(3 h) has eigenvalues about 4² ≈ 15 times apart; the fast-decaying difference mode must be fought continuously.
+- id: c-gram-2
+  tags:
+  - gramian
+  kind: recognize
+  q: What does it mean if the controllability Gramian W(T) is singular?
+  choices:
+  - "Some direction cannot be reached at all: the pair is uncontrollable"
+  - The system is unstable
+  - The input is too small
+  - T is too long
+  answer: 0
+  why: "W(T) > 0 for any T > 0 exactly when (A, B) is controllable."
+- id: c-kal-1
+  tags:
+  - kalman
+  kind: recognize
+  q: "Heat both rooms equally and read the average. What does the house's transfer function look like?"
+  choices:
+  - "First order, with only the 5-hour pole: the difference mode is neither reached nor seen"
+  - Second order with both poles
+  - "Zero: nothing gets through"
+  - First order with only the 27-minute pole
+  answer: 0
+  why: "Kalman decomposition: the average is controllable and observable; the difference is neither and cancels out of G(s)."
+- id: c-opt-1
+  tags:
+  - optimal
+  kind: trap
+  q: "In Pontryagin's principle with x(T) fixed, a student sets λ(T) = 0. What is wrong?"
+  choices:
+  - "λ(T) = 0 (transversality) holds only when x(T) is free; with x(T) fixed, λ(0) is the unknown, found from Φ_M(T)"
+  - Nothing
+  - λ(0) should be 0 instead
+  - λ must be constant
+  answer: 0
+  why: "Fixed endpoint: x(0) and x(T) are given, λ(0) is solved for. Free endpoint: x(0) and λ(T) = 0."
+- id: c-opt-2
+  tags:
+  - optimal
+  kind: recognize
+  q: Why do the eigenvalues of a Hamiltonian matrix M come in ± pairs?
+  choices:
+  - "State and costate run in opposite time directions (λ̇ = −Aᵀλ − …), which makes the spectrum symmetric about the imaginary axis"
+  - Because M is symmetric
+  - Because M is upper triangular
+  - They do not
+  answer: 0
+  why: "For M = [[A, −BR⁻¹Bᵀ], [−Q, −Aᵀ]], λ is an eigenvalue exactly when −λ is. In A4, ±√146/2."
+- id: c-opt-3
+  tags:
+  - optimal
+  - gramian
+  kind: action
+  q: "The least-energy heater profile that warms the house from outdoor temperature to (10, 7) K in 3 hours: what does it look like?"
+  choices:
+  - "About 1.8 kW at first, rising to about 2.4 kW at 2 h, then easing to about 1 kW at the end"
+  - A constant 1.5 kW
+  - "Full power for an hour, then off"
+  - "Zero at first, then full power"
+  answer: 0
+  why: u(t) = bᵀe^(Aᵀ(3−t))W(3)⁻¹x_f mixes e^(0.2(t−3)) and e^(2.2(t−3)) shapes. The late dip trims the fast difference mode so room 1 does not overshoot.
