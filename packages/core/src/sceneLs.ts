@@ -163,7 +163,7 @@ export function drawSpeakerSpectrum(g: G, r: Rect, P: Pal, ov: string[]) {
     for (let n = 0; n < N; n++) h.push(S.x[Math.round(n / fsmp / S.dt)] ?? 0);
     const mag = (k: number) => { let re = 0, im = 0; for (let n = 0; n < N; n++) { re += h[n] * Math.cos((2 * Math.PI * k * n) / N); im -= h[n] * Math.sin((2 * Math.PI * k * n) / N); } return Math.hypot(re, im); };
     const ks = Array.from({ length: N / 2 + 1 }, (_, k) => mag(k)), mx = Math.max(...ks) * 1.15;
-    const { X, Y } = axes(g, r, P, [0, 4], [0, mx], 'f (kHz)', '|X[k]|', { pad: [30, 14, 8, 24], xTicks: [0, 1, 2, 3, 4] });
+    const { X, Y } = axes(g, r, P, [0, 4], [0, mx], 'f (kHz)', '|X[k]|', { pad: [30, 14, 8, 24], xTicks: [0, 1, 2, 3] /* no 4: the axis name sits there */ });
     ks.forEach((v, k) => { const f = (k * fsmp) / N / 1000; line(g, [[X(f), Y(0)], [X(f), Y(v)]], P.warn, 1.4); dot(g, X(f), Y(v), 2.2, P.warn); });
     text(g, 'N = 64 at 8 kHz: a bin every 125 Hz', r.x + r.w - 6, r.y + 12, P.warn, { align: 'right', px: 9.5, wt: 700, optional: true });
     return;
@@ -171,19 +171,19 @@ export function drawSpeakerSpectrum(g: G, r: Rect, P: Pal, ov: string[]) {
   const lx: [number, number] = [2, 4], L10 = (f: number) => Math.log10(f);
   if (ov.includes('series')) {
     const f0 = 200, { X, Y } = axes(g, r, P, lx, [0, 1.6], 'f (Hz, log)', 'amplitude', { pad: [30, 14, 8, 24] });
-    for (const f of [100, 1000, 10000]) text(g, f >= 1000 ? `${f / 1000}k` : String(f), X(L10(f)), r.y + r.h - 12, P.muted, { align: 'center', px: 9 });
+    for (const f of [100, 1000, 10000]) text(g, f >= 1000 ? `${f / 1000}k` : String(f), X(L10(f)), r.y + r.h - 12, P.muted, { align: 'center', px: 9, bg: P.panel });
     for (let n = 1; n * f0 <= 10000; n += 2) { const a = 4 / (n * Math.PI), o = a * speakerMag(n * f0); line(g, [[X(L10(n * f0)) - 2, Y(0)], [X(L10(n * f0)) - 2, Y(a)]], P.muted, 1.6); line(g, [[X(L10(n * f0)) + 2, Y(0)], [X(L10(n * f0)) + 2, Y(o)]], P.s0, 2); }
     text(g, 'grey: 200 Hz buzz harmonics in', r.x + r.w - 6, r.y + 12, P.muted, { align: 'right', px: 9.5, wt: 700, optional: true });
     text(g, 'blue: each scaled by |H|', r.x + r.w - 6, r.y + 24, P.s0, { align: 'right', px: 9.5, wt: 700, optional: true });
     return;
   }
   const { X, Y } = axes(g, r, P, lx, [-40, 12], 'f (Hz, log)', '|H| (dB re DC)', { pad: [30, 14, 8, 24] });
-  for (const f of [100, 1000, 10000]) text(g, f >= 1000 ? `${f / 1000}k` : String(f), X(L10(f)), r.y + r.h - 12, P.muted, { align: 'center', px: 9 });
+  for (const f of [100, 1000, 10000]) text(g, f >= 1000 ? `${f / 1000}k` : String(f), X(L10(f)), r.y + r.h - 12, P.muted, { align: 'center', px: 9, bg: P.panel });
   const q: [number, number][] = []; for (let u = 2; u <= 4.0001; u += 0.01) q.push([X(u), Y(20 * Math.log10(speakerMag(10 ** u)))]);
   if (ov.includes('critical')) { const qc: [number, number][] = []; for (let u = 2; u <= 4.0001; u += 0.01) qc.push([X(u), Y(20 * Math.log10(speakerMag(10 ** u, SPK.crit)))]); line(g, qc, P.s1, 1.6, [4, 3]); }
   line(g, q, P.s0, 2.4); line(g, [[X(L10(SPK.fs)), Y(-40)], [X(L10(SPK.fs)), Y(12)]], P.s1, 1, [3, 3], 0.8);
   text(g, 'fs ≈ 717 Hz', X(L10(SPK.fs)) + 4, r.y + 24, P.s1, { px: 10, wt: 700 });
-  text(g, '−40 dB/decade', X(3.6), Y(-28), P.muted, { align: 'center', px: 9.5, optional: true });
+  text(g, '−40 dB/decade', X(3.6), Y(-28), P.muted, { align: 'center', px: 9.5, optional: true, bg: P.panel });
 }
 
 export function drawSpeakerZ(g: G, r: Rect, P: Pal) {
@@ -258,8 +258,10 @@ export function drawHouseTrace(g: G, r: Rect, P: Pal, ov: string[], tAnim: numbe
   line(g, path((i) => S.x1[i], th), P.s1, 2.4); line(g, path((i) => S.x2[i], th), P.s2, 2.4);
   if (S.kind === 'optimal') for (const [v, c] of [[OPT_TARGET[0], P.s1], [OPT_TARGET[1], P.s2]] as [number, string][]) { g.save(); g.strokeStyle = c; g.lineWidth = 2; g.beginPath(); g.arc(X(S.T) - 3, Y(out + v), 5, 0, 7); g.stroke(); g.restore(); }
   g.restore();
-  text(g, 'T₁', r.x + r.w - 10, Y(out + S.x1[S.n - 1]) - 4, P.s1, { align: 'right', px: 10, wt: 800 });
-  text(g, 'T₂', r.x + r.w - 10, Y(out + S.x2[S.n - 1]) + 12, P.s2, { align: 'right', px: 10, wt: 800 });
+  // end labels: T₂ goes under its curve unless that runs into the time axis, then it stacks above T₁
+  const y1 = Y(out + S.x1[S.n - 1]) - 4; let y2 = Y(out + S.x2[S.n - 1]) + 12; if (y2 > Y(out + lo) - 4) y2 = Math.min(y1, Y(out + S.x2[S.n - 1]) - 4) - 12;
+  text(g, 'T₁', r.x + r.w - 10, y1, P.s1, { align: 'right', px: 10, wt: 800 });
+  text(g, 'T₂', r.x + r.w - 10, y2, P.s2, { align: 'right', px: 10, wt: 800 });
   if (ov.includes('modes')) text(g, 'dashed: average and half-difference (above 5 °C)', r.x + 34, r.y + 12, P.s3, { px: 9.5, wt: 700, optional: true });
   if (S.kind === 'optimal') text(g, 'circles: the 3 h target', r.x + 34, r.y + 12, P.muted, { px: 9.5, wt: 700, optional: true });
 }

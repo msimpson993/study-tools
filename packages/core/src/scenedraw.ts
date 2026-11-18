@@ -64,7 +64,7 @@ export function axes(g: G, r: Rect, P: Pal, xr: [number, number], yr: [number, n
   if (!o.noYZero && yr[0] < 0 && yr[1] > 0) line(g, [[X(xr[0]), Y(0)], [X(xr[1]), Y(0)]], P.muted, 1, [], 0.7);
   if (xr[0] < 0 && xr[1] > 0) line(g, [[X(0), Y(yr[0])], [X(0), Y(yr[1])]], P.muted, 1, [], 0.7);
   for (const v of o.xTicks ?? []) { line(g, [[X(v), Y(yr[0])], [X(v), Y(yr[0]) + 3]], P.muted, 1); text(g, String(v), X(v), Y(yr[0]) + 13, P.muted, { align: 'center', px: 9 }); }
-  text(g, xl, r.x + r.w - R, r.y + r.h - 2, P.muted, { align: 'right', px: 10, wt: 600 }); text(g, yl, r.x + 3, r.y + 10, P.muted, { px: 10, wt: 600 });
+  text(g, xl, r.x + r.w - R, r.y + r.h - 2, P.muted, { align: 'right', px: 10, wt: 600, bg: P.panel }); text(g, yl, r.x + 3, r.y + 10, P.muted, { px: 10, wt: 600 });
   return { X, Y };
 }
 
