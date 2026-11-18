@@ -279,7 +279,7 @@ export function drawHousePhase(g: G, r: Rect, P: Pal, ov: string[], tAnim: numbe
   line(g, qq, P.s1, 1.4, [], 0.18); line(g, q, P.s1, 2.4);
   const c = hAt(S, th); dot(g, X(c.a), Y(c.b), 4.5, P.s1, P.panel);
   g.restore();
-  if (ov.includes('modes') || ov.includes('flow')) { text(g, 'average (1, 1): τ = 5 h', sq.x + sq.w - 4, sq.y + 12, P.s3, { align: 'right', px: 9.5, wt: 700 }); text(g, 'difference (1, −1): τ ≈ 27 min', sq.x + 4, sq.y + sq.h - 4, P.muted, { px: 9.5, wt: 700, optional: true }); }
+  if (ov.includes('modes') || ov.includes('flow')) { text(g, 'average (1, 1): τ = 5 h', sq.x + sq.w - 4, sq.y + 12, P.s3, { align: 'right', px: 9.5, wt: 700, bg: P.panel }); text(g, 'difference (1, −1): τ ≈ 27 min', sq.x + 4, sq.y + sq.h - 4, P.muted, { px: 9.5, wt: 700, optional: true, bg: P.panel }); }
   if (ov.includes('reach')) { text(g, 'B', X(6) + 3, Y(0) - 4, P.s0, { px: 11, wt: 800 }); text(g, 'AB', X(-3.6) - 2, Y(3) - 4, P.s3, { align: 'right', px: 11, wt: 800 }); }
   if (ov.includes('gramian')) text(g, 'same energy, 3 h: thin across the diagonal', sq.x + 4, sq.y + sq.h - 16, P.s0, { px: 9.5, wt: 700, optional: true });
   if (r.w - side > 70) { text(g, 'state', r.x + 4, r.y + 22, P.muted, { px: 10 }); text(g, `x₁ = ${fmt(c.a, 1)} K`, r.x + 4, r.y + 36, P.s1, { px: 11, wt: 700 }); text(g, `x₂ = ${fmt(c.b, 1)} K`, r.x + 4, r.y + 52, P.s2, { px: 11, wt: 700 }); }
