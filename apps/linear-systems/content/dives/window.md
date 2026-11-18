@@ -17,7 +17,7 @@ neighbors:
   - parseval
   - sampling
 matlab: "X = fft(x .* hann(N))"
-exampleScene: { overlays: [dft], caption: "64 samples at 8 kHz: bins every 125 Hz, and the 690 Hz ring falls between them." }
+exampleScene: { overlays: [dft], caption: "64 samples at 8 kHz, bins 125 Hz apart: the 688 Hz ring falls between bins, so its peak reads low and smears (leakage)." }
 ---
 
 A finite record x[n]w[n] has transform (1/2π)X ⊛ W: each spectral line is replaced by a copy of the window's transform. For the rectangular window W is a Dirichlet kernel, sin(NΩ/2)/sin(Ω/2), with a main lobe 4π/N wide and side lobes only 13 dB down.

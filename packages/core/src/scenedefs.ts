@@ -94,7 +94,7 @@ export const SCENES: Record<string, SceneInfo> = {
   speaker: {
     id: 'speaker',
     title: 'The noise-cancelling earbud speaker',
-    physical: 'A micro-speaker in a noise-cancelling earbud (Thiele–Small values Mms = 0.084 g, Rms = 0.173 kg/s, Cms = 0.587 mm/N, Bl = 0.545 T·m, Re = 7.47 Ω, Le = 0.04 mH). A voltage V(t) drives the voice coil, the diaphragm moves x(t), and in the sealed ear canal the sound pressure follows x. It resonates at fs ≈ 717 Hz with damping ratio ζ ≈ 0.28.',
+    physical: 'A micro-speaker in a noise-cancelling earbud (Thiele–Small values Mms = 0.084 g, Rms = 0.173 kg/s, Cms = 0.587 mm/N, Bl = 0.545 T·m, Re = 7.47 Ω, Le = 0.04 mH). A voltage V(t) drives the voice coil, the diaphragm moves x(t), and in the sealed ear canal the sound pressure follows x. It resonates at fs ≈ 717 Hz with damping ratio ζ ≈ 0.28 (0.229 from Rms alone; the back-EMF damping Bl²/Re of the voltage-driven coil adds the rest).',
     defaults: ['forces'],
     overlays: [
       { id: 'forces', label: 'forces', says: 'The forces on the diaphragm: the coil force Bl·i, the suspension spring −x/Cms and the damping −Rms·ẋ. Their sum is Mms·ẍ.' },
@@ -109,15 +109,15 @@ export const SCENES: Record<string, SceneInfo> = {
       { id: 'bode', label: '|H(f)|', says: 'The frequency response |H(j2πf)|, H(s) on the jω axis: flat in the bass, a peak near 660 Hz from the light damping, then falling at 40 dB per decade.', inset: 'spectrum' },
       { id: 'series', label: 'Fourier series', says: 'A 200 Hz buzz (square wave) is a sum of harmonics at 200, 600, 1000 Hz, …; the speaker scales each by |H| at its own frequency.', inset: 'spectrum' },
       { id: 'sampler', label: 'sampling', says: 'A microphone signal read by the ANC chip\'s converter. Drawn at 8 kHz here so the samples are visible; real ANC converters run much faster to keep the delay small.', inset: 'trace' },
-      { id: 'dft', label: 'DFT bins', says: 'A block of N = 64 samples at 8 kHz analysed by the DFT: bins every 125 Hz sample the spectrum of the ring.', inset: 'spectrum' },
+      { id: 'dft', label: 'DFT bins', says: 'A block of N = 64 samples at 8 kHz analysed by the DFT: bins every 125 Hz. The 688 Hz ring falls between bins (5.5 bins), so its peak reads low and smears over the neighbours: leakage.', inset: 'spectrum' },
       { id: 'zplane', label: 'z-plane', says: 'The same two poles after sampling at 8 kHz: z = e^{pT}, inside the unit circle. The ANC filters are designed here, as H(z).', inset: 'zplane' },
-      { id: 'anc', label: 'noise cancelling', says: 'Active noise cancelling: a reference mic outside (feedforward) and an error mic in the ear (feedback) drive an adaptive filter (FxLMS) so the speaker makes anti-noise. The residual at the ear shrinks as the filter adapts (schematic).', inset: 'trace' },
+      { id: 'anc', label: 'noise cancelling', says: 'Active noise cancelling: a reference mic outside (feedforward) and an error mic in the ear (feedback) drive an adaptive filter (FxLMS) so the speaker makes anti-noise. The residual at the ear shrinks as the filter adapts. Illustrative waveforms, not a simulated FxLMS.', inset: 'trace' },
     ],
   },
   house: {
     id: 'house',
     title: 'The two-room house and its thermostat',
-    physical: 'Two rooms share a wall and each leaks heat outdoors. Temperatures are measured above the outdoor temperature: ẋ = Ax + Bu with A = [[−1.2, 1], [1, −1.2]] per hour, a heater in room 1 (B = (3600/C_th, 0)ᵀ) and a thermostat reading room 1 (C = [1, 0]). The modes are the average temperature (λ = −0.2/h, τ = 5 h) and the difference (λ = −2.2/h, τ ≈ 27 min).',
+    physical: 'Two rooms share a wall and each leaks heat outdoors. Temperatures are measured above the outdoor temperature: ẋ = Ax + Bu with A = [[−1.2, 1], [1, −1.2]] per hour, a heater in room 1 (u in kW; with C_th = 1 MJ/K per room, B = (3.6, 0)ᵀ K/h per kW) and a thermostat reading room 1 (C = [1, 0]). The modes are the average temperature (λ = −0.2/h, τ = 5 h) and the difference (λ = −2.2/h, τ ≈ 27 min).',
     defaults: ['heat'],
     overlays: [
       { id: 'heat', label: 'heater on', says: 'The 1.5 kW heater in room 1 switches on at t = 0. Room 1 warms first; room 2 follows through the shared wall.' },
@@ -131,7 +131,7 @@ export const SCENES: Record<string, SceneInfo> = {
       { id: 'thermo', label: 'thermostat in room 1', says: 'The thermostat reads room 1 only, y = Cx with C = [1, 0]. It sees both modes, so the full state can be worked out from y(t).' },
       { id: 'reach', label: 'where u can push', says: 'The directions B and AB: the heater pushes room 1 only, and the shared wall turns that into a push on room 2. Together they span the plane, so the pair is controllable.', inset: 'phase' },
       { id: 'gramian', label: 'reachable ellipse', says: 'The controllability Gramian as an ellipse: the states reachable with the same heating energy in 3 hours. It is long in a direction about 31° up from the room-1 axis (heat room 1 and let the wall share it) and thin across it: holding the rooms apart is the expensive direction.', inset: 'phase' },
-      { id: 'optimal', label: 'least-energy warm-up', says: 'The heater profile with the least energy ∫u² that takes the house from cold to a chosen target in 3 hours (Pontryagin, or the Gramian formula). It rises for about two hours, then eases off so room 1 does not overshoot.', inset: 'ctrl' },
+      { id: 'optimal', label: 'least-energy warm-up', says: 'The heater profile with the least energy ∫u² that takes the house from cold to an illustrative target, (10, 7) K above outdoors in 3 hours (Pontryagin, or the Gramian formula). It rises for about two hours, then eases off so room 1 does not overshoot.', inset: 'ctrl' },
     ],
   },
 };

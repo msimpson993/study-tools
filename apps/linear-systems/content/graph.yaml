@@ -1,4 +1,4 @@
-# Question maps (rebuilt Nov 2026): Big picture (13 boxes) and Full detail (30 boxes, the same 13 plus the exam detail).
+# Question maps (rebuilt Nov 2026): Big picture (14 boxes) and Full detail (30 boxes, the same 14 plus the exam detail).
 # `dive` links a node to dives/<id>.md, `live` to a figure, `link` to another page. Node/edge ids are per map.
 maps:
 - id: big
@@ -134,6 +134,16 @@ maps:
     dive: expm
     live: "figure:expm"
     quizTag: expm
+  - id: STAB
+    label: Stability
+    detail: "All Re λ < 0 (or |λ| < 1)"
+    series: 2
+    short: "The state returns to zero from any start exactly when every eigenvalue of A has negative real part (or magnitude below 1 in discrete time). Input–output (BIBO) stability only needs the poles of the transfer function, which can miss hidden modes."
+    eq: "Re λᵢ(A) < 0  (continuous),   |λᵢ(A)| < 1  (discrete)"
+    addsToExample: "Checks the house: −0.2 and −2.2 per hour, both negative, so without heating it always returns to the outdoor temperature."
+    accountsFor: "Why a house with the heater off always cools down, and which mode sets how long."
+    dive: stab
+    quizTag: stab
   - id: CO
     label: Reach and see every mode?
     detail: "Controllability, observability"
@@ -253,6 +263,12 @@ maps:
     label: best input
     question: We can predict the response to any input. Which input is best?
     idea: "Add a cost and minimise it: Pontryagin's principle gives a costate that runs alongside the state, and the pair is solved with another e^(Mt)."
+  - &id012
+    from: PHI
+    to: STAB
+    label: does it settle?
+    question: When does every starting state die out?
+    idea: "When every e^(λᵢt) decays: all eigenvalues in the open left half-plane."
 - id: full
   title: Full detail
   caption: "The same map with every box the exams use: ROC rules, poles and zeros, orthogonality, Parseval, windowing, Jordan form, Cayley–Hamilton, PBH, Gramians and the Kalman split. Dashed lines join the same idea seen from the two sides."
@@ -386,6 +402,16 @@ maps:
     dive: expm
     live: "figure:expm"
     quizTag: expm
+  - id: STAB
+    label: Stability
+    detail: "All Re λ < 0 (or |λ| < 1)"
+    series: 2
+    short: "The state returns to zero from any start exactly when every eigenvalue of A has negative real part (or magnitude below 1 in discrete time). Input–output (BIBO) stability only needs the poles of the transfer function, which can miss hidden modes."
+    eq: "Re λᵢ(A) < 0  (continuous),   |λᵢ(A)| < 1  (discrete)"
+    addsToExample: "Checks the house: −0.2 and −2.2 per hour, both negative, so without heating it always returns to the outdoor temperature."
+    accountsFor: "Why a house with the heater off always cools down, and which mode sets how long."
+    dive: stab
+    quizTag: stab
   - id: CO
     label: Controllability
     detail: Can u push every mode?
@@ -553,16 +579,6 @@ maps:
     accountsFor: Why a 2×2 matrix exponential needs only two scalar functions.
     dive: cayley
     quizTag: cayley
-  - id: STAB
-    label: Stability
-    detail: "All Re λ < 0 (or |λ| < 1)"
-    series: 2
-    short: "The state returns to zero from any start exactly when every eigenvalue of A has negative real part (or magnitude below 1 in discrete time). Input–output (BIBO) stability only needs the poles of the transfer function, which can miss hidden modes."
-    eq: "Re λᵢ(A) < 0  (continuous),   |λᵢ(A)| < 1  (discrete)"
-    addsToExample: "Checks the house: −0.2 and −2.2 per hour, both negative, so without heating it always returns to the outdoor temperature."
-    accountsFor: "Why a house with the heater off always cools down, and which mode sets how long."
-    dive: stab
-    quizTag: stab
   - id: OBS
     label: Observability
     detail: Does y show every mode?
@@ -615,6 +631,7 @@ maps:
   - *id009
   - *id010
   - *id011
+  - *id012
   - from: TR
     to: ROC
     label: where it converges
@@ -688,11 +705,6 @@ maps:
     label: without eigenvectors
     question: Is there a way to get e^(At) without the eigenvectors?
     idea: "Cayley–Hamilton: A satisfies its characteristic polynomial, so e^(At) is a polynomial of degree n − 1 in A."
-  - from: PHI
-    to: STAB
-    label: does it settle?
-    question: When does every starting state die out?
-    idea: "When every e^(λᵢt) decays: all eigenvalues in the open left half-plane."
   - from: X
     to: OBS
     label: add y

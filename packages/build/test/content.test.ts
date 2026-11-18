@@ -21,11 +21,11 @@ describe('shipped content', () => {
     const { content } = loadApp(path.join(repoRoot, 'apps', app));
     expect(content.maps.length).toBeGreaterThan(0);
   });
-  it('linear-systems keeps its 2 maps / 43 nodes / 47 edges / 29 dives (Big picture + Full detail rebuild)', () => {
+  it('linear-systems keeps its 2 maps / 44 nodes / 48 edges / 29 dives (Big picture + Full detail rebuild)', () => {
     const { content } = loadApp(path.join(repoRoot, 'apps', 'linear-systems'));
     expect(content.maps.map((m) => m.id)).toEqual(['big', 'full']);
-    expect(content.maps.reduce((n, m) => n + m.nodes.length, 0)).toBe(43);
-    expect(content.maps.reduce((n, m) => n + m.edges.length, 0)).toBe(47);
+    expect(content.maps.reduce((n, m) => n + m.nodes.length, 0)).toBe(44);
+    expect(content.maps.reduce((n, m) => n + m.edges.length, 0)).toBe(48);
     expect(content.dives.length).toBe(29);
     expect((content.review ?? []).map((r) => r.id)).toEqual(['part-a', 'part-b', 'formula-sheet', 'self-test']);
     expect(content.quiz.length).toBe(87);

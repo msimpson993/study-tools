@@ -17,7 +17,7 @@ neighbors:
   - ctrl
   - cayley
 matlab: "% sol = bvp4c(@(t,y) M*y, @(ya,yb) [ya(1)-x0; yb(1)-xT], solinit)"
-exampleScene: { scene: house, overlays: [optimal, trace], caption: "The least-energy heater profile for a 3-hour warm-up, and the two room temperatures it produces." }
+exampleScene: { scene: house, overlays: [optimal, trace], caption: "The least-energy heater profile to an illustrative target, (10, 7) K above outdoors in 3 h, and the room temperatures it produces." }
 ---
 
 Minimise J = ∫₀ᵀ L(x, u) dt subject to ẋ = f(x, u), with x(0) given and x(T) either fixed or free.

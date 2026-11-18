@@ -17,7 +17,7 @@ neighbors:
   - sampling
   - lti
 matlab: "y = filter(b, a, x)    % runs the difference equation"
-exampleScene: { overlays: [anc], diagram: [anc-ff, anc-fb], caption: "Feedforward and feedback noise cancelling: digital filters, each one a difference equation." }
+exampleScene: { overlays: [anc], diagram: [anc-ff, anc-fb], caption: "Feedforward and feedback noise cancelling: each filter is a difference equation. Illustrative waveforms, not a simulated FxLMS." }
 ---
 
 The shift rule makes a difference equation into algebra: y(n − k) ↔ z⁻ᵏY(z) when the initial conditions are zero, and y(n − 1) ↔ z⁻¹Y(z) + y(−1) in the one-sided transform when they are not. For ODEs, ẏ ↔ sY − y(0⁻).

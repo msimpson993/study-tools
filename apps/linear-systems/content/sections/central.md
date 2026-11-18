@@ -9,5 +9,5 @@ The first answer is impulses: the response to one sharp kick, h, gives every oth
 ```
 
 ```callout:note How the map works
-Each box shows its question and a one-line answer. Tap a box for a short explanation, a key equation and a button into the deep dive; tap a line for why one idea leads to the next. **Big picture** is the whole course in 13 boxes; **Full detail** adds the boxes the exams use (ROC rules, Parseval, windowing, Jordan form, Cayley–Hamilton, PBH, Gramians, the Kalman split). Diamonds are questions; dashed lines join the same idea seen from two sides. Switch to **Review** on the map to track what you have seen, quiz a branch, or hide the text and rebuild the chain from memory.
+Each box shows its question and a one-line answer. Tap a box for a short explanation, a key equation and a button into the deep dive; tap a line for why one idea leads to the next. **Big picture** is the whole course in 14 boxes; **Full detail** adds the boxes the exams use (ROC rules, Parseval, windowing, Jordan form, Cayley–Hamilton, PBH, Gramians, the Kalman split). Diamonds are questions; dashed lines join the same idea seen from two sides. Switch to **Review** on the map to track what you have seen, quiz a branch, or hide the text and rebuild the chain from memory.
 ```

@@ -263,7 +263,7 @@ export function drawHouseTrace(g: G, r: Rect, P: Pal, ov: string[], tAnim: numbe
   text(g, 'T₁', r.x + r.w - 10, y1, P.s1, { align: 'right', px: 10, wt: 800 });
   text(g, 'T₂', r.x + r.w - 10, y2, P.s2, { align: 'right', px: 10, wt: 800 });
   if (ov.includes('modes')) text(g, 'dashed: average and half-difference (above 5 °C)', r.x + 34, r.y + 12, P.s3, { px: 9.5, wt: 700, optional: true });
-  if (S.kind === 'optimal') text(g, 'circles: the 3 h target', r.x + 34, r.y + 12, P.muted, { px: 9.5, wt: 700, optional: true });
+  if (S.kind === 'optimal') text(g, 'circles: illustrative 3 h target', r.x + 34, r.y + 12, P.muted, { px: 9.5, wt: 700, optional: true });
 }
 
 export function drawHousePhase(g: G, r: Rect, P: Pal, ov: string[], tAnim: number) {

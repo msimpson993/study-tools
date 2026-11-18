@@ -30,19 +30,19 @@ runningExample:
     |---|---|---|
     | moving mass M_ms | 0.084 g | with the suspension: ω_s = 1/√(M_ms C_ms) ≈ 4,503 rad/s, f_s ≈ 717 Hz |
     | suspension compliance C_ms | 0.587 mm/N | stiffness k = 1/C_ms ≈ 1,704 N/m |
-    | mechanical damping R_ms | 0.173 kg/s | ζ ≈ 0.23 on its own |
-    | force factor Bl, coil resistance R_e | 0.545 T·m, 7.47 Ω | back-EMF damping Bl²/R_e ≈ 0.040 kg/s, so ζ ≈ 0.28 when voltage-driven |
+    | mechanical damping R_ms | 0.173 kg/s | ζ ≈ 0.229 from R_ms alone |
+    | force factor Bl, coil resistance R_e | 0.545 T·m, 7.47 Ω | back-EMF damping Bl²/R_e ≈ 0.040 kg/s; the coil is voltage-driven, so the total gives **ζ ≈ 0.28**, the value used throughout |
     | coil inductance L_e | 0.04 mH | coil pole −R_e/L_e ≈ −186,750 rad/s: far faster, so 2 states (x, ẋ) suffice |
     | poles | −1,267 ± j4,322 rad/s | ring at ≈ 690 Hz, decay time ≈ 0.8 ms |
 
     Noise cancelling comes as feedforward (outside microphone), feedback (in-ear microphone) or hybrid, with an adaptive FxLMS filter running at low latency.
 
-    **Two-room house** (temperatures measured above outdoors, time in hours)
+    **Two-room house** (units used throughout: temperatures x in K above outdoors, time t in hours, heater power u in kW; each room's heat capacity C_th = 1 MJ/K)
 
     | piece | value | what it means |
     |---|---|---|
     | A | [[−1.2, 1], [1, −1.2]] /h | the shared wall (1/h) plus a leak outdoors (0.2/h) per room |
-    | B | (3600/C_th, 0)ᵀ | a heater in room 1; C_th is the room's heat capacity (J/K) |
+    | B | (3.6, 0)ᵀ K/h per kW | a heater in room 1: 1 kW for an hour is 3.6 MJ, which warms a 1 MJ/K room by 3.6 K |
     | C | [1, 0] | a thermostat in room 1 |
     | modes | (1, 1): λ = −0.2/h, τ = 5 h; (1, −1): λ = −2.2/h, τ ≈ 27 min | the average and the difference of the two rooms |
 
@@ -51,12 +51,12 @@ runningExample:
     Every box of the map says what its idea **adds to one of these examples** and what it lets us **account for**.
 hub:
   order: 2
-# Porting guard (rebuilt Nov 2026): 2 maps (Big picture 13 boxes / 13 lines, Full detail 30 boxes / 34 lines),
+# Porting guard (rebuilt Nov 2026): 2 maps (Big picture 14 boxes / 14 lines, Full detail 30 boxes / 34 lines),
 # 29 dives, 4 review pages, 87 quiz questions (24 original + 21 practice variants + 42 per-node concept questions). Update deliberately when content is added or dropped.
 expect:
   maps: 2
-  nodes: 43
-  edges: 47
+  nodes: 44
+  edges: 48
   dives: 29
   review: 4
   quiz: 87
