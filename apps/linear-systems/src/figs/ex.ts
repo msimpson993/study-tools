@@ -14,7 +14,7 @@ export const TAU = 2 * Math.PI;
 /** a₀ = k/m and a₁ = R/m in ms units; `damp` scales the total damping R (1 = the real speaker, ζ ≈ 0.28). */
 export function spk(damp = 1) {
   const a0 = SPK.k / SPK.m / 1e6, a1 = (damp * SPK.Rtot) / SPK.m / 1e3, wn = Math.sqrt(a0), sigma = a1 / 2, zeta = a1 / (2 * wn);
-  const disc = sigma * sigma - a0, wd = Math.sqrt(Math.max(0, -disc));
+  const d0 = sigma * sigma - a0, disc = Math.abs(d0) < 1e-9 ? 0 : d0, wd = Math.sqrt(Math.max(0, -disc));
   const poles: Cx[] = disc < 0 ? [[-sigma, wd], [-sigma, -wd]] : [[-sigma + Math.sqrt(disc), 0], [-sigma - Math.sqrt(disc), 0]];
   return { a0, a1, wn, sigma, zeta, wd, poles, fd: (wd * 1000) / TAU, fn: (wn * 1000) / TAU };
 }

@@ -24,7 +24,7 @@ The output is the input times one complex number. So e^(st) is an **eigenfunctio
 
 **Picture it first.** A complex exponential e^(jωt) is a point running round a circle. An LTI system can stretch the circle (|H|) and rotate the starting point (∠H), but it cannot change how fast the point runs. That is why tones keep their frequency.
 
-```figure:lti
+```figure:eigfn
 ```
 
 ````callout:note What this answers

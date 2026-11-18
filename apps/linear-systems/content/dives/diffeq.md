@@ -29,7 +29,7 @@ $$y(n)+a_1y(n-1)+a_2y(n-2)=x(n)\;\Longrightarrow\;H(z)=\frac{z^2}{z^2+a_1z+a_2}$
 
 **Picture it first.** A difference equation's poles and zeros sit in the z-plane; their distances to points on the unit circle shape the frequency response.
 
-```figure:dtft
+```figure:zfilter
 ```
 
 ````callout:note What this answers

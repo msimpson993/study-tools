@@ -18,7 +18,7 @@ exampleScene: { scene: house, overlays: [modes, trace], caption: "The state spli
 
 An eigenvector is a line that A leaves invariant: the output is a scalar multiple of the input. That scalar is the eigenvalue, and it is the whole story of A along that line. In a linear system those lines are the modes.
 
-**Picture it first.** Think of A as an instruction to move the whole plane. Most vectors get turned as well as stretched, but a few special directions only stretch. Try it on A = [[0, 1], [−2, −3]] (the textbook pair of modes −1 and −2), then picture the house: its eigen-directions are the average (1, 1) and the difference (1, −1).
+**Picture it first.** Think of A as an instruction to move the whole plane. Most vectors get turned as well as stretched, but a few special directions only stretch. Try it on the house matrix A = [[−1.2, 1], [1, −1.2]] below: its eigen-directions are the average (1, 1), shrunk by 0.2 per hour, and the difference (1, −1), shrunk by 2.2 per hour.
 
 ```figure:eig
 ```

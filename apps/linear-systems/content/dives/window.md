@@ -20,7 +20,7 @@ A finite record x[n]w[n] has transform (1/2π)X ⊛ W: each spectral line is rep
 
 $$x[n]\,w[n]\;\longleftrightarrow\;\frac{1}{2\pi}\int X(e^{j\theta})\,W(e^{j(\Omega-\theta)})\,d\theta$$
 
-```figure:dft
+```figure:window
 ```
 
 ````callout:note What this answers

@@ -31,7 +31,7 @@ and the unknown λ(0) is solved from the known end condition.
 
 **Picture it first.** The two-point problem is solved with a state transition matrix, the same object as e^(At), applied to the Hamiltonian matrix M.
 
-```figure:expm
+```figure:optimal
 ```
 
 ````callout:note What this answers

@@ -1,8 +1,13 @@
 import content from 'virtual:study-content';
 import { mountApp } from '@study/core';
-import { mountExpm } from './figs/expm';
-import { ssFigure, flowFigure, stabFigure, ctrlFigure, obsFigure, kalmanFigure } from './figs/dynamics';
-import { tfFigure, ltiFigure, ftFigure, fsFigure, dtftFigure, dftFigure, laplaceFigure, samplingFigure } from './figs/signals';
-import { eigFigure, diagFigure, jordanFigure, orthoFigure } from './figs/linalg';
+import { expmFigure, eigFigure, diagFigure, flowFigure, cayleyFigure, stabFigure, ctrlFigure, obsFigure, kalmanFigure, gramianFigure, optimalFigure } from './figs/house';
+import { ssFigure, ltiFigure, eigfnFigure, ftFigure, fsFigure, orthoFigure, samplingFigure, dtftFigure, dftFigure, windowFigure, laplaceFigure, inverseFigure, tfFigure, zfilterFigure } from './figs/speaker';
 
-mountApp(content, { figures: { expm: mountExpm, eig: eigFigure, diag: diagFigure, jordan: jordanFigure, ortho: orthoFigure, ss: ssFigure, flow: flowFigure, stab: stabFigure, ctrl: ctrlFigure, obs: obsFigure, kalman: kalmanFigure, tf: tfFigure, lti: ltiFigure, ft: ftFigure, fs: fsFigure, dtft: dtftFigure, dft: dftFigure, laplace: laplaceFigure, sampling: samplingFigure } });
+mountApp(content, {
+  figures: {
+    // house
+    expm: expmFigure, eig: eigFigure, diag: diagFigure, flow: flowFigure, cayley: cayleyFigure, stab: stabFigure, ctrl: ctrlFigure, obs: obsFigure, kalman: kalmanFigure, gramian: gramianFigure, optimal: optimalFigure,
+    // speaker
+    ss: ssFigure, lti: ltiFigure, eigfn: eigfnFigure, ft: ftFigure, fs: fsFigure, ortho: orthoFigure, sampling: samplingFigure, dtft: dtftFigure, dft: dftFigure, window: windowFigure, laplace: laplaceFigure, inverse: inverseFigure, jordan: inverseFigure, tf: tfFigure, zfilter: zfilterFigure,
+  },
+});

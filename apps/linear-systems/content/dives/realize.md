@@ -22,7 +22,7 @@ $$\frac{b_2s^2+b_1s+b_0}{s^3+a_2s^2+a_1s+a_0}:\quad A=\begin{bmatrix}0&1&0\\0&0&
 
 **Picture it first.** Three integrators in a chain. The input enters at the top; every integrator's output feeds back with weight −aₖ (the poles); the output taps the chain with weights bₖ (the zeros). Zeros live in C, poles live in the last row of A.
 
-```figure:ctrl
+```figure:ss
 ```
 
 ````callout:note What this answers

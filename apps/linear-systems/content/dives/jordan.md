@@ -18,7 +18,7 @@ exampleScene: { overlays: [critical, poles], caption: "Critical damping: the two
 
 When a repeated eigenvalue does not have enough independent eigenvectors, A is not diagonalizable. The next-best basis puts A into Jordan form: each block is λI plus a single superdiagonal of 1s. The missing pure mode is replaced by a chain, and time response picks up polynomial factors t^k e^(λt).
 
-**Picture it first.** When the grid of eigenvectors collapses to a single line, A cannot be a pure stretch. What it does instead is a shear.
+**Picture it first.** When the grid of eigenvectors collapses to a single line, A cannot be a pure stretch. What it does instead is a shear. On the speaker, raise the damping until its two poles meet (critical damping, ζ = 1): that is the moment the eigenvector grid collapses.
 
 ```figure:jordan
 ```

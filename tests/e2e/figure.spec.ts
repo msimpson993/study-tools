@@ -57,9 +57,9 @@ test.describe('linear-systems: live figure (core Figure component)', () => {
 
   test('a preset is a setting of visible controls and round-trips through the URL', async ({ page }) => {
     await open(page, 'linear-systems', FIG);
-    await page.locator('[data-testid=controls] .st-presets button', { hasText: /critical/i }).click();
+    await page.locator('[data-testid=controls] .st-presets button', { hasText: /difference mode/i }).click();
     const hash = await page.evaluate(() => location.hash);
-    expect(hash).toMatch(/a1=/);
+    expect(hash).toMatch(/x1=/);
     const vals = await page.locator('[data-testid=controls] input[type=range]').evaluateAll((els) => els.map((e) => (e as HTMLInputElement).value));
     await page.goto(`/linear-systems/index.html${hash}`); await page.reload(); await page.waitForFunction(() => !!(window as any).__study);
     const vals2 = await page.locator('[data-testid=controls] input[type=range]').evaluateAll((els) => els.map((e) => (e as HTMLInputElement).value));

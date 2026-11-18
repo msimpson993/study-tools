@@ -31,9 +31,9 @@ $$\frac{1}{z-a}\;\leftrightarrow\;\begin{cases}a^{n-1}u(n-1), & |z|>|a|\ \text{(
 
 If X(z) has a factor z upstairs, expand X(z)/z instead and use z/(z − a) ↔ aⁿu(n) (right) or −aⁿu(−n − 1) (left).
 
-**Picture it first.** The poles are where |X(s)| shoots up; the ROC is the region the inverse line must run through.
+**Picture it first.** The poles are where |X(s)| shoots up; the ROC is the region the inverse line must run through. Each pole contributes one term to the answer, weighted by its residue; the figure does this for the speaker.
 
-```figure:laplace
+```figure:inverse
 ```
 
 ````callout:note What this answers

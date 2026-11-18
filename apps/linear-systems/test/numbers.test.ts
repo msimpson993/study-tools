@@ -386,3 +386,18 @@ describe('figure models (src/figs/ex.ts): numbers the live figures draw', () => 
     expect(ex.eigs(ex.thermostatA(0.5)).map((l) => +l[0].toFixed(3))).toEqual([-0.755, -3.445]);
   });
 });
+
+describe('figure captions (figures.yaml) state these', () => {
+  const ph = (H: number[]) => (Math.atan2(H[1], H[0]) * 180) / Math.PI;
+  it('speaker gain/lag: 200 Hz ×1.07 / 10°, 690 Hz ×1.83 / 82°, 2 kHz ×0.14 / 167°; peak +5.4 dB', () => {
+    expect(ex.cabs(ex.Hf(200))).toBeCloseTo(1.069, 2); expect(ph(ex.Hf(200))).toBeCloseTo(-9.7, 0);
+    expect(ex.cabs(ex.Hf(690))).toBeCloseTo(1.83, 2); expect(ex.cabs(ex.Hf(2000))).toBeCloseTo(0.144, 2); expect(ph(ex.Hf(2000))).toBeCloseTo(-167, 0);
+    expect(ex.dB(ex.peakBand().peak)).toBeCloseTo(5.36, 1);
+  });
+  it('house: α₀(1 h) = 0.890, α₁(1 h) = 0.354; (10, 10) K in 3 h needs a 3.8 kW peak, (10, 7) K in 1.5 h 5.6 kW and 28.9 kW²·h', () => {
+    const a = ex.cayley(ex.houseA(), 1); expect(a.a0).toBeCloseTo(0.8895, 4); expect(a.a1).toBeCloseTo(0.354, 3);
+    const peak = (d: [number, number], T: number) => { const u = ex.leastEnergyU(d, T); let m = 0; for (let t = 0; t <= T + 1e-9; t += 0.005) m = Math.max(m, u(t)); return m; };
+    expect(peak([10, 10], 3)).toBeCloseTo(3.80, 1); expect(peak([10, 7], 1.5)).toBeCloseTo(5.56, 1); expect(ex.reachCost([10, 7], 1.5)).toBeCloseTo(28.93, 1);
+    expect(ex.aliasOf(690, 1200)).toBe(510); expect(ex.residue()[1]).toBeCloseTo(-2.346, 3); expect(ex.spk(-0.3).poles[0][0]).toBeCloseTo(0.38, 2);
+  });
+});

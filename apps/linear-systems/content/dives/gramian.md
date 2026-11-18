@@ -24,7 +24,7 @@ $$u(t)=B^{\mathsf T}e^{A^{\mathsf T}(T-t)}W_c(T)^{-1}\big(x_f-e^{AT}x_0\big).$$
 
 **Picture it first.** B and AB are the directions the input can push in, and the Gramian weighs how far each gets per unit of energy. The states you can reach with one unit of energy form an ellipse (an ellipsoid in n dimensions) whose axes are the eigenvectors of W_c, with half-lengths √(eigenvalues). A long axis is a cheap direction and a short axis an expensive one; if some eigenvalue is zero the ellipse is flat and that direction is unreachable.
 
-```figure:ctrl
+```figure:gramian
 ```
 
 ````callout:note What this answers

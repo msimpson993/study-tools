@@ -24,7 +24,7 @@ For a repeated eigenvalue, also match the derivative with respect to λ (that is
 
 **Picture it first.** e^(At) is a blend of I and A whose weights change with time; the eigenvalues set how fast.
 
-```figure:expm
+```figure:cayley
 ```
 
 ````callout:note What this answers

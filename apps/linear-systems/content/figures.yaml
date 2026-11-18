@@ -1,420 +1,507 @@
+# Live figures, all drawn on the two running examples (models in src/figs/ex.ts, unit-tested in test/numbers.test.ts).
+# House: x = (T₁, T₂) in K above outdoors, t in hours, heater power in kW, B = (3.6, 0) K/h per kW.
+# Speaker: t in ms, s in 1/ms (= krad/s), f in Hz, H(s) = X/V normalised to 1 at DC (a₀ = 20.28, a₁ = 2.533).
+
 - id: expm
-  title: "State transition e^{At}: the state x(t) and its modal coordinates ξ(t)"
-  x: time t (s)
-  y: state / modal coordinate (dimensionless)
+  title: "The house’s state transition e^(At): room temperatures x(t) and their modes ξ(t)"
+  x: time t (h)
+  y: K above outdoors
   legend:
-    - { label: "x₁(t) = y(t)", color: "var(--cyan)" }
-    - { label: "x₂(t) = dy/dt", color: "var(--org)" }
-    - { label: "ξ₁(t) = ξ₁(0) e^{λ₁t}  (mode λ₁)", color: "var(--grn)", dash: true }
-    - { label: "ξ₂(t) = ξ₂(0) e^{λ₂t}  (mode λ₂)", color: "var(--vio)", dash: true }
-  howToRead: "Left: the two states of A = [[0, 1], [−a₀, −a₁]] released from x(0), computed as e^{At}x(0). Right: the same motion in eigen-coordinates ξ = V⁻¹x, where each coordinate is a pure exponential. Pair view shows both directions of the change of basis (analysis ξ = V⁻¹x, synthesis x = Vξ). With complex or repeated eigenvalues there is no real diagonalization, so the ξ plot says so. Drag the sliders to move the poles and the initial state."
+    - { label: "T₁(t), room 1", color: "var(--cyan)" }
+    - { label: "T₂(t), room 2", color: "var(--org)" }
+    - { label: "ξ₁(t) = average, ∝ e^(−0.2t)", color: "var(--grn)", dash: true }
+    - { label: "ξ₂(t) = half-difference, ∝ e^(−2.2t)", color: "var(--vio)", dash: true }
+  howToRead: "Left: the two room temperatures released from x(0) with the heater off, computed as e^(At)x(0) with A = [[−kw − leak, kw], [kw, −kw − leak]] per hour. Right: the same motion in mode coordinates ξ = (average, half-difference), where each coordinate is a single decaying exponential. Pair view shows both directions of the change of basis. The dashed line on the left marks when 90% of the room-to-room gap has gone."
+  lookFor: "With the real house (wall 1 /h, leak 0.2 /h), room 1 starting 10 K warmer: the gap shrinks with a 27-minute time constant (about 90% gone in 1 h, marked) while the average takes about 5 hours. Start on (5, −5) and only the fast mode moves."
   controls:
-    - { id: a1, label: "a₁ (damping term)", type: range, min: -1, max: 6, step: 0.05, default: 3, group: primary }
-    - { id: a0, label: "a₀ (stiffness term)", type: range, min: 0, max: 8, step: 0.05, default: 2, group: primary }
-    - { id: x1, label: "x₁(0)", type: range, min: -2, max: 2, step: 0.05, default: 1, group: primary }
-    - { id: x2, label: "x₂(0)", type: range, min: -2, max: 2, step: 0.05, default: 0, group: primary }
-    - { id: tmax, label: "Time span", type: range, min: 1, max: 12, step: 0.5, default: 6, group: more, unit: s }
+    - { id: kw, label: "wall coupling kw", type: range, min: 0, max: 2, step: 0.05, default: 1, group: primary, unit: "/h" }
+    - { id: leak, label: "leak to outdoors", type: range, min: 0.05, max: 1, step: 0.05, default: 0.2, group: primary, unit: "/h" }
+    - { id: x1, label: "T₁(0)", type: range, min: -10, max: 15, step: 0.5, default: 10, group: primary, unit: K }
+    - { id: x2, label: "T₂(0)", type: range, min: -10, max: 15, step: 0.5, default: 0, group: primary, unit: K }
+    - { id: tmax, label: "time span", type: range, min: 1, max: 12, step: 0.5, default: 6, group: more, unit: h }
   presets:
-    - { id: running, label: "Textbook cart (−1, −2)", set: { a1: 3, a0: 2, x1: 1, x2: 0 }, about: "A = [[0, 1], [−2, −3]]: eigenvalues −1 and −2 with eigenvectors [1, −1]ᵀ and [1, −2]ᵀ. Both modes decay; the slow one (−1) dominates." }
-    - { id: pure-mode, label: "Excite one mode", set: { a1: 3, a0: 2, x1: 1, x2: -1 }, about: "Starting on the eigenvector [1, −1]ᵀ excites only the −1 mode: ξ₂ stays at zero and x moves along a line." }
-    - { id: critical, label: "Critically damped (Jordan)", set: { a1: 2, a0: 1, x1: 1, x2: 0 }, about: "Repeated eigenvalue −1 and a single Jordan block: e^{At} contains t e^{−t}. No real eigen-coordinates exist." }
-    - { id: oscillating, label: "Underdamped", set: { a1: 0.6, a0: 4, x1: 1, x2: 0 }, about: "Complex eigenvalues −0.3 ± 1.95j: a decaying rotation. Real picture: A rotates and scales a plane." }
-    - { id: unstable, label: "Unstable", set: { a1: -0.5, a0: 2, x1: 0.5, x2: 0 }, about: "Eigenvalues in the right half-plane (Re λ > 0): the response grows. Stability is a statement about eigenvalues of A." }
+    - { id: house, label: "House: room 1 10 K warmer", set: { kw: 1, leak: 0.2, x1: 10, x2: 0 }, about: "ξ(0) = (5, 5): half of each mode. The difference dies at −2.2 /h, the average at −0.2 /h." }
+    - { id: avg, label: "Average mode only (10, 10)", set: { kw: 1, leak: 0.2, x1: 10, x2: 10 }, about: "Starting on the eigenvector (1, 1): both rooms cool together at e^(−0.2t)." }
+    - { id: diff, label: "Difference mode only (5, −5)", set: { kw: 1, leak: 0.2, x1: 5, x2: -5 }, about: "Starting on (1, −1): the rooms meet at zero within the hour, at e^(−2.2t)." }
+    - { id: wall, label: "No shared wall", set: { kw: 0, leak: 0.2, x1: 10, x2: 0 }, about: "kw = 0: A = −0.2·I, both eigenvalues equal and every direction is an eigenvector; the rooms cool independently." }
   pair:
     forward: x
     inverse: xi
     forwardName: "Analysis: ξ = V⁻¹ x"
     inverseName: "Synthesis: x = V ξ"
-    strip: "V = [v₁ v₂] with v_i = [1, λ_i]ᵀ for this companion matrix."
+    strip: "V = [(1, 1) (1, −1)]: x = ξ₁·(1, 1) + ξ₂·(1, −1)."
 
 - id: eig
-  title: "A matrix is a transformation of the plane: which directions only stretch?"
-  x: x₁ = position
-  y: x₂ = velocity
+  title: "The house matrix moves the plane of room temperatures: which directions only stretch?"
+  x: T₁ (K above outdoors)
+  y: T₂ (K)
   legend:
     - { label: "v: a probe vector", color: "var(--cyan)" }
     - { label: "Av: where A sends it", color: "var(--yel)" }
-    - { label: "eigen-direction 1 (dashed)", color: "var(--grn)", dash: true }
-    - { label: "eigen-direction 2 (dashed)", color: "var(--org)", dash: true }
+    - { label: "average mode (1, 1)", color: "var(--grn)", dash: true }
+    - { label: "difference mode (1, −1)", color: "var(--org)", dash: true }
     - { label: "image of the unit grid", color: "var(--accent)" }
-  howToRead: "Left: the faint grid is the plane before, the blue grid is where A sends it (drag the morph slider or press Play to watch it happen). The cyan arrow is a probe v, the yellow arrow is Av. Right: for every direction of v, how far Av is turned away from v. It touches zero exactly at the eigenvectors, the dashed lines on the left. Edit the four entries of A, or start from the textbook cart."
-  lookFor: "Turn the probe angle: Av swings around, but when v lies on a dashed line Av stays on that same line. Now pick Rotation: the dashed lines vanish and the right plot never touches zero."
+  howToRead: "Left: the faint grid is the (T₁, T₂) plane, the blue grid is where the house matrix A sends it (the morph slider goes from I to A; Play animates it). The cyan arrow is a probe v, the yellow arrow is Av, the rate of change of the temperatures at state v. Right: for every direction of v, how far Av is pushed sideways off v’s line; it is zero only along the dashed eigen-directions."
+  lookFor: "Turn the probe to 45°: Av points straight back along v, shrunk to 0.2 (the average mode). At 135° Av is 2.2 times v, reversed (the difference mode)."
   animate: { control: t, speed: 0.25, loop: true }
   controls:
-    - { id: a, label: "A₁₁", type: range, min: -3, max: 3, step: 0.1, default: 0, group: primary }
-    - { id: b, label: "A₁₂", type: range, min: -3, max: 3, step: 0.1, default: 1, group: primary }
-    - { id: c, label: "A₂₁", type: range, min: -3, max: 3, step: 0.1, default: -2, group: primary }
-    - { id: d, label: "A₂₂", type: range, min: -3, max: 3, step: 0.1, default: -3, group: primary }
-    - { id: th, label: "probe direction of v", type: range, min: 0, max: 360, step: 1, default: 30, group: primary, unit: "°" }
+    - { id: th, label: "probe direction of v", type: range, min: 0, max: 360, step: 1, default: 20, group: primary, unit: "°" }
     - { id: t, label: "morph: identity → A", type: range, min: 0, max: 1, step: 0.01, default: 1, group: primary }
+    - { id: kw, label: "wall coupling kw", type: range, min: 0, max: 2, step: 0.05, default: 1, group: primary, unit: "/h" }
+    - { id: leak, label: "leak to outdoors", type: range, min: 0.05, max: 1, step: 0.05, default: 0.2, group: more, unit: "/h" }
   presets:
-    - { id: cart, label: "Textbook cart", set: { a: 0, b: 1, c: -2, d: -3, th: 30, t: 1 }, about: "A = [[0, 1], [−2, −3]]: eigenvalues −1 and −2, eigen-directions (1, −1) and (1, −2)." }
-    - { id: stretch, label: "Symmetric stretch", set: { a: 2, b: 1, c: 1, d: 2, th: 30, t: 1 }, about: "A symmetric matrix: perpendicular eigen-directions (1, 1) and (1, −1), stretching by 3 and 1." }
-    - { id: rotation, label: "Rotation", set: { a: 0, b: -1, c: 1, d: 0, th: 30, t: 1 }, about: "A quarter turn: no direction keeps its line, eigenvalues ±j." }
-    - { id: shear, label: "Shear", set: { a: 1, b: 1, c: 0, d: 1, th: 30, t: 1 }, about: "Repeated eigenvalue 1 and only one eigen-direction (the x-axis)." }
+    - { id: house, label: "House", set: { th: 20, t: 1, kw: 1, leak: 0.2 }, about: "A = [[−1.2, 1], [1, −1.2]] /h: eigenvalues −0.2 and −2.2, eigen-directions (1, 1) and (1, −1)." }
+    - { id: avg, label: "Probe on (1, 1)", set: { th: 45, t: 1, kw: 1, leak: 0.2 }, about: "Av = −0.2·v: equal rooms cool together slowly." }
+    - { id: diff, label: "Probe on (1, −1)", set: { th: 135, t: 1, kw: 1, leak: 0.2 }, about: "Av = −2.2·v: a temperature difference closes fast." }
+    - { id: nowall, label: "No shared wall", set: { th: 20, t: 1, kw: 0, leak: 0.2 }, about: "A = −0.2·I: every direction is an eigen-direction and the right plot is flat at zero." }
 
 - id: diag
-  title: "Change of basis: in the eigenbasis, A just stretches the axes"
-  x: ξ₁ or x₁
-  y: ξ₂ or x₂
+  title: "Diagonalising the house: in mode coordinates A just scales each axis"
+  x: T₁ or ξ₁ (K)
+  y: T₂ or ξ₂ (K)
   legend:
-    - { label: "x, ξ: the probe", color: "var(--cyan)" }
-    - { label: "Ax, Λξ: its image", color: "var(--yel)" }
-    - { label: "eigenvector v₁ and its coordinate ξ₁", color: "var(--grn)", dash: true }
-    - { label: "eigenvector v₂ and its coordinate ξ₂", color: "var(--org)", dash: true }
-  howToRead: "Left: the plane in the usual (position, velocity) coordinates, with a skewed grid whose lines run along the eigenvectors v₁ and v₂. Right: the same vector measured on that skewed grid, which makes the grid square. In ξ coordinates A is the diagonal matrix Λ: it only stretches ξ₁ by λ₁ and ξ₂ by λ₂. Rotate the probe with the slider or press Play."
-  lookFor: "Left, the dashed legs of the probe are its components along v₁ and v₂. Right, those same legs are plain horizontal and vertical, and Λξ just scales each leg independently."
+    - { label: "x, ξ: the probe state", color: "var(--cyan)" }
+    - { label: "Ax, Λξ: its rate of change", color: "var(--yel)" }
+    - { label: "average leg ξ₁·(1, 1)", color: "var(--grn)", dash: true }
+    - { label: "difference leg ξ₂·(1, −1)", color: "var(--org)", dash: true }
+  howToRead: "Left: a state x = (T₁, T₂) drawn on a grid tilted along the eigenvectors (1, 1) and (1, −1), with its two legs along them and Ax. Right: the same state in mode coordinates ξ = (average, half-difference); the grid is square and Λξ simply scales the two legs by λ₁ = −0.2 and λ₂ = −2.2. Play rotates the probe."
+  lookFor: "On the right the yellow arrow never turns: its horizontal leg is 0.2 × ξ₁, its vertical leg 2.2 × ξ₂, each reversed. On the left the same arrow turns because the legs scale differently."
   animate: { control: phi, speed: 45, loop: true }
   controls:
-    - { id: l1, label: "λ₁", type: range, min: -3, max: 2, step: 0.05, default: -1, group: primary }
-    - { id: l2, label: "λ₂", type: range, min: -3, max: 2, step: 0.05, default: -2, group: primary }
     - { id: phi, label: "probe direction", type: range, min: 0, max: 360, step: 1, default: 20, group: primary, unit: "°" }
-    - { id: th1, label: "direction of v₁", type: range, min: -90, max: 90, step: 1, default: -45, group: more, unit: "°" }
-    - { id: th2, label: "direction of v₂", type: range, min: -90, max: 90, step: 1, default: -63, group: more, unit: "°" }
+    - { id: kw, label: "wall coupling kw", type: range, min: 0, max: 2, step: 0.05, default: 1, group: primary, unit: "/h" }
+    - { id: leak, label: "leak to outdoors", type: range, min: 0.05, max: 1, step: 0.05, default: 0.2, group: more, unit: "/h" }
   presets:
-    - { id: cart, label: "Textbook cart", set: { l1: -1, l2: -2, th1: -45, th2: -63, phi: 20 }, about: "Eigenvalues −1, −2 with eigenvectors (1, −1) and (1, −2): a skewed, not perpendicular, basis." }
-    - { id: symmetric, label: "Perpendicular basis", set: { l1: 3, l2: 1, th1: 45, th2: -45, phi: 20 }, about: "A symmetric matrix: orthogonal eigenvectors, the skew disappears." }
-    - { id: nearly, label: "Nearly parallel", set: { l1: -1, l2: -2, th1: -45, th2: -50, phi: 20 }, about: "Eigenvectors almost on top of each other: the basis is ill-conditioned, coordinates become huge." }
-    - { id: defective, label: "Parallel (defective)", set: { l1: -1, l2: -1, th1: -45, th2: -45, phi: 20 }, about: "One eigen-direction only: there is no eigenbasis, so no diagonal form." }
-
-- id: jordan
-  title: "Jordan form: when the eigenvectors run short, e^{At} shears the plane"
-  x: x₁ or time t (s)
-  y: x₂ or entry of e^{At}
-  legend:
-    - { label: "image of the unit square's edges", color: "var(--cyan)" }
-    - { label: "t·e^{λt} term", color: "var(--org)" }
-    - { label: "e^{λt} term", color: "var(--cyan)" }
-    - { label: "the one eigen-direction", color: "var(--grn)", dash: true }
-    - { label: "path of the starting point (0, 1)", color: "var(--yel)" }
-  howToRead: "A = [[λ, k], [0, λ]] has a repeated eigenvalue and only the x-axis as an eigen-direction. Left: e^{At} applied to the plane. The grid shrinks by e^{λt} (as for any decaying mode) but also slides sideways, a shear. Right: the entries of e^{At}. The corner entry k·t·e^{λt} rises first and decays later, a transient hump even though everything is stable. With k = 0 the matrix is diagonal and the hump disappears."
-  lookFor: "Press Play and follow the yellow path: the starting point first drifts sideways (the shear), then is pulled home. Set the coupling k to 0 and watch the shear vanish."
-  animate: { control: t, speed: 0.8, loop: true }
-  controls:
-    - { id: lam, label: "repeated eigenvalue λ", type: range, min: -2, max: 0.5, step: 0.05, default: -1, group: primary }
-    - { id: k, label: "coupling k (0 = diagonal)", type: range, min: 0, max: 2, step: 0.05, default: 1, group: primary }
-    - { id: t, label: "time t", type: range, min: 0, max: 6, step: 0.05, default: 1, group: primary, unit: s }
-  presets:
-    - { id: block, label: "Jordan block, λ = −1", set: { lam: -1, k: 1, t: 1 }, about: "Repeated −1 with one eigenvector: e^{At} = e^{−t}[[1, t], [0, 1]]. Like the critically damped cart (k = 1, c = 2)." }
-    - { id: diagonal, label: "Diagonalizable (k = 0)", set: { lam: -1, k: 0, t: 1 }, about: "The same eigenvalue twice but two eigenvectors: no shear, no hump." }
-    - { id: marginal, label: "λ = 0: linear growth", set: { lam: 0, k: 1, t: 1 }, about: "A Jordan block at λ = 0: e^{At} = [[1, t], [0, 1]], unbounded though λ = 0." }
-
-- id: ortho
-  title: "Orthogonality: inner product as a shadow, sinusoids as perpendicular directions"
-  x: x₁ or t (rad)
-  y: x₂ or sin(mt) sin(nt)
-  legend:
-    - { label: "w", color: "var(--cyan)" }
-    - { label: "u", color: "var(--org)" }
-    - { label: "projection of u on w", color: "var(--grn)" }
-    - { label: "product of two sinusoids", color: "var(--text)" }
-  howToRead: "Left: the inner product ⟨u, w⟩ is the signed length of the shadow that u casts on the line through w (times |w|). It is zero exactly when u is perpendicular to w. Right: the same idea for functions. ⟨sin mt, sin nt⟩ = ∫ sin(mt) sin(nt) dt over one period is the net green-minus-red area. For m ≠ n the positive and negative lobes cancel, so different sinusoids are orthogonal, which is why Fourier coefficients are just inner products."
-  lookFor: "Turn α to 90° and the shadow shrinks to zero. On the right, set m ≠ n and watch the green and red areas balance exactly."
-  controls:
-    - { id: alpha, label: "angle between u and w", type: range, min: 0, max: 180, step: 1, default: 40, group: primary, unit: "°" }
-    - { id: m, label: "frequency m", type: range, min: 1, max: 6, step: 1, default: 1, group: primary }
-    - { id: n, label: "frequency n", type: range, min: 1, max: 6, step: 1, default: 2, group: primary }
-  presets:
-    - { id: perp, label: "Perpendicular, m ≠ n", set: { alpha: 90, m: 1, n: 2 }, about: "No shadow; the two sinusoids have zero inner product." }
-    - { id: same, label: "Parallel, m = n", set: { alpha: 0, m: 2, n: 2 }, about: "Full shadow; a sinusoid is not orthogonal to itself (area π)." }
-
-- id: ss
-  title: "A cart on a spring and damper in motion: force in, state and sensor out"
-  x: time t (s)
-  y: position, velocity, force
-  legend:
-    - { label: "x = position (what the sensor reads)", color: "var(--cyan)" }
-    - { label: "ẋ = velocity", color: "var(--org)" }
-    - { label: "u = the applied force", color: "var(--muted)", dash: true }
-  howToRead: "Top: the cart on its spring and damper, with the force arrow while you push. Bottom: the two states over time (bold up to now, faint for the future) and the force. The state is exactly the pair (position, velocity), because those two numbers are all you need to predict the future given the force. Change the spring k or damper c and the matrix A = [[0, 1], [−k, −c]] changes with them."
-  lookFor: "Press Play with a step force: the cart overshoots or creeps to x = 1/k, depending on the damper. Then switch to Pulse and see the free motion after you let go: that is the state evolving by A alone."
-  animate: { control: t, speed: 1.2, loop: true }
-  height: 260
-  controls:
-    - { id: input, label: "force u(t)", type: seg, default: step, group: primary, options: [{ value: none, label: "none" }, { value: step, label: "step" }, { value: pulse, label: "pulse" }, { value: sine, label: "sine" }] }
-    - { id: amp, label: "force amplitude", type: range, min: 0, max: 2, step: 0.05, default: 1, group: primary, unit: N }
-    - { id: cd, label: "damper c", type: range, min: 0, max: 6, step: 0.05, default: 3, group: primary }
-    - { id: k, label: "spring k", type: range, min: 0.5, max: 6, step: 0.05, default: 2, group: primary }
-    - { id: t, label: "time t", type: range, min: 0, max: 10, step: 0.02, default: 0, group: primary, unit: s }
-    - { id: x0, label: "initial position x(0)", type: range, min: -1, max: 1, step: 0.05, default: 0, group: more }
-  presets:
-    - { id: step, label: "Step push (textbook cart)", set: { input: step, amp: 1, cd: 3, k: 2, t: 0, x0: 0 }, about: "Overdamped (poles −1, −2): the position creeps to 1/k = 0.5 m without overshoot." }
-    - { id: pulse, label: "Push then release", set: { input: pulse, amp: 1, cd: 3, k: 2, t: 0, x0: 0 }, about: "After the pulse ends the force is zero: the state decays by A alone." }
-    - { id: bouncy, label: "Underdamped", set: { input: step, amp: 1, cd: 0.6, k: 4, t: 0, x0: 0 }, about: "Complex poles: the cart rings (oscillates) while it settles." }
-    - { id: free, label: "Released from x = 1", set: { input: none, amp: 0, cd: 3, k: 2, t: 0, x0: 1 }, about: "No force: the free response x(t) = e^{At}x(0)." }
+    - { id: house, label: "House", set: { phi: 20, kw: 1, leak: 0.2 }, about: "Λ = diag(−0.2, −2.2)." }
+    - { id: onavg, label: "Equal rooms", set: { phi: 45, kw: 1, leak: 0.2 }, about: "Only the average leg: ξ₂ = 0." }
+    - { id: thin, label: "Thin wall (kw = 2)", set: { phi: 20, kw: 2, leak: 0.2 }, about: "The difference mode gets faster (λ₂ = −4.2); the average mode does not change." }
 
 - id: flow
-  title: "e^{At} as a movie: the whole plane flows toward the origin"
-  x: x₁ = position or time (s)
-  y: x₂ = velocity or state
+  title: "The house’s phase plane: fast onto the diagonal, then slowly home"
+  x: T₁ (K)
+  y: T₂ (K)
   legend:
-    - { label: "the ring of starting states, and where e^{At} has taken them", color: "var(--accent)" }
-    - { label: "one chosen trajectory x(t) = e^{At}x(0)", color: "var(--yel)" }
-    - { label: "eigen-direction 1", color: "var(--grn)", dash: true }
-    - { label: "eigen-direction 2", color: "var(--org)", dash: true }
-    - { label: "x₁ = position", color: "var(--cyan)" }
-    - { label: "x₂ = velocity", color: "var(--org)" }
-  howToRead: "Left: the phase plane (position across, velocity up). Little arrows show Ax, the direction the state is pushed everywhere. The blue ring is a set of starting states; at time t, e^{At} has carried each of them along its path, so the ring becomes the blue ellipse. The yellow curve follows one particular start. Right: the same yellow motion unrolled against time. Press Play and watch e^{At} squash the plane."
-  lookFor: "The ring is squashed fastest along the fast eigen-direction (−2, orange) and slowest along the slow one (−1, green), so late in the movie everything lines up on the slow direction."
-  animate: { control: t, speed: 0.8, loop: true }
+    - { label: "trajectory so far", color: "var(--cyan)" }
+    - { label: "state at time t", color: "var(--yel)" }
+    - { label: "average mode line (1, 1)", color: "var(--grn)", dash: true }
+    - { label: "difference mode line (1, −1)", color: "var(--org)", dash: true }
+  howToRead: "Left: the small arrows are the direction of ẋ = Ax at each state (heater off). The blue path starts at x(0) and is drawn up to time t. Right: the same two temperatures against time with a marker at t. Press Play to run the clock over six hours."
+  lookFor: "From (10, 0) the path heads almost straight for the diagonal (the difference mode dies in about an hour), then creeps down the diagonal toward 0 over hours."
+  animate: { control: t, speed: 1, loop: true }
   controls:
-    - { id: a1, label: "a₁ (damping term, A = [[0, 1], [−a₀, −a₁]])", type: range, min: -1, max: 6, step: 0.05, default: 3, group: primary }
-    - { id: a0, label: "a₀ (stiffness term)", type: range, min: 0, max: 8, step: 0.05, default: 2, group: primary }
-    - { id: x1, label: "x₁(0)", type: range, min: -2, max: 2, step: 0.05, default: 1, group: primary }
-    - { id: x2, label: "x₂(0)", type: range, min: -2, max: 2, step: 0.05, default: 0.5, group: primary }
-    - { id: t, label: "time t", type: range, min: 0, max: 8, step: 0.02, default: 0, group: primary, unit: s }
+    - { id: t, label: "time t", type: range, min: 0, max: 6, step: 0.05, default: 1, group: primary, unit: h }
+    - { id: x1, label: "T₁(0)", type: range, min: -2, max: 11, step: 0.5, default: 10, group: primary, unit: K }
+    - { id: x2, label: "T₂(0)", type: range, min: -2, max: 11, step: 0.5, default: 0, group: primary, unit: K }
   presets:
-    - { id: cart, label: "Textbook cart (−1, −2)", set: { a1: 3, a0: 2, x1: 1, x2: 0.5, t: 0 }, about: "Two real decaying modes: the plane collapses onto the slow direction." }
-    - { id: spiral, label: "Underdamped spiral", set: { a1: 0.6, a0: 4, x1: 1, x2: 0.5, t: 0 }, about: "Complex eigenvalues −0.3 ± 1.95j: the plane spirals inward, no eigen-directions." }
-    - { id: unstable, label: "Unstable", set: { a1: -0.5, a0: 2, x1: 0.5, x2: 0, t: 0 }, about: "Right half-plane eigenvalues: the plane spirals outward." }
+    - { id: house, label: "Room 1 10 K warmer", set: { t: 1, x1: 10, x2: 0 }, about: "The gap closes first, then both rooms cool together." }
+    - { id: both, label: "Both rooms 10 K", set: { t: 1, x1: 10, x2: 10 }, about: "Already on the slow line: it just slides toward 0." }
+    - { id: swap, label: "Room 2 warmer", set: { t: 1, x1: 2, x2: 10 }, about: "Mirror image: the same fast mode, the other way." }
+
+- id: cayley
+  title: "Cayley–Hamilton on the house: e^(At) = α₀(t) I + α₁(t) A"
+  x: time t (h)
+  y: α₀, α₁ (dimensionless, α₁ in h)
+  legend:
+    - { label: "α₀(t)", color: "var(--cyan)" }
+    - { label: "α₁(t)", color: "var(--org)" }
+  howToRead: "Because A² can be written with A and I, every power series in A collapses to α₀I + α₁A. Left: the two coefficients against time, from α₀ + α₁λ = e^(λt) at λ = −0.2 and −2.2. Right: the four entries of α₀I + α₁A next to the entries from the modal formula ½[[e₁ + e₂, e₁ − e₂], [e₁ − e₂, e₁ + e₂]]."
+  lookFor: "At t = 1 h: α₁ = (e^(−0.2) − e^(−2.2))/2 ≈ 0.354 and the two matrices agree to every digit. Set the wall to 0: α₁ becomes t·e^(−0.2t) (repeated eigenvalue)."
+  controls:
+    - { id: t, label: "time t", type: range, min: 0, max: 6, step: 0.05, default: 1, group: primary, unit: h }
+    - { id: kw, label: "wall coupling kw", type: range, min: 0, max: 2, step: 0.05, default: 1, group: primary, unit: "/h" }
+    - { id: leak, label: "leak to outdoors", type: range, min: 0.05, max: 1, step: 0.05, default: 0.2, group: more, unit: "/h" }
+  presets:
+    - { id: house, label: "House at 1 h", set: { t: 1, kw: 1, leak: 0.2 }, about: "α₀ ≈ 0.890, α₁ ≈ 0.354." }
+    - { id: late, label: "House at 4 h", set: { t: 4, kw: 1, leak: 0.2 }, about: "The fast mode has gone: e^(At) ≈ ½e^(−0.2t)[[1, 1], [1, 1]]." }
+    - { id: rep, label: "No wall (repeated −0.2)", set: { t: 1, kw: 0, leak: 0.2 }, about: "A = −0.2·I; with a repeated eigenvalue the second condition is the derivative: α₁ = t e^(−0.2t)." }
 
 - id: stab
-  title: "Stability is a place on the plane of eigenvalues"
-  x: Re of the pole
-  y: Im of the pole
+  title: "Stability of the thermostat loop u = −kp·T₁"
+  x: Re λ (1/h)
+  y: Im λ (1/h) or deviation (K)
   legend:
-    - { label: "stable pole (and decaying mode)", color: "var(--grn)" }
-    - { label: "unstable pole (and growing mode)", color: "var(--bad)" }
-    - { label: "samples of the mode", color: "var(--yel)" }
-  howToRead: "Left: the pole plane with its stable region shaded green: the left half of the s-plane, or the inside of the unit circle in the z-plane. The × marks the mode's pole(s). Right: what that mode does in time, e^{σt}cos ωt with its envelope. A pole in the green area gives a shrinking envelope. Switch to the z-plane to see the same mode sampled every T = 0.4 s: the pole moves to z = e^{sT}, and the left half-plane becomes the unit disc."
-  lookFor: "Slide σ across zero: the pole crosses the imaginary axis, and the envelope flips from shrinking to growing. In the z-plane the same thing happens as the pole crosses the unit circle."
+    - { label: "loop eigenvalues (stable)", color: "var(--cyan)" }
+    - { label: "an eigenvalue in the right half-plane", color: "var(--bad)" }
+    - { label: "T₁ deviation", color: "var(--cyan)" }
+    - { label: "T₂ deviation", color: "var(--org)" }
+  howToRead: "A thermostat in room 1 sets the room-1 heater to −kp kW per K of deviation, so the deviations obey ẋ = (A − B·kp·C)x with B = (3.6, 0) and C = [1, 0]. Left: the two loop eigenvalues (crosses) and the path they take as kp runs from −0.5 to 1 (grey dots). Right: the room deviations after room 1 is knocked 2 K above its setpoint. The note gives |e^(λT)| for a controller that samples every 15 minutes: inside the unit circle exactly when Re λ < 0."
+  lookFor: "Drag kp below −0.102 kW/K (a heater wired backwards, turning up when the room is already warm): one eigenvalue crosses into the shaded half-plane and the deviation grows instead of dying."
   controls:
-    - { id: dom, label: "plane", type: seg, default: s, group: primary, options: [{ value: s, label: "s-plane (continuous)" }, { value: z, label: "z-plane (sampled)" }] }
-    - { id: sigma, label: "σ = Re s", type: range, min: -2, max: 1, step: 0.02, default: -1, group: primary }
-    - { id: omega, label: "ω = Im s", type: range, min: 0, max: 4, step: 0.02, default: 0, group: primary }
+    - { id: kp, label: "thermostat gain kp", type: range, min: -0.5, max: 1, step: 0.01, default: 0.5, group: primary, unit: "kW/K" }
   presets:
-    - { id: slow, label: "Cart's slow mode (−1)", set: { dom: s, sigma: -1, omega: 0 }, about: "The cart's slow pole: e^{−t}." }
-    - { id: fast, label: "Cart's fast mode (−2)", set: { dom: s, sigma: -2, omega: 0 }, about: "The cart's fast pole: e^{−2t}." }
-    - { id: ring, label: "Underdamped ringing", set: { dom: s, sigma: -0.3, omega: 2, } , about: "A complex pair: a decaying oscillation." }
-    - { id: marginal, label: "Marginal (σ = 0)", set: { dom: s, sigma: 0, omega: 2 }, about: "On the imaginary axis: oscillates forever, neither decays nor grows." }
-    - { id: unstable, label: "Unstable", set: { dom: s, sigma: 0.4, omega: 1.5 }, about: "Right half-plane: grows without bound." }
-    - { id: sampled, label: "Same mode, sampled", set: { dom: z, sigma: -0.3, omega: 2 }, about: "The same ringing mode as a z-plane pole z = e^{sT} inside the unit circle." }
+    - { id: open, label: "No thermostat (kp = 0)", set: { kp: 0 }, about: "The open house: eigenvalues −0.2 and −2.2." }
+    - { id: good, label: "kp = 0.5 kW/K", set: { kp: 0.5 }, about: "Eigenvalues −0.755 and −3.445: faster recovery." }
+    - { id: edge, label: "Edge, kp = −0.10", set: { kp: -0.1 }, about: "One eigenvalue just left of 0: very slow recovery." }
+    - { id: bad, label: "Wired backwards, kp = −0.3", set: { kp: -0.3 }, about: "det(A − BkpC) < 0: a positive eigenvalue, the room runs away." }
 
 - id: ctrl
-  title: "Controllability: the set of states the input can reach"
-  x: x₁ = position
-  y: x₂ = velocity
+  title: "Controllability of the house: which way can the heater push the rooms?"
+  x: T₁ (K) or heater share s
+  y: T₂ (K) or push (K/h per kW)
   legend:
-    - { label: "reachable set in time T", color: "var(--cyan)" }
-    - { label: "B (where the input pushes)", color: "var(--yel)" }
-    - { label: "AB (how A bends that push)", color: "var(--vio)" }
-    - { label: "eigen-direction 1", color: "var(--grn)", dash: true }
-    - { label: "eigen-direction 2", color: "var(--org)", dash: true }
-  howToRead: "Left: the blue region is every state reachable from rest within time T with an input of size |u| ≤ 1. Yellow is B, the direction of a quick push. Purple is AB, B after A has bent it. Right: the parallelogram of B and AB. When it has area, B and AB span the plane and the reachable set is a full 2-D region. When B lies along an eigenvector, AB is parallel to B, the area is zero, and the reachable set collapses to a line: that mode is the only one you can touch."
-  lookFor: "Slowly turn B (angle). When B lines up with a dashed eigen-direction, the blue region flattens to a line and the parallelogram collapses. Press Play to let time T grow and watch the region swell."
-  animate: { control: T, speed: 0.6, loop: true }
+    - { label: "B: the heater’s direct push", color: "var(--cyan)" }
+    - { label: "AB: where the walls carry it next", color: "var(--yel)" }
+    - { label: "1 kW for 3 h from rest", color: "var(--vio)" }
+    - { label: "push on the average mode", color: "var(--grn)" }
+    - { label: "push on the difference mode", color: "var(--org)" }
+  howToRead: "The heater power is split: a share s goes to room 1 and 1 − s to room 2, so B = 3.6·(s, 1 − s) K/h per kW. Left: B and AB. If they point in different directions, [B, AB] has rank 2 and any pair of room temperatures can be reached; the violet path is what 1 kW for 3 hours does. Right (the PBH test): the push on each mode, wᵀB with w = (1, 1)/2 and (1, −1)/2. A mode with zero push can never be steered."
+  lookFor: "At s = ½ (equal heat in both rooms) B and AB both lie on the diagonal, det [B, AB] = 0, the violet path stays on the diagonal, and the push on the difference mode is 0."
   controls:
-    - { id: beta, label: "direction of B", type: range, min: -180, max: 180, step: 1, default: 90, group: primary, unit: "°" }
-    - { id: T, label: "time horizon T", type: range, min: 0.1, max: 6, step: 0.05, default: 2, group: primary, unit: s }
-    - { id: a1, label: "a₁", type: range, min: 0, max: 6, step: 0.05, default: 3, group: more }
-    - { id: a0, label: "a₀", type: range, min: 0.5, max: 8, step: 0.05, default: 2, group: more }
+    - { id: split, label: "heater share in room 1, s", type: range, min: 0, max: 1, step: 0.01, default: 1, group: primary }
   presets:
-    - { id: cart, label: "Textbook cart: force on the mass", set: { beta: 90, T: 2, a1: 3, a0: 2 }, about: "B = (0, 1): the force changes velocity. B and AB are independent: fully controllable." }
-    - { id: slow, label: "B along the slow mode", set: { beta: -45, T: 2, a1: 3, a0: 2 }, about: "B ∥ (1, −1), the −1 eigenvector: the input can only excite that mode." }
-    - { id: fast, label: "B along the fast mode", set: { beta: -63, T: 2, a1: 3, a0: 2 }, about: "B nearly ∥ (1, −2): almost only the −2 mode is excited." }
+    - { id: house, label: "Heater in room 1 (s = 1)", set: { split: 1 }, about: "B = (3.6, 0), AB = (−4.32, 3.6): det = 12.96, controllable." }
+    - { id: half, label: "Equal split (s = ½)", set: { split: 0.5 }, about: "B = (1.8, 1.8) is an eigenvector: only the average mode can be moved." }
+    - { id: room2, label: "Heater in room 2 (s = 0)", set: { split: 0 }, about: "Mirror image of the real house: controllable." }
 
 - id: obs
-  title: "Observability: which differences between states the output can see"
-  x: x₁ = position or time (s)
-  y: x₂ = velocity or output y
+  title: "Observability of the house: can one sensor tell two starting states apart?"
+  x: time t (h) or T₁ (K)
+  y: sensor reading (K) or T₂ (K)
   legend:
-    - { label: "state P and its output", color: "var(--cyan)" }
-    - { label: "state Q and its output", color: "var(--org)", dash: true }
-    - { label: "C: the sensor's direction", color: "var(--vio)" }
-    - { label: "difference of the outputs", color: "var(--yel)" }
-    - { label: "eigen-direction 1", color: "var(--grn)", dash: true }
-    - { label: "eigen-direction 2", color: "var(--org)", dash: true }
-  howToRead: "Left: the state plane. The sensor reads y = Cx, the component of the state along C (grey lines are states with the same reading). P and Q are two starting states that differ by a push along an eigenvector. Right: the output the sensor records from P and from Q. If the sensor is blind to the mode that separates them (C · v = 0), the two records coincide forever and you can never tell P from Q. That mode is unobservable."
-  lookFor: "Set the sensor angle so that C is perpendicular to the dashed direction P and Q differ along: the two curves land exactly on top of each other. A position-only sensor on the textbook cart (angle 0) never has this problem."
+    - { label: "reading from x_a = (8, 2)", color: "var(--cyan)" }
+    - { label: "reading from x_b = (2, 8)", color: "var(--org)", dash: true }
+    - { label: "sensor weights C", color: "var(--yel)" }
+  howToRead: "The sensor reads y = c·T₁ + (1 − c)·T₂. Left: the readings over 4 hours (heater off) from two starting states with the same average but opposite differences. Right: the two states, the sensor direction C and the difference-mode line through them. If the readings differ, [C; CA] has rank 2 and x(0) can be worked out from y."
+  lookFor: "At c = ½ (a sensor on the shared wall reads the average) the two readings lie exactly on top of each other: the difference mode is invisible, det [C; CA] = 0."
   controls:
-    - { id: gamma, label: "sensor direction C", type: range, min: -90, max: 90, step: 1, default: 0, group: primary, unit: "°" }
-    - { id: s, label: "offset of Q from P", type: range, min: -1.5, max: 1.5, step: 0.05, default: 1, group: primary }
-    - { id: along, label: "offset runs along", type: seg, default: "1", group: primary, options: [{ value: "1", label: "mode −1" }, { value: "2", label: "mode −2" }] }
+    - { id: c, label: "sensor weight on room 1, c", type: range, min: 0, max: 1, step: 0.01, default: 1, group: primary }
   presets:
-    - { id: pos, label: "Position sensor (textbook cart)", set: { gamma: 0, s: 1, along: "1" }, about: "C = (1, 0): sees both modes, so any difference shows up." }
-    - { id: vel, label: "Velocity sensor", set: { gamma: 90, s: 1, along: "1" }, about: "C = (0, 1): also sees both modes (the cart is observable from velocity too)." }
-    - { id: blind1, label: "Blind to the −1 mode", set: { gamma: 45, s: 1, along: "1" }, about: "C = (1, 1)/√2 is perpendicular to (1, −1): the slow mode is invisible." }
-    - { id: blind2, label: "Blind to the −2 mode", set: { gamma: 27, s: 1, along: "2" }, about: "C ∝ (2, 1) is perpendicular to (1, −2): the fast mode is invisible." }
+    - { id: house, label: "Sensor in room 1 (c = 1)", set: { c: 1 }, about: "C = [1, 0]: observable, det [C; CA] = 1." }
+    - { id: half, label: "Average sensor (c = ½)", set: { c: 0.5 }, about: "C = [½, ½] is orthogonal to (1, −1): unobservable." }
+    - { id: near, label: "Nearly average (c = 0.55)", set: { c: 0.55 }, about: "Observable in theory, but the two readings differ only slightly: hard in practice." }
 
 - id: kalman
-  title: "Kalman decomposition: only controllable-and-observable modes reach the transfer function"
-  x: signal flow or time (s)
-  y: modes or impulse response
+  title: "Kalman decomposition of the house: which modes are reached and which are seen"
+  x: signal flow or time t (h)
+  y: modes or y(t) (K per kWh)
   legend:
-    - { label: "mode 1 (λ = −1)", color: "var(--cyan)" }
-    - { label: "mode 2 (λ = −2)", color: "var(--org)" }
-    - { label: "mode 3 (λ = −3)", color: "var(--grn)" }
-    - { label: "mode 4 (λ = 0.5)", color: "var(--vio)" }
-    - { label: "actual output h(t)", color: "var(--text)" }
-  howToRead: "Left: four modes wired between the force u and the sensor y. A yellow wire means the input reaches that mode (controllable) or the sensor sees it (observable); a ✕ means that wire is cut. Only a mode with both wires survives to the transfer function G(s). Right: the impulse response from rest. The thick curve is what the cart actually does; thin dashed curves are modes that exist inside the state but never make it to the output."
-  lookFor: "Cut one wire of mode 3 (make it controllable-only or observable-only) and its curve drops out of the thick line even though the mode is still there. The pole list under the diagram shrinks with it."
-  height: 300
+    - { label: "live wire (non-zero weight)", color: "var(--yel)" }
+    - { label: "average-mode term", color: "var(--grn)", dash: true }
+    - { label: "difference-mode term", color: "var(--org)", dash: true }
+    - { label: "total output y(t)", color: "var(--text)" }
+  howToRead: "Left: the heater reaches each mode with weight wᵀB (heater share s) and the sensor sees it with weight Cv (sensor weight c); a dashed grey wire has weight zero. Each mode is labelled with its Kalman class. Right: the sensor reading after a 1 kWh heater pulse, as the sum of one exponential per mode. Only reached-and-seen modes appear in y and in G(s)."
+  lookFor: "Set either s or c to ½: the difference mode drops out of G(s), which becomes a single first-order term 1.8/(s + 0.2) even though the house still has two states."
   controls:
-    - { id: m1, label: "mode 1 (the cart's −1)", type: select, default: co, group: primary, options: [{ value: co, label: "controllable + observable" }, { value: c, label: "controllable only" }, { value: o, label: "observable only" }, { value: n, label: "neither" }] }
-    - { id: m2, label: "mode 2 (the cart's −2)", type: select, default: co, group: primary, options: [{ value: co, label: "controllable + observable" }, { value: c, label: "controllable only" }, { value: o, label: "observable only" }, { value: n, label: "neither" }] }
-    - { id: m3, label: "mode 3 (extra λ = −3)", type: select, default: c, group: primary, options: [{ value: co, label: "controllable + observable" }, { value: c, label: "controllable only" }, { value: o, label: "observable only" }, { value: n, label: "neither" }] }
-    - { id: m4, label: "mode 4 (extra λ = 0.5)", type: select, default: o, group: primary, options: [{ value: co, label: "controllable + observable" }, { value: c, label: "controllable only" }, { value: o, label: "observable only" }, { value: n, label: "neither" }] }
+    - { id: split, label: "heater share in room 1, s", type: range, min: 0, max: 1, step: 0.05, default: 1, group: primary }
+    - { id: c, label: "sensor weight on room 1, c", type: range, min: 0, max: 1, step: 0.05, default: 1, group: primary }
   presets:
-    - { id: cart, label: "The cart: 2 modes, both CO", set: { m1: co, m2: co, m3: n, m4: n }, about: "Only the two cart modes exist: minimal realization, G(s) has both poles." }
-    - { id: hidden, label: "Two extra, hidden modes", set: { m1: co, m2: co, m3: c, m4: o }, about: "Modes 3 and 4 are in the state but cancel out of G(s)." }
-    - { id: full, label: "Everything controllable and observable", set: { m1: co, m2: co, m3: co, m4: co }, about: "All four modes appear in G(s), including the unstable one." }
+    - { id: house, label: "Heater and sensor in room 1", set: { split: 1, c: 1 }, about: "Both modes reached and seen: G(s) = 1.8/(s + 0.2) + 1.8/(s + 2.2)." }
+    - { id: heat, label: "Equal heating", set: { split: 0.5, c: 1 }, about: "The difference mode is seen but not reached." }
+    - { id: sense, label: "Average sensor", set: { split: 1, c: 0.5 }, about: "The difference mode is reached but not seen." }
+    - { id: both, label: "Both averaged", set: { split: 0.5, c: 0.5 }, about: "Only the average mode is left in G(s)." }
 
-- id: tf
-  title: "Poles and zeros are distances: reading G(jω) off the s-plane"
-  x: Re s or ω (rad/s)
-  y: Im s or |G(jω)|
+- id: gramian
+  title: "The house’s controllability Gramian: what reaching a state costs"
+  x: T₁ (K) or time allowed (h)
+  y: T₂ (K) or energy (kW²·h)
   legend:
-    - { label: "pole of the cart (×)", color: "var(--bad)" }
-    - { label: "distance from a pole to jω", color: "var(--org)", dash: true }
-    - { label: "zero (○) and its distance", color: "var(--grn)" }
-    - { label: "the test point jω", color: "var(--yel)" }
-    - { label: "|G(jω)|", color: "var(--cyan)" }
-  howToRead: "Left: the s-plane. The yellow dot is jω, a point on the imaginary axis (the frequency you are probing with a sine). Dashed lines run from every pole to it; |G(jω)| is the gain K divided by the product of those pole distances (and multiplied by the distance to a zero, if there is one). Right: |G(jω)| for every ω. Press Play to slide the probe up the axis and watch the response trace itself."
-  lookFor: "A pole close to the imaginary axis makes one distance small, so the response peaks when jω passes it (try Lightly damped). A zero does the opposite: it pulls the response down when the probe passes it."
-  animate: { control: w, speed: 0.7, loop: true }
+    - { label: "reachable with 5 kW²·h", color: "var(--grn)" }
+    - { label: "reachable with 13.43 kW²·h", color: "var(--cyan)" }
+    - { label: "reachable with 45 kW²·h", color: "var(--vio)" }
+    - { label: "the (10, 7) K target", color: "var(--yel)" }
+  howToRead: "Left: the states the heater can reach from rest in T hours using at most a given energy ∫u²dt form ellipses xᵀW(T)⁻¹x ≤ E, where W(T) is the Gramian in K²/(kW²·h). The thin axis of the ellipse is the expensive direction. Right: the least energy to reach (10, 7) K, against the time allowed. This is a reaching cost; keeping the rooms there afterwards costs heat at a steady rate on top."
+  lookFor: "At T = 3 h the target (10, 7) sits on the 13.43 kW²·h ellipse. The thin axis points along ≈ (0.51, −0.86): pulling room 2 below room 1 is the expensive direction to reach. Make T shorter and the cost climbs steeply."
   controls:
-    - { id: a1, label: "a₁: G(s) = a₀ / (s² + a₁s + a₀)", type: range, min: 0, max: 6, step: 0.05, default: 3, group: primary }
-    - { id: a0, label: "a₀", type: range, min: 0.5, max: 8, step: 0.05, default: 2, group: primary }
-    - { id: w, label: "probe frequency ω", type: range, min: 0, max: 5, step: 0.02, default: 1, group: primary, unit: rad/s }
-    - { id: hasZero, label: "add a zero", type: toggle, default: false, group: more }
-    - { id: zr, label: "zero position", type: range, min: -5, max: 5, step: 0.1, default: -3, group: more }
+    - { id: T, label: "time allowed T", type: range, min: 0.5, max: 8, step: 0.1, default: 3, group: primary, unit: h }
+    - { id: split, label: "heater share in room 1, s", type: range, min: 0, max: 1, step: 0.05, default: 1, group: more }
   presets:
-    - { id: cart, label: "Textbook cart: poles −1, −2", set: { a1: 3, a0: 2, w: 1, hasZero: false, zr: -3 }, about: "G(s) = 2/((s+1)(s+2)): a smooth low-pass, no resonance." }
-    - { id: ring, label: "Lightly damped", set: { a1: 0.4, a0: 4, w: 1, hasZero: false, zr: -3 }, about: "Poles −0.2 ± 2j sit near the axis: a resonance near ω = 2." }
-    - { id: zero, label: "Cart with a zero at −3", set: { a1: 3, a0: 2, w: 1, hasZero: true, zr: -3 }, about: "A left-half-plane zero lifts the high-frequency end." }
+    - { id: house, label: "3 hours", set: { T: 3, split: 1 }, about: "W eigenvalues 0.78 and 12.0 K²/(kW²·h): a 15:1 ratio." }
+    - { id: rush, label: "1 hour", set: { T: 1, split: 1 }, about: "Much thinner ellipse: the same target costs far more." }
+    - { id: slow, label: "6 hours", set: { T: 6, split: 1 }, about: "More time, less energy, but the cost levels off because heat leaks away." }
+
+- id: optimal
+  title: "Least-energy warm-up of the house to an illustrative target"
+  x: time t (h)
+  y: heater power (kW) or K above outdoors
+  legend:
+    - { label: "heater power u(t)", color: "var(--yel)" }
+    - { label: "2.5 kW heater limit", color: "var(--bad)", dash: true }
+    - { label: "T₁(t)", color: "var(--cyan)" }
+    - { label: "T₂(t)", color: "var(--org)" }
+  howToRead: "The illustrative target is (T₁, T₂) at time T, starting from outdoor temperature. Pontryagin’s minimum principle (or the Gramian) gives the profile that gets there with the least ∫u²dt: u(t) = Bᵀe^(Aᵀ(T−t))W(T)⁻¹x_T. Left: that heater power and the 2.5 kW limit. Right: the two room temperatures it produces, landing on the circles at t = T."
+  lookFor: "For (10, 7) K in 3 h: u starts at 1.78 kW, peaks near 2.41 kW around 2 h and eases to 0.97 kW at the end, because late heat mostly widens the room-1/room-2 gap (the fast difference mode) instead of warming room 2. Energy 13.43 kW²·h."
+  controls:
+    - { id: Tf, label: "time allowed T", type: range, min: 1, max: 6, step: 0.1, default: 3, group: primary, unit: h }
+    - { id: x1T, label: "target T₁", type: range, min: 0, max: 15, step: 0.5, default: 10, group: primary, unit: K }
+    - { id: x2T, label: "target T₂", type: range, min: 0, max: 15, step: 0.5, default: 7, group: primary, unit: K }
+  presets:
+    - { id: house, label: "(10, 7) K in 3 h", set: { Tf: 3, x1T: 10, x2T: 7 }, about: "Fits within the 2.5 kW heater." }
+    - { id: equal, label: "(10, 10) K in 3 h", set: { Tf: 3, x1T: 10, x2T: 10 }, about: "Room 2 is heated only through the wall: 31.4 kW²·h and a 3.8 kW peak, past the 2.5 kW limit." }
+    - { id: rush, label: "(10, 7) K in 1.5 h", set: { Tf: 1.5, x1T: 10, x2T: 7 }, about: "Half the time: 28.9 kW²·h and a 5.6 kW peak, more than the heater has." }
+
+- id: ss
+  title: "The speaker as a state-space model: the state (x, ẋ) of the cone"
+  x: cone position x (µm) or time t (ms)
+  y: velocity ẋ (mm/s) or x (µm)
+  legend:
+    - { label: "state path so far", color: "var(--cyan)" }
+    - { label: "state at time t", color: "var(--yel)" }
+    - { label: "drive voltage (scaled)", color: "var(--vio)", dash: true }
+  howToRead: "The two states are cone position x and velocity ẋ; the coil current follows the voltage almost instantly and is left out. ẋ = Ax + Bu with A = [[0, 1], [−20.28, −2.533]] per ms and a DC gain of 42.8 µm per volt. Left: the state moving through the (x, ẋ) plane (axes scaled to fit). Right: the cone position against time with the drive. Play runs the clock."
+  lookFor: "A click (a short pulse) starts the state on the velocity axis; it spirals in two or three turns (688 turns a second) before it is gone. A step spirals in to the new rest position 42.8 µm per volt out."
+  animate: { control: t, speed: 1, loop: true }
+  controls:
+    - { id: t, label: "time t", type: range, min: 0, max: 6, step: 0.01, default: 2, group: primary, unit: ms }
+    - { id: input, label: "drive", type: seg, default: click, group: primary, options: [{ value: click, label: "click" }, { value: step, label: "step" }, { value: tone, label: "690 Hz tone" }] }
+    - { id: amp, label: "drive level", type: range, min: 0, max: 1, step: 0.01, default: 0.5, group: primary, unit: V }
+  presets:
+    - { id: click, label: "Click", set: { input: click, amp: 0.5, t: 2 }, about: "A 0.05 ms pulse: the free ring of the two poles −1.27 ± 4.32j /ms." }
+    - { id: step, label: "Step of 0.5 V", set: { input: step, amp: 0.5, t: 3 }, about: "Settles at 21.4 µm after a few overshoots (ζ ≈ 0.28)." }
+    - { id: tone, label: "690 Hz tone", set: { input: tone, amp: 0.5, t: 6 }, about: "After the start-up transient the state circles an ellipse at the drive frequency." }
 
 - id: lti
-  title: "Convolution as flip-and-slide: the cart's output from its impulse response"
-  x: τ (s) or time t (s)
-  y: signals and y(t)
+  title: "Convolution on the speaker: drive voltage ∗ impulse response = cone motion"
+  x: τ or t (ms)
+  y: amplitude
   legend:
-    - { label: "input force x(τ)", color: "var(--cyan)" }
-    - { label: "flipped impulse response h(t − τ) (×2)", color: "var(--org)" }
-    - { label: "their product", color: "var(--grn)" }
-  howToRead: "Top: the input x(τ) (blue) and the impulse response of the cart h flipped around and slid so that its start sits at τ = t (orange, drawn ×2 for visibility). The green shape is their product at each τ; its area is exactly y(t) = ∫ x(τ) h(t − τ) dτ. Bottom: y(t) built up as the slide advances. Why flip? Because a push at τ has been 'ringing down' for t − τ seconds by the time t."
-  lookFor: "Press Play. When the orange kernel overlaps the input, the green area grows; once the input is over, the kernel slides off it and the area shrinks back toward zero: the cart returns to rest."
-  animate: { control: t, speed: 0.9, loop: true }
+    - { label: "drive V(τ) (V)", color: "var(--cyan)" }
+    - { label: "h(t − τ), flipped and slid to t (scaled)", color: "var(--org)" }
+    - { label: "product (area = output)", color: "var(--grn)" }
+  howToRead: "Left: the drive V(τ), the speaker’s impulse response flipped and slid to the current time t, and their product. The area under the product, times the DC gain 42.8 µm/V, is the cone displacement x(t). Right: x(t) built up as t moves (the solid part is what has been computed so far). Play slides t."
+  lookFor: "With a 1 ms pulse the output rises, overshoots and rings at 688 Hz after the pulse ends: each later moment is the overlap of the pulse with a later part of the flipped ring."
+  animate: { control: t, speed: 1, loop: true }
   controls:
-    - { id: input, label: "input force", type: seg, default: pulse, group: primary, options: [{ value: pulse, label: "pulse" }, { value: step, label: "step" }, { value: two, label: "up-down" }, { value: sine, label: "sine" }] }
-    - { id: sys, label: "system", type: seg, default: cart, group: primary, options: [{ value: cart, label: "textbook cart" }, { value: ring, label: "underdamped" }] }
-    - { id: t, label: "output time t", type: range, min: 0, max: 9, step: 0.02, default: 2, group: primary, unit: s }
+    - { id: t, label: "time t", type: range, min: 0, max: 6, step: 0.02, default: 1.5, group: primary, unit: ms }
+    - { id: input, label: "drive", type: seg, default: pulse, group: primary, options: [{ value: pulse, label: "1 ms pulse" }, { value: click, label: "click" }, { value: burst, label: "690 Hz burst" }, { value: step, label: "step" }] }
   presets:
-    - { id: pulse, label: "Cart, 1.5 s push", set: { input: pulse, sys: cart, t: 2 }, about: "h(t) = e^{−t} − e^{−2t}: a smooth bump, so the response to a pulse is a smoothed bump." }
-    - { id: step, label: "Cart, step", set: { input: step, sys: cart, t: 2 }, about: "The step response is the running integral of h." }
-    - { id: ring, label: "Underdamped, pulse", set: { input: pulse, sys: ring, t: 2 }, about: "A ringing kernel: the output rings after the push." }
+    - { id: pulse, label: "1 V pulse, 1 ms", set: { input: pulse, t: 1.5 }, about: "Rise, overshoot, then the free ring." }
+    - { id: click, label: "Click (0.1 ms)", set: { input: click, t: 1 }, about: "Short enough that the output is just a scaled copy of h(t)." }
+    - { id: burst, label: "Three cycles at 690 Hz", set: { input: burst, t: 4 }, about: "Near resonance: the ring builds up with each cycle." }
+
+- id: eigfn
+  title: "Tones are eigenfunctions of the speaker: the same frequency comes out"
+  x: time t (ms) or real part
+  y: amplitude or imaginary part
+  legend:
+    - { label: "drive cos(ωt)", color: "var(--cyan)" }
+    - { label: "cone |H|cos(ωt + ∠H)", color: "var(--org)" }
+  howToRead: "Left: a steady drive tone and the steady cone motion (normalised so DC gives 1). Right: the same two signals as rotating phasors e^(jωt) and H(jω)e^(jωt): both turn at the same rate; H only stretches and rotates. Play runs time."
+  lookFor: "At 690 Hz the cone moves 1.83 times as far as at DC and lags by 82°. Move f above 1 kHz: the output shrinks and the lag approaches 180°, but the frequency never changes."
+  animate: { control: t, speed: 0.5, loop: true }
+  controls:
+    - { id: f, label: "tone frequency f", type: range, min: 50, max: 3000, step: 10, default: 690, group: primary, unit: Hz }
+    - { id: t, label: "time t", type: range, min: 0, max: 5, step: 0.01, default: 0, group: primary, unit: ms }
+  presets:
+    - { id: ring, label: "690 Hz", set: { f: 690 }, about: "Near resonance: ×1.83, lag 82°." }
+    - { id: low, label: "200 Hz", set: { f: 200 }, about: "Below resonance: ×1.07, lag 10°." }
+    - { id: high, label: "2 kHz", set: { f: 2000 }, about: "Above resonance: ×0.14, lag 167°." }
 
 - id: ft
-  title: "The Fourier transform as winding a signal around a circle"
-  x: Re or frequency f (Hz)
-  y: Im or |X(f)|
+  title: "The Fourier transform of the speaker’s click response, by winding"
+  x: real part or frequency f (Hz)
+  y: imaginary part or |X(f)|
   legend:
-    - { label: "x(t) e^{−j2πft}, the wound-up signal", color: "var(--accent)" }
-    - { label: "centre of mass of the wound-up signal", color: "var(--yel)" }
-  howToRead: "Pick a winding frequency f. Left: the signal x(t) is multiplied by e^{−j2πft}, which wraps it around the origin f times per second. If the signal has a component at f, its bumps line up on one side and the centre of mass (yellow) moves away from the origin; otherwise they cancel. Right: the distance of the centre of mass from the origin, as a function of f, is |X(f)|, the Fourier transform. Switch to the cart's impulse response to see the transform of the textbook cart: at f = 0 it sums to G(0)."
-  lookFor: "Press Play and sweep f. For the two-tone signal the centre of mass lights up at exactly 1 Hz and 2.5 Hz and stays near zero elsewhere. For the cart it is largest at f = 0 and shrinks smoothly: a low-pass system."
-  animate: { control: f, speed: 0.25, loop: true }
+    - { label: "h(t)e^(−j2πft), wound", color: "var(--cyan)" }
+    - { label: "X(f) = the total (its centre of mass × duration)", color: "var(--yel)" }
+    - { label: "|X(f)|", color: "var(--cyan)" }
+  howToRead: "Left: the click response h(t) wound around the origin at f turns per second; adding up the whole curve gives the complex number X(f). Right: |X(f)| for every f, which for an impulse response is |H(j2πf)|. The green band is the −3 dB band. Play sweeps f."
+  lookFor: "Near 660 Hz the winding lines up with the ring and the yellow arrow is longest. The band is about 400–850 Hz wide because the ring decays in under 1 ms."
+  animate: { control: f, speed: 150, loop: true }
   controls:
-    - { id: sig, label: "signal", type: seg, default: tones, group: primary, options: [{ value: tones, label: "two tones (1 and 2.5 Hz)" }, { value: cart, label: "cart's h(t)" }] }
-    - { id: f, label: "winding frequency f", type: range, min: 0, max: 4, step: 0.02, default: 1, group: primary, unit: Hz }
+    - { id: f, label: "winding frequency f", type: range, min: 0, max: 2000, step: 5, default: 300, group: primary, unit: Hz }
   presets:
-    - { id: tones, label: "Two tones", set: { sig: tones, f: 1 }, about: "Peaks at 1 Hz and 2.5 Hz." }
-    - { id: cart, label: "The cart's response", set: { sig: cart, f: 0.3 }, about: "X(f) = G(j2πf): a low-pass shape." }
+    - { id: dc, label: "f = 0", set: { f: 0 }, about: "No winding: X(0) = ∫h dt = 1 (the DC gain)." }
+    - { id: peak, label: "Peak, 658 Hz", set: { f: 658 }, about: "|X| ≈ 1.85 (+5.4 dB)." }
+    - { id: high, label: "1.5 kHz", set: { f: 1500 }, about: "The winding averages out: |X| is small." }
 
 - id: fs
-  title: "Fourier series: a periodic signal as a chain of rotating phasors"
-  x: Re or phase θ (rad)
-  y: Im or x(θ)
+  title: "Fourier series of a square-wave drive, and Parseval"
+  x: time t (ms) or frequency (Hz)
+  y: drive (V) or amplitude
   legend:
-    - { label: "fundamental phasor", color: "var(--cyan)" }
-    - { label: "higher harmonics", color: "var(--grn)" }
-    - { label: "the partial sum", color: "var(--yel)" }
-    - { label: "the exact waveform", color: "var(--muted)", dash: true }
-  howToRead: "Each harmonic k is an arrow of length |b_k| turning k times per period. They are chained tip to tail; the height of the last tip is the partial sum Σ b_k sin(kθ). Left: the chain at the current phase θ. Right: the waveform that height traces as θ goes round once. Dashed is the exact waveform; the bold yellow is what the first N harmonics make. Press Play to watch the circles turn."
-  lookFor: "With a square wave, add harmonics one at a time: the corners sharpen, but an overshoot (Gibbs) stays near each jump. For a triangle wave the harmonics shrink like 1/k², so three of them already look right."
-  animate: { control: th, speed: 1.3, loop: true }
+    - { label: "partial sum of N harmonics", color: "var(--cyan)" }
+    - { label: "the ±1 V square wave", color: "var(--muted)", dash: true }
+    - { label: "drive harmonic 4/(πk)", color: "var(--cyan)" }
+    - { label: "same harmonic at the cone, ×|H(kf₀)|", color: "var(--org)" }
+  howToRead: "A zero-mean ±1 V square wave at f₀ is a sum of odd sine harmonics with amplitudes 4/(πk). Left: the sum of the first N harmonics over two periods; the note gives the share of the power (mean square 1) they carry, which by Parseval is Σ(4/(πk))²/2. Right: the harmonic amplitudes in the drive (blue) and after the speaker’s |H| (orange); grey bars are harmonics left out."
+  lookFor: "The first harmonic alone already carries 81% of the power, three harmonics 90%. At f₀ = 230 Hz the third harmonic lands on the 690 Hz resonance and is boosted at the cone."
   controls:
-    - { id: wave, label: "waveform", type: seg, default: square, group: primary, options: [{ value: square, label: "square" }, { value: saw, label: "sawtooth" }, { value: tri, label: "triangle" }] }
-    - { id: N, label: "harmonics included", type: range, min: 1, max: 25, step: 1, default: 3, group: primary }
-    - { id: th, label: "phase θ", type: range, min: 0, max: 6.2832, step: 0.01, default: 0.8, group: primary, unit: rad }
+    - { id: N, label: "harmonics N", type: range, min: 1, max: 25, step: 1, default: 5, group: primary }
+    - { id: f0, label: "fundamental f₀", type: range, min: 100, max: 800, step: 10, default: 200, group: primary, unit: Hz }
   presets:
-    - { id: square3, label: "Square wave, 3 terms", set: { wave: square, N: 3, th: 0.8 }, about: "A periodic push force on the textbook cart." }
-    - { id: square25, label: "Square wave, 25 terms", set: { wave: square, N: 25, th: 0.8 }, about: "Sharper edges, but a Gibbs overshoot stays." }
-    - { id: tri, label: "Triangle wave", set: { wave: tri, N: 3, th: 0.8 }, about: "Harmonics fall like 1/k²: converges fast." }
+    - { id: buzz, label: "200 Hz buzz", set: { N: 5, f0: 200 }, about: "Odd harmonics at 200, 600, 1000 Hz…" }
+    - { id: one, label: "First harmonic only", set: { N: 1, f0: 200 }, about: "8/π² ≈ 81% of the power." }
+    - { id: third, label: "230 Hz: 3rd on resonance", set: { N: 7, f0: 230 }, about: "690 Hz is the third harmonic." }
 
-- id: dtft
-  title: "The DTFT: the spectrum of samples repeats every 2π"
-  x: sample index n or ω (rad/sample)
-  y: x[n] or |X(e^{jω})|
+- id: ortho
+  title: "Orthogonality: measuring one harmonic of the buzz at a time"
+  x: time t (ms) or harmonic m
+  y: amplitude
   legend:
-    - { label: "samples x[n] = h(nT) of the cart's impulse response", color: "var(--cyan)" }
-    - { label: "|X(e^{jω})|, the DTFT", color: "var(--cyan)" }
-    - { label: "unsampled |G(jΩ)|/T", color: "var(--muted)", dash: true }
-  howToRead: "Left: the cart's impulse response h(t) sampled every T seconds. Right: the DTFT of those samples. Frequency here is in radians per sample, so everything repeats every 2π: the shaded band [−π, π] is one full copy. The dashed curve is the spectrum of the unsampled cart (frequency scaled by T). The DTFT is the sum of all its shifted copies, so when T is large the copies overlap and add: aliasing."
-  lookFor: "Press Play to slide the probe frequency across the periodic spectrum. Then increase T (sample more slowly): the DTFT no longer matches the dashed curve, because neighbouring copies leak into the band."
-  animate: { control: w, speed: 1.2, loop: true }
+    - { label: "the buzz at the cone, y(t)", color: "var(--cyan)" }
+    - { label: "probe cos(2π·m·200t)", color: "var(--org)", dash: true }
+    - { label: "product (area ∝ inner product)", color: "var(--grn)" }
+  howToRead: "The buzz is the cone’s response to a 200 Hz ±1 V square wave: odd harmonics shaped by the speaker. Left: one period of it, a probe harmonic m, and their product; the inner product ⟨e_m, y⟩/⟨e_m, e_m⟩ (with the matching sine) is harmonic m’s amplitude. Right: those amplitudes for m = 1…9, each measured on its own."
+  lookFor: "Pick an even m: the green area cancels exactly, because the drive has no even harmonics and different harmonics are orthogonal over a period."
   controls:
-    - { id: T, label: "sample period T", type: range, min: 0.1, max: 1.5, step: 0.05, default: 0.5, group: primary, unit: s }
-    - { id: w, label: "probe frequency ω", type: range, min: -6.2832, max: 6.2832, step: 0.02, default: 1, group: primary, unit: rad/sample }
+    - { id: m, label: "probe harmonic m", type: range, min: 1, max: 9, step: 1, default: 3, group: primary }
   presets:
-    - { id: fast, label: "Fast sampling (T = 0.2)", set: { T: 0.2, w: 1 }, about: "Copies are far apart: the DTFT matches the continuous spectrum in [−π, π]." }
-    - { id: medium, label: "T = 0.5", set: { T: 0.5, w: 1 }, about: "Visible mismatch near ±π." }
-    - { id: slow, label: "Slow sampling (T = 1.4)", set: { T: 1.4, w: 1 }, about: "Strong overlap of the copies: aliasing." }
-
-- id: dft
-  title: "The DFT: N equally spaced samples of the DTFT circle"
-  x: Re z or ω (rad/sample)
-  y: Im z or |X|
-  legend:
-    - { label: "the DTFT around the unit circle", color: "var(--accent)", dash: true }
-    - { label: "DFT bins X[k]", color: "var(--yel)" }
-  howToRead: "A record of L samples (a cosine of f₀ cycles per sample) has a DTFT that is defined on the whole unit circle. Left: the unit circle, brighter where the DTFT is larger, with N yellow dots where the DFT looks, at ω_k = 2πk/N. Right: the same thing unrolled: the dashed curve is the DTFT and the stems are the DFT bins, which are just samples of that curve. If the tone falls exactly on a bin there is one clean spike; between bins the energy appears to leak."
-  lookFor: "Press Play to slide the tone's frequency. At exact bins the stems collapse to a single spike; in between, they spread over many bins. Then increase N (zero padding): no new information appears, the stems just fill in the same curve."
-  animate: { control: f0, speed: 0.03, loop: true }
-  controls:
-    - { id: f0, label: "tone frequency f₀", type: range, min: 0.05, max: 0.45, step: 0.005, default: 0.25, group: primary, unit: cycles/sample }
-    - { id: L, label: "record length L", type: range, min: 8, max: 32, step: 1, default: 16, group: primary }
-    - { id: N, label: "DFT size N (zero padding)", type: seg, default: "16", group: primary, options: [{ value: "8", label: "8" }, { value: "16", label: "16" }, { value: "32", label: "32" }, { value: "128", label: "128" }] }
-  presets:
-    - { id: onbin, label: "On a bin", set: { f0: 0.25, L: 16, N: "16" }, about: "L = N = 16 and f₀ = 4/16: exactly bin 4, one spike." }
-    - { id: leak, label: "Between bins", set: { f0: 0.27, L: 16, N: "16" }, about: "f₀·L = 4.32: not an integer, so the energy leaks." }
-    - { id: padded, label: "Zero-padded", set: { f0: 0.27, L: 16, N: "128" }, about: "Same record, 128-point DFT: the stems trace the DTFT curve." }
-
-- id: laplace
-  title: "The Laplace transform: weighting the signal by e^{−st} and adding it up"
-  x: time t (s) or σ = Re s
-  y: integrand or ω = Im s
-  legend:
-    - { label: "integrand x(t) e^{−σt} cos ωt", color: "var(--grn)" }
-    - { label: "the signal x(t)", color: "var(--muted)", dash: true }
-    - { label: "weight e^{−σt}", color: "var(--org)", dash: true }
-    - { label: "region of convergence boundary", color: "var(--yel)", dash: true }
-  howToRead: "Pick a point s = σ + jω. Left: multiply the signal x(t) by the weight e^{−σt} (it shrinks the late part when σ > 0) and by cos ωt, and add up the area. That area is the real part of X(s). Right: |X(s)| at every s as a heat map, with the cart's poles as ×. The integral only converges for σ to the right of the dashed line, the region of convergence; to its left the area runs off to infinity, even though the formula still gives a number."
-  lookFor: "Slide σ left across the dashed line for the cart: the green area stops settling and blows up. The pole is exactly where the integral starts to fail. Sweep ω with Play to see the integrand oscillate faster."
-  animate: { control: omega, speed: 0.6, loop: true }
-  controls:
-    - { id: sig, label: "signal", type: seg, default: cart, group: primary, options: [{ value: cart, label: "cart's h(t)" }, { value: grow, label: "growing e^{0.5t}" }] }
-    - { id: sigma, label: "σ = Re s", type: range, min: -3, max: 2, step: 0.05, default: 0, group: primary }
-    - { id: omega, label: "ω = Im s", type: range, min: 0, max: 6, step: 0.05, default: 1.5, group: primary }
-  presets:
-    - { id: cart, label: "Cart, inside the ROC", set: { sig: cart, sigma: 0, omega: 1.5 }, about: "σ = 0 > −1: converges. X(jω) = G(jω)." }
-    - { id: edge, label: "Cart, outside the ROC", set: { sig: cart, sigma: -1.6, omega: 0.5 }, about: "σ < −1: e^{−σt}e^{−t} grows, the integral diverges." }
-    - { id: grow, label: "Growing signal", set: { sig: grow, sigma: 1, omega: 1.5 }, about: "x = e^{0.5t} has abscissa 0.5: it has no Fourier transform but does have a Laplace transform for σ > 0.5." }
+    - { id: one, label: "m = 1 (200 Hz)", set: { m: 1 }, about: "The fundamental." }
+    - { id: three, label: "m = 3 (600 Hz)", set: { m: 3 }, about: "Near the resonance: boosted." }
+    - { id: two, label: "m = 2 (400 Hz)", set: { m: 2 }, about: "Even: zero." }
 
 - id: sampling
-  title: "Aliasing: two tones the samples cannot tell apart"
-  x: time t (s) or frequency (Hz)
+  title: "Sampling the speaker’s sound: aliasing"
+  x: time t (ms) or frequency (kHz)
   y: amplitude
   legend:
     - { label: "the true tone", color: "var(--cyan)" }
-    - { label: "its alias, same samples", color: "var(--org)", dash: true }
+    - { label: "its alias, through the same samples", color: "var(--org)", dash: true }
     - { label: "samples", color: "var(--yel)" }
-  howToRead: "Top: a tone of f Hz (blue) sampled at fs Hz (yellow dots). The orange dashed tone passes through the very same dots: it is the alias. Bottom: the spectrum of the sampled signal is the tone's spectrum copied at every multiple of fs. The green band (±fs/2) is all the samples can represent; whichever copy lands inside it (orange) is what you will 'see'. When f is above fs/2, a copy from outside folds into the band at the alias frequency."
-  lookFor: "Press Play to sweep f upward at fs = 8 Hz. Up to 4 Hz the blue line sits in the band. Past 4 Hz an orange copy walks down inside the band while the tone keeps climbing: 6.5 Hz looks exactly like 1.5 Hz."
-  animate: { control: f, speed: 1.2, loop: true }
+  howToRead: "Top: a tone sampled at fs (yellow dots), with the lowest-frequency tone that passes through the same dots (orange). Bottom: sampling copies the spectrum at every multiple of fs; the green band ±fs/2 is all the samples can represent, and the copy inside it is what you hear back."
+  lookFor: "At 8 kHz the 690 Hz ring is safe. Sweep f past 4 kHz: an orange copy walks down inside the band; 7.31 kHz samples exactly like 690 Hz."
+  animate: { control: f, speed: 1500, loop: true }
   controls:
-    - { id: f, label: "tone frequency f", type: range, min: 0.2, max: 14, step: 0.1, default: 3, group: primary, unit: Hz }
-    - { id: fs, label: "sampling rate fs", type: range, min: 4, max: 20, step: 0.5, default: 8, group: primary, unit: Hz }
+    - { id: f, label: "tone frequency f", type: range, min: 100, max: 15000, step: 10, default: 690, group: primary, unit: Hz }
+    - { id: fs, label: "sampling rate fs", type: range, min: 1, max: 16, step: 0.1, default: 8, group: primary, unit: kHz }
   presets:
-    - { id: ok, label: "Safe: 3 Hz at 8 Hz", set: { f: 3, fs: 8 }, about: "Below Nyquist (4 Hz): the samples identify the tone." }
-    - { id: edge, label: "At Nyquist: 4 Hz", set: { f: 4, fs: 8 }, about: "Exactly fs/2: the borderline case." }
-    - { id: alias, label: "Aliased: 6.5 Hz at 8 Hz", set: { f: 6.5, fs: 8 }, about: "Looks like 1.5 Hz in the samples." }
+    - { id: ring, label: "690 Hz at 8 kHz", set: { f: 690, fs: 8 }, about: "Well below fs/2 = 4 kHz." }
+    - { id: alias, label: "7.31 kHz at 8 kHz", set: { f: 7310, fs: 8 }, about: "Aliases onto 690 Hz." }
+    - { id: slow, label: "690 Hz at 1.2 kHz", set: { f: 690, fs: 1.2 }, about: "fs/2 = 600 Hz is below 690 Hz: the ring aliases to 510 Hz." }
+
+- id: dtft
+  title: "DTFT of the sampled click ring"
+  x: sample n or Ω (rad/sample)
+  y: x[n] or |X(e^(jΩ))|
+  legend:
+    - { label: "samples x[n] = T·h(nT)", color: "var(--cyan)" }
+    - { label: "|X(e^(jΩ))|", color: "var(--cyan)" }
+    - { label: "the chosen Ω", color: "var(--yel)" }
+  howToRead: "Left: three milliseconds of the click ring sampled at fs (dashed: the continuous ring). Right: its DTFT magnitude from −2π to 2π, in closed form b₁e^(−jΩ)/(1 − 2r cos θ e^(−jΩ) + r²e^(−2jΩ)) with r = e^(−σT) and θ = ω_d T. The green band is one period, −π to π; Ω converts to hertz as Ω·fs/2π. Play sweeps Ω."
+  lookFor: "At 8 kHz the peak sits at Ω ≈ 0.54 rad (688 Hz) and repeats every 2π. Lower fs and the same ring moves to larger Ω, closer to π."
+  animate: { control: Om, speed: 0.5, loop: true }
+  controls:
+    - { id: Om, label: "Ω", type: range, min: 0, max: 3.14, step: 0.01, default: 0.54, group: primary, unit: rad }
+    - { id: fs, label: "sampling rate fs", type: range, min: 2, max: 16, step: 0.5, default: 8, group: primary, unit: kHz }
+  presets:
+    - { id: base, label: "8 kHz", set: { fs: 8, Om: 0.54 }, about: "r = 0.854, θ = 0.540." }
+    - { id: slow, label: "3 kHz", set: { fs: 3, Om: 1.44 }, about: "The ring is now at Ω ≈ 1.44 rad." }
+    - { id: fast, label: "16 kHz", set: { fs: 16, Om: 0.27 }, about: "More samples per ring: Ω ≈ 0.27 rad." }
+
+- id: dft
+  title: "DFT of a block of the click ring: N bins on the DTFT"
+  x: sample n or frequency (Hz)
+  y: x[n] or |X|
+  legend:
+    - { label: "samples / DFT bins", color: "var(--cyan)" }
+    - { label: "the DTFT it samples", color: "var(--muted)", dash: true }
+  howToRead: "Left: N samples of the click ring at 8 kHz. Right: the DFT magnitudes |X[k]| at frequencies k·fs/N (bins), sitting exactly on the DTFT of the same samples (dashed). More samples means closer bins on the same curve."
+  lookFor: "The ring has died out within about 8 samples, so 64 samples are mostly zeros; its spectrum is about 400 Hz wide because of damping, so it covers several bins whatever N is."
+  controls:
+    - { id: N, label: "block length N", type: range, min: 16, max: 128, step: 16, default: 64, group: primary }
+  presets:
+    - { id: base, label: "N = 64", set: { N: 64 }, about: "Bins 125 Hz apart." }
+    - { id: short, label: "N = 16", set: { N: 16 }, about: "Bins 500 Hz apart: the peak is barely resolved." }
+    - { id: long, label: "N = 128", set: { N: 128 }, about: "Bins 62.5 Hz apart: same curve, more samples of it." }
+
+- id: window
+  title: "Windowing and leakage: a steady hum near the resonance"
+  x: sample n or bin k
+  y: amplitude or level (dB)
+  legend:
+    - { label: "windowed samples / DFT bins", color: "var(--cyan)" }
+    - { label: "window shape", color: "var(--vio)", dash: true }
+    - { label: "true frequency of the hum", color: "var(--yel)", dash: true }
+  howToRead: "Left: 64 samples (8 ms at 8 kHz) of a steady hum, multiplied by a rectangular or Hann window. Right: the DFT in dB, scaled so a hum exactly on a bin reads 0 dB, with the hum’s true frequency marked. Bins are 125 Hz apart. Play sweeps the hum frequency."
+  lookFor: "At 750 Hz (bin 6) there is a single spike. At 690 Hz the hum falls between bins 5 and 6: both read about 4 dB low (−4.7 and −3.2 dB) and the energy leaks into every bin. Hann lowers the far bins by tens of dB but widens the peak."
+  animate: { control: f, speed: 20, loop: true }
+  controls:
+    - { id: f, label: "hum frequency", type: range, min: 500, max: 900, step: 1, default: 690, group: primary, unit: Hz }
+    - { id: win, label: "window", type: seg, default: rect, group: primary, options: [{ value: rect, label: "rectangular" }, { value: hann, label: "Hann" }] }
+  presets:
+    - { id: hum, label: "690 Hz, rectangular", set: { f: 690, win: rect }, about: "Bin 5.52: leakage." }
+    - { id: onbin, label: "750 Hz (on bin 6)", set: { f: 750, win: rect }, about: "A whole number of cycles: one spike." }
+    - { id: hann, label: "690 Hz, Hann", set: { f: 690, win: hann }, about: "Lower skirts, wider peak." }
+
+- id: laplace
+  title: "The Laplace transform of the speaker’s impulse response, and its region of convergence"
+  x: time t (ms) or σ (1/ms)
+  y: integrand or ω (1/ms)
+  legend:
+    - { label: "h(t)·e^(−σt)·cos ωt", color: "var(--grn)" }
+    - { label: "poles of H(s)", color: "#fff" }
+    - { label: "region-of-convergence boundary", color: "var(--yel)", dash: true }
+  howToRead: "Pick s = σ + jω (in 1/ms, so ω = 4.32 is 688 Hz). Left: the speaker’s h(t) weighted by e^(−σt) and cos ωt; its area is Re H(s). Right: |H(s)| over the s-plane as a heat map with the two poles. The integral settles only to the right of the dashed line through the poles (σ > −1.27): the ROC. The second signal is an unstable speaker with negative damping."
+  lookFor: "Slide σ left past −1.27: the weighted ring stops decaying and the area never settles, exactly where the poles are. With the unstable speaker the ROC moves right of 0, so it has no Fourier transform."
+  animate: { control: omega, speed: 1, loop: true }
+  controls:
+    - { id: sigma, label: "σ = Re s", type: range, min: -3, max: 1.5, step: 0.05, default: 0, group: primary, unit: "1/ms" }
+    - { id: omega, label: "ω = Im s", type: range, min: 0, max: 8, step: 0.05, default: 4.3, group: primary, unit: "1/ms" }
+    - { id: sig, label: "signal", type: seg, default: spk, group: primary, options: [{ value: spk, label: "speaker h(t)" }, { value: grow, label: "unstable speaker" }] }
+  presets:
+    - { id: spk, label: "Inside the ROC", set: { sig: spk, sigma: 0, omega: 4.3 }, about: "σ = 0 > −1.27: this is H(jω), the frequency response." }
+    - { id: edge, label: "Outside the ROC", set: { sig: spk, sigma: -1.8, omega: 4.3 }, about: "e^(−σt) grows faster than the ring decays." }
+    - { id: grow, label: "Unstable speaker", set: { sig: grow, sigma: 1, omega: 4.3 }, about: "Poles at +0.38 ± 4.49j: ROC σ > 0.38." }
+
+- id: inverse
+  title: "Inverting H(s) on the speaker: one term per pole, weighted by its residue"
+  x: Re s (1/ms) or time t (ms)
+  y: Im s (1/ms) or h(t) (1/ms)
+  legend:
+    - { label: "poles", color: "var(--bad)" }
+    - { label: "h(t)", color: "var(--cyan)" }
+    - { label: "pole terms or envelope", color: "var(--org)", dash: true }
+  howToRead: "H(s) = a₀/(s² + a₁s + a₀) with a₀ = 20.28 and a₁ = 2.533 × the damping factor. Left: the two poles and the residue c = a₀/(p₁ − p₂). Right: h(t) and its terms: for a complex pair the two terms combine into 2|c|e^(−σt)sin ω_d t (envelope dashed); for two real poles they are two exponentials; for a repeated pole the single term is a₀t e^(−σt)."
+  lookFor: "Raise the damping factor: the poles slide together, meet at −4.50 when the factor is 3.56 (critical), then split along the real axis. At the meeting point the residues blow up and cancel into t·e^(−σt)."
+  controls:
+    - { id: damp, label: "damping factor (1 = real speaker)", type: range, min: 0.3, max: 6, step: 0.01, default: 1, group: primary }
+  presets:
+    - { id: real, label: "Real speaker (ζ = 0.28)", set: { damp: 1 }, about: "Poles −1.27 ± 4.32j; residue −2.35j." }
+    - { id: crit, label: "Critical (×3.56)", set: { damp: 3.56 }, about: "Repeated pole: a Jordan block." }
+    - { id: over, label: "Overdamped (×5)", set: { damp: 5 }, about: "Two real poles, two exponentials." }
+
+- id: jordan
+  title: "A repeated pole on the speaker: the Jordan case at critical damping"
+  x: Re s (1/ms) or time t (ms)
+  y: Im s (1/ms) or h(t) (1/ms)
+  legend:
+    - { label: "poles", color: "var(--bad)" }
+    - { label: "h(t)", color: "var(--cyan)" }
+    - { label: "pole terms", color: "var(--org)", dash: true }
+  howToRead: "Same speaker model with its damping scaled. At a factor of 3.56 (ζ = 1) the two poles coincide at −4.50 /ms and A = [[0, 1], [−a₀, −a₁]] has a single eigenvector: one Jordan block, and h(t) = a₀ t e^(−4.50t). Nudge the factor either side to see the two-term forms it is the limit of."
+  lookFor: "Just above critical the two dashed exponentials are huge and opposite; their difference is the smooth t·e^(−σt) curve. Just below, the oscillation is so slow it never completes a cycle."
+  controls:
+    - { id: damp, label: "damping factor (1 = real speaker)", type: range, min: 2.5, max: 5, step: 0.01, default: 3.56, group: primary }
+  presets:
+    - { id: crit, label: "Critical (×3.56)", set: { damp: 3.56 }, about: "Repeated pole −4.50: a₀ t e^(−4.50t)." }
+    - { id: above, label: "Just over (×3.8)", set: { damp: 3.8 }, about: "Two close real poles." }
+    - { id: below, label: "Just under (×3.3)", set: { damp: 3.3 }, about: "A slow complex pair." }
+
+- id: tf
+  title: "The speaker’s transfer function as distances to its poles"
+  x: Re s (1/ms) or frequency (Hz)
+  y: Im s (1/ms) or |H| (dB)
+  legend:
+    - { label: "pole-to-jω distances", color: "var(--org)", dash: true }
+    - { label: "the point jω = j2πf", color: "var(--yel)" }
+    - { label: "|H(j2πf)|", color: "var(--cyan)" }
+  howToRead: "|H(jω)| = a₀ divided by the product of the distances from the two poles to the point jω on the imaginary axis (ω in 1/ms: 2πf/1000). Left: the poles and those distances. Right: |H| in dB against frequency. Play sweeps f."
+  lookFor: "As jω passes the upper pole near 4.32j (688 Hz) its distance is smallest and |H| peaks at about +5.4 dB (×1.85). Increase the damping and the poles move left: the peak flattens."
+  animate: { control: f, speed: 250, loop: true }
+  controls:
+    - { id: f, label: "frequency f", type: range, min: 0, max: 2500, step: 5, default: 300, group: primary, unit: Hz }
+    - { id: damp, label: "damping factor", type: range, min: 0.3, max: 4, step: 0.05, default: 1, group: primary }
+  presets:
+    - { id: real, label: "Real speaker at 690 Hz", set: { f: 690, damp: 1 }, about: "Close to the pole: the peak." }
+    - { id: light, label: "Light damping", set: { f: 690, damp: 0.4 }, about: "A sharp resonance." }
+    - { id: crit, label: "Critical damping", set: { f: 690, damp: 3.56 }, about: "No peak at all." }
+
+- id: zfilter
+  title: "The speaker as a digital filter: a difference equation and its z-plane"
+  x: Re z or frequency (Hz)
+  y: Im z or |H| (dB)
+  legend:
+    - { label: "pole-to-e^(jΩ) distances", color: "var(--org)", dash: true }
+    - { label: "the point e^(jΩ)", color: "var(--yel)" }
+    - { label: "digital |H(e^(jΩ))|", color: "var(--cyan)" }
+    - { label: "analogue |H(j2πf)|", color: "var(--muted)", dash: true }
+  howToRead: "Sampling the speaker’s impulse response gives the recursion y[n] = 2r cos θ·y[n−1] − r²y[n−2] + b₁x[n−1] with poles r e^(±jθ) (r = e^(−σT), θ = ω_d T) and a zero at the origin. Left: the z-plane, unit circle, poles, and the point e^(jΩ) for the chosen frequency; the distances from the poles and zero to that point shape the response. Right: the digital response against the analogue one."
+  lookFor: "At 8 kHz the poles sit at 0.854·e^(±0.540j), inside the unit circle (stable). Lower the sampling rate: the digital curve departs from the analogue one near fs/2."
+  animate: { control: f, speed: 300, loop: true }
+  controls:
+    - { id: f, label: "frequency f", type: range, min: 0, max: 4000, step: 10, default: 690, group: primary, unit: Hz }
+    - { id: fs, label: "sampling rate fs", type: range, min: 3, max: 16, step: 0.5, default: 8, group: primary, unit: kHz }
+  presets:
+    - { id: base, label: "8 kHz, 690 Hz", set: { fs: 8, f: 690 }, about: "Near the poles: the peak." }
+    - { id: slow, label: "3 kHz", set: { fs: 3, f: 690 }, about: "Poles at a larger angle; the digital curve bends near 1.5 kHz." }
+    - { id: fast, label: "16 kHz", set: { fs: 16, f: 690 }, about: "Close to the analogue response." }
