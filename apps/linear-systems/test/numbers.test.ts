@@ -118,10 +118,10 @@ describe('two-room house: A = [[−1.2, 1], [1, −1.2]] /h, B = (3600/C_th, 0)�
     expect(-1 / l1).toBeCloseTo(5, 12); expect((-1 / l2) * 60).toBeCloseTo(27.27, 2);
     close(mul(A, col([1, 1])), col([-0.2, -0.2]), 12); close(mul(A, col([1, -1])), col([-2.2, 2.2]), 12);
   });
-  it('1.5 kW heater with C_th = 1 MJ/K settles at (14.7, 12.3) K above outdoors', () => {
-    const b = 1500 * 3600 / 1e6; // K/h per room-1 input
+  it('2.5 kW heater with C_th = 1 MJ/K (B = (3.6, 0) K/h per kW) settles at (24.55, 20.45) K above outdoors', () => {
+    const b = 3.6 * 2.5; // K/h from the room-1 heater
     const dt = det(A); const x = [(-(A[1][1]) * b) / dt, (A[1][0] * b) / dt]; // −A⁻¹ B u
-    expect(x[0]).toBeCloseTo(14.73, 2); expect(x[1]).toBeCloseTo(12.27, 2);
+    expect(x[0]).toBeCloseTo(24.55, 2); expect(x[1]).toBeCloseTo(20.45, 2);
   });
   it('heater in room 1 + sensor in room 1: controllable and observable', () => {
     expect(rank(ctrb(A, col([3.6, 0])))).toBe(2); expect(rank(obsv(A, [[1, 0]]))).toBe(2);
@@ -273,5 +273,33 @@ describe('the page states the numbers tested above', () => {
     const subj = read('subject.yaml'); const a = read('content/review/part-a.md');
     for (const v of ['717', '186', '0.28', '−0.2', '−2.2', '27 min', '5 h']) expect(subj).toContain(v);
     for (const v of ['{4}{35}', '47.9', '0.3125', '−0.003527']) expect(a).toContain(v);
+  });
+});
+
+import { houseOptimalU, houseGramian, simulateHouse, HOUSE } from '../../../packages/core/src/sceneLsModels';
+describe('house: least-energy warm-up to the illustrative (10, 7) K target in 3 h, and the 3-hour Gramian', () => {
+  const u = houseOptimalU([0, 0], [10, 7], 3); // W
+  it('heater profile: 1.78 kW at 0 h, peak ≈ 2.41 kW near 2 h, 0.97 kW at 3 h; energy ∫u² ≈ 13.43 kW²·h', () => {
+    expect(u(0) / 1000).toBeCloseTo(1.7787, 3); expect(u(2) / 1000).toBeCloseTo(2.4054, 3); expect(u(3) / 1000).toBeCloseTo(0.9655, 3);
+    let peak = 0, tp = 0, E = 0; const N = 3000;
+    for (let i = 0; i <= N; i++) { const t = (3 * i) / N, v = u(t) / 1000; if (v > peak) { peak = v; tp = t; } if (i < N) E += (u((3 * (i + 0.5)) / N) / 1000) ** 2 * (3 / N); }
+    expect(peak).toBeCloseTo(2.4057, 3); expect(tp).toBeCloseTo(1.98, 1); expect(E).toBeCloseTo(13.43, 2);
+    expect(peak).toBeLessThan(HOUSE.P / 1000); // the 2.5 kW heater can deliver it
+  });
+  it('it lands on (10, 7) K; room 1 peaks just above the target, ≈ 10.10 K at ≈ 2.85 h (10.06 K on a 0.25 h grid at 2.75 h)', () => {
+    const S = simulateHouse([0, 0], (t) => [u(t), 0], 3, 0.001);
+    expect(S.x1[S.n - 1]).toBeCloseTo(10, 2); expect(S.x2[S.n - 1]).toBeCloseTo(7, 2);
+    let m = 0, im = 0; for (let i = 0; i < S.n; i++) if (S.x1[i] > m) { m = S.x1[i]; im = i; }
+    expect(m).toBeCloseTo(10.105, 2); expect(im * S.dt).toBeCloseTo(2.85, 1);
+    expect(S.x1[2750]).toBeCloseTo(10.06, 2);
+  });
+  it('W(3) in K²/(kW²·h): eigenvalues 0.78 and 12.0, thin axis ≈ (0.51, −0.86), major axis ≈ 31° up; reaching costs 31.4 and 60.3 kW²·h', () => {
+    const Ww = houseGramian(3), W = Ww.map((r) => r.map((v) => v * 1e6)); // per W² → per kW²
+    const tr = (W[0][0] + W[1][1]) / 2, df = Math.sqrt(((W[0][0] - W[1][1]) / 2) ** 2 + W[0][1] ** 2);
+    expect(tr - df).toBeCloseTo(0.782, 3); expect(tr + df).toBeCloseTo(12.011, 3);
+    const v = [W[0][1], (tr - df) - W[0][0]], n = Math.hypot(v[0], v[1]); expect(Math.abs(v[0] / n)).toBeCloseTo(0.51, 2); expect(Math.abs(v[1] / n)).toBeCloseTo(0.86, 2);
+    expect((Math.atan2((tr + df) - W[0][0], W[0][1]) * 180) / Math.PI).toBeCloseTo(30.6, 0);
+    const E = (x: number[]) => { const d = W[0][0] * W[1][1] - W[0][1] ** 2; return (W[1][1] * x[0] * x[0] - 2 * W[0][1] * x[0] * x[1] + W[0][0] * x[1] * x[1]) / d; };
+    expect(E([10, 10])).toBeCloseTo(31.36, 1); expect(E([5, -5])).toBeCloseTo(60.26, 1); expect(E([10, 7])).toBeCloseTo(13.43, 2);
   });
 });

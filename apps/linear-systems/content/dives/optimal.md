@@ -2,7 +2,7 @@
 id: optimal
 order: 29
 title: "The best input: Pontryagin's principle"
-addsToExample: "Finds the heater profile with the least energy ∫u² dt that warms the house from outdoor temperature to (10, 7) K above it in 3 hours. The costate obeys λ̇ = −Aᵀλ, so u(t) = −bᵀλ(t)/2 is a mix of e^(0.2(t−3)) and e^(2.2(t−3)) shapes: about 1.8 kW at first, rising to 2.4 kW after 2 hours, then easing to about 1 kW at the end so room 1 does not overshoot while room 2 catches up."
+addsToExample: "Finds the heater profile with the least energy ∫u² dt that warms the house from outdoor temperature to (10, 7) K above it in 3 hours. The costate obeys λ̇ = −Aᵀλ, so u(t) = −bᵀλ(t)/2 is a mix of e^(0.2(t−3)) and e^(2.2(t−3)) shapes: about 1.8 kW at first, rising to 2.4 kW after 2 hours, then easing to about 1 kW at the end, because late heat mostly widens the room-1/room-2 gap (the fast difference mode) instead of warming room 2. Its energy is ∫u² dt ≈ 13.4 kW²·h, and the 2.4 kW peak is within the 2.5 kW heater."
 accountsFor: "Why the cheapest warm-up is not a constant power: it leans on the slow average mode early and trims the fast difference mode at the end, and how much energy any target costs (the Gramian gives the same answer)."
 category: steer
 neighbors:

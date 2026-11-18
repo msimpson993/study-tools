@@ -39,7 +39,7 @@ export const clickVelocity = (q: number) => ((SPEAKER.Bl / SPEAKER.Re) * q) / SP
 
 /* ───────────── the two-room house ───────────── */
 /** Per hour. Temperatures in K above the outdoor temperature; heater power in W; C_th (J/K) is the heat capacity of a room. */
-export const HOUSE = { A: [[-1.2, 1], [1, -1.2]] as [[number, number], [number, number]], Cth: 1.0e6, P: 1500, outdoor: 5, Tf: 3 } as const;
+export const HOUSE = { A: [[-1.2, 1], [1, -1.2]] as [[number, number], [number, number]], Cth: 1.0e6, P: 2500, outdoor: 5, Tf: 3 } as const;
 export const houseB = (Cth: number = HOUSE.Cth): number => 3600 / Cth; // K per hour per W
 export const HOUSE_EIG = { avg: -0.2, diff: -2.2, tauAvg: 5, tauDiffMin: 60 / 2.2 } as const;
 /** e^{At} for the symmetric house matrix: ½[[e₁ + e₂, e₁ − e₂], [e₁ − e₂, e₁ + e₂]], e₁ = e^{−0.2t}, e₂ = e^{−2.2t}. */

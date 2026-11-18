@@ -367,7 +367,7 @@
   - "$[1 - (\\frac12)^n + (\\frac13)^n]u(n)$"
   - "$[3 - 2(\\frac12)^n + (\\frac13)^n]u(n)$"
   answer: 0
-  why: "$Y/z = \\frac{z^2}{(z-1)(z-\\frac12)(z-\\frac13)}$: residues $3$, $-3$, $1$. The DC gain is $\\frac{1}{1-\\frac56+\\frac16} = 3$, and $y(0) = 1$: only the first choice gives $3-3+1 = 1$."
+  why: "$Y/z = \\frac{z^2}{(z-1)(z-\\frac12)(z-\\frac13)}$: residues $3$, $-3$, $1$. The DC gain is $\\frac{1}{1-\\frac56+\\frac16} = 3$, and $y(0) = 1$: only the choice with DC gain 3 and $y(0) = 1$ fits ($3-3+1 = 1$)."
 - id: v-d2
   tags:
   - diffeq
@@ -398,7 +398,7 @@
   - "$2 + (\\frac12)^{n+1}$"
   - "$2 - (\\frac12)^{n}$"
   answer: 0
-  why: "One-sided shift: $y(n-1) \\leftrightarrow z^{-1}Y + y(-1)$. So $Y(1-\\frac12z^{-1}) = \\frac12 + \\frac{z}{z-1}$, giving $Y = \\frac{z(3z-1)}{(z-1)(2z-1)}$ and $y(n) = 2 - (\\frac12)^{n+1}$. Check: $y(0) = \\frac12\\cdot1 + 1 = 1.5$ ✓. The second choice is the zero-initial-condition answer."
+  why: "One-sided shift: $y(n-1) \\leftrightarrow z^{-1}Y + y(-1)$. So $Y(1-\\frac12z^{-1}) = \\frac12 + \\frac{z}{z-1}$, giving $Y = \\frac{z(3z-1)}{(z-1)(2z-1)}$ and $y(n) = 2 - (\\frac12)^{n+1}$. Check: $y(0) = \\frac12\\cdot1 + 1 = 1.5$ ✓. $2 - (\\frac12)^n$ is the zero-initial-condition answer."
 - id: v-p1
   tags:
   - optimal
@@ -429,7 +429,7 @@
   - "$u^\\circ = 1/T$ for $t<T/2$, then $0$"
   - "$u^\\circ = e^{-t}/(1-e^{-T})$"
   answer: 0
-  why: "$H = \\frac12u^2 + \\lambda u$, $\\dot\\lambda = -\\partial H/\\partial x = 0$, so $\\lambda$ and $u = -\\lambda$ are constant; $x(T) = uT = 1$. Same as the Gramian answer: $W = T$, energy $1/T$."
+  why: "$H = \\frac12u^2 + \\lambda u$, $\\dot\\lambda = -\\partial H/\\partial x = 0$, so $\\lambda$ and $u = -\\lambda$ are constant; $x(T) = uT = 1$. Same as the Gramian answer: $W = T$, and $\\int u^2dt = 1/T$ (so $J = 1/(2T)$)."
 - id: v-p3
   tags:
   - optimal
@@ -556,7 +556,7 @@
   - "$(e^{-t} + e^{-2t})u(t)$"
   - "$(-e^{-t} + 2e^{-2t})u(t)$"
   answer: 0
-  why: "$h = C\\Phi(t)B = \\Phi_{12}(t) = e^{-t} - e^{-2t}$. Check: $h(0^+) = CB = 0$; the other choices are other entries of $\\Phi$."
+  why: "$h = C\\Phi(t)B = \\Phi_{12}(t) = e^{-t} - e^{-2t}$. Check: $h(0^+) = CB = 0$; two of the other choices are $\\Phi_{11}$ and $\\Phi_{22}$."
 - id: v-e2
   tags:
   - kalman
@@ -749,16 +749,15 @@
 - id: c-deq-2
   tags:
   - diffeq
-  - sampling
   kind: action
-  q: "Feedforward or feedback ANC: which microphone does each use?"
+  q: "Feedback ANC: the error mic in the ear feeds a digital filter C(z), which drives the speaker S. How does the residual e at the ear relate to the noise d?"
   choices:
-  - "Feedforward: an outside reference microphone; feedback: an error microphone inside the ear (hybrid uses both)"
-  - "Feedforward: the in-ear microphone; feedback: the outside one"
-  - Both use only the outside microphone
-  - Neither uses a microphone; they filter the music
+  - "e = d/(1 + S·C): where the loop gain |S·C| is large, the residual is small"
+  - e = d·S·C
+  - "e = d − S, whatever C is"
+  - "e = d: feedback cannot change what reaches the ear"
   answer: 0
-  why: "Feedforward predicts the noise from outside before it reaches the ear; feedback cancels what is left at the ear. Hybrid combines them, with an adaptive (FxLMS) filter."
+  why: "Round the loop, e = d − S·C·e, so e = d/(1 + SC). C(z) is a difference equation running on the error-mic samples; the loop's delay limits how high in frequency the gain can stay large. Feedforward instead uses the outside reference mic to predict d before it arrives."
 - id: c-ft-1
   tags:
   - ft
@@ -802,7 +801,7 @@
   tags:
   - parseval
   kind: compute
-  q: "What fraction of a square wave's power is in its fundamental?"
+  q: "What fraction of a zero-mean ±1 square wave's power is in its fundamental?"
   choices:
   - "8/π² ≈ 81 %"
   - "50 %"
@@ -822,13 +821,20 @@
   - "Radius 0.85, angle ±4322°"
   - Outside the unit circle
   answer: 0
-  why: "z = e^(pT): |z| = e^(σT·(−1)) and ∠z = ω_d T. Stable continuous poles map inside the unit circle."
+  why: "z = e^(pT): |z| = e^(Re(p)·T) = e^(−1267/8000) ≈ 0.85 and ∠z = ω_d T = 4322/8000 rad ≈ 31°. Stable continuous poles map inside the unit circle."
 - id: c-dtft-1
   tags:
   - dtft
-  kind: recall
-  q: Why is the DTFT periodic in Ω with period 2π?
-  a: "Because e^(j(Ω + 2π)n) = e^(jΩn) for every integer n: two frequencies 2π apart give the same samples, so the spectrum must repeat. Equivalently, the DTFT is the Z-transform on the unit circle z = e^(jΩ), and going once round the circle brings you back."
+  - sampling
+  kind: compute
+  q: "The speaker's click ring (688 Hz) is sampled at 8 kHz. Where does its DTFT peak on the Ω axis?"
+  choices:
+  - "Near Ω = 2π·688/8000 ≈ 0.54 rad (about 31°), and again at every Ω ± 2π"
+  - At Ω = 688 rad
+  - "Only at Ω = 0.54 rad, nowhere else"
+  - "At Ω = π, the Nyquist frequency"
+  answer: 0
+  why: "Ω = 2πf/f_s = 2π·688/8000 ≈ 0.54 rad, the angle of the sampled poles. The DTFT repeats every 2π, so the same peak sits at 0.54 + 2πk (and its mirror at −0.54 + 2πk)."
 - id: c-dft-1
   tags:
   - dft
@@ -870,14 +876,14 @@
   tags:
   - ss
   kind: compute
-  q: "In the house, B = (3600/C_th, 0)ᵀ with C_th = 1 MJ/K. A 1.5 kW heater runs in room 1 for a long time. What are the steady room temperatures above outdoors?"
+  q: "In the house, B = (3600/C_th, 0)ᵀ with C_th = 1 MJ/K, = (3.6, 0) K/h per kW. A 2.5 kW heater runs in room 1 for a long time. What are the steady room temperatures above outdoors?"
   choices:
-  - About 14.7 K in room 1 and 12.3 K in room 2
-  - About 5.4 K in both rooms
-  - About 27 K in room 1 and 0 K in room 2
+  - About 24.5 K in room 1 and 20.5 K in room 2
+  - About 9 K in both rooms
+  - About 45 K in room 1 and 0 K in room 2
   - They rise forever
   answer: 0
-  why: "Bu = 3600·1500/10⁶ = 5.4 K/h. Steady state x = −A⁻¹Bu = (1/0.44)·(1.2·5.4, 5.4) ≈ (14.7, 12.3) K."
+  why: "Bu = 3.6·2.5 = 9 K/h. Steady state x = −A⁻¹Bu = (1/0.44)·(1.2·9, 9) ≈ (24.55, 20.45) K."
 - id: c-ss-2
   tags:
   - ss
@@ -1025,14 +1031,14 @@
   tags:
   - gramian
   kind: compute
-  q: The house is controllable from the room-1 heater. Why does holding the rooms 10 K apart still cost about twice the energy of warming both by 10 K?
+  q: "Allowing the heater input to go negative (cooling), why does reaching (5, −5) K in 3 h, a 10 K gap with the average at the outdoor temperature, cost about twice the energy of reaching (10, 10) K, even though it's half as far?"
   choices:
-  - "The Gramian's reachable ellipse is thin across the direction (1, −1): that direction has a small Gramian eigenvalue, and E_min = x_fᵀW⁻¹x_f is large there"
+  - "W(3)'s ellipse is thin in directions that pull the rooms apart (small eigenvalue 0.78 vs 12.0, along ≈(0.51, −0.86)), and E_min = x_fᵀW⁻¹x_f is large there"
   - Because the system is not controllable in that direction
   - Because the outdoor temperature changes
   - It does not; the cost is the same in every direction
   answer: 0
-  why: W(3 h) has eigenvalues about 4² ≈ 15 times apart; the fast-decaying difference mode must be fought continuously.
+  why: "This is a reaching cost, not a holding cost. W(3) (in K²/(kW²·h)) has eigenvalues 0.78 and 12.0, about 15 times apart, so the ellipse is about 4 times longer than wide, tilted about 31° up from the room-1 axis. E_min is about 6.0e7 W²·h for (5, −5) against 3.1e7 W²·h for (10, 10)."
 - id: c-gram-2
   tags:
   - gramian
@@ -1080,7 +1086,7 @@
   - Because M is upper triangular
   - They do not
   answer: 0
-  why: "For M = [[A, −BR⁻¹Bᵀ], [−Q, −Aᵀ]], λ is an eigenvalue exactly when −λ is. In A4, ±√146/2."
+  why: "M = [[A, −BR⁻¹Bᵀ], [−Q, −Aᵀ]] is a Hamiltonian matrix: JM is symmetric for J = [[0, I], [−I, 0]], so −Mᵀ = JMJ⁻¹ is similar to M and λ is an eigenvalue exactly when −λ is. In A4, ±√146/2."
 - id: c-opt-3
   tags:
   - optimal
@@ -1089,8 +1095,8 @@
   q: "The least-energy heater profile that warms the house from outdoor temperature to (10, 7) K in 3 hours: what does it look like?"
   choices:
   - "About 1.8 kW at first, rising to about 2.4 kW at 2 h, then easing to about 1 kW at the end"
-  - A constant 1.5 kW
+  - A constant 2.5 kW
   - "Full power for an hour, then off"
   - "Zero at first, then full power"
   answer: 0
-  why: u(t) = bᵀe^(Aᵀ(3−t))W(3)⁻¹x_f mixes e^(0.2(t−3)) and e^(2.2(t−3)) shapes. The late dip trims the fast difference mode so room 1 does not overshoot.
+  why: u(t) = bᵀe^(Aᵀ(3−t))W(3)⁻¹x_f mixes e^(0.2(t−3)) and e^(2.2(t−3)) shapes. It eases off at the end because late heat mostly widens the room-1/room-2 gap (the fast difference mode) instead of warming room 2. Its energy is ∫u² dt ≈ 13.4 kW²·h.

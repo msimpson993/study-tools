@@ -177,8 +177,8 @@ maps:
     eq: "∂H/∂u = 0,   λ̇ = −∂H/∂x,   (x, λ)(t) = e^(Mt)(x, λ)(0)"
     trap: "λ(T) = 0 only when x(T) is free. With a fixed endpoint, λ(T) is whatever it needs to be."
     predict: "To warm the house in 3 hours with the least energy, should the heater run flat out, stay constant, or change over time?"
-    addsToExample: Finds the least-energy heater profile that warms the house to a target in 3 hours.
-    accountsFor: "Why the cheapest warm-up rises for two hours and then eases off, and how much energy any target costs."
+    addsToExample: "Finds the least-energy heater profile that warms the house to an illustrative target, (10, 7) K, in 3 hours: about 1.8 kW, rising to 2.4 kW, easing to 1.0 kW, within the 2.5 kW heater."
+    accountsFor: "Why the cheapest warm-up rises for two hours and then eases off (late heat would mostly widen the gap between the rooms), and how much energy any target costs."
     dive: optimal
     quizTag: optimal
   edges:
@@ -445,8 +445,8 @@ maps:
     eq: "∂H/∂u = 0,   λ̇ = −∂H/∂x,   (x, λ)(t) = e^(Mt)(x, λ)(0)"
     trap: "λ(T) = 0 only when x(T) is free. With a fixed endpoint, λ(T) is whatever it needs to be."
     predict: "To warm the house in 3 hours with the least energy, should the heater run flat out, stay constant, or change over time?"
-    addsToExample: Finds the least-energy heater profile that warms the house to a target in 3 hours.
-    accountsFor: "Why the cheapest warm-up rises for two hours and then eases off, and how much energy any target costs."
+    addsToExample: "Finds the least-energy heater profile that warms the house to an illustrative target, (10, 7) K, in 3 hours: about 1.8 kW, rising to 2.4 kW, easing to 1.0 kW, within the 2.5 kW heater."
+    accountsFor: "Why the cheapest warm-up rises for two hours and then eases off (late heat would mostly widen the gap between the rooms), and how much energy any target costs."
     dive: optimal
     quizTag: optimal
   - id: ROC
@@ -606,7 +606,7 @@ maps:
     short: "The controllability Gramian W(T) = ∫₀ᵀ e^(Aτ)BBᵀe^(Aᵀτ)dτ measures how easily the input moves the state in each direction. It is invertible exactly when the system is controllable, and the least energy to reach x_f is x_fᵀW⁻¹x_f. The observability Gramian is its dual."
     eq: "W(T) = ∫₀ᵀ e^(Aτ)BBᵀe^(Aᵀτ)dτ,   E_min = x_fᵀ W(T)⁻¹ x_f"
     addsToExample: "Draws the house's reachable ellipse for 3 hours of heating: long in the direction of heating room 1 and letting the wall share it, thin across it."
-    accountsFor: Why holding the rooms 10 K apart costs about twice the energy of warming both by 10 K.
+    accountsFor: "Why reaching (5, −5) K, a 10 K gap with the average at outdoor temperature, costs about twice the energy of reaching (10, 10) K: a reaching cost along the ellipse's thin axis ≈ (0.51, −0.86)."
     dive: gramian
     quizTag: gramian
   - id: KAL
