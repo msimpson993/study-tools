@@ -669,12 +669,12 @@
   kind: trap
   q: "At 2 V the earbud's linear model predicts about 92 µm of cone motion; its (illustrative) excursion limit is ±100 µm. You double the drive to 4 V. Does the motion double?"
   choices:
-  - "No: the cone runs into its limit, so T{2u} falls well short of 2T{u}. Clipping fails homogeneity at large signals"
-  - "Yes: the speaker is linear, so it moves 183 µm"
+  - "No: through the soft limit the cone peaks at only about 95 µm at 4 V, well short of 2·T{2 V} ≈ 2 × 72 ≈ 145 µm. Clipping fails homogeneity at large signals"
+  - "Yes: it moves 183 µm, as the linear model predicts"
   - "Yes, but only after a delay"
   - "No, because the speaker is time-varying"
   answer: 0
-  why: "Clipping is time-invariant but not linear at large signals: the motion peaks at about 95 µm instead of the 183 µm a linear speaker would give, and T{4 V} falls 29% (rms) short of 2·T{2 V} in the live figure. At 0.2 V the same test passes to within 0.7%: linear for small signals."
+  why: "Compare the actual outputs, not the linear model. Through the soft limit (x = 100·tanh(x_lin/100) µm) the 2 V motion is already compressed to about 72 µm peak, not 92 µm; at 4 V the linear model would give 183 µm but the cone reaches only about 95 µm, against 2·T{2 V} ≈ 145 µm. Over the whole waveform T{4 V} falls 29% (rms) short of 2·T{2 V}. Clipping is time-invariant but not linear at large signals; at 0.2 V the same test passes to within 0.7%."
 - id: c-linsys-6
   tags:
   - linsys
