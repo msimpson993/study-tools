@@ -3,6 +3,10 @@ import { APPS, open, noHScroll, trackErrors } from './helpers';
 
 const isFull = (page: Page) => page.evaluate(() => !!(document.fullscreenElement ?? (document as any).webkitFullscreenElement));
 const btn = (page: Page) => page.getByTestId('fullscreen-toggle');
+/** The back-gesture sentinel is pushed from the fullscreenchange handler, which can run a frame after fullscreenElement is set.
+ *  A goBack() before it exists would leave the page (about:blank), so wait until the sentinel entry is on top. */
+const sentinelOnTop = (page: Page) => expect.poll(() => page.evaluate(() => (history.state as { __studyFs?: string } | null)?.__studyFs ?? null)).toBe('fs');
+const enterFs = async (page: Page) => { await btn(page).click(); await expect.poll(() => isFull(page)).toBe(true); await sentinelOnTop(page); };
 
 for (const app of APPS) {
   test.describe(`${app}: full-screen button`, () => {
@@ -52,7 +56,7 @@ for (const app of APPS) {
     test('pressing the button again leaves the URL, history depth and view unchanged', async ({ page }) => {
       await open(page, app);
       const before = await page.evaluate(() => ({ url: location.href, len: history.length }));
-      await btn(page).click(); await expect.poll(() => isFull(page)).toBe(true);
+      await enterFs(page);
       await btn(page).click(); await expect.poll(() => isFull(page)).toBe(false);
       // let the sentinel clean-up (history.back) settle
       await expect.poll(() => page.evaluate(() => location.href)).toBe(before.url);
@@ -67,7 +71,7 @@ for (const app of APPS) {
       const errs = trackErrors(page);
       await open(page, app, '#/');
       const startUrl = await page.evaluate(() => location.href);
-      await btn(page).click(); await expect.poll(() => isFull(page)).toBe(true);
+      await enterFs(page);
       await page.goBack();
       await expect.poll(() => isFull(page)).toBe(false);
       await page.waitForTimeout(300);
@@ -80,7 +84,7 @@ for (const app of APPS) {
     test('in-app navigation works in full screen and the next back gesture still exits without navigating', async ({ page }) => {
       await open(page, app, '#/');
       const hubHash = await page.evaluate(() => location.hash);
-      await btn(page).click(); await expect.poll(() => isFull(page)).toBe(true);
+      await enterFs(page);
       // navigate inside the app (the router listens to hashchange); full screen must survive it
       const target = await page.evaluate(() => {
         const a = [...document.querySelectorAll('a[href^="#/"]')].find((x) => (x.getAttribute('href') ?? '') !== (location.hash || '#/')) as HTMLAnchorElement | undefined;
@@ -89,6 +93,7 @@ for (const app of APPS) {
       if (target) {
         await expect.poll(() => page.evaluate(() => location.hash)).toBe(target);
         expect(await isFull(page)).toBe(true);
+        await sentinelOnTop(page); // a fresh sentinel goes on top of the new in-app entry
         await page.goBack();
         await expect.poll(() => isFull(page)).toBe(false);
         await page.waitForTimeout(300);
@@ -101,7 +106,7 @@ for (const app of APPS) {
     test('Escape (browser exit) leaves full screen and cleans up history', async ({ page }) => {
       await open(page, app, '#/');
       const startUrl = await page.evaluate(() => location.href);
-      await btn(page).click(); await expect.poll(() => isFull(page)).toBe(true);
+      await enterFs(page);
       await page.evaluate(() => document.exitFullscreen()); // what Esc / the browser UI does
       await expect.poll(() => isFull(page)).toBe(false);
       await page.waitForTimeout(300);
