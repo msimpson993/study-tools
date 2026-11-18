@@ -414,3 +414,12 @@ describe('tutor round 2 (window phase, square-wave shares)', () => {
     expect(ex.squarePowerShare(3)).toBeCloseTo(0.9006, 4); expect(ex.squarePowerShare(4)).toBeCloseTo(0.9006, 4); expect(ex.squarePowerShare(5)).toBeCloseTo(0.9331, 4);
   });
 });
+
+describe('least-energy profiles that need cooling', () => {
+  const ends = (d: [number, number], T: number) => { const u = ex.leastEnergyU(d, T); let m = Infinity, tm = 0; for (let t = 0; t <= T + 1e-9; t += 0.005) if (u(t) < m) { m = u(t); tm = t; } return { u0: u(0), min: m, tm }; };
+  it('(10, 10) K in 3 h dips to −4.7 kW at the end; (10, 7) K in 1.5 h starts at +5.5 kW and needs −2.6 kW at the end; (10, 7) in 3 h never goes negative', () => {
+    const a = ends([10, 10], 3); expect(a.min).toBeCloseTo(-4.70, 1); expect(a.tm).toBeCloseTo(3, 1);
+    const b = ends([10, 7], 1.5); expect(b.min).toBeCloseTo(-2.61, 1); expect(b.tm).toBeCloseTo(1.5, 1); expect(b.u0).toBeCloseTo(5.54, 1);
+    expect(ends([10, 7], 3).min).toBeGreaterThan(0);
+  });
+});

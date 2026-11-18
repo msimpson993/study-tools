@@ -324,6 +324,7 @@ export const optimalFigure = figureOf((c) => {
         const p = plan(), us = p.run.t.map(p.u), top = Math.max(3, ...us) * 1.1, f = graph(g, w, h, [0, p.Tf], [Math.min(0, ...us) - 0.2, top], 'time t (h)', 'heater power (kW)');
         tline(g, f, [0, 2.5], [p.Tf, 2.5], col.bad(), 1.5, [6, 4]); note(g, '2.5 kW heater', f.box.l + 4, f.Y(2.5) - 8, col.bad(), 'left', 10);
         curve(g, f, p.run.t, us, col.e(), 3);
+        if (Math.min(...us) < 0) { tline(g, f, [0, 0], [p.Tf, 0], col.strong(), 1); note(g, 'negative = cooling; a heater can’t do this', f.box.r - 4, f.box.t + 24, col.bad(), 'right', 10); }
         let E = 0; for (let i = 1; i < us.length; i++) E += ((us[i] ** 2 + us[i - 1] ** 2) / 2) * (p.run.t[i] - p.run.t[i - 1]);
         note(g, `energy ∫u²dt = ${fmt(E, 2)} kW²·h · u(0) = ${fmt(us[0], 2)}, u(T) = ${fmt(us[us.length - 1], 2)} kW`, f.box.r - 4, f.box.b - 8, col.text(), 'right', 10);
       },

@@ -226,8 +226,8 @@
     - { id: x2T, label: "target T₂", type: range, min: 0, max: 15, step: 0.5, default: 7, group: primary, unit: K }
   presets:
     - { id: house, label: "(10, 7) K in 3 h", set: { Tf: 3, x1T: 10, x2T: 7 }, about: "Fits within the 2.5 kW heater." }
-    - { id: equal, label: "(10, 10) K in 3 h", set: { Tf: 3, x1T: 10, x2T: 10 }, about: "Room 2 is heated only through the wall: 31.4 kW²·h and a 3.8 kW peak, past the 2.5 kW limit." }
-    - { id: rush, label: "(10, 7) K in 1.5 h", set: { Tf: 1.5, x1T: 10, x2T: 7 }, about: "Half the time: 28.9 kW²·h and a 5.6 kW peak, more than the heater has." }
+    - { id: equal, label: "(10, 10) K in 3 h", set: { Tf: 3, x1T: 10, x2T: 10 }, about: "Room 2 is heated only through the wall: 31.4 kW²·h and a 3.8 kW peak, past the 2.5 kW limit, and it dips to −4.7 kW (cooling) near the end." }
+    - { id: rush, label: "(10, 7) K in 1.5 h", set: { Tf: 1.5, x1T: 10, x2T: 7 }, about: "Half the time: 28.9 kW²·h and a 5.6 kW peak, more than the heater has, and it needs −2.6 kW (cooling) at the end." }
 
 - id: ss
   title: "The speaker as a state-space model: the state (x, ẋ) of the cone"
