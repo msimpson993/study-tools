@@ -263,12 +263,13 @@ export function mountApp(content: AppContent, hooks: AppHooks = {}): void {
       h('ol', { class: 'chain' }, ...d.chain.map((s) => h('li', null, s.title, s.detail ? h('small', null, s.detail) : null)))));
     let sceneStop: (() => void) | null = null;
     if (content.subject.runningExample && d.addsToExample) {
-      const callout = h('aside', { class: 'callout c-example', dataset: { testid: 'dive-example' } }, h('b', { class: 'lead' }, `Running example: ${content.subject.runningExample.title}`),
+      const exId = d.exampleScene?.scene, exTitle = (exId && content.subject.runningExample.moreScenes?.find((m) => m.id === exId)?.title) || (!exId && content.subject.runningExample.moreScenes?.length ? content.subject.runningExample.scene?.title : undefined) || content.subject.runningExample.title;
+      const callout = h('aside', { class: 'callout c-example', dataset: { testid: 'dive-example' } }, h('b', { class: 'lead' }, `Running example: ${exTitle}`),
         h('div', { class: 'cb', html: `<p><b>What this adds:</b> ${d.addsToExample}</p>${d.accountsFor ? `<p><b>What it lets us account for:</b> ${d.accountsFor}</p>` : ''}` }));
       const sc = content.subject.runningExample.scene;
       const row = h('div', { class: `ex-row${sc ? ' has-scene' : ''}`, dataset: { testid: 'dive-example-row' } }, callout);
       art.append(row);
-      if (sc) sceneStop = mountScene(row, { scene: sc.id, overlays: d.exampleScene?.overlays, caption: d.exampleScene?.caption, params: d.exampleScene?.params ?? sc.params, diagram: d.exampleScene?.diagram ?? sc.diagram }).destroy;
+      if (sc) { const id = d.exampleScene?.scene ?? sc.id, base = id === sc.id ? sc : content.subject.runningExample.moreScenes?.find((m) => m.id === id); sceneStop = mountScene(row, { scene: id, overlays: d.exampleScene?.overlays, caption: d.exampleScene?.caption, params: d.exampleScene?.params ?? base?.params, diagram: d.exampleScene?.diagram ?? base?.diagram }).destroy; }
     }
     const body = h('div', { html: d.html });
     art.append(body);

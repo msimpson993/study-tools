@@ -250,9 +250,15 @@ export function loadApp(appDir: string): { content: AppContent; warnings: string
   // Example scenes: scene id and overlay names are checked against core's catalogue (packages/core/src/scenedefs.ts).
   const sceneId = re?.scene?.id;
   if (re?.scene) problems.push(...sceneProblems(re.scene.id, re.scene.overlays, 'subject.yaml runningExample.scene', re.scene.params, re.scene.diagram));
-  for (const m of maps) for (const n of m.nodes) if (n.exampleScene) { if (!sceneId) warnings.push(`graph.yaml ${m.id}/${n.id}: exampleScene is ignored: subject.yaml has no runningExample.scene`); else problems.push(...sceneProblems(sceneId, n.exampleScene.overlays, `graph.yaml ${m.id}/${n.id} exampleScene`, n.exampleScene.params, n.exampleScene.diagram)); }
+  const more = (re as { moreScenes?: { id: string; overlays?: string[]; params?: Record<string, number>; diagram?: unknown }[] } | undefined)?.moreScenes ?? [];
+  if (more.length && !sceneId) problems.push('subject.yaml runningExample.moreScenes needs runningExample.scene');
+  more.forEach((m, i) => problems.push(...sceneProblems(m.id, m.overlays, `subject.yaml runningExample.moreScenes[${i}]`, m.params, m.diagram)));
+  const allowed = new Set([sceneId, ...more.map((m) => m.id)].filter(Boolean) as string[]);
+  /** the scene a node/dive draws: its own `scene` (must be one of the subject's) or the subject's first */
+  const sceneOf = (ref: { scene?: string }, where: string): string => { if (ref.scene && !allowed.has(ref.scene)) problems.push(`${where}: exampleScene.scene "${ref.scene}" is not one of the subject's scenes (${[...allowed].join(', ')})`); return ref.scene ?? sceneId!; };
+  for (const m of maps) for (const n of m.nodes) if (n.exampleScene) { if (!sceneId) warnings.push(`graph.yaml ${m.id}/${n.id}: exampleScene is ignored: subject.yaml has no runningExample.scene`); else problems.push(...sceneProblems(sceneOf(n.exampleScene, `graph.yaml ${m.id}/${n.id}`), n.exampleScene.overlays, `graph.yaml ${m.id}/${n.id} exampleScene`, n.exampleScene.params, n.exampleScene.diagram)); }
   for (const d of dives) {
-    if (d.exampleScene) { if (!sceneId) warnings.push(`dives/${d.id}: exampleScene is ignored: subject.yaml has no runningExample.scene`); else problems.push(...sceneProblems(sceneId, d.exampleScene.overlays, `dives/${d.id} exampleScene`, d.exampleScene.params, d.exampleScene.diagram)); }
+    if (d.exampleScene) { if (!sceneId) warnings.push(`dives/${d.id}: exampleScene is ignored: subject.yaml has no runningExample.scene`); else problems.push(...sceneProblems(sceneOf(d.exampleScene, `dives/${d.id}`), d.exampleScene.overlays, `dives/${d.id} exampleScene`, d.exampleScene.params, d.exampleScene.diagram)); }
     else if (sceneId) warnings.push(`dives/${d.id}: no exampleScene; the scene's default overlays are shown`);
   }
   for (const ref of mathErrors.figureRefs) if (!figures.some((f) => f.id === ref.id)) problems.push(`${ref.where}: figure:${ref.id} is not in figures.yaml`);
@@ -324,7 +330,7 @@ export function loadApp(appDir: string): { content: AppContent; warnings: string
   if (problems.length) throw new ContentError(problems, appName);
 
   const content: AppContent = {
-    subject: { ...subject, sections: sectionsR as any, runningExample: re ? { title: re.title, summary: inline(re.summary, 'runningExample'), details: re.details ? block(re.details, 'runningExample.details') : undefined, scene: re.scene } : undefined },
+    subject: { ...subject, sections: sectionsR as any, runningExample: re ? { title: re.title, summary: inline(re.summary, 'runningExample'), details: re.details ? block(re.details, 'runningExample.details') : undefined, scene: re.scene, moreScenes: (re as { moreScenes?: unknown[] }).moreScenes as never } : undefined },
     maps, dives, review, quiz, glossary: glossaryR as Term[], figures: figuresR as FigureDef[], extra,
   };
   return { content, warnings };

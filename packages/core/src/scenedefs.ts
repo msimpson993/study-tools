@@ -5,6 +5,7 @@
  * Drawing lives in scene.ts.
  */
 import { diagramProblems, type DiagramSpec } from './blockdiagram';
+import { isChainScene, chainDiagramProblems } from './chaindiagram';
 export type InsetKind = 'trace' | 'phase' | 'poles' | 'spectrum' | 'zplane' | 'ctrl';
 export interface OverlayInfo {
   id: string;
@@ -89,12 +90,56 @@ export const SCENES: Record<string, SceneInfo> = {
       { id: 'zpoles', label: 'z-plane poles', says: 'The same poles after sampling: z = e^(pT), radius e^(−σT), angle 2πf₀/fs.', inset: 'zplane' },
     ],
   },
+
+  speaker: {
+    id: 'speaker',
+    title: 'The noise-cancelling earbud speaker',
+    physical: 'A micro-speaker in a noise-cancelling earbud (Thiele–Small values Mms = 0.084 g, Rms = 0.173 kg/s, Cms = 0.587 mm/N, Bl = 0.545 T·m, Re = 7.47 Ω, Le = 0.04 mH). A voltage V(t) drives the voice coil, the diaphragm moves x(t), and in the sealed ear canal the sound pressure follows x. It resonates at fs ≈ 717 Hz with damping ratio ζ ≈ 0.28.',
+    defaults: ['forces'],
+    overlays: [
+      { id: 'forces', label: 'forces', says: 'The forces on the diaphragm: the coil force Bl·i, the suspension spring −x/Cms and the damping −Rms·ẋ. Their sum is Mms·ẍ.' },
+      { id: 'coil', label: 'coil circuit', says: 'The electrical side: V drives the current i through Re and Le, against the back-EMF Bl·ẋ. Its pole sits at −Re/Le ≈ −186,750 rad/s, about 40 times faster than the mechanics, so two states (x, ẋ) are enough.' },
+      { id: 'click', label: 'click → h(t)', says: 'A click (an impulse of voltage): the diaphragm rings at about 690 Hz and dies away within a few milliseconds. That ring is the impulse response h(t).', inset: 'trace' },
+      { id: 'split', label: 'add the responses', says: 'Linearity: a tone plus a click goes in, and the motion is exactly the response to the tone plus the response to the click.', inset: 'trace' },
+      { id: 'conv', label: 'sum of clicks', says: 'Convolution: any input is a row of scaled, shifted clicks, so the output is the same row of scaled, shifted impulse responses, added up.', inset: 'trace' },
+      { id: 'tone', label: 'tone in, tone out', says: 'A 500 Hz tone goes in; after a short transient the diaphragm moves at exactly 500 Hz, only scaled and delayed. Tones e^{jωt} are what this system only scales.', inset: 'trace' },
+      { id: 'state', label: 'state (x, ẋ)', says: 'The state: position and velocity of the diaphragm, a point that spirals into the origin because the eigenvalues are complex.', inset: 'phase' },
+      { id: 'critical', label: 'critically damped', says: 'The same speaker with damping raised to 2√(k·Mms) ≈ 0.76 kg/s: the two poles merge at −ωs ≈ −4,503 rad/s, a Jordan block with only one eigen-direction.', inset: 'phase' },
+      { id: 'poles', label: 'poles', says: 'The eigenvalues of A, the poles of H(s), at −1,267 ± j4,322 rad/s: the real part sets the decay, the imaginary part the ring frequency. The coil pole is far off to the left.', inset: 'poles' },
+      { id: 'bode', label: '|H(f)|', says: 'The frequency response |H(j2πf)|, H(s) on the jω axis: flat in the bass, a peak near 660 Hz from the light damping, then falling at 40 dB per decade.', inset: 'spectrum' },
+      { id: 'series', label: 'Fourier series', says: 'A 200 Hz buzz (square wave) is a sum of harmonics at 200, 600, 1000 Hz, …; the speaker scales each by |H| at its own frequency.', inset: 'spectrum' },
+      { id: 'sampler', label: 'sampling', says: 'A microphone signal read by the ANC chip\'s converter. Drawn at 8 kHz here so the samples are visible; real ANC converters run much faster to keep the delay small.', inset: 'trace' },
+      { id: 'dft', label: 'DFT bins', says: 'A block of N = 64 samples at 8 kHz analysed by the DFT: bins every 125 Hz sample the spectrum of the ring.', inset: 'spectrum' },
+      { id: 'zplane', label: 'z-plane', says: 'The same two poles after sampling at 8 kHz: z = e^{pT}, inside the unit circle. The ANC filters are designed here, as H(z).', inset: 'zplane' },
+      { id: 'anc', label: 'noise cancelling', says: 'Active noise cancelling: a reference mic outside (feedforward) and an error mic in the ear (feedback) drive an adaptive filter (FxLMS) so the speaker makes anti-noise. The residual at the ear shrinks as the filter adapts (schematic).', inset: 'trace' },
+    ],
+  },
+  house: {
+    id: 'house',
+    title: 'The two-room house and its thermostat',
+    physical: 'Two rooms share a wall and each leaks heat outdoors. Temperatures are measured above the outdoor temperature: ẋ = Ax + Bu with A = [[−1.2, 1], [1, −1.2]] per hour, a heater in room 1 (B = (3600/C_th, 0)ᵀ) and a thermostat reading room 1 (C = [1, 0]). The modes are the average temperature (λ = −0.2/h, τ = 5 h) and the difference (λ = −2.2/h, τ ≈ 27 min).',
+    defaults: ['heat'],
+    overlays: [
+      { id: 'heat', label: 'heater on', says: 'The 1.5 kW heater in room 1 switches on at t = 0. Room 1 warms first; room 2 follows through the shared wall.' },
+      { id: 'flows', label: 'heat flows', says: 'The heat flows: through the shared wall in proportion to T₁ − T₂ (rate 1/h) and out to the cold in proportion to each room\'s temperature (rate 0.2/h).' },
+      { id: 'trace', label: 'T₁(t), T₂(t)', says: 'Both room temperatures over 12 hours.', inset: 'trace' },
+      { id: 'modes', label: 'modes', says: 'The two eigen-directions of A: the average (1, 1), which fades slowly (τ = 5 h), and the difference (1, −1), which fades fast (τ ≈ 27 min). The state splits into these two parts.', inset: 'phase' },
+      { id: 'flow', label: 'what A does', says: 'The arrows ẋ = Ax over the plane of the two temperatures: everything is pulled first onto the average line, then slowly to the outdoor temperature.', inset: 'phase' },
+      { id: 'poles', label: 'eigenvalues', says: 'The eigenvalues −0.2/h and −2.2/h on the real axis: both negative, so the house is stable, and the slow one dominates.', inset: 'poles' },
+      { id: 'both', label: 'heat both rooms', says: 'The heater power split equally between the rooms, B ∝ (1, 1): the input only pushes the average. The difference can never be changed by the input; it is uncontrollable and just decays on its own.' },
+      { id: 'avg', label: 'thermostat reads the average', says: 'A thermostat that reads the average (T₁ + T₂)/2: it cannot tell the rooms apart, so the difference mode is unobservable.' },
+      { id: 'thermo', label: 'thermostat in room 1', says: 'The thermostat reads room 1 only, y = Cx with C = [1, 0]. It sees both modes, so the full state can be worked out from y(t).' },
+      { id: 'reach', label: 'where u can push', says: 'The directions B and AB: the heater pushes room 1 only, and the shared wall turns that into a push on room 2. Together they span the plane, so the pair is controllable.', inset: 'phase' },
+      { id: 'gramian', label: 'reachable ellipse', says: 'The controllability Gramian as an ellipse: the states reachable with the same heating energy in 3 hours. It is long, roughly along the average, and thin across it: the difference is the expensive direction to move.', inset: 'phase' },
+      { id: 'optimal', label: 'least-energy warm-up', says: 'The heater profile with the least energy ∫u² that takes the house from cold to a chosen target in 3 hours (Pontryagin, or the Gramian formula). It starts high and eases off.', inset: 'ctrl' },
+    ],
+  },
 };
 
 /** What a content file may say: `exampleScene: { overlays: [...], caption?: "…" }` on a dive or a map node. */
-export interface ExampleSceneRef { overlays?: string[]; caption?: string; params?: Record<string, number>; /** staged block diagram under the picture (see docs/example-scenes.md) */ diagram?: DiagramSpec }
+export interface ExampleSceneRef { /** another scene of the subject than runningExample.scene (it must be listed there or in runningExample.moreScenes) */ scene?: string; overlays?: string[]; caption?: string; params?: Record<string, number>; /** staged block diagram under the picture (see docs/example-scenes.md) */ diagram?: DiagramSpec | string | string[] }
 /** What subject.yaml may say: `runningExample.scene: { id: cart, overlays: [...] }` (overlays = the small hero on the map page). */
-export interface SubjectSceneRef { id: string; overlays?: string[]; params?: Record<string, number>; caption?: string; diagram?: DiagramSpec }
+export interface SubjectSceneRef { id: string; overlays?: string[]; params?: Record<string, number>; caption?: string; diagram?: DiagramSpec | string | string[] }
 
 /** Closed-loop overlays (they replace the open-loop drive: push, hammer, shaker, clock … cannot be combined with them). */
 export const LOOP_OVERLAYS = ['loop', 'pid', 'disturb', 'noise', 'limit', 'delay', 'lag'] as const;
@@ -140,6 +185,6 @@ export function sceneProblems(scene: string, overlays: string[] | undefined, whe
     }
     if (!loop) p.push(`${where}: params only apply to the closed-loop overlays (${LOOP_OVERLAYS.join(', ')}); none is on`);
   }
-  p.push(...diagramProblems(diagram, where));
+  p.push(...(isChainScene(scene) ? chainDiagramProblems(scene, diagram, where) : diagramProblems(diagram, where)));
   return p;
 }

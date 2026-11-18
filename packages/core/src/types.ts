@@ -26,7 +26,7 @@ export interface MapNode {
   /** what it lets us account for (HTML) */
   accountsFor?: string;
   /** overlays of the example scene this box adds (the dive linked from it inherits them) */
-  exampleScene?: { overlays?: string[]; caption?: string; params?: Record<string, number>; /** staged block diagram under the picture */ diagram?: DiagramSpec };
+  exampleScene?: { /** another scene than runningExample.scene (one of runningExample.moreScenes) */ scene?: string; overlays?: string[]; caption?: string; params?: Record<string, number>; /** staged block diagram under the picture */ diagram?: DiagramSpec | string | string[] };
   /** id of a deep dive in dives/ */
   dive?: string;
   /** live entry, "figure:<id>[?k=v]" or "board:<pair>[?preset=<id>]" */
@@ -72,7 +72,7 @@ export interface Dive {
   addsToExample?: string;
   accountsFor?: string;
   /** which overlays of the subject's example scene this dive shows beside "what this adds" (front matter, else from a node linking here) */
-  exampleScene?: { overlays?: string[]; caption?: string; params?: Record<string, number>; /** staged block diagram under the picture */ diagram?: DiagramSpec };
+  exampleScene?: { /** another scene than runningExample.scene (one of runningExample.moreScenes) */ scene?: string; overlays?: string[]; caption?: string; params?: Record<string, number>; /** staged block diagram under the picture */ diagram?: DiagramSpec | string | string[] };
   html: string;
 }
 
@@ -136,7 +136,7 @@ export interface Subject {
   hub?: { order?: number };
   /** ids of the quiz-figure renderers this app registers; when present, `figure.id` in quiz.yaml is validated against it */
   quizFigures?: string[];
-  runningExample?: { title: string; summary: string; details?: string; /** which core example scene draws it (`cart`, `tine`) and the overlays of the small hero on the map page */ scene?: { id: string; overlays?: string[]; params?: Record<string, number>; caption?: string; diagram?: DiagramSpec } };
+  runningExample?: { title: string; summary: string; details?: string; /** which core example scene draws it (`cart`, `tine`) and the overlays of the small hero on the map page */ scene?: SceneRef; /** further scenes (more than one running example): the map hero switches between them, dives pick one with exampleScene.scene */ moreScenes?: SceneRef[] };
   board?: { pairs: string[] };
 }
 
@@ -151,3 +151,5 @@ export interface AppContent {
   figures: FigureDef[];
   extra: Record<string, unknown>;
 }
+/** A subject-level scene reference (runningExample.scene / moreScenes). */
+export interface SceneRef { id: string; title?: string; overlays?: string[]; params?: Record<string, number>; caption?: string; diagram?: DiagramSpec | string | string[] }

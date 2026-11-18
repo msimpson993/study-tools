@@ -45,7 +45,21 @@ export function mountConceptMap(host: HTMLElement, content: AppContent, progress
   const heroScene = content.subject.runningExample?.scene;
   const hero = h('div', { class: `cm-hero${heroScene ? ' has-scene' : ''}`, dataset: { testid: 'map-hero' } },
     h('div', { class: 'cm-q', dataset: { testid: 'central-question' } }, content.subject.centralQuestion, h('small', null, 'Central question. Tap any box or line to open it.')));
-  const heroHandle = heroScene ? mountScene(hero, { scene: heroScene.id, overlays: heroScene.overlays, params: heroScene.params, caption: heroScene.caption, diagram: heroScene.diagram, compact: true }) : null;
+  const heroScenes = heroScene ? [heroScene, ...(content.subject.runningExample?.moreScenes ?? [])] : [];
+  // more than one running example: the picture sits in a box with a small switch above it
+  const heroBox = heroScenes.length > 1 ? h('div', { class: 'cm-hero-sc', dataset: { testid: 'hero-scenes' } }) : null;
+  if (heroBox) hero.append(heroBox);
+  let heroHandle = heroScene ? mountScene(heroBox ?? hero, { scene: heroScene.id, overlays: heroScene.overlays, params: heroScene.params, caption: heroScene.caption, diagram: heroScene.diagram, compact: true }) : null;
+  if (heroBox) {
+    const sw = h('div', { class: 'st-seg cm-hero-switch', role: 'group', 'aria-label': 'Running example', dataset: { testid: 'hero-switch' } });
+    const pickHero = (i: number) => {
+      const sc = heroScenes[i]; heroHandle?.destroy();
+      heroHandle = mountScene(heroBox, { scene: sc.id, overlays: sc.overlays, params: sc.params, caption: sc.caption, diagram: sc.diagram, compact: true });
+      [...sw.children].forEach((b, j) => { b.classList.toggle('on', i === j); b.setAttribute('aria-pressed', String(i === j)); });
+    };
+    heroScenes.forEach((sc, i) => sw.append(h('button', { type: 'button', class: i ? '' : 'on', 'aria-pressed': String(!i), dataset: { scene: sc.id }, onclick: () => pickHero(i) }, sc.title ?? sc.id)));
+    heroBox.prepend(sw);
+  }
   root.append(
     hero,
     top, reviewBar, caption, legend,

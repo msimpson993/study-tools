@@ -128,6 +128,10 @@
                   "additionalProperties": false,
                   "description": "Pick the overlays of the subject's example scene that this node adds (see docs/components.md, example scenes). Names are validated against the scene's catalogue at build time.",
                   "properties": {
+                    "scene": {
+                      "type": "string",
+                      "description": "Draw another scene of the subject than runningExample.scene (it must be runningExample.scene.id or one of runningExample.moreScenes)."
+                    },
                     "overlays": {
                       "type": "array",
                       "items": {
@@ -148,7 +152,7 @@
                       "description": "Closed-loop cart parameters (numbers): K, Ki, Kd, r, umax, d, td, noise, seed, delay, lag. Only valid with a closed-loop overlay (loop, pid, disturb, noise, limit, delay, lag); ranges are in docs/example-scenes.md and checked at build time."
                     },
                     "diagram": {
-                      "description": "Staged block diagram under the picture: a stage name or a list of stages (open, states, loop, disturb, pid, noise, gain). Newly added parts at each stage are highlighted. See docs/example-scenes.md.",
+                      "description": "Staged block diagram under the picture: a stage name or a list of stages (cart: ode, open, poles, states, loop, error, disturb, pid, noise, gain, sfb, observer, sep, refin; speaker: spk-chain, spk-model, spk-digital, anc-ff, anc-fb, anc-hybrid; house: house-open, house-modal, house-kalman, house-loop; validated against the scene at build time). Newly added parts at each stage are highlighted. See docs/example-scenes.md.",
                       "oneOf": [
                         {
                           "type": "string",
@@ -166,7 +170,17 @@
                             "sfb",
                             "observer",
                             "sep",
-                            "refin"
+                            "refin",
+                            "spk-chain",
+                            "spk-model",
+                            "spk-digital",
+                            "anc-ff",
+                            "anc-fb",
+                            "anc-hybrid",
+                            "house-open",
+                            "house-modal",
+                            "house-kalman",
+                            "house-loop"
                           ]
                         },
                         {
@@ -188,7 +202,17 @@
                               "sfb",
                               "observer",
                               "sep",
-                              "refin"
+                              "refin",
+                              "spk-chain",
+                              "spk-model",
+                              "spk-digital",
+                              "anc-ff",
+                              "anc-fb",
+                              "anc-hybrid",
+                              "house-open",
+                              "house-modal",
+                              "house-kalman",
+                              "house-loop"
                             ]
                           }
                         }

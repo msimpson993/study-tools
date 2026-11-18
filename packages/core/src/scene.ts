@@ -15,7 +15,10 @@ import { cssVar, fitCanvas } from './plot';
 import { h } from './dom';
 import { c2dZoh, tf, type TF } from './dsp/tf';
 import { simulatePid, pidClosedLoopPoles } from './dsp/pid';
+import { palette, font, fmt, beginPanel, text, pick, arrow, line, dot, clip, axes, type Pal, type Rect, type G } from './scenedraw';
 import { SCENES, insetsOf, expandOverlays, isLoopScene, type InsetKind } from './scenedefs';
+import { CHAIN_STAGES, isChainScene, chainStripHeight, layoutChain, drawChainStage } from './chaindiagram';
+import * as LS from './sceneLs';
 import { diagramStages, diagramStripHeight, layoutDiagrams, drawBlockDiagram, type DiagramSpec, type DiagramSignals } from './blockdiagram';
 
 /* ───────────────────────────── models (pure, unit-tested) ───────────────────────────── */
@@ -124,10 +127,12 @@ export function tineSpectrum(f: number): number {
 }
 
 /** Total length of one loop (animation time) for a scene + overlays. */
-export function sceneDuration(scene: string, overlays: string[]): number { return scene === 'tine' ? TINE.T : isLoopScene(scene, overlays) ? 10 : simulateCart(overlays).T; }
+export function sceneDuration(scene: string, overlays: string[]): number { if (scene === 'speaker') return LS.SPK_ANIM_T(overlays); if (scene === 'house') return LS.houseAnimT(); return scene === 'tine' ? TINE.T : isLoopScene(scene, overlays) ? 10 : simulateCart(overlays).T; }
 /** Frame to hold under reduced motion / as the poster: an instant where the overlays have something to show. */
 export function sceneRestTime(scene: string, overlays: string[], params: Record<string, number> = {}): number {
   if (scene === 'tine') return 1.6;
+  if (scene === 'speaker') return LS.speakerRest(overlays);
+  if (scene === 'house') return LS.houseRest(overlays);
   if (isLoopScene(scene, overlays)) { const ov = expandOverlays(scene, overlays); return ov.includes('disturb') ? (Number.isFinite(params.td) ? params.td : 4) + 2.2 : ov.includes('limit') ? 0.6 : ov.includes('delay') || ov.includes('lag') || ov.includes('noise') ? 3.2 : 2.4; }
   if (overlays.includes('hammer')) return 0.75;
   if (overlays.includes('shaker')) return 9;
@@ -135,63 +140,24 @@ export function sceneRestTime(scene: string, overlays: string[], params: Record<
   return 0.9;
 }
 
-/* ───────────────────────────── drawing helpers ───────────────────────────── */
-
-interface Pal { text: string; muted: string; border: string; strong: string; panel: string; elev: string; board: string; s0: string; s1: string; s2: string; s3: string; ok: string; bad: string; warn: string }
-const palette = (): Pal => ({ text: cssVar('--text'), muted: cssVar('--muted'), border: cssVar('--border'), strong: cssVar('--border-strong'), panel: cssVar('--panel'), elev: cssVar('--elev'), board: cssVar('--board'), s0: cssVar('--s0'), s1: cssVar('--s1'), s2: cssVar('--s2'), s3: cssVar('--s3'), ok: cssVar('--ok'), bad: cssVar('--bad'), warn: cssVar('--warn') });
-interface Rect { x: number; y: number; w: number; h: number }
-type G = CanvasRenderingContext2D;
-const font = (px: number, wt = 500) => `${wt} ${px}px system-ui,-apple-system,"Segoe UI",Roboto,sans-serif`;
-const fmt = (v: number, d = 2) => (Math.abs(v) < 0.5 * 10 ** -d ? 0 : v).toFixed(d).replace('-', '−');
-
-/** Labels drawn so far in the current panel: later labels dodge them (or are dropped when `optional`), and every label is kept inside the panel. */
-let LB: { x0: number; y0: number; x1: number; y1: number }[] = [];
-let BND: Rect | null = null;
-const beginPanel = (r: Rect) => { LB = []; BND = r; };
-const hits = (a: { x0: number; y0: number; x1: number; y1: number }) => LB.some((b) => a.x0 < b.x1 && a.x1 > b.x0 && a.y0 < b.y1 && a.y1 > b.y0);
-function text(g: G, s: string, x: number, y: number, color: string, o: { align?: CanvasTextAlign; base?: CanvasTextBaseline; px?: number; wt?: number; bg?: string; /** secondary label: dropped instead of moved when it would collide */ optional?: boolean } = {}): boolean {
-  let px = o.px ?? 11; g.font = font(px, o.wt ?? 500); let w = g.measureText(s).width;
-  if (BND) { const room = BND.w - 4; if (w > room) { px = Math.max(8, (px * room) / w); g.font = font(px, o.wt ?? 500); w = g.measureText(s).width; } }
-  let x0 = o.align === 'center' ? x - w / 2 : o.align === 'right' ? x - w : x;
-  if (BND) x0 = Math.min(Math.max(x0, BND.x + 2), BND.x + BND.w - 2 - w);
-  let yy = y;
-  if (BND) yy = Math.min(Math.max(yy, BND.y + px * 0.85 + 0.5), BND.y + BND.h - px * 0.25 - 0.5);
-  const box = (yv: number) => ({ x0: x0 - 1, x1: x0 + w + 1, y0: yv - px * 0.85, y1: yv + px * 0.25 });
-  if (hits(box(yy))) {
-    if (o.optional) return false;
-    let placed = false; for (const dy of [-(px + 1), px + 1, -2 * (px + 1), 2 * (px + 1)]) { const yv = yy + dy; const bx = box(yv); if (!hits(bx) && (!BND || (bx.y0 >= BND.y && bx.y1 <= BND.y + BND.h))) { yy = yv; placed = true; break; } }
-    void placed; // nowhere clear: stay where it was (already clamped to the panel)
-  }
-  const bx = box(yy); LB.push(bx);
-  g.textAlign = 'left'; g.textBaseline = o.base ?? 'alphabetic';
-  if (o.bg) { g.fillStyle = o.bg; g.globalAlpha = 0.82; g.fillRect(x0 - 3, yy - px, w + 6, px + 4); g.globalAlpha = 1; }
-  g.fillStyle = color; g.fillText(s, x0, yy);
-  return true;
-}
-/** The first variant of a label that fits `maxW` px at this size (the last if none does): short labels instead of squeezed or overlapping ones. */
-function pick(g: G, px: number, wt: number, maxW: number, ...v: string[]): string {
-  g.font = font(px, wt); for (const s of v) if (g.measureText(s).width <= maxW) return s; return v[v.length - 1];
-}
-function arrow(g: G, x1: number, y1: number, x2: number, y2: number, color: string, wd = 2, dash: number[] = []) {
-  const L = Math.hypot(x2 - x1, y2 - y1); if (L < 1.5) return;
-  g.save(); g.strokeStyle = color; g.fillStyle = color; g.lineWidth = wd; g.lineCap = 'round'; g.setLineDash(dash);
-  const a = Math.atan2(y2 - y1, x2 - x1), hl = Math.min(8, L * 0.6);
-  g.beginPath(); g.moveTo(x1, y1); g.lineTo(x2 - Math.cos(a) * hl * 0.6, y2 - Math.sin(a) * hl * 0.6); g.stroke();
-  g.setLineDash([]); g.beginPath(); g.moveTo(x2, y2); g.lineTo(x2 - hl * Math.cos(a - 0.4), y2 - hl * Math.sin(a - 0.4)); g.lineTo(x2 - hl * Math.cos(a + 0.4), y2 - hl * Math.sin(a + 0.4)); g.closePath(); g.fill();
-  g.restore();
-}
-function line(g: G, pts: [number, number][], color: string, wd = 1.5, dash: number[] = [], alpha = 1) {
-  g.save(); g.globalAlpha = alpha; g.strokeStyle = color; g.lineWidth = wd; g.setLineDash(dash); g.lineJoin = 'round'; g.lineCap = 'round';
-  g.beginPath(); pts.forEach(([x, y], i) => (i ? g.lineTo(x, y) : g.moveTo(x, y))); g.stroke(); g.restore();
-}
-function dot(g: G, x: number, y: number, r: number, fill: string, stroke?: string) { g.beginPath(); g.arc(x, y, r, 0, 7); g.fillStyle = fill; g.fill(); if (stroke) { g.strokeStyle = stroke; g.lineWidth = 1.5; g.stroke(); } }
-const clip = (g: G, r: Rect) => { g.beginPath(); g.rect(r.x, r.y, r.w, r.h); g.clip(); };
-
 /* ───────────────────────────── layout ───────────────────────────── */
 
-export interface SceneLayout { w: number; h: number; compact: boolean; main: Rect; insets: { kind: InsetKind; rect: Rect }[]; diagrams: { stage: import('./blockdiagram').DiagramStage; rect: Rect }[] }
-export function sceneLayout(scene: string, overlays: string[], w: number, compact: boolean, diagram?: DiagramSpec | null): SceneLayout {
-  const stages = diagramStages(diagram);
+export interface SceneLayout { w: number; h: number; compact: boolean; main: Rect; insets: { kind: InsetKind; rect: Rect }[]; diagrams: { stage: import('./blockdiagram').DiagramStage; rect: Rect }[]; /** speaker / house signal-flow stages (chaindiagram.ts) */ chains?: { stage: string; rect: Rect }[] }
+/** Layout for the linear-systems scenes: main picture, chain-diagram strip, then up to two panels. */
+function chainLayout(scene: string, overlays: string[], w: number, compact: boolean, diagram?: unknown): SceneLayout {
+  const ids = (Array.isArray(diagram) ? diagram : diagram ? [diagram] : []).filter((s): s is string => typeof s === 'string' && !!CHAIN_STAGES[s]);
+  const mainH = Math.round(Math.min(210, Math.max(compact ? 126 : 150, w * (compact ? 0.4 : 0.44)))) + (scene === 'house' && !compact ? 10 : 0);
+  const kinds = compact ? [] : insetsOf(scene, overlays), gap = 8, insetH = Math.round(Math.min(210, Math.max(150, w * 0.5)));
+  const showChain = ids.length > 0 && !compact, dH = showChain ? chainStripHeight(ids, w) : 0, dY = mainH + gap;
+  const chains = showChain ? layoutChain(ids, w, dY) : [];
+  const insetY = (showChain ? dY + dH : mainH) + (kinds.length ? gap : 0);
+  const insets = kinds.map((kind, i) => { const cw = (w - gap * (kinds.length - 1)) / kinds.length; return { kind, rect: { x: i * (cw + gap), y: insetY, w: cw, h: insetH } }; });
+  const h = kinds.length ? insetY + insetH : showChain ? dY + dH : mainH;
+  return { w, h, compact, main: { x: 0, y: 0, w, h: mainH }, insets, diagrams: [], chains };
+}
+export function sceneLayout(scene: string, overlays: string[], w: number, compact: boolean, diagram?: DiagramSpec | string | string[] | null): SceneLayout {
+  if (isChainScene(scene)) return chainLayout(scene, overlays, w, compact, diagram);
+  const stages = diagramStages(diagram as DiagramSpec);
   const hasDiagram = stages.length > 0;
   // When a staged block diagram sits under the cart, don't reserve under-cart space for drawLoopDiagram.
   const loopMode = isLoopScene(scene, overlays) && !hasDiagram;
@@ -370,18 +336,6 @@ function drawCartMain(g: G, r: Rect, P: Pal, S: CartSim, ov: string[], t: number
     text(g, `reads x(kT), holds it`, cx2 - 19, cy2 + 9, P.muted, { align: 'right', px: 9.5, wt: 600 });
   }
   for (const f of late) f();
-}
-
-/** One axis box with ticks; returns data→pixel maps. */
-function axes(g: G, r: Rect, P: Pal, xr: [number, number], yr: [number, number], xl: string, yl: string, o: { pad?: [number, number, number, number]; xTicks?: number[]; noYZero?: boolean } = {}) {
-  const [L, T, R, B] = o.pad ?? [30, 14, 8, 24];
-  const X = (v: number) => r.x + L + ((v - xr[0]) / (xr[1] - xr[0])) * (r.w - L - R), Y = (v: number) => r.y + T + (1 - (v - yr[0]) / (yr[1] - yr[0])) * (r.h - T - B);
-  g.save(); g.strokeStyle = P.strong; g.lineWidth = 1; g.beginPath(); g.moveTo(X(xr[0]), Y(yr[1])); g.lineTo(X(xr[0]), Y(yr[0])); g.lineTo(X(xr[1]), Y(yr[0])); g.stroke(); g.restore();
-  if (!o.noYZero && yr[0] < 0 && yr[1] > 0) line(g, [[X(xr[0]), Y(0)], [X(xr[1]), Y(0)]], P.muted, 1, [], 0.7);
-  if (xr[0] < 0 && xr[1] > 0) line(g, [[X(0), Y(yr[0])], [X(0), Y(yr[1])]], P.muted, 1, [], 0.7);
-  for (const v of o.xTicks ?? []) { line(g, [[X(v), Y(yr[0])], [X(v), Y(yr[0]) + 3]], P.muted, 1); text(g, String(v), X(v), Y(yr[0]) + 13, P.muted, { align: 'center', px: 9 }); }
-  text(g, xl, r.x + r.w - R, r.y + r.h - 2, P.muted, { align: 'right', px: 10, wt: 600 }); text(g, yl, r.x + 3, r.y + 10, P.muted, { px: 10, wt: 600 });
-  return { X, Y };
 }
 
 function drawCartTrace(g: G, r: Rect, P: Pal, S: CartSim, ov: string[], t: number) {
@@ -654,6 +608,14 @@ export function drawSceneFrame(g: G, L: SceneLayout, scene: string, overlays: st
     for (const { kind, rect } of L.insets) region(rect, () => {
       if (kind === 'trace') drawCartTrace(g, rect, P, S, ov, t); else if (kind === 'phase') drawCartPhase(g, rect, P, S, ov, t); else if (kind === 'poles') drawCartPoles(g, rect, P, S, ov, t); else if (kind === 'ctrl' && S.loop) drawLoopCtrl(g, rect, P, S, ov, t);
     });
+  } else if (scene === 'speaker' || scene === 'house') {
+    const sp = scene === 'speaker';
+    region(L.main, () => (sp ? LS.drawSpeakerMain : LS.drawHouseMain)(g, L.main, P, ov, t, small));
+    for (const { stage, rect } of L.chains ?? []) region(rect, () => drawChainStage(g, rect, stage, DP, { highlight: !L.compact }));
+    for (const { kind, rect } of L.insets) region(rect, () => {
+      if (sp) { if (kind === 'trace') LS.drawSpeakerTrace(g, rect, P, ov, t); else if (kind === 'phase') LS.drawSpeakerPhase(g, rect, P, ov, t); else if (kind === 'poles') LS.drawSpeakerPoles(g, rect, P, ov); else if (kind === 'spectrum') LS.drawSpeakerSpectrum(g, rect, P, ov); else if (kind === 'zplane') LS.drawSpeakerZ(g, rect, P); }
+      else { if (kind === 'trace') LS.drawHouseTrace(g, rect, P, ov, t); else if (kind === 'phase') LS.drawHousePhase(g, rect, P, ov, t); else if (kind === 'poles') LS.drawHousePoles(g, rect, P); else if (kind === 'ctrl') LS.drawHouseCtrl(g, rect, P, ov, t); }
+    });
   } else if (scene === 'tine') {
     region(L.main, () => drawTineMain(g, L.main, P, ov, t, small));
     for (const { kind, rect } of L.insets) region(rect, () => {
@@ -663,7 +625,7 @@ export function drawSceneFrame(g: G, L: SceneLayout, scene: string, overlays: st
   }
 }
 
-export interface SceneOptions { scene: string; overlays?: string[]; caption?: string; /** closed-loop parameters (see scenedefs SCENES.cart.params) */ params?: Record<string, number>; /** small hero: main picture only */ compact?: boolean; /** staged block diagram under the picture (see blockdiagram.ts) */ diagram?: DiagramSpec }
+export interface SceneOptions { scene: string; overlays?: string[]; caption?: string; /** closed-loop parameters (see scenedefs SCENES.cart.params) */ params?: Record<string, number>; /** small hero: main picture only */ compact?: boolean; /** staged block diagram under the picture (see blockdiagram.ts; chaindiagram.ts for speaker / house) */ diagram?: DiagramSpec | string | string[] }
 export interface SceneHandle { el: HTMLElement; canvas: HTMLCanvasElement; setOverlays(o: string[]): void; destroy(): void; /** draw a fixed frame (animation time, s) */ drawAt(t: number): void }
 declare global { interface Window { __sceneFreeze?: number } }
 
@@ -685,11 +647,11 @@ const DIAGRAM_SAYS: Record<string, string> = {
 };
 
 /** Plain-language description (alt text and caption) of what a scene shows with these overlays (and optional staged diagram). */
-export function sceneAlt(scene: string, overlays: string[], diagram?: DiagramSpec | null): string {
+export function sceneAlt(scene: string, overlays: string[], diagram?: DiagramSpec | string | string[] | null): string {
   const info = SCENES[scene]; if (!info) return '';
   const base = `${info.physical} Shown: ${overlays.map((id) => info.overlays.find((o) => o.id === id)?.says ?? id).join(' ')}`;
-  const stages = diagramStages(diagram);
-  return stages.length ? `${base} ${stages.map((s) => DIAGRAM_SAYS[s]).join(' ')}` : base;
+  const stages = diagramStages(diagram as DiagramSpec) as string[];
+  return stages.length ? `${base} ${stages.map((s) => DIAGRAM_SAYS[s] ?? CHAIN_STAGES[s]?.says ?? '').join(' ')}` : base;
 }
 
 export function mountScene(host: HTMLElement, opts: SceneOptions): SceneHandle {
@@ -697,7 +659,7 @@ export function mountScene(host: HTMLElement, opts: SceneOptions): SceneHandle {
   let overlays = (opts.overlays?.length ? opts.overlays : info?.defaults) ?? [];
   const canvas = h('canvas', { class: 'scene-cv', role: 'img', dataset: { testid: 'scene-canvas' } }) as HTMLCanvasElement;
   const cap = h('figcaption', { class: 'scene-cap' });
-  const stages = diagramStages(opts.diagram);
+  const stages = diagramStages(opts.diagram as DiagramSpec);
   const el = h('figure', { class: `scene${opts.compact ? ' compact' : ''}${opts.caption ? ' has-caption' : ''}`, dataset: { testid: 'example-scene', scene: opts.scene, overlays: overlays.join(','), diagram: stages.join(',') } }, canvas, cap) as HTMLElement;
   host.append(el);
   if (!info) { el.replaceChildren(h('div', { class: 'scene-miss', dataset: { testid: 'scene-missing' } }, `Scene “${opts.scene}” is not available.`)); return { el, canvas, setOverlays() {}, destroy() { el.remove(); }, drawAt() {} }; }

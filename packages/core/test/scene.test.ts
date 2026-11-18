@@ -48,7 +48,7 @@ describe('tine scene', () => {
 });
 
 describe('scene catalogue and validation', () => {
-  it('knows both scenes; defaults are valid overlays', () => { for (const s of Object.values(SCENES)) expect(sceneProblems(s.id, s.defaults, s.id)).toEqual([]); expect(Object.keys(SCENES).sort()).toEqual(['cart', 'tine']); });
+  it('knows every scene; defaults are valid overlays', () => { for (const s of Object.values(SCENES)) expect(sceneProblems(s.id, s.defaults, s.id)).toEqual([]); expect(Object.keys(SCENES).sort()).toEqual(['cart', 'house', 'speaker', 'tine']); });
   it('unknown scene / overlay / duplicate / too many panels are problems', () => {
     expect(sceneProblems('bogus', [], 'x')[0]).toMatch(/unknown scene/);
     expect(sceneProblems('cart', ['forces', 'nope'], 'x')[0]).toMatch(/unknown overlay "nope"/);

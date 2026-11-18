@@ -152,7 +152,7 @@ void suggestKMax;
 
 /* ─── example scenes: the animated running examples, one per overlay set ─── */
 {
-  const sec = h('section', { dataset: { testid: 'scenes' } }, h('h2', { style: 'font-size:1.05rem;margin:2rem 0 .3rem' }, 'Example scenes'), h('p', { style: 'color:var(--muted);margin:0 0 .8rem;font-size:.9rem' }, 'mountScene(host, { scene, overlays }): the cart and the plucked tine, animated from the real simulation. Each overlay is one thing a node adds.'));
+  const sec = h('section', { dataset: { testid: 'scenes' } }, h('h2', { style: 'font-size:1.05rem;margin:2rem 0 .3rem' }, 'Example scenes'), h('p', { style: 'color:var(--muted);margin:0 0 .8rem;font-size:.9rem' }, 'mountScene(host, { scene, overlays }): the cart, the plucked tine, the earbud speaker and the two-room house, animated from the real simulation. Each overlay is one thing a node adds.'));
   const grid = h('div', { style: 'display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,360px),1fr));gap:.8rem' });
   const sets: [string, string[], Record<string, number>?][] = [
     ['cart', ['forces', 'phase']], ['cart', ['modes', 'trace']], ['cart', ['hammer', 'trace']], ['cart', ['shaker', 'poles']], ['cart', ['clock', 'trace']], ['cart', ['sensor', 'observe']], ['cart', ['push', 'reach']], ['cart', ['critical', 'flow']],
@@ -160,5 +160,11 @@ void suggestKMax;
     ['tine', ['envelope', 'poles']], ['tine', ['sampler', 'spectrum']], ['tine', ['window', 'sampler']], ['tine', ['poles', 'zpoles']],
   ];
   for (const [scene, overlays, params] of sets) { const cell = h('div', { dataset: { sceneSet: `${scene}:${overlays.join('+')}` } }); grid.append(cell); mountScene(cell, { scene, overlays, params }); }
+  // linear-systems scenes, some with their signal-flow stages
+  const ls: [string, string[], (string | string[])?][] = [
+    ['speaker', ['forces', 'click'], 'spk-chain'], ['speaker', ['coil', 'poles'], 'spk-model'], ['speaker', ['split']], ['speaker', ['conv']], ['speaker', ['tone', 'bode']], ['speaker', ['state', 'poles']], ['speaker', ['critical', 'poles']], ['speaker', ['series']], ['speaker', ['sampler', 'zplane'], 'spk-digital'], ['speaker', ['dft']], ['speaker', ['anc'], ['anc-ff', 'anc-fb']],
+    ['house', ['heat', 'flows', 'trace'], 'house-open'], ['house', ['modes', 'trace']], ['house', ['flow', 'poles'], 'house-modal'], ['house', ['both', 'avg', 'modes'], 'house-kalman'], ['house', ['heat', 'thermo', 'reach']], ['house', ['gramian']], ['house', ['optimal', 'trace']],
+  ];
+  for (const [scene, overlays, diagram] of ls) { const cell = h('div', { dataset: { sceneSet: `${scene}:${overlays.join('+')}` } }); grid.append(cell); mountScene(cell, { scene, overlays, diagram }); }
   sec.append(grid); root.append(sec);
 }
