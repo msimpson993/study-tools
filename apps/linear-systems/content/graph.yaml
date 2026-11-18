@@ -15,7 +15,7 @@ maps:
     label: "Inputs in, outputs out"
     detail: Predict the output for any input
     kind: terminal
-    short: "The class's one question. A linear system is fully known once you know what it does to a few simple pieces; everything else is splitting an input into those pieces and adding the answers back up. The signals view uses tones and exponentials as the pieces, the state view uses the modes of A, and the last boxes ask which modes an input can affect and a measurement can reveal."
+    short: "The class's one question. A linear system is fully known once you know what it does to a few simple pieces; everything else is splitting an input into those pieces and adding the answers back up. The signals view uses tones and exponentials as the pieces, the state view uses the modes of A, and the last boxes ask which modes an input can affect and a measurement can reveal. The same tools run RF filters and amplifiers, channels, audio, circuits, structures, buildings, optics and control: see Where this shows up on the central-question page."
     eq: "y = h ∗ u,    ẋ = Ax + Bu,  y = Cx + Du"
     addsToExample: "Sets up both running examples: an earbud speaker (voltage in, diaphragm motion out) and a two-room house (heater power in, room temperatures out)."
     accountsFor: Why the same handful of ideas predicts a 717 Hz speaker resonance and a 5-hour house warm-up.
@@ -284,7 +284,7 @@ maps:
     label: "Inputs in, outputs out"
     detail: Predict the output for any input
     kind: terminal
-    short: "The class's one question. A linear system is fully known once you know what it does to a few simple pieces; everything else is splitting an input into those pieces and adding the answers back up. The signals view uses tones and exponentials as the pieces, the state view uses the modes of A, and the last boxes ask which modes an input can affect and a measurement can reveal."
+    short: "The class's one question. A linear system is fully known once you know what it does to a few simple pieces; everything else is splitting an input into those pieces and adding the answers back up. The signals view uses tones and exponentials as the pieces, the state view uses the modes of A, and the last boxes ask which modes an input can affect and a measurement can reveal. The same tools run RF filters and amplifiers, channels, audio, circuits, structures, buildings, optics and control: see Where this shows up on the central-question page."
     eq: "y = h ∗ u,    ẋ = Ax + Bu,  y = Cx + Du"
     addsToExample: "Sets up both running examples: an earbud speaker (voltage in, diaphragm motion out) and a two-room house (heater power in, room temperatures out)."
     accountsFor: Why the same handful of ideas predicts a 717 Hz speaker resonance and a 5-hour house warm-up.
