@@ -2,7 +2,7 @@
 id: realize
 order: 23
 title: "Realization: from H(s) to A, B, C"
-addsToExample: "Builds the speaker's state model. The full model has three states (current i, position x, velocity ẋ), but the coil's own pole −Re/Le ≈ −186,750 rad/s is about 40 times faster than the mechanical poles, so i follows V almost instantly and two states (x, ẋ) are enough. In phase-variable form A = [[0, 1], [−k/Mms, −R/Mms]], B = (0, 1)ᵀ, C = [(Bl/Re)/Mms, 0]."
+addsToExample: "Builds the speaker's state model. The full model has three states (current i, position x, velocity ẋ), but the coil's own pole −Re/Le ≈ −186,750 rad/s is about 40 times faster than the mechanical poles, so i follows V almost instantly and two states (x, ẋ) are enough. In phase-variable form A = [[0, 1], [−k/Mms, −R/Mms]], B = (0, 1)ᵀ, C = [(Bl/Re)/Mms, 0]; here the state is the scaled position w = x·Mms·Re/Bl (and ẇ). For the physical state (x, ẋ) keep the same A and use B = (0, Bl/(Re·Mms))ᵀ with C = [1, 0]."
 accountsFor: "Why two numbers, position and velocity, describe the speaker across the audio band, and where each Thiele–Small value sits in A, B and C."
 category: state
 neighbors:

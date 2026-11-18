@@ -321,3 +321,10 @@ describe('leakage vs damping (window and DFT dives)', () => {
     expect(20 * Math.log10(2 / Math.PI)).toBeCloseTo(-3.92, 2);
   });
 });
+
+describe('house difference mode (Φ wording)', () => {
+  it('τ = 1/2.2 h ≈ 27 min, and e^(−2.2·1) ≈ 0.11, so about 90% of the gap is gone in 1 h', () => {
+    expect(60 / 2.2).toBeCloseTo(27.3, 1);
+    expect(1 - Math.exp(-2.2)).toBeCloseTo(0.889, 3);
+  });
+});

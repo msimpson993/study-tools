@@ -23,9 +23,9 @@ Laplace (continuous time) and Z (discrete time) are the natural transforms for c
 ```figure:laplace
 ```
 
-$$X(s)=\int_{0^-}^{\infty} x(t)\,e^{-st}\,dt\quad\text{(unilateral)}$$
+$$X(s)=\int_{-\infty}^{\infty} x(t)\,e^{-st}\,dt,\qquad X(z)=\sum_{n=-\infty}^{\infty} x[n]\,z^{-n},\qquad z=e^{sT}$$
 
-$$X(z)=\sum_{n=0}^{\infty} x[n]\,z^{-n},\qquad z=e^{sT}$$
+These are the bilateral transforms; each comes with its ROC. For state space we use the unilateral versions, $\int_{0^-}^{\infty}$ and $\sum_{n=0}^{\infty}$, which start at $0^-$ and so carry the initial conditions.
 
 ````callout:note What this answers
 Where transients, ROC, and system poles live, and how Fourier analysis sits inside Laplace / Z when the axis is in the ROC.
@@ -43,4 +43,4 @@ L{e^(−t) u(t)} = 1/(s+1) with ROC Re(s) &gt; −1. The Z-transform of its samp
 
 - Always carry the ROC. u(t) and −u(−t) have Laplace transforms that look like 1/s, but one ROC is Re(s) &gt; 0 and the other is Re(s) &lt; 0.
 - Control courses often use the unilateral Laplace transform (initial conditions included). Signals courses often use the bilateral one. They agree on causal signals at rest.
-- The Z-transform is usually written in z^(−1). That delay convention is what keeps the stable region inside the unit circle; it is not an extra geometric choice on top of z = e^(s T).
+- Writing H(z) in z⁻¹ is just notation (z⁻¹ = one delay); a causal system is stable when its poles are inside |z| = 1.

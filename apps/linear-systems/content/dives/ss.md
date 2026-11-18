@@ -2,7 +2,7 @@
 id: ss
 order: 17
 title: State space
-addsToExample: "Writes the house as ẋ = Ax + Bu with x = (T₁, T₂) above outdoors: A = [[−1.2, 1], [1, −1.2]] per hour (shared wall 1/h, leak 0.2/h), B = (3600/C_th, 0)ᵀ for a heater in room 1, C = [1, 0] for a thermostat in room 1."
+addsToExample: "Writes the house as ẋ = Ax + Bu with x = (T₁, T₂) above outdoors: A = [[−1.2, 1], [1, −1.2]] per hour (shared wall 1/h, leak 0.2/h), B = (3600/C_th, 0)ᵀ = (3.6, 0) K/h per kW for a heater in room 1, C = [1, 0] for a thermostat in room 1."
 accountsFor: "Why room 1 warms first and room 2 follows through the wall, from three small matrices."
 category: state
 neighbors:

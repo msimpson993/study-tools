@@ -77,7 +77,7 @@ covers: "Everything the practice problems A1–A4 and B1–B3 use, plus the Four
 - $H = L + \lambda^{\mathsf T}f$; $\partial H/\partial u = 0$
 - $\dot x = \partial H/\partial\lambda$, $\dot\lambda = -\partial H/\partial x$
 - $x(T)$ fixed: solve $\lambda(0)$ from $\Phi_M(T)$; $x(T)$ free: $\lambda(T) = 0$
-- Hamiltonian $M$: eigenvalues in $\pm$ pairs; tr $M = 0$ ⇒ $M^2 = -\det M\,I$
+- Hamiltonian $M$: eigenvalues in $\pm$ pairs; tr $M = 0$ ⇒ $M^2 = -\det M\,I$ (2×2)
 
 </div>
 

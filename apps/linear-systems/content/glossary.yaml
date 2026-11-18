@@ -36,7 +36,7 @@
   meaning: "Bounded-input bounded-output stability: poles of $G(s)$ in the open left half-plane (inside the unit circle for $z$). Weaker than internal stability when modes are hidden."
   section: Systems and the eigen idea
 - term: Internal stability
-  meaning: "Every eigenvalue of $A$ has negative real part, so every mode, seen or not, dies out."
+  meaning: "Every eigenvalue of $A$ has negative real part ($|\\lambda| < 1$ in discrete time), so every mode, seen or not, dies out."
   section: Systems and the eigen idea
 - term: τ (time constant)
   meaning: "$\\tau = -1/\\lambda$ for a real eigenvalue: the time for that mode to fall to 1/e ≈ 37 %."
@@ -68,16 +68,16 @@
   meaning: "Transfer function: $G(s) = C(sI - A)^{-1}B + D$. The eigenvalue an LTI system assigns to $e^{st}$."
   section: "Laplace, Z and inverses"
 - term: Partial fractions
-  meaning: Splitting $X(s)$ into $\sum c_p/(s-p)$ so each term inverts to one exponential.
+  meaning: Splitting $X(s)$ into $\sum c_p/(s-p)$ so each term inverts to one exponential (a repeated pole adds $c/(s-p)^k$ terms).
   section: "Laplace, Z and inverses"
 - term: Cover-up rule
   meaning: "Residue of a simple pole: $c_p = (s-p)X(s)$ evaluated at $s = p$."
   section: "Laplace, Z and inverses"
 - term: Residue
-  meaning: Coefficient that a pole contributes to the inverse. For a pole of order $m$ use the $(m-1)$-th derivative formula.
+  meaning: "Residue of $X(s)e^{st}$ at a pole = that pole's term in $x(t)$; order $m$: $\\frac{1}{(m-1)!}\\frac{d^{m-1}}{ds^{m-1}}\\big[(s-p)^m X e^{st}\\big]$ at $s = p$."
   section: "Laplace, Z and inverses"
 - term: Bromwich / contour inverse
-  meaning: "$x(t) = \\frac{1}{2\\pi j}\\int X(s)e^{st}ds$ along a line in the ROC, closed left for $t>0$ (sum of residues)."
+  meaning: "$x(t) = \\frac{1}{2\\pi j}\\int X(s)e^{st}ds$ along a line in the ROC, closed left for $t>0$ (sum of residues), closed right for $t<0$ (minus the residues there)."
   section: "Laplace, Z and inverses"
 - term: Zero-state / zero-input response
   meaning: "Part driven by the input from rest, and part due to initial conditions alone. Total = both."
@@ -96,7 +96,7 @@
   meaning: "Two signals with zero inner product. Complex exponentials at different frequencies are orthogonal over a period, which is why each Fourier coefficient can be read off alone."
   section: Fourier and sampling
 - term: Inner product
-  meaning: "$\\langle x, y\\rangle = \\int x\\,\\bar y\\,dt$: how much of $y$ is in $x$."
+  meaning: "$\\langle x, y\\rangle = \\int \\bar x\\,y\\,dt$ (conjugate the first argument). $\\langle e_k, x\\rangle/\\langle e_k, e_k\\rangle$ is how much of $e_k$ is in $x$."
   section: Fourier and sampling
 - term: Fourier coefficient $c_k$
   meaning: "$c_k = \\frac1T\\int_T x(t)\\,e^{-jk\\omega_0 t}\\,dt$: the share of the $k$-th harmonic."
@@ -115,7 +115,7 @@
   meaning: Frequencies above fs/2 fold back and look like lower ones after sampling.
   section: Fourier and sampling
 - term: Nyquist rate
-  meaning: Sample faster than twice the highest frequency present to avoid aliasing.
+  meaning: "Twice the highest frequency present, $2f_{max}$; sample faster than this to avoid aliasing."
   section: Fourier and sampling
 - term: z = e^(sT)
   meaning: Map from the s-plane to the z-plane. Left half-plane → inside the unit circle; many-to-one (aliasing).
@@ -246,7 +246,7 @@
   units: T·m (0.545)
   section: Earbud speaker
 - term: "Re, Le"
-  meaning: "Coil resistance and inductance. Their ratio gives the fast coil pole −Re/Le ≈ −186,000 rad/s."
+  meaning: "Coil resistance and inductance. Their ratio gives the fast coil pole −Re/Le ≈ −186,750 rad/s."
   units: "Ω (7.47), mH (0.04)"
   section: Earbud speaker
 - term: fs (resonance)

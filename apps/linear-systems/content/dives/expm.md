@@ -3,7 +3,7 @@ id: expm
 order: 21
 title: State transition matrix
 addsToExample: "Gives the house's e^(At) = ½[[e₁ + e₂, e₁ − e₂], [e₁ − e₂, e₁ + e₂]] with e₁ = e^(−0.2t), e₂ = e^(−2.2t)."
-accountsFor: "The two time scales: the rooms even out in about 27 minutes, and the whole house cools over about 5 hours."
+accountsFor: "The two time scales: the gap between the rooms shrinks with a 27-minute time constant (about 90% gone in 1 h), and the whole house cools over about 5 hours."
 category: state
 neighbors:
   - diag

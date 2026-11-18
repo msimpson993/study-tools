@@ -27,7 +27,7 @@ The shift rule makes a difference equation into algebra: y(n − k) ↔ z⁻ᵏY
 
 $$y(n)+a_1y(n-1)+a_2y(n-2)=x(n)\;\Longrightarrow\;H(z)=\frac{z^2}{z^2+a_1z+a_2}$$
 
-**Picture it first.** A difference equation's poles sit in the z-plane; on the unit circle they shape the filter's frequency response.
+**Picture it first.** A difference equation's poles and zeros sit in the z-plane; their distances to points on the unit circle shape the frequency response.
 
 ```figure:dtft
 ```

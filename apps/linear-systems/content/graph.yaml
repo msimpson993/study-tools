@@ -130,7 +130,7 @@ maps:
     trap: "e^(At) is not the matrix of entry-wise exponentials e^(aᵢⱼt). Use the modes, (sI − A)⁻¹, or Cayley–Hamilton."
     predict: Room 1 starts 10 K warmer than room 2. How long until the difference has mostly gone?
     addsToExample: "Gives the house's e^(At) = ½[[e₁ + e₂, e₁ − e₂], [e₁ − e₂, e₁ + e₂]] with e₁ = e^(−0.2t), e₂ = e^(−2.2t)."
-    accountsFor: "The two time constants: room temperatures even out in about 27 minutes, and the whole house cools over about 5 hours."
+    accountsFor: "The two time scales: the gap between the rooms shrinks with a 27-minute time constant (about 90% gone in 1 h), and the whole house cools over about 5 hours."
     dive: expm
     live: "figure:expm"
     quizTag: expm
@@ -398,7 +398,7 @@ maps:
     trap: "e^(At) is not the matrix of entry-wise exponentials e^(aᵢⱼt). Use the modes, (sI − A)⁻¹, or Cayley–Hamilton."
     predict: Room 1 starts 10 K warmer than room 2. How long until the difference has mostly gone?
     addsToExample: "Gives the house's e^(At) = ½[[e₁ + e₂, e₁ − e₂], [e₁ − e₂, e₁ + e₂]] with e₁ = e^(−0.2t), e₂ = e^(−2.2t)."
-    accountsFor: "The two time constants: room temperatures even out in about 27 minutes, and the whole house cools over about 5 hours."
+    accountsFor: "The two time scales: the gap between the rooms shrinks with a 27-minute time constant (about 90% gone in 1 h), and the whole house cools over about 5 hours."
     dive: expm
     live: "figure:expm"
     quizTag: expm
