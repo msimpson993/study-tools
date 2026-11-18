@@ -1,9 +1,27 @@
-# Glossary (rebuilt Nov 2026): 89 terms in 8 sections. The original 19 terms are kept (wording unchanged except e^(...) notation).
+# Glossary (rebuilt Nov 2026): 95 terms in 8 sections. The original 19 terms are kept (wording unchanged except e^(...) notation).
 - term: Linear
   meaning: "Superposition holds: the response to $a x_1 + b x_2$ is $a y_1 + b y_2$. Doubling the input doubles the output."
   section: Systems and the eigen idea
 - term: Time-invariant
   meaning: Delaying the input only delays the output; the system does not change with time.
+  section: Systems and the eigen idea
+- term: "System, operator"
+  meaning: "A rule $T$ that maps a whole input signal to a whole output signal, $y = T\\{u\\}$: the earbud maps voltage to diaphragm motion, the house maps heater power to room temperatures."
+  section: Systems and the eigen idea
+- term: Additivity
+  meaning: "The response to a sum is the sum of the responses: $T\\{u_1 + u_2\\} = T\\{u_1\\} + T\\{u_2\\}$. Fails for $y = u^2$ and for clipping at large signals."
+  section: Systems and the eigen idea
+- term: Homogeneity
+  meaning: "Scaling the input scales the output by the same factor: $T\\{a u\\} = a\\,T\\{u\\}$. With additivity it makes a system linear; taking $a = 0$ shows zero in must give zero out."
+  section: Systems and the eigen idea
+- term: Affine
+  meaning: "Linear plus a constant, like $y = 2u + 1$: a straight-line graph that misses the origin. Not linear, but linear in the deviations $\\delta y = 2\\,\\delta u$ about an operating point."
+  section: Systems and the eigen idea
+- term: "Linearization, small-signal model"
+  meaning: "The first-order Taylor model of a nonlinear system about an operating point: $\\delta\\dot x = \\frac{\\partial f}{\\partial x}\\big|_0 \\delta x + \\frac{\\partial f}{\\partial u}\\big|_0 \\delta u$ (the Jacobian). Examples: a transistor amplifier about its bias point, a pendulum with $\\sin\\theta \\approx \\theta$, a speaker at normal volume."
+  section: Systems and the eigen idea
+- term: Time-varying
+  meaning: "A system whose rule changes with time, so delaying the input does not just delay the output. Examples: an AM mixer $y = u\\cos\\omega_0 t$ and time scaling $y(t) = u(2t)$, both linear."
   section: Systems and the eigen idea
 - term: LTI
   meaning: "Linear time-invariant system; its output is the convolution $y = h * x$."
@@ -174,61 +192,61 @@
   section: State space
 - term: Controllable
   meaning: Any state can be reached from any other in finite time by some input. Every mode feels u.
-  section: Reach and see
+  section: Reachability and observability
 - term: Observable
   meaning: The initial state can be worked out from the output over a finite time. Every mode shows up in y.
-  section: Reach and see
+  section: Reachability and observability
 - term: "Ctrb, Obsv"
   meaning: "Controllability matrix [B AB … Aⁿ⁻¹B] and observability matrix [C; CA; …; CAⁿ⁻¹]. Full rank n means controllable / observable."
-  section: Reach and see
+  section: Reachability and observability
 - term: PBH
   meaning: "Popov–Belevitch–Hautus test: rank[λI − A, B] = n (controllable) and rank[λI − A; C] = n (observable) for every eigenvalue λ."
-  section: Reach and see
+  section: Reachability and observability
 - term: Duality
   meaning: "(A, B) controllable ⇔ (Aᵀ, Bᵀ) observable. Every controllability fact has an observability twin."
-  section: Reach and see
+  section: Reachability and observability
 - term: "W_c, W_o (Gramians)"
   meaning: "$W_c = \\int_0^T e^{A t}BB^\\top e^{A^\\top t}dt$ (and $W_o$ with $C$). Invertible ⇔ controllable / observable; eigenvalues show which directions are cheap."
-  section: Reach and see
+  section: Reachability and observability
 - term: Minimum energy
   meaning: "Cheapest input to reach $x_f$ from rest in time $T$ costs $x_f^\\top W_c^{-1} x_f$."
-  section: Reach and see
+  section: Reachability and observability
 - term: Kalman decomposition
   meaning: Change of coordinates that splits the state into controllable/uncontrollable × observable/unobservable parts. Only the controllable-and-observable part appears in G(s).
-  section: Reach and see
+  section: Reachability and observability
 - term: Hidden mode
   meaning: A mode that is uncontrollable or unobservable; its pole cancels in G(s) but it still lives in A.
-  section: Reach and see
+  section: Reachability and observability
 - term: Pole–zero cancellation
   meaning: "A zero lands on a pole, so the transfer function loses that pole: a sign of a hidden mode."
-  section: Reach and see
+  section: Reachability and observability
 - term: Minimal realization
   meaning: A state-space model that is both controllable and observable; deg G = n and poles = eig(A).
-  section: Reach and see
+  section: Reachability and observability
 - term: J (cost)
   meaning: "Number to minimise, e.g. $J = \\int (x^2 + 2u^2)\\,dt$: weighs state error against effort."
-  section: Optimal control
+  section: "Application: optimal control"
 - term: L (running cost)
   meaning: The integrand of J.
-  section: Optimal control
+  section: "Application: optimal control"
 - term: Hamiltonian H
   meaning: $H = L + \lambda^\top(Ax + Bu)$. The best input makes H stationary in u at every instant.
-  section: Optimal control
+  section: "Application: optimal control"
 - term: λ(t) (costate)
   meaning: "Lagrange multiplier on the dynamics, obeying $\\dot\\lambda = -\\partial H/\\partial x$. Not an eigenvalue here."
-  section: Optimal control
+  section: "Application: optimal control"
 - term: Pontryagin minimum principle
   meaning: "Necessary conditions for an optimal u: state and costate equations, $\\partial H/\\partial u = 0$ (or u minimises H), and boundary conditions."
-  section: Optimal control
+  section: "Application: optimal control"
 - term: u°(t)
   meaning: The optimal input.
-  section: Optimal control
+  section: "Application: optimal control"
 - term: Transversality
   meaning: "Boundary condition on λ at a free endpoint, e.g. λ(T) = 0 when x(T) is free. Not needed when both ends are fixed."
-  section: Optimal control
+  section: "Application: optimal control"
 - term: Two-point boundary value problem
   meaning: "State known at the start, costate (or state) fixed at the end; solved with the transition matrix of the Hamiltonian system."
-  section: Optimal control
+  section: "Application: optimal control"
 - term: Mms
   meaning: Moving mass of the diaphragm and coil.
   units: g (0.084)

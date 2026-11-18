@@ -28,7 +28,7 @@ describe('shipped content', () => {
     expect(content.maps.reduce((n, m) => n + m.edges.length, 0)).toBe(54);
     expect(content.dives.length).toBe(30);
     expect((content.review ?? []).map((r) => r.id)).toEqual(['part-a', 'part-b', 'formula-sheet', 'self-test']);
-    expect(content.quiz.length).toBe(87);
+    expect(content.quiz.length).toBe(93);
     expect(content.quiz.filter((q) => q.tags?.includes('variants')).length).toBe(21);
   });
   it('linear-systems dives open on their map question and parent box (no chain fold)', () => {
@@ -38,9 +38,9 @@ describe('shipped content', () => {
       expect(d.html.trimStart().startsWith('<p><strong>The question:</strong>'), d.id).toBe(true);
     }
   });
-  it('linear-systems glossary: 89 terms, every one in a section, no raw ^{…} outside math', () => {
+  it('linear-systems glossary: 95 terms, every one in a section, no raw ^{…} outside math', () => {
     const { content } = loadApp(path.join(repoRoot, 'apps', 'linear-systems'));
-    expect(content.glossary.length).toBe(89);
+    expect(content.glossary.length).toBe(95);
     expect(content.glossary.every((t) => !!t.section)).toBe(true);
     expect(new Set(content.glossary.map((t) => t.section)).size).toBe(8);
     for (const t of content.glossary) expect(t.meaning.replace(/<span class="katex[\s\S]*?<\/math>/g, '')).not.toMatch(/\^\{/);

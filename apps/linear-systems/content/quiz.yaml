@@ -592,7 +592,7 @@
   why: "$\\Phi = e^{-t}\\begin{bmatrix}\\cos2t + \\frac12\\sin2t & \\frac12\\sin2t\\\\ -\\frac52\\sin2t & \\cos2t - \\frac12\\sin2t\\end{bmatrix}$. Check $\\Phi(0) = I$ and $\\dot\\Phi_{11}(0) = A_{11} = 0$: $-1 + 1 = 0$ ✓ for the first choice, $-1$ for the second."
 - id: c-lti-1
   tags:
-  - lti
+  - linsys
   kind: recognize
   q: "Doubling the input of a system doubles its output, but the response to a click at t = 1 s is not the response to a click at t = 0 shifted by 1 s. What is the system?"
   choices:
@@ -604,8 +604,8 @@
   why: Convolution with a single h needs both linearity and time invariance. A linear time-varying system has an impulse response that depends on when you kick it.
 - id: c-lti-2
   tags:
+  - linsys
   - lti
-  - eigfn
   kind: trap
   q: The earbud speaker gets a 500 Hz tone plus a click. What comes out (ignoring distortion)?
   choices:
@@ -615,6 +615,78 @@
   - The product of the two responses
   answer: 0
   why: "Linearity: the response to a sum is the sum of the responses. That is also why anti-noise can simply be added to the music."
+- id: c-linsys-1
+  tags:
+  - linsys
+  kind: trap
+  q: Is the system y = 2u + 1 linear?
+  choices:
+  - "No: it is affine. Zero in gives 1 out, and T{u₁ + u₂} = 2u₁ + 2u₂ + 1 while T{u₁} + T{u₂} = 2u₁ + 2u₂ + 2"
+  - "Yes: its graph is a straight line"
+  - "Yes, but only for positive inputs"
+  - "No, because it is time-varying"
+  answer: 0
+  why: "A straight-line graph is not enough. Linearity needs T{0} = 0 (take a = 0 in homogeneity). Written about its operating point, δy = 2δu is linear."
+- id: c-linsys-2
+  tags:
+  - linsys
+  kind: compute
+  q: "For y = u², take the constant inputs u₁ = 1 and u₂ = 2. Compare T{u₁ + u₂} with T{u₁} + T{u₂}, and T{2u₁} with 2T{u₁}."
+  choices:
+  - "9 vs 5, and 4 vs 2: it fails both additivity and homogeneity"
+  - "5 vs 5, and 2 vs 2: it is linear"
+  - "9 vs 5, but 2 vs 2: it fails only additivity"
+  - "It passes both, because squaring is time-invariant"
+  answer: 0
+  why: "(1 + 2)² = 9 but 1² + 2² = 5; (2·1)² = 4 but 2·1² = 2. Squaring is time-invariant, but that is a separate property."
+- id: c-linsys-3
+  tags:
+  - linsys
+  kind: recognize
+  q: "An AM mixer multiplies its input by a carrier: y(t) = u(t)·cos(ω₀t). Which is it?"
+  choices:
+  - Linear but time-varying
+  - Nonlinear but time-invariant
+  - LTI
+  - Nonlinear and time-varying
+  answer: 0
+  why: "Sums and scaling pass through, so it is linear. Delay the input by τ and the output is u(t − τ)cos(ω₀t), not y(t − τ) = u(t − τ)cos(ω₀(t − τ)): the carrier does not move, so it is time-varying. That is why a mixer can create new frequencies, which no LTI system can."
+- id: c-linsys-4
+  tags:
+  - linsys
+  kind: compute
+  q: y(t) = u(2t) plays the input at double speed. Delay the input by τ. What happens to the output?
+  choices:
+  - "It is delayed by only τ/2, so the system is linear but not time-invariant"
+  - "It is delayed by τ, so the system is LTI"
+  - "It is delayed by 2τ, so the system is nonlinear"
+  - "Nothing: time scaling ignores delays"
+  answer: 0
+  why: "The delayed input gives u(2t − τ) = u(2(t − τ/2)) = y(t − τ/2). Sums and scaling still pass through, so it is linear; the delay does not, so it is time-varying."
+- id: c-linsys-5
+  tags:
+  - linsys
+  kind: trap
+  q: "At 2 V the earbud's linear model predicts about 92 µm of cone motion; its (illustrative) excursion limit is ±100 µm. You double the drive to 4 V. Does the motion double?"
+  choices:
+  - "No: the cone runs into its limit, so T{2u} falls well short of 2T{u}. Clipping fails homogeneity at large signals"
+  - "Yes: the speaker is linear, so it moves 183 µm"
+  - "Yes, but only after a delay"
+  - "No, because the speaker is time-varying"
+  answer: 0
+  why: "Clipping is time-invariant but not linear at large signals: the motion peaks at about 95 µm instead of the 183 µm a linear speaker would give, and T{4 V} falls 29% (rms) short of 2·T{2 V} in the live figure. At 0.2 V the same test passes to within 0.7%: linear for small signals."
+- id: c-linsys-6
+  tags:
+  - linsys
+  kind: compute
+  q: "Is a pure delay y(t) = u(t − 1) LTI? If so, what are its impulse response and transfer function?"
+  choices:
+  - "Yes: h(t) = δ(t − 1) and H(s) = e^(−s)"
+  - "No: a delay is time-varying"
+  - "Yes: h(t) = 1 for t ≥ 1 and H(s) = 1/s"
+  - "Linear but not time-invariant, so it has no H(s)"
+  answer: 0
+  why: "Sums and scaling pass through, and delaying the input by τ delays the output by τ. A click at 0 comes out at t = 1, so h(t) = δ(t − 1), and its Laplace transform is e^(−s): |H(jω)| = 1 at every frequency, with phase −ω."
 - id: c-eig-1
   tags:
   - eig

@@ -57,7 +57,7 @@ covers: "Everything the practice problems A1–A4 and B1–B3 use, plus the Four
 - Jordan block: $e^{Jt} = e^{\lambda t}\begin{bmatrix}1&t\\0&1\end{bmatrix}$
 - Stable ⇔ all Re $\lambda_i<0$
 
-#### Reach and see
+#### Reachability and observability
 
 - Ctrb: rank $[B\ AB\ \cdots\ A^{n-1}B] = n$
 - Obsv: rank $[C;\ CA;\ \cdots;\ CA^{n-1}] = n$
@@ -72,7 +72,7 @@ covers: "Everything the practice problems A1–A4 and B1–B3 use, plus the Four
 - Biproper: divide first, quotient → $D$
 - $G = C(sI-A)^{-1}B + D$; MATLAB tf2ss reverses the order
 
-#### Pontryagin
+#### Application: optimal control (Pontryagin)
 
 - $H = L + \lambda^{\mathsf T}f$; $\partial H/\partial u = 0$
 - $\dot x = \partial H/\partial\lambda$, $\dot\lambda = -\partial H/\partial x$

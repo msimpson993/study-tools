@@ -52,11 +52,11 @@ runningExample:
 hub:
   order: 2
 # Porting guard (rebuilt Nov 2026): 2 maps (Big picture 15 boxes / 15 lines, Full detail 34 boxes / 39 lines),
-# 30 dives, 4 review pages, 87 quiz questions (24 original + 21 practice variants + 42 per-node concept questions). Update deliberately when content is added or dropped.
+# 30 dives, 4 review pages, 93 quiz questions (24 original + 21 practice variants + 48 per-node concept questions). Update deliberately when content is added or dropped.
 expect:
   maps: 2
   nodes: 49
   edges: 54
   dives: 30
   review: 4
-  quiz: 87
+  quiz: 93
