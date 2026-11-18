@@ -1,13 +1,13 @@
 id: linear-systems
-title: Linear systems class dashboard
-centralQuestion: How does a linear system turn inputs into outputs, and how do we predict and steer it?
-blurb: "A map-first review of the whole class: linearity and the eigen idea, Laplace/Z and Fourier, state space, controllability, realization and optimal control, drawn on two running examples (a noise-cancelling earbud speaker and a two-room house), with 29 deep dives, live figures, worked exam problems and a self-test."
+title: Linear Systems Analysis
+centralQuestion: What is a linear system, and how do we predict what it does to any input?
+blurb: "A map-first review of Linear Systems Analysis: what a linear system is, and the tools that predict what it does to any input: the eigen idea, Laplace/Z transforms, Fourier analysis, state space and modes, reachability and observability, and realization. Drawn on two running examples (a noise-cancelling earbud speaker and a two-room house), with deep dives, live figures, worked exam problems and a self-test. Optimal control appears at the end as one application."
 archetype: guide
 categories:
   - { id: foundations, label: "Linearity & eigen idea" }
   - { id: signals, label: Signals view }
   - { id: state, label: State view }
-  - { id: steer, label: "Reach, see & optimise" }
+  - { id: structure, label: "Reachability & observability" }
 sections:
   - { id: map, title: The question map, kind: map }
   - { id: central, title: The central question, kind: md }

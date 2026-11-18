@@ -116,7 +116,7 @@
     - { id: rep, label: "No wall (repeated −0.2)", set: { t: 1, kw: 0, leak: 0.2 }, about: "A = −0.2·I; with a repeated eigenvalue the second condition is the derivative: α₁ = t e^(−0.2t)." }
 
 - id: stab
-  title: "Stability of the thermostat loop u = −kp·T₁"
+  title: "Application: feedback. Stability of the thermostat loop u = −kp·T₁"
   x: Re λ (1/h)
   y: Im λ (1/h) or deviation (K)
   legend:
@@ -144,7 +144,7 @@
     - { label: "1 kW for 3 h from rest", color: "var(--vio)" }
     - { label: "push on the average mode", color: "var(--grn)" }
     - { label: "push on the difference mode", color: "var(--org)" }
-  howToRead: "The heater power is split: a share s goes to room 1 and 1 − s to room 2, so B = 3.6·(s, 1 − s) K/h per kW. Left: B and AB. If they point in different directions, [B, AB] has rank 2 and any pair of room temperatures can be reached; the violet path is what 1 kW for 3 hours does. Right (the PBH test): the push on each mode, wᵀB with w = (1, 1)/2 and (1, −1)/2. A mode with zero push can never be steered."
+  howToRead: "The heater power is split: a share s goes to room 1 and 1 − s to room 2, so B = 3.6·(s, 1 − s) K/h per kW. Left: B and AB. If they point in different directions, [B, AB] has rank 2 and any pair of room temperatures can be reached; the violet path is what 1 kW for 3 hours does. Right (the PBH test): the push on each mode, wᵀB with w = (1, 1)/2 and (1, −1)/2. A mode with zero push can never be moved by the input."
   lookFor: "At s = ½ (equal heat in both rooms) B and AB both lie on the diagonal, det [B, AB] = 0, the violet path stays on the diagonal, and the push on the difference mode is 0."
   controls:
     - { id: split, label: "heater share in room 1, s", type: range, min: 0, max: 1, step: 0.01, default: 1, group: primary }

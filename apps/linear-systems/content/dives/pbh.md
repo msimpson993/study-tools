@@ -4,7 +4,7 @@ order: 26
 title: The PBH test
 addsToExample: "Tests the house mode by mode. With the heater in room 1, B ∝ (1, 0) is not orthogonal to either left eigenvector, (1, 1) or (1, −1): both modes are reached. Heating both rooms equally, B ∝ (1, 1), is orthogonal to (1, −1): the difference mode is missed. A thermostat reading the average, C = [½, ½], gives Cv = 0 for v = (1, −1): the difference is unseen."
 accountsFor: "Exactly which mode a heater or sensor placement loses, not just that one is lost."
-category: steer
+category: structure
 neighbors:
   - ctrl
   - obs

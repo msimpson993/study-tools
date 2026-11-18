@@ -4,7 +4,7 @@ order: 25
 title: Observability
 addsToExample: "Tries two thermostats: one in room 1 (C = [1, 0]) sees both modes; one reading the average (C = [½, ½]) is blind to the difference mode."
 accountsFor: "Why the thermostat's placement decides whether you can work out room 2's temperature."
-category: steer
+category: structure
 neighbors:
   - ctrl
   - kalman

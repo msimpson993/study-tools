@@ -4,7 +4,7 @@ order: 27
 title: Gramians
 addsToExample: "Computes the house's 3-hour controllability Gramian W(3) for the room-1 heater. Its ellipse is about 4 times longer than it is wide, tilted about 31° up from the room-1 axis. Its eigenvalues are 0.78 and 12.0 K²/(kW²·h), and the thin axis points along ≈(0.51, −0.86). Reaching (10, 10) K costs ∫u² ≈ 3.1 × 10⁷ W²·h; reaching (5, −5) K (a 10 K gap with the average at the outdoor temperature, heater allowed to cool) costs about 6.0 × 10⁷ W²·h, nearly twice as much although it is half as far. These are reaching costs, not holding costs."
 accountsFor: "Why some targets are cheap and others expensive even though the house is controllable, and where the least-energy warm-up comes from."
-category: steer
+category: structure
 neighbors:
   - ctrl
   - optimal

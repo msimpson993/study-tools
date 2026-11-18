@@ -4,7 +4,7 @@ order: 24
 title: Controllability
 addsToExample: "Asks whether the room-1 heater can reach every state: B points along room 1 and AB has a room-2 part (the wall), so [B AB] has rank 2. Heating both rooms equally, B ∝ (1, 1), gives rank 1: the difference mode is uncontrollable."
 accountsFor: "Which heater placements can set both room temperatures, and which can only set their average."
-category: steer
+category: structure
 neighbors:
   - obs
   - kalman

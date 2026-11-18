@@ -42,5 +42,5 @@ L{e^(−t) u(t)} = 1/(s+1) with ROC Re(s) &gt; −1. The Z-transform of its samp
 ### Common pitfalls
 
 - Always carry the ROC. u(t) and −u(−t) have Laplace transforms that look like 1/s, but one ROC is Re(s) &gt; 0 and the other is Re(s) &lt; 0.
-- Control courses often use the unilateral Laplace transform (initial conditions included). Signals courses often use the bilateral one. They agree on causal signals at rest.
+- State-space and circuit texts often use the unilateral Laplace transform (initial conditions included). Signals texts often use the bilateral one. They agree on causal signals at rest.
 - Writing H(z) in z⁻¹ is just notation (z⁻¹ = one delay); a causal system is stable when its poles are inside |z| = 1.

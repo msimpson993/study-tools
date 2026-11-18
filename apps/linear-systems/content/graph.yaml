@@ -8,13 +8,14 @@ maps:
   - Linearity and the eigen idea
   - "Signals view: transforms and Fourier"
   - "State view: A, B, C"
-  - "Steering: reach, see, optimise"
+  - "What can an input affect, a measurement reveal?"
+  - Application
   nodes:
   - id: root
     label: "Inputs in, outputs out"
-    detail: How to predict and steer it
+    detail: Predict the output for any input
     kind: terminal
-    short: "The class's one question. A linear system is fully known once you know what it does to a few simple pieces; everything else is splitting an input into those pieces and adding the answers back up. The signals view uses tones and exponentials as the pieces, the state view uses the modes of A, and the last boxes ask how to steer the system with the best input."
+    short: "The class's one question. A linear system is fully known once you know what it does to a few simple pieces; everything else is splitting an input into those pieces and adding the answers back up. The signals view uses tones and exponentials as the pieces, the state view uses the modes of A, and the last boxes ask which modes an input can affect and a measurement can reveal."
     eq: "y = h ∗ u,    ẋ = Ax + Bu,  y = Cx + Du"
     addsToExample: "Sets up both running examples: an earbud speaker (voltage in, diaphragm motion out) and a two-room house (heater power in, room temperatures out)."
     accountsFor: Why the same handful of ideas predicts a 717 Hz speaker resonance and a 5-hour house warm-up.
@@ -145,11 +146,11 @@ maps:
     dive: stab
     quizTag: stab
   - id: CO
-    label: Reach and see every mode?
-    detail: "Controllability, observability"
+    label: Reachable and observable?
+    detail: "Which modes u excites, y reveals"
     kind: decision
     series: 3
-    short: "Controllability asks whether the input can push every mode; observability asks whether the output shows every mode. Rank tests on [B AB …] and [C; CA; …] answer both. They are duals (swap A→Aᵀ, B↔Cᵀ), and the Kalman decomposition splits the state into the four reached/seen combinations."
+    short: "Which modes can the input excite, and which can the output reveal? Controllability asks whether the input can push every mode; observability asks whether the output shows every mode. Rank tests on [B AB …] and [C; CA; …] answer both. They are duals (swap A→Aᵀ, B↔Cᵀ), and the Kalman decomposition splits the state into the four reached/seen combinations."
     eq: "rank [B  AB  ⋯  A^(n−1)B] = n,   rank [C; CA; ⋯; CA^(n−1)] = n"
     trap: A mode can be stable and still uncontrollable. Uncontrollable does not mean unstable; it means the input cannot change it.
     predict: Split the heater power equally between both rooms. Can you still make room 1 warmer than room 2?
@@ -170,9 +171,9 @@ maps:
     dive: realize
     quizTag: realize
   - id: OPT
-    label: What is the best input?
-    detail: "Pontryagin: costate λ, TPBVP"
-    series: 3
+    label: "Application: optimal control"
+    detail: "Best input: Pontryagin, costate λ"
+    series: 4
     short: "To minimise a cost ∫L dt, form the Hamiltonian H = L + λᵀ(Ax + Bu), set ∂H/∂u = 0, and run the costate backwards: λ̇ = −∂H/∂x. State and costate together form a linear system with the Hamiltonian matrix M; with x fixed at both ends, the unknown λ(0) comes from Φ_M(T)."
     eq: "∂H/∂u = 0,   λ̇ = −∂H/∂x,   (x, λ)(t) = e^(Mt)(x, λ)(0)"
     trap: "λ(T) = 0 only when x(T) is free. With a fixed endpoint, λ(T) is whatever it needs to be."
@@ -260,8 +261,8 @@ maps:
   - &id011
     from: PHI
     to: OPT
-    label: best input
-    question: We can predict the response to any input. Which input is best?
+    label: application
+    question: "We can predict the response to any input. One application: which input is best?"
     idea: "Add a cost and minimise it: Pontryagin's principle gives a costate that runs alongside the state, and the pair is solved with another e^(Mt)."
   - &id012
     from: PHI
@@ -271,18 +272,19 @@ maps:
     idea: "When every e^(λᵢt) decays: all eigenvalues in the open left half-plane."
 - id: full
   title: Full detail
-  caption: "The same map with every box the exams use: ROC rules, poles and zeros, orthogonality, Parseval, windowing, Jordan form, Cayley–Hamilton, PBH, Gramians and the Kalman split. Dashed lines join the same idea seen from the two sides."
+  caption: "The same map with every box the exams use: ROC rules, poles and zeros, orthogonality, Parseval, windowing, Jordan form, Cayley–Hamilton, PBH, Gramians and the Kalman split. The application box (optimal control) has its own colour. Dashed lines join the same idea seen from the two sides."
   seriesNames:
   - Linearity and the eigen idea
   - "Signals view: transforms and Fourier"
   - "State view: A, B, C"
-  - "Steering: reach, see, optimise"
+  - "What can an input affect, a measurement reveal?"
+  - Application
   nodes:
   - id: root
     label: "Inputs in, outputs out"
-    detail: How to predict and steer it
+    detail: Predict the output for any input
     kind: terminal
-    short: "The class's one question. A linear system is fully known once you know what it does to a few simple pieces; everything else is splitting an input into those pieces and adding the answers back up. The signals view uses tones and exponentials as the pieces, the state view uses the modes of A, and the last boxes ask how to steer the system with the best input."
+    short: "The class's one question. A linear system is fully known once you know what it does to a few simple pieces; everything else is splitting an input into those pieces and adding the answers back up. The signals view uses tones and exponentials as the pieces, the state view uses the modes of A, and the last boxes ask which modes an input can affect and a measurement can reveal."
     eq: "y = h ∗ u,    ẋ = Ax + Bu,  y = Cx + Du"
     addsToExample: "Sets up both running examples: an earbud speaker (voltage in, diaphragm motion out) and a two-room house (heater power in, room temperatures out)."
     accountsFor: Why the same handful of ideas predicts a 717 Hz speaker resonance and a 5-hour house warm-up.
@@ -417,7 +419,7 @@ maps:
     detail: Can u push every mode?
     kind: box
     series: 3
-    short: "The input can steer the state anywhere exactly when rank [B AB ⋯ A^{n−1}B] = n: B pushes some directions, A carries those pushes into new ones, and together they must span the space. Its dual is observability."
+    short: "The input can drive the state anywhere exactly when rank [B AB ⋯ A^{n−1}B] = n: B pushes some directions, A carries those pushes into new ones, and together they must span the space. Its dual is observability."
     eq: "rank [B  AB  ⋯  A^(n−1)B] = n,   rank [C; CA; ⋯; CA^(n−1)] = n"
     trap: A mode can be stable and still uncontrollable. Uncontrollable does not mean unstable; it means the input cannot change it.
     predict: Split the heater power equally between both rooms. Can you still make room 1 warmer than room 2?
@@ -438,9 +440,9 @@ maps:
     dive: realize
     quizTag: realize
   - id: OPT
-    label: What is the best input?
-    detail: "Pontryagin: costate λ, TPBVP"
-    series: 3
+    label: "Application: optimal control"
+    detail: "Best input: Pontryagin, costate λ"
+    series: 4
     short: "To minimise a cost ∫L dt, form the Hamiltonian H = L + λᵀ(Ax + Bu), set ∂H/∂u = 0, and run the costate backwards: λ̇ = −∂H/∂x. State and costate together form a linear system with the Hamiltonian matrix M; with x fixed at both ends, the unknown λ(0) comes from Φ_M(T)."
     eq: "∂H/∂u = 0,   λ̇ = −∂H/∂x,   (x, λ)(t) = e^(Mt)(x, λ)(0)"
     trap: "λ(T) = 0 only when x(T) is free. With a fixed endpoint, λ(T) is whatever it needs to be."
@@ -611,9 +613,9 @@ maps:
     quizTag: gramian
   - id: KAL
     label: Kalman decomposition
-    detail: Reached? Seen? Four blocks
+    detail: Only reached + seen shows in H(s)
     series: 3
-    short: "Change coordinates so the state splits into four parts: controllable and observable, controllable only, observable only, neither. Only the first part shows up in the transfer function; the rest cancel as pole–zero pairs."
+    short: "Split the system into reachable/observable parts; only the reachable-and-observable part shows in H(s). Change coordinates so the state splits into four parts: controllable and observable, controllable only, observable only, neither. Only the first part shows up in the transfer function; the rest cancel as pole–zero pairs."
     eq: G(s) = C_co(sI − A_co)⁻¹B_co + D
     addsToExample: "Splits the house with both rooms heated equally and an average thermostat: the average is reached and seen, the difference neither."
     accountsFor: "Why that house's transfer function is first order, with only the 5-hour pole."

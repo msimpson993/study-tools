@@ -4,7 +4,7 @@ order: 28
 title: Kalman decomposition & minimal realization
 addsToExample: "Splits the house with both rooms heated equally and an average thermostat: the average is reached and seen, the difference neither. The transfer function keeps only the 5-hour pole."
 accountsFor: "Why that house looks like a first-order system from outside, even though it has two states."
-category: steer
+category: structure
 neighbors:
   - ctrl
   - obs
