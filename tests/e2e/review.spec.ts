@@ -73,3 +73,43 @@ test.describe('control-systems: the Review area (mini exams live outside the map
     await expect(page.getByTestId('dive')).toBeVisible();
   });
 });
+
+test.describe('linear-systems: the Exam review area', () => {
+  const LS = ['part-a', 'part-b', 'formula-sheet', 'self-test'];
+  test('the Review list shows the four pages and no review node sits on either map', async ({ page }) => {
+    const errs = trackErrors(page);
+    await open(page, 'linear-systems', '#/review');
+    await expect(page.getByTestId('review-card')).toHaveCount(LS.length);
+    await open(page, 'linear-systems');
+    await expect(page.locator('[data-testid=map-node][data-node*=part-]')).toHaveCount(0);
+    expect(errs).toEqual([]);
+  });
+  for (const id of LS) {
+    test(`${id} renders at 390px with every solution open: no horizontal scroll, math without errors`, async ({ page }) => {
+      const errs = trackErrors(page);
+      await page.setViewportSize({ width: 390, height: 844 });
+      await open(page, 'linear-systems', `#/review/${id}`);
+      const pg = page.getByTestId('review-page');
+      await expect(pg).toBeVisible();
+      await page.evaluate(() => document.querySelectorAll('details').forEach((d) => (d.open = true)));
+      await expect(pg.locator('.math-error, .katex-error')).toHaveCount(0);
+      expect(await noHScroll(page)).toBe(true);
+      expect(errs).toEqual([]);
+    });
+  }
+  test('part A self-test runs the 12 matching variants; a subset runs on its own', async ({ page }) => {
+    await open(page, 'linear-systems', '#/review/part-a');
+    const pg = page.getByTestId('review-page');
+    await expect(pg.getByTestId('review-quiz')).toContainText('(12)');
+    await pg.getByTestId('review-quiz-subset').first().click();
+    await expect(page.getByTestId('qcard').first()).toBeVisible();
+    await expect(page.locator('.cm-sum').first()).toContainText('of 3');
+  });
+  test('the formula sheet prints on its own', async ({ page }) => {
+    await open(page, 'linear-systems', '#/review/formula-sheet');
+    await expect(page.locator('[data-testid=review-page] .formula-sheet')).toHaveCount(1);
+    await page.evaluate(() => { window.print = () => { (window as any).__printed = document.body.dataset.print; }; });
+    await page.getByTestId('review-print').click();
+    expect(await page.evaluate(() => (window as any).__printed)).toBe('sheet');
+  });
+});

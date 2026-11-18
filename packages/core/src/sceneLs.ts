@@ -46,7 +46,7 @@ export function drawSpeakerMain(g: G, r: Rect, P: Pal, ov: string[], tAnim: numb
   const sx = r.x + Math.max(22, w * 0.07), sr = 11;
   g.save(); g.strokeStyle = P.text; g.lineWidth = 1.5; g.beginPath(); g.arc(sx, cy, sr, 0, 7); g.stroke(); g.restore();
   line(g, Array.from({ length: 13 }, (_, i) => [sx - 6 + i, cy - 4 * Math.sin((i / 12) * 2 * Math.PI)] as [number, number]), P.text, 1.3);
-  text(g, 'V(t)', sx, cy + sr + 13, P.text, { align: 'center', px, wt: 700 });
+  text(g, 'V(t)', sx + sr + 5, cy + 4, P.text, { align: 'left', px, wt: 700 }); // beside the source, clear of the wires above and below
   // magnet + voice coil + cone + suspension
   const mx = r.x + w * 0.27, mw = Math.max(18, w * 0.05), mh = hh * 0.46;
   g.fillStyle = P.strong; g.fillRect(mx - mw, cy - mh / 2, mw, mh); g.fillStyle = P.elev; g.fillRect(mx - mw * 0.55, cy - mh * 0.12, mw * 0.55, mh * 0.24);

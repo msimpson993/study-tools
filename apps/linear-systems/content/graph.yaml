@@ -84,7 +84,7 @@ maps:
       label: See it on the six-domains board
   - id: INV
     label: Going back
-    detail: Residues; the ROC picks the side
+    detail: Residues; ROC picks the side
     series: 1
     short: "To get a signal back, split X into first-order pieces (partial fractions) or close the inverse contour and add residues. Each pole gives one exponential; the ROC decides whether that term runs forward (right-sided, pole inside the ROC's inner edge) or backward in time (left-sided)."
     eq: "x(t) = Σ Res[X(s)e^(st)],   1/(z − a) ↔ a^(n−1)u(n−1) or −a^(n−1)u(−n)"
@@ -336,7 +336,7 @@ maps:
       label: See it on the six-domains board
   - id: INV
     label: Going back
-    detail: Residues; the ROC picks the side
+    detail: Residues; ROC picks the side
     series: 1
     short: "To get a signal back, split X into first-order pieces (partial fractions) or close the inverse contour and add residues. Each pole gives one exponential; the ROC decides whether that term runs forward (right-sided, pole inside the ROC's inner edge) or backward in time (left-sided)."
     eq: "x(t) = Σ Res[X(s)e^(st)],   1/(z − a) ↔ a^(n−1)u(n−1) or −a^(n−1)u(−n)"
@@ -425,7 +425,7 @@ maps:
     quizTag: optimal
   - id: ROC
     label: Region of convergence
-    detail: Bounded by poles; picks the side
+    detail: Poles bound it; it picks x(t)
     series: 1
     short: "The ROC never contains a pole, so it is bounded by poles: a half-plane or strip in s, a disc, ring or exterior in z. Right-sided signals have an ROC to the right (outside the outermost pole), left-sided to the left (inside), two-sided a strip or ring. Stable means the ROC contains the jω axis or unit circle."
     eq: "right-sided ⇒ |z| > r_max,   left-sided ⇒ |z| < r_min,   stable ⇔ |z| = 1 ∈ ROC"
@@ -479,7 +479,7 @@ maps:
     quizTag: parseval
   - id: SAMP
     label: Sampling
-    detail: Spectrum repeats; folds at fs/2
+    detail: Copies every fs; fold at fs/2
     series: 1
     short: Sampling every T seconds makes the spectrum repeat every 2π/T. Content above half the sample rate folds back (aliases). A continuous pole p becomes a discrete pole z = e^(pT).
     eq: "z = e^(sT),   fold frequency = f_s/2"
@@ -489,7 +489,7 @@ maps:
     quizTag: sampling
   - id: DTFT
     label: DTFT
-    detail: "Z on the unit circle, period 2π"
+    detail: "Z on |z| = 1; period 2π"
     series: 1
     short: "The DTFT is the Z-transform on the unit circle, z = e^(jΩ). Its spectrum is periodic in Ω with period 2π, because sampling cannot tell Ω from Ω + 2π."
     eq: "X(e^(jΩ)) = Σ x[n] e^(−jΩn)"
