@@ -6,9 +6,9 @@ maps:
   caption: "The whole course on one page. Each box is a question with its one-line answer on its face; read top to bottom. Solid arrows are the next question; the dashed line says a transfer function and a state model are the same system. Tap any box or line for more, and switch to Full detail for the extra boxes."
   seriesNames:
   - Linearity and the eigen idea
-  - "Signals view: transforms and Fourier"
-  - "State view: A, B, C"
-  - "What can inputs affect, outputs reveal?"
+  - "Signals: transforms and Fourier"
+  - "State: A, B, C"
+  - "What can u affect, y reveal?"
   - Application
   nodes:
   - id: root
@@ -293,9 +293,9 @@ maps:
   caption: "The same map with every box the exams use: what makes a system linear and time-invariant, ROC rules, poles and zeros, orthogonality, Parseval, windowing, Jordan form, Cayley–Hamilton, PBH, Gramians and the Kalman split. The application box (optimal control) has its own colour. Dashed lines join the same idea seen from the two sides."
   seriesNames:
   - Linearity and the eigen idea
-  - "Signals view: transforms and Fourier"
-  - "State view: A, B, C"
-  - "What can inputs affect, outputs reveal?"
+  - "Signals: transforms and Fourier"
+  - "State: A, B, C"
+  - "What can u affect, y reveal?"
   - Application
   nodes:
   - id: root
