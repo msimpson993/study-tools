@@ -28,6 +28,7 @@ npm run check          # everything above in order
 1. **Map first.** A new page starts with `content/graph.yaml` (central question → chain of questions). Do not build a page without the map. Every node/edge needs a non-empty popup; the build fails otherwise.
 2. **Content, not code.** Add topics as YAML/Markdown. Touch `packages/core` only for behaviour every page should share.
 3. **Never regress a ported page.** Pages carry an `expect:` guard in `subject.yaml` (counts of nodes/edges/dives/examples); update it deliberately.
+3b. **Question-chain format.** Box pop-ups, line pop-ups (why ask it here, Back/Next through the lines), the dive template, audio, computed-and-tested numbers, one page per course: `docs/design-principles.md › The question-chain format` and `docs/content-format.md` (fields and guards). `apps/linear-systems` is the reference.
 4. **Verify in a browser** before claiming done: `docs/verification-checklist.md`.
 5. Dark true-black (`#000`) default, light toggle, 390 px phone must work, explanations collapsed by default.
 6. Commit small, push after every commit; CI must stay green (`.github/workflows/ci.yml`).

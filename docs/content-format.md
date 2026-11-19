@@ -72,3 +72,48 @@ List of `{id, tags[], kind, q, …}`. `kind: recall` needs `a`; every other kind
 
 ## Hash routes
 `#/` map · `#/dive/<id>?from=<map>/<node>` · `#/s/<section>` · `#/quiz?tags=a,b&title=…` · `#/figure/<id>?preset=…` · `#/board?pair=<id>&preset=<example>`.
+
+## The question-chain format: fields and guards (reference: `apps/linear-systems`)
+See [design-principles.md › The question-chain format](design-principles.md#the-question-chain-format-reference-appslinear-systems) for the rules; these are the fields that carry them.
+
+**Box pop-up template** (`node.pop`, opt-in; when present the pop-up shows only the template):
+```yaml
+short: "Yes. For small changes … Doing this is called linearization: …"   # plain answer first, then the term
+eq: "Δy ≈ f′(x₀) Δx"
+pop:
+  rough: "small change out ≈ slope × small change in"      # ≥ 8 chars
+  eqKey: "Δx = small change in drive; f′(x₀) = slope at the operating point …"   # every symbol of eq
+  figures:                                                  # ≤ 4, quiz-figure renderers
+    - { id: pop-lintest, params: { a: 0.2 }, alt: "…", caption: "(a) 0.2 V" }    # multi-panel: captions start "(a)", "(b)"…
+  figCaption: "<b>(a)</b> … <b>(b)</b> …"                   # ≥ 20 chars, required with figures, names every panel
+  audio: [clip440]                                          # ids from the app's audio registry
+  example: "At 0.2 V … at 2 V …"                            # the running-example line (else addsToExample)
+  next: "…"                                                 # only used when the box has no outgoing line
+  ask: c-lin-2                                              # one quiz id: the intuition question
+```
+The restated question comes from the incoming edge's `question` (the root's from its `label`); the next-question links from the outgoing edges.
+
+**Edges** add:
+```yaml
+- from: LIN
+  to: NEAR
+  question: "Real things are never perfectly linear, so does this help?"
+  idea: "Yes: for small signals …"             # the short answer shown on the line
+  why: |                                        # markdown, ≥ 20 chars; main-chain lines use three leads
+    **Still open:** …
+    **Why it matters:** …
+    **What we want:** …
+  whyFigures: [{ id: pop-lintest, params: { a: 2 }, alt: "…" }]   # optional, ≤ 2
+  whyFigCaption: "Box 3, panel (b): … "         # required with whyFigures
+```
+**Dives** add `level` (math tag; turns on *At a glance*) and `check: [quiz ids]` (*Check yourself*, 2–3). Use ```` ````callout:derivation Full derivation ```` for a collapsed derivation.
+
+**Guards** (`packages/build/test/content.test.ts`, per app; linear-systems is the reference):
+- every non-root pop-up node has an incoming question; the root label is a question;
+- figures need `figCaption`; multi-panel captions are labelled and walked through;
+- words: text ≤ ~150 (soft target), ≤ ~180 with captions;
+- every edge has `why`; main-chain lines have *Still open / Why it matters / What we want*, ≤ ~150 words, and a caption on any figure;
+- dives: `level`, 2–3 checks, *The big idea*, *Worked example: on*, *What it can't do*, ≥ 1 interactive figure; *Full derivation* only on the listed dives;
+- glossary count and every term in a section.
+- `subject.yaml › expect` pins the counts (maps, nodes, edges, dives, quiz, examples); the build fails if they drift, so update it deliberately.
+E2E: `tests/e2e/chain-nav.spec.ts` (walk through the lines, question lines, 390 px buttons), `visuals.spec.ts` (captions), `audio.spec.ts`.

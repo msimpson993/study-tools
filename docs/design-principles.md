@@ -95,3 +95,29 @@ Build with Vite + `vite-plugin-singlefile`; hub generated from `subject.yaml`s. 
 - Separate, drifting copies of CSS/quiz code per page; patch-by-string builds.
 - Dropping content/interactivity when re-platforming; claiming "verified" without measuring.
 - Misreading a terse request narrowly (time *slider* vs time-*axis* slider): when ambiguous, include both or state the interpretation.
+
+## The question-chain format (reference: `apps/linear-systems`)
+*Malcolm, Nov 18 2026. Applies to every course page; `apps/linear-systems` is the worked reference, so copy its patterns.*
+
+**One page per course.** A course is one app. Standalone tools (a transforms board, a sandbox) are folded into that course page as a section, opened from the boxes and dives that need them with deep links (pair, preset). Old URLs redirect into the course page. **Review stays separate**: the map's Review mode and the quiz are their own views, never mixed into the teaching pop-ups.
+
+**Box pop-ups** (`node.pop`), top to bottom:
+1. **The question**, restated: the incoming line's question (the one the reader arrived by, else the main-chain one). The root states the full central question.
+2. **The answer, plain first.** The first sentence answers that question directly in plain words ("Yes: small changes near the operating point are almost linear"). Only then name the real term, each with a plain definition ("this is called linearization: replace the curve by its tangent line, the Jacobian for several variables").
+3. **In rough words:** the formula as a sentence. The map equation follows; every symbol in it is explained (`eqKey`).
+4. **Figures only where needed**, captioned. A composite figure has labelled panels (a), (b)… and one caption that walks through them in order, saying what each shows and what it proves. Text and figures say the same thing.
+5. **On the running example:** one line on the course's running example (earbud, car).
+6. **Next question(s):** each outgoing line's question, as a link to that line.
+7. **One intuition question** (`ask`, a quiz id) as a Quick check.
+
+**Length.** Aim for about 120 words; up to about 150 is fine; about 180 with figure captions. Going past ~150 is OK only when truly needed, and a box that needs that much should first be considered for splitting into two map topics. It is a guideline, not a hard cap: readability wins.
+
+**No leaps.** Each box first answers the question it was asked; bridging sentences connect it to the next question. Read the chain as a first-time reader: incoming question → answer → next question.
+
+**Line pop-ups** carry the question, a **why ask it here** (what the previous box left unanswered, why that gap matters, what kind of answer we want; it can be several paragraphs and borrow a captioned figure, but leans brief, ~150 words), the short answer, and **Back / Next**. Navigation goes **through the lines**: box → line → box → line. A box's Next opens its outgoing line (one per line); its Back opens its incoming line (main chain first; the root has no Back). A line's Next opens its target box and its Back its source box. Buttons are ≥ 44 px and never overlap at 390 px.
+
+**Dives** follow one template: a math-level tag (`level`: Conceptual / Some algebra / Worked calculation, which turns on the *At a glance* outline); opening on its map question; *The big idea*; *See it* with at least one interactive figure (more where they help); *The math* with every symbol labelled by its physical meaning; a collapsed *Full derivation* only where a derivation is expected (a course exam would ask for it); *Worked example: on* the running example; *What it can't do*; *Check yourself* with 2–3 questions.
+
+**Audio** (opt-in, `packages/core/src/audio.ts`): generated in the browser from the running example's own model (no files, works offline); nothing is created or plays until the reader presses Play; clips are short (≤ 8 s) and normalised to a low peak (−20 dBFS) under a master volume; one Stop silences everything; every player has a "What you hear: …" note and, where it helps, a plot of what is playing. Sound only where it teaches something you can hear (the earbud), never for the car.
+
+**Numbers are computed, not typed.** Every number in a pop-up, caption, dive or quiz comes from the app's model code and is pinned by a unit test (`apps/<id>/test/*.test.ts`). If a reviewer's number disagrees, recompute and flag it; never adjust a number by hand to match text.
