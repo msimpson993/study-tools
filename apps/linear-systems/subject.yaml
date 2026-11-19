@@ -37,7 +37,7 @@ runningExample:
     | mechanical damping R_ms | 0.173 kg/s | ζ ≈ 0.229 from R_ms alone |
     | force factor Bl, coil resistance R_e | 0.545 T·m, 7.47 Ω | back-EMF damping Bl²/R_e ≈ 0.040 kg/s; the coil is voltage-driven, so the total gives **ζ ≈ 0.28**, the value used throughout |
     | coil inductance L_e | 0.04 mH | coil pole −R_e/L_e ≈ −186,750 rad/s: far faster, so 2 states (x, ẋ) suffice |
-    | poles | −1,267 ± j4,322 rad/s | ring at ≈ 690 Hz, decay time ≈ 0.8 ms |
+    | poles | −1,267 ± j4,322 rad/s | ring at ≈ 688 Hz, decay time ≈ 0.8 ms |
 
     Noise cancelling comes as feedforward (outside microphone), feedback (in-ear microphone) or hybrid, with an adaptive FxLMS filter running at low latency.
 

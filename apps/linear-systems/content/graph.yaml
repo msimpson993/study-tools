@@ -29,7 +29,7 @@ maps:
     detail: "Input in, output out"
     kind: box
     series: 0
-    short: "The output of a system: anything that turns an input signal into an output signal (formally an operator T, y = T{u}: the whole output for the whole input u)."
+    short: "The output of a system. A system is anything that turns an input signal into an output signal (formally an operator T, y = T{u})."
     pop: &id004
       rough: "output = the system's rule applied to the input, y = T{u}"
       example: "Earbud: drive voltage in, cone motion out. Car: road heights under the wheels in, body heave and pitch out."
@@ -480,7 +480,7 @@ maps:
     detail: "Input in, output out"
     kind: box
     series: 0
-    short: "The output of a system: anything that turns an input signal into an output signal (formally an operator T, y = T{u}: the whole output for the whole input u)."
+    short: "The output of a system. A system is anything that turns an input signal into an output signal (formally an operator T, y = T{u})."
     pop: *id004
     addsToExample: "Names the two running examples as systems: voltage ↦ cone motion for the earbud, road heights ↦ heave and pitch for the car."
     dive: linsys
