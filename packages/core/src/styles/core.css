@@ -346,8 +346,10 @@ details.derivation{margin:.7rem 0}details.derivation>summary{font-weight:650}
   .cm-caps>details[open]{flex-basis:100%}
   .cm-caps .sum-long{display:none}.cm-caps .sum-short{display:inline}
   .cm-caps summary{font-size:.8rem;padding:.3rem .5rem}
-  .cm-legend{flex-wrap:nowrap;overflow-x:auto;gap:.2rem .7rem;padding-bottom:3px;margin-bottom:.3rem;scrollbar-width:thin}
-  .cm-legend .lg-series{flex-wrap:nowrap}
+  /* the legend wraps onto short rows instead of running off the right edge (compact so the map still starts high) */
+  .cm-legend{flex-wrap:wrap;gap:.1rem .6rem;margin-bottom:.3rem;font-size:.7rem;line-height:1.2}
+  .cm-legend .lg-series{display:contents}
+  .cm-legend .lg-chip,.cm-legend .lg-vbtn{padding:0 .45rem 0 .35rem;line-height:1.25}
   .cm-legend .lg-chip,.cm-legend .lg-view{white-space:nowrap}
 }
 /* the Live figures list: long titles wrap inside their button (no page wider than the phone) */
