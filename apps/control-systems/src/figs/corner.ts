@@ -97,7 +97,8 @@ export const dominantFigure = figureOf(() => [
       const kt = num(v, 'kt', 200) * 1000, p = cornerOf(), body = roots([p.m, p.c, p.k]);
       const all = on(v, 'wheel') ? roots(charPoly(wheelA(p, WHEEL.mu, kt))) : body, hop = all.filter((q) => Math.abs(q.im) > 20 || q.re < -15);
       const fr = drawSPlane(g, w, h, { range: 90, reCenter: -40, poles: all, marks: on(v, 'wheel') ? body.map((s) => ({ s, shape: 'ring' as const, color: col.muted() })) : [] });
-      if (hop.length) { const q = hop.find((x) => x.im > 0) ?? hop[0], wn = Math.hypot(q.re, q.im); para(g, `wheel hop |p| = ${f(wn, 1)} rad/s (${f(wn / 2 / Math.PI, 1)} Hz), ${f(q.re / body[0].re, 1)}× faster decay than the body`, fr.box.l + 4, fr.box.t + 10, fr.box.r - fr.box.l - 8, col.b(), 10); }
+      if (hop.length) { const q = hop.find((x) => x.im > 0) ?? hop[0], wn = Math.hypot(q.re, q.im); const slow = all.filter((x) => !hop.includes(x)), sb = slow.find((x) => x.im > 0) ?? slow[0] ?? body[0]; // divide by the body pair WITH the wheel (numbers.py [R3]: 20.4/1.60 = 12.8×)
+        para(g, `wheel hop |p| = ${f(wn, 1)} rad/s (${f(wn / 2 / Math.PI, 1)} Hz): decays ${f(q.re / sb.re, 1)}× faster than the body`, fr.box.l + 4, (fr.box.t + fr.box.b) / 2 - 34, (fr.box.r - fr.box.l) * 0.42, col.b(), 10); }
       else para(g, 'one mass: just the body pair −2 ± j7.75', fr.box.l + 4, fr.box.t + 10, fr.box.r - fr.box.l - 8, col.a(), 10);
     },
   },

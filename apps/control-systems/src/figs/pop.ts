@@ -7,7 +7,7 @@ import { houseRun } from './house';
 import { obsRun, refRun } from './corner';
 import { dishPoles } from './dish';
 import { dishSim } from '../model/plants';
-import { drawHouse, drawCorner, drawDish, drawLoop } from './draw';
+import { drawHouse, drawCorner, drawDish, drawLoop, arrowPx } from './draw';
 import { legend, lin, para, f, range, wrap } from './util';
 import { quizFigures as pidQuiz } from './pidquiz';
 
@@ -52,7 +52,7 @@ export const popFigures: QuizFigureRegistry = {
 
   'pop-housemodes': mini((g, w, h, p) => {
     if (panel(p) === 'a') { const F = drawSPlane(g, w, h, { range: 2.6, reCenter: -1.2, poles: [C(-0.2), C(-2.2)], labels: true, xLabel: 'σ (1/h)', yLabel: 'jω (rad/h)' }); text(g, 'both real: no ringing', F.box.l + 4, F.box.t + 10, col.muted(), 'left', 10); return; }
-    const t = lin(0, 6, 241), F = fr(g, w, h, [0, 6], [-1.1, 1.1], 'time (h)', 'K'); tline(g, F, [0, 0], [6, 0], col.strong(), 1);
+    const t = lin(0, 6, 241), F = fr(g, w, h, [0, 6], [-1.1, 1.1], 'time (h)', 'temperature (K)'); tline(g, F, [0, 0], [6, 0], col.strong(), 1);
     curve(g, F, t, t.map((q) => Math.exp(-0.2 * q)), col.c(), 2.2); curve(g, F, t, t.map((q) => Math.exp(-2.2 * q)), col.b(), 2); curve(g, F, t, t.map((q) => -Math.exp(-2.2 * q)), col.a(), 2, [5, 3]);
     legend(g, F, [{ label: 'slow: both rooms together (τ 5 h)', color: col.c() }, { label: 'fast: room 1 ↓ …', color: col.b() }, { label: '… room 2 ↑ (27 min)', color: col.a(), dash: true }], 'br', 9.5);
   }),
@@ -86,7 +86,8 @@ export const popFigures: QuizFigureRegistry = {
   'pop-pgain': mini((g, w, h, p) => {
     if (panel(p) === 'a') {
       const Ks = lin(0, 1000, 120), up: ReturnType<typeof C>[] = [], dn: ReturnType<typeof C>[] = []; for (const K of Ks) { const r = roots([1, 2, K / DISH.J]); up.push(r[0]); dn.push(r[1]); }
-      drawSPlane(g, w, h, { range: 12, reCenter: -1, locus: [up, dn], poles: roots([1, 2, 4]), labels: false, marks: [{ s: C(-1, 0), label: 'Kp = 10', color: col.e() }] }); return;
+      // × at Kp 40 (−1 ± 1.73j) and Kp 1000 (−1 ± 9.95j); the yellow dot is where the branches meet, Kp = 10
+      drawSPlane(g, w, h, { range: 12, reCenter: -1, locus: [up, dn], poles: [...roots([1, 2, 4]), ...roots([1, 2, 1000 / DISH.J])], labels: false, marks: [{ s: C(-1, 0), label: 'Kp = 10', color: col.e(), shape: 'dot' }] }); return;
     }
     const F = fr(g, w, h, [0, 4], [0, 10.5], 'time (s)', 'θ (°)');
     for (const [K, c] of [[40, col.c()], [1000, col.b()]] as [number, string][]) { const s = dishSim({ Kp: K, T: 4, dt: 1e-3, every: 10 }); curve(g, F, s.t, degs(s.y), c, 2); }
@@ -142,7 +143,7 @@ export const popFigures: QuizFigureRegistry = {
   'pop-sc': mini((g, w, h, p) => {
     if (panel(p) === 'a') {
       const ws = lin(-2, 1.5, 200), S = ws.map((e) => houseSC(1100, 10 ** e).S), Cm = ws.map((e) => houseSC(1100, 10 ** e).C), F = fr(g, w, h, [-2, 1.5], [0, 1.4], 'log₁₀ ω (rad/h)', '|S|, |C|');
-      curve(g, F, ws, S, col.c(), 2); curve(g, F, ws, Cm, col.d(), 2); legend(g, F, [{ label: '|S| rejects', color: col.c() }, { label: '|C| passes', color: col.d() }], 'tl', 9.5); return;
+      curve(g, F, ws, S, col.c(), 2); curve(g, F, ws, Cm, col.d(), 2); legend(g, F, [{ label: '|S| weather through', color: col.c() }, { label: '|C| sensor error through', color: col.d() }], 'tl', 9.5); return;
     }
     const F = fr(g, w, h, [0, 12], [-1.2, 0.3], 'time (h)', 'room (K)'), t = lin(0, 12, 241), k = houseG2().num[0], pp = housePoly();
     const P = step(tf([k * 1100], [1, pp[1], pp[2] + k * 1100]), t).y.map((q) => -q), PI = step(tf([k * 1100, k * 200], [1, pp[1], pp[2] + k * 1100, k * 200]), t).y.map((q) => -q);
@@ -174,6 +175,16 @@ export const popFigures: QuizFigureRegistry = {
     const F = fr(g, w, h, [0, 2], [-2, 4.3], 'time (s)', 'z (cm)'); curve(g, F, tt, ev(ps.y).map((q) => q * 100), col.muted(), 1.8, [5, 3]); curve(g, F, tt, ev(a.y).map((q) => q * 100), col.a(), 2.2);
     legend(g, F, [{ label: 'passive: 3.9 cm, rings', color: col.muted(), dash: true }, { label: 'active: 1.9 cm', color: col.a() }], 'tr', 9.5);
   }),
+
+  'pop-slideplace': mini((g, w, h) => {
+    // both plants on one s-plane in rad/s, no normalising: P slides the dish's poles along a fixed path; state feedback places the corner's
+    const Ks = lin(0, 1000, 160), up: ReturnType<typeof C>[] = [], dn: ReturnType<typeof C>[] = []; for (const K of Ks) { const r = roots([1, 2, K / DISH.J]); up.push(r[0]); dn.push(r[1]); }
+    const F = drawSPlane(g, w, h, { range: 11, reCenter: -4.5, locus: [up, dn], poles: [...roots([1, 2, 4]), ...roots([1, 2, 100])], zeros: [], labels: false,
+      marks: [...roots([corner.m, corner.c, corner.k]).map((s) => ({ s, shape: 'ring' as const, color: col.muted() })), { s: C(-8, 6), shape: 'dot' as const, color: col.a() }, { s: C(-8, -6), shape: 'dot' as const, color: col.a() }] });
+    for (const sg of [1, -1]) arrowPx(g, F.X(-2.3), F.Y(sg * 7.6), F.X(-7.6), F.Y(sg * 6.2), col.a(), 1.6, 6);
+    text(g, 'P: decay stuck at 1 /s', F.X(-1) + 6, F.Y(10.2), col.muted(), 'left', 10);
+    text(g, 'state feedback: K = [14 400, 4 800]', F.X(-8), F.Y(-6) + 16, col.a(), 'center', 10);
+  }, 1.4, 340),
 
   'pop-obs': mini((g, w, h) => {
     const r = obsRun({ speed: 5, e0: 1 }), F = fr(g, w, h, [0, 0.6], range([r.z, r.zh].map((a) => a.slice(0, Math.round(a.length * 0.4))), 0.1), 'time (s)', 'z (cm)'), n = Math.round(r.t.length * 0.4);

@@ -169,11 +169,12 @@ export const partialFigure = figureOf(() => [
   {
     id: 'terms', title: 'X₂(s) = 9/(s(s + 0.2)(s + 2.2)): one term per pole', x: 'time (h)', y: 'K',
     draw(g, w, h, v) {
-      const p1 = num(v, 'p1', -0.2), p2 = num(v, 'p2', -2.2), F = 20.45, r1 = (F * p2) / (p1 - p2), r2 = (F * p1) / (p2 - p1), t = lin(0, 24, 481);
+      const p1 = num(v, 'p1', -0.2), p2 = num(v, 'p2', -2.2), F = 20.45, r1 = (F * p2) / (p1 - p2), r2 = (F * p1) / (p2 - p1), W = num(v, 'win', 24), t = lin(0, W, 481);
       const y0 = t.map(() => F), y1 = t.map((tt) => r1 * Math.exp(p1 * tt)), y2 = t.map((tt) => r2 * Math.exp(p2 * tt)), y = t.map((_, i) => y0[i] + y1[i] + y2[i]);
-      const fr = plotFrame(g, w, h, [0, 24], range([y, y1, y2, y0], 0.06), 'time (h)', 'K'); tline(g, fr, [0, 0], [24, 0], col.strong(), 1);
+      const fr = plotFrame(g, w, h, [0, W], range([y, y1, y2, y0], 0.06), 'time (h)', 'K'); tline(g, fr, [0, 0], [W, 0], col.strong(), 1);
       if (on(v, 'terms')) { curve(g, fr, t, y0, col.muted(), 1.4, [5, 3]); curve(g, fr, t, y1, col.c(), 1.6, [5, 3]); curve(g, fr, t, y2, col.d(), 1.6, [5, 3]); }
       curve(g, fr, t, y, col.a(), 2.4);
+      const y1h = F + r1 * Math.exp(p1) + r2 * Math.exp(p2); dot(g, fr, [1, y1h], col.e(), 4.5, true); text(g, `1 h: ${f(y1h)} K`, fr.X(1) + 7, fr.Y(y1h) - 2, col.e(), 'left', 10); // the worked example's check point
       legend(g, fr, [{ label: `x₂(t) = ${f(F)} ${r1 < 0 ? '−' : '+'} ${f(Math.abs(r1))}e^(${f(p1)}t) ${r2 < 0 ? '−' : '+'} ${f(Math.abs(r2), 3)}e^(${f(p2)}t)`, color: col.a() }, ...(on(v, 'terms') ? [{ label: `step term ${f(F)}`, color: col.muted(), dash: true }, { label: `slow term (pole ${f(p1)})`, color: col.c(), dash: true }, { label: `fast term (pole ${f(p2)})`, color: col.d(), dash: true }] : [])], 'br');
       text(g, `residues sum to ${f(F + r1 + r2, 3)} (x₂(0) = 0)`, fr.box.l + 6, fr.box.t + 8, col.muted(), 'left', 10);
     },
@@ -243,13 +244,35 @@ export const regulatePanels = (): FigurePanel[] => [
   {
     id: 'heat', title: 'Extra heater power the thermostat adds', x: 'time (h)', y: 'extra power (W)',
     draw(g, w, h, v) {
-      const r = front(v), tt = Array.from(r.t).filter((_, i) => i % 20 === 0), uu = Array.from(r.u).filter((_, i) => i % 20 === 0), need = (-num(v, 'd', -5) * 2 * HOUSE_WALLS.Gout);
-      const fr = plotFrame(g, w, h, [0, 24], [0, Math.max(need * 1.4, 200)], 'time (h)', 'W'); hline(g, fr, need, [0, 24], `steady need ${f(need, 0)} W`);
+      const r = front(v), tt = Array.from(r.t).filter((_, i) => i % 20 === 0), uu = Array.from(r.u).filter((_, i) => i % 20 === 0);
+      // each controller's own steady value (review 1, W1): (|d| − droop)/G₂(0); P droops |d|/(1 + L(0)), PI not at all, open loop adds nothing
+      const ctrl = str(v, 'ctrl', 'pi'), d = -num(v, 'd', -5), G0 = dc(houseG2()), L0 = num(v, 'Kp', 1100) * G0;
+      const need = ctrl === 'pi' ? d / G0 : ctrl === 'p' ? (d - d / (1 + L0)) / G0 : 0;
+      const fr = plotFrame(g, w, h, [0, 24], [0, Math.max(need * 1.4, r.peakU * 1.1, 200)], 'time (h)', 'W');
+      if (ctrl !== 'open') hline(g, fr, need, [0, 24], `steady: ${f(need, 0)} W (${ctrl === 'pi' ? 'PI' : 'P'})`);
       curve(g, fr, tt, uu, col.b(), 2.2); text(g, `now ${f(r.uFinal, 0)} W · peak ${f(r.peakU, 0)} W`, fr.box.l + 6, fr.box.t + 8, col.b(), 'left', 10.5);
     },
   },
 ];
 export const regulateFigure = figureOf(regulatePanels);
+/* ── blocks · figure:coldfront: why feed back at all? the same front, heater left alone vs a P thermostat ── */
+export const coldfrontFigure = figureOf((): FigurePanel[] => [{
+  id: 'both', title: 'Outdoors drops 5 K: heater left alone vs a P thermostat', x: 'time (h)', y: 'bedroom change (K)',
+  draw(g, w, h, v) {
+    const d = num(v, 'd', -5), Kp = num(v, 'Kp', 1100), ol = houseColdFront(0, 0, d, 24, 2e-3), p = houseColdFront(Kp, 0, d, 24, 2e-3), ev = (x: ArrayLike<number>) => Array.from(x).filter((_, i) => i % 20 === 0);
+    const fr = plotFrame(g, w, h, [0, 24], [Math.min(d * 1.08, -1), 0.6], 'time (h)', 'K'); tline(g, fr, [0, 0], [24, 0], col.muted(), 1, [5, 4]);
+    curve(g, fr, ev(ol.t), ev(ol.y), col.b(), 2.2); curve(g, fr, ev(p.t), ev(p.y), col.a(), 2.4);
+    legend(g, fr, [{ label: `open loop: ${f(ol.final, 2)} K after 24 h`, color: col.b() }, { label: `P ${f(Kp, 0)}: ${f(p.final, 2)} K (worst ${f(p.worst, 2)})`, color: col.a() }], 'tr');
+  },
+}, {
+  id: 'heat', title: 'Extra heat the heater adds', x: 'time (h)', y: 'extra heat (W)',
+  draw(g, w, h, v) {
+    const d = num(v, 'd', -5), Kp = num(v, 'Kp', 1100), p = houseColdFront(Kp, 0, d, 24, 2e-3), ev = (x: ArrayLike<number>) => Array.from(x).filter((_, i) => i % 20 === 0);
+    const fr = plotFrame(g, w, h, [0, 24], [0, Math.max(100, p.peakU * 1.25)], 'time (h)', 'W'); tline(g, fr, [0, 0], [24, 0], col.b(), 2.2);
+    curve(g, fr, ev(p.t), ev(p.u), col.a(), 2.4);
+    legend(g, fr, [{ label: 'open loop: 0 W (nobody turns it up)', color: col.b() }, { label: `P ${f(Kp, 0)}: ${f(p.uFinal, 0)} W after 24 h`, color: col.a() }], 'br');
+  },
+}]);
 
 /* ── SENS · figure:sens ── */
 function sensRuns(v: V) {
@@ -297,7 +320,7 @@ export const scFigure = figureOf(() => [
       for (const q of ws) { const L = scL(v, C(0, q)), d = Math.hypot(1 + L.re, L.im); S.push(1 / d); Cm.push(Math.hypot(L.re, L.im) / d); }
       const fr = plotFrame(g, w, h, [-2, 1.5], [0, 1.45], 'log₁₀ ω (rad/h)', '|S|, |C|'); hline(g, fr, 1, [-2, 1.5], '');
       curve(g, fr, lx, S, col.c(), 2.2); curve(g, fr, lx, Cm, col.d(), 2.2);
-      legend(g, fr, [{ label: '|S|: what the loop rejects (weather, model error)', color: col.c() }, { label: '|C|: what it passes (sensor error)', color: col.d() }], 'tl');
+      legend(g, fr, [{ label: '|S|: weather through', color: col.c() }, { label: '|C|: sensor error through', color: col.d() }], 'tl');
     },
   },
   {

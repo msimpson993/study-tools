@@ -116,7 +116,9 @@ export const integralFigure = figureOf(() => [
       const fr = angleFrame(g, w, h, T, [y], deg(DISH.step)); hline(g, fr, deg(DISH.step), [0, T], 'target 5.73°', col.e());
       if (s.unstable || Ki >= 2 * Kp) { para(g, `Ki ≥ 2Kp: unstable (Routh on s³ + 2s² + 0.1Kp s + 0.1Ki)`, fr.box.l + 6, fr.box.t + 10, fr.box.r - fr.box.l - 12, col.bad(), 11); }
       curve(g, fr, s.t, y, col.a(), 2.2);
-      if (wind && !s.unstable) { const ws = windStats(s.t, s.y, DISH.step); tline(g, fr, [W, fr.iy(fr.box.t)], [W, fr.iy(fr.box.b)], col.d(), 1, [3, 3]); text(g, `wind 20 N·m: peak ${f(ws.peak, 2)}°`, fr.X(W) + 4, fr.box.b - 10, col.d(), 'left', 10); }
+      if (wind && !s.unstable) { // the wind's own effect: the with-wind run minus the no-wind run (numbers.py [R3]), not |θ − target|, which still holds the step's ringing
+        const s0 = dishSim({ Kp, Ki, T, dt: 5e-4 }); let pk = 0; for (let i = 0; i < s.t.length; i++) if (s.t[i] >= W) pk = Math.max(pk, Math.abs(deg(s.y[i] - s0.y[i])));
+        tline(g, fr, [W, fr.iy(fr.box.t)], [W, fr.iy(fr.box.b)], col.d(), 1, [3, 3]); text(g, `wind alone: peak ${f(pk, 2)}°`, fr.X(W) + 4, fr.box.b - 10, col.d(), 'left', 10); }
     },
   },
   {
@@ -209,7 +211,7 @@ export const indexFigure = figureOf(() => [
   {
     id: 'e', title: 'Step error e(t) and the area the index adds up', x: 'time (s)', y: 'e',
     draw(g, w, h, v) {
-      const plant = str(v, 'plant', 'telescope'), K = num(v, plant === 'dish' ? 'Kr' : 'K3', plant === 'dish' ? 80 : 4), kind = str(v, 'index', 'ISE');
+      const plant = str(v, 'plant', 'dish'), K = num(v, plant === 'dish' ? 'Kr' : 'K3', plant === 'dish' ? 80 : 4), kind = str(v, 'index', 'ISE');
       const a1 = plant === 'dish' ? 2 + 0.1 * K : 0.5 * K, a0 = plant === 'dish' ? 100 : 2.5, T = plant === 'dish' ? 3 : 12, t = lin(0, T, 601);
       const disc = a1 * a1 - 4 * a0, e = t.map((tt) => { if (disc < 0) { const s = a1 / 2, wd = Math.sqrt(-disc) / 2; return Math.exp(-s * tt) * (Math.cos(wd * tt) + (s / wd) * Math.sin(wd * tt)); } const r1 = (-a1 + Math.sqrt(disc)) / 2, r2 = (-a1 - Math.sqrt(disc)) / 2; return ((r1 + a1) * Math.exp(r1 * tt) - (r2 + a1) * Math.exp(r2 * tt)) / (r1 - r2); });
       const shown = kind === 'ISE' ? e.map((q) => q * q) : kind === 'IAE' ? e.map(Math.abs) : e.map((q, i) => t[i] * Math.abs(q));
@@ -222,7 +224,7 @@ export const indexFigure = figureOf(() => [
   {
     id: 'curve', title: 'Index vs gain: the minimum is the "best" gain', x: 'gain', y: 'index',
     draw(g, w, h, v) {
-      const plant = str(v, 'plant', 'telescope'), kind = str(v, 'index', 'ISE'), [lo, hi] = plant === 'dish' ? [20, 200] : [2, 6], K = num(v, plant === 'dish' ? 'Kr' : 'K3', plant === 'dish' ? 80 : 4);
+      const plant = str(v, 'plant', 'dish'), kind = str(v, 'index', 'ISE'), [lo, hi] = plant === 'dish' ? [20, 200] : [2, 6], K = num(v, plant === 'dish' ? 'Kr' : 'K3', plant === 'dish' ? 80 : 4);
       const ks = lin(lo, hi, 61), ys = ks.map((k) => indexOf(plant, k, kind)), fr = plotFrame(g, w, h, [lo, hi], range([ys], 0.1), plant === 'dish' ? 'K_r (N·m·s/rad)' : 'K₃', kind);
       curve(g, fr, ks, ys, col.b(), 2.2); let im = 0; ys.forEach((q, i) => { if (q < ys[im]) im = i; }); dot(g, fr, [ks[im], ys[im]], col.ok(), 5); text(g, `min near ${f(ks[im], plant === 'dish' ? 0 : 2)}`, fr.X(ks[im]), fr.Y(ys[im]) + 14, col.ok(), 'center', 10);
       dot(g, fr, [K, indexOf(plant, K, kind)], col.e(), 4);

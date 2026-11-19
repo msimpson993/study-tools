@@ -1,5 +1,5 @@
 /** The 14 symptom cards (kept from pid-tuning). Build 1: twelve run on the antenna dish, G = 0.1/(s(s + 2)), with the tutor's numbers.py [F] settings;
- *  the nonlinearity and limit-cycle cards keep their generic teaching plant (the dish model has no nonlinearity). */
+ *  review 1: the nonlinearity and limit-cycle cards run on the dish with gear stiction (numbers.py [R4] sim_stick). */
 /**
  * The 14 "things that go wrong" of the appendix as live core Figures. Each case runs the PROBLEM at the slider settings against the FIXED version
  * (dashed): the core simulator (simulatePid) where it can, the app-local `runLoop` for the delay, sensor lag, nonlinearity, rate limit, set-point filter and dead zone.
@@ -10,6 +10,8 @@ import { legend, type Item } from './util';
 const f2 = (x: number) => String(+x.toFixed(2));
 import { dishCard, cardMet, cardWind, dishSat, dishSim, deg, type CardOpts } from '../model/plants';
 import { DISH, DISH_TUNED } from '../model/params';
+import * as M from '../model/plants';
+const stickCache = new Map<string, ReturnType<typeof M.simStick>>();
 
 type V = Record<string, number | string | boolean>;
 interface Series { t: ArrayLike<number>; y: ArrayLike<number>; color: string; dash?: boolean; width?: number }
@@ -113,20 +115,32 @@ const CASES: Record<string, Case> = {
   delay: (v) => stepCard('Time delay in the measurement', { ...gains(v), T: 15, delay: n(v, 'delay') }, { Kp: 800, Ki: 200, Kd: 110, T: 15, delay: n(v, 'delay') }, [0, 5], { yr: [-0.5, 2.5] }),
   sensorlag: (v) => stepCard('Sensor lag in the measurement', { ...TUNED, T: 15, lag: n(v, 'lag') }, { ...TUNED, T: 15, lag: 0.02 }, [0, 4], { yr: [0, 1.6] }),
   nonlinear: (v) => {
-    const f = (u: number) => Math.max(0, u) ** 2, r = n(v, 'r'), run = (rr: number, kp: number, ki: number) => { const s = runLoop({ taus: [1, 0.5], f, Kp: kp, Ki: ki, T: 30, dt: 0.01, r: () => rr }); return { t: s.t, y: s.y.map((y) => y / rr), u: s.u }; };
-    const pb = run(r, n(v, 'Kp'), n(v, 'Ki')), fx = run(r, 2 / 3, 0.5);
-    return [{ title: 'Nonlinearity: the plant gain depends on the operating point', y: 'normalised output y / r', xr: [0, 30], yr: [0, 2.4], series: [{ ...run(1, 2, 1.5), color: col.a() }, { ...pb, color: PB() }, { ...fx, color: FX(), dash: true }], hl: [{ y: 1, label: 'y / r = 1' }], legend: [{ label: 'gains (2, 1.5) at r = 1, where they were tuned', color: col.a() }, { label: `slider gains (${f2(n(v, 'Kp'))}, ${f2(n(v, 'Ki'))}) at r = ${f2(r)}`, color: PB() }, { label: `fix: gains ÷ 3 at r = ${f2(r)}`, color: FX(), dash: true }], legendAt: 'tr' }, uPlot(pb, fx, [0, 30], { legend: [{ label: 'slider gains', color: PB() }, { label: 'fix: gains ÷ 3', color: FX(), dash: true }], legendAt: 'tr' })]; },
+    // review 1 (W7): the dish with gear stiction (numbers.py [R4]); PD (2000, 0, 200), each step normalised to its size; dashed: the same loop without friction
+    const Ts = n(v, 'Ts'), Tc = n(v, 'Tc'), run = (r: number, ts: number, tc: number) => { const k = `nl|${r}|${ts}|${tc}`; if (!stickCache.has(k)) stickCache.set(k, M.simStick(2000, 0, 200, { r, T: 6, Ts: ts, Tc: tc, every: 20 })); const s = stickCache.get(k)!; return { t: s.t, y: Array.from(s.y, (y) => y / r), u: s.u, final: s.final }; };
+    const panel = (r: number): Plot => { const a = run(r, Ts, Tc), b = run(r, 0, 0), short = ((r - a.final) * 180) / Math.PI;
+      return { title: `${r} rad step (${f2((r * 180) / Math.PI)}°)`, y: 'angle ÷ step', xr: [0, 3], yr: [0, 1.3], series: [{ t: a.t, y: a.y, color: PB() }, { t: b.t, y: b.y, color: FX(), dash: true }], hl: [{ y: 1, label: 'target' }],
+        legend: [{ label: `stiction ${f2(Ts)}/${f2(Tc)} N·m: stops ${short.toFixed(3)}° short (${f2((100 * (r - a.final)) / r)} %)`, color: PB() }, { label: 'no friction', color: FX(), dash: true }], legendAt: 'br' }; };
+    return [panel(0.02), panel(0.2)];
+  },
   twodof: (v) => {
     const a = card({ ...TUNED, T: 40, b: n(v, 'b'), wind: WIND, twind: 20 }), b = card({ ...TUNED, T: 40, b: 0.9, wind: WIND, twind: 20 }), pa = thin(a, (y) => y / R0), pb = thin(b, (y) => y / R0);
     const t1 = (s: typeof a) => { const m = cardMet(s.t, s.y, R0, 20); return `%OS ${pct(m.OS)}, Ts ${m.Ts.toFixed(2)} s; ${wtxt(cardWind(s.t, s.y, 20), 20)}`; };
     return [{ title: 'Set-point weight b: the step, then a 20 N·m gust at 20 s', y: 'angle ÷ target', xr: [0, 30], yr: [0, 1.4], series: [{ ...pa, color: PB() }, { ...pb, color: FX(), dash: true }], hl: [{ y: 1, label: 'target 0.1 rad' }], vl: [{ x: 20, label: 'wind' }], notes: [`solid: ${t1(a)}`, `dashed (b = 0.9): ${t1(b)}`] },
       tPlot({ t: pa.t, u: pa.u }, { t: pb.t, u: pb.u }, [0, 30], { vl: [{ x: 20, label: 'wind' }] })];
   },
-  limitcycle: (v) => { const o = { taus: [1, Infinity], Kp: 0.5, dz: n(v, 'dz'), T: 100, dt: 0.02 }, a = runLoop({ ...o, Ki: n(v, 'Ki') }), b = runLoop({ ...o, dz: 0.3, Ki: 0.3 }); const la = `dead zone ${f2(n(v, 'dz'))}, Ki ${f2(n(v, 'Ki'))}`, lb = 'fix: dead zone 0.3, Ki 0.3'; return [{ title: 'Limit cycle from a dead zone', y: 'output y', xr: [0, 100], yr: [-0.5, 2.5], series: [{ ...a, color: PB() }, { ...b, color: FX(), dash: true }], hl: [{ y: 1, label: 'r = 1' }], legend: [{ label: la, color: PB() }, { label: lb, color: FX(), dash: true }], legendAt: 'tr' }, uPlot(a, b, [0, 100], { legend: [{ label: la, color: PB() }, { label: lb, color: FX(), dash: true }], legendAt: 'tr' })]; },
+  limitcycle: (v) => {
+    // review 1 (W7): stiction plus integral action hunts forever; an integrator dead band δ stops it (numbers.py [R4])
+    const edb = n(v, 'edb'), run = (d: number) => { const k = `lc|${d}`; if (!stickCache.has(k)) stickCache.set(k, M.simStick(2000, 1000, 200, { T: 200, edb: d, every: 200 })); const s = stickCache.get(k)!; return { t: s.t, y: Array.from(s.y, (y) => ((y - 0.1) * 180) / Math.PI), u: Array.from(s.u) }; };
+    const a = run(0), b = run(edb > 0 ? edb : 0.003), dd = ((edb > 0 ? edb : 0.003) * 180) / Math.PI;
+    return [{ title: 'Pointing error with stiction, tuned PID (2000, 1000, 200)', y: 'error (°)', xr: [0, 200], yr: [-0.5, 0.3], series: [{ ...a, color: PB(), width: 1.8 }, { ...b, color: FX(), dash: true }], hl: [{ y: dd }, { y: -dd, label: `±δ = ±${dd.toFixed(2)}°` }, { y: 0 }],
+      legend: [{ label: 'tuned PID: hunts ±0.15°, period 23.9 s', color: PB() }, { label: `with a dead band δ = ${(edb > 0 ? edb : 0.003).toFixed(4).replace(/0+$/, '')} rad: sticks and stays`, color: FX(), dash: true }], legendAt: 'br' },
+      { title: 'Motor torque: the integrator builds it up while the gear is stuck', y: 'torque (N·m)', xr: [0, 200], yr: [-70, 40], series: [{ t: a.t, y: a.u, color: PB(), width: 1.6 }, { t: b.t, y: b.u, color: FX(), dash: true }], hl: [{ y: 20, label: 'T_st = 20 N·m' }, { y: -20 }],
+        legend: [{ label: 'tuned PID: torque ramps to ±T_st, breaks free, overshoots', color: PB() }, { label: 'dead band: torque stops changing', color: FX(), dash: true }], legendAt: 'br' }];
+  },
 };
 void nz;
 /** values used once to build each card's panel list (titles do not depend on them) */
-const DUMMY: V = { Kp: 2000, Ki: 1000, Kd: 200, N: 20, aw: 'none', dm: false, limit: false, umax: 200, slew: 2, delay: 0.05, lag: 0.05, b: 1, filter: false, Nf: 200, rmax: 0.5, sensTau: 1.5, r: 9, tauf: 0, dz: 0.3 };
+const DUMMY: V = { Kp: 2000, Ki: 1000, Kd: 200, N: 20, aw: 'none', dm: false, limit: false, umax: 200, slew: 2, delay: 0.05, lag: 0.05, b: 1, filter: false, Nf: 200, rmax: 0.5, sensTau: 1.5, r: 9, tauf: 0, dz: 0.3, Ts: 20, Tc: 10, edb: 0.003 };
 export const caseFigure = (id: string) => figureOf((): FigurePanel[] => {
   const run = CASES[id], plots = run(DUMMY);
   return plots.map((p, i) => ({ id: `p${i}`, title: p.title, x: 'time (s)', y: p.y, draw: (g: CanvasRenderingContext2D, w: number, h: number, v: V) => draw(g, w, h, run(v)[i]) }));

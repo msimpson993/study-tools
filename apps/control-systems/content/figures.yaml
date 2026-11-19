@@ -373,12 +373,29 @@
       type: toggle
       default: true
       group: primary
+    - id: win
+      label: window
+      type: range
+      min: 4
+      max: 24
+      step: 1
+      default: 24
+      group: primary
+      unit: h
   presets:
     - id: house
       label: the house
       set:
         p1: -0.2
         p2: -2.2
+        win: 24
+    - id: worked
+      label: "worked example: 0–10 h, 1 h marked"
+      set:
+        p1: -0.2
+        p2: -2.2
+        terms: true
+        win: 10
 - id: rlc
   title: "G(s) for circuits: RLC, and the house as an RC network"
   x: schematic · time
@@ -387,7 +404,7 @@
     - label: output
       color: var(--cyan)
   howToRead: "Left: the circuit and its G(s). Right: its step response. The house preset maps temperature to voltage and heat flow to current: two capacitors, three resistors, a current source."
-  lookFor: "Same equations, same G(s): the RC house warms exactly like the house."
+  lookFor: 'With R = L = C = 1, G = 1/(s² + s + 1): ζ = 0.5, so the step overshoots 16.3 %. Pick "house as RC" and the ringing disappears: no inductor.'
   controls:
     - id: circ
       label: circuit
@@ -443,7 +460,7 @@
   legend:
     - label: "|G| colour: dark low, bright high"
       color: var(--yel)
-  howToRead: "Left: |G(s)| over the s-plane as a height map (poles are peaks, zeros pits). Right: the slice along the jω axis, which is the frequency response (preview). The probe marks one frequency."
+  howToRead: "Left: |G(s)| over the s-plane as a height map (poles are peaks, zeros pits). Right: the slice along the jω axis, which is the frequency response (not in lecture notes). The probe marks one frequency."
   lookFor: "The daily heater cycle (0.262 rad/h) reaches the bedroom at 4.93 K/kW instead of 8.18: the slow pole filters it."
   controls:
     - id: plant
@@ -491,8 +508,8 @@
       color: var(--cyan)
     - label: extra heater power
       color: var(--org)
-  howToRead: "Outdoors drops at t = 0; the thermostat (P or PI, in the bedroom) changes the heater. Left: the bedroom's change from its set point. Right: the extra heater power, with the steady need marked."
-  lookFor: However you tune it, the heater ends up adding 611 W; P just needs a 0.5 K error to be told to.
+  howToRead: "Outdoors drops at t = 0; the thermostat (P or PI, in the bedroom) changes the heater. Left: the bedroom's change from its set point. Right: the extra heater power, with each controller's steady value marked."
+  lookFor: "The right panel settles at 611 W under PI and 550 W under P: P stops short by its 0.5 K droop, and the cooler bedroom needs less heat."
   controls:
     - id: ctrl
       label: controller
@@ -631,7 +648,7 @@
       color: var(--cyan)
     - label: reading
       color: var(--muted)
-  howToRead: "Left (preview: frequency response): |S| is what the loop rejects, |C| what it passes from the sensor. Right: the room and the thermostat's reading when the sensor reads high by the bias (and flickers, if on)."
+  howToRead: "Left: gain to sines from slow to fast (frequency response; not in lecture notes). |S| = share of weather that gets through; |C| = share of sensor error that gets through. Right: the room and the thermostat's reading when the sensor reads high by the bias (and flickers, if on)."
   lookFor: "Slow bias: C ≈ 1, passed straight through. Fast flicker above ~1.5 rad/h: C falls, filtered out."
   controls:
     - id: Kp
@@ -1013,7 +1030,7 @@
     - label: AB
       color: var(--org)
   howToRead: "Left: B and AB as directions in the state plane (normalised); if they line up, det P_c = 0 and some direction cannot be steered. det P_o tests the sensor the same way. Right: what the input does to each state."
-  lookFor: "Two equal heaters on one dial: both rooms always warm together; no setting makes the bedroom warmer than the living room."
+  lookFor: "B points straight along the velocity axis: the force changes speed only. AB points mostly the other way, tilted toward height, so the two aren't parallel and det Pc = −6.25 × 10⁻⁶ ≠ 0: controllable. Pick \"two heaters\" to see a case that fails: both arrows lie on one line."
   controls:
     - id: plant
       label: case
@@ -1125,7 +1142,7 @@
       color: var(--org)
       dash: true
   howToRead: The corner under its state feedback takes a 1 kN load while an observer, fed only the height, estimates height and speed. The estimate starts off by the chosen error. L is printed for the chosen observer speed.
-  lookFor: "×10 locks on faster but the velocity estimate gets noisy: L = [156, 9312] multiplies the sensor noise."
+  lookFor: At 5× (L = [76, 2132]) the estimate locks on within about 0.15 s and stays smooth. At 10× (L = [156, 9312]) it locks on sooner but copies far more sensor noise into the velocity estimate.
   controls:
     - id: speed
       label: observer speed (× controller poles)
@@ -1314,7 +1331,7 @@
     control: t
     speed: 1
 - id: locus
-  title: Root locus of the dish (preview)
+  title: Root locus of the dish (not in lecture notes)
   x: σ (1/s)
   y: jω (rad/s)
   legend:
@@ -1322,7 +1339,7 @@
       color: var(--cyan)
     - label: poles at this Kp
       color: var(--yel)
-  howToRead: "Preview (root locus, added; not in LN1/2/4): every pole position as Kp goes from 0 up; the marked poles are at the slider's Kp."
+  howToRead: Every pole position as Kp goes from 0 up; the marked poles are at the slider's Kp.
   lookFor: "The branches meet at −1 and go straight up: more gain buys speed, never decay."
   controls:
     - id: Kp
@@ -1507,7 +1524,7 @@
     - label: torque
       color: var(--org)
   howToRead: "Left: the step with PD; the readout gives %OS and ζ = (B + Kd)/(2√(Kp J)), and the zero at −Kp/Kd when D acts on the error. Right: the motor torque."
-  lookFor: "Same poles, two overshoots: 15.6 % with D on error, 4.6 % on measurement; the difference is the zero at −Kp/Kd."
+  lookFor: With D on the measurement the dish overshoots 3.8 % (4.6 % with unfiltered D); switch D to the error and it jumps to 16.1 %.
   controls:
     - id: Kp
       label: Kp
@@ -1650,28 +1667,10 @@
     - label: shaded integrand / index curve
       color: var(--org)
   howToRead: "Left: the step error e(t) and the area the chosen index adds up (e², |e| or t·|e|). Right: the index against gain, minimum marked; the yellow dot is the slider's gain."
-  lookFor: The telescope's ISE optimum is K₃ = √10 = 3.16 (ζ 0.5); IAE prefers 4.19 (ζ 0.66).
+  lookFor: ISE is lowest at K_r = 80 (ζ = 0.5), IAE at 112.5 (ζ = 0.66), ITAE at 130.5 (ζ = 0.75). The hand-tuned 120 (ζ = 0.7) sits between.
   controls:
-    - id: plant
-      label: plant
-      type: seg
-      options:
-        - value: telescope
-          label: telescope (LN2)
-        - value: dish
-          label: dish rate feedback
-      default: telescope
-      group: primary
-    - id: K3
-      label: K₃ (telescope)
-      type: range
-      min: 2
-      max: 6
-      step: 0.01
-      default: 4
-      group: primary
     - id: Kr
-      label: K_r (dish)
+      label: K_r (dish rate feedback)
       type: range
       min: 20
       max: 200
@@ -1692,30 +1691,26 @@
       default: ISE
       group: primary
   presets:
-    - id: tise
-      label: telescope ISE optimum √10
-      set:
-        plant: telescope
-        K3: 3.16
-        index: ISE
-    - id: tiae
-      label: telescope IAE optimum 4.19
-      set:
-        plant: telescope
-        K3: 4.19
-        index: IAE
     - id: dise
-      label: dish ISE optimum 80
+      label: ISE optimum 80
       set:
-        plant: dish
         Kr: 80
         index: ISE
     - id: diae
-      label: dish IAE optimum 112.5
+      label: IAE optimum 112.5
       set:
-        plant: dish
         Kr: 112
         index: IAE
+    - id: ditae
+      label: ITAE optimum 130.5
+      set:
+        Kr: 130
+        index: ITAE
+    - id: hand
+      label: hand-tuned 120
+      set:
+        Kr: 120
+        index: ISE
 - id: windup
   title: "When the push hits its limit: windup"
   x: time (s)
@@ -1783,7 +1778,7 @@
   legend:
     - label: response
       color: var(--cyan)
-  howToRead: 'P only at gain K until you switch on "apply ZN": then the ZN PID from Kᵤ and Tᵤ. On the ideal dish there is no Kᵤ; with the amplifier lag Routh gives one. p3 is the old pid-tuning example.'
+  howToRead: 'P only at gain K until you switch on "apply ZN": then the ZN PID from Kᵤ and Tᵤ. On the ideal dish there is no Kᵤ; with the amplifier lag Routh gives one.'
   lookFor: "ZN's 64 % overshoot vs hand tuning's 7 %: ZN aims at fast disturbance rejection."
   controls:
     - id: plant
@@ -1794,8 +1789,6 @@
           label: dish + 0.05 s lag
         - value: dish
           label: ideal dish
-        - value: p3
-          label: p3 = 1/(s+1)³
       default: lag
       group: primary
     - id: K
@@ -1830,12 +1823,6 @@
         plant: lag
         zn: true
         dm: false
-    - id: p3
-      label: legacy p3 ZN
-      set:
-        plant: p3
-        zn: true
-        dm: false
 - id: lab
   title: "PID Lab: drag the gains yourself"
   x: time (s)
@@ -1848,7 +1835,7 @@
     - label: previous run
       color: var(--muted)
       dash: true
-  howToRead: "The dish (0.1/(s(s + 2)), 0.1 rad step, 200 N·m limit, D on measurement) under your PID. Wind adds 20 N·m at 3 s. Readouts check the specs: %OS < 10 %, wind peak < 0.6°, zero steady error, torque within the limit. p1, p2, p3 are the old lag plants with their old settings."
+  howToRead: "The dish (0.1/(s(s + 2)), 0.1 rad step, 200 N·m limit, D on measurement) under your PID. Wind adds 20 N·m at 3 s. Readouts check the specs: %OS < 10 %, wind peak < 0.6°, zero steady error, torque within the limit."
   lookFor: Start at P 1000 (73 % ring), add Kd until it stops ringing, then just enough Ki to clear the wind.
   controls:
     - id: plant
@@ -1858,13 +1845,7 @@
         - value: dish
           label: dish
         - value: lag
-          label: dish + lag
-        - value: p1
-          label: p1
-        - value: p2
-          label: p2
-        - value: p3
-          label: p3
+          label: dish + amplifier lag
       default: dish
       group: primary
     - id: Kp
@@ -1892,7 +1873,7 @@
       default: 0
       group: primary
     - id: wind
-      label: wind 20 N·m at 3 s (load on p1–p3)
+      label: wind 20 N·m at 3 s
       type: toggle
       default: false
       group: primary
@@ -1997,7 +1978,7 @@
         Ki: 1000
         Kd: 400
     - id: kick
-      label: "kick: D on the error"
+      label: derivative kick (D on the error)
       set:
         plant: dish
         Kp: 2000
@@ -2023,23 +2004,167 @@
         step: 2
         aw: clamp
     - id: znlag
-      label: ZN on dish + lag
+      label: Ziegler–Nichols, dish + amplifier lag (264, 531.5, 32.8)
       set:
         plant: lag
         Kp: 264
         Ki: 531.5
         Kd: 32.8
         dm: false
-    - id: p3zn
-      label: legacy p3 ZN
-      set:
-        plant: p3
-        Kp: 4.8
-        Ki: 2.65
-        Kd: 2.18
-        dm: false
-        T: 30
   height: 240
+- id: coldfront
+  title: Why feed back at all? The cold front, open loop vs P
+  x: time (h)
+  y: bedroom change (K)
+  legend:
+    - label: open loop (heater left alone)
+      color: var(--org)
+    - label: P thermostat
+      color: var(--cyan)
+  howToRead: "Outdoors drops 5 K at t = 0. Orange: the heater is left at its setting. Cyan: a P thermostat in the bedroom (Kp W per K of error) turns it up. Bottom: the extra heat each one adds."
+  lookFor: The open-loop room follows the weather; the closed loop cuts the drop by 1 + L(0) = 10.
+  controls:
+    - id: Kp
+      label: Kp
+      type: range
+      min: 200
+      max: 2200
+      step: 50
+      default: 1100
+      group: primary
+      unit: W/K
+    - id: d
+      label: cold front
+      type: range
+      min: -10
+      max: -1
+      step: 0.5
+      default: -5
+      group: primary
+      unit: K
+  presets:
+    - id: house
+      label: Kp 1100, −5 K
+      set:
+        Kp: 1100
+        d: -5
+- id: heatbars
+  title: Where the extra heat goes
+  x: controller
+  y: extra heat (W)
+  legend:
+    - label: living-room wall leak
+      color: var(--org)
+    - label: bedroom wall leak
+      color: var(--cyan)
+  howToRead: "Steady extra heat after a −5 K front, split into what leaks through each room's outside wall (55.56 W/K each). Bottom: how far the bedroom ends up below its set point."
+  lookFor: Where the extra heat goes after a −5 K front. PI holds the bedroom, so both walls leak more; P lets the bedroom sag 0.5 K, which saves 61 W.
+  controls:
+    - id: Kp
+      label: Kp (P)
+      type: range
+      min: 200
+      max: 2200
+      step: 50
+      default: 1100
+      group: primary
+      unit: W/K
+  presets:
+    - id: house
+      label: Kp 1100 (the thermostat)
+      set:
+        Kp: 1100
+    - id: soft
+      label: Kp 500
+      set:
+        Kp: 500
+- id: ssblock
+  title: The corner as two integrators
+  x: signal flow
+  y: states
+  legend:
+    - label: states (velocity, height)
+      color: var(--cyan)
+    - label: gains
+      color: var(--org)
+  howToRead: "Signals flow left to right: the force is divided by the 400 kg mass to give acceleration, integrated once for velocity and again for height. The shock and the spring feed the states back with minus signs. Bottom: the same diagram simulated for a step force u."
+  lookFor: Force gives acceleration (÷ 400 kg). Integrate once for velocity, again for height. The shock feeds velocity back (−4ż), the spring feeds height back (−64z). The two integrator outputs are the two states.
+  controls:
+    - id: u
+      label: step force u
+      type: range
+      min: 100
+      max: 1000
+      step: 50
+      default: 400
+      group: primary
+      unit: N
+  presets:
+    - id: u400
+      label: u = 400 N
+      set:
+        u: 400
+    - id: u800
+      label: u = 800 N
+      set:
+        u: 800
+- id: rlcschem
+  title: "Two circuits: the series RLC and the house as an RC network"
+  x: schematic
+  y: circuit
+  legend:
+    - label: capacitor
+      color: var(--cyan)
+    - label: resistor
+      color: var(--vio)
+  howToRead: "(a) The series RLC whose step response the figure below plots. (b) The house: rooms are capacitors, walls are resistors, the heater is a current source, outdoors is ground."
+  lookFor: "(a) The series RLC whose step response the figure plots. (b) The house: rooms are capacitors, walls are resistors, the heater is a current source, outdoors is ground."
+  controls:
+    - id: vals
+      label: show the house values
+      type: toggle
+      default: true
+      group: primary
+  presets:
+    - id: vals
+      label: with values
+      set:
+        vals: true
+    - id: sym
+      label: symbols only
+      set:
+        vals: false
+- id: torquebal
+  title: "Why it stops short: the torque balance"
+  x: pointing error (°)
+  y: torque (N·m)
+  legend:
+    - label: wind torque
+      color: var(--grn)
+      dash: true
+    - label: motor torque Kp·e
+      color: var(--cyan)
+  howToRead: "At rest the motor must hold the wind. Under P it makes torque only from an error: Kp·e. The error settles where the two lines cross. Bottom: the same P loop in time, wind on from t = 0."
+  lookFor: "With Kp = 1000 the lines cross at e = 20/1000 rad = 1.15°: that is the steady wind error. Double Kp and it halves; it never reaches zero."
+  controls:
+    - id: Kp
+      label: Kp
+      type: range
+      min: 200
+      max: 4000
+      step: 50
+      default: 1000
+      group: primary
+      unit: N·m/rad
+  presets:
+    - id: p1000
+      label: Kp 1000
+      set:
+        Kp: 1000
+    - id: p2000
+      label: Kp 2000
+      set:
+        Kp: 2000
 - id: cart
   title: "The cart: mass, spring and damper decide the poles"
   x: time (s) · σ (1/s)
@@ -2357,7 +2482,7 @@
         q: 0.4
       about: "G(0) exists but y diverges: the theorem fails."
 - id: bode
-  title: "Gain and phase margin: how far from the edge? (preview: not in LN1/2/4)"
+  title: "Gain and phase margin: how far from the edge? (not in lecture notes)"
   x: ω (rad/s)
   y: dB · degrees
   legend:
@@ -2397,60 +2522,10 @@
       label: K = 9
       set:
         K: 9
-- id: problem
-  title: "Why feedback: a plant whose gain we got wrong"
-  x: time (s)
-  y: output y (target r = 1)
-  legend:
-    - label: output y
-      color: var(--cyan)
-    - label: reference r = 1
-      color: var(--muted)
-      dash: true
-  howToRead: "Left: open loop, where the controller sends u = r and trusts the model that the plant has unit DC gain. Right: a PI loop that measures y and corrects from the error. Slide the true plant gain away from 1 and add a push on the plant input halfway: open loop is wrong by exactly that much; closed loop recovers."
-  lookFor: "Set the true gain to 0.6: open loop ends at 0.6, closed loop at 1. Then add a push of 0.3: open loop shifts again, closed loop returns to 1."
-  controls:
-    - id: gain
-      label: True plant gain
-      type: range
-      min: 0.4
-      max: 1.6
-      step: 0.02
-      default: 0.6
-      group: primary
-    - id: push
-      label: Push on the plant input (at t = 6 s)
-      type: range
-      min: 0
-      max: 0.5
-      step: 0.01
-      default: 0
-      group: primary
-  presets:
-    - id: known
-      label: Model is right
-      set:
-        gain: 1
-        push: 0
-    - id: low
-      label: Gain is 0.6
-      set:
-        gain: 0.6
-        push: 0
-    - id: push
-      label: Gain 0.6 and a push of 0.3
-      set:
-        gain: 0.6
-        push: 0.3
-    - id: high
-      label: Gain is 1.4
-      set:
-        gain: 1.4
-        push: 0
 - id: bodepid
-  title: "PID by its margins: crossover and phase margin (preview: not in LN1/2/4)"
-  x: ω (rad/s)
-  y: dB · degrees
+  title: "PID by its margins: crossover and phase margin (not in lecture notes)"
+  x: ω (rad/s) · time (s)
+  y: dB · degrees · output / target
   legend:
     - label: "|L(jω)| (dB)"
       color: var(--cyan)
@@ -2458,71 +2533,55 @@
       color: var(--org)
     - label: PM / GM bars
       color: var(--grn)
-  howToRead: "Left: the Bode plot of the loop L = Gc·G for the PID on the chosen plant; the green bars are the phase margin (at the 0 dB crossover) and the gain margin (at the −180° crossover). Right: the step response that loop gives. More crossover means faster; more phase margin means less ringing. The MATLAB PID Tuner sliders move exactly these two numbers."
-  lookFor: "Raise Kp: the crossover moves right (faster) and the phase margin shrinks (more overshoot). Add Kd: the phase margin comes back."
+  howToRead: "Left: the Bode plot of the dish loop L = Gc·G, G = 0.1/(s(s + 2)), ideal D on the error, ω from 0.1 to 1000 rad/s; the green bar is the phase margin at the crossover (where the gain crosses 1, 0 dB). Right: the 0.1 rad step that loop gives. More crossover means faster; more phase margin means less ringing."
+  lookFor: "P 1000 crosses at 9.90 rad/s with only 11.4° of margin (73 % overshoot). PD (1000, 0, 120): 13.86 rad/s, 67.2°. The tuned PID: 21.73 rad/s, 70.3°."
   controls:
-    - id: plant
-      label: Plant
-      type: select
-      options:
-        - value: p3
-          label: 1/(s+1)³
-        - value: p2
-          label: 1/((s+1)(0.5s+1))
-        - value: p1
-          label: 1/(s+1)
-      default: p3
-      group: primary
     - id: Kp
       label: Kp
       type: range
-      min: 0.1
-      max: 10
-      step: 0.05
-      default: 2
+      min: 0
+      max: 5000
+      step: 10
+      default: 2000
       group: primary
+      unit: N·m/rad
     - id: Ki
       label: Ki
       type: range
       min: 0
-      max: 5
-      step: 0.02
-      default: 0.4
+      max: 4000
+      step: 10
+      default: 1000
       group: primary
+      unit: N·m/(rad·s)
     - id: Kd
       label: Kd
       type: range
       min: 0
-      max: 4
-      step: 0.02
-      default: 0.8
+      max: 500
+      step: 5
+      default: 200
       group: primary
+      unit: N·m·s/rad
   presets:
-    - id: mild
-      label: Gentle PID
+    - id: p
+      label: P 1000
       set:
-        Kp: 1
-        Ki: 0.3
-        Kd: 0.5
-    - id: fast
-      label: Fast, less margin
-      set:
-        Kp: 4
-        Ki: 1
-        Kd: 0.5
-    - id: edge
-      label: Near the edge
-      set:
-        Kp: 7.5
+        Kp: 1000
         Ki: 0
         Kd: 0
-      about: Phase margin close to zero.
-    - id: damped
-      label: Kd restores margin
+    - id: pd
+      label: PD (1000, 0, 120)
       set:
-        Kp: 4
-        Ki: 1
-        Kd: 2
+        Kp: 1000
+        Ki: 0
+        Kd: 120
+    - id: tuned
+      label: tuned (2000, 1000, 200)
+      set:
+        Kp: 2000
+        Ki: 1000
+        Kd: 200
 - id: fail-slow
   title: A1 · Slow response
   x: time (s)
@@ -2863,7 +2922,7 @@
   y: angle · torque
   legend: *a1
   howToRead: "The tuned dish (2000, 1000, 200) with the D filter N_f = 200 rad/s, at a 0.1 rad command step. Solid: the problem at the slider settings; dashed: the fix, for contrast. Read-outs use the tutor's definitions (numbers.py [F])."
-  lookFor: "D on the error spikes the torque to 4200 N·m (17.0 % overshoot unlimited, 6.4 % at the 200 N·m limit). D on the measurement starts at 200 N·m: 6.6 %."
+  lookFor: "D on the error spikes the torque to 4200 N·m (16.6 % overshoot unlimited, 6.1 % at the 200 N·m limit). D on the measurement starts at 200 N·m: 6.3 %."
   controls:
     - id: dm
       label: D on measurement
@@ -2917,7 +2976,7 @@
       set:
         umax: 400
 - id: fail-delay
-  title: A10 · Time delay (added)
+  title: A10 · Time delay
   x: time (s)
   y: angle · torque
   legend: *a1
@@ -2983,7 +3042,7 @@
         Ki: 1000
         Kd: 200
 - id: fail-sensorlag
-  title: A11 · Sensor lag (added)
+  title: A11 · Sensor lag
   x: time (s)
   y: angle · torque
   legend: *a1
@@ -3009,58 +3068,50 @@
       set:
         lag: 0.02
 - id: fail-nonlinear
-  title: A12 · Nonlinearity / operating-point change
+  title: A12 · Nonlinearity
   x: time (s)
-  y: output y
+  y: angle ÷ step
   legend:
-    - label: problem (solid)
+    - label: with stiction (solid)
       color: var(--org)
-    - label: fixed version (dashed)
+    - label: no friction (dashed)
       color: var(--grn)
       dash: true
-    - label: reference r
+    - label: target
       color: var(--muted)
       dash: true
-  howToRead: "Generic teaching plant (not the dish): the effect needs a nonlinearity the dish model doesn't have. The solid trace is the failure (a plant whose gain grows with the operating point); the dashed trace is a fixed version, for contrast. The sliders move the solid run, so you can walk it to the fix or away from it."
-  lookFor: "Gains tuned at r = 1 are three times too hot at r = 9: divide them, or gain-schedule."
+  howToRead: "The dish under PD (2000, 0, 200), D on the measurement, 200 N·m limit, with gear stiction: the gear needs |T| > T_st to break free, then drags at T_c (not in lecture notes). Left: a 0.02 rad step; right: 0.2 rad, each normalised to its size. Dashed: the same loop without friction. Read-outs follow numbers.py [R4]."
+  lookFor: A 0.2 rad step stops 0.064° short (0.6 % of the step); a 0.02 rad step stops 0.269° short (23.5 %). Without friction both overshoot 2.0 % and end exactly on target.
   controls:
-    - id: Kp
-      label: Kp
+    - id: Ts
+      label: break-free torque T_st
       type: range
       min: 0
-      max: 3
-      step: 0.05
-      default: 2
+      max: 40
+      step: 1
+      default: 20
       group: primary
-    - id: Ki
-      label: Ki
+      unit: N·m
+    - id: Tc
+      label: sliding friction T_c
       type: range
       min: 0
-      max: 3
-      step: 0.05
-      default: 1.5
+      max: 20
+      step: 1
+      default: 10
       group: primary
-    - id: r
-      label: Step size r
-      type: range
-      min: 1
-      max: 9
-      step: 0.5
-      default: 9
-      group: primary
+      unit: N·m
   presets:
-    - id: problem
-      label: The problem
+    - id: stick
+      label: stiction 20 / 10 N·m
       set:
-        Kp: 2
-        Ki: 1.5
-        r: 9
-    - id: fixed
-      label: The fix
+        Ts: 20
+        Tc: 10
+    - id: none
+      label: no friction
       set:
-        Kp: 0.667
-        Ki: 0.5
-        r: 9
+        Ts: 0
+        Tc: 0
 - id: fail-twodof
   title: A13 · Tracking against gust rejection
   x: time (s)
@@ -3091,43 +3142,32 @@
       set:
         b: 0.5
 - id: fail-limitcycle
-  title: A14 · Limit cycle from dead zone / backlash
+  title: A14 · Limit cycle
   x: time (s)
-  y: output y
+  y: error (°)
   legend:
-    - label: problem (solid)
+    - label: tuned PID (solid)
       color: var(--org)
-    - label: fixed version (dashed)
+    - label: with the dead band (dashed)
       color: var(--grn)
       dash: true
-    - label: reference r
+    - label: ±δ
       color: var(--muted)
       dash: true
-  howToRead: "Generic teaching plant (not the dish): the effect needs a nonlinearity the dish model doesn't have. The solid trace is the failure (an integrator plant behind a dead zone); the dashed trace is a fixed version, for contrast. The sliders move the solid run, so you can walk it to the fix or away from it."
-  lookFor: "The integral drives u across the dead zone again and again: lower Ki or shrink the dead zone."
+  howToRead: "The tuned dish PID (2000, 1000, 200) after a 0.1 rad step, with the same stiction as A12. While the gear is stuck the integrator keeps building torque until it breaks free and jumps past the target. Dashed: the integrator pauses while |e| < δ. Bottom: the motor torque. Read-outs follow numbers.py [R4]."
+  lookFor: Without the dead band it hunts between −0.145° and +0.147°, period 23.9 s, forever. With δ = 0.003 rad it sticks at +0.149° and stays.
   controls:
-    - id: Ki
-      label: Ki
+    - id: edb
+      label: integrator dead band δ
       type: range
-      min: 0
-      max: 1
-      step: 0.02
-      default: 0.5
+      min: 0.0005
+      max: 0.006
+      step: 0.0005
+      default: 0.003
       group: primary
-    - id: dz
-      label: Dead zone ±
-      type: range
-      min: 0
-      max: 0.6
-      step: 0.02
-      default: 0.3
-      group: primary
+      unit: rad
   presets:
-    - id: problem
-      label: The problem
+    - id: db
+      label: δ = 0.003 rad (0.17°)
       set:
-        Ki: 0.5
-    - id: fixed
-      label: The fix
-      set:
-        Ki: 0.3
+        edb: 0.003
