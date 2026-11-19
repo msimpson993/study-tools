@@ -247,7 +247,7 @@ A speed-control motor has $R_a = 1$, $J = 10$, $b = 1$, $K_b = K_m = 1$, so $G =
 - Standard form $\dfrac{C(s)}{R(s)} = \dfrac{\omega_n^2}{s^2 + 2\zeta\omega_ns + \omega_n^2}$; servo with P control ($J\ddot\theta + B\dot\theta = T$): $\dfrac{C}{R} = \dfrac{K}{Js^2 + Bs + K}$, $\omega_n = \sqrt{\dfrac{K}{J}}$, $\dfrac{B}{J} = 2\zeta\omega_n = 2\sigma$, $\zeta = \dfrac{B}{B_c} = \dfrac{B}{2\sqrt{JK}}$, $\sigma = \zeta\omega_n$
 - Underdamped $0 < \zeta < 1$: poles $-\zeta\omega_n \pm j\omega_d$, $\omega_d = \omega_n\sqrt{1-\zeta^2}$; $c(t) = 1 - \dfrac{e^{-\zeta\omega_nt}}{\sqrt{1-\zeta^2}}\sin\!\left(\omega_dt + \tan^{-1}\dfrac{\sqrt{1-\zeta^2}}{\zeta}\right)$
 - Critically damped $\zeta = 1$: double pole at $-\omega_n$; $c(t) = 1 - e^{-\omega_nt}(1 + \omega_nt)$
-- Overdamped $\zeta > 1$: two real poles $s_{1,2} = (\zeta \pm \sqrt{\zeta^2-1})\,\omega_n$ (both negative), response is two decaying exponentials, no overshoot
+- Overdamped $\zeta > 1$: two real poles $s_{1,2} = -(\zeta \pm \sqrt{\zeta^2-1})\,\omega_n$ (both negative; LN1 slide 54), response is two decaying exponentials, no overshoot
 - Undamped $\zeta = 0$: poles $\pm j\omega_n$, oscillates forever
 
 #### Step-response specifications

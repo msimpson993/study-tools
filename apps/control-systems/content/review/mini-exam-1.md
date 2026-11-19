@@ -16,10 +16,10 @@ quizTag: mini-exam
 | 6–9 | draw and read a block diagram: summing and branch points, cascade, parallel and feedback loop, open-loop G·H versus feedforward G | [The loop: command path and disturbance path](#/dive/blocks) |
 | 10–17 | name the controller types (on/off, P, I, PI, PD, PID) and write each one's transfer function with Kp, Ti and Td | [What P, I and D each do](#/dive/ctrl) |
 | 18–20 | find C/R and C/D for a loop with a disturbance, and reduce a multi-loop diagram step by step | [The loop: command path and disturbance path](#/dive/blocks) |
-| 21–27 | define state, state vector and state space; write ẋ = Ax + Bu, y = Cx + Du for the mass–spring–damper | [State space: the cart as two states](#/dive/ss) |
+| 21–27 | define state, state vector and state space; write ẋ = Ax + Bu, y = Cx + Du for the mass–spring–damper | [Look inside: state space](#/dive/ss) |
 | 28–32 | derive G(s) = C(sI − A)⁻¹B + D (and the transfer matrix for several inputs and outputs) | [From state space to the transfer function](#/dive/ss2tf) |
-| 33–38 | write the phase-variable (companion) form for an nth-order ODE, with and without input derivatives; know a realization is not unique | [State space: the cart as two states](#/dive/ss) |
-| 40–45 | get G(s) for an LRC circuit and cascaded RC sections; op-amp inverting and non-inverting stages, lag/lead networks, the op-amp PID | [Getting G(s) for real hardware](#/dive/circuits) |
+| 33–37 | write the phase-variable (companion) form for an nth-order ODE, with and without input derivatives; know a realization is not unique | [Look inside: state space](#/dive/ss) |
+| 42–45 | get G(s) for an LRC circuit and cascaded RC sections; op-amp inverting and non-inverting stages, lag/lead networks, the op-amp PID | [Getting G(s) for real hardware](#/dive/circuits) |
 | 38–41 | say how many states a plant needs (independent energy stores) | [Why a plant has the order it has](#/dive/order) |
 | 47–49 | sketch the first-order step and impulse responses, and read K and τ off K/(τs + 1) (63.2 % at t = τ) | [The simplest plant](#/dive/first) |
 | (Lectures; slides 50–72 are in the [Mini exam 2 carry-over](#/review/mini-exam-2)) | read ζ and ωₙ off two poles; decide which poles dominate | [ζ and ωₙ](#/dive/second), [Which poles matter](#/dive/dominant) |
