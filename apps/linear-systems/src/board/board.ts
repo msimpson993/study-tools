@@ -3,7 +3,7 @@
    Pure math lives in @study/core/dsp and ./model (unit-tested); this module is the DOM/canvas layer. */
 import content from 'virtual:study-content';
 import { C, cadd, csub, cmul, cdiv, cabs, carg, cexpj, cscale, TAU, WINS, windowAt, windowMetrics, dft as coreDft } from '@study/core/dsp';
-import { derive, xt as mxt, Xs as mXs, Xjw as mXjw, Xz as mXz } from '../model';
+import { derive, xt as mxt, Xs as mXs, Xjw as mXjw, Xz as mXz } from './model';
 import BOARD_HTML from './board.html?raw';
 import './board.css';
 

@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { C, cadd, cmul, cdiv, csub, cabs, cscale, cexpj, TAU, type Cx } from '@study/core/dsp';
-import { derive, xt, Xs, Xjw, Xz, type ModelParams } from '../src/model';
+import { derive, xt, Xs, Xjw, Xz, type ModelParams } from '../src/board/model';
 
 const DEF: ModelParams = { A: 1, wave: 'free', mode: 'under', sig: 0.6, f0: 1, dl: 1, fs: 8, M: 32, N: 64 };
 // the seven cases of the original page's built-in self-check

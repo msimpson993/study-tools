@@ -3,10 +3,12 @@ import { mountApp } from '@study/core';
 import { popFigures } from './figs/pop';
 import { audioHook } from '@study/core/audio';
 import { sounds } from './figs/sounds';
+import { mountBoard } from './board/board';
 import { expmFigure, eigFigure, diagFigure, flowFigure, cayleyFigure, stabFigure, ctrlFigure, obsFigure, kalmanFigure, gramianFigure, optimalFigure, skyhookFigure } from './figs/carfigs';
 import { ssFigure, ltiFigure, eigfnFigure, ftFigure, fsFigure, orthoFigure, samplingFigure, dtftFigure, dftFigure, windowFigure, laplaceFigure, inverseFigure, tfFigure, zfilterFigure, lintestFigure } from './figs/speaker';
 
 mountApp(content, {
+  board: (host, params) => mountBoard(host, params),
   quizFigures: popFigures,
   audio: audioHook(sounds),
   figures: {

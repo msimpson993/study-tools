@@ -8,10 +8,10 @@ const st = (page: Page) => page.evaluate(() => ({ open: !(document.getElementByI
 const hashCanvas = (page: Page, id: string) => page.evaluate((i) => { const s = (document.getElementById(i) as HTMLCanvasElement).toDataURL(); let x = 0; for (let k = 0; k < s.length; k += 7) x = (x * 31 + s.charCodeAt(k)) | 0; return x; }, id);
 const setRange = (page: Page, id: string, v: number) => page.evaluate(([i, val]) => { const e = document.getElementById(i as string) as HTMLInputElement; e.value = String(val); e.dispatchEvent(new Event('input')); }, [id, v]);
 
-test.describe('transforms: six-domains board (migrated 1:1)', () => {
+test.describe('linear-systems: six-domains board (migrated 1:1 from the retired transforms page)', () => {
   test.beforeEach(async ({ page }) => {
     await page.setViewportSize({ width: 1400, height: 900 });
-    await open(page, 'transforms', BOARD);
+    await open(page, 'linear-systems', BOARD);
     await page.waitForFunction(() => !!(window as any).__EX && (window as any).S);
   });
 
@@ -204,16 +204,16 @@ test.describe('transforms: six-domains board (migrated 1:1)', () => {
   });
 
   test('deep link #/board?pair=lap&preset=under opens the pair view on that example', async ({ page }) => {
-    await page.goto('/transforms/index.html#/board?pair=lap&preset=over');
+    await page.goto('/linear-systems/index.html#/board?pair=lap&preset=over');
     await page.reload(); await page.waitForFunction(() => !!(window as any).S && (window as any).MOD.k);
     expect(await st(page)).toMatchObject({ open: true, sel: 'lap', mode: 'over' });
   });
 });
 
-test.describe('transforms: board on a phone (390px)', () => {
+test.describe('linear-systems: six-domains board on a phone (390px)', () => {
   test.use({ viewport: { width: 390, height: 844 }, hasTouch: true, isMobile: true });
   test('tap opens a pinned expanded view; the slider below stays reachable and drives it; margin tap closes', async ({ page }) => {
-    await open(page, 'transforms', BOARD);
+    await open(page, 'linear-systems', BOARD);
     await page.waitForFunction(() => !!(window as any).S);
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth + 1)).toBe(true);
     await page.locator('#cvDF').scrollIntoViewIfNeeded();
