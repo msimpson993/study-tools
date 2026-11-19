@@ -37,7 +37,7 @@ describe('shipped content', () => {
     expect(content.quiz.length).toBe(103); // 97 + 4 kept from the retired transforms page + 2 skyhook (Nov 19)
     expect(content.quiz.filter((q) => q.tags?.includes('variants')).length).toBe(21);
   });
-  it('linear-systems Big-picture boxes follow the fixed pop-up template (answer, rough words, running example, next question; every figure captioned; ≤ ~180 words incl. captions)', () => {
+  it('linear-systems Big-picture boxes follow the fixed pop-up template (answer, rough words, running example, next question; every figure captioned; ≤ 150 words incl. captions)', () => {
     const { content } = loadApp(path.join(repoRoot, 'apps', 'linear-systems'));
     const big = content.maps.find((m) => m.id === 'big')!;
     expect(big.nodes.length).toBe(15);
@@ -55,7 +55,7 @@ describe('shipped content', () => {
       if (figs.length) expect(n.pop?.figCaption, `${n.id} figure caption`).toBeTruthy();
       if (figs.length > 1) figs.forEach((f, i) => { const L = String.fromCharCode(97 + i); expect(f.caption ?? '', `${n.id} panel ${L} label`).toMatch(new RegExp(`^\\(${L}\\)`)); const cap = (n.pop?.figCaption ?? '').replace(/\((\w)–(\w)\)/g, (_, x: string, y: string) => Array.from({ length: y.charCodeAt(0) - x.charCodeAt(0) + 1 }, (_, j) => `(${String.fromCharCode(x.charCodeAt(0) + j)})`).join(' ')); expect(cap, `${n.id} caption walks through (${L})`).toContain(`(${L})`); });
       const total = words(n.short ?? '') + words(n.pop?.rough ?? '') + words(example ?? '') + words(next ?? '') + words(n.pop?.eqKey ?? '') + words(n.pop?.figCaption ?? '') + figs.reduce((a, f) => a + words(f.caption ?? ''), 0);
-      expect(total, `${n.id} pop-up words`).toBeLessThanOrEqual(180);
+      expect(total, `${n.id} pop-up words`).toBeLessThanOrEqual(150);
       expect((n.pop?.figures ?? []).length, n.id).toBeLessThanOrEqual(4);
     }
     // every outgoing edge carries the question the box ends on
