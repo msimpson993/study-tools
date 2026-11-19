@@ -163,7 +163,7 @@ maps:
     detail: "Series, FT, DTFT, DFT"
     kind: box
     series: 1
-    short: "Write it as a sum of sines: Fourier analysis gives the amount of each pitch, and each sine passes through on its own (Box 6), scaled and delayed. Its four versions and two catches (aliasing, leakage) are in Full detail. See also <a href=\"#/s/picture\">Broader picture</a> and <a href=\"#/s/figures\">Live figures</a>."
+    short: "Write it as a sum of sines: Fourier analysis gives the amount of each pitch; each sine passes through on its own (Box 6), scaled and delayed. Its four versions and two catches (aliasing, leakage) are in Full detail. See also <a href=\"#/s/picture\">Broader picture</a> and <a href=\"#/s/figures\">Live figures</a>."
     pop: &id010
       audio:
       - snd-square
@@ -185,15 +185,15 @@ maps:
     detail: Growing and dying e^(st)
     kind: box
     series: 1
-    short: "Let the pieces grow or die too: exponentials e^(st), s = σ + jω, where σ sets growth or decay. Splitting into these is the Laplace transform. A derivative becomes × s, so the system is one fraction, the transfer function H(s) = Y(s)/U(s) (output over input)."
+    short: "Let the pieces grow or die too: exponentials e^(st), s = σ + jω; σ sets growth or decay. Splitting into these is the Laplace transform. A derivative becomes × s, so the system is one fraction, the transfer function H(s) = Y(s)/U(s) (output over input)."
     eq: Y(s) = H(s) U(s)
     pop: &id012
       rough: d/dt → × s; output = H × input
       figures:
       - id: pop-est
         alt: "Three exponentials e^(st): dying, steady and growing."
-      figCaption: "Re e^(st) for three s with the same ω: σ < 0 dies away, σ = 0 is Fourier's steady sine, σ > 0 grows."
-      example: "The earbud becomes H(s) = a₀/(s² + a₁s + a₀), with a₀ = ωₙ² and a₁ = 2ζωₙ: ωₙ = 2π × 717 Hz is the natural frequency, ζ = 0.281 the damping ratio."
+      figCaption: "Re e^(st), same ω, three σ: σ < 0 dies away, σ = 0 is Fourier's steady sine, σ > 0 grows."
+      example: "The earbud becomes H(s) = a₀/(s² + a₁s + a₀), with a₀ = ωₙ², a₁ = 2ζωₙ, natural frequency ωₙ = 2π × 717 Hz and damping ratio ζ = 0.281."
       ask: c-deq-1
     addsToExample: "Gives the speaker's transfer function from voltage to motion, H(s) = a₀/(s² + a₁s + a₀), with poles at −1,266 ± j4,322 rad/s: they set the 688 Hz ring and its 0.79 ms decay. How a₀ and a₁ come from the speaker's parts is in the Laplace dive."
     accountsFor: "The ring frequency and decay of the click response, read straight off two numbers."
@@ -224,7 +224,7 @@ maps:
     detail: "ẋ = Ax + Bu, y = Cx + Du"
     kind: box
     series: 2
-    short: "A memory: the few numbers that, with the future input, fix everything that happens next. That memory is the state x. A state-space model says how it changes: A times the state plus B times the input."
+    short: "A memory: the few numbers, the state x, that with the future input fix everything that happens next. A state-space model says how it changes: A times the state plus B times the input."
     eq: "ẋ = Ax + Bu,  y = Cx + Du"
     pop: &id015
       rough: "how the memory changes = its own pull + the input's push"
@@ -243,7 +243,7 @@ maps:
     detail: Eigenvectors of A
     kind: box
     series: 2
-    short: "Look along special directions: an eigenvector v of A is one that A only stretches, by its eigenvalue λ. Started there, the state stays on it and moves as e^(λt), a mode, like a tone keeping its shape. The eigenvalues are the poles (Box 13: a mode can hide)."
+    short: "Look along special directions: an eigenvector v of A is one A only scales, by its eigenvalue λ. Started there, the state stays on it and moves as e^(λt), a mode. The eigenvalues are the poles (both are roots of det(sI − A); Box 13: a mode can hide)."
     eq: Av = λv
     pop: &id016
       rough: state = Σ amount × mode shape × e^(λt)
@@ -258,7 +258,7 @@ maps:
           mode: 1
         alt: "Pitch: nose and tail swing opposite ways about a still point 0.56 m ahead of the centre of gravity."
         caption: (b) Pitch
-      figCaption: "Mode shapes, exaggerated (dashed = rest): <b>(a)</b> bounce, mostly up and down; <b>(b)</b> pitch, nose and tail opposite about a still point 0.56 m ahead of the centre of gravity."
+      figCaption: "Mode shapes, exaggerated (dashed = rest): <b>(a)</b> bounce, mostly up-and-down; <b>(b)</b> pitch, nose and tail opposite about a still point 0.56 m ahead of the centre of gravity."
       example: "Bounce at 1.15 Hz (ζ 0.29), pitch at 1.42 Hz (ζ 0.36). Damping ratio ζ: 0 rings forever, 1 means no overshoot."
       ask: c-eig-1
     addsToExample: "Finds the pieces both examples only scale: tones for the speaker, and the bounce and pitch modes for the car."
@@ -294,14 +294,14 @@ maps:
     detail: Hidden modes
     kind: decision
     series: 3
-    short: "Not always. H(s), the outside view, shows only the modes the input can move and the output can see. A mode the input can't affect is uncontrollable; one the output can't see, unobservable. It cancels from H(s) as a pole–zero pair but stays inside, and can be unstable."
+    short: "Not always: H(s), the outside view, shows only modes the input can move and the output can see. A mode the input can't affect is uncontrollable; one the output can't see, unobservable. It cancels from H(s) (a pole–zero pair) but still lives inside, possibly unstable."
     pop: &id018
       rough: H(s) shows only modes the input moves and the output sees
       figures:
       - id: pop-carhidden
         alt: "Symmetric car, a push at the centre of gravity: the body heaves, but pitch never starts."
-      figCaption: "A symmetric car pushed up at its centre of gravity (1.5 kN for 0.2 s): heave responds, pitch (flat line) stays exactly zero. The push cannot reach the pitch mode."
-      example: "On the symmetric car a push at the centre of gravity can move the state in only 2 of its 4 directions, and a height sensor there misses pitch: H(s) keeps only bounce."
+      figCaption: "A symmetric car pushed at its centre of gravity: heave responds; pitch (flat line) stays zero, out of the push’s reach."
+      example: "Symmetric car, push at the centre of gravity: only 2 of 4 state directions move, and a height sensor there misses pitch, so H(s) keeps only bounce."
       ask: c-kal-1
     addsToExample: "Splits the symmetric car with the push and the height sensor at the centre: bounce is reached and seen, pitch neither."
     accountsFor: "Why that car's transfer function from push to height has only the bounce poles."
@@ -311,7 +311,7 @@ maps:
     detail: Design with the tools
     kind: box
     series: 4
-    short: "Design with the same tools: filters shape H(jω); feedback (an input computed from the measured output) moves the poles; optimal control finds the cheapest input. The controllability Gramian measures how easy each direction of the state is to push, so it prices that input."
+    short: "Design with the same tools: filters shape H(jω); feedback (an input computed from the measured output) moves the poles; optimal control finds the cheapest input. The controllability Gramian measures how easy each state direction is to push, so it prices that input."
     pop: &id019
       rough: "choose the system, or the input, to get the output you want"
       figures:
@@ -352,13 +352,13 @@ maps:
     label: does it help?
     question: "Real things are never perfectly linear, so does this help?"
     idea: "Yes: for small signals around an operating point almost everything is linear, and then the exact linear tools apply."
-    why: "**Still open:** the Box 3 test is strict, and the earbud already fails it. At 2 V, doubling the drive misses double the motion by 29% (rms).\n\n**Why it matters:** every real device fails somewhere if pushed hard enough. If \"linear\" had to mean \"linear at every level\", the shortcut would apply to nothing real.\n\n**What we want:** to know when a system is *close enough* to linear (how small the signal must be) and how to get the linear model that is accurate there."
+    why: "**Still open:** the Box 3 test is strict, and the loud earbud already fails it.\n\n**Why it matters:** every real device fails if pushed hard enough; if \"linear\" meant \"linear at every level\", the shortcut would fit nothing real.\n\n**What we want:** to know how small the signal must be for a system to count as linear, and the linear model that holds there."
     whyFigures:
     - id: pop-lintest
       params:
         a: 2
       alt: "Earbud at 2 V: doubling the drive gives far less than twice the motion because the cone clips."
-    whyFigCaption: "Box 3, panel (b): at 2 V the cone hits its ±100 µm limit (grey lines), so twice the drive (solid) falls short of twice the response (dashed). The loud earbud fails the homogeneity test. That failure is the gap this question asks about."
+    whyFigCaption: "Box 3, panel (b): at 2 V the cone hits its ±100 µm limit (grey), so the doubled drive's motion (solid) misses doubled motion (dashed) by 29% (rms): the loud earbud fails homogeneity."
   - &id024
     from: NEAR
     to: KICK
@@ -372,13 +372,13 @@ maps:
     label: same shape?
     question: "That's tedious. Is there an input that comes out with the same shape?"
     idea: "Steady sine waves: a linear time-invariant system only scales and delays them, so convolution becomes one multiplication per pitch."
-    why: "**Still open:** in Box 5, convolution predicts any output from the one measured ring h(t). But each output needs a fresh sum of shifted rings; the 1 ms pulse already needed four.\n\n**Why it matters:** a second of music is tens of thousands of samples, so that is a lot of adding, and the result does not tell us what the earbud does to sound.\n\n**What we want:** an input that comes out with its shape unchanged, only scaled and delayed. Each such piece then costs one multiplication. Mathematicians call an input that a system only multiplies by a number an *eigenfunction*."
+    why: "**Still open:** convolution predicts any output from the ring h(t), but every output needs a fresh sum of shifted rings.\n\n**Why it matters:** a second of music is tens of thousands of samples to add up, and the sum does not say what the earbud does to sound.\n\n**What we want:** an input that comes out only scaled and delayed, so each piece costs one multiplication (an *eigenfunction*)."
     whyFigures:
     - id: pop-kick
       params:
         frame: 2
       alt: A 1 ms pulse is four clicks; the motion is the sum of four shifted rings.
-    whyFigCaption: "Box 5, panel (b): a 1 ms pulse built as four quarter-size clicks (bars). Each click gives a shifted copy of the ring h (thin curves), and the motion is their sum (thick). A longer input needs many more copies. That cost is what this question wants to avoid."
+    whyFigCaption: "Box 5's figure: a 1 ms pulse is four quarter-size clicks (bars); their shifted rings (thin) add up to the motion (thick). Longer inputs need many more copies."
   - &id026
     from: TONE
     to: FOUR
@@ -390,21 +390,21 @@ maps:
     from: FOUR
     to: LAP
     label: "start, grow, die"
-    question: "Sines last forever, so what about signals that start, grow or die?"
+    question: "What about signals that start, grow or die?"
     idea: "Let the exponent be complex, e^(st): Laplace (and Z for samples) handles switch-ons, growth and decay, and turns equations into algebra."
     why: "**Still open:** Fourier's sines last forever at constant size. A switch-on, the earbud's dying ring (time constant 0.79 ms) and anything that grows do not.\n\n**Why it matters:** for a response that grows, the Fourier integral never settles, so the transform does not exist. Those unstable systems are the ones we most need to spot.\n\n**What we want:** building blocks that can also grow or die away. That means e^(st) with a complex s = σ + jω, where σ is the growth rate (positive) or decay rate (negative) and ω is the frequency."
   - &id028
     from: LAP
     to: PZ
     label: read H(s)
-    question: What does H(s) tell us about the system?
+    question: What does H(s) tell us?
     idea: Its poles are the natural rhythms and its zeros the blocked inputs; together they shape the gain at every pitch.
     why: "**Still open:** in Box 8 the Laplace transform turned the earbud's differential equation into a single fraction, H(s), the *transfer function* (output ÷ input, as a function of s).\n\n**Why it matters:** a fraction on the page does not yet tell us whether the earbud rings, at what pitch, or whether it settles.\n\n**What we want:** a fast way to read behaviour from H(s), by looking at where the fraction blows up and where it drops to zero."
   - &id029
     from: PZ
     to: STATE
     label: look inside
-    question: "That's the outside view. What's going on inside?"
+    question: "What's going on inside?"
     idea: "Describe the system by what it remembers, the state, and how that memory changes: ẋ = Ax + Bu."
     why: "**Still open:** H(s) links only the input to the output. For the car, the road goes in and the body motion comes out, but the heave, the pitch and what each spring is doing all stay hidden.\n\n**Why it matters:** with several moving parts, one part can misbehave while the output still looks fine. The parts also push on each other, which one fraction cannot show.\n\n**What we want:** a description of what the system *remembers* from moment to moment (its *state*) and the rule for how that memory changes."
   - &id030
@@ -414,23 +414,23 @@ maps:
     question: Will it settle?
     idea: A pole in the right half-plane is a rhythm that grows; the system settles only if every pole lies to the left.
     side: true
-    why: "**Still open:** Box 9 showed that each pole p is a natural rhythm e^(pt), and its real part sets whether that rhythm grows or dies. The earbud's poles at −1.27 ± 4.32j per ms die away.\n\n**Why it matters:** one growing rhythm is enough to wreck a system: a squeal from the earbud, or a car that bounces higher at every bump.\n\n**What we want:** a yes/no test for settling that we can read straight from where the poles sit.\n\n**A side path:** this shortcut asks the question from the outside view only. The main path first looks inside (Boxes 10 and 11) and reaches the same box by asking \"Will every mode fade?\"."
+    why: "**Still open:** Box 9 showed that each pole p is a natural rhythm e^(pt), and its real part sets whether that rhythm grows or dies. The earbud's poles at −1.27 ± 4.32j per ms die away.\n\n**Why it matters:** one growing rhythm wrecks a system: an earbud squeal, or a car that bounces higher at every bump.\n\n**What we want:** a yes/no test for settling that we can read straight from where the poles sit.\n\n**A side path:** this shortcut asks from the outside view; the main path looks inside first (Boxes 10 and 11) and arrives asking \"Will every mode fade?\"."
   - &id031
     from: STATE
     to: MODES
     label: untangle
-    question: Everything affects everything. How do we untangle it?
+    question: Everything is coupled. How do we untangle it?
     idea: "Switch to the eigenvectors of A: in those coordinates every mode changes on its own."
     why: "**Still open:** Box 10 wrote the car as ẋ = Ax + Bu. The state x (heave, pitch and their rates) changes at a rate set by the matrix A. But A couples everything: heave pushes pitch and pitch pushes heave.\n\n**Why it matters:** coupled equations cannot be solved one at a time, so we still cannot say how the car moves.\n\n**What we want:** new coordinates in which each part moves on its own, the way each tone in Box 6 passed through on its own."
   - &id032
     from: TONE
     to: MODES
     label: same trick
-    question: "Modes and tones: is it the same idea?"
+    question: "Modes and tones: the same idea?"
     idea: "Same trick: find inputs (or states) that keep their shape. Tones are only scaled by H(jω); modes are only scaled by e^(λt)."
     dashed: true
     reverse: true
-    why: "**Still open:** Box 11 found the car's *modes*: shapes the car keeps while it fades (bounce at 1.15 Hz, pitch at 1.42 Hz). That sounds like Box 6, where a tone kept its shape and was only scaled.\n\n**Why it matters:** if it is the same idea, what we learned about tones (one number per piece, no integrals) carries over to the inside view. Seeing that link is what turns two topics into one.\n\n**What we want:** to check whether both are the same trick: find what the system only multiplies by a number. For signals that is a tone (an eigenfunction); for states it is an eigenvector."
+    why: "**Still open:** Box 11 found the car's *modes*: shapes the car keeps while it fades (bounce at 1.15 Hz, pitch at 1.42 Hz). That sounds like Box 6, where a tone kept its shape and was only scaled.\n\n**Why it matters:** if it is the same idea, what we learned about tones (one number per piece, no integrals) carries over to the inside view, and two topics become one.\n\n**What we want:** to check whether both are one trick, finding what the system only multiplies by a number: a tone (an eigenfunction) for signals, an eigenvector for states."
   - &id033
     from: MODES
     to: STAB
@@ -449,7 +449,7 @@ maps:
     from: INOUT
     to: WORK
     label: use it
-    question: What can we do with all this?
+    question: What can we do with it?
     idea: "Design: filters, feedback and optimal control all use the same tools on the same models."
     why: "**Still open:** we can predict outputs, test settling and find hidden modes, but only for the earbud and the car as they were built.\n\n**Why it matters:** the point is to change them: cancel noise in the earbud, stop the car bouncing, level it quickly after a bump.\n\n**What we want:** to use the same tools (gain at each pitch, poles, state and modes) to design a filter, a feedback loop or the best input."
 - id: full
@@ -533,7 +533,7 @@ maps:
     detail: "Series, FT, DTFT, DFT"
     kind: box
     series: 1
-    short: "Write it as a sum of sines: Fourier analysis gives the amount of each pitch, and each sine passes through on its own (Box 6), scaled and delayed. Its four versions and two catches (aliasing, leakage) are in Full detail. See also <a href=\"#/s/picture\">Broader picture</a> and <a href=\"#/s/figures\">Live figures</a>."
+    short: "Write it as a sum of sines: Fourier analysis gives the amount of each pitch; each sine passes through on its own (Box 6), scaled and delayed. Its four versions and two catches (aliasing, leakage) are in Full detail. See also <a href=\"#/s/picture\">Broader picture</a> and <a href=\"#/s/figures\">Live figures</a>."
     pop: *id010
     addsToExample: "Plays a 200 Hz square buzz (±1 V) into the earbud: harmonics of 1.27, 0.42 and 0.25 V at 200, 600 and 1000 Hz, scaled ×1.07, ×1.79 and ×0.81 by the earbud."
     accountsFor: "Why earbuds sound the way they do across the band, and which frequencies the ANC has to fight."
@@ -544,7 +544,7 @@ maps:
     detail: Growing and dying e^(st)
     kind: box
     series: 1
-    short: "Let the pieces grow or die too: exponentials e^(st), s = σ + jω, where σ sets growth or decay. Splitting into these is the Laplace transform. A derivative becomes × s, so the system is one fraction, the transfer function H(s) = Y(s)/U(s) (output over input)."
+    short: "Let the pieces grow or die too: exponentials e^(st), s = σ + jω; σ sets growth or decay. Splitting into these is the Laplace transform. A derivative becomes × s, so the system is one fraction, the transfer function H(s) = Y(s)/U(s) (output over input)."
     eq: Y(s) = H(s) U(s)
     pop: *id012
     addsToExample: "Gives the speaker's transfer function from voltage to motion, H(s) = a₀/(s² + a₁s + a₀), with poles at −1,266 ± j4,322 rad/s: they set the 688 Hz ring and its 0.79 ms decay. How a₀ and a₁ come from the speaker's parts is in the Laplace dive."
@@ -566,7 +566,7 @@ maps:
     detail: "ẋ = Ax + Bu, y = Cx + Du"
     kind: box
     series: 2
-    short: "A memory: the few numbers that, with the future input, fix everything that happens next. That memory is the state x. A state-space model says how it changes: A times the state plus B times the input."
+    short: "A memory: the few numbers, the state x, that with the future input fix everything that happens next. A state-space model says how it changes: A times the state plus B times the input."
     eq: "ẋ = Ax + Bu,  y = Cx + Du"
     pop: *id015
     addsToExample: "Writes the car as ẋ = Ax + Bu with x = (z, θ, ż, θ̇): the springs and shocks at the two axles couple heave and pitch."
@@ -577,7 +577,7 @@ maps:
     detail: Eigenvectors of A
     kind: box
     series: 2
-    short: "Look along special directions: an eigenvector v of A is one that A only stretches, by its eigenvalue λ. Started there, the state stays on it and moves as e^(λt), a mode, like a tone keeping its shape. The eigenvalues are the poles (Box 13: a mode can hide)."
+    short: "Look along special directions: an eigenvector v of A is one A only scales, by its eigenvalue λ. Started there, the state stays on it and moves as e^(λt), a mode. The eigenvalues are the poles (both are roots of det(sI − A); Box 13: a mode can hide)."
     eq: Av = λv
     pop: *id016
     addsToExample: "Finds the pieces both examples only scale: tones for the speaker, and the bounce and pitch modes for the car."
@@ -598,7 +598,7 @@ maps:
     detail: Hidden modes
     kind: decision
     series: 3
-    short: "Not always. H(s), the outside view, shows only the modes the input can move and the output can see. A mode the input can't affect is uncontrollable; one the output can't see, unobservable. It cancels from H(s) as a pole–zero pair but stays inside, and can be unstable."
+    short: "Not always: H(s), the outside view, shows only modes the input can move and the output can see. A mode the input can't affect is uncontrollable; one the output can't see, unobservable. It cancels from H(s) (a pole–zero pair) but still lives inside, possibly unstable."
     pop: *id018
     addsToExample: "Splits the symmetric car with the push and the height sensor at the centre: bounce is reached and seen, pitch neither."
     accountsFor: "Why that car's transfer function from push to height has only the bounce poles."
@@ -608,7 +608,7 @@ maps:
     detail: Design with the tools
     kind: box
     series: 4
-    short: "Design with the same tools: filters shape H(jω); feedback (an input computed from the measured output) moves the poles; optimal control finds the cheapest input. The controllability Gramian measures how easy each direction of the state is to push, so it prices that input."
+    short: "Design with the same tools: filters shape H(jω); feedback (an input computed from the measured output) moves the poles; optimal control finds the cheapest input. The controllability Gramian measures how easy each state direction is to push, so it prices that input."
     pop: *id019
     addsToExample: "Finds the least-energy front and rear actuator forces that level the body from 2° nose-down in 0.5 s: peaks of 476 N and 652 N."
     accountsFor: "Why the cheapest forces start small, swing in sign, and do their hardest work in the second half, and why a shorter time or a single actuator costs so much more."
@@ -915,7 +915,7 @@ maps:
   - from: LAP
     to: ROC
     label: where it converges
-    question: Where does the transform actually exist?
+    question: Where does the transform exist?
     idea: "Only where the integral or sum converges: a region bounded by poles. Its shape encodes causality and stability."
     why: "**Still open:** Box 8 wrote X(s) as an integral over all t, but that integral blows up for some values of s.\n\n**Why it matters:** the same formula, 1/(s + a), belongs to a signal that runs forward and to one that runs backward; only where it converges tells them apart.\n\n**What we want:** the region of s where the transform exists, and what its shape says about the signal."
   - from: ROC
@@ -927,13 +927,13 @@ maps:
   - from: LAP
     to: DE
     label: use it
-    question: What does the transform buy you for differential and difference equations?
+    question: What does the transform do for differential equations?
     idea: "Derivatives and delays become multiplication by s and z⁻¹, so solving the equation is algebra on fractions."
     why: "**Still open:** Box 8 promised that a derivative becomes × s, but we have not yet solved an equation with it.\n\n**Why it matters:** the earbud and its noise-cancelling filter are both written as equations, and solving them by hand is slow.\n\n**What we want:** the step-by-step use: transform, solve by algebra, transform back."
   - from: FOUR
     to: ORTHO
     label: why it works
-    question: Why can a signal be split into tones without the pieces interfering?
+    question: "Why don't tones interfere?"
     idea: "Tones at different frequencies are orthogonal: the inner product of two harmonics over a period is zero."
     why: "**Still open:** Box 7 split a signal into sines, but did not say why each amount can be found on its own.\n\n**Why it matters:** if finding one harmonic disturbed another, every coefficient would depend on all the rest.\n\n**What we want:** the property that keeps the pieces independent, like perpendicular axes."
   - from: ORTHO
@@ -975,13 +975,13 @@ maps:
   - from: STATE
     to: RE
     label: "build A, B, C"
-    question: "Given only H(s), how do we build a state model for it?"
+    question: How do we build a state model from H(s)?
     idea: "Wire integrators so the denominator sits in A and the numerator in C: the phase-variable realization."
     why: "**Still open:** Box 10 built the car's A, B, C from its physics, but often we only have a measured H(s).\n\n**Why it matters:** the state tools (modes, controllability, feedback) all need A, B and C.\n\n**What we want:** a way to wire integrators so that a given H(s) comes out, with no spare states."
   - from: MODES
     to: DIAG
     label: change basis
-    question: What does the system look like in eigenvector coordinates?
+    question: In eigenvector coordinates?
     idea: "Diagonal: n separate one-state systems, one per mode."
     why: "**Still open:** Box 11 found the modes one at a time, but the system is still written in the tangled coordinates.\n\n**Why it matters:** in the right coordinates each mode is a separate first-order system, and the whole problem falls apart into easy pieces.\n\n**What we want:** the system rewritten in eigenvector coordinates."
   - from: DIAG
@@ -1005,21 +1005,21 @@ maps:
   - from: INOUT
     to: OBS
     label: the output side
-    question: The input side is controllability. What is the matching question for the output?
+    question: Can the output see every mode?
     idea: "Observability: can the readings over time pin down every mode? It is the dual of controllability (A → Aᵀ, B ↔ Cᵀ)."
     why: "**Still open:** Reaching every mode is half the story; a sensor can still miss one.\n\n**Why it matters:** a mode the output never shows can drift or grow unseen.\n\n**What we want:** the matching yes/no test from A and C."
     rank: 2
   - from: INOUT
     to: PBH
     label: one mode at a time
-    question: "Which mode, exactly, does the input miss?"
+    question: Which mode is missed?
     idea: "Test each eigenvalue: the mode is reached if its left eigenvector is not orthogonal to B."
     why: "**Still open:** The rank tests answer yes or no for the whole system, not which mode is the problem.\n\n**Why it matters:** to move an actuator or sensor you need to know which mode it is missing.\n\n**What we want:** a test that checks each mode separately."
     rank: 3
   - from: INOUT
     to: GRAM
     label: how hard?
-    question: "Controllable, yes, but how much effort does each direction take?"
+    question: How hard is each direction?
     idea: "The Gramian measures it: its eigenvectors are the easy and hard directions, its inverse gives the minimum energy."
     why: "**Still open:** Controllable is yes or no, but some directions take far more effort than others.\n\n**Why it matters:** the car can be levelled with two actuators or with one, and one alone needs about 20 times the peak force (12.9 kN against 652 N).\n\n**What we want:** a number for how hard each direction is to push."
     rank: 4
@@ -1039,13 +1039,13 @@ maps:
   - from: WORK
     to: FB
     label: feedback
-    question: What happens when the output drives the input?
+    question: What if the output drives the input?
     idea: "Feedback changes A, so it moves the poles: it can steady a system or destabilise it."
     why: "**Still open:** Filters act on signals; they cannot change how the system itself rings.\n\n**Why it matters:** worn shocks make the car float, and only changing its dynamics fixes that.\n\n**What we want:** what feeding the measurement back to the input does to the poles."
   - from: WORK
     to: OPT
     label: optimal control
-    question: Which input reaches a target most cheaply?
+    question: Which input reaches a target with the least energy?
     idea: "Pontryagin's principle: add a costate that prices each unit of state; the best input follows from it."
     why: "**Still open:** Feedback steadies the car in general, but some jobs have a target and a deadline.\n\n**Why it matters:** levelling the body in 0.5 s can cost a little or a lot, depending on the input chosen.\n\n**What we want:** the best input for one specific job."
   - from: GRAM
