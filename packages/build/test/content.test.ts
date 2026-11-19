@@ -56,6 +56,9 @@ describe('shipped content', () => {
     for (const e of big.edges) expect(e.question, `${e.from}->${e.to}`).toBeTruthy();
     // every main-chain (solid) line says why you would ask its question there; the full map's lines too
     for (const m of content.maps) for (const e of m.edges) if (!e.dashed || m.id === 'big') expect((e.why ?? '').length, `${m.id} ${e.from}->${e.to} why`).toBeGreaterThan(20);
+    // every non-root box pop-up can restate its question: it has a solid incoming line carrying one (the root states the central question as its label)
+    for (const m of content.maps) for (const n of m.nodes) if (n.pop && m.edges.some((e) => e.from === n.id) && n.id !== 'root') expect(m.edges.find((e) => e.to === n.id && !e.dashed)?.question ?? '', `${m.id}/${n.id} incoming question`).toMatch(/\?/);
+    expect(big.nodes.find((n) => n.id === 'root')!.label).toMatch(/\?$/);
     // every main-chain line of the big map (the dashed look-back too) teaches the move: what is still open, why it matters, what answer we want;
     // it leans brief (soft target ~150 words) and any figure it borrows is captioned
     for (const e of big.edges) {

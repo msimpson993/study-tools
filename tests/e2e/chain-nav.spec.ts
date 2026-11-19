@@ -14,6 +14,7 @@ test.describe('linear-systems: walk the chain through the lines', () => {
     await page.locator('[data-testid=map-node][data-node="root"]').dispatchEvent('click');
     await expect(heading(page)).toHaveText(await labelOf(page, 'root'));
     await expect(page.getByTestId('chain-back')).toHaveCount(0); // the root has no Back
+    await expect(page.getByTestId('pop-question')).toContainText('How do we predict the output for ANY input?');
     const path: string[] = ['box:root'];
     for (let i = 1; i < MAIN.length; i++) {
       // box → its outgoing line (the Next-question link opens the LINE, not the next box)
@@ -27,6 +28,7 @@ test.describe('linear-systems: walk the chain through the lines', () => {
       await page.getByTestId('edge-next').click();
       await expect(heading(page)).toHaveText(await labelOf(page, MAIN[i]));
       path.push(`box:${MAIN[i]}`);
+      await expect(page.getByTestId('pop-question'), `box ${MAIN[i]} restates the question it was reached by`).toHaveAttribute('data-edge', `${MAIN[i - 1]}__${MAIN[i]}`);
     }
     await expect(page.getByTestId('pop-next-link')).toHaveCount(0); // box 14 ends the chain
     expect(path.length).toBe(2 * MAIN.length - 1);
@@ -83,5 +85,28 @@ test.describe('linear-systems: walk the chain through the lines', () => {
     await expect(page.getByTestId('edge-why')).toContainText('eigenvector');
     await expect(page.getByTestId('edge-back')).toHaveAttribute('data-to', 'MODES');
     await page.getByTestId('edge-next').click(); await expect(heading(page)).toHaveText(await labelOf(page, 'TONE'));
+  });
+
+  test('every box pop-up on both maps opens with its question line; a box with two ways in restates the one you came by', async ({ page }) => {
+    await open(page, 'linear-systems');
+    const maps = await page.evaluate(() => (window as any).__study.content.maps.map((m: any) => ({ id: m.id, nodes: m.nodes.filter((n: any) => n.pop).map((n: any) => n.id), edges: m.edges })));
+    for (const [mi, m] of maps.entries()) {
+      if (mi > 0) await page.locator(`button[role=tab][data-map="${m.id}"]`).first().click();
+      for (const id of m.nodes) {
+        await page.locator(`[data-testid=map-node][data-node="${id}"]`).first().dispatchEvent('click');
+        const q = page.getByTestId('pop-question');
+        await expect(q, `${m.id}/${id} question line`).toHaveCount(1);
+        const ins = m.edges.filter((e: any) => e.to === id && !e.dashed).map((e: any) => `${e.from}__${e.to}`);
+        const got = (await q.getAttribute('data-edge')) ?? '';
+        if (ins.length) expect(ins, `${m.id}/${id} restates one of its incoming questions`).toContain(got); else expect(got, `${m.id}/${id} is a root`).toBe('');
+        await page.getByTestId('panel-close').click();
+      }
+    }
+    // box 12 (Will it settle?) has two ways in: arrive from box 11 and it restates box 11's question
+    await page.reload();
+    await page.locator('[data-testid=map-edge][data-edge="MODES__STAB"]').first().dispatchEvent('click');
+    await page.getByTestId('edge-next').click();
+    await expect(page.getByTestId('pop-question')).toHaveAttribute('data-edge', 'MODES__STAB');
+    await expect(page.getByTestId('pop-question')).toContainText('Will every mode fade?');
   });
 });
