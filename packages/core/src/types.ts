@@ -49,6 +49,8 @@ export interface MapEdge {
   reverse?: boolean;
   /** a side path (a shortcut) out of a fork: listed after the main path, styled and labelled as a side path, and never part of the main chain */
   side?: boolean;
+  /** display order among a box's next questions (lower first; unset = 0); the layout ignores it */
+  rank?: number;
   /** the follow-up question this line asks (the next box answers it) (rendered HTML) */
   question: string;
   /** the idea behind the link (rendered HTML) */

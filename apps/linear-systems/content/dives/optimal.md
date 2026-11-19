@@ -2,7 +2,7 @@
 id: optimal
 order: 29
 title: "Application: optimal control (Pontryagin's principle)"
-addsToExample: "Finds the least-energy front and rear actuator forces (active suspension) that bring the body from 2° nose-down to level and still in 0.5 s. With ∫|u|² dt as the cost the costate obeys λ̇ = −Aᵀλ, so u(t) = −Bᵀλ(t)/2 is built from the car's modes run backwards from T: small at first, the front force peaking at 476 N part-way through and the rear at 652 N right at the end, with E = 96,160 N²·s. Given 1 s, about 120 N is enough."
+addsToExample: "Finds the least-energy front and rear actuator forces (active suspension) that bring the body from 2° nose-down to level and still in 0.5 s. With ∫|u|² dt as the cost the costate obeys ṗ = −Aᵀp, so u(t) = −Bᵀp(t)/2 is built from the car's modes run backwards from T: small at first, the front force peaking at 476 N part-way through and the rear at 652 N right at the end, with E = 96,160 N²·s. Given 1 s, about 120 N is enough."
 accountsFor: "Why the cheapest levelling forces start small, swing in sign, and do their hardest work in the second half, and why a shorter time costs so much more."
 category: structure
 neighbors:
@@ -36,57 +36,59 @@ How to turn "best" into equations you can solve with the tools you already have:
 
 Minimise J = ∫₀ᵀ L(x, u) dt subject to ẋ = f(x, u), with x(0) given and x(T) either fixed or free.
 
-1. **Hamiltonian:** H = L + λᵀf (this page's convention; with ½L or −L the costate is scaled or sign-flipped, but u°(t) is the same).
-2. **Stationarity:** ∂H/∂u = 0 (no constraint on u), and ∂²H/∂u² > 0 for a minimum.
-3. **Canonical equations:** ẋ = ∂H/∂λ, λ̇ = −∂H/∂x.
-4. **Boundary conditions:** x(0) given; x(T) given *or* λ(T) = 0 if x(T) is free (transversality).
+*Notation:* this page writes the Hamiltonian as script 𝓗 and the costate as p, because plain H is the transfer function H(s) and λ names eigenvalues elsewhere in the course (many textbooks use H and λ).
 
-For a linear system with a quadratic cost, steps 2–3 give a linear system in (x, λ) with the Hamiltonian matrix M, whose eigenvalues come in ± pairs. Then
+1. **Hamiltonian:** 𝓗 = L + pᵀf (this page's convention; with ½L or −L the costate is scaled or sign-flipped, but u°(t) is the same).
+2. **Stationarity:** ∂𝓗/∂u = 0 (no constraint on u), and ∂²𝓗/∂u² > 0 for a minimum.
+3. **Canonical equations:** ẋ = ∂𝓗/∂p, ṗ = −∂𝓗/∂x.
+4. **Boundary conditions:** x(0) given; x(T) given *or* p(T) = 0 if x(T) is free (transversality).
 
-$$\begin{bmatrix}x(T)\\\lambda(T)\end{bmatrix}=\Phi_M(T)\begin{bmatrix}x(0)\\\lambda(0)\end{bmatrix},\qquad \Phi_M(t)=e^{Mt},$$
+For a linear system with a quadratic cost, steps 2–3 give a linear system in (x, p) with the Hamiltonian matrix M, whose eigenvalues come in ± pairs. Then
 
-and the unknown λ(0) is solved from the known end condition.
+$$\begin{bmatrix}x(T)\\p(T)\end{bmatrix}=\Phi_M(T)\begin{bmatrix}x(0)\\p(0)\end{bmatrix},\qquad \Phi_M(t)=e^{Mt},$$
+
+and the unknown p(0) is solved from the known end condition.
 
 **What each symbol means.**
 
 - $J$: the cost to minimise, e.g. $\int (x^\mathsf{T}Qx + u^\mathsf{T}Ru)\,dt$.
-- $\lambda(t)$: the costate, the running price of a unit of state.
-- $\mathcal{H} = $ running cost $+ \lambda^\mathsf{T}(Ax + Bu)$: the Hamiltonian; the best $u$ minimises it at every instant.
-- $M$: the Hamiltonian matrix driving $(x, \lambda)$ together; $\Phi_M = e^{Mt}$.
+- $p(t)$: the costate, the running price of a unit of state.
+- $\mathcal{H} = $ running cost $+ p^\mathsf{T}(Ax + Bu)$: the Hamiltonian; the best $u$ minimises it at every instant.
+- $M$: the Hamiltonian matrix driving $(x, p)$ together; $\Phi_M = e^{Mt}$.
 
 ````callout:derivation Full derivation
-Minimise $J = \int_0^T L(x, u)\,dt$ subject to $\dot x = Ax + Bu$. Adjoin the dynamics with a costate $\lambda(t)$ and define
+Minimise $J = \int_0^T L(x, u)\,dt$ subject to $\dot x = Ax + Bu$. Adjoin the dynamics with a costate $p(t)$ and define
 
-$$\mathcal{H}=L(x,u)+\lambda^\mathsf{T}(Ax+Bu).$$
+$$\mathcal{H}=L(x,u)+p^\mathsf{T}(Ax+Bu).$$
 
 Setting the first variation of $J$ to zero gives the necessary conditions:
 
-$$\dot x=\frac{\partial\mathcal H}{\partial\lambda},\quad \dot\lambda=-\frac{\partial\mathcal H}{\partial x},\quad \frac{\partial\mathcal H}{\partial u}=0.$$
+$$\dot x=\frac{\partial\mathcal H}{\partial p},\quad \dot p=-\frac{\partial\mathcal H}{\partial x},\quad \frac{\partial\mathcal H}{\partial u}=0.$$
 
-For $L = x^\mathsf{T}Qx + u^\mathsf{T}Ru$ the last gives $u = -\tfrac12R^{-1}B^\mathsf{T}\lambda$; substituting gives the linear system $(\dot x, \dot\lambda) = M(x, \lambda)$. Boundary conditions: $x(0)$ given, and either $x(T)$ given (then $\lambda(0)$ is unknown) or $\lambda(T) = 0$ when $x(T)$ is free.
+For $L = x^\mathsf{T}Qx + u^\mathsf{T}Ru$ the last gives $u = -\tfrac12R^{-1}B^\mathsf{T}p$; substituting gives the linear system $(\dot x, \dot p) = M(x, p)$. Boundary conditions: $x(0)$ given, and either $x(T)$ given (then $p(0)$ is unknown) or $p(T) = 0$ when $x(T)$ is free.
 ````
 
 ### Worked example: on the car
 
 1. Car with front and rear actuators: minimise $\int_0^{0.5}|u|^2\,dt$ to go from 2° nose-down at rest to level and still.
-2. With $L = |u|^2$ the costate obeys $\dot\lambda = -A^\mathsf{T}\lambda$, so $u(t) = -B^\mathsf{T}\lambda(t)/2$ is built from the car's modes run backwards from $T$; the end condition fixes $\lambda(0)$.
+2. With $L = |u|^2$ the costate obeys $\dot p = -A^\mathsf{T}p$, so $u(t) = -B^\mathsf{T}p(t)/2$ is built from the car's modes run backwards from $T$; the end condition fixes $p(0)$.
 3. Result: small at first; the front force peaks at about 476 N part-way through, the rear at about 652 N right at the end, with $E = 96{,}160$ N²·s; the Gramian gives the same answer. Allowed 1 s, about 120 N is enough.
 
-**Exam-style example.** ẋ = 6x + u, J = ∫₀¹(x² + 2u²)dt, x(0) = 1, x(1) = 2. H = x² + 2u² + λ(6x + u), so u° = −λ/4 and
+**Exam-style example.** ẋ = 6x + u, J = ∫₀¹(x² + 2u²)dt, x(0) = 1, x(1) = 2. 𝓗 = x² + 2u² + p(6x + u), so u° = −p/4 and
 
-$$\begin{bmatrix}\dot x\\\dot\lambda\end{bmatrix}=\underbrace{\begin{bmatrix}6&-\tfrac14\\-2&-6\end{bmatrix}}_{M}\begin{bmatrix}x\\\lambda\end{bmatrix},\quad \omega=\tfrac{\sqrt{146}}{2}\approx6.04,\quad \Phi_M(t)=\cosh\omega t\,I+\frac{\sinh\omega t}{\omega}M.$$
+$$\begin{bmatrix}\dot x\\\dot p\end{bmatrix}=\underbrace{\begin{bmatrix}6&-\tfrac14\\-2&-6\end{bmatrix}}_{M}\begin{bmatrix}x\\p\end{bmatrix},\quad \omega=\tfrac{\sqrt{146}}{2}\approx6.04,\quad \Phi_M(t)=\cosh\omega t\,I+\frac{\sinh\omega t}{\omega}M.$$
 
-x(1) = φ₁₁(1)·1 + φ₁₂(1)λ(0) = 2 gives λ(0) ≈ 47.94, and u°(0) ≈ −11.98: push hard down first, then let the instability carry x up to 2. The full walkthrough is in the Review area (A4).
+x(1) = φ₁₁(1)·1 + φ₁₂(1)p(0) = 2 gives p(0) ≈ 47.94, and u°(0) ≈ −11.98: push hard down first, then let the instability carry x up to 2. The full walkthrough is in the Review area (A4).
 
 ### What it can't do
 
 This plans one input for one start and one target, open loop. A real system meets disturbances, so in practice the optimal input is turned into feedback (LQR) — beyond this course's map.
 
-**Next question.** With cost ∫uᵀu only, λ̇ = −Aᵀλ on its own, and the answer is the Gramian formula u = Bᵀe^(Aᵀ(T−t))W(T)⁻¹(x_f − e^(AT)x₀). Adding a state cost xᵀQx couples x and λ, and an infinite horizon leads to LQR.
+**Next question.** With cost ∫uᵀu only, ṗ = −Aᵀp on its own, and the answer is the Gramian formula u = Bᵀe^(Aᵀ(T−t))W(T)⁻¹(x_f − e^(AT)x₀). Adding a state cost xᵀQx couples x and p, and an infinite horizon leads to LQR.
 
 ### Common pitfalls
 
-- λ̇ = −∂H/∂x, with the minus sign.
-- λ(T) = 0 only for a free endpoint. With x(T) fixed, λ(0) is the unknown you solve for.
-- The factor in u°: 2u² gives ∂H/∂u = 4u + λ, so u° = −λ/4.
+- ṗ = −∂𝓗/∂x, with the minus sign.
+- p(T) = 0 only for a free endpoint. With x(T) fixed, p(0) is the unknown you solve for.
+- The factor in u°: 2u² gives ∂𝓗/∂u = 4u + p, so u° = −p/4.
 - Building e^(Mt) entry by entry from e^(±ωt). Use the full matrix (Cayley–Hamilton or the modes).

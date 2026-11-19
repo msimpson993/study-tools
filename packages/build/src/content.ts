@@ -117,7 +117,7 @@ export function loadApp(appDir: string): { content: AppContent; warnings: string
           ...(n.pop ? { pop: { rough: inline(n.pop.rough, `${m.id}/${n.id} pop`), eqKey: n.pop.eqKey ? inline(n.pop.eqKey, `${m.id}/${n.id} pop`) : undefined, figures: n.pop.figures, figCaption: n.pop.figCaption ? inline(n.pop.figCaption, `${m.id}/${n.id} pop`) : undefined, audio: n.pop.audio, example: n.pop.example ? inline(n.pop.example, `${m.id}/${n.id} pop`) : undefined, next: n.pop.next ? inline(n.pop.next, `${m.id}/${n.id} pop`) : undefined, ask: n.pop.ask } } : {}),
         })),
         edges: (m.edges ?? []).map((e: any) => ({
-          from: e.from, to: e.to, label: e.label, dashed: e.dashed, eq: e.eq, ...(e.reverse ? { reverse: true } : {}), ...(e.side ? { side: true } : {}),
+          from: e.from, to: e.to, label: e.label, dashed: e.dashed, eq: e.eq, ...(e.reverse ? { reverse: true } : {}), ...(e.side ? { side: true } : {}), ...(e.rank !== undefined ? { rank: e.rank } : {}),
           question: inline(e.question, `graph.yaml ${m.id}/${e.from}->${e.to}`),
           idea: inline(e.idea, `graph.yaml ${m.id}/${e.from}->${e.to}`),
           ...(e.why ? { why: block(e.why, `graph.yaml ${m.id}/${e.from}->${e.to}`) } : {}),

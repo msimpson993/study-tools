@@ -32,6 +32,7 @@ maps:
     edges:
       - { from: a, to: b, label: short pill text, dashed: false, question: ≥8 chars, idea: ≥20 chars, eq: optional }
       - { from: a, to: c, …, side: true }   # optional: a shortcut out of a fork; listed after the main path, labelled 'Side path', never the main chain
+      - { from: a, to: d, …, rank: 2 }     # optional: display order among a box's next questions (lower first); the layout ignores it
 ```
 Rules enforced: unique ids per map, no dangling or duplicate edges, graph is a DAG, every node reachable from `root`, popups non-empty, `live` targets exist (figure id, board pair, preset id), cross-app link targets exist.
 YAML gotchas: quote any scalar containing `: `, `{`, `|`, `#` (labels like `Finite record: DFT` break).

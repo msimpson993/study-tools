@@ -111,6 +111,14 @@ test.describe('linear-systems: walk the chain through the lines', () => {
     await expect(heading(page)).toHaveText(await labelOf(page, 'LAP'));
   });
 
+  test("Full detail: box 13's next questions run controllability, observability, PBH, then the Gramian", async ({ page }) => {
+    await open(page, 'linear-systems');
+    await page.locator('button[role=tab][data-map="full"]').first().click();
+    await page.locator('[data-testid=map-node][data-node="INOUT"]').first().dispatchEvent('click');
+    const to = await page.getByTestId('pop-next-link').evaluateAll((els) => els.map((e) => e.getAttribute('data-to')));
+    expect(to.filter((x) => x !== 'WORK')).toEqual(['CO', 'OBS', 'PBH', 'GRAM']);
+  });
+
   test('review progress counts unique boxes: a box on both maps counts once, seen on either is seen', async ({ page }) => {
     await open(page, 'linear-systems');
     const total = await page.evaluate(() => new Set((window as any).__study.content.maps.flatMap((m: any) => m.nodes.map((n: any) => n.id))).size);

@@ -136,6 +136,7 @@ test('linear-systems: map figures are captioned and panels labelled (box 3 and b
   const cap = page.getByTestId('pop-figcap');
   await expect(cap).toBeVisible(); await expect(cap).toContainText('(a)'); await expect(cap).toContainText('(b)'); await expect(cap).toContainText('homogeneity');
   await expect(page.locator('.pop-figs .qfig-cap').first()).toHaveText('(a) 0.2 V');
+  await expect(page.locator('.pop-figs .qfig-cap').nth(1)).toHaveText('(b) 2 V vs 4 V');
   await page.locator('[data-testid=map-node][data-node="SUP"]').dispatchEvent('click');
   await expect(page.getByTestId('pop-figcap')).toContainText('superposition plus a time shift');
 });

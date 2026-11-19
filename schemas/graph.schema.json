@@ -385,6 +385,10 @@
                   "type": "boolean",
                   "description": "draw the arrowhead at the `from` end (a back-reference that the DAG layout lays out downwards)"
                 },
+                "rank": {
+                  "type": "number",
+                  "description": "display order among a box's next questions (lower first; unset = 0, then the edge order). Does not affect the layout."
+                },
                 "side": {
                   "type": "boolean",
                   "description": "a side path (shortcut) out of a fork: listed after the main path, labelled 'Side path', styled differently, and not part of the main chain that Back falls back to"

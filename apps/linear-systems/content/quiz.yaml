@@ -1030,7 +1030,7 @@
   kind: recognize
   q: Why do the eigenvalues of a Hamiltonian matrix M come in ± pairs?
   choices:
-  - "State and costate run in opposite time directions (λ̇ = −Aᵀλ − …), which makes the spectrum symmetric about the imaginary axis"
+  - "State and costate run in opposite time directions (ṗ = −Aᵀp − …, with p the costate), which makes the spectrum symmetric about the imaginary axis"
   - Because M is symmetric
   - Because M is upper triangular
   - They do not

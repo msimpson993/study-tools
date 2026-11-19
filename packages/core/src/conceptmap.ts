@@ -113,7 +113,7 @@ export function mountConceptMap(host: HTMLElement, content: AppContent, progress
     return ins.sort((a, b) => rank(a) - rank(b));
   };
   /** Next order: main path first, side paths after */
-  const nextOrder = (id: string, m: MapDef) => m.edges.filter((e) => e.from === id && !e.dashed).sort((a, b) => Number(!!a.side) - Number(!!b.side));
+  const nextOrder = (id: string, m: MapDef) => m.edges.filter((e) => e.from === id && !e.dashed).sort((a, b) => Number(!!a.side) - Number(!!b.side) || (a.rank ?? 0) - (b.rank ?? 0));
   /** the main-chain box a Full-detail branch hangs from: the last box on its path that is also on the first map */
   const mainAncestor = (id: string, m: MapDef) => { const first = new Set(content.maps[0]?.nodes.map((n) => n.id)); const up = mainPath(id, m).filter((x) => x !== id && first.has(x)); return up[up.length - 1]; };
   const openEdge = (key: string) => { setPick({ kind: 'edge', id: key }); panel.scrollTop = 0; };
