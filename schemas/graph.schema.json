@@ -219,6 +219,73 @@
                       ]
                     }
                   }
+                },
+                "pop": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "rough"
+                  ],
+                  "description": "Opt-in fixed pop-up template: the short answer, then a rough-words formula, optional figures (quiz-figure renderers, drawn as one compact strip), the running-example line, the next question and one intuition question (a quiz id). When present the pop-up shows only this template.",
+                  "properties": {
+                    "rough": {
+                      "type": "string",
+                      "minLength": 8,
+                      "description": "the formula in rough words"
+                    },
+                    "eqKey": {
+                      "type": "string",
+                      "description": "what each symbol of `eq` means and what the equation is used for"
+                    },
+                    "figures": {
+                      "type": "array",
+                      "maxItems": 4,
+                      "items": {
+                        "type": "object",
+                        "additionalProperties": false,
+                        "required": [
+                          "id",
+                          "alt"
+                        ],
+                        "properties": {
+                          "id": {
+                            "type": "string"
+                          },
+                          "params": {
+                            "type": "object",
+                            "additionalProperties": {
+                              "type": [
+                                "number",
+                                "string",
+                                "boolean"
+                              ]
+                            }
+                          },
+                          "alt": {
+                            "type": "string",
+                            "minLength": 8
+                          },
+                          "caption": {
+                            "type": "string"
+                          }
+                        }
+                      }
+                    },
+                    "example": {
+                      "type": "string",
+                      "minLength": 10,
+                      "description": "'On the running example:' line (default: addsToExample)"
+                    },
+                    "next": {
+                      "type": "string",
+                      "minLength": 8,
+                      "description": "'Next question:' (the outgoing edge question)"
+                    },
+                    "ask": {
+                      "type": "string",
+                      "description": "quiz id of the one intuition question"
+                    }
+                  }
                 }
               }
             }
@@ -257,6 +324,10 @@
                 },
                 "eq": {
                   "type": "string"
+                },
+                "reverse": {
+                  "type": "boolean",
+                  "description": "draw the arrowhead at the `from` end (a back-reference that the DAG layout lays out downwards)"
                 }
               }
             }

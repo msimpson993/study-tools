@@ -2,9 +2,9 @@ import MarkdownIt from 'markdown-it';
 import texmath from 'markdown-it-texmath';
 import katex from 'katex';
 
-export const CALLOUT_KINDS = ['short', 'why', 'recognize', 'trap', 'predict', 'note'] as const;
+export const CALLOUT_KINDS = ['short', 'why', 'recognize', 'trap', 'predict', 'note', 'derivation'] as const;
 const LEADS: Record<string, string> = {
-  short: 'Short answer', why: 'Why it matters', recognize: 'Recognize', trap: 'Trap', predict: 'Predict', note: 'Note',
+  short: 'Short answer', why: 'Why it matters', recognize: 'Recognize', trap: 'Trap', predict: 'Predict', note: 'Note', derivation: 'Full derivation',
 };
 
 export class MathErrors { list: string[] = []; figureRefs: { id: string; where: string }[] = [] }
@@ -42,6 +42,7 @@ export function createMarkdown(errors: MathErrors, where: () => string) {
         errors.list.push(`${where()}: unknown callout kind "${head}" (use ${CALLOUT_KINDS.join(', ')})`);
       }
       const lead = rest.length ? rest.join(' ') : LEADS[head] ?? head;
+      if (head === 'derivation') return `<details class="fold derivation" data-testid="derivation"><summary>${esc(lead)}</summary><div class="cb">${md.render(t.content)}</div></details>\n`;
       return `<aside class="callout c-${esc(head)}"><b class="lead">${esc(lead)}</b><div class="cb">${md.render(t.content)}</div></aside>\n`;
     }
     return defaultFence(tokens, idx, options, env, self);

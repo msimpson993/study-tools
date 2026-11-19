@@ -18,3 +18,4 @@ export * from './ctrlviz';
 export * from './scenedefs';
 export * from './blockdiagram';
 export * from './scene';
+export * from './minicheck';

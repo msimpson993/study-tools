@@ -281,3 +281,21 @@ details.st-more .st-badge{display:inline-block;margin-left:.35rem;padding:0 .4re
   body[data-print=sheet]{background:#fff;color:#000}
   html:has(body[data-print=sheet]){background:#fff}
 }
+/* opt-in pop-up template (node.pop), inline checks, dive template (level tag, At a glance, Full derivation) */
+.pop-answer p{margin:.2rem 0 .45rem;font-size:1rem}
+.pop-row{margin:.35rem 0;font-size:.93rem;line-height:1.45}.pop-lead{color:var(--accent);font-weight:650}
+.pop-key{margin:.1rem 0 .4rem;font-size:.85rem}
+.pop-figs{display:grid;gap:.35rem;margin:.4rem 0}.pop-figs.n2{grid-template-columns:1fr 1fr}.pop-figs.n3{grid-template-columns:1fr 1fr 1fr}
+.pop-figs .qfigure{margin:0}.pop-figs canvas{background:var(--panel2);border:1px solid var(--border);border-radius:10px;margin:0 auto!important}.pop-figs .qfig-cap{font-size:.75rem;color:var(--muted);text-align:center;line-height:1.25}
+.mini-q{margin:.45rem 0;padding:.55rem .7rem;border:1px solid var(--border);border-radius:12px;background:var(--panel)}
+.mini-q .qtext{font:600 .95rem/1.4 Charter,Georgia,serif;margin-bottom:.25rem}
+.mini-q .choice{display:flex;gap:.55rem;width:100%;text-align:left;margin:.25rem 0;padding:.4rem .6rem;border-radius:10px;border:1px solid var(--border);background:var(--panel2);color:var(--text);cursor:pointer;font:.88rem/1.35 system-ui,sans-serif}
+.mini-q .choice b{flex:0 0 1.2rem;color:var(--muted)}.mini-q .choice:hover:not([disabled]){border-color:var(--accent)}
+.mini-q .choice.right{border-color:var(--ok);background:color-mix(in srgb,var(--ok) 14%,var(--panel))}.mini-q .choice.wrong{border-color:var(--bad);background:color-mix(in srgb,var(--bad) 14%,var(--panel))}
+.mini-q .why{margin-top:.4rem;padding:.4rem .6rem;border-radius:9px;background:var(--panel2);font-size:.88rem}
+.level-tag{display:inline-block;margin:.1rem 0 .5rem;padding:.12rem .6rem;border:1px solid var(--border-strong);border-radius:999px;font:.8rem system-ui,sans-serif;color:var(--muted)}.level-tag b{color:var(--text)}
+.glance{margin:.3rem 0 .9rem;padding:.55rem .85rem;border:1px solid var(--border);border-left:4px solid var(--accent);border-radius:10px;background:var(--panel)}
+.glance .lead{display:block;font:650 .78rem system-ui,sans-serif;text-transform:uppercase;letter-spacing:.05em;color:var(--accent);margin-bottom:.2rem}
+.glance ol{margin:.1rem 0 0 1.2rem;padding:0;font:.92rem/1.55 system-ui,sans-serif}.glance a{color:var(--text)}
+details.derivation{margin:.7rem 0}details.derivation>summary{font-weight:650}
+.check-yourself{margin-top:1rem}

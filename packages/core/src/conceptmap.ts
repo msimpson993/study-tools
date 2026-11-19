@@ -5,6 +5,8 @@ import { computeGeometry, layoutWidth, placeLabels, roundedPath, arrowHead, edge
 import { storeGet, storeSet } from './store';
 import { mountScene } from './scene';
 import { Progress, quizTagOf, subtree } from './progress';
+import { mountQuizFigure, type QuizFigureRegistry } from './quizfig';
+import { miniCheck } from './minicheck';
 
 export interface MapState {
   mapId: string;
@@ -22,6 +24,8 @@ export interface MapNav {
   openLive(live: string): void;
   openQuiz(tags: string[], title: string): void;
   onState?(): void;
+  /** renderers for pop-up figures (`node.pop.figures`); the same registry as quiz figures */
+  figures?: QuizFigureRegistry;
 }
 
 /** localStorage key of the map view choice; shared by every app on the origin */
@@ -226,7 +230,7 @@ export function mountConceptMap(host: HTMLElement, content: AppContent, progress
       });
       grp.append(
         s('path', { d, fill: 'none', stroke: 'transparent', 'stroke-width': 26, 'stroke-linejoin': 'round', 'pointer-events': 'stroke' }),
-        s('path', { class: 'line', d: dHop }), s('path', { class: 'head', d: arrowHead(g.points) }),
+        s('path', { class: 'line', d: dHop }), s('path', { class: 'head', d: arrowHead(data.reverse ? [...g.points].reverse() : g.points) }),
         s('circle', { cx: g.dot.x, cy: g.dot.y, r: 14, fill: 'transparent' }),
         s('circle', { class: 'dot', cx: g.dot.x, cy: g.dot.y, r: 6 }),
       );
@@ -281,7 +285,32 @@ export function mountConceptMap(host: HTMLElement, content: AppContent, progress
     return wrap;
   }
 
+  let popStops: (() => void)[] = [];
+  const askOpen = new Set<string>();
+  /** The opt-in fixed pop-up template (node.pop): answer, rough formula, figure strip, running example, next question, one intuition question. */
+  function popTemplate(n: MapNode, m: MapDef): HTMLElement[] {
+    const p = n.pop!, out: HTMLElement[] = [];
+    const row = (cls: string, lead: string, html: string, testid: string) => h('p', { class: `pop-row ${cls}`, dataset: { testid } }, h('b', { class: 'pop-lead' }, lead), ' ', h('span', { html }));
+    out.push(h('div', { class: 'pop-answer', dataset: { testid: 'pop-answer' }, html: `<p>${n.short}</p>` }));
+    out.push(row('pop-rough', 'In rough words:', p.rough, 'pop-rough'));
+    if (n.eqHtml || n.eq) out.push(n.eqHtml ? h('div', { class: 'st-eq', html: n.eqHtml }) : h('div', { class: 'st-eq' }, n.eq!));
+    if (p.eqKey) out.push(h('p', { class: 'pop-key st-hint', dataset: { testid: 'pop-key' }, html: p.eqKey }));
+    if (p.figures?.length) {
+      const strip = h('div', { class: `pop-figs n${p.figures.length}`, dataset: { testid: 'pop-figures' } });
+      for (const f of p.figures) { const mf = mountQuizFigure(f, nav.figures); popStops.push(mf.destroy); strip.append(mf.el); }
+      out.push(strip);
+    }
+    const ex = p.example ?? n.addsToExample;
+    if (ex) out.push(row('pop-example', 'On the running example:', ex, 'adds-to-example'));
+    const nx = p.next ?? m.edges.find((e) => e.from === n.id && !e.dashed)?.question;
+    if (nx) out.push(row('pop-next', 'Next question:', nx, 'pop-next'));
+    const q = p.ask ? content.quiz.find((x) => x.id === p.ask) : undefined;
+    if (q) { const d = h('details', { class: 'fold pop-ask', open: askOpen.has(n.id), dataset: { testid: 'pop-ask' } }, h('summary', null, 'Quick check'), miniCheck(q, progress)); d.addEventListener('toggle', () => { if (d.open) askOpen.add(n.id); else askOpen.delete(n.id); }); out.push(d); }
+    return out;
+  }
+
   function renderPanel() {
+    popStops.forEach((f) => f()); popStops = [];
     clear(panel);
     const m = map();
     const pick = st.pick;
@@ -295,12 +324,13 @@ export function mountConceptMap(host: HTMLElement, content: AppContent, progress
       const n = m.nodes.find((x) => x.id === pick.id);
       if (!n) return;
       const head = h('div', { class: 'cm-head' }, h('h3', null, n.label), copyRefButton(() => nodeReference(content, n, m.id)), close);
-      panel.append(head, ...(n.detail ? [h('div', { class: 'st-hint' }, n.detail)] : []), h('div', { html: `<p>${n.short}</p>` }));
-      if (n.eqHtml) panel.append(h('div', { class: 'st-eq', html: n.eqHtml })); else if (n.eq) panel.append(h('div', { class: 'st-eq' }, n.eq));
-      if (n.addsToExample) panel.append(h('aside', { class: 'callout c-example', dataset: { testid: 'adds-to-example' } }, h('b', { class: 'lead' }, 'Adds to the running example'), h('div', { class: 'cb', html: `<p>${n.addsToExample}</p>` })));
-      if (n.accountsFor) panel.append(h('aside', { class: 'callout c-account', dataset: { testid: 'accounts-for' } }, h('b', { class: 'lead' }, 'Lets us account for'), h('div', { class: 'cb', html: `<p>${n.accountsFor}</p>` })));
+      if (n.pop) panel.append(head, ...popTemplate(n, m));
+      else panel.append(head, ...(n.detail ? [h('div', { class: 'st-hint' }, n.detail)] : []), h('div', { html: `<p>${n.short}</p>` }));
+      if (n.pop) { /* template replaces the free-form rows */ } else if (n.eqHtml) panel.append(h('div', { class: 'st-eq', html: n.eqHtml })); else if (n.eq) panel.append(h('div', { class: 'st-eq' }, n.eq));
+      if (!n.pop && n.addsToExample) panel.append(h('aside', { class: 'callout c-example', dataset: { testid: 'adds-to-example' } }, h('b', { class: 'lead' }, 'Adds to the running example'), h('div', { class: 'cb', html: `<p>${n.addsToExample}</p>` })));
+      if (!n.pop && n.accountsFor) panel.append(h('aside', { class: 'callout c-account', dataset: { testid: 'accounts-for' } }, h('b', { class: 'lead' }, 'Lets us account for'), h('div', { class: 'cb', html: `<p>${n.accountsFor}</p>` })));
       for (const [k, lead] of [['why', 'Why it matters'], ['recognize', 'Recognize'], ['trap', 'Trap'], ['predict', 'Predict']] as const) {
-        const v = n[k];
+        const v = n.pop ? undefined : n[k];
         if (v) panel.append(h('aside', { class: `callout c-${k}` }, h('b', { class: 'lead' }, lead), h('div', { class: 'cb', html: `<p>${v}</p>` })));
       }
       panel.append(pathChips(pathToRoot(n.id, m.edges), m));
@@ -320,7 +350,7 @@ export function mountConceptMap(host: HTMLElement, content: AppContent, progress
       const e = m.edges.find((x) => edgeKey(x.from, x.to) === pick.id);
       if (!e) return;
       const f = m.nodes.find((x) => x.id === e.from)!, t = m.nodes.find((x) => x.id === e.to)!;
-      const head = h('div', { class: 'cm-head' }, h('h3', null, `${f.label} → ${t.label}`), copyRefButton(() => edgeReference(content, e, f, t, m.id)), close);
+      const head = h('div', { class: 'cm-head' }, h('h3', null, e.reverse ? `${t.label} ⇢ ${f.label}` : `${f.label} → ${t.label}`), copyRefButton(() => edgeReference(content, e, f, t, m.id)), close);
       panel.append(head, h('div', { class: 'st-hint' }, e.dashed ? 'Dashed: the same idea in another language' : 'Next step in the chain of questions'),
         h('aside', { class: 'callout c-predict' }, h('b', { class: 'lead' }, 'The question this line answers'), h('div', { class: 'cb', html: `<p>${e.question}</p>` })),
         h('div', { html: `<p>${e.idea}</p>` }));
@@ -341,7 +371,7 @@ export function mountConceptMap(host: HTMLElement, content: AppContent, progress
   const off = progress.onChange(() => { renderReview(); renderSvg(); renderPanel(); });
   const onKey = (ev: KeyboardEvent) => { if (ev.key === 'Escape' && (st.pick || st.series !== null) && !document.querySelector('.fig-overlay:not([hidden])')) { st.series = null; setPick(null); } };
   document.addEventListener('keydown', onKey);
-  return () => { heroHandle?.destroy(); ro.disconnect(); off(); document.removeEventListener('keydown', onKey); root.remove(); };
+  return () => { popStops.forEach((f) => f()); heroHandle?.destroy(); ro.disconnect(); off(); document.removeEventListener('keydown', onKey); root.remove(); };
 }
 
 /** Expose geometry+labels of the *current* render to tests. */

@@ -35,13 +35,18 @@ export interface MapNode {
   quizTag?: string;
   /** link to another app / page */
   link?: { href: string; label: string };
+  /** opt-in fixed pop-up template (HTML strings); when present the pop-up shows only this */
+  pop?: NodePop;
 }
+export interface NodePop { rough: string; eqKey?: string; figures?: QuizFigureRef[]; example?: string; next?: string; ask?: string }
 
 export interface MapEdge {
   from: string;
   to: string;
   label?: string;
   dashed?: boolean;
+  /** draw the arrowhead at the `from` end */
+  reverse?: boolean;
   /** the follow-up question this line answers (rendered HTML) */
   question: string;
   /** the idea behind the link (rendered HTML) */
@@ -68,6 +73,10 @@ export interface Dive {
   chain: DiveStep[];
   neighbors: string[];
   matlab?: string;
+  /** math-level tag; turns on the 'At a glance' outline */
+  level?: string;
+  /** quiz ids shown inline as 'Check yourself' */
+  check?: string[];
   /** from front matter, else inherited from the first map node that links here (HTML) */
   addsToExample?: string;
   accountsFor?: string;

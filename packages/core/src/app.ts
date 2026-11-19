@@ -5,6 +5,7 @@ import type { AppContent, FigureDef } from './types';
 import { Progress } from './progress';
 import { mountScene } from './scene';
 import { mountConceptMap, newMapState, type MapState } from './conceptmap';
+import { miniCheck } from './minicheck';
 import { mountQuiz } from './quiz';
 import type { QuizFigureRegistry } from './quizfig';
 import { ControlSet } from './controls';
@@ -106,6 +107,7 @@ export function mountApp(content: AppContent, hooks: AppHooks = {}): void {
       go(kind === 'figure' ? `/figure/${rest}` : `/board?pair=${rest.replace('?', '&')}`);
     },
     openQuiz: (tags: string[], title: string) => go(`/quiz?tags=${encodeURIComponent(tags.join(','))}&title=${encodeURIComponent(title)}`),
+    figures: hooks.quizFigures,
     onState: () => {
       if (!isMapHash(location.hash || '#/')) return;
       const want = mapHashFor(mapState.pick);
@@ -269,6 +271,8 @@ export function mountApp(content: AppContent, hooks: AppHooks = {}): void {
     main.append(crumbs(['Deep dives', '#/s/dives'], catLabel ?? '', d.title));
     const art = h('article', { class: 'prose', dataset: { testid: 'dive' } },
       h('div', { class: 'dive-head' }, h('h2', null, d.title), copyRefButton(() => diveReference(content, d))));
+    const glance = d.level ? h('nav', { class: 'glance', dataset: { testid: 'at-a-glance' } }) : null;
+    if (d.level) art.append(h('div', { class: 'level-tag', dataset: { testid: 'math-level' } }, h('span', null, 'Math level: '), h('b', null, d.level)), glance!);
     if (d.chain.length) art.append(h('details', { class: 'fold', open: true }, h('summary', null, 'Where are we? The chain of questions that leads here'),
       h('ol', { class: 'chain' }, ...d.chain.map((s) => h('li', null, s.title, s.detail ? h('small', null, s.detail) : null)))));
     let sceneStop: (() => void) | null = null;
@@ -283,6 +287,19 @@ export function mountApp(content: AppContent, hooks: AppHooks = {}): void {
     }
     const body = h('div', { html: d.html });
     art.append(body);
+    if (d.check?.length) {
+      const qs = d.check.map((id) => content.quiz.find((x) => x.id === id)).filter((x): x is NonNullable<typeof x> => !!x);
+      art.append(h('section', { class: 'check-yourself', dataset: { testid: 'check-yourself' } }, h('h3', null, 'Check yourself'), ...qs.map((q) => miniCheck(q, progress))));
+    }
+    if (glance) {
+      const heads = [...art.querySelectorAll<HTMLElement>(':scope > div > h3, :scope > section > h3')];
+      const ol = h('ol', null);
+      heads.forEach((hd, i) => {
+        hd.id = `sec-${d.id}-${i + 1}`;
+        ol.append(h('li', null, h('a', { href: '#', dataset: { target: hd.id }, onclick: (ev: Event) => { ev.preventDefault(); hd.scrollIntoView({ behavior: 'smooth', block: 'start' }); } }, hd.textContent ?? '')));
+      });
+      glance.append(h('b', { class: 'lead' }, 'At a glance'), ol);
+    }
     const stops = embedFigures(body);
     const prevCleanup = cleanup;
     cleanup = () => { prevCleanup?.(); stops.forEach((f) => f()); sceneStop?.(); };
