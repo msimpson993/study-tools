@@ -1,5 +1,5 @@
 /** Live figures on the car (half-car suspension model in core carModel.ts, tutor's parameters, numbers tested in test/car.test.ts). */
-import { figureOf, rangeFrame, curve, tline, polyline, dot, text, wipe, col, linspace, type Frame } from '@study/core';
+import { figureOf, rangeFrame, curve, tline, polyline, dot, text, wipe, col, linspace, withLabelRole, type Frame } from '@study/core';
 import { withSky, skyGains, skyEqualGain, skyBump } from './car';
 import { CAR, CAR_SYM, worn, carA, forceB, roadB, carModes, sim, bumpInput, minEnergy, gramian, expm, mvec, mmul, rank, ctrbM, obsvM, mck, DEG, BUMP, type CarP, type Mat } from './car';
 import { num, fmt, graph, note } from './util';
@@ -17,7 +17,24 @@ function shapes(p: CarP) {
   const nb = Math.sqrt(p.m + p.J * tb * tb), np = Math.sqrt(p.m * zp * zp + p.J);
   return { md, tb, zp, phiB: [1 / nb, tb / nb] as [number, number], phiP: [zp / np, 1 / np] as [number, number] };
 }
-const carFrame = (w: number, h: number): Frame => rangeFrame(w, h, [-2.65, 2.25], [-0.15, 1.75], 8, 8, 18, 14);
+const carFrame = (w: number, h: number, keyRows = 0): Frame => rangeFrame(w, h, [-2.65, 2.25], [-0.15, 1.75], 8, 8, keyRows ? 26 : 18, keyRows ? 16 + 13 * keyRows : 14);
+type KeyPart = [string, string];
+/** A4: the key lines wrapped to the panel width (measured in the key's own font) */
+function keyRows(g: CanvasRenderingContext2D, w: number, lines: KeyPart[][]): KeyPart[][] {
+  g.font = '10px system-ui,sans-serif'; const gap = 10, wd = (t: string) => g.measureText(t).width, rows: KeyPart[][] = [];
+  for (const parts of lines) { let row: KeyPart[] = [], used = 0; for (const pt of parts) { const need = wd(pt[0]) + (row.length ? gap : 0); if (row.length && used + need > w - 12) { rows.push(row); row = []; used = 0; } used += wd(pt[0]) + (row.length ? gap : 0); row.push(pt); } rows.push(row); }
+  return rows;
+}
+/** A4: draw the key under the road, so no label sits on the springs, shocks or dashed shapes */
+function carKey(g: CanvasRenderingContext2D, w: number, h: number, rows: KeyPart[][]) {
+  const gap = 10;
+  withLabelRole('axis', () => rows.forEach((parts, i) => {
+    g.font = '10px system-ui,sans-serif'; const wd = (t: string) => g.measureText(t).width, tot = parts.reduce((a, [t]) => a + wd(t), 0) + gap * (parts.length - 1);
+    let x = Math.max(6, (w - tot) / 2); const y = h - 8 - 13 * (rows.length - 1 - i);
+    for (const [t, c] of parts) { text(g, t, x, y, c, 'left', 10); g.font = '10px system-ui,sans-serif'; x += wd(t) + gap; }
+  }));
+}
+const KEY_PARTS = (): KeyPart[] => [['zigzag: spring', col.a()], ['green bar: shock', col.c()], ['+: centre of gravity', col.text()]];
 /** side-view car on its two spring+shock pairs; z (m), th (rad), drawn with vertical gain `gn` */
 function drawCar(g: CanvasRenderingContext2D, f: Frame, p: CarP, z: number, th: number, gn: number, o: { color?: string; ghost?: boolean; road?: [number, number]; labels?: boolean | 'key' } = {}) {
   const yb = 0.62, y = (x: number) => yb + gn * (z + x * th), c = o.color ?? col.text();
@@ -28,24 +45,19 @@ function drawCar(g: CanvasRenderingContext2D, f: Frame, p: CarP, z: number, th: 
       const cy = wr + u; g.beginPath(); g.ellipse(f.X(x), f.Y(cy), Math.abs(f.X(wr) - f.X(0)), Math.abs(f.Y(0) - f.Y(wr)), 0, 0, 7); g.strokeStyle = col.strong(); g.lineWidth = 2; g.stroke();
       const top = y(x), n = 6, zz: [number, number][] = []; for (let i = 0; i <= n; i++) zz.push([x - 0.12 + (i % 2 ? 0.06 : -0.06) * (i > 0 && i < n ? 1 : 0), cy + 0.05 + ((top - cy - 0.05) * i) / n]);
       polyline(g, f, zz, col.a(), 1.6); tline(g, f, [x + 0.12, cy + 0.05], [x + 0.12, top], col.c(), 3);
-      if (o.labels === 'key' && x < 0) { // A4: name the rear zigzag and green bar in their own colours (front pair is the same)
-        const ym = f.Y((cy + 0.05 + top) / 2);
-        text(g, 'spring', f.X(x - 0.26), ym, col.a(), 'right', 10); text(g, 'shock', f.X(x + 0.2), ym, col.c(), 'left', 10);
-      }
     }
   }
   const bl = -p.b - 0.75, br = p.a + 0.75, H = 0.42;
   const pts: [number, number][] = [[bl, 0], [br, 0], [br, 0.55 * H / 0.42 * 0.42], [p.a - 0.5, 0.62], [p.a - 0.95, 1.05], [-p.b + 0.55, 1.05], [-p.b + 0.05, 0.66], [bl, 0.6], [bl, 0]];
   polyline(g, f, pts.map(([x, d]) => [x, y(x) + d * 0.8] as [number, number]), c, o.ghost ? 1.2 : 2, o.ghost ? [4, 3] : []);
   if (!o.ghost) { const cx = f.X(0), cy = f.Y(y(0) + 0.25); g.strokeStyle = c; g.lineWidth = 1.4; g.beginPath(); g.moveTo(cx - 5, cy); g.lineTo(cx + 5, cy); g.moveTo(cx, cy - 5); g.lineTo(cx, cy + 5); g.stroke(); }
-  if (o.labels === 'key' && !o.ghost) text(g, '+ centre of gravity', f.X(0) + 8, f.Y(y(0) + 0.25) - 10, c, 'left', 10);
   if (o.labels === true && !o.ghost) { // A4: name the parts on the drawing
     text(g, '+ = centre of gravity (x = 0)', f.X(0) + 8, f.Y(y(0) + 0.25) - 10, c, 'left', 10);
     text(g, 'wheel / axle', f.X(p.a), f.Y(-0.02) + 2, col.muted(), 'center', 10, 'top');
     text(g, 'spring + shock', f.X(-p.b) + 16, f.Y(0.45), col.muted(), 'left', 10);
   }
 }
-const markX = (g: CanvasRenderingContext2D, f: Frame, x: number, color: string, label: string, up = true) => { tline(g, f, [x, 0.05], [x, 1.55], color, 1.2, [3, 3]); text(g, label, f.X(x), f.Y(up ? 1.62 : 0.02) + (up ? 0 : 10), color, 'center', 10); };
+const markX = (g: CanvasRenderingContext2D, f: Frame, x: number, color: string, label: string, up = true, above = false) => { tline(g, f, [x, 0.05], [x, 1.55], color, 1.2, [3, 3]); text(g, label, f.X(x), above ? f.box.t - 10 : f.Y(up ? 1.62 : 0.02) + (up ? 0 : 10), color, 'center', 10); };
 
 /* ───────────── eig: the two modes drawn on the car ───────────── */
 export const eigFigure = figureOf((c) => {
@@ -73,10 +85,10 @@ export const diagFigure = figureOf((c) => {
     const det = 1 - S.tb * S.zp, q1 = (z - S.zp * th) / det, q2 = (th - S.tb * z) / det; return { p, S, z, th, q1, q2 }; };
   return [
     { id: 'pose', title: 'The pose (z, θ) and its two mode parts', x: 'position (m)', y: 'height (exaggerated)',
-      draw(g, w, h) { wipe(g, w, h); const { p, S, z, th, q1, q2 } = split(), f = carFrame(w, h);
+      draw(g, w, h) { wipe(g, w, h); const rows = keyRows(g, w, [KEY_PARTS(), [['dashed: the bounce part (blue) and the pitch part (orange)', col.muted()]]]), { p, S, z, th, q1, q2 } = split(), f = carFrame(w, h, rows.length);
         drawCar(g, f, p, q1, q1 * S.tb, 6, { ghost: true, color: col.a() }); drawCar(g, f, p, q2 * S.zp, q2, 6, { ghost: true, color: col.b() }); drawCar(g, f, p, z, th, 6, { labels: 'key' });
         note(g, `z = ${fmt(z * 100, 1)} cm, θ = ${fmt(th * DEG, 2)}°`, 8, 12, col.text(), 'left', 11);
-        note(g, 'dashed: the bounce part and the pitch part', w - 8, h - 6, col.muted(), 'right', 10); } },
+        carKey(g, w, h, rows); } },
     { id: 'modal', title: 'Mode coordinates: how much bounce, how much pitch', x: 'bounce amount q₁ (cm of heave)', y: 'pitch amount q₂ (°)',
       draw(g, w, h) { wipe(g, w, h); const { q1, q2 } = split(), f = graph(g, w, h, [-4, 4], [-3, 3], 'bounce amount q₁ (cm)', 'pitch amount q₂ (°)');
         tline(g, f, [0, 0], [q1 * 100, 0], col.a(), 3); tline(g, f, [q1 * 100, 0], [q1 * 100, q2 * DEG], col.b(), 3); dot(g, f, [q1 * 100, q2 * DEG], col.e(), 5);
@@ -169,11 +181,11 @@ const snap = (p: CarP, x: number) => { const n = carModes(p)[1].node; return Num
 const modeAt = (p: CarP, x: number) => { const S = shapes(p); return { b: S.phiB[0] + x * S.phiB[1], q: S.phiP[0] + x * S.phiP[1], S }; };
 function shapesPanel(c: { values: V }, key: string, label: string, color: string) {
   return { id: 'car', title: `The two mode shapes and the ${label}`, x: 'position (m)', y: 'height (exaggerated)',
-    draw(g: CanvasRenderingContext2D, w: number, h: number) { wipe(g, w, h); const p = carOf(c.values), S = shapes(p), f = carFrame(w, h), x = snap(p, num(c.values, key));
+    draw(g: CanvasRenderingContext2D, w: number, h: number) { wipe(g, w, h); const rows = keyRows(g, w, [KEY_PARTS(), [['yellow dot: pitch still point', col.e()], ['dashed: bounce (blue), pitch (orange)', col.muted()]]]), p = carOf(c.values), S = shapes(p), f = carFrame(w, h, rows.length), x = snap(p, num(c.values, key));
       drawCar(g, f, p, 0, 0, 1, { labels: 'key' }); drawCar(g, f, p, 0.06, 0.06 * S.tb, 3, { ghost: true, color: col.a() }); drawCar(g, f, p, 0.04 * S.zp, 0.04, 3, { ghost: true, color: col.b() });
-      markX(g, f, x, color, `${label} x = ${fmt(x, 2)} m`);
-      if (Number.isFinite(S.zp)) { const xn = -S.zp; if (xn > -2.6 && xn < 2.2) { dot(g, f, [xn, 0.62], col.e(), 3.5); text(g, 'still point', f.X(xn), f.Y(0.62) + 12, col.e(), 'center', 10); } }
-      note(g, 'dashed: bounce (blue), pitch (orange)', 8, h - 6, col.muted(), 'left', 10); } };
+      markX(g, f, x, color, `${label} x = ${fmt(x, 2)} m`, true, true);
+      if (Number.isFinite(S.zp)) { const xn = -S.zp; if (xn > -2.6 && xn < 2.2) { dot(g, f, [xn, 0.62], col.e(), 3.5); } }
+      carKey(g, w, h, rows); } };
 }
 const bars = (g: CanvasRenderingContext2D, w: number, h: number, vals: [string, number, string][], ylab: string, msg: string, msgColor: string) => {
   const m = Math.max(0.02, ...vals.map((v) => Math.abs(v[1]))) * 1.2, f = graph(g, w, h, [0, vals.length], [-m, m], 'mode', ylab, 1, 0, 44, () => '');
