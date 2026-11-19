@@ -59,7 +59,7 @@ maps:
     detail: Sums and scaling pass
     kind: box
     series: 0
-    short: "Sums and scaling pass straight through: sum in, sum of outputs out (additivity); twice in, twice out (homogeneity). LTI adds time invariance: a delayed input only delays the output."
+    short: "Sums and scaling pass straight through: sum in, sum of outputs out (additivity); twice in, twice out (homogeneity). Linear and time-invariant (LTI): a delayed input only delays the output."
     eq: "T{a u₁ + b u₂} = a T{u₁} + b T{u₂}"
     pop: &id006
       audio:
@@ -76,10 +76,10 @@ maps:
           a: 2
         alt: "Earbud driven at 2 V and at 4 V: the 4 V motion is far less than twice the 2 V motion because the cone clips."
         caption: (b) 2 V vs 4 V
-      figCaption: "<b>(a)</b> Twice the drive (solid) gives exactly twice the motion (dashed); homogeneity holds. <b>(b)</b> The cone hits its ±100 µm limit (grey), so 4 V gives 29% less than double."
+      figCaption: "<b>(a)</b> Doubled drive's motion (solid) matches doubled motion (dashed) within 0.7%: homogeneity holds. <b>(b)</b> The cone hits its ±100 µm limit (grey), so 4 V misses double by 29% (rms)."
       example: "Quiet, the earbud passes both tests; loud, it fails."
       ask: c-linsys-1
-    addsToExample: "At 0.2 V, sums and doubling pass (within 0.7%); at 2 V the cone clips and doubling falls 29% short."
+    addsToExample: "At 0.2 V, sums and doubling pass (within 0.7%); at 2 V the cone clips and doubling misses by 29% (rms)."
     dive: linsys
     live: "figure:lintest"
     quizTag: linsys
@@ -153,7 +153,7 @@ maps:
         alt: At 3 kHz the cone barely moves (×0.06) and lags almost half a cycle.
         caption: (d)
       figCaption: "<b>(a)</b> Gain against pitch. <b>(b–d)</b> At each marked pitch, drive (dashed) and motion (solid) are one sine, scaled and shifted."
-      example: "×1.07 at 200 Hz, ×1.85 at the 658 Hz peak (just below the 717 Hz natural frequency), almost nothing above 1 kHz."
+      example: "×1.07 at 200 Hz, ×1.85 at the 658 Hz peak (just below the 717 Hz natural frequency), ×0.06 by 3 kHz."
       ask: pop-tone
     addsToExample: "Plays a 500 Hz tone: after a brief transient the diaphragm moves at exactly 500 Hz, scaled by |H| and delayed by ∠H."
     accountsFor: "Why a speaker never changes the pitch of a note, only its loudness and timing."
@@ -195,7 +195,7 @@ maps:
       figCaption: "Re e^(st) for three s with the same ω: σ < 0 dies away, σ = 0 is Fourier's steady sine, σ > 0 grows."
       example: "The earbud becomes H(s) = a₀/(s² + a₁s + a₀), with a₀ = ωₙ² and a₁ = 2ζωₙ: ωₙ = 2π × 717 Hz is the natural frequency, ζ = 0.281 the damping ratio."
       ask: c-deq-1
-    addsToExample: "Gives the speaker's transfer function from voltage to motion, H(s) = a₀/(s² + a₁s + a₀), with poles at −1,267 ± j4,322 rad/s: they set the 688 Hz ring and its 0.79 ms decay. How a₀ and a₁ come from the speaker's parts is in the Laplace dive."
+    addsToExample: "Gives the speaker's transfer function from voltage to motion, H(s) = a₀/(s² + a₁s + a₀), with poles at −1,266 ± j4,322 rad/s: they set the 688 Hz ring and its 0.79 ms decay. How a₀ and a₁ come from the speaker's parts is in the Laplace dive."
     accountsFor: "The ring frequency and decay of the click response, read straight off two numbers."
     dive: laplace
     link: &id013
@@ -213,7 +213,7 @@ maps:
       - id: pop-pz
         alt: "The earbud's two poles at −1.27 ± 4.32j per ms; jω at 658 Hz is where the distances are smallest."
       figCaption: "The s-plane (per ms): across = decay rate σ, up = frequency ω. Crosses: the earbud's poles. Dashed: distances to jω at 658 Hz, where their product, and so 1 ÷ gain, is smallest."
-      example: "Earbud poles at −1,267 ± j4,322 rad/s: it rings at 688 Hz and decays with time constant 0.79 ms."
+      example: "Earbud poles at −1,266 ± j4,322 rad/s: it rings at 688 Hz and decays with time constant 0.79 ms."
       next: Will it settle? And what is going on inside?
       ask: c-laplace-1
     addsToExample: "Reads the speaker's peak from its pole pair: lightly damped (ζ ≈ 0.28), so the poles sit fairly close to the jω axis and |H| peaks near 658 Hz."
@@ -284,7 +284,7 @@ maps:
         alt: "Shocks worn to 20%: it rings for about 8 cycles."
         caption: (b) Worn shocks
       figCaption: "Heave after a 5 cm bump at 15 m/s. <b>(a)</b> New shocks: damping ratio ζ 0.29 and 0.36 (0 rings forever, 1 means no overshoot); the ringing dies in about 1.6 cycles. <b>(b)</b> Worn to 20%: ζ 0.06 and 0.07, about 8 cycles."
-      example: "Car: worn shocks keep it above 1 mm until 3.9 s instead of 1.2 s. The earbud settles too (real part −1,267 /s)."
+      example: "Car: worn shocks keep it above 1 mm until 3.9 s instead of 1.2 s. The earbud settles too (real part −1,266 /s)."
       ask: c-eig-2
     addsToExample: "Checks the car: all four eigenvalues have negative real part, so after a bump it always comes back to rest; worn shocks move them toward the axis."
     accountsFor: "Why worn shocks make a car float: the poles creep toward the axis, so the ringing lasts about 8 cycles instead of 1.6."
@@ -352,7 +352,7 @@ maps:
     label: does it help?
     question: "Real things are never perfectly linear, so does this help?"
     idea: "Yes: for small signals around an operating point almost everything is linear, and then the exact linear tools apply."
-    why: "**Still open:** the Box 3 test is strict, and the earbud already fails it. At 2 V, doubling the drive gives 29% less than double the motion.\n\n**Why it matters:** every real device fails somewhere if pushed hard enough. If \"linear\" had to mean \"linear at every level\", the shortcut would apply to nothing real.\n\n**What we want:** to know when a system is *close enough* to linear (how small the signal must be) and how to get the linear model that is accurate there."
+    why: "**Still open:** the Box 3 test is strict, and the earbud already fails it. At 2 V, doubling the drive misses double the motion by 29% (rms).\n\n**Why it matters:** every real device fails somewhere if pushed hard enough. If \"linear\" had to mean \"linear at every level\", the shortcut would apply to nothing real.\n\n**What we want:** to know when a system is *close enough* to linear (how small the signal must be) and how to get the linear model that is accurate there."
     whyFigures:
     - id: pop-lintest
       params:
@@ -490,10 +490,10 @@ maps:
     detail: Sums and scaling pass
     kind: box
     series: 0
-    short: "Sums and scaling pass straight through: sum in, sum of outputs out (additivity); twice in, twice out (homogeneity). LTI adds time invariance: a delayed input only delays the output."
+    short: "Sums and scaling pass straight through: sum in, sum of outputs out (additivity); twice in, twice out (homogeneity). Linear and time-invariant (LTI): a delayed input only delays the output."
     eq: "T{a u₁ + b u₂} = a T{u₁} + b T{u₂}"
     pop: *id006
-    addsToExample: "At 0.2 V, sums and doubling pass (within 0.7%); at 2 V the cone clips and doubling falls 29% short."
+    addsToExample: "At 0.2 V, sums and doubling pass (within 0.7%); at 2 V the cone clips and doubling misses by 29% (rms)."
     dive: linsys
     live: "figure:lintest"
     quizTag: linsys
@@ -547,7 +547,7 @@ maps:
     short: "Let the pieces grow or die too: exponentials e^(st), s = σ + jω, where σ sets growth or decay. Splitting into these is the Laplace transform. A derivative becomes × s, so the system is one fraction, the transfer function H(s) = Y(s)/U(s) (output over input)."
     eq: Y(s) = H(s) U(s)
     pop: *id012
-    addsToExample: "Gives the speaker's transfer function from voltage to motion, H(s) = a₀/(s² + a₁s + a₀), with poles at −1,267 ± j4,322 rad/s: they set the 688 Hz ring and its 0.79 ms decay. How a₀ and a₁ come from the speaker's parts is in the Laplace dive."
+    addsToExample: "Gives the speaker's transfer function from voltage to motion, H(s) = a₀/(s² + a₁s + a₀), with poles at −1,266 ± j4,322 rad/s: they set the 688 Hz ring and its 0.79 ms decay. How a₀ and a₁ come from the speaker's parts is in the Laplace dive."
     accountsFor: "The ring frequency and decay of the click response, read straight off two numbers."
     dive: laplace
     link: *id013
@@ -617,11 +617,11 @@ maps:
     label: Region of convergence
     detail: Poles bound it; it picks x(t)
     series: 1
-    short: "Only for some values of s: the region of convergence (ROC), where the transform's integral stays finite. The ROC never contains a pole, so poles bound it. Right-sided signals have an ROC to the right (outside the outermost pole), left-sided to the left (inside), two-sided a strip or ring. Stable means the ROC contains the jω axis or unit circle."
+    short: "Only for some values of s: the region of convergence (ROC), where the transform's integral stays finite. The ROC never contains a pole, so poles bound it. Right-sided signals: ROC right of the rightmost pole (outside the outermost, in z); left-sided: left of the leftmost (inside the innermost); two-sided: a strip or ring. Stable means the ROC contains the jω axis or unit circle."
     eq: "right-sided ⇒ |z| > r_max,   left-sided ⇒ |z| < r_min,   stable ⇔ |z| = 1 ∈ ROC"
     pop:
       rough: "where the sum for X(s) converges; same formula, different region = different signal"
-    addsToExample: "Puts the speaker's ROC to the right of both poles (Re s > −1,267): causal, and it contains the jω axis, so the speaker is stable and has a frequency response."
+    addsToExample: "Puts the speaker's ROC to the right of both poles (Re s > −1,266): causal, and it contains the jω axis, so the speaker is stable and has a frequency response."
     accountsFor: "Why the frequency response exists at all, and why the ring dies away instead of growing."
     dive: roc
     quizTag: roc
@@ -633,7 +633,7 @@ maps:
     eq: "x(t) = Σ Res[X(s)e^(st)],   1/(z − a) ↔ a^(n−1)u(n−1) or −a^(n−1)u(−n)"
     pop:
       rough: time signal = Σ (residue at each pole) × e^(pole × t)
-    addsToExample: "Recovers the speaker's ring from its two poles: h(t) = (Bl/Re)/(Mms ω_d) e^(−σt) sin(ω_d t). Here Bl is the motor strength (force per amp), Re the coil's resistance, Mms the moving mass, σ = 1,267 /s the decay rate and ω_d = 2π × 688 Hz the ring (damped) frequency."
+    addsToExample: "Recovers the speaker's ring from its two poles: h(t) = (Bl/Re)/(Mms ω_d) e^(−σt) sin(ω_d t). Here Bl is the motor strength (force per amp), Re the coil's resistance, Mms the moving mass, σ = 1,266 /s the decay rate and ω_d = 2π × 688 Hz the ring (damped) frequency."
     accountsFor: "Why the click response is a decaying sine, and why a causal speaker's ROC lies to the right of both poles."
     dive: inverse
     quizTag: inverse
@@ -1001,7 +1001,7 @@ maps:
     label: without eigenvectors
     question: Is there a way to get e^(At) without the eigenvectors?
     idea: "Cayley–Hamilton: A satisfies its characteristic polynomial, so e^(At) is a polynomial of degree n − 1 in A."
-    why: "**Still open:** E^(At) via eigenvectors fails when there aren't enough of them, and is fiddly even when there are.\n\n**Why it matters:** exams and hand calculations need e^(At) for small matrices quickly.\n\n**What we want:** a way to write e^(At) as a short polynomial in A."
+    why: "**Still open:** Computing e^(At) from eigenvectors fails when there aren't enough of them, and is fiddly even when there are.\n\n**Why it matters:** exams and hand calculations need e^(At) for small matrices quickly.\n\n**What we want:** a way to write e^(At) as a short polynomial in A."
   - from: INOUT
     to: OBS
     label: the output side
@@ -1046,7 +1046,7 @@ maps:
     to: OPT
     label: optimal control
     question: Which input reaches a target most cheaply?
-    idea: "Pontryagin's principle: add a costate that tracks the cost of each push; the best input follows from it."
+    idea: "Pontryagin's principle: add a costate that prices each unit of state; the best input follows from it."
     why: "**Still open:** Feedback steadies the car in general, but some jobs have a target and a deadline.\n\n**Why it matters:** levelling the body in 0.5 s can cost a little or a lot, depending on the input chosen.\n\n**What we want:** the best input for one specific job."
   - from: GRAM
     to: OPT

@@ -16,7 +16,7 @@ const lintest: QuizFigureDef = { aspect: 1.25, maxWidth: 260, draw(g, w, h, p) {
   const f = fr(g, w, h, [0, 6], [-m, m], 't (ms)', 'µm');
   if (a > 1) { tline(g, f, [0, XMAX_UM], [6, XMAX_UM], col.muted(), 1, [2, 3]); tline(g, f, [0, -XMAX_UM], [6, -XMAX_UM], col.muted(), 1, [2, 3]); }
   curve(g, f, ts, R, col.e(), 1.6, [5, 3]); curve(g, f, ts, L, col.c(), 2);
-  title(g, `${a} V: ${r.pass ? 'twice in → twice out' : `${(r.err * 100).toFixed(0)}% short (clips)`}`, w, r.pass ? col.ok() : col.bad());
+  title(g, `${a} V: ${r.pass ? 'twice in → twice out' : `${(r.err * 100).toFixed(0)}% short, rms (clips)`}`, w, r.pass ? col.ok() : col.bad());
 } };
 
 /** Box 4: the earbud's (illustrative) excursion curve and its straight-line approximation near rest. */
