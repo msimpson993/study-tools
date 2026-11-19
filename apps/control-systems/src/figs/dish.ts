@@ -184,18 +184,21 @@ export const tunetableFigure = figureOf(() => [
     },
   },
   {
-    id: 'bars', title: 'Overshoot, settling and wind peak: one gain raised, against the start', x: 'gain raised', y: 'value ÷ start value', height: 260,
+    id: 'bars', title: 'Overshoot, settling and wind peak: one gain raised, against the start', x: 'gain raised', y: 'value ÷ start value', height: 280,
     draw(g, w, h, v) {
       g.clearRect(0, 0, w, h); const pick = str(v, 'row'), rows = TUNE_NUM.filter((r) => pick === 'all' || !pick || r.id === pick);
       // categories, not numbers, along x: each group is named under its bars, with its three values on a second line
-      const yr: V2 = [0, 3.7], fr = rangeFrame(w, h, [0, rows.length], yr, 48, 12, 10, 50);
+      // a group narrower than ~170 px (phones, any font) stacks its three values on three lines instead of one, so neighbours can't touch
+      const stack = (w - 60) / Math.max(rows.length, 1) < 170, yr: V2 = [0, 3.7], fr = rangeFrame(w, h, [0, rows.length], yr, 48, 12, 10, stack ? 74 : 50);
       graphAxes(g, fr, [0, rows.length], yr, '', 'value ÷ start (1 = no change)', 1, 0.5, () => '');
       text(g, 'gain raised (from 2000, 1000, 200)', (fr.box.l + fr.box.r) / 2, h - 6, col.text(), 'center', 11);
       tline(g, fr, [0, 1], [rows.length, 1], col.muted(), 1, [5, 4]);
       const keys: ['os' | 'ts' | 'wind', string, () => string][] = [['os', '%OS', col.a], ['ts', 'Ts', col.b], ['wind', 'wind peak', col.d]];
       rows.forEach((r, i) => {
         keys.forEach(([k, , c], j) => { const x0 = fr.X(i + 0.15 + j * 0.24), x1 = fr.X(i + 0.37 + j * 0.24), q = r[k] / TUNE_START[k]; g.fillStyle = c(); g.fillRect(x0, fr.Y(Math.min(q, 2.6)), x1 - x0, fr.Y(0) - fr.Y(Math.min(q, 2.6))); });
-        withLabelRole('axis', () => { text(g, `raise ${r.id}`, fr.X(i + 0.5), fr.box.b + 10, col.text(), 'center', 10.5); text(g, `${f(r.os, 1)} %, ${f(r.ts, 2)} s, ${f(r.wind, 3)}°`, fr.X(i + 0.5), fr.box.b + 23, col.muted(), 'center', 9); });
+        withLabelRole('axis', () => { text(g, `raise ${r.id}`, fr.X(i + 0.5), fr.box.b + 10, col.text(), 'center', 10.5); const vals = [`${f(r.os, 1)} %`, `${f(r.ts, 2)} s`, `${f(r.wind, 3)}°`];
+          if (stack) vals.forEach((t, j) => text(g, t, fr.X(i + 0.5), fr.box.b + 23 + 11 * j, col.muted(), 'center', 9));
+          else text(g, vals.join(', '), fr.X(i + 0.5), fr.box.b + 23, col.muted(), 'center', 9); });
       });
       legend(g, fr, [...keys.map(([, l, c]) => ({ label: l, color: c() })), { label: 'start: 7.4 %, 2.2 s, 0.556°', color: col.muted(), dash: true }], 'tr');
     },
