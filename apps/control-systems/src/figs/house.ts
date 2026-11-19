@@ -222,7 +222,7 @@ const planeG = (v: V): { G: TF; range: number; re: number; wmax: number; unit: s
 export const planeFigure = figureOf(() => [
   { id: 'map', title: '|G(s)| over the s-plane: poles are peaks, zeros are pits', x: 'σ (1/h; 1/s for the corner)', y: 'jω (rad/h; rad/s for the corner)', draw: (g, w, h, v) => { const P = planeG(v); drawHeightMap(g, w, h, { G: P.G, range: P.range, reCenter: P.re, omega: num(v, 'omega', 0.262), xLabel: `σ (${P.unit === 'rad/h' ? '1/h' : '1/s'})`, yLabel: `jω (${P.unit})`, scale: true }); } },
   {
-    id: 'slice', title: '|G(jω)| along the jω axis (frequency response, preview)', x: 'ω (rad/h; rad/s for the corner)', y: '|G(jω)| / G(0)',
+    id: 'slice', title: '|G(jω)| along the jω axis (frequency response; not in lecture notes)', x: 'ω (rad/h; rad/s for the corner)', y: '|G(jω)| / G(0)',
     draw(g, w, h, v) {
       const P = planeG(v); drawJwSlice(g, w, h, { G: P.G, wmax: P.wmax, omega: num(v, 'omega', 0.262), xLabel: `ω (${P.unit}) along the jω axis` });
       if (str(v, 'plant', 'bed') !== 'corner') text(g, `daily heater cycle ω = 0.262 rad/h: |G₂| = ${f(houseG2mag(0.262) * 1000)} K/kW vs ${f(dc(houseG2()) * 1000)} at DC`, 8, 12, col.muted(), 'left', 9.5);
@@ -298,7 +298,7 @@ export const sensFigure = figureOf(() => [
     },
   },
   {
-    id: 'S', title: '|S(jω)| of the P thermostat: how much model error gets through (preview: frequency response)', x: 'ω (rad/h, log)', y: '|S|',
+    id: 'S', title: '|S(jω)| of the P thermostat: how much model error gets through (frequency response; not in lecture notes)', x: 'ω (rad/h, log)', y: '|S|',
     draw(g, w, h, v) {
       const Kp = num(v, 'Kp', 1100), ws = lin(-2, 1.5, 300).map((e) => 10 ** e), S = ws.map((q) => houseSC(Kp, q).S), lx = ws.map(Math.log10);
       const fr = plotFrame(g, w, h, [-2, 1.5], [0, Math.max(1.5, Math.max(...S) * 1.1)], 'log₁₀ ω (rad/h)', '|S|'); hline(g, fr, 1, [-2, 1.5], '1 = no help');
@@ -314,7 +314,7 @@ const scL = (v: V, s: Cx): Cx => { const Kp = num(v, 'Kp', 1100), pi = str(v, 'c
 const roomRange = ([lo, hi]: [number, number]): [number, number] => [lo, hi + 0.3 * (hi - lo)];
 export const scFigure = figureOf(() => [
   {
-    id: 'sc', title: '|S| and |C| over frequency (preview: frequency response)', x: 'ω (rad/h, log)', y: 'magnitude',
+    id: 'sc', title: '|S| and |C| over frequency (frequency response; not in lecture notes)', x: 'ω (rad/h, log)', y: 'magnitude',
     draw(g, w, h, v) {
       const ws = lin(-2, 1.5, 300).map((e) => 10 ** e), lx = ws.map(Math.log10), S: number[] = [], Cm: number[] = [];
       for (const q of ws) { const L = scL(v, C(0, q)), d = Math.hypot(1 + L.re, L.im); S.push(1 / d); Cm.push(Math.hypot(L.re, L.im) / d); }

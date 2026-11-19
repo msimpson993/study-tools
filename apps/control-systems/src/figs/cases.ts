@@ -131,11 +131,15 @@ const CASES: Record<string, Case> = {
   limitcycle: (v) => {
     // review 1 (W7): stiction plus integral action hunts forever; an integrator dead band δ stops it (numbers.py [R4])
     const edb = n(v, 'edb'), run = (d: number) => { const k = `lc|${d}`; if (!stickCache.has(k)) stickCache.set(k, M.simStick(2000, 1000, 200, { T: 200, edb: d, every: 200 })); const s = stickCache.get(k)!; return { t: s.t, y: Array.from(s.y, (y) => ((y - 0.1) * 180) / Math.PI), u: Array.from(s.u) }; };
-    const a = run(0), b = run(edb > 0 ? edb : 0.003), dd = ((edb > 0 ? edb : 0.003) * 180) / Math.PI;
+    const de = edb > 0 ? edb : 0.003, a = run(0), b = run(de), dd = (de * 180) / Math.PI;
+    // the legend is read from the run, not assumed (tutor build 4, 1e): after 60 s, does the error still cross zero?
+    let cross = 0, lo = Infinity, hi = -Infinity; for (let i = 1; i < b.t.length; i++) if (b.t[i] >= 60) { if (Math.sign(b.y[i]) !== Math.sign(b.y[i - 1]) && b.y[i] !== 0) cross++; lo = Math.min(lo, b.y[i]); hi = Math.max(hi, b.y[i]); }
+    const sticks = cross === 0, endE = b.y[b.y.length - 1], dTxt = de.toFixed(4).replace(/0+$/, ''), sg = (x: number) => `${x >= 0 ? '+' : '−'}${Math.abs(x).toFixed(3)}°`;
+    const bLab = sticks ? `with a dead band δ = ${dTxt} rad: sticks at ${sg(endE)}` : `δ = ${dTxt} rad is too narrow: still hunts (${sg(lo)} … ${sg(hi)})`;
     return [{ title: 'Pointing error with stiction, tuned PID (2000, 1000, 200)', y: 'error (°)', xr: [0, 200], yr: [-0.5, 0.3], series: [{ ...a, color: PB(), width: 1.8 }, { ...b, color: FX(), dash: true }], hl: [{ y: dd }, { y: -dd, label: `±δ = ±${dd.toFixed(2)}°` }, { y: 0 }],
-      legend: [{ label: 'tuned PID: hunts ±0.15°, period 23.9 s', color: PB() }, { label: `with a dead band δ = ${(edb > 0 ? edb : 0.003).toFixed(4).replace(/0+$/, '')} rad: sticks and stays`, color: FX(), dash: true }], legendAt: 'br' },
+      legend: [{ label: 'tuned PID: hunts ±0.15°, period 23.9 s', color: PB() }, { label: bLab, color: FX(), dash: true }], legendAt: 'br' },
       { title: 'Motor torque: the integrator builds it up while the gear is stuck', y: 'torque (N·m)', xr: [0, 200], yr: [-70, 40], series: [{ t: a.t, y: a.u, color: PB(), width: 1.6 }, { t: b.t, y: b.u, color: FX(), dash: true }], hl: [{ y: 20, label: 'T_st = 20 N·m' }, { y: -20 }],
-        legend: [{ label: 'tuned PID: torque ramps to ±T_st, breaks free, overshoots', color: PB() }, { label: 'dead band: torque stops changing', color: FX(), dash: true }], legendAt: 'br' }];
+        legend: [{ label: 'tuned PID: torque ramps to ±T_st, breaks free, overshoots', color: PB() }, { label: sticks ? 'dead band: torque stops changing' : 'band too narrow: torque still ramps', color: FX(), dash: true }], legendAt: 'br' }];
   },
 };
 void nz;

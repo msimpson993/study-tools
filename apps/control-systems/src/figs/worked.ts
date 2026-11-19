@@ -44,7 +44,7 @@ export const ssblockFigure = figureOf((): FigurePanel[] => [{
     for (let i = 0; i <= T / dt; i++) { if (i % 10 === 0) { t.push(i * dt); z.push(x * 1000); zd.push(xd * 1000); } const a = u / 400 - 4 * xd - 64 * x; xd += dt * a; x += dt * xd; }
     const lo = Math.min(...zd, ...z), hi = Math.max(...zd, ...z), fr = plotFrame(g, w, h, [0, T], [lo - 0.1 * (hi - lo), hi + 0.15 * (hi - lo)], 'time (s)', 'mm · mm/s');
     curve(g, fr, t, zd, col.a(), 2, [6, 4]); curve(g, fr, t, z, col.a(), 2.4);
-    legend(g, fr, [{ label: `height z → u/(400·64) = ${f((u / 25600) * 1000, 1)} mm`, color: col.a() }, { label: 'velocity ż → 0', color: col.a(), dash: true }], 'tr');
+    legend(g, fr, [{ label: `height z → u/k = u/25 600 N/m = ${f((u / 25600) * 1000, 1)} mm`, color: col.a() }, { label: 'velocity ż → 0', color: col.a(), dash: true }], 'tr');
   },
 }]);
 
@@ -129,14 +129,15 @@ export const torquebalFigure = figureOf((): FigurePanel[] => [{
     legend(g, fr, [{ label: `wind torque ${f(Td, 0)} N·m`, color: col.c(), dash: true }, { label: `motor torque Kp·e (Kp = ${k3(Kp)} N·m/rad)`, color: col.a() }], 'tl');
   },
 }, {
-  id: 'time', title: 'The same balance in time: P holding the dish against the wind', x: 'time (s)', y: 'error (°)', height: 220,
+  id: 'time', title: 'The same balance in time: P holding the dish against the wind', x: 'time (s)', y: 'pushed off target (°)', height: 220,
   draw(g, w, h, v: V) {
     // target 0, wind 20 N·m from t = 0: J θ̈ + B θ̇ = Kp·e + 20, e = −θ (Euler, 1 ms)
     const Kp = num(v, 'Kp', 1000), Td = DISH.wind as number, T = 8, dt = 1e-3, t: number[] = [], e: number[] = []; let th = 0, om = 0;
-    for (let i = 0; i <= T / dt; i++) { if (i % 10 === 0) { t.push(i * dt); e.push((-th * 180) / Math.PI); } om += (dt * (-Kp * th + Td - DISH.B * om)) / DISH.J; th += dt * om; }
-    const eS = (-(Td / Kp) * 180) / Math.PI, lo = Math.min(...e), fr = plotFrame(g, w, h, [0, T], [lo * 1.15, Math.max(0.2, -lo * 0.15)], 'time (s)', '°');
+    // plotted as the offset θ, positive, so it matches the left panel's balance at +20/Kp (tutor build 4, 1d)
+    for (let i = 0; i <= T / dt; i++) { if (i % 10 === 0) { t.push(i * dt); e.push((th * 180) / Math.PI); } om += (dt * (-Kp * th + Td - DISH.B * om)) / DISH.J; th += dt * om; }
+    const eS = ((Td / Kp) * 180) / Math.PI, hi = Math.max(...e), fr = plotFrame(g, w, h, [0, T], [Math.min(-0.2, -hi * 0.15), hi * 1.3], 'time (s)', 'pushed off target (°)');
     g.save(); g.strokeStyle = col.e(); g.lineWidth = 1; g.setLineDash([5, 4]); g.beginPath(); g.moveTo(fr.X(0), fr.Y(eS)); g.lineTo(fr.X(T), fr.Y(eS)); g.stroke(); g.restore();
     g.save(); g.strokeStyle = col.a(); g.lineWidth = 2.2; g.beginPath(); t.forEach((q, i) => (i ? g.lineTo(fr.X(q), fr.Y(e[i])) : g.moveTo(fr.X(q), fr.Y(e[i])))); g.stroke(); g.restore();
-    legend(g, fr, [{ label: `error settles at −20/Kp = ${f(eS)}°`, color: col.e(), dash: true }, { label: 'pointing error under P', color: col.a() }], 'tr');
+    legend(g, fr, [{ label: `settles at 20/Kp = ${f(eS)}°`, color: col.e(), dash: true }, { label: 'offset from target under P', color: col.a() }], 'tr');
   },
 }]);
