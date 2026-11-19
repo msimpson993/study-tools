@@ -56,6 +56,14 @@ describe('shipped content', () => {
     for (const e of big.edges) expect(e.question, `${e.from}->${e.to}`).toBeTruthy();
     // every main-chain (solid) line says why you would ask its question there; the full map's lines too
     for (const m of content.maps) for (const e of m.edges) if (!e.dashed || m.id === 'big') expect((e.why ?? '').length, `${m.id} ${e.from}->${e.to} why`).toBeGreaterThan(20);
+    // every main-chain line of the big map (the dashed look-back too) teaches the move: what is still open, why it matters, what answer we want;
+    // it leans brief (soft target ~150 words) and any figure it borrows is captioned
+    for (const e of big.edges) {
+      const w = e.why ?? '', id = `${e.from}->${e.to}`;
+      for (const part of ['Still open:', 'Why it matters:', 'What we want:']) expect(w, `${id} why: ${part}`).toContain(part);
+      expect(words(w.replace(/<[^>]+>/g, ' ')), `${id} why words (guideline)`).toBeLessThanOrEqual(150);
+      if (e.whyFigures?.length) { expect((e.whyFigCaption ?? '').length, `${id} why figure caption`).toBeGreaterThan(40); for (const f of e.whyFigures) expect(f.alt.length, id).toBeGreaterThan(8); }
+    }
   });
   it('linear-systems dives follow the dive template (level tag, worked example, what it can\'t do, 2-3 checks, >= 1 interactive figure)', () => {
     const { content } = loadApp(path.join(repoRoot, 'apps', 'linear-systems'));

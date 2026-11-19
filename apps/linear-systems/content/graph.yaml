@@ -342,84 +342,96 @@ maps:
     label: start here
     question: What exactly are we trying to predict?
     idea: "Before any shortcut we need the object: a system, the rule that turns an input into an output."
-    why: "Before predicting anything we need to pin down what goes in, what comes out, and what does the transforming."
+    why: "**Still open:** \"predict the output for any input\" does not yet say output *of what*, or input *to what*.\n\n**Why it matters:** we cannot measure, test or simplify something we have not pinned down. For the earbud, the voltage goes in and the cone motion comes out; for the car, the road goes in and the body motion comes out.\n\n**What we want:** a definition: an input signal, an output signal, and the rule that turns one into the other."
   - &id021
     from: SYS
     to: SUP
     label: shortcut?
     question: "There are infinitely many possible inputs, so is there a shortcut?"
     idea: "If the system is linear, yes: know the outputs of a few simple pieces and add them up for any input."
-    why: "A system is defined by what it does to every possible input, and there are infinitely many; we cannot test them all, so we need a shortcut."
+    why: "**Still open:** Box 1 made a system a rule from input to output, but the rule has to cover *every* input: every song through the earbud, every road under the car.\n\n**Why it matters:** there are infinitely many inputs. We cannot measure them all, and simulating each one from scratch is slow.\n\n**What we want:** a shortcut that reuses work: build any output from a few responses we already know."
   - &id022
     from: SUP
     to: LIN
     label: which systems?
     question: What exactly counts as linear?
     idea: "The shortcut needs sums and scaling to pass straight through; time invariance makes every piece's response a shifted copy of one."
-    why: "The shortcut only works if the system is linear, so we need a precise test for when that holds."
+    why: "**Still open:** in Box 2 we added the front-wheel and rear-wheel responses to get the car's motion over a bump. That worked because the car model has a special property, but we have not said which.\n\n**Why it matters:** on a system without that property, adding pieces gives a wrong answer that looks just as believable.\n\n**What we want:** a precise test: checks we can run on any system to decide whether splitting and adding (superposition) is allowed."
   - &id023
     from: LIN
     to: NEAR
     label: does it help?
     question: "Real things are never perfectly linear, so does this help?"
     idea: "Yes: for small signals around an operating point almost everything is linear, and then the exact linear tools apply."
-    why: "The test is strict, and the earbud already fails it at 2 V. If no real system passes exactly, the shortcut looks useless."
+    why: "**Still open:** the Box 3 test is strict, and the earbud already fails it. At 2 V, doubling the drive gives 29% less than double the motion.\n\n**Why it matters:** every real device fails somewhere if pushed hard enough. If \"linear\" had to mean \"linear at every level\", the shortcut would apply to nothing real.\n\n**What we want:** to know when a system is *close enough* to linear (how small the signal must be) and how to get the linear model that is accurate there."
+    whyFigures:
+    - id: pop-lintest
+      params:
+        a: 2
+      alt: "Earbud at 2 V: doubling the drive gives far less than twice the motion because the cone clips."
+    whyFigCaption: "Box 3, panel (b): at 2 V the cone hits its ±100 µm limit (grey lines), so twice the drive (solid) falls short of twice the response (dashed). The loud earbud fails the homogeneity test. That failure is the gap this question asks about."
   - &id024
     from: NEAR
     to: KICK
     label: which pieces?
     question: Which simple pieces should we use?
     idea: "The first choice is sharp kicks: one measured ring, h(t), then predicts every output by convolution."
-    why: "Linearity lets us split the input into pieces, but it doesn't say which pieces, and that choice decides how much work the rest is."
+    why: "**Still open:** after Box 4 we may treat the earbud and car as linear, so any input can be split into pieces and the pieces' responses added. But Box 4 does not say *which* pieces.\n\n**Why it matters:** the choice decides the work. If every piece needs its own measurement, splitting has not saved anything.\n\n**What we want:** one family of simple pieces that can build any input, where one measurement gives the response to all of them. Time invariance helps here: a shifted input gives the same response, shifted."
   - &id025
     from: KICK
     to: TONE
     label: same shape?
     question: "That's tedious. Is there an input that comes out with the same shape?"
     idea: "Steady sine waves: a linear time-invariant system only scales and delays them, so convolution becomes one multiplication per pitch."
-    why: "Convolution works for any input, but every output needs a fresh integral. Pieces that come out with their shape unchanged would turn each one into a single multiplication."
+    why: "**Still open:** in Box 5, convolution predicts any output from the one measured ring h(t). But each output needs a fresh sum of shifted rings; the 1 ms pulse already needed four.\n\n**Why it matters:** a second of music is tens of thousands of samples, so that is a lot of adding, and the result does not tell us what the earbud does to sound.\n\n**What we want:** an input that comes out with its shape unchanged, only scaled and delayed. Each such piece then costs one multiplication. Mathematicians call an input that a system only multiplies by a number an *eigenfunction*."
+    whyFigures:
+    - id: pop-kick
+      params:
+        frame: 2
+      alt: A 1 ms pulse is four clicks; the motion is the sum of four shifted rings.
+    whyFigCaption: "Box 5, panel (b): a 1 ms pulse built as four quarter-size clicks (bars). Each click gives a shifted copy of the ring h (thin curves), and the motion is their sum (thick). A longer input needs many more copies. That cost is what this question wants to avoid."
   - &id026
     from: TONE
     to: FOUR
     label: split into sines
     question: How do we split a real signal into sines?
     idea: Fourier analysis writes a signal as a sum of sines; multiply each by the gain at its pitch and add them back up.
-    why: "Sine waves pass through with just a gain and a delay, but real signals (a buzz, a click, speech) are not single sines."
+    why: "**Still open:** Box 6 handles one sine at a time. The earbud scales a 200 Hz tone ×1.07 and a 658 Hz tone ×1.85. But a buzz, a click or a voice is not a single sine.\n\n**Why it matters:** the tone shortcut is only useful if any real signal can be written in tones.\n\n**What we want:** a recipe that splits a signal into sines and says how much of each pitch it holds (its *spectrum*). Then we scale each sine by the gain at its pitch and add them back up."
   - &id027
     from: FOUR
     to: LAP
     label: "start, grow, die"
     question: "Sines last forever, so what about signals that start, grow or die?"
     idea: "Let the exponent be complex, e^(st): Laplace (and Z for samples) handles switch-ons, growth and decay, and turns equations into algebra."
-    why: "Sines go on forever, but switch-ons, dying rings and unstable growth do not; an unstable system has no Fourier transform at all."
+    why: "**Still open:** Fourier's sines last forever at constant size. A switch-on, the earbud's dying ring (time constant 0.79 ms) and anything that grows do not.\n\n**Why it matters:** for a response that grows, the Fourier integral never settles, so the transform does not exist. Those unstable systems are the ones we most need to spot.\n\n**What we want:** building blocks that can also grow or die away. That means e^(st) with a complex s = σ + jω, where σ is the growth rate (positive) or decay rate (negative) and ω is the frequency."
   - &id028
     from: LAP
     to: PZ
     label: read H(s)
     question: What does H(s) tell us about the system?
     idea: Its poles are the natural rhythms and its zeros the blocked inputs; together they shape the gain at every pitch.
-    why: "The transform has turned the whole system into one fraction, H(s); now we need to read that fraction for what it says about behaviour."
+    why: "**Still open:** in Box 8 the Laplace transform turned the earbud's differential equation into a single fraction, H(s), the *transfer function* (output ÷ input, as a function of s).\n\n**Why it matters:** a fraction on the page does not yet tell us whether the earbud rings, at what pitch, or whether it settles.\n\n**What we want:** a fast way to read behaviour from H(s), by looking at where the fraction blows up and where it drops to zero."
   - &id029
     from: PZ
     to: STAB
     label: settle?
     question: Will it settle?
     idea: A pole in the right half-plane is a rhythm that grows; the system settles only if every pole lies to the left.
-    why: "Each pole is a rhythm e^(pt) that can grow or die, so the obvious worry is whether any of them grows."
+    why: "**Still open:** Box 9 showed that each pole p is a natural rhythm e^(pt), and its real part sets whether that rhythm grows or dies. The earbud's poles at −1.27 ± 4.32j per ms die away.\n\n**Why it matters:** one growing rhythm is enough to wreck a system: a squeal from the earbud, or a car that bounces higher at every bump.\n\n**What we want:** a yes/no test for settling that we can read straight from where the poles sit."
   - &id030
     from: PZ
     to: STATE
     label: look inside
     question: "That's the outside view. What's going on inside?"
     idea: "Describe the system by what it remembers, the state, and how that memory changes: ẋ = Ax + Bu."
-    why: "H(s) only links input to output. It says nothing about what is going on inside, which matters once a system has several moving parts, like the car's heave and pitch."
+    why: "**Still open:** H(s) links only the input to the output. For the car, the road goes in and the body motion comes out, but the heave, the pitch and what each spring is doing all stay hidden.\n\n**Why it matters:** with several moving parts, one part can misbehave while the output still looks fine. The parts also push on each other, which one fraction cannot show.\n\n**What we want:** a description of what the system *remembers* from moment to moment (its *state*) and the rule for how that memory changes."
   - &id031
     from: STATE
     to: MODES
     label: untangle
     question: Everything affects everything. How do we untangle it?
     idea: "Switch to the eigenvectors of A: in those coordinates every mode changes on its own."
-    why: "In ẋ = Ax + Bu every state variable drives the others (heave pushes pitch and back), so the equations cannot be solved one at a time."
+    why: "**Still open:** Box 10 wrote the car as ẋ = Ax + Bu. The state x (heave, pitch and their rates) changes at a rate set by the matrix A. But A couples everything: heave pushes pitch and pitch pushes heave.\n\n**Why it matters:** coupled equations cannot be solved one at a time, so we still cannot say how the car moves.\n\n**What we want:** new coordinates in which each part moves on its own, the way each tone in Box 6 passed through on its own."
   - &id032
     from: TONE
     to: MODES
@@ -428,28 +440,28 @@ maps:
     idea: "Same trick: find inputs (or states) that keep their shape. Tones are only scaled by H(jω); modes are only scaled by e^(λt)."
     dashed: true
     reverse: true
-    why: "Tones were the inputs a system only scales; modes look like the same trick applied to the state, so it is worth asking whether they are."
+    why: "**Still open:** Box 11 found the car's *modes*: shapes the car keeps while it fades (bounce at 1.15 Hz, pitch at 1.42 Hz). That sounds like Box 6, where a tone kept its shape and was only scaled.\n\n**Why it matters:** if it is the same idea, what we learned about tones (one number per piece, no integrals) carries over to the inside view. Seeing that link is what turns two topics into one.\n\n**What we want:** to check whether both are the same trick: find what the system only multiplies by a number. For signals that is a tone (an eigenfunction); for states it is an eigenvector."
   - &id033
     from: MODES
     to: STAB
     label: settle?
     question: Will every mode fade?
     idea: "Each mode moves as e^(λt), so the state settles exactly when every eigenvalue has negative real part; these are the same poles."
-    why: "The motion is a mix of modes, each moving as e^(λt), so whether it settles must come down to those rates."
+    why: "**Still open:** the car's motion is a mix of modes, each changing as e^(λt), where λ is an *eigenvalue* of A. Box 9 judged settling from the outside, by the poles.\n\n**Why it matters:** from the inside we need the same yes/no answer. A system with many parts has many modes, and any one of them could grow.\n\n**What we want:** a condition on the eigenvalues, and to see whether it agrees with the pole test."
   - &id034
     from: STAB
     to: INOUT
     label: views agree?
     question: Do the inside and outside views always agree?
     idea: "Not always: H(s) can hide a mode the input cannot reach or the output cannot see."
-    why: "We can now judge stability two ways, from the poles of H(s) outside and the eigenvalues of A inside. If they ever disagree, one view is hiding something."
+    why: "**Still open:** we now have two stability tests: the poles of H(s) (outside) and the eigenvalues of A (inside). So far both have given the same verdict: the earbud and the car settle.\n\n**Why it matters:** if the two ever differ, one view is missing a mode, and a mode H(s) does not show could still be growing out of sight.\n\n**What we want:** to know when the two views must agree and, when they do not, which modes are hidden and why."
   - &id035
     from: INOUT
     to: WORK
     label: use it
     question: What can we do with all this?
     idea: "Design: filters, feedback and optimal control all use the same tools on the same models."
-    why: "We can now predict, check stability and spot hidden modes; the remaining step is to use the same tools to make a system do what we want."
+    why: "**Still open:** we can predict outputs, test settling and find hidden modes, but only for the earbud and the car as they were built.\n\n**Why it matters:** the point is to change them: cancel noise in the earbud, stop the car bouncing, level it quickly after a bump.\n\n**What we want:** to use the same tools (gain at each pitch, poles, state and modes) to design a filter, a feedback loop or the best input."
 - id: full
   title: Full detail
   caption: "The same fourteen boxes plus every box the exams use, hung under the box it belongs to: ROC and residues under Laplace, the Fourier family under Fourier, e^(At), Jordan and Cayley–Hamilton under modes, realization under state, PBH, Gramians and the Kalman split under hidden modes, and filters, feedback and optimal control under applications."
