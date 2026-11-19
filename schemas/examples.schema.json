@@ -21,6 +21,6 @@
         }
       }
     },
-    "tryThis": { "type": "array", "items": { "type": "object", "required": ["id", "head", "text"], "properties": { "id": { "type": "string" }, "head": { "type": "string" }, "text": { "type": "string" } }, "additionalProperties": false } }
+    "tryThis": { "type": "array", "items": { "type": "object", "required": ["id", "head", "text"], "properties": { "id": { "type": "string" }, "head": { "type": "string" }, "text": { "type": "string" }, "box": { "type": "string", "description": "map box id this card belongs to; the card links to it" } }, "additionalProperties": false } }
   }
 }

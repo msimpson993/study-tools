@@ -124,7 +124,7 @@ examples:
       M: 40
       N: 64
       interp: sinc
-    sel: map
+    sel: samp
     look: "Z-plane: the pole angle wraps to 2π·1.5/8, so it looks like 1.5 Hz. CT: the sinc reconstruction (pink) is a slow 1.5 Hz wave, not the yellow 6.5 Hz original. DF: the peak is at 1.5 Hz."
     why: s and s + j2πk/T map to the same z, so the samples cannot tell 6.5 Hz from 6.5 − 8 = −1.5 Hz.
     eq: f<sub>a</sub> = |f<sub>0</sub> − k f<sub>s</sub>|, &nbsp; k = round(f<sub>0</sub>/f<sub>s</sub>)
@@ -308,20 +308,26 @@ examples:
     ml: "p = [-1267+4322j, -1267-4322j];  zp = exp(p/8000)   % abs ≈ 0.8535, angle ≈ 31°"
 tryThis:
   - id: alias
+    box: SAMP
     head: Push f₀ past Nyquist
     text: The z-pole wraps around through z = −1, the DTFT copies overlap, and the sinc reconstruction rebuilds a slower tone.
   - id: unstable
+    box: STAB
     head: Make σ negative
     text: The s-pole crosses into the RHP and the z-pole leaves the unit circle (r = e<sup>−σT</sup> &gt; 1). The FT and DTFT stop existing.
   - id: offbin
+    box: WIN
     head: Move the tone off-bin
     text: Half a bin off, the tone leaks into every bin. Compare with the on-bin case, then try Hann or a larger N.
   - id: short
+    box: WIN
     head: Shorten the record
     text: With M = 8, the +f₀ and −f₀ lobes merge into one hump no matter how large N is. Resolution needs record length.
   - id: zohsinc
+    box: SAMP
     head: Compare ZOH vs sinc
     text: "Toggle the interpolation: staircase and half-sample lag vs. ideal (non-causal, ringing) reconstruction."
   - id: fsview
+    box: FS
     head: See the Fourier-series view
     text: The CT panel shows the periodic extension (period NT) that the DFT quietly assumes, and the jump at each period edge.

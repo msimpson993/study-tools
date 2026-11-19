@@ -91,3 +91,14 @@ describe('Earbud preset (σ = 1,267 /s, f₀ = 688 Hz, fs = 8 kHz, drawn in ms /
     expect(peak({ ...S, wave: 'cos' })).toBeCloseTo(0.705, 3);
   });
 });
+
+describe('A21: zeros do not map like poles under sampling (default ring, σ = 0.6 /s, f₀ = 1 Hz, fs = 8 Hz)', () => {
+  const d = derive({ ...DEF });
+  it('the z-zero is 0.593, from the residues, not e^(s₀T) = 0.861', () => {
+    expect(d.z0.re).toBeCloseTo(-1.2, 12);
+    expect(d.zz.re).toBeCloseTo(0.5934, 4); expect(d.zz.im).toBeCloseTo(0, 12);
+    expect(Math.exp(d.z0.re * d.T)).toBeCloseTo(0.8607, 4);
+    // the poles do map: |q| = e^(−σT)
+    expect(d.r).toBeCloseTo(Math.exp(-0.6 / 8), 12);
+  });
+});

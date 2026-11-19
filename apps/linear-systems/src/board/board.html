@@ -34,6 +34,7 @@
 
   <h2 class="sec">Try this</h2>
   <ul class="try" id="tryList"></ul>
+  <p class="sub" id="conventions">Conventions: s = σ + jω, z = r e<sup>jΩ</sup>, Ω = ωT (rad/sample). The pole is at s = −σ ± jω<sub>d</sub>, so r = e<sup>−σT</sup>.</p>
 </main>
 
 <aside class="ui">
@@ -69,8 +70,8 @@
     <div class="seg" id="segCtv"><button data-v="sig">Signal + reconstruction</button><button data-v="per">Periodic ext. (FS)</button></div>
     <label>Continuous-Freq. panel: shifted copies X(j(ω−kω<sub>s</sub>))</label>
     <div class="seg" id="segCop"><button data-v="off">Hide</button><button data-v="on">Show</button></div>
-    <label>Interpolation (DT → CT)</label>
-    <div class="seg" id="segInterp"><button data-v="zoh">ZOH</button><button data-v="foh">FOH (linear)</button><button data-v="sinc">Ideal sinc</button></div>
+    <div id="rowInterp"><label>Interpolation (DT → CT, sampling pair only)</label>
+    <div class="seg" id="segInterp"><button data-v="zoh">ZOH</button><button data-v="foh">FOH (linear)</button><button data-v="sinc">Ideal sinc</button></div></div>
     <label>Magnitude scale</label>
     <div class="seg" id="segDb"><button data-v="lin">Linear</button><button data-v="db">dB</button></div>
     <details class="exinfo" id="wininfo"><summary id="winsum"></summary><div class="exb" id="winbody"></div></details>
@@ -87,5 +88,5 @@
   </div>
 </aside>
 </div>
-<footer>Self-contained page: vanilla JS + canvas, no network needed. Conventions: s = Re{s} + jω, z = r e<sup>jΩ</sup>, Ω = ωT (rad/sample). The pole is at s = −σ ± jω<sub>d</sub>, so r = e<sup>−σT</sup>.</footer>
+
 

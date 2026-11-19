@@ -105,6 +105,9 @@ function drawCT(d,x,cv=cvCT){
     return;
   }
   line(F,ts,ys,COL.yel,2);
+  if(S.sel!=='samp'){ // A22: the hold/reconstruction belongs to the sampling pair only; elsewhere just the samples
+    g.save();g.fillStyle=COL.pink;x.forEach((v,k)=>{const px=F.X(k*d.T);if(px>F.x&&px<F.x+F.w){g.beginPath();g.arc(px,F.Y(v),S.M>120?1.2:2.2,0,TAU);g.fill();}});g.restore();
+    text(g,'x(t) (yellow) and its samples x[n] (pink)',F.x+F.w-2,F.y+2,COL.pink,'right');return;}
   // reconstruction from the M samples
   const rec=ts.map(t=>{
     if(S.interp==='zoh'){const k=Math.floor(t/d.T+1e-9);return (k>=0&&k<S.M)?x[k]:0;}
@@ -148,9 +151,10 @@ function drawCF(d,cv=cvCF){
   line(F,f,mag.map(lin2),COL.yel,stab>0?2:1.4,null,stab>0?1:.5);
   if(dtftOK)line(F,f,dm.map(lin2),COL.grn,1.6,[5,3],stab>0?1:.7);
   vmark(F,-d.nyq,COL.pink,'−fs/2');vmark(F,d.nyq,COL.pink,'fs/2');vmark(F,S.fs,COL.pink,'fs',[1,4]);vmark(F,-S.fs,COL.pink,'',[1,4]);
+  if(!small&&stab>1e-12){text(g,'X(jω)',F.x+4,F.y+2,COL.yel);if(dtftOK)text(g,'T·X(e^(jωT)) dashed',F.x+4,F.y+2+11*FK,COL.grn);if(S.cop)text(g,'copies at ±k·fs',F.x+F.w-2,F.y+2+11*FK,COL.cyan,'right');} // A22: the key meanings on the plot
   if(stab<=1e-12)text(g,stab<-1e-12?(small?'unstable: no FT/DTFT':'unstable pole: FT/DTFT do not exist (showing X(s) at s=jω)'):(small?'marginal: impulses':'pole on jω axis: FT/DTFT contain impulses (spikes)'),F.x+4,F.y+12,COL.warn||'#f0b54a');
   const P=frame(g,4,hm+12*FK,W-8,H-hm-25*FK,fr,[-Math.PI,Math.PI]);
-  axes(P,{xl:'f ('+UH()+')',yl:'Phase'});
+  axes(P,{xl:'f ('+UH()+')',yl:'Phase (rad)'});
   line(P,f,ph,COL.yel,1.5,null,stab>0?1:.5);if(dtftOK)line(P,f,dp,COL.grn,1.2,[5,3]);
   vmark(P,-d.nyq,COL.pink,'');vmark(P,d.nyq,COL.pink,'');
 }
@@ -167,10 +171,16 @@ function drawDF(d,X,xw,cv=cvDF){
   vmark(F,d.nyq,COL.pink,'fs/2');
   if(d.mode==='under'&&S.f0<=S.fs)vmark(F,S.f0>d.nyq?S.fs-S.f0:S.f0,COL.yel,'',[1,3]);
   if(!small)text(g,'Δf = '+d.df.toPrecision(3)+' '+UH(),F.x+F.w-2,F.y+2,COL.cyan,'right');
-  const P=frame(g,4,hm+12*FK,W-8,H-hm-25*FK,fr,[-Math.PI,Math.PI]);axes(P,{xl:'f = k·fs/N ('+UH()+')',yl:'Phase'});
+  const P=frame(g,4,hm+12*FK,W-8,H-hm-25*FK,fr,[-Math.PI,Math.PI]);axes(P,{xl:'f = k·fs/N ('+UH()+')',yl:'Phase (rad)'});
   line(P,fc,cpz,COL.grn,1,[4,3],.6);
   const kp=X.map((v,i)=>km[i]<1e-6*mx?0:carg(v));stems(P,kf,kp,COL.cyan,dots,1.2);
 }
+/* tick numbers on the s-plane: σ along the real axis, ω up the left edge (units in the axis names) */
+function planeTicksB(F,re,im){const g=F.g,lab=v=>String(+v.toFixed(3)).replace('-','−'),ax=Math.min(Math.max(F.Y(0),F.y),F.y+F.h),sx=niceStep(re[1]-re[0],5),sy=niceStep(im[1]-im[0],4);
+  g.save();g.strokeStyle=COL.axis;g.lineWidth=1;
+  for(let x=Math.ceil(re[0]/sx)*sx;x<=re[1]+1e-9;x+=sx){if(Math.abs(x)<1e-9)continue;const px=F.X(x);g.beginPath();g.moveTo(px,ax-3);g.lineTo(px,ax+3);g.stroke();text(g,lab(x),px,ax+4,COL.muted,'center');}
+  for(let y=Math.ceil(im[0]/sy)*sy;y<=im[1]+1e-9;y+=sy){if(Math.abs(y)<1e-9)continue;const py=F.Y(y);g.beginPath();g.moveTo(F.X(0)-3,py);g.lineTo(F.X(0)+3,py);g.stroke();text(g,lab(y),F.X(0)-4,py,COL.muted,'right','middle');}
+  g.restore();}
 const VIEWS=new Map();let drag=null;
 function drawS(d,cv=cvS){
   const {g,W,H}=setup(cv);let sView;const old=VIEWS.get(cv);
@@ -180,7 +190,8 @@ function drawS(d,cv=cvS){
   g.save();g.strokeStyle=COL.axis;g.lineWidth=1;g.beginPath();g.moveTo(F.x,F.Y(0));g.lineTo(F.x+F.w,F.Y(0));g.moveTo(F.X(0),F.y);g.lineTo(F.X(0),F.y+F.h);g.stroke();g.restore();
   const ny=Math.PI/d.T;[ny,-ny].forEach(v=>{if(v<sView.im[1]&&v>sView.im[0]){g.save();g.strokeStyle=COL.pink;g.setLineDash([4,3]);g.beginPath();g.moveTo(F.x,F.Y(v));g.lineTo(F.x+F.w,F.Y(v));g.stroke();g.restore();}});
   g.save();g.fillStyle=COL.pink;g.globalAlpha=.06;g.fillRect(F.x,F.Y(ny),F.w,F.Y(-ny)-F.Y(ny));g.restore();
-  text(g,'ω = +π/T',F.x+3,F.Y(ny)-11*FK,COL.pink);text(g,'jω',F.X(0)+3,F.y+1,COL.muted);text(g,'Re',F.x+F.w-2,F.Y(0)+2,COL.muted,'right');
+  text(g,'ω = +π/T',F.x+3,F.Y(ny)-11*FK,COL.pink);text(g,'jω ('+UR()+')',F.X(0)+3,F.y+1,COL.muted);text(g,'σ = Re s ('+UI()+')',F.x+F.w-2,F.Y(0)+2,COL.muted,'right');
+  planeTicksB(F,sView.re,sView.im);
   text(g,'stable',F.x+3,F.y+F.h-12*FK,COL.grn);
   mark(g,F.X(d.p1.re),F.Y(d.p1.im),'x',COL.grn);mark(g,F.X(d.p2.re),F.Y(d.p2.im),'x',COL.grn);mark(g,F.X(d.z0.re),F.Y(0),'o',COL.yel);
   if(d.rep)text(g,'×2',F.X(d.p1.re)+6*FK,F.Y(0)-14*FK,COL.grn);
@@ -245,6 +256,8 @@ function MHcos(d){
     zp:'<i>q</i><sub>a,b</sub> = <i>e</i><sup>(−σ ± δ)<i>T</i></sup>',z1:'<i>z</i><sub>1</sub> = (<i>q</i><sub>a</sub> + <i>q</i><sub>b</sub>)/2 = <i>r</i> cosh δ<i>T</i>'};
 }
 const f3=v=>(Math.abs(v)<5e-4?0:v).toFixed(3);
+/* A21: poles map by z = e^(sT), zeros do not (the z-zero comes from the residues; checked in board-model.test) */
+const zNote=d=>d.rep?'':`Zeros don't map like poles under sampling: the s-zero at ${f3(d.z0.re)} would give e^(s₀T) = ${f3(Math.exp(d.z0.re*d.T))}, but X(z)'s zero is at z = ${f3(d.zz.re)}.`;
 function PS(d){return d.mode==='under'?`${(-S.sig).toFixed(2)} ± j${d.wd.toFixed(2)}`:d.rep?`${(-S.sig).toFixed(2)} (double)`:`${d.p1.re.toFixed(2)}, ${d.p2.re.toFixed(2)}`;}
 function PZ(d){return d.mode==='under'?`${d.r.toFixed(4)} ∠ ±${Math.abs(d.Wwrap).toFixed(3)}`:d.rep?`${d.q1.re.toFixed(4)} (double)`:`${d.q1.re.toFixed(4)}, ${d.q2.re.toFixed(4)}`;}
 function stabTxt(d){return d.pmax<-1e-12?'stable (LHP)':d.pmax>1e-12?'unstable (RHP)':'marginal (on the jω axis)';}
@@ -326,7 +339,7 @@ const TX={
         'Exact for the <i>poles</i> of a sampled impulse response (impulse invariance), and also the pole map used by c2d ZOH/FOH. <i>Zeros do not map this way</i>: the s-zero (at −2σ for the free response, −σ for the damped cosine) would land at e<sup>z₀T</sup>, but the actual z-zeros are 0 and z<sub>1</sub> (see the Z-transform card).',
         'Tustin (bilinear) s ≈ (2/T)(z−1)/(z+1) is a different, warped approximation.'],
   ml:'zp = exp(pole(sys)*T);  sysd = c2d(sys,T,"impulse");  % or "zoh"',
-  live:d=>d.mode!=='under'?`Real s-poles ${PS(d)} ↦ z = ${PZ(d)} on the positive real axis. Zero angle, so the poles can't alias.`:`Ω<sub>d</sub> = ω<sub>d</sub>T = ${d.Wd.toFixed(3)} rad${d.aliased?` > π, so it wraps to ${d.Wwrap.toFixed(3)} rad (looks like ${d.fa.toFixed(2)} ${UH()})`:''}; r = e<sup>−σT</sup> = ${d.r.toFixed(4)}.`},
+  live:d=>d.mode!=='under'?`Real s-poles ${PS(d)} ↦ z = ${PZ(d)} on the positive real axis. Zero angle, so the poles can't alias. ${zNote(d)}`:`Ω<sub>d</sub> = ω<sub>d</sub>T = ${d.Wd.toFixed(3)} rad${d.aliased?` > π, so it wraps to ${d.Wwrap.toFixed(3)} rad (looks like ${d.fa.toFixed(2)} ${UH()})`:''}; r = e<sup>−σT</sup> = ${d.r.toFixed(4)}. ${zNote(d)}`},
 };
 
 const I=v=>`<i>${v}</i>`;
@@ -525,7 +538,7 @@ function syncControls(){
   $('selWin').value=S.win;$('rowBeta').hidden=S.win!=='kaiser';$('rowAlpha').hidden=S.win!=='tukey';
   segSet('segMode',S.mode);$('rowDl').hidden=S.mode!=='over';const U=S.mode==='under';
   $('sF0').disabled=!U;$('sF0').classList.toggle('off',!U);$('lblF0').classList.toggle('off',!U);document.querySelector('input.num[data-n=f0]').disabled=!U;
-  segSet('segInterp',S.interp);segSet('segDb',S.db?'db':'lin');segSet('segCtv',S.ctv);segSet('segCop',S.cop?'on':'off');moreBadge();
+  $('rowInterp').hidden=S.sel!=='samp';segSet('segInterp',S.interp);segSet('segDb',S.db?'db':'lin');segSet('segCtv',S.ctv);segSet('segCop',S.cop?'on':'off');moreBadge();
 }
 function moreBadge(){const v=viewFor(S.sel),L=[];
   if(S.wave!==DEF.wave)L.push('waveform: damped cosine');if(S.interp!==DEF.interp)L.push('interp: '+({foh:'FOH',sinc:'ideal sinc'})[S.interp]);if(S.db)L.push('dB scale');
@@ -600,8 +613,9 @@ function renderExInfo(){
 $('btnReset').onclick=()=>applyExample('under');
 
 /* try-this list: same applyExample path */
-const TRY=content.extra.examples.tryThis.map(t=>[t.id,t.head,t.text]);
-TRY.forEach(([id,h,t])=>{const li=document.createElement('li');li.innerHTML=`<button class="tbtn" data-ex="${id}">Do it</button><div><b>${h}.</b> ${t}</div>`;li.querySelector('button').onclick=()=>{applyExample(id);$('map').scrollIntoView({behavior:'smooth',block:'start'});};$('tryList').appendChild(li);});
+const TRY=content.extra.examples.tryThis.map(t=>[t.id,t.head,t.text,t.box]);
+const boxLabel=id=>{for(const m of content.maps||[])for(const n of m.nodes||[])if(n.id===id)return n.label;return null;};
+TRY.forEach(([id,h,t,bx])=>{const li=document.createElement('li');const lb=bx&&boxLabel(bx);li.innerHTML=`<button class="tbtn" data-ex="${id}">Do it</button><div><b>${h}.</b> ${t}${lb?` <a class="try-box" data-testid="try-box" href="#/node/${bx}">Box: ${lb} →</a>`:''}</div>`;li.querySelector('button').onclick=()=>{applyExample(id);$('map').scrollIntoView({behavior:'smooth',block:'start'});};$('tryList').appendChild(li);});
 
 /* ---------- pointer handling: pole drag vs. tap-to-expand ---------- */
 function canvasXY(cv,e){const r=cv.getBoundingClientRect();return [e.clientX-r.left,e.clientY-r.top];}
@@ -719,7 +733,7 @@ function legendItems(k,d){
     it(sw('fill',COL.grn,{a:.25}),'Re s < 0','stable half-plane');it(sw('fill','#ef5b5b',{a:.25}),'Re s > 0','unstable half-plane');
     it(sw('line',COL.pink,{dash:'4 3',w:1.4}),'ω = ±π/T','Nyquist lines; the band between them maps once onto the z-plane');
   }else{
-    it(sw('x',COL.grn),'poles','z = '+PZ(d)+' · drag them');it(sw('o',COL.yel),'zeros','z = 0 and z₁ = '+f3(d.zz.re));
+    it(sw('x',COL.grn),'poles','z = '+PZ(d)+' · drag them');it(sw('o',COL.yel),'zeros','z = 0 and z₁ = '+f3(d.zz.re)+'. Zeros do not map like poles under sampling: e^(s₀T) = '+f3(Math.exp(d.z0.re*d.T))+' for the s-zero, but X(z)\'s zero comes from the residues, so z₁ = '+f3(d.zz.re));
     it(sw('circ',COL.chalk,{fill:COL.grn}),'|z| = 1','unit circle (image of the jω axis); inside = stable');
     it(sw('dot',COL.pink),'z = −1','Nyquist (ω = π/T)');it(sw('dot',COL.cyan),'z = 1','DC (s = 0)');
     if(U)it(sw('arc',COL.grn),'Ω<sub>d</sub>','pole angle = ω<sub>d</sub>T');
