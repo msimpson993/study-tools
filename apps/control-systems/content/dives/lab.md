@@ -24,7 +24,7 @@ The default plant is the dish, 0.1/(s(s + 2)). The alternate adds the motor ampl
 ### Every control
 
 - Kp 0–5000 (default 1000), Ki 0–4000 (default 0), Kd 0–500 (default 0) and the derivative filter N_f 20–500 rad/s (default 200).
-- Step 0.02–2 rad (default 0.1); wind toggle (20 N·m at t = 3 s); noise toggle (0.01° rms).
+- Step 0.02–2 rad (default 0.1); wind toggle (20 N·m at t = 10 s); noise toggle (0.01° rms).
 - Torque limit |T| 50–1000 N·m (default 200) and anti-windup {none, clamp, back-calculation}.
 - D on measurement (default on); ghost toggle to keep the last run.
 
@@ -57,7 +57,7 @@ Bode plots are not in the lecture notes; this panel shows how the gains shape th
 - **Kd**: N·m·s per rad, torque per rate of turn.
 - **N_f**: derivative filter corner (rad/s). D ignores angle changes faster than about N_f.
 - **T_max**: motor torque limit (N·m, default 200).
-- **T_d**: wind torque, 20 N·m from t = 3 s.
+- **T_d**: wind torque, 20 N·m from t = 10 s.
 - **Noise**: sensor noise, 0.01° rms.
 - **Anti-windup**: what the integrator does while the torque is clipped. *Clamp* stops it; *back-calculation* bleeds it off.
 - **D on measurement / on error**: whether the derivative acts on −θ (no kick at a step) or on e.

@@ -1578,7 +1578,7 @@
     - label: start (2000, 1000, 200)
       color: var(--muted)
       dash: true
-  howToRead: "Three panels from the tuned (2000, 1000, 200); each raises one gain to its slider. Step at 0 s, 20 N·m gust at 3 s. Readouts: %OS, Tₛ, wind peak and time back inside 0.05°."
+  howToRead: "Three panels from the tuned (2000, 1000, 200); each raises one gain to its slider. Step at 0 s, 20 N·m gust at 10 s. Readouts: %OS, Tₛ, wind peak and time back inside 0.05°."
   lookFor: Kp 4000 nearly halves the wind peak, but the slow integrator pole takes longer to clear it (7 s).
   controls:
     - id: Kp
@@ -1835,7 +1835,7 @@
     - label: previous run
       color: var(--muted)
       dash: true
-  howToRead: "The dish (0.1/(s(s + 2)), 0.1 rad step, 200 N·m limit, D on measurement) under your PID. Wind adds 20 N·m at 3 s. Readouts check the specs: %OS < 10 %, wind peak < 0.6°, zero steady error, torque within the limit."
+  howToRead: "The dish (0.1/(s(s + 2)), 0.1 rad step, 200 N·m limit, D on measurement) under your PID. Wind adds 20 N·m at 10 s, after the step has settled. Readouts check the specs: %OS < 10 %, wind peak < 0.6°, zero steady error, torque within the limit. Readouts include the derivative filter N_f, so they sit slightly below the ideal-derivative numbers quoted in the text (tuned: 6.3 % vs 7.4 %)."
   lookFor: Start at P 1000 (73 % ring), add Kd until it stops ringing, then just enough Ki to clear the wind.
   controls:
     - id: plant
@@ -1873,7 +1873,7 @@
       default: 0
       group: primary
     - id: wind
-      label: wind 20 N·m at 3 s
+      label: wind 20 N·m at 10 s
       type: toggle
       default: false
       group: primary
@@ -1937,7 +1937,7 @@
       min: 4
       max: 40
       step: 1
-      default: 12
+      default: 16
       group: more
       unit: s
   presets:
@@ -2021,7 +2021,7 @@
       color: var(--org)
     - label: P thermostat
       color: var(--cyan)
-  howToRead: "Outdoors drops 5 K at t = 0. Orange: the heater is left at its setting. Cyan: a P thermostat in the bedroom (Kp W per K of error) turns it up. Bottom: the extra heat each one adds."
+  howToRead: "Outdoors drops 5 K at t = 0. Orange: the heater is left at its setting. Cyan: a P thermostat in the bedroom (Kp W per K of error) turns it up. Right (below on phones): the extra heat each one adds."
   lookFor: The open-loop room follows the weather; the closed loop cuts the drop by 1 + L(0) = 10.
   controls:
     - id: Kp
@@ -2057,8 +2057,8 @@
       color: var(--org)
     - label: bedroom wall leak
       color: var(--cyan)
-  howToRead: "Steady extra heat after a −5 K front, split into what leaks through each room's outside wall (55.56 W/K each). Bottom: how far the bedroom ends up below its set point."
-  lookFor: Where the extra heat goes after a −5 K front. PI holds the bedroom, so both walls leak more; P lets the bedroom sag 0.5 K, which saves 61 W.
+  howToRead: "Steady extra heat after a −5 K front, split into what leaks through each room's outside wall (55.56 W/K each). Right (below on phones): how far the bedroom ends up below its set point."
+  lookFor: Where the extra heat goes after a −5 K front. PI holds the bedroom, so both walls leak more; P lets the bedroom sag 0.5 K, which saves 61 W (at Kp = 1100).
   controls:
     - id: Kp
       label: Kp (P)
@@ -2087,7 +2087,7 @@
       color: var(--cyan)
     - label: gains
       color: var(--org)
-  howToRead: "Signals flow left to right: the force is divided by the 400 kg mass to give acceleration, integrated once for velocity and again for height. The shock and the spring feed the states back with minus signs. Bottom: the same diagram simulated for a step force u."
+  howToRead: "Signals flow left to right: the force is divided by the 400 kg mass to give acceleration, integrated once for velocity and again for height. The shock and the spring feed the states back with minus signs. Right (below on phones): the same diagram simulated for a step force u."
   lookFor: Force gives acceleration (÷ 400 kg). Integrate once for velocity, again for height. The shock feeds velocity back (−4ż), the spring feeds height back (−64z). The two integrator outputs are the two states.
   controls:
     - id: u
@@ -2144,7 +2144,7 @@
       dash: true
     - label: motor torque Kp·e
       color: var(--cyan)
-  howToRead: "At rest the motor must hold the wind. Under P it makes torque only from an error: Kp·e. The error settles where the two lines cross. Bottom: the same P loop in time, wind on from t = 0."
+  howToRead: "At rest the motor must hold the wind. Under P it makes torque only from an error: Kp·e. The error settles where the two lines cross. Right (below on phones): the same P loop in time, wind on from t = 0."
   lookFor: "With Kp = 1000 the lines cross at e = 20/1000 rad = 1.15°: that is the steady wind error. Double Kp and it halves; it never reaches zero."
   controls:
     - id: Kp
@@ -3154,7 +3154,7 @@
     - label: ±δ
       color: var(--muted)
       dash: true
-  howToRead: "The tuned dish PID (2000, 1000, 200) after a 0.1 rad step, with the same stiction as A12. While the gear is stuck the integrator keeps building torque until it breaks free and jumps past the target. Dashed: the integrator pauses while |e| < δ. Bottom: the motor torque. Read-outs follow numbers.py [R4]."
+  howToRead: "The tuned dish PID (2000, 1000, 200) after a 0.1 rad step, with the same stiction as A12. While the gear is stuck the integrator keeps building torque until it breaks free and jumps past the target. Dashed: the integrator pauses while |e| < δ. The band has to be wider than the error the gear sticks at (about 0.15°); a narrower band changes nothing. Right (below on phones): the motor torque. Read-outs follow numbers.py [R4]."
   lookFor: Without the dead band it hunts between −0.145° and +0.147°, period 23.9 s, forever. With δ = 0.003 rad it sticks at +0.149° and stays.
   controls:
     - id: edb
