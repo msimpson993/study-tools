@@ -1,3 +1,16 @@
+- id: q-root
+  tags:
+    - overview
+  kind: recognize
+  q: Which step turns a rough model into a dependable one?
+  choices:
+    - "Feedback: measure the output and correct the gap"
+    - A more detailed model
+    - A bigger actuator
+  answer: 0
+  why: No model is exact, and a bigger actuator only pushes harder on the wrong guess. Feedback
+    measures what really happens and corrects the difference, so the loop works even when the model
+    is off (the house's 10 % plant error moves the room by only 0.5 % at L(0) = 19).
 - id: q-model
   tags:
     - model
@@ -103,13 +116,14 @@
   tags:
     - integral
   kind: recognize
-  q: "Kp = 500: largest stable Ki?"
+  q: Kp = 500 on the dish (D off). Ki must stay below…
   choices:
     - "1000"
     - "500"
     - "250"
   answer: 0
-  why: Ki < 2Kp.
+  why: From s³ + 2s² + 0.1Kp·s + 0.1Ki, the cubic test (*added*) needs Ki < (B/J)·Kp = 2Kp = 1000. At
+    Ki = 2Kp the poles reach the jω axis.
 - id: q-der
   tags:
     - derivative
@@ -153,7 +167,8 @@
     - 1.9 %
     - 10 %
   answer: 0
-  why: S(0) = 1/20.
+  why: "S(0) = 1/(1 + L(0)) = 1/20 = 0.05, and a plant change reaches the output scaled by S: 10 % ×
+    0.05 = 0.5 %."
 - id: q-noise
   tags:
     - fb
@@ -175,7 +190,8 @@
     - One per pole of the road
     - The shock adds one
   answer: 0
-  why: The shock stores nothing.
+  why: "One state per energy store: the spring's (height z) and the body's (velocity ż). The shock
+    only turns motion into heat."
 - id: q-cc
   tags:
     - cc
@@ -219,7 +235,8 @@
     - "2"
     - "3"
   answer: 0
-  why: Two from each half.
+  why: The full system has the plant's 2 states plus the observer's 2. Separation splits the poles
+    into the 2 you placed with K and the 2 placed with L.
 - id: q-ref
   tags:
     - refin
@@ -252,7 +269,8 @@
     - a differentiator
     - a plain gain
   answer: 0
-  why: An integrator (−1/(RCs)).
+  why: With Z_f = 1/(sC) and Z_in = R, the gain −Z_f/Z_in = −1/(RCs). Dividing by s is integrating, so
+    the output ramps for as long as the input is held.
 - id: q-inv
   tags:
     - inverse
@@ -274,7 +292,20 @@
     - drops to 0
     - stays the same
   answer: 0
-  why: Grows without bound.
+  why: "|G| divides by the distance to each pole. As that distance shrinks to zero, the height grows
+    without bound. A zero does the opposite and pulls |G| to 0."
+- id: ck-plane-1
+  tags:
+    - plane
+  kind: recognize
+  q: "House landscape: put the probe at s = 0. What is the height?"
+  choices:
+    - "8.18 K/kW: the DC gain"
+    - "0"
+    - infinite
+  answer: 0
+  why: "s = 0 is a constant input, so the height there is the steady gain: |G₂(0)| = 0.0036/(0.2 ×
+    2.2) = 0.00818 K/W = 8.18 K/kW. Height is infinite only on a pole and 0 only on a zero."
 - id: q-reduce
   tags:
     - reduce
@@ -285,7 +316,9 @@
     - more accurate
     - fine if it is stable
   answer: 0
-  why: Not causal, so not usable.
+  why: "More zeros than poles means G keeps rising with frequency, so the model would respond to an
+    input before it arrives: it isn't causal. A reduced model must keep at least as many poles as
+    zeros."
 - id: q-dom
   tags:
     - dominant
@@ -296,7 +329,8 @@
     - The wheel's
     - Both equally
   answer: 0
-  why: It decays 12.8× slower.
+  why: The body pair decays at 1.6 /s and the wheel pair 12.8× faster, so after a fraction of a second
+    only the body motion is left.
 - id: q-blockalg
   tags:
     - blocks
@@ -304,10 +338,11 @@
   q: Do C/R and C/D of one loop have the same poles?
   choices:
     - "Yes: both have 1 + L as their denominator"
-    - No
+    - "No"
     - Only with H = 1
   answer: 0
-  why: "Yes: both have 1 + L as their denominator."
+  why: C/R = G/(1 + GH) and C/D = G_d/(1 + GH) differ only in their numerators. The loop sets the
+    denominator 1 + L, so every input sees the same poles.
 - id: q-menu
   tags:
     - ctrl
@@ -318,7 +353,8 @@
     - "8"
     - "0.5"
   answer: 0
-  why: "2."
+  why: Ki = Kp/Ti = 4/2 = 2. Ti is how long the I term takes to add as much as P does for a steady
+    error; a longer Ti means a gentler I.
 - id: q-speed
   tags:
     - ctrl
@@ -329,7 +365,8 @@
     - 18 s
     - 2 s
   answer: 0
-  why: 0.2 s.
+  why: "P feedback divides the time constant by (1 + loop gain): τ_cl = 2/(1 + 9) = 0.2 s. The speed
+    loop does the same thing: K_ω = 80 takes 0.5 s to 0.1 s."
 - id: q-type
   tags:
     - sse
@@ -340,7 +377,9 @@
     - ω/K_v
     - ∞
   answer: 0
-  why: "0."
+  why: A type-1 loop has one integrator. Any steady error would make its output keep growing, so the
+    only steady state is e = 0. Here the dish's motor angle is the integrator. A ramp would leave a
+    finite error, ω/K_v.
 - id: q-windup
   tags:
     - windup
@@ -351,7 +390,9 @@
     - small moves
     - noisy sensors
   answer: 0
-  why: Large moves that saturate the motor.
+  why: The integrator keeps adding error while the motor is pinned at its limit, so it overshoots once
+    it comes off. Small moves never hit the limit. On the dish, a 2 rad slew gives 21.6 % overshoot
+    without anti-windup and 3.8 % with clamping; a 0.2 rad slew barely changes (7.9 %).
 - id: q-lab
   tags:
     - lab
@@ -362,7 +403,8 @@
     - gets smoother
     - is unchanged
   answer: 0
-  why: Chatters more.
+  why: D multiplies the rate of change of the measurement, and sensor noise changes fast, so a bigger
+    Kd turns noise into torque chatter. Filter the D term, or keep Kd modest.
 - id: q-methods
   tags:
     - methods
@@ -373,7 +415,8 @@
     - no overshoot
     - being optimal
   answer: 0
-  why: Fast disturbance rejection but large overshoot.
+  why: Ziegler–Nichols aims at a quarter-decay disturbance response, so it reacts hard and overshoots.
+    On the dish with a 0.05 s amplifier lag it gives 63.8 % on a step. Treat it as a starting point.
 - id: q-fail
   tags:
     - failures
@@ -384,7 +427,9 @@
     - Windup
     - Noise
   answer: 0
-  why: "Derivative kick: put D on the measurement."
+  why: 'A step in the command makes the error jump. "D on error" differentiates that jump into a
+    spike: 4200 N·m on the dish. "D on measurement" sees only the smooth antenna angle, so the spike
+    disappears.'
 - id: q-index
   tags:
     - index
@@ -406,7 +451,8 @@
     - Always different
     - Unrelated
   answer: 0
-  why: The same, unless a mode cancels.
+  why: G's denominator is det(sI − A), whose roots are A's eigenvalues. A mode drops out of G only if
+    it cancels because it can't be reached or seen, like the house with an averaging thermostat.
 - id: q-ack
   tags:
     - sf
@@ -417,7 +463,8 @@
     - the poles are complex
     - n > 2
   answer: 0
-  why: Pc is singular (the plant is uncontrollable).
+  why: Ackermann divides by the controllability matrix Pc = [B AB …]. If Pc is singular, some state
+    can't be pushed by u, so no gain can move its pole. Complex poles and higher n are fine.
 - id: ck-model-1
   tags:
     - model

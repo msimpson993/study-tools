@@ -40,6 +40,7 @@ Dividing by C_th and timing in hours:
 - u: heater power in the living room (W).
 - C_th = 1 MJ/K per room: heat capacity.
 - G_in = 277.8 W/K: the inner wall's conductance; G_out = 55.6 W/K: each room's leak outdoors.
+- 1 /h = 3600·G_in/C_th: the flow between the rooms per kelvin of difference; 0.2 /h = 3600·G_out/C_th: each room's leak outdoors (so −1.2 = −(1 + 0.2)).
 - 0.0036 = 3600/C_th: K per hour per watt.
 
 **Linear:** every term is a constant times a temperature or the power, so responses add. **Time-invariant:** walls don't change. **Lumped:** each room has one temperature (perfectly mixed air).

@@ -27,7 +27,11 @@ Make the walls leakier and compare the nominal (dashed) and perturbed (solid) re
 S_G^T = (∂T/T)/(∂G/G) = 1/(1 + GcGH) = S   (LN2 slides 5–9)
 ```
 
-The chain rule gives it in one line: T = GcG/(1 + GcGH), so ∂T/∂G = Gc/(1 + GcGH)², and (G/T)(∂T/∂G) = 1/(1 + GcGH).
+S is the fraction of a plant error that reaches the output (LN2 slides 5–9).
+
+````callout:derivation Full derivation
+T = GcG/(1 + GcGH), so ∂T/∂G = Gc/(1 + GcGH)², and (G/T)(∂T/∂G) = 1/(1 + GcGH).
+````
 
 ```eq
 Sensor sensitivity: S_H^T = −L/(1 + L) ≈ −1 for large L
@@ -42,7 +46,7 @@ The sensor must be right (*Why not infinite gain?*).
 The leak goes from 0.2 to 0.24 /h, so G₂(0) drops from 8.18 to 6.70 K/kW (−18.2 %).
 
 - P 1100: T(0) goes from 0.900 to 0.881 (−2.17 %; S predicts −1.82 %, the gap because the change isn't small).
-- PI: 0 %.
+- PI: 0 %. With PI the steady value doesn't depend on the walls at all.
 - |S| peaks at 1.33 near 2.6 rad/h: around that speed, feedback slightly *amplifies* model errors.
 
 ### Exam example

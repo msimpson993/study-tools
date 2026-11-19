@@ -35,8 +35,12 @@ Corner: A = [[0, 1], [−64, −4]], B = [0, 0.0025]ᵀ, C = [1, 0], D = 0; eig(
 
 ### Worked example: on the corner, released 5 cm high
 
-The body swings to −2.22 cm at 0.41 s, then spirals in. G(s) can't describe this start; state space can.
+The body swings to −2.22 cm at 0.41 s, then spirals in. G(s) can't describe this start; state space can. The eigenvalues of A are −2 ± 7.75j, the same as G's poles (*From states back to G(s)*).
 
 ### What it can't do
 
 It's still a linear model, and the choice of states isn't unique (any invertible change of variables works).
+
+### Slides
+
+Taught in LN1, for Mini exam 1.

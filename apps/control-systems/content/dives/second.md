@@ -44,6 +44,8 @@ m z̈ + c ż + k z = u  ⇒  Z/U = (1/m)/(s² + (c/m)s + k/m)
 
 **What each symbol means.** z: body height from rest (m); u: force on the body (N); m (kg), c (N·s/m), k (N/m). Tₛ = 4/σ is LN1 slide 59; the rise-time fit is slide 60.
 
+Below ζ = 1 the poles are complex, −σ ± jω_d: the body overshoots and rings (*underdamped*). Rise time: the notes use 0–100 % when underdamped and 10–90 % (T_r1) otherwise (LN1 slide 60).
+
 ````callout:derivation Full derivation
 Y(s) = ωₙ²/(s(s² + 2ζωₙs + ωₙ²)). Partial fractions with the completed square (s + ζωₙ)² + ω_d² give y = 1 − (e^(−ζωₙt)/√(1−ζ²)) sin(ω_d t + θ), with θ = cos⁻¹ζ. The peak is where ẏ = 0: sin ω_d t = 0, so Tₚ = π/ω_d; substitute into y for %OS. (LN1 slides 51–57.)
 ````

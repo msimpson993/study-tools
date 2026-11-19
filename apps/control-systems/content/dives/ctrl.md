@@ -5,7 +5,7 @@ title: "Turn up the gain (P), the controller menu, and faster loops"
 category: pid
 neighbors: [blocks, sse, integral, derivative]
 level: Some algebra
-check: [q-pgain, q-menu, q-speed]
+check: [q-pgain, q-speed, ck-pgain-1]
 ---
 
 **The question:** a car corner only follows the road; what happens when a motor we command pushes in proportion to the error? This is the box *Turn up the gain (P)*, with its side boxes *The controller menu* and *Feedback makes it faster*, after *Close the loop*.

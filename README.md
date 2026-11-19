@@ -9,7 +9,7 @@ The former *Six domains of linear systems* page (`/transforms/`) was folded into
 | Page | URL | What it is |
 |---|---|---|
 | Linear Systems Analysis | [/linear-systems/](https://msimpson993.github.io/study-tools/linear-systems/) | 2 question maps (Big picture 15 boxes, Full detail 52 boxes in all), 30 deep dives, 28 live figures on two running examples (an earbud speaker and a car on its suspension), earbud sounds, 101-question self-check, 4 exam-review pages, 107-term glossary, and the six-domains board (9 transforms, forward/inverse pair views, draggable poles, 21 examples incl. an Earbud preset, 9 windows, ZOH/FOH/sinc) |
-| Control systems (EECE5130) | [/control-systems/](https://msimpson993.github.io/study-tools/control-systems/) | 2 question maps (Big picture 22 boxes, Full detail 39 boxes), 33 deep dives, 56 live figures on three running examples (a two-room house, a car suspension corner, an antenna dish) incl. the PID Lab and 14 tuning failure cards, full original course guide, 259-question self-check, 2 mini-exam review pages. The former PID tuning page was folded in here in Nov 2026. |
+| Control systems (EECE5130) | [/control-systems/](https://msimpson993.github.io/study-tools/control-systems/) | 2 question maps (Big picture 22 boxes, Full detail 39 boxes), 33 deep dives, 56 live figures on three running examples (a two-room house, a car suspension corner, an antenna dish) incl. the PID Lab and 14 tuning failure cards, full original course guide, 261-question self-check, 2 mini-exam review pages. The former PID tuning page was folded in here in Nov 2026. |
 
 Every page is also built as a **single self-contained HTML file** (`dist/<page>/index.html`, works offline from `file://`); CI uploads them as an artifact.
 

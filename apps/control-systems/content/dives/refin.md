@@ -21,6 +21,8 @@ Step the ride height and make the real spring stiffer or softer than modelled. M
 ```figure:refin
 ```
 
+With N̄ off, the command enters only as a height error, u = −k₁(z − r) − k₂ż. The body then stops at k₁/(k + k₁) = 36 % of the command (0.72 cm of a 2 cm step), because the passive spring keeps pulling it back while k₁ alone does the pushing. N̄ = k + k₁ = 40 000 N/m scales the command so the body lands exactly on it.
+
 ### The math
 
 ```eq

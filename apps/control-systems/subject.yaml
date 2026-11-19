@@ -63,11 +63,11 @@ runningExample:
 hub:
   order: 3
 # Porting guard (rebuilt Nov 2026, question-chain format; pid-tuning folded in): 2 maps (Big picture 22 boxes / 24 lines,
-# Full detail 39 / 41), 33 dives, 2 review pages, 259 quiz questions (38 box asks + 52 dive checks + 123 kept CS + 46 kept PID).
+# Full detail 39 / 41), 33 dives, 2 review pages, 261 quiz questions (39 box asks + 53 dive checks + 123 kept CS + 46 kept PID).
 expect:
   maps: 2
   nodes: 61
   edges: 65
   dives: 33
   review: 2
-  quiz: 259
+  quiz: 261

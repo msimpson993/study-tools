@@ -35,7 +35,7 @@ S + C = 1,   C = L/(1 + L)
 
 ### Worked example: on the house, sun on the thermostat (+1 K reading)
 
-P 1100 leaves the room 0.90 K cold; PI, the full 1 K. |C| peaks at 0.96 near 1.2 rad/h; S and C cross near 1.5 rad/h.
+P 1100 leaves the room 0.90 K cold; PI, the full 1 K. The irony: the same integral action that removes the cold-front droop makes the room obey a biased thermostat exactly, so a 1 K high reading gives a 1 K cold room. |C| peaks at 0.96 near 1.2 rad/h; S and C cross near 1.5 rad/h.
 
 ### Exam example
 

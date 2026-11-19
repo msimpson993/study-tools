@@ -33,12 +33,12 @@ test.describe('control-systems: the migrated interactive guide', () => {
     await expect(page.getByTestId('qcard').first()).toBeVisible();
   });
 
-  test('quizzes: 38 box asks + 52 dive checks + 83 course + 22 mini-exam + 46 PID questions; figure questions render their diagram', async ({ page }) => {
+  test('quizzes: 39 box asks + 53 dive checks + 83 course + 22 mini-exam + 46 PID questions; figure questions render their diagram', async ({ page }) => {
     await open(page, 'control-systems');
     const q = await page.evaluate(() => (window as any).__study.content.quiz);
-    expect(q.length).toBe(259);
-    expect(q.filter((x: any) => /^q-/.test(x.id)).length).toBe(38);
-    expect(q.filter((x: any) => x.id.startsWith('ck-')).length).toBe(52);
+    expect(q.length).toBe(261);
+    expect(q.filter((x: any) => /^q-/.test(x.id)).length).toBe(39);
+    expect(q.filter((x: any) => x.id.startsWith('ck-')).length).toBe(53);
     expect(q.filter((x: any) => x.id.startsWith('cs-')).length).toBe(83);
     expect(q.filter((x: any) => x.id.startsWith('mini-')).length).toBe(22);
     expect(q.filter((x: any) => x.id.startsWith('pid-')).length).toBe(46);
@@ -98,6 +98,14 @@ test.describe('control-systems: PID folded in (the PID Lab on the dish, the fail
     expect(root).not.toContain('…');
     expect(root).toContain('approximately-');
     expect(root.replace(/\s+/g, ' ')).toContain('do what we command?');
+    // the map legend wraps on a phone instead of running off the right edge (both apps share it)
+    for (const app of ['control-systems', 'linear-systems']) {
+      if (app !== 'control-systems') await open(page, app);
+      const right = await page.locator('[data-testid=map-legend] *').evaluateAll((els) => Math.max(...els.map((e) => e.getBoundingClientRect().right)));
+      expect(right, `${app} legend`).toBeLessThanOrEqual(390);
+      expect(await page.getByTestId('map-legend').evaluate((e) => e.scrollWidth <= e.clientWidth + 1), `${app} legend scroll`).toBe(true);
+    }
+    await open(page, 'control-systems');
     expect(await noHScroll(page)).toBe(true);
   });
   test('the dish, corner and house dives render at 390 px with no horizontal scroll', async ({ page }) => {

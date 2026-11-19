@@ -34,7 +34,7 @@ U = Kp(R − X₂)  ⇒  X₂/D = G_d/(1 + KpG₂);   droop = D·G_d(0)/(1 + L(0
 - PI: L has an integrator, L(0) = ∞, so the droop is 0.
 - Steady extra heat = 5 K × 2 × 55.6 W/K = 611 W, whatever the controller.
 
-**What each symbol means.** d: the outdoor temperature change (K); Kp (W/K); Ki (W/(K·h)); L(0) = Kp·G₂(0).
+**What each symbol means.** d: the outdoor temperature change (K); Kp (W/K); Ki (W/(K·h)); L(0) = Kp·G₂(0). The thermostat here is Kp = 1100 W per K of error and, for PI, Ki = 200 W per K·h.
 
 ### Worked example: on the house, −5 K cold front
 
