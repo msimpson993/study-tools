@@ -3,7 +3,7 @@
  * (```picture:<id> caption``` fences). Every value is computed here from the problem's own numbers
  * (and checked in test/reviewpics.test.ts); the speaker chain reads a₀, a₁ from spk().
  */
-import { rangeFrame, graphAxes, curve, text, dot, col, linspace, cssVar, type QuizFigureDef } from '@study/core';
+import { rangeFrame, graphAxes, curve, text, dot, col, linspace, cssVar, withLabelRole, type QuizFigureDef } from '@study/core';
 import { spk, UM_PER_V } from './ex';
 
 type P2 = [number, number];
@@ -31,7 +31,7 @@ function planeAxes(g: CanvasRenderingContext2D, p: Pl, re: string, im: string) {
   text(g, re, p.r - 2, p.Y(0) - 9, col.muted(), 'right', 10); if (p.X(0) > p.l && p.X(0) < p.r) text(g, im, p.X(0) + 4, p.t + 6, col.muted(), 'left', 10);
 }
 /** tick marks and values along the real axis */
-function reTicks(g: CanvasRenderingContext2D, p: Pl, vals: number[]) { for (const v of vals) { seg(g, p.X(v), p.Y(0) - 3, p.X(v), p.Y(0) + 3, col.strong()); if (v) text(g, String(v).replace('-', '−'), p.X(v), p.Y(0) + 11, col.muted(), 'center', 9); } }
+function reTicks(g: CanvasRenderingContext2D, p: Pl, vals: number[]) { for (const v of vals) { seg(g, p.X(v), p.Y(0) - 3, p.X(v), p.Y(0) + 3, col.strong()); if (v) text(g, String(v).replace('-', '−'), p.X(v), p.Y(0) + 15, col.muted(), 'center', 9); } }
 /** shade where the predicate holds, column by column (σ ranges) or by radius (|z| ranges) */
 function shadeRe(g: CanvasRenderingContext2D, p: Pl, lo: number, hi: number, fill: string) {
   const a = Math.max(p.l, p.X(lo)), b = Math.min(p.r, p.X(hi)); if (b > a) { g.save(); g.fillStyle = fill; g.fillRect(a, p.t, b - a, p.b - p.t); g.restore(); }
@@ -43,56 +43,72 @@ function shadeRadius(g: CanvasRenderingContext2D, p: Pl, r0: number, r1: number,
 function stemsAt(g: CanvasRenderingContext2D, f: ReturnType<typeof rangeFrame>, ns: number[], vs: number[], color: (n: number) => string) {
   ns.forEach((n, i) => { const c = color(n); seg(g, f.X(n), f.Y(0), f.X(n), f.Y(vs[i]), c, 1.6); dot(g, f, [n, vs[i]], c, 3.2); });
 }
-/** graph axes for a panel that does not start at the canvas edge: the y label is drawn rotated beside the panel */
+/** graph axes for a panel anywhere on the canvas: the axis names are drawn beside this panel (graphAxes would put them at the canvas edges) */
 function axesAt(g: CanvasRenderingContext2D, f: ReturnType<typeof rangeFrame>, xr: P2, yr: P2, xl: string, yl: string, xs: number, ys: number, xfmt?: (x: number) => string) {
-  graphAxes(g, f, xr, yr, xl, '', xs, ys, xfmt);
-  g.save(); g.translate(f.box.l - 30, (f.box.t + f.box.b) / 2); g.rotate(-Math.PI / 2); text(g, yl, 0, 0, col.muted(), 'center', 10); g.restore();
+  withLabelRole('axis', () => {
+    text(g, xl, (f.box.l + f.box.r) / 2, f.box.b + 24, col.text(), 'center', 10);
+    g.save(); g.translate(f.box.l - 30, (f.box.t + f.box.b) / 2); g.rotate(-Math.PI / 2); text(g, yl, 0, 0, col.text(), 'center', 10); g.restore();
+  });
+  graphAxes(g, f, xr, yr, '', '', xs, ys, xfmt);
 }
 const BLUE = 'rgba(110,168,255,.16)', ORANGE = 'rgba(255,150,80,.16)', GREEN = 'rgba(110,226,110,.14)';
 
+/* ---------- layout: two panels side by side, stacked on a phone; every note sits in a header band above its panel ---------- */
+type R4 = { x: number; y: number; w: number; h: number };
+type Line = [string, string];
+const STACK_BELOW = 1.5; // canvas width / height under which the two panels stack (the phone aspect is 0.95)
+function two(w: number, h: number): [R4, R4] {
+  return w / h < STACK_BELOW ? [{ x: 0, y: 0, w, h: h / 2 }, { x: 0, y: h / 2, w, h: h / 2 }] : [{ x: 0, y: 0, w: w * 0.48, h }, { x: w * 0.5, y: 0, w: w * 0.5, h }];
+}
+/** the panel's key, one coloured line each, above the plot; returns what is left for the plot */
+function header(g: CanvasRenderingContext2D, r: R4, lines: Line[], n = lines.length): R4 {
+  withLabelRole('axis', () => lines.forEach(([s, c], i) => text(g, s, r.x + 6, r.y + 8 + 12 * i, c, 'left', 9.5)));
+  const hh = 12 * n + 6; return { x: r.x, y: r.y + hh, w: r.w, h: r.h - hh };
+}
+const planeIn = (r: R4, cx: number, cy: number, R: number) => plane(r.x + 4, r.y, r.w - 8, r.h - 6, cx, cy, R);
+const frameIn = (w: number, h: number, r: R4, xr: P2, yr: P2, l = 40) => rangeFrame(w, h, xr, yr, r.x + l, w - (r.x + r.w) + 8, r.y + 4, h - (r.y + r.h) + 30);
+/** both panels' headers get the same height, so the plots line up when side by side */
+const heads = (lines: Line[][]) => Math.max(...lines.map((l) => l.length));
+const PH = { aspect: 2.1, phoneAspect: 0.95, maxWidth: 520 };
+
 /* ---------- A1: inverse Z with the ring ROC 2 < |z| < 3 ---------- */
 export const a1 = { A: 4 / 35, B: -2 / 5, C: 2 / 7, x: (n: number) => (n >= 1 ? (4 / 35) * 0.5 ** (n - 1) - (2 / 5) * (-2) ** (n - 1) : -(2 / 7) * (-3) ** (n - 1)) };
-const picA1: QuizFigureDef = { aspect: 2.1, maxWidth: 520, draw(g, w, h) {
-  g.clearRect(0, 0, w, h); const p = plane(4, 18, w * 0.46, h - 26, 0, 0, 3.6);
+const picA1: QuizFigureDef = { ...PH, draw(g, w, h) {
+  g.clearRect(0, 0, w, h); const [A, B] = two(w, h);
+  const lk: Line[][] = [[['green ring: the ROC 2 < |z| < 3', col.ok()], ['blue ×: inside the ring → right-sided', col.a()], ['orange ×: outside → left-sided', col.b()], ['dashed: unit circle, not in the ROC', col.muted()]],
+    [['n ≥ 1: the ½ and −2 terms run forward', col.a()], ['n ≤ 0: the −3 term runs backward, shrinking', col.b()]]], n = heads(lk);
+  const p = planeIn(header(g, A, lk[0], n), 0, 0, 3.6);
   shadeRadius(g, p, 2, 3, GREEN); ring(g, p.X(0), p.Y(0), 2 * p.s, col.ok(), 1); ring(g, p.X(0), p.Y(0), 3 * p.s, col.ok(), 1);
   ring(g, p.X(0), p.Y(0), p.s, col.muted(), 1.2, [4, 3]); planeAxes(g, p, 'Re z', 'Im z'); reTicks(g, p, [-3, -2, 1, 2, 3]);
   cross(g, p.X(0.5), p.Y(0), col.a()); cross(g, p.X(-2), p.Y(0), col.a()); cross(g, p.X(-3), p.Y(0), col.b());
-  text(g, 'green ring: the ROC 2 < |z| < 3', 6, 8, col.ok(), 'left', 10);
-  text(g, 'dashed: unit circle, not in the ROC', p.X(0), p.Y(-1) + 12, col.muted(), 'center', 9);
-  text(g, 'blue ×: inside the ring → right-sided', p.l + 2, p.b - 16, col.a(), 'left', 9);
-  text(g, 'orange ×: outside → left-sided', p.l + 2, p.b - 4, col.b(), 'left', 9);
-  const ns = Array.from({ length: 9 }, (_, i) => i - 4), xs = ns.map(a1.x), f = rangeFrame(w, h, [-4.6, 4.6], [-2, 3.6], w * 0.5 + 34, 8, 18, 24);
-  axesAt(g, f, [-4.6, 4.6], [-2, 3.6], 'n', 'x(n)', 2, 1); stemsAt(g, f, ns, xs, (n) => (n >= 1 ? col.a() : col.b()));
-  text(g, 'n ≥ 1: the ½ and −2 terms run forward', f.box.r, f.box.t - 8, col.a(), 'right', 9);
-  text(g, 'n ≤ 0: the −3 term runs backward, shrinking', f.box.l + 2, f.Y(-1.4), col.b(), 'left', 9);
+  const ns = Array.from({ length: 9 }, (_, i) => i - 4), xs = ns.map(a1.x), f = frameIn(w, h, header(g, B, lk[1], n), [-4.6, 4.6], [-2, 3.6]);
+  axesAt(g, f, [-4.6, 4.6], [-2, 3.6], 'n', 'x(n)', 2, 1); stemsAt(g, f, ns, xs, (k) => (k >= 1 ? col.a() : col.b()));
 } };
 
 /* ---------- A2: a double pole at −3 and y = t e^(−3t) ---------- */
-const picA2: QuizFigureDef = { aspect: 2.1, maxWidth: 520, draw(g, w, h) {
-  g.clearRect(0, 0, w, h); const p = plane(4, 18, w * 0.46, h - 26, -2, 0, 3);
+const picA2: QuizFigureDef = { ...PH, draw(g, w, h) {
+  g.clearRect(0, 0, w, h); const [A, B] = two(w, h);
+  const lk: Line[][] = [[['green: ROC Re s > −3', col.ok()], ['red ×: the double pole at −3 (×2)', col.bad()], ['yellow dashed: the contour, closed left for t > 0', col.e()]],
+    [[`y = t e^(−3t): grows, peaks at t = 1/3 (${(1 / (3 * Math.E)).toFixed(3)}), decays`, col.a()]]], n = heads(lk);
+  const p = planeIn(header(g, A, lk[0], n), -2, 0, 3);
   shadeRe(g, p, -3, 99, GREEN); planeAxes(g, p, 'Re s', 'Im s'); reTicks(g, p, [-4, -3, -2, -1, 1]);
-  seg(g, p.X(-1.5), p.t, p.X(-1.5), p.b, col.e(), 1.4, [5, 3]);
-  cross(g, p.X(-3), p.Y(0), col.bad()); text(g, 'double pole (×2)', p.X(-3) - 6, p.Y(0) - 12, col.bad(), 'right', 9);
-  text(g, 'green: ROC Re s > −3', 6, 8, col.ok(), 'left', 10);
-  text(g, 'yellow: the contour,', p.X(-1.5) + 4, p.t + 22, col.e(), 'left', 9); text(g, 'closed left for t > 0', p.X(-1.5) + 4, p.t + 34, col.e(), 'left', 9);
-  const ts = linspace(0, 2, 201), f = rangeFrame(w, h, [0, 2], [0, 0.15], w * 0.5 + 40, 8, 18, 24);
+  seg(g, p.X(-1.5), p.t, p.X(-1.5), p.b, col.e(), 1.4, [5, 3]); cross(g, p.X(-3), p.Y(0), col.bad());
+  const ts = linspace(0, 2, 201), f = frameIn(w, h, header(g, B, lk[1], n), [0, 2], [0, 0.15], 44);
   axesAt(g, f, [0, 2], [0, 0.15], 't', 'y(t)', 0.5, 0.05); curve(g, f, ts, ts.map((t) => t * Math.exp(-3 * t)), col.a(), 2.4);
   dot(g, f, [1 / 3, 1 / (3 * Math.E)], col.e(), 4);
-  text(g, `y = t e^(−3t): grows, peaks at t = 1/3 (${(1 / (3 * Math.E)).toFixed(3)}), decays`, f.box.r, f.box.t - 8, col.a(), 'right', 9);
 } };
 
 /* ---------- A3: forced plus natural modes, y(n) from the recursion ---------- */
 export function a3y(N: number) { const y: number[] = []; for (let n = 0; n < N; n++) y.push(-0.75 * (y[n - 1] ?? 0) - 0.125 * (y[n - 2] ?? 0) + 0.5 ** n); return y; }
-const picA3: QuizFigureDef = { aspect: 2.1, maxWidth: 520, draw(g, w, h) {
-  g.clearRect(0, 0, w, h); const p = plane(4, 18, w * 0.46, h - 26, 0, 0, 1.25);
+const picA3: QuizFigureDef = { ...PH, draw(g, w, h) {
+  g.clearRect(0, 0, w, h); const [A, B] = two(w, h);
+  const lk: Line[][] = [[['green: ROC |z| > ½ · dashed: unit circle', col.ok()], ['orange ×: input mode (½)ⁿ', col.b()], ['blue ×: natural modes (−¼)ⁿ, (−½)ⁿ', col.a()]],
+    [['y(n): alternates (negative poles)', col.e()], ['and decays (all poles inside |z| = 1)', col.e()]]], n = heads(lk);
+  const p = planeIn(header(g, A, lk[0], n), 0, 0, 1.25);
   shadeRadius(g, p, 0.5, 99, GREEN); ring(g, p.X(0), p.Y(0), p.s, col.muted(), 1.2, [4, 3]); planeAxes(g, p, 'Re z', 'Im z'); reTicks(g, p, [-1, -0.5, 0.5, 1]);
   cross(g, p.X(0.5), p.Y(0), col.b()); cross(g, p.X(-0.25), p.Y(0), col.a()); cross(g, p.X(-0.5), p.Y(0), col.a());
-  text(g, 'green: ROC |z| > ½ · dashed: unit circle', 6, 8, col.ok(), 'left', 10);
-  text(g, 'orange ×: input mode (½)ⁿ', p.l + 2, p.b - 16, col.b(), 'left', 9);
-  text(g, 'blue ×: natural modes (−¼)ⁿ, (−½)ⁿ', p.l + 2, p.b - 4, col.a(), 'left', 9);
-  const ns = Array.from({ length: 9 }, (_, i) => i), ys = a3y(9), f = rangeFrame(w, h, [-0.6, 8.6], [-0.4, 1.1], w * 0.5 + 40, 8, 18, 24);
+  const ns = Array.from({ length: 9 }, (_, i) => i), ys = a3y(9), f = frameIn(w, h, header(g, B, lk[1], n), [-0.6, 8.6], [-0.4, 1.1]);
   axesAt(g, f, [-0.6, 8.6], [-0.4, 1.1], 'n', 'y(n)', 2, 0.5); stemsAt(g, f, ns, ys, () => col.e());
-  text(g, 'y(n): alternates (negative poles), all inside |z| = 1, so it decays', f.box.r, f.box.t - 8, col.e(), 'right', 9);
 } };
 
 /* ---------- A4: the optimal path through the saddle of the Hamiltonian system ---------- */
@@ -103,49 +119,46 @@ export const a4 = (() => {
   const x = (t: number) => phi(t)[0][0] + phi(t)[0][1] * l0, lam = (t: number) => phi(t)[1][0] + phi(t)[1][1] * l0;
   return { om, l0, x, lam, u: (t: number) => -lam(t) / 4, kStable: 4 * (6 + om), kUnstable: 4 * (6 - om) };
 })();
-const picA4: QuizFigureDef = { aspect: 2.1, maxWidth: 520, draw(g, w, h) {
-  g.clearRect(0, 0, w, h); const ts = linspace(0, 1, 201);
-  const f = rangeFrame(w, h, [0, 1], [-0.2, 2.2], 36, w * 0.5 + 6, 18, 24);
+const picA4: QuizFigureDef = { ...PH, draw(g, w, h) {
+  g.clearRect(0, 0, w, h); const [A, B] = two(w, h), ts = linspace(0, 1, 201);
+  const lk: Line[][] = [[['yellow: optimal x(t), parked near 0', col.e()], ['dashed: straight line x = 1 + t (cost 136 vs 24.2)', col.muted()]],
+    [[`yellow: the same path in (x, λ), from (1, ${a4.l0.toFixed(1)}) to x(1) = 2`, col.e()], ['blue dashed: stable direction (in) · orange: unstable (out)', col.muted()]]], n = heads(lk);
+  const f = frameIn(w, h, header(g, A, lk[0], n), [0, 1], [-0.2, 2.2], 40);
   axesAt(g, f, [0, 1], [-0.2, 2.2], 't', 'x(t)', 0.25, 0.5);
   curve(g, f, ts, ts.map((t) => 1 + t), col.muted(), 1.4, [5, 3]); curve(g, f, ts, ts.map(a4.x), col.e(), 2.6);
-  text(g, 'yellow: optimal x(t), parked near 0', f.box.l + 4, f.box.t - 8, col.e(), 'left', 9);
-  text(g, 'dashed: straight line (cost 136 vs 24.2)', f.box.l + 4, f.Y(1.9), col.muted(), 'left', 9);
-  const q = rangeFrame(w, h, [-0.2, 2.3], [-8, 55], w * 0.5 + 44, 8, 18, 24);
+  const q = frameIn(w, h, header(g, B, lk[1], n), [-0.2, 2.3], [-8, 55], 44);
   axesAt(g, q, [-0.2, 2.3], [-8, 55], 'x', 'λ', 0.5, 10);
-  const xx = linspace(-0.2, 2.3, 50); curve(g, q, xx, xx.map((v) => a4.kStable * v), col.a(), 1.2, [4, 3]); curve(g, q, xx, xx.map((v) => a4.kUnstable * v), col.b(), 1.2, [4, 3]);
+  const xx = linspace(-0.2, 2.3, 50); g.save(); g.beginPath(); g.rect(q.box.l, q.box.t, q.box.r - q.box.l, q.box.b - q.box.t); g.clip();
+  curve(g, q, xx, xx.map((v) => a4.kStable * v), col.a(), 1.2, [4, 3]); curve(g, q, xx, xx.map((v) => a4.kUnstable * v), col.b(), 1.2, [4, 3]); g.restore();
   curve(g, q, ts.map(a4.x), ts.map(a4.lam), col.e(), 2.4); dot(g, q, [1, a4.l0], col.bad(), 4); dot(g, q, [2, a4.lam(1)], col.ok(), 4);
-  text(g, 'blue: stable direction (in) · orange: unstable (out)', q.box.r, q.box.t - 8, col.muted(), 'right', 9);
-  text(g, `start (1, ${a4.l0.toFixed(1)})`, q.X(1) + 6, q.Y(a4.l0), col.bad(), 'left', 9);
-  text(g, 'end x(1) = 2', q.X(2) - 4, q.Y(a4.lam(1)) - 10, col.ok(), 'right', 9);
 } };
 
 /* ---------- B1: poles +1, −1, −2, zeros ±j, and the impulse response ---------- */
 export const b1y = (t: number) => Math.exp(t) / 3 - Math.exp(-t) + (5 / 3) * Math.exp(-2 * t);
-const picB1: QuizFigureDef = { aspect: 2.1, maxWidth: 520, draw(g, w, h) {
-  g.clearRect(0, 0, w, h); const p = plane(4, 18, w * 0.46, h - 26, -0.5, 0, 1.9);
+const picB1: QuizFigureDef = { ...PH, draw(g, w, h) {
+  g.clearRect(0, 0, w, h); const [A, B] = two(w, h);
+  const lk: Line[][] = [[['× poles (modes) · ○ zeros ±j', col.text()], ['red ×: +1, the unstable mode', col.bad()]], [['yellow: y(t), from y(0⁺) = 1', col.e()], ['red dashed: eᵗ/3, where it heads', col.bad()]]], n = heads(lk);
+  const p = planeIn(header(g, A, lk[0], n), -0.5, 0, 1.9);
   planeAxes(g, p, 'Re s', 'Im s'); reTicks(g, p, [-2, -1, 1]);
   cross(g, p.X(1), p.Y(0), col.bad()); cross(g, p.X(-1), p.Y(0), col.a()); cross(g, p.X(-2), p.Y(0), col.a());
   zero(g, p.X(0), p.Y(1), col.ok()); zero(g, p.X(0), p.Y(-1), col.ok());
-  text(g, '× poles (modes) · ○ zeros ±j', 6, 8, col.text(), 'left', 10);
-  text(g, 'red: +1, unstable', p.X(1), p.Y(0) + 16, col.bad(), 'center', 9);
-  const ts = linspace(0, 3, 241), f = rangeFrame(w, h, [0, 3], [0, 7.5], w * 0.5 + 34, 8, 18, 24);
+  const ts = linspace(0, 3, 241), f = frameIn(w, h, header(g, B, lk[1], n), [0, 3], [0, 7.5]);
   axesAt(g, f, [0, 3], [0, 7.5], 't', 'y(t)', 1, 2);
   curve(g, f, ts, ts.map((t) => Math.exp(t) / 3), col.bad(), 1.3, [5, 3]); curve(g, f, ts, ts.map(b1y), col.e(), 2.4);
-  text(g, 'yellow: y(t), from y(0⁺) = 1', f.box.l + 4, f.box.t - 8, col.e(), 'left', 9);
-  text(g, 'dashed: eᵗ/3, where it heads', f.box.l + 4, f.Y(5.6), col.bad(), 'left', 9);
 } };
 
 /* ---------- B2: a sensor as a projection; it misses the mode it is perpendicular to ---------- */
 export const b2 = { v: [[-2, 4, 1], [0, 1, 1], [0, 0, 1]], lam: [-1, -2, -3], read: (f: number, gg: number) => b2.v.map((v) => f * v[1] + gg * v[2]) };
-const picB2: QuizFigureDef = { aspect: 2.1, maxWidth: 520, draw(g, w, h) {
-  g.clearRect(0, 0, w, h); const p = plane(w * 0.04, 22, w * 0.92, h - 30, 1.9, 0.55, 1.35);
-  planeAxes(g, p, 'x₂', 'x₃'); const fS = 1, gS = 0, r = b2.read(fS, gS);
-  seg(g, p.X(0), p.t, p.X(0), p.b, col.bad(), 2.4, [6, 4]);
-  arrow(g, p.X(0), p.Y(0), p.X(1.2), p.Y(0), col.ok(), 2.6);
-  const cs = [col.a(), col.b(), col.c()];
-  b2.v.forEach((v, i) => { arrow(g, p.X(0), p.Y(0), p.X(v[1]), p.Y(v[2]), cs[i], 2); text(g, `λ = ${String(b2.lam[i]).replace('-', '−')}: reads ${r[i]}`, p.X(v[1]) + 6, p.Y(v[2]) - (i === 2 ? 2 : 8), cs[i], 'left', 9); });
-  text(g, 'green: sensor y = f x₂ + g x₃ with f = 1, g = 0', 6, 8, col.ok(), 'left', 10);
-  text(g, 'red dashed: its blind line (perpendicular); the λ = −3 mode lies on it', p.X(0) + 6, p.b - 6, col.bad(), 'left', 9);
+const picB2: QuizFigureDef = { aspect: 2.1, phoneAspect: 1.6, maxWidth: 520, draw(g, w, h) {
+  g.clearRect(0, 0, w, h); const r = b2.read(1, 0), cs = [col.a(), col.b(), col.c()];
+  const body = header(g, { x: 0, y: 0, w, h }, [['green arrow: sensor y = f x₂ + g x₃ with f = 1, g = 0', col.ok()], ['red dashed: its blind line (perpendicular); the λ = −3 mode lies on it', col.bad()],
+    [b2.v.map((_, i) => `λ = ${String(b2.lam[i]).replace('-', '−')} reads ${r[i]}`).join(' · '), col.text()]]);
+  // fit x₂ ∈ [−0.4, 4.4] and x₃ ∈ [−0.25, 1.35] whatever the shape (stacked phone or wide)
+  const pw = body.w - 20, ph = body.h - 4, sc = Math.min(pw / 4.8, ph / 1.6), p = plane(body.x + 10, body.y, pw, ph, 2, 0.55, ph / (2 * sc));
+  planeAxes(g, p, 'x₂', 'x₃');
+  seg(g, p.X(0), p.t, p.X(0), p.b, col.bad(), 2.4, [6, 4]); arrow(g, p.X(0), p.Y(0), p.X(1.2), p.Y(0), col.ok(), 2.6);
+  b2.v.forEach((v, i) => { arrow(g, p.X(0), p.Y(0), p.X(v[1]), p.Y(v[2]), cs[i], 2); const right = p.X(v[1]) > (p.l + p.r) / 2;
+    text(g, `λ = ${String(b2.lam[i]).replace('-', '−')}`, p.X(v[1]) + (right ? -4 : 6), p.Y(v[2]) - 9, cs[i], right ? 'right' : 'left', 9.5); });
 } };
 
 /* ---------- integrator chains (phase-variable realizations) ---------- */
@@ -189,29 +202,31 @@ const picSpkChain: QuizFigureDef = { aspect: 2.0, maxWidth: 520, draw(g, w, h) {
   text(g, 'u = V (volts) · per ms units · orange: A’s last row', 4, h - 4, col.muted(), 'left', 9);
 } };
 
+
 /* ---------- worked examples in the dives ---------- */
 /** roc: h = e^(−t)u(t) (Re s > −1) convolved with x = e^(2t)u(−t) (Re s < 2): Y's ROC is the strip */
 export const rocY = (t: number) => (t >= 0 ? Math.exp(-t) / 3 : Math.exp(2 * t) / 3);
-const picRocStrip: QuizFigureDef = { aspect: 2.1, maxWidth: 520, draw(g, w, h) {
-  g.clearRect(0, 0, w, h); const p = plane(4, 18, w * 0.46, h - 26, 0.5, 0, 2.2);
+const picRocStrip: QuizFigureDef = { ...PH, draw(g, w, h) {
+  g.clearRect(0, 0, w, h); const [A, B] = two(w, h);
+  const lk: Line[][] = [[['blue: h’s ROC Re s > −1', col.a()], ['orange: x’s ROC Re s < 2', col.b()], ['yellow: the overlap −1 < Re s < 2, Y’s ROC', col.e()]],
+    [['y is two-sided (a strip ROC):', col.e()], ['⅓e^(2t) for t < 0', col.b()], ['⅓e^(−t) for t > 0', col.a()]]], n = heads(lk);
+  const p = planeIn(header(g, A, lk[0], n), 0.5, 0, 2.2);
   shadeRe(g, p, -1, 99, BLUE); shadeRe(g, p, -99, 2, ORANGE); shadeRe(g, p, -1, 2, 'rgba(255,220,90,.10)'); planeAxes(g, p, 'Re s', 'Im s'); reTicks(g, p, [-2, -1, 1, 2, 3]);
   seg(g, p.X(-1), p.t, p.X(-1), p.b, col.a(), 1.2, [4, 3]); seg(g, p.X(2), p.t, p.X(2), p.b, col.b(), 1.2, [4, 3]);
   cross(g, p.X(-1), p.Y(0), col.a()); cross(g, p.X(2), p.Y(0), col.b());
-  text(g, 'blue: h’s ROC Re s > −1 · orange: x’s Re s < 2', 6, 8, col.text(), 'left', 10);
-  text(g, 'overlap: −1 < Re s < 2', p.X(0.5), p.b - 6, col.e(), 'center', 9);
-  const ts = linspace(-2.5, 3, 221), f = rangeFrame(w, h, [-2.5, 3], [0, 0.42], w * 0.5 + 40, 8, 18, 24);
-  axesAt(g, f, [-2.5, 3], [0, 0.42], 't', 'y(t)', 1, 0.1); curve(g, f, ts, ts.map(rocY), col.e(), 2.4);
-  text(g, 'a strip ROC: y is two-sided', f.box.r, f.box.t - 8, col.e(), 'right', 9);
-  text(g, '⅓e^(2t), t < 0', f.X(-1.2), f.Y(0.2), col.b(), 'center', 9); text(g, '⅓e^(−t), t > 0', f.X(1.7), f.Y(0.2), col.a(), 'center', 9);
+  const ts = linspace(-2.5, 3, 221), f = frameIn(w, h, header(g, B, lk[1], n), [-2.5, 3], [0, 0.42]);
+  axesAt(g, f, [-2.5, 3], [0, 0.42], 't', 'y(t)', 1, 0.1);
+  curve(g, f, ts.filter((t) => t <= 0), ts.filter((t) => t <= 0).map(rocY), col.b(), 2.4); curve(g, f, ts.filter((t) => t >= 0), ts.filter((t) => t >= 0).map(rocY), col.a(), 2.4);
 } };
 /** sampling: cos(2π·5t) sampled at 6 Hz gives the same samples as cos(2π·1t) */
 export const alias56 = { fs: 6, f: 5, fa: 1, n: Array.from({ length: 7 }, (_, n) => n) };
-const picAlias: QuizFigureDef = { aspect: 2.3, maxWidth: 520, draw(g, w, h) {
-  g.clearRect(0, 0, w, h); const ts = linspace(0, 1, 600), f = rangeFrame(w, h, [0, 1], [-1.25, 1.45], 40, 10, 10, 26);
-  axesAt(g, f, [0, 1], [-1.25, 1.45], 't (s)', 'x', 1 / 6, 0.5, (t) => `${Math.round(t * 6)}/6`);
+const picAlias: QuizFigureDef = { aspect: 2.3, phoneAspect: 1.5, maxWidth: 520, draw(g, w, h) {
+  g.clearRect(0, 0, w, h); const body = header(g, { x: 0, y: 0, w, h }, [['blue: 5 Hz · orange dashed: 1 Hz', col.text()], ['yellow: the samples at 6 Hz, shared by both', col.e()]]);
+  const ts = linspace(0, 1, 600), f = frameIn(w, h, body, [0, 1], [-1.25, 1.25]);
+  // ticks at n/6 from integers (adding 1/6 six times misses 3/6 by rounding)
+  axesAt(g, f, [0, 1], [-1.25, 1.25], 't (s)', 'x', 1 / 6, 0.5, (t) => `${Math.round(t * 6)}/6`);
   curve(g, f, ts, ts.map((t) => Math.cos(TAU * 5 * t)), col.a(), 1.3); curve(g, f, ts, ts.map((t) => Math.cos(TAU * t)), col.b(), 2.2, [6, 4]);
   for (const n of alias56.n) dot(g, f, [n / 6, Math.cos((TAU * 5 * n) / 6)], col.e(), 4.5);
-  text(g, 'blue: 5 Hz · orange dashed: 1 Hz · yellow: samples at 6 Hz, shared by both', f.box.l + 4, f.box.t + 6, col.text(), 'left', 10);
 } };
 
 export const reviewPictures: Record<string, QuizFigureDef> = {

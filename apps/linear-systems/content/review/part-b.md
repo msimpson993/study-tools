@@ -40,7 +40,7 @@ $$y(t)=\Big(\tfrac13e^{t}-e^{-t}+\tfrac53e^{-2t}\Big)u(t)$$
 
 **Picture it.** Three modes on the real axis at +1, −1 and −2. The impulse kicks the state to $B = e_3$; that point splits into the three eigen-directions, each evolving at its own rate. The +1 mode is unstable, so $y$ eventually grows like $e^t/3$. The zeros at $\pm j$ (from $C = [1\ 0\ 1]$) cancel no pole, so all three modes show in $y$.
 
-```picture:pic-rev-b1 Left: poles +1, −1, −2 and zeros ±j. Right: the impulse response y(t), which heads for eᵗ/3.
+```picture:pic-rev-b1 Left (top on a phone): poles +1, −1, −2 and zeros ±j. Right (below on a phone): the impulse response y(t), which heads for eᵗ/3.
 s-plane with one unstable pole at +1, two stable poles and zeros on the imaginary axis; y(t) starts at 1 and grows like e to the t over 3.
 ```
 

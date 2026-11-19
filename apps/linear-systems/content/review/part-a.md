@@ -40,7 +40,7 @@ Sample values for $n = -3,\dots,4$: −0.003527, 0.010582, −0.031746, 0.095238
 
 **Picture it.** Three poles on the real axis; the ring $2<|z|<3$ sits between the second and third. Each pole looks either inward or outward from the ring: inward poles give terms that run forward in time, the outward pole gives a term that runs backward, where $(-3)^{n-1}$ shrinks as $n \to -\infty$. The unit circle is not in the ring, so this $x(n)$ has no DTFT.
 
-```picture:pic-rev-a1 Left: the poles ½, −2 (inside the ring, blue) and −3 (outside, orange), the ROC ring 2 < |z| < 3 and the unit circle. Right: x(n) for n = −4…4.
+```picture:pic-rev-a1 Left (top on a phone): the poles ½, −2 (inside the ring, blue) and −3 (outside, orange), the ROC ring 2 < |z| < 3 and the unit circle. Right (below on a phone): x(n) for n = −4…4.
 z-plane with the ring ROC between radius 2 and 3, and the stems of x(n): left-sided for n ≤ 0, right-sided for n ≥ 1.
 ```
 
@@ -63,7 +63,7 @@ $$y(t)=t\,e^{-3t}u(t)$$
 
 **Picture it.** One double pole at −3, and the ROC is the half-plane to its right. A repeated pole is what you get when you feed a system its own natural mode: $t e^{-3t}$ first grows, then decays, the continuous-time version of driving a system at its eigenvalue.
 
-```picture:pic-rev-a2 Left: the double pole at −3, the ROC Re s > −3 and the Bromwich contour. Right: y(t) = t e^(−3t), peaking at t = 1/3.
+```picture:pic-rev-a2 Left (top on a phone): the double pole at −3, the ROC Re s > −3 and the Bromwich contour. Right (below on a phone): y(t) = t e^(−3t), peaking at t = 1/3.
 s-plane with a double pole at −3 and the ROC to its right; the response t e^(−3t) rises, peaks at t = 1/3 and decays.
 ```
 
@@ -90,7 +90,7 @@ $y(0), y(1), y(2) = 1,\ -0.25,\ 0.3125$ and $y(3), y(4), y(5) = -0.078125,\ 0.08
 
 **Picture it.** The output is the input's mode $(\tfrac12)^n$ plus the system's natural modes $(-\tfrac14)^n$ and $(-\tfrac12)^n$: forced plus homogeneous. The system poles sit on the negative real axis, so the natural modes alternate in sign; everything is inside the unit circle, so it all decays.
 
-```picture:pic-rev-a3 Left: the input pole ½ (orange) and the system poles −¼, −½ (blue), all inside the unit circle. Right: y(n) for n = 0…8 from the recursion.
+```picture:pic-rev-a3 Left (top on a phone): the input pole ½ (orange) and the system poles −¼, −½ (blue), all inside the unit circle. Right (below on a phone): y(n) for n = 0…8 from the recursion.
 z-plane with three poles inside the unit circle, and stems of y(n) that alternate in sign and decay.
 ```
 
@@ -123,7 +123,7 @@ The Hamiltonian convention does not change the answer. With $H = \tfrac12L + \la
 
 **Picture it.** The plant is violently unstable ($e^{6t}$): left alone, $x$ would reach $e^6 \approx 403$. The optimal input pushes hard down first ($u^\circ(0) \approx -12$), parks $x$ near zero where $x^2$ is cheap, then lets the instability carry it up to 2 at the end. In the $(x,\lambda)$ plane the origin is a saddle (eigenvalues $\pm\omega$): the path rides in along the stable eigenvector and peels off along the unstable one.
 
-```picture:pic-rev-a4 Left: the optimal x(t) against the straight line x = 1 + t. Right: the same path in the (x, λ) plane, in along the stable eigenvector and out along the unstable one.
+```picture:pic-rev-a4 Left (top on a phone): the optimal x(t) against the straight line x = 1 + t. Right (below on a phone): the same path in the (x, λ) plane, in along the stable eigenvector and out along the unstable one.
 The optimal state dips to near zero and climbs to 2 at t = 1; in the (x, λ) plane it rides the saddle's two eigenvector lines.
 ```
 

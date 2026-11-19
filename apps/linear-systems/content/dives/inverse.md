@@ -70,7 +70,7 @@ If X(z) has a factor z upstairs, expand X(z)/z instead and use z/(z − a) ↔ a
 
 $$x(n)=\Big[\tfrac{4}{35}\big(\tfrac12\big)^{n-1}-\tfrac25(-2)^{n-1}\Big]u(n-1)-\tfrac27(-3)^{n-1}u(-n).$$
 
-```picture:pic-rev-a1 Left: the poles ½ and −2 inside the ring (blue, right-sided) and −3 outside (orange, left-sided). Right: x(n) for n = −4…4.
+```picture:pic-rev-a1 Left (top on a phone): the poles ½ and −2 inside the ring (blue, right-sided) and −3 outside (orange, left-sided). Right (below on a phone): x(n) for n = −4…4.
 z-plane with the ring ROC between radius 2 and 3, and the stems of x(n).
 ```
 

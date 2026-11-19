@@ -63,7 +63,7 @@ The Laplace integral ∫x(t)e^(−st)dt converges only for some s, because e^(�
 
 **Exam-style example.** Convolution multiplies transforms, and the ROC of the product contains the overlap of the two ROCs. h = e^(−t)u(t) has Re s > −1 and x = e^(2t)u(−t) has Re s < 2, so Y = −1/((s + 1)(s − 2)) has ROC −1 < Re s < 2: a strip, so y is two-sided, y = ⅓e^(−t)u(t) + ⅓e^(2t)u(−t).
 
-```picture:pic-ex-roc-strip Left: h's ROC Re s > −1 (blue) and x's Re s < 2 (orange) overlap in the strip −1 < Re s < 2. Right: the two-sided y(t).
+```picture:pic-ex-roc-strip Left (top on a phone): h's ROC Re s > −1 (blue) and x's Re s < 2 (orange) overlap in the strip −1 < Re s < 2. Right (below on a phone): the two-sided y(t).
 The s-plane with two half-planes overlapping in a vertical strip, and y(t) rising as e^(2t)/3 before 0 and decaying as e^(−t)/3 after.
 ```
 
