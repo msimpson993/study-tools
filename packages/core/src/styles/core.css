@@ -299,3 +299,9 @@ details.st-more .st-badge{display:inline-block;margin-left:.35rem;padding:0 .4re
 .glance ol{margin:.1rem 0 0 1.2rem;padding:0;font:.92rem/1.55 system-ui,sans-serif}.glance a{color:var(--text)}
 details.derivation{margin:.7rem 0}details.derivation>summary{font-weight:650}
 .check-yourself{margin-top:1rem}
+/* opt-in sound players (audio.ts) */
+.pop-audio{display:grid;gap:.4rem;margin:.4rem 0}.aud{border:1px solid var(--border);border-radius:10px;padding:.45rem .5rem;background:var(--panel2)}
+.aud-bar{display:flex;flex-wrap:wrap;gap:.35rem;align-items:center}.aud-play.on{outline:2px solid var(--accent)}
+.aud-vol,.aud-ctl{display:flex;align-items:center;gap:.4rem;font-size:.8rem;color:var(--muted)}.aud-vol input{width:5.5rem}
+.aud-ctl{margin-top:.3rem}.aud-ctl input{flex:1;min-width:0}.aud-ctl output{min-width:4.5em;text-align:right;color:var(--text)}
+.aud canvas{background:var(--panel);border:1px solid var(--border);border-radius:8px}.aud-note{font-size:.75rem;color:var(--muted);margin:.25rem 0 0;line-height:1.3}

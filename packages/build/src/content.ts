@@ -114,7 +114,7 @@ export function loadApp(appDir: string): { content: AppContent; warnings: string
           addsToExample: n.addsToExample ? inline(n.addsToExample, `${m.id}/${n.id}`) : undefined,
           accountsFor: n.accountsFor ? inline(n.accountsFor, `${m.id}/${n.id}`) : undefined,
           exampleScene: n.exampleScene, dive: n.dive, live: n.live, quizTag: n.quizTag, link: n.link,
-          ...(n.pop ? { pop: { rough: inline(n.pop.rough, `${m.id}/${n.id} pop`), eqKey: n.pop.eqKey ? inline(n.pop.eqKey, `${m.id}/${n.id} pop`) : undefined, figures: n.pop.figures, example: n.pop.example ? inline(n.pop.example, `${m.id}/${n.id} pop`) : undefined, next: n.pop.next ? inline(n.pop.next, `${m.id}/${n.id} pop`) : undefined, ask: n.pop.ask } } : {}),
+          ...(n.pop ? { pop: { rough: inline(n.pop.rough, `${m.id}/${n.id} pop`), eqKey: n.pop.eqKey ? inline(n.pop.eqKey, `${m.id}/${n.id} pop`) : undefined, figures: n.pop.figures, audio: n.pop.audio, example: n.pop.example ? inline(n.pop.example, `${m.id}/${n.id} pop`) : undefined, next: n.pop.next ? inline(n.pop.next, `${m.id}/${n.id} pop`) : undefined, ask: n.pop.ask } } : {}),
         })),
         edges: (m.edges ?? []).map((e: any) => ({
           from: e.from, to: e.to, label: e.label, dashed: e.dashed, eq: e.eq, ...(e.reverse ? { reverse: true } : {}),
@@ -185,6 +185,7 @@ export function loadApp(appDir: string): { content: AppContent; warnings: string
     if (n.pop?.ask && !qids.has(n.pop.ask)) problems.push(`graph.yaml ${m.id}/${n.id}: pop.ask "${n.pop.ask}" is not a quiz id`);
     const listed = subject.quizFigures;
     for (const f of n.pop?.figures ?? []) if (listed && !listed.includes(f.id)) problems.push(`graph.yaml ${m.id}/${n.id}: pop figure "${f.id}" is not in subject.yaml quizFigures`);
+    for (const a of n.pop?.audio ?? []) if (!subject.audio?.includes(a)) problems.push(`graph.yaml ${m.id}/${n.id}: pop audio "${a}" is not in subject.yaml audio`);
   }
   for (const d of dives) for (const id of d.check ?? []) if (!qids.has(id)) problems.push(`dives/${d.id}.md: check "${id}" is not a quiz id`);
 

@@ -26,7 +26,10 @@ export interface MapNav {
   onState?(): void;
   /** renderers for pop-up figures (`node.pop.figures`); the same registry as quiz figures */
   figures?: QuizFigureRegistry;
+  /** opt-in sound players for `node.pop.audio` (see audio.ts: audioHook) */
+  audio?: PopAudioHook;
 }
+export interface PopAudioHook { mount(id: string): { el: HTMLElement; destroy(): void } }
 
 /** localStorage key of the map view choice; shared by every app on the origin */
 export const MAP_VIEW_KEY = 'study-tools.mapView';
@@ -302,6 +305,11 @@ export function mountConceptMap(host: HTMLElement, content: AppContent, progress
       const strip = h('div', { class: `pop-figs n${narrow}`, dataset: { testid: 'pop-figures' } });
       for (const f of p.figures) { const mf = mountQuizFigure(f, nav.figures); popStops.push(mf.destroy); if (wide(f)) mf.el.style.gridColumn = '1 / -1'; strip.append(mf.el); }
       out.push(strip);
+    }
+    if (p.audio?.length && nav.audio) {
+      const box = h('div', { class: 'pop-audio', dataset: { testid: 'pop-audio' } });
+      for (const id of p.audio) { const a = nav.audio.mount(id); popStops.push(a.destroy); box.append(a.el); }
+      out.push(box);
     }
     const ex = p.example ?? n.addsToExample;
     if (ex) out.push(row('pop-example', 'On the running example:', ex, 'adds-to-example'));

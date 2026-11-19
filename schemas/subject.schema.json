@@ -381,6 +381,14 @@
           }
         }
       }
+    },
+    "audio": {
+      "type": "array",
+      "description": "opt-in sound examples this app registers (audio.ts); pop.audio ids are validated against it",
+      "items": {
+        "type": "string",
+        "pattern": "^[A-Za-z0-9_-]+$"
+      }
     }
   }
 }

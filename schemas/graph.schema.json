@@ -284,6 +284,14 @@
                     "ask": {
                       "type": "string",
                       "description": "quiz id of the one intuition question"
+                    },
+                    "audio": {
+                      "type": "array",
+                      "description": "opt-in sound players (ids from subject.yaml audio)",
+                      "items": {
+                        "type": "string",
+                        "pattern": "^[A-Za-z0-9_-]+$"
+                      }
                     }
                   }
                 }

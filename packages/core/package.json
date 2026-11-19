@@ -11,6 +11,8 @@
     "./theme.css": "./src/styles/theme.css",
     "./styles.css": "./src/styles/core.css",
     "./models": "./src/sceneLsModels.ts",
-    "./car": "./src/carModel.ts"
+    "./car": "./src/carModel.ts",
+    "./audio": "./src/audio.ts",
+    "./audio-dsp": "./src/audioDsp.ts"
   }
 }

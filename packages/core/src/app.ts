@@ -8,6 +8,7 @@ import { mountConceptMap, newMapState, type MapState } from './conceptmap';
 import { miniCheck } from './minicheck';
 import { mountQuiz } from './quiz';
 import type { QuizFigureRegistry } from './quizfig';
+import type { PopAudioHook } from './conceptmap';
 import { ControlSet } from './controls';
 import { createFullscreen, replaceUrl } from './fullscreen';
 import { setRefContent, pickFromHash, mapHashFor, isMapHash, copyRefButton, diveReference } from './copyref';
@@ -18,6 +19,8 @@ export interface AppHooks {
   figures?: Record<string, (host: HTMLElement, def: FigureDef, controls: ControlSet) => (() => void) | void>;
   /** Renderers for quiz questions with a `figure:` (id → def); see quizfig.ts. */
   quizFigures?: QuizFigureRegistry;
+  /** Opt-in sound examples for map pop-ups: the app imports `audioHook(registry)` from '@study/core/audio' (so apps without sound never bundle it). */
+  audio?: PopAudioHook;
   /** Mount the app's single custom board view lazily (kept alive while hidden). */
   board?: (host: HTMLElement, params: URLSearchParams) => BoardHandle;
 }
@@ -108,6 +111,7 @@ export function mountApp(content: AppContent, hooks: AppHooks = {}): void {
     },
     openQuiz: (tags: string[], title: string) => go(`/quiz?tags=${encodeURIComponent(tags.join(','))}&title=${encodeURIComponent(title)}`),
     figures: hooks.quizFigures,
+    audio: hooks.audio,
     onState: () => {
       if (!isMapHash(location.hash || '#/')) return;
       const want = mapHashFor(mapState.pick);
