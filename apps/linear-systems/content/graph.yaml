@@ -114,17 +114,11 @@ maps:
       rough: output now = Σ past input × how much is still remembered
       figures:
       - id: pop-kick
-        params:
-          frame: 1
-        alt: "One click makes the cone ring: the impulse response h(t)."
-        caption: (a) One click
-      - id: pop-kick
+        alt: "A 1 ms pulse is four clicks; each makes a ring h(t), and the motion is the sum of the four shifted rings."
         params:
           frame: 2
-        alt: A 1 ms pulse is four clicks; the motion is the sum of four shifted rings.
-        caption: (b) Four clicks
-      figCaption: "<b>(a)</b> One click (bar) makes h(t): the cone rings and dies away. <b>(b)</b> A 1 ms pulse = four quarter-size clicks; their copies of h (thin) add up to the motion (thick)."
-      example: A click rings the cone at 688 Hz for a few milliseconds (717 Hz undamped; damping slows the ring to 688 Hz).
+      figCaption: A 1 ms pulse is four quarter-size clicks (bars). Each makes a copy of the ring h(t) (thin); the copies add up to the motion (thick).
+      example: A click rings the cone at 688 Hz for a few milliseconds.
       ask: pop-kick
     addsToExample: "Clicks the speaker: one voltage click makes the diaphragm ring at 688 Hz (717 Hz undamped; damping slows the ring) for a few milliseconds. That ring is h(t)."
     accountsFor: "Why the speaker's response to music, or to anti-noise, can be predicted from that one ring."
@@ -142,7 +136,7 @@ maps:
       figures:
       - id: pop-gain
         alt: "The earbud's gain against pitch: about 1 in the bass, a peak of ×1.85 near 658 Hz, falling to ×0.06 at 3 kHz."
-        caption: (a) Gain against pitch
+        caption: (a)
       - id: pop-cone
         params:
           f: 200
@@ -159,7 +153,7 @@ maps:
         alt: At 3 kHz the cone barely moves (×0.06) and lags almost half a cycle.
         caption: (d)
       figCaption: "<b>(a)</b> Gain against pitch. <b>(b–d)</b> At each marked pitch, drive (dashed) and motion (solid) are one sine, scaled and shifted."
-      example: "×1.07 at 200 Hz; ×1.85 at the 658 Hz gain peak, a little below the 717 Hz natural frequency; almost nothing above 1 kHz. fₙ = 717 Hz: undamped; f_d = 688 Hz: a click's damped ring; 658 Hz: the loudest steady tone."
+      example: "×1.07 at 200 Hz, ×1.85 at the 658 Hz peak (just below the 717 Hz natural frequency), almost nothing above 1 kHz."
       ask: pop-tone
     addsToExample: "Plays a 500 Hz tone: after a brief transient the diaphragm moves at exactly 500 Hz, scaled by |H| and delayed by ∠H."
     accountsFor: "Why a speaker never changes the pitch of a note, only its loudness and timing."
@@ -169,7 +163,7 @@ maps:
     detail: "Series, FT, DTFT, DFT"
     kind: box
     series: 1
-    short: "Write it as a sum of sines: Fourier analysis gives the amount of each pitch, and each sine passes through on its own (Box 6), scaled and delayed. Versions: Fourier series, Fourier transform, DTFT (discrete-time Fourier transform) and DFT (discrete Fourier transform); they and two catches, aliasing and leakage, are in Full detail. See also the <a href=\"#/s/picture\">Broader picture</a> and the <a href=\"#/s/figures\">Live figures</a>."
+    short: "Write it as a sum of sines: Fourier analysis gives the amount of each pitch, and each sine passes through on its own (Box 6), scaled and delayed. Its four versions and two catches (aliasing, leakage) are in Full detail. See also <a href=\"#/s/picture\">Broader picture</a> and <a href=\"#/s/figures\">Live figures</a>."
     pop: &id010
       audio:
       - snd-square
@@ -249,7 +243,7 @@ maps:
     detail: Eigenvectors of A
     kind: box
     series: 2
-    short: "Look along special directions: an eigenvector v of A is one that A only stretches, by its eigenvalue λ. Started there, the state stays on it and moves as e^(λt), a mode, like a tone keeping its shape. Any state is a mix of modes. The eigenvalues are the poles: e^(λt) is a pole's rhythm e^(pt) (Box 13: a mode can hide)."
+    short: "Look along special directions: an eigenvector v of A is one that A only stretches, by its eigenvalue λ. Started there, the state stays on it and moves as e^(λt), a mode, like a tone keeping its shape. The eigenvalues are the poles (Box 13: a mode can hide)."
     eq: Av = λv
     pop: &id016
       rough: state = Σ amount × mode shape × e^(λt)
@@ -324,7 +318,7 @@ maps:
       - id: pop-caropt
         alt: "Active suspension: least-energy front and rear forces that level the body from 2° nose-down in 0.5 s."
       figCaption: "Active suspension: the least-energy forces that level the body from 2° nose-down in 0.5 s. Both swing in sign; the front dips to −476 N at 0.28 s, the rear to −652 N at the end."
-      example: "E = 96,160 N²·s: the least total squared force over the move (front² + rear², summed over the 0.5 s). Why two actuators and enough time matter: the front actuator alone needs 12.9 kN peaks, and given 1 s, about 120 N is enough."
+      example: "E = 96,160 N²·s: the least total squared force over the move (front² + rear², summed over the 0.5 s)."
       next: "Which application? Full detail opens filters, feedback and optimal control."
       ask: c-opt-3
     addsToExample: "Finds the least-energy front and rear actuator forces that level the body from 2° nose-down in 0.5 s: peaks of 476 N and 652 N."
@@ -539,7 +533,7 @@ maps:
     detail: "Series, FT, DTFT, DFT"
     kind: box
     series: 1
-    short: "Write it as a sum of sines: Fourier analysis gives the amount of each pitch, and each sine passes through on its own (Box 6), scaled and delayed. Versions: Fourier series, Fourier transform, DTFT (discrete-time Fourier transform) and DFT (discrete Fourier transform); they and two catches, aliasing and leakage, are in Full detail. See also the <a href=\"#/s/picture\">Broader picture</a> and the <a href=\"#/s/figures\">Live figures</a>."
+    short: "Write it as a sum of sines: Fourier analysis gives the amount of each pitch, and each sine passes through on its own (Box 6), scaled and delayed. Its four versions and two catches (aliasing, leakage) are in Full detail. See also <a href=\"#/s/picture\">Broader picture</a> and <a href=\"#/s/figures\">Live figures</a>."
     pop: *id010
     addsToExample: "Plays a 200 Hz square buzz (±1 V) into the earbud: harmonics of 1.27, 0.42 and 0.25 V at 200, 600 and 1000 Hz, scaled ×1.07, ×1.79 and ×0.81 by the earbud."
     accountsFor: "Why earbuds sound the way they do across the band, and which frequencies the ANC has to fight."
@@ -583,7 +577,7 @@ maps:
     detail: Eigenvectors of A
     kind: box
     series: 2
-    short: "Look along special directions: an eigenvector v of A is one that A only stretches, by its eigenvalue λ. Started there, the state stays on it and moves as e^(λt), a mode, like a tone keeping its shape. Any state is a mix of modes. The eigenvalues are the poles: e^(λt) is a pole's rhythm e^(pt) (Box 13: a mode can hide)."
+    short: "Look along special directions: an eigenvector v of A is one that A only stretches, by its eigenvalue λ. Started there, the state stays on it and moves as e^(λt), a mode, like a tone keeping its shape. The eigenvalues are the poles (Box 13: a mode can hide)."
     eq: Av = λv
     pop: *id016
     addsToExample: "Finds the pieces both examples only scale: tones for the speaker, and the bounce and pitch modes for the car."

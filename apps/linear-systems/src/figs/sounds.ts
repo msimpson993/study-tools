@@ -50,14 +50,14 @@ export const sounds: AudioRegistry = {
         text(g, `3rd harmonic ${harmonicDb(v.v, 3).toFixed(0)} dB`, w - 8, 8, col.b(), 'right', 10); } },
   },
   'snd-ping': {
-    label: 'Play the earbud ping', note: `Hear it: four short ticks, ${spk().fd.toFixed(0)} Hz rings gone in milliseconds.`,
+    label: 'Play the earbud ping', note: 'Hear it: four short ticks, each ring gone in milliseconds.',
     render: (fs) => pings(fs, 1, 4, 0.3),
     view: { aspect: 2.4, alt: 'The earbud impulse response h(t) over the first 5 ms.',
       draw(g, w, h) { const ts = linspace(0, 5, 301), ys = ts.map((t) => hImp(t)), m = Math.max(...ys.map(Math.abs)) * 1.1, f = fr(g, w, h, [0, 5], [-m, m], 't (ms)', 'h');
         curve(g, f, ts, ys, col.a(), 2); text(g, `rings at ${spk().fd.toFixed(1)} Hz, τ = ${(1 / spk().sigma).toFixed(2)} ms`, w - 8, 8, col.text(), 'right', 10); } },
   },
   'snd-ping-x': {
-    label: 'EXAGGERATED: play a low-damping ping', note: `Not the real earbud: 3% damping, so you hear the ring's pitch.`,
+    label: 'EXAGGERATED: play a low-damping ping', note: `3% damping, not the real earbud's, so you hear the ring's pitch.`,
     render: (fs) => pings(fs, 0.03, 3, 0.6),
     view: { aspect: 2.4, alt: 'An exaggerated, lightly damped ring over 60 ms.',
       draw(g, w, h) { const ts = linspace(0, 60, 1201), ys = ts.map((t) => hImp(t, 0.03)), m = Math.max(...ys.map(Math.abs)) * 1.1, f = fr(g, w, h, [0, 60], [-m, m], 't (ms)', 'h');
@@ -77,7 +77,7 @@ export const sounds: AudioRegistry = {
         else text(g, `peak ${Math.max(...ys).toFixed(1)} dB`, w - 8, 8, col.text(), 'right', 10); } },
   },
   'snd-square': {
-    label: 'Play the square-wave build-up', note: 'Hear a 200 Hz tone turn into a buzz as harmonics are added.',
+    label: 'Play the square-wave build-up', note: 'Hear a 200 Hz tone become a buzz as harmonics add.',
     controls: [{ key: 'n', label: 'odd harmonics', min: 1, max: 15, step: 1, value: 1, fmt: (v) => `${v} (to ${(2 * v - 1) * 200} Hz)` }],
     render: (fs, v) => squarePartial(fs, v.n),
     view: { aspect: 2.4, alt: 'Two periods of the partial sum and the ideal square wave.',
