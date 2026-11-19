@@ -15,7 +15,7 @@ maps:
     label: How do we predict the output for ANY input?
     detail: "Inputs in, outputs out"
     kind: terminal
-    short: "Learn the system's response to a few simple pieces (impulses, sinusoids, exponentials), then add those responses up to get the output for any input; this is superposition. The fourteen boxes below are that shortcut, step by step."
+    short: "Learn the system's response to a few simple pieces (impulses, sinusoids, exponentials), then add those responses up to get the output for any input; this is superposition. The fourteen boxes below are that shortcut, step by step. See also the <a href=\"#/s/picture\">Broader picture</a> and the <a href=\"#/s/figures\">Live figures</a>."
     pop: &id002
       rough: any output = sum of the outputs of simple pieces
       example: "Two running examples, drawn on the map: an earbud speaker (voltage in, cone motion out) and a car on its suspension (road bumps in, body heave and pitch out) for the state boxes."
@@ -124,9 +124,9 @@ maps:
         alt: A 1 ms pulse is four clicks; the motion is the sum of four shifted rings.
         caption: (b) Four clicks
       figCaption: "<b>(a)</b> One click (bar) makes h(t): the cone rings and dies away. <b>(b)</b> A 1 ms pulse = four quarter-size clicks; their copies of h (thin) add up to the motion (thick)."
-      example: A click rings the cone at 688 Hz for a few milliseconds.
+      example: A click rings the cone at 688 Hz for a few milliseconds (717 Hz undamped; damping slows the ring to 688 Hz).
       ask: pop-kick
-    addsToExample: "Clicks the speaker: one voltage click makes the diaphragm ring at 688 Hz for a few milliseconds. That ring is h(t)."
+    addsToExample: "Clicks the speaker: one voltage click makes the diaphragm ring at 688 Hz (717 Hz undamped; damping slows the ring) for a few milliseconds. That ring is h(t)."
     accountsFor: "Why the speaker's response to music, or to anti-noise, can be predicted from that one ring."
     dive: lti
   - id: TONE
@@ -134,7 +134,7 @@ maps:
     detail: "H(jω): the fingerprint"
     kind: box
     series: 1
-    short: "Yes: a sine wave. An LTI system passes a pure tone through as the same tone, scaled and delayed (an eigenfunction). Gain and phase lag against pitch make the frequency response H(jω)."
+    short: "Yes: a sine wave. An LTI system passes a pure tone through as the same tone, scaled and delayed (an eigenfunction). Gain and phase lag against pitch make the frequency response H(jω). A real sound is many tones at once (Box 7 explains)."
     pop: &id009
       audio:
       - snd-sweep
@@ -169,7 +169,7 @@ maps:
     detail: "Series, FT, DTFT, DFT"
     kind: box
     series: 1
-    short: "Write it as a sum of sines: Fourier analysis gives the amount of each pitch, and each sine passes through on its own (Box 6), scaled and delayed. Versions: Fourier series, Fourier transform, DTFT (discrete-time Fourier transform) and DFT (discrete Fourier transform); they and two catches, aliasing and leakage, are in Full detail."
+    short: "Write it as a sum of sines: Fourier analysis gives the amount of each pitch, and each sine passes through on its own (Box 6), scaled and delayed. Versions: Fourier series, Fourier transform, DTFT (discrete-time Fourier transform) and DFT (discrete Fourier transform); they and two catches, aliasing and leakage, are in Full detail. See also the <a href=\"#/s/picture\">Broader picture</a> and the <a href=\"#/s/figures\">Live figures</a>."
     pop: &id010
       audio:
       - snd-square
@@ -201,7 +201,7 @@ maps:
       figCaption: "Re e^(st) for three s with the same ω: σ < 0 dies away, σ = 0 is Fourier's steady sine, σ > 0 grows."
       example: "The earbud becomes H(s) = a₀/(s² + a₁s + a₀), with a₀ = ωₙ² and a₁ = 2ζωₙ: ωₙ = 2π × 717 Hz is the natural frequency, ζ = 0.281 the damping ratio."
       ask: c-deq-1
-    addsToExample: "Gives the speaker's transfer function from voltage to motion, H(s) = (Bl/Re)/(Mms s² + R s + 1/Cms), with R = Rms + Bl²/Re (the coil's back-EMF adds damping) and poles at −1,267 ± j4,322 rad/s."
+    addsToExample: "Gives the speaker's transfer function from voltage to motion, H(s) = a₀/(s² + a₁s + a₀), with poles at −1,267 ± j4,322 rad/s: they set the 688 Hz ring and its 0.79 ms decay. How a₀ and a₁ come from the speaker's parts is in the Laplace dive."
     accountsFor: "The ring frequency and decay of the click response, read straight off two numbers."
     dive: laplace
     link: &id013
@@ -222,7 +222,7 @@ maps:
       example: "Earbud poles at −1,267 ± j4,322 rad/s: it rings at 688 Hz, decays with time constant 0.79 ms, and its gain peaks near 658 Hz."
       next: Will it settle? And what is going on inside?
       ask: c-laplace-1
-    addsToExample: "Reads the speaker's peak from its pole pair: lightly damped (ζ ≈ 0.28), so the poles sit fairly close to the jω axis and |H| peaks near 660 Hz."
+    addsToExample: "Reads the speaker's peak from its pole pair: lightly damped (ζ ≈ 0.28), so the poles sit fairly close to the jω axis and |H| peaks near 658 Hz."
     accountsFor: "Why lighter damping would give a sharper, louder resonance."
     dive: tf
   - id: STATE
@@ -324,7 +324,7 @@ maps:
       - id: pop-caropt
         alt: "Active suspension: least-energy front and rear forces that level the body from 2° nose-down in 0.5 s."
       figCaption: "Active suspension: the least-energy forces that level the body from 2° nose-down in 0.5 s. Both swing in sign; the front dips to −476 N at 0.28 s, the rear to −652 N at the end."
-      example: "E = 96,160 N²·s: the least total squared force over the move (front² + rear², summed over the 0.5 s). The front actuator alone needs 12.9 kN peaks; given 1 s, about 120 N is enough."
+      example: "E = 96,160 N²·s: the least total squared force over the move (front² + rear², summed over the 0.5 s). Why two actuators and enough time matter: the front actuator alone needs 12.9 kN peaks, and given 1 s, about 120 N is enough."
       next: "Which application? Full detail opens filters, feedback and optimal control."
       ask: c-opt-3
     addsToExample: "Finds the least-energy front and rear actuator forces that level the body from 2° nose-down in 0.5 s: peaks of 476 N and 652 N."
@@ -467,7 +467,7 @@ maps:
     label: How do we predict the output for ANY input?
     detail: "Inputs in, outputs out"
     kind: terminal
-    short: "Learn the system's response to a few simple pieces (impulses, sinusoids, exponentials), then add those responses up to get the output for any input; this is superposition. The fourteen boxes below are that shortcut, step by step."
+    short: "Learn the system's response to a few simple pieces (impulses, sinusoids, exponentials), then add those responses up to get the output for any input; this is superposition. The fourteen boxes below are that shortcut, step by step. See also the <a href=\"#/s/picture\">Broader picture</a> and the <a href=\"#/s/figures\">Live figures</a>."
     pop: *id002
     accountsFor: "Why the same handful of ideas predicts a 717 Hz speaker resonance and a car's 1.15 Hz bounce."
     link: *id003
@@ -521,7 +521,7 @@ maps:
     short: "Sharp kicks (impulses): any input is a row of scaled, shifted kicks. One kick gives the impulse response h(t), so any output adds up scaled, shifted copies of h: the convolution y = h ∗ u."
     eq: y(t) = ∫ h(τ) u(t − τ) dτ
     pop: *id008
-    addsToExample: "Clicks the speaker: one voltage click makes the diaphragm ring at 688 Hz for a few milliseconds. That ring is h(t)."
+    addsToExample: "Clicks the speaker: one voltage click makes the diaphragm ring at 688 Hz (717 Hz undamped; damping slows the ring) for a few milliseconds. That ring is h(t)."
     accountsFor: "Why the speaker's response to music, or to anti-noise, can be predicted from that one ring."
     dive: lti
   - id: TONE
@@ -529,7 +529,7 @@ maps:
     detail: "H(jω): the fingerprint"
     kind: box
     series: 1
-    short: "Yes: a sine wave. An LTI system passes a pure tone through as the same tone, scaled and delayed (an eigenfunction). Gain and phase lag against pitch make the frequency response H(jω)."
+    short: "Yes: a sine wave. An LTI system passes a pure tone through as the same tone, scaled and delayed (an eigenfunction). Gain and phase lag against pitch make the frequency response H(jω). A real sound is many tones at once (Box 7 explains)."
     pop: *id009
     addsToExample: "Plays a 500 Hz tone: after a brief transient the diaphragm moves at exactly 500 Hz, scaled by |H| and delayed by ∠H."
     accountsFor: "Why a speaker never changes the pitch of a note, only its loudness and timing."
@@ -539,7 +539,7 @@ maps:
     detail: "Series, FT, DTFT, DFT"
     kind: box
     series: 1
-    short: "Write it as a sum of sines: Fourier analysis gives the amount of each pitch, and each sine passes through on its own (Box 6), scaled and delayed. Versions: Fourier series, Fourier transform, DTFT (discrete-time Fourier transform) and DFT (discrete Fourier transform); they and two catches, aliasing and leakage, are in Full detail."
+    short: "Write it as a sum of sines: Fourier analysis gives the amount of each pitch, and each sine passes through on its own (Box 6), scaled and delayed. Versions: Fourier series, Fourier transform, DTFT (discrete-time Fourier transform) and DFT (discrete Fourier transform); they and two catches, aliasing and leakage, are in Full detail. See also the <a href=\"#/s/picture\">Broader picture</a> and the <a href=\"#/s/figures\">Live figures</a>."
     pop: *id010
     addsToExample: "Plays a 200 Hz square buzz (±1 V) into the earbud: harmonics of 1.27, 0.42 and 0.25 V at 200, 600 and 1000 Hz, scaled ×1.07, ×1.79 and ×0.81 by the earbud."
     accountsFor: "Why earbuds sound the way they do across the band, and which frequencies the ANC has to fight."
@@ -553,7 +553,7 @@ maps:
     short: "Let the pieces grow or die too: exponentials e^(st), s = σ + jω, where σ sets growth or decay. Splitting into these is the Laplace transform (the Z-transform for samples). A derivative becomes × s, so the system is one fraction, the transfer function H(s) = Y(s)/U(s) (output over input)."
     eq: Y(s) = H(s) U(s)
     pop: *id012
-    addsToExample: "Gives the speaker's transfer function from voltage to motion, H(s) = (Bl/Re)/(Mms s² + R s + 1/Cms), with R = Rms + Bl²/Re (the coil's back-EMF adds damping) and poles at −1,267 ± j4,322 rad/s."
+    addsToExample: "Gives the speaker's transfer function from voltage to motion, H(s) = a₀/(s² + a₁s + a₀), with poles at −1,267 ± j4,322 rad/s: they set the 688 Hz ring and its 0.79 ms decay. How a₀ and a₁ come from the speaker's parts is in the Laplace dive."
     accountsFor: "The ring frequency and decay of the click response, read straight off two numbers."
     dive: laplace
     link: *id013
@@ -564,7 +564,7 @@ maps:
     series: 1
     short: "Almost everything, through two sets of points. Poles: values of s where H(s) is infinite; each is a natural mode e^(pt), a rhythm the system rings with. Zeros: values where H(s) = 0, inputs it blocks. The gain at any pitch follows from the distances from jω to them."
     pop: *id014
-    addsToExample: "Reads the speaker's peak from its pole pair: lightly damped (ζ ≈ 0.28), so the poles sit fairly close to the jω axis and |H| peaks near 660 Hz."
+    addsToExample: "Reads the speaker's peak from its pole pair: lightly damped (ζ ≈ 0.28), so the poles sit fairly close to the jω axis and |H| peaks near 658 Hz."
     accountsFor: "Why lighter damping would give a sharper, louder resonance."
     dive: tf
   - id: STATE
@@ -651,7 +651,7 @@ maps:
     eq: "y(n − k) ↔ z^(−k)Y(z),   ẏ ↔ sY − y(0⁻)"
     pop:
       rough: differential or difference equation → divide output by input → H(s) or H(z)
-    addsToExample: "Runs the noise-cancelling filter in the earbud chip: a difference equation y[n] = Σ bₖ u[n − k] − Σ aₖ y[n − k] that the Z-transform turns into H(z)."
+    addsToExample: "Runs the noise-cancelling filter in the earbud chip: a difference equation y[n] = Σ bₖ u[n − k] − Σ aₖ y[n − k] that the Z-transform turns into H(z). The figure runs the same steps on the earbud's own model, sampled: the sampled speaker, not the ANC filter itself."
     accountsFor: "How the ANC chip makes anti-noise sample by sample, and why its filter is designed in the z-plane."
     dive: diffeq
     quizTag: diffeq
@@ -704,7 +704,7 @@ maps:
       rough: samples see a pitch f and every f ± k·fs as the same; keep f below fs/2
       audio:
       - snd-alias
-    addsToExample: "Samples the earbud's microphone in the ANC chip (drawn at 8 kHz so the samples show)."
+    addsToExample: "Samples the earbud's microphone in the ANC chip (drawn at 8 kHz so the samples show); the figure samples the speaker model itself."
     accountsFor: Why the chip needs an anti-alias filter and a fast sample rate.
     dive: sampling
     quizTag: sampling
@@ -889,7 +889,7 @@ maps:
     pop:
       rough: "closed loop: new A = old A − (where the input pushes) × gain × (what is measured)"
     addsToExample: "Skyhook active damping on the car: each axle actuator pushes against the body's vertical speed there, F = −c·(body speed), with c_f = 4,317 and c_r = 4,771 N·s/m. Bounce damping rises from ζ 0.289 to 0.700 and pitch from 0.357 to 0.863 at the same 1.151 and 1.419 Hz; over the 5 cm bump the heave peak falls from 8.77 to 6.25 mm and it is back within 1 mm by 0.50 s instead of 1.17 s."
-    dive: stab
+    dive: skyhook
     live: "figure:skyhook"
   - id: FILT
     label: "Filters: noise cancelling"

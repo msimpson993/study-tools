@@ -29,18 +29,22 @@ runningExample:
     - { id: car, overlays: [springs], title: Car on its suspension, caption: "Seen from the side: the body on front and rear spring+shock pairs." }
   summary: "Two drawn systems run through the page. The signals boxes use an earbud speaker: voltage in, diaphragm motion out, resonating at about 717 Hz. The state-space boxes use a car on its suspension, seen from the side: road and actuator forces in, the body's heave and pitch out, with two modes, bounce (1.15 Hz) and pitch (1.42 Hz). Use the switch on the map to see either one."
   details: |
-    **Earbud speaker** (Thiele–Small values of a micro-speaker)
+    **Earbud speaker**: a micro-speaker, voltage in, diaphragm motion out, ζ ≈ 0.28; poles −1,267 ± j4,322 rad/s, so it rings at ≈ 688 Hz (717 Hz undamped).
+
+    <details class="model-details"><summary>Model details: the speaker's Thiele–Small values and noise cancelling</summary>
 
     | piece | value | what it gives |
     |---|---|---|
-    | moving mass M_ms | 0.084 g | with the suspension: ω_s = 1/√(M_ms C_ms) ≈ 4,503 rad/s, f_s ≈ 717 Hz |
+    | moving mass M_ms | 0.084 g | with the suspension: ωₙ = 1/√(M_ms C_ms) ≈ 4,503 rad/s, fₙ ≈ 717 Hz (undamped) |
     | suspension compliance C_ms | 0.587 mm/N | stiffness k = 1/C_ms ≈ 1,704 N/m |
     | mechanical damping R_ms | 0.173 kg/s | ζ ≈ 0.229 from R_ms alone |
     | force factor Bl, coil resistance R_e | 0.545 T·m, 7.47 Ω | back-EMF damping Bl²/R_e ≈ 0.040 kg/s; the coil is voltage-driven, so the total gives **ζ ≈ 0.28**, the value used throughout |
     | coil inductance L_e | 0.04 mH | coil pole −R_e/L_e ≈ −186,750 rad/s: far faster, so 2 states (x, ẋ) suffice |
     | poles | −1,267 ± j4,322 rad/s | ring at ≈ 688 Hz, decay time ≈ 0.8 ms |
 
-    Noise cancelling comes as feedforward (outside microphone), feedback (in-ear microphone) or hybrid, with an adaptive FxLMS filter running at low latency.
+    Noise cancelling comes as feedforward (outside microphone), feedback (in-ear microphone) or hybrid, with an adaptive FxLMS filter running at low latency (beyond this course).
+
+    </details>
 
     **Car on its suspension** (a side view, "half car"; the tutor's parameter set)
 
@@ -61,12 +65,12 @@ audio: [snd-clip, snd-ping, snd-ping-x, snd-sweep, snd-square, snd-alias, snd-be
 hub:
   order: 2
 # Porting guard (rebuilt Nov 2026): 2 maps (Big picture 15 boxes / 15 lines, Full detail 34 boxes / 39 lines),
-# 30 dives, 4 review pages, 101 quiz questions (24 original + 21 practice variants + per-node concept questions + 4 kept from the retired transforms page), 20 board examples. Update deliberately when content is added or dropped.
+# 31 dives (skyhook split out of stab, Nov 19), 4 review pages, 103 quiz questions (24 original + 21 practice variants + per-node concept questions + 4 kept from the retired transforms page + 2 skyhook), 20 board examples. Update deliberately when content is added or dropped.
 expect:
   maps: 2
   nodes: 52
   edges: 55
-  dives: 30
+  dives: 31
   review: 4
-  quiz: 101
+  quiz: 103
   examples: 21

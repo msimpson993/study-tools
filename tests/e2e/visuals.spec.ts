@@ -112,7 +112,7 @@ for (const app of APPS) {
       expect(c.subject.runningExample.title.length).toBeGreaterThan(5);
       const fold = page.getByTestId('running-example');
       await expect(fold).toBeVisible();
-      await fold.locator('summary').click();
+      await fold.locator('summary').first().click();
       await expect(fold).toContainText(c.subject.runningExample.title.slice(0, 10));
       const node = c.maps.flatMap((m: any) => m.nodes.map((n: any) => ({ ...n, map: m }))).find((n: any) => n.id !== 'root' && n.addsToExample);
       const mi = c.maps.indexOf(node.map);

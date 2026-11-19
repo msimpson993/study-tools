@@ -92,7 +92,7 @@ for (const app of ['linear-systems', 'control-systems', 'pid-tuning']) {
       await page.locator('.fig-layout').first().screenshot({ path: path.join(dir, `${app}-${f.id}.png`) });
     }
     // running example: fold + a node popup that says what it adds
-    await open(page, app); await page.getByTestId('running-example').locator('summary').click();
+    await open(page, app); await page.getByTestId('running-example').locator('summary').first().click();
     await page.locator('[data-testid=map-node]').nth(3).dispatchEvent('click'); await page.waitForTimeout(250);
     await page.screenshot({ path: path.join(dir, `${app}-running-example-popup.png`) });
     await ctx.close();
