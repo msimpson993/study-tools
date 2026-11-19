@@ -50,3 +50,33 @@ for (const app of ['control-systems'] as const) for (const vw of [1366, 390]) {
     expect(uniq, uniq.slice(0, 40).join('\n')).toEqual([]);
   });
 }
+
+/** linear-systems pass 4: the worked-example and review pictures and the figures the student flagged (R2, R3, A4),
+ * at both widths: no label on another label and none running off its canvas */
+const LS_PAGES = ['/review/part-a', '/review/part-b', '/dive/inverse', '/dive/roc', '/dive/sampling', '/dive/realize', '/dive/fs', '/dive/parseval', '/dive/ctrl', '/dive/obs', '/dive/diag', '/dive/kalman'];
+/** a pixel or two of descender box past the edge is fine */
+const clipped = (log: L[]) => {
+  const out: string[] = [];
+  for (const e of log as (L & { W: number; H: number })[]) if (!e.skipped && e.s.trim() && e.y0 !== undefined && (e.x0 < -1 || e.x1 > e.W + 1 || e.y0 < -3 || e.y1! > e.H + 3)) out.push(`${e.id || `canvas ${e.cv}`}: “${e.s}” runs off the canvas [${Math.round(e.x0)}–${Math.round(e.x1)} of ${e.W}, ${Math.round(e.y0)}–${Math.round(e.y1!)} of ${e.H}]`);
+  return out;
+};
+for (const vw of [1366, 390]) {
+  test(`linear-systems @${vw}: review and worked-example pictures, fs, sampling and car figures keep their labels apart and on the canvas`, async ({ page }) => {
+    test.setTimeout(300_000);
+    await page.setViewportSize({ width: vw, height: vw > 500 ? 900 : 844 });
+    await page.addInitScript(() => { (window as any).__textLog = []; (window as any).__textCanvases = []; });
+    await open(page, 'linear-systems');
+    const bad: string[] = [];
+    for (const hash of LS_PAGES) {
+      await page.goto(`/linear-systems/index.html#${hash}`); await page.reload(); await page.waitForTimeout(900);
+      // every canvas drawn once at its laid-out size: scroll through the page so lazy figures mount
+      for (const cv of await page.locator('main canvas').all()) await cv.scrollIntoViewIfNeeded().catch(() => {});
+      await page.waitForTimeout(500);
+      const log = await take(page);
+      bad.push(...collisions(log).map((s) => `${hash} · ${s}`), ...clipped(log).map((s) => `${hash} · ${s}`));
+    }
+    const uniq = [...new Set(bad)];
+    if (REPORT) fs.writeFileSync(`${REPORT}-linear-systems-pass4-${vw}.txt`, uniq.join('\n'));
+    expect(uniq, uniq.slice(0, 40).join('\n')).toEqual([]);
+  });
+}
