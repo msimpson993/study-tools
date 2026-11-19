@@ -72,7 +72,7 @@ export function mountApp(content: AppContent, hooks: AppHooks = {}): void {
     h('button', { class: 'tbtn', 'aria-label': 'Toggle sidebar', title: 'Toggle sidebar', dataset: { testid: 'sidebar-toggle' }, onclick: () => { if (onBoard) boardSb = !boardSb; else sbOpen = !sbOpen; applySb(); } }, '☰'),
     h('span', { class: 'ttl' }, subj.title),
     h('span', { class: 'q' }, subj.centralQuestion),
-    content.glossary.length ? h('button', { class: 'tbtn', dataset: { testid: 'glossary-btn' }, onclick: () => { glossary.hidden = !glossary.hidden; } }, 'Variables') : null,
+    content.glossary.length ? h('button', { class: 'tbtn', dataset: { testid: 'glossary-btn' }, onclick: () => { glossary.hidden = !glossary.hidden; if (!glossary.hidden) glossaryToTopic(); } }, 'Variables') : null,
     h('a', { class: 'tbtn', href: hub, title: 'All study pages' }, 'Hub'),
     fsBtn,
     h('button', { class: 'tbtn', dataset: { testid: 'theme-toggle' }, 'aria-label': 'Toggle light/dark theme', onclick: () => { toggleTheme(); themeBtn.textContent = currentTheme() === 'dark' ? '☾' : '☀'; } }, '☾')));
@@ -83,6 +83,7 @@ export function mountApp(content: AppContent, hooks: AppHooks = {}): void {
   if (window.innerWidth <= 900) { sbOpen = false; applySb(); }
 
   // glossary drawer
+  let glossaryToTopic = () => {};
   {
     const dl = h('dl');
     const render = (q: string) => {
@@ -96,6 +97,25 @@ export function mountApp(content: AppContent, hooks: AppHooks = {}): void {
       }
     };
     const inp = h('input', { type: 'search', placeholder: 'Search symbols and terms', 'aria-label': 'Search glossary' });
+    // on open, scroll to the section whose terms the current page (the open map box's panel, else the main view) uses most
+    glossaryToTopic = () => {
+      if (inp.value) return;
+      const panel = document.querySelector<HTMLElement>('.cm-panel:not(.idle)');
+      const page = ((panel?.innerText || '') + ' ' + (panel ? '' : main.innerText)).toLowerCase();
+      const score = new Map<string, number>();
+      for (const t of content.glossary) {
+        if (!t.section) continue;
+        const names = t.term.split(/,\s*|\s+or\s+/).map((x) => x.trim().toLowerCase()).filter((x) => x.length >= 3);
+        let n = 0;
+        for (const nm of names) { let i = page.indexOf(nm); while (i >= 0 && n < 50) { n++; i = page.indexOf(nm, i + nm.length); } }
+        score.set(t.section, (score.get(t.section) ?? 0) + Math.min(n, 6));
+      }
+      let best = '', bs = 0;
+      for (const [k, v] of score) if (v > bs) { best = k; bs = v; }
+      const head = [...dl.querySelectorAll<HTMLElement>('.gloss-sec')].find((e) => e.textContent === best);
+      glossary.dataset.topic = head ? best : '';
+      glossary.scrollTop = head ? Math.max(0, head.offsetTop - 8) : 0;
+    };
     inp.addEventListener('input', () => render(inp.value));
     render('');
     glossary.append(h('div', { style: 'display:flex;gap:.5rem;align-items:center;margin-bottom:.5rem' }, h('b', null, 'Variables & terms'), h('span', { style: 'flex:1' }), h('button', { class: 'tbtn', onclick: () => { glossary.hidden = true; } }, '✕')), inp, dl);
@@ -208,7 +228,7 @@ export function mountApp(content: AppContent, hooks: AppHooks = {}): void {
       wrap.append(h('p', null, 'Every deep dive opens with the chain of questions that leads there. You can also reach them from any map box.'), chips, list);
       main.append(wrap);
     } else if (sec.kind === 'glossary') {
-      const dl = h('dl', { class: 'prose' });
+      const dl = h('dl', { class: 'prose gloss-page', dataset: { testid: 'glossary-page' } });
       let last: string | undefined;
       for (const t of content.glossary) {
         if (t.section && t.section !== last) dl.append(h('h3', null, t.section));

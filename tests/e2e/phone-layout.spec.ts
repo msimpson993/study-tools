@@ -16,6 +16,21 @@ test.describe('linear-systems at 390 px', () => {
     expect(r.f).toMatch(/system-ui/); expect(r.f).not.toMatch(/Charter|Georgia/);
   });
 
+  test('pass 4: the glossary page uses the site font', async ({ page }) => {
+    await open(page, 'linear-systems', '#/s/glossary');
+    const f = await page.evaluate(() => ['dt', 'dd'].map((t) => getComputedStyle(document.querySelector(`[data-testid=glossary-page] ${t}`)!).fontFamily));
+    for (const x of f) { expect(x).toMatch(/system-ui/); expect(x).not.toMatch(/Charter|Georgia/); }
+  });
+
+  test('pass 4: the Variables drawer opens scrolled to the current topic', async ({ page }) => {
+    await open(page, 'linear-systems', '#/dive/ctrl');
+    await page.getByTestId('glossary-btn').click();
+    const d = page.getByTestId('glossary');
+    await expect(d).toHaveAttribute('data-topic', 'Reachability and observability');
+    const r = await d.evaluate((el) => { const h = [...el.querySelectorAll<HTMLElement>('.gloss-sec')].find((e) => e.textContent === el.dataset.topic)!; return { top: h.getBoundingClientRect().top - el.getBoundingClientRect().top, s: el.scrollTop }; });
+    expect(r.s).toBeGreaterThan(0); expect(r.top).toBeGreaterThanOrEqual(0); expect(r.top).toBeLessThan(40);
+  });
+
   test('Live figures: long titles wrap inside their buttons, no sideways page', async ({ page }) => {
     await open(page, 'linear-systems', '#/s/figures');
     await expect(page.getByTestId('figure-list')).toBeVisible();
