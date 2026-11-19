@@ -48,7 +48,7 @@ Laplace (continuous time) and Z (discrete time) are the natural transforms for c
 
 - $s = \sigma + j\omega$: a complex rate; $\sigma$ (1/s) is growth or decay, $\omega$ (rad/s) the pitch.
 - $X(s)$: the Laplace transform, how much of each $e^{st}$ the signal contains.
-- $z = e^{sT}$, $X(z)$: the same for samples spaced $T$ apart.
+- $z = e^{sT}$, $X(z)$: the same for samples spaced $T$ apart (the Z-transform), where a delay becomes × z⁻¹.
 - $H(s) = Y(s)/U(s)$: output over input, the transfer function.
 
 ### Worked example: on the earbud

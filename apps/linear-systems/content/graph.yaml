@@ -76,8 +76,8 @@ maps:
           a: 2
         alt: "Earbud driven at 2 V and at 4 V: the 4 V motion is far less than twice the 2 V motion because the cone clips."
         caption: (b) 2 V vs 4 V
-      figCaption: "<b>(a)</b> 0.2 V: twice the drive (solid) gives exactly twice the motion (dashed); homogeneity holds. <b>(b)</b> 2 V vs 4 V: the cone hits its ±100 µm limit (grey), so 4 V gives 29% less than double."
-      example: "Quiet, the earbud passes both tests (within 0.7%); loud, it fails."
+      figCaption: "<b>(a)</b> Twice the drive (solid) gives exactly twice the motion (dashed); homogeneity holds. <b>(b)</b> The cone hits its ±100 µm limit (grey), so 4 V gives 29% less than double."
+      example: "Quiet, the earbud passes both tests; loud, it fails."
       ask: c-linsys-1
     addsToExample: "At 0.2 V, sums and doubling pass (within 0.7%); at 2 V the cone clips and doubling falls 29% short."
     dive: linsys
@@ -185,10 +185,10 @@ maps:
     detail: Growing and dying e^(st)
     kind: box
     series: 1
-    short: "Let the pieces grow or die too: exponentials e^(st), s = σ + jω, where σ sets growth or decay. Splitting into these is the Laplace transform (the Z-transform for samples). A derivative becomes × s, so the system is one fraction, the transfer function H(s) = Y(s)/U(s) (output over input)."
+    short: "Let the pieces grow or die too: exponentials e^(st), s = σ + jω, where σ sets growth or decay. Splitting into these is the Laplace transform. A derivative becomes × s, so the system is one fraction, the transfer function H(s) = Y(s)/U(s) (output over input)."
     eq: Y(s) = H(s) U(s)
     pop: &id012
-      rough: d/dt → × s; a delay → × z⁻¹; output = H × input
+      rough: d/dt → × s; output = H × input
       figures:
       - id: pop-est
         alt: "Three exponentials e^(st): dying, steady and growing."
@@ -213,7 +213,7 @@ maps:
       - id: pop-pz
         alt: "The earbud's two poles at −1.27 ± 4.32j per ms; jω at 658 Hz is where the distances are smallest."
       figCaption: "The s-plane (per ms): across = decay rate σ, up = frequency ω. Crosses: the earbud's poles. Dashed: distances to jω at 658 Hz, where their product, and so 1 ÷ gain, is smallest."
-      example: "Earbud poles at −1,267 ± j4,322 rad/s: it rings at 688 Hz, decays with time constant 0.79 ms, and its gain peaks near 658 Hz."
+      example: "Earbud poles at −1,267 ± j4,322 rad/s: it rings at 688 Hz and decays with time constant 0.79 ms."
       next: Will it settle? And what is going on inside?
       ask: c-laplace-1
     addsToExample: "Reads the speaker's peak from its pole pair: lightly damped (ζ ≈ 0.28), so the poles sit fairly close to the jω axis and |H| peaks near 658 Hz."
@@ -224,7 +224,7 @@ maps:
     detail: "ẋ = Ax + Bu, y = Cx + Du"
     kind: box
     series: 2
-    short: "A memory: the few numbers that, with the future input, fix everything that happens next. That memory is the state x. A state-space model says how it changes: a matrix A times the state plus a matrix B times the input."
+    short: "A memory: the few numbers that, with the future input, fix everything that happens next. That memory is the state x. A state-space model says how it changes: A times the state plus B times the input."
     eq: "ẋ = Ax + Bu,  y = Cx + Du"
     pop: &id015
       rough: "how the memory changes = its own pull + the input's push"
@@ -233,7 +233,7 @@ maps:
       - id: pop-carstate
         alt: "The car side-on: heave z lifts the whole body, pitch θ tilts it nose-up. With their rates ż and θ̇ that is the whole state."
       figCaption: "The car side-on, front right: dashed at rest, solid heaved up (z) and pitched nose-up (θ), exaggerated. With their rates ż, θ̇: the whole state."
-      example: "Car: 1400 kg, pitch inertia 2000 kg·m², axles 1.2 m ahead of and 1.5 m behind the centre of gravity."
+      example: "Car: 1400 kg, axles 1.2 m ahead of and 1.5 m behind the centre of gravity."
       ask: c-ss-1
     addsToExample: "Writes the car as ẋ = Ax + Bu with x = (z, θ, ż, θ̇): the springs and shocks at the two axles couple heave and pitch."
     accountsFor: "Why a bump under the front wheel makes the body both rise and pitch: the axles sit at different distances from the centre of gravity."
@@ -301,7 +301,7 @@ maps:
       - id: pop-carhidden
         alt: "Symmetric car, a push at the centre of gravity: the body heaves, but pitch never starts."
       figCaption: "A symmetric car pushed up at its centre of gravity (1.5 kN for 0.2 s): heave responds, pitch (flat line) stays exactly zero. The push cannot reach the pitch mode."
-      example: "Car: on the symmetric car a push at the centre of gravity can move the state in only 2 of its 4 directions (controllability matrix rank 2), and a height sensor there misses pitch: H(s) keeps only bounce. The main car's blind spot is 0.56 m ahead."
+      example: "On the symmetric car a push at the centre of gravity can move the state in only 2 of its 4 directions, and a height sensor there misses pitch: H(s) keeps only bounce."
       ask: c-kal-1
     addsToExample: "Splits the symmetric car with the push and the height sensor at the centre: bounce is reached and seen, pitch neither."
     accountsFor: "Why that car's transfer function from push to height has only the bounce poles."
@@ -544,7 +544,7 @@ maps:
     detail: Growing and dying e^(st)
     kind: box
     series: 1
-    short: "Let the pieces grow or die too: exponentials e^(st), s = σ + jω, where σ sets growth or decay. Splitting into these is the Laplace transform (the Z-transform for samples). A derivative becomes × s, so the system is one fraction, the transfer function H(s) = Y(s)/U(s) (output over input)."
+    short: "Let the pieces grow or die too: exponentials e^(st), s = σ + jω, where σ sets growth or decay. Splitting into these is the Laplace transform. A derivative becomes × s, so the system is one fraction, the transfer function H(s) = Y(s)/U(s) (output over input)."
     eq: Y(s) = H(s) U(s)
     pop: *id012
     addsToExample: "Gives the speaker's transfer function from voltage to motion, H(s) = a₀/(s² + a₁s + a₀), with poles at −1,267 ± j4,322 rad/s: they set the 688 Hz ring and its 0.79 ms decay. How a₀ and a₁ come from the speaker's parts is in the Laplace dive."
@@ -566,7 +566,7 @@ maps:
     detail: "ẋ = Ax + Bu, y = Cx + Du"
     kind: box
     series: 2
-    short: "A memory: the few numbers that, with the future input, fix everything that happens next. That memory is the state x. A state-space model says how it changes: a matrix A times the state plus a matrix B times the input."
+    short: "A memory: the few numbers that, with the future input, fix everything that happens next. That memory is the state x. A state-space model says how it changes: A times the state plus B times the input."
     eq: "ẋ = Ax + Bu,  y = Cx + Du"
     pop: *id015
     addsToExample: "Writes the car as ẋ = Ax + Bu with x = (z, θ, ż, θ̇): the springs and shocks at the two axles couple heave and pitch."
@@ -617,7 +617,7 @@ maps:
     label: Region of convergence
     detail: Poles bound it; it picks x(t)
     series: 1
-    short: "Only for some values of s: the region of convergence (ROC), where the transform's integral stays finite. The ROC never contains a pole, so poles bound it: a half-plane or strip in s, a disc, ring or exterior in z. Right-sided signals have an ROC to the right (outside the outermost pole), left-sided to the left (inside), two-sided a strip or ring. Stable means the ROC contains the jω axis or unit circle."
+    short: "Only for some values of s: the region of convergence (ROC), where the transform's integral stays finite. The ROC never contains a pole, so poles bound it. Right-sided signals have an ROC to the right (outside the outermost pole), left-sided to the left (inside), two-sided a strip or ring. Stable means the ROC contains the jω axis or unit circle."
     eq: "right-sided ⇒ |z| > r_max,   left-sided ⇒ |z| < r_min,   stable ⇔ |z| = 1 ∈ ROC"
     pop:
       rough: "where the sum for X(s) converges; same formula, different region = different signal"
@@ -745,7 +745,7 @@ maps:
       rough: a finite block smears a pitch over nearby bins; a taper trades width for skirts
       audio:
       - snd-beat
-    addsToExample: "Shows why a steady 690 Hz hum near the resonance, 64 samples at 8 kHz, falls between bins 5 and 6 (125 Hz apart): its peak reads 4.7 dB low in bin 5, 3.2 dB in bin 6, and smears."
+    addsToExample: "A steady 690 Hz hum, 64 samples at 8 kHz, falls between bins 5 and 6: its peak reads 4.7 dB low in bin 5, 3.2 dB in bin 6, and smears."
     accountsFor: Why the DFT of a pure tone is not a single spike.
     dive: window
     quizTag: window
@@ -843,7 +843,7 @@ maps:
     label: PBH test
     detail: "One mode at a time: wᵀB, Cv"
     series: 3
-    short: "The mode whose shape does not move where the input pushes (formally, whose left eigenvector w has wᵀB = 0). The Popov–Belevitch–Hautus (PBH) test checks each mode this way: the input reaches mode i if wᵢᵀB ≠ 0, and the output sees it if Cvᵢ ≠ 0 (right eigenvector). Equivalently rank[A − λI, B] = n and rank[A − λI; C] = n at every eigenvalue."
+    short: "The mode whose shape does not move where the input pushes (formally, whose left eigenvector w has wᵀB = 0). The Popov–Belevitch–Hautus (PBH) test checks each mode this way: the input reaches mode i if wᵢᵀB ≠ 0, and the output sees it if Cvᵢ ≠ 0 (right eigenvector)."
     eq: wᵢᵀB ≠ 0  and  Cvᵢ ≠ 0  for every i
     pop:
       rough: "a mode is lost if the input's push on it, or the sensor's view of it, is zero"
@@ -867,7 +867,7 @@ maps:
     label: Optimal control
     detail: "Best u: Pontryagin, costate p"
     series: 4
-    short: "Find the input that keeps a running cost as low as possible; that is optimal control. To minimise a cost ∫L dt, form the Hamiltonian \U0001D4D7 = L + pᵀ(Ax + Bu), set ∂\U0001D4D7/∂u = 0, and run the costate p backwards: ṗ = −∂\U0001D4D7/∂x. State and costate together form a linear system with the Hamiltonian matrix M; with x fixed at both ends, the unknown p(0) comes from Φ_M(T). (Script \U0001D4D7 and p, not H and λ, because H(s) is the transfer function and λ names eigenvalues.)"
+    short: "Find the input that keeps a running cost as low as possible; that is optimal control. To minimise a cost ∫L dt, form the Hamiltonian \U0001D4D7 = L + pᵀ(Ax + Bu), set ∂\U0001D4D7/∂u = 0, and run the costate p backwards: ṗ = −∂\U0001D4D7/∂x. State and costate together form a linear system with the Hamiltonian matrix M; with x fixed at both ends, the unknown p(0) comes from Φ_M(T)."
     eq: "∂\U0001D4D7/∂u = 0,   ṗ = −∂\U0001D4D7/∂x,   (x, p)(t) = e^(Mt)(x, p)(0)"
     pop:
       rough: best input = the one that keeps a running balance (costate) of what each push will cost
@@ -882,7 +882,7 @@ maps:
     short: "The system's poles move. Feed the measured state back to the input, u = −Kx: that changes A to A − BK and so moves the eigenvalues; the stability test is the same eigenvalue test. Wired the right way it steadies a system; wired backwards it can destabilise one."
     pop:
       rough: "closed loop: new A = old A − (where the input pushes) × gain × (what is measured)"
-    addsToExample: "Skyhook active damping on the car: each axle actuator pushes against the body's vertical speed there, F = −c·(body speed), with c_f = 4,317 and c_r = 4,771 N·s/m. Bounce damping rises from ζ 0.289 to 0.700 and pitch from 0.357 to 0.863 at the same 1.151 and 1.419 Hz; over the 5 cm bump the heave peak falls from 8.77 to 6.25 mm and it is back within 1 mm by 0.50 s instead of 1.17 s."
+    addsToExample: "Skyhook active damping on the car: each axle actuator pushes against the body's vertical speed there, F = −c·(body speed). Bounce damping rises from ζ 0.289 to 0.700 and pitch from 0.357 to 0.863; over the 5 cm bump the heave peak falls from 8.77 to 6.25 mm and it is back within 1 mm by 0.50 s instead of 1.17 s."
     dive: skyhook
     live: "figure:skyhook"
   - id: FILT
