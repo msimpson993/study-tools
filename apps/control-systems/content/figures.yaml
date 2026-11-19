@@ -1835,7 +1835,7 @@
     - label: previous run
       color: var(--muted)
       dash: true
-  howToRead: "The dish (0.1/(s(s + 2)), 0.1 rad step, 200 N·m limit, D on measurement) under your PID. Wind adds 20 N·m at 10 s, after the step has settled. Readouts check the specs: %OS < 10 %, wind peak < 0.6°, zero steady error, torque within the limit. Readouts include the derivative filter N_f, so they sit slightly below the ideal-derivative numbers quoted in the text (tuned: 6.3 % vs 7.4 %)."
+  howToRead: "The dish (0.1/(s(s + 2)), 0.1 rad step, 200 N·m limit, D on measurement) under your PID. Wind adds 20 N·m at 10 s, after the step has settled. Readouts check the specs: %OS < 10 %, wind peak < 0.6°, zero steady error, torque within the limit. Readouts include the derivative filter N_f, so they sit slightly below the ideal-derivative numbers quoted in the text (tuned: 6.3 % vs 7.4 %). With the wind on, the no-anti-windup preset fails the steady-error check (about 0.14° off at 9.9 s): the overfilled integrator is still bleeding off when the gust arrives. Switch to the clamping preset and it passes."
   lookFor: Start at P 1000 (73 % ring), add Kd until it stops ringing, then just enough Ki to clear the wind.
   controls:
     - id: plant
