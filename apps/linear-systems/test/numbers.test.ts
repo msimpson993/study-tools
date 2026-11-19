@@ -364,3 +364,14 @@ describe('lintest figure model: which systems pass the linearity and time-invari
     expect(ex.ltPeak('offset', 1)).toBeCloseTo(3, 6); expect(ex.ltPeak('square', 2)).toBeCloseTo(4, 6);
   });
 });
+describe('tutor review (Nov 18): DTFT peak and the square-wave buzz', () => {
+  it('sampled at 8 kHz the DTFT of the ring peaks at Ω ≈ 0.519 rad (29.7°, ≈ 661 Hz), below the 31° (688 Hz) pole angle', async () => {
+    const { spk } = await import('../src/figs/ex'); const p = spk(), r = Math.exp(-p.sigma / 8), th = (2 * Math.PI * p.fd) / 8000;
+    let best = 0, bw = 0; for (let w = 0.3; w < 0.8; w += 1e-5) { const d = Math.hypot(Math.cos(w) - r * Math.cos(th), Math.sin(w) - r * Math.sin(th)) * Math.hypot(Math.cos(w) - r * Math.cos(th), Math.sin(w) + r * Math.sin(th)); if (1 / d > best) { best = 1 / d; bw = w; } }
+    expect(bw).toBeCloseTo(0.519, 3); expect((bw * 180) / Math.PI).toBeCloseTo(29.7, 1); expect(Math.round((bw / (2 * Math.PI)) * 8000)).toBe(661); expect((th * 180) / Math.PI).toBeCloseTo(31, 0);
+  });
+  it('a ±1 V 200 Hz square: harmonics 1.27, 0.42, 0.25 V at 200, 600, 1000 Hz, scaled ×1.07, ×1.79, ×0.81 by the earbud', async () => {
+    const { Hf, cabs } = await import('../src/figs/ex');
+    [[1, 1.27, 1.07], [3, 0.42, 1.79], [5, 0.25, 0.81]].forEach(([k, a, g]) => { expect(4 / (Math.PI * k)).toBeCloseTo(a, 2); expect(cabs(Hf(200 * k))).toBeCloseTo(g, 2); });
+  });
+});

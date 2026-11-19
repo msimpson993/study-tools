@@ -50,7 +50,7 @@ The DTFT is the analysis of a discrete-time, typically aperiodic, sequence again
 
 1. Sample the click ring at 8 kHz, $T = 0.125$ ms.
 2. Each pole $s = -\sigma \pm j\omega_d$ maps to $z = e^{sT}$: radius $e^{-\sigma T} \approx 0.85$, angle $\omega_d T \approx 31°$.
-3. The DTFT peaks where the unit circle passes closest to those poles, at about $31°/360° \times 8$ kHz ≈ 690 Hz, the ring frequency.
+3. The DTFT peaks where the unit circle passes closest to the poles: at $\Omega \approx 0.519$ rad (29.7°, ≈ 661 Hz), a little below the 31° (688 Hz) pole angle, because the mirror pole at −31° pulls the peak down.
 
 **Exam-style example.** For x[n] = (1/2)^n u[n], the DTFT is X(e^(jΩ)) = 1 / (1 − ½ e^(−jΩ)), which is the Z-transform 1 / (1 − ½ z^(−1)) evaluated on the unit circle (legal because the ROC is |z| &gt; 1/2). At Ω = 0, X = 2. At Ω = π, X = 2/3. At Ω = π/2, X = 0.8 − 0.4j, with magnitude 2/√5 ≈ 0.894.
 

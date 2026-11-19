@@ -16,7 +16,7 @@ level: Some algebra
 check: [c-eig-1, c-eig-2, m1]
 ---
 
-**The question:** clicks work, but is there a set of pieces the system does not even reshape? This is the box *Modes: untangle A*: if the input is split into the right pieces, each piece comes out only scaled. Those pieces are eigenvectors (for a matrix) and eigenfunctions (for a signal system), and the scale factors are eigenvalues.
+**The question:** everything affects everything; how do we untangle it? This is the box *Modes: untangle A*. Look for pieces the system does not even reshape: if the input is split into the right pieces, each piece comes out only scaled. Those pieces are eigenvectors (for a matrix) and eigenfunctions (for a signal system), and the scale factors are eigenvalues.
 
 ### The big idea
 

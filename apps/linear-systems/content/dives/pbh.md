@@ -49,7 +49,7 @@ $$\text{observable}\iff\operatorname{rank}\begin{bmatrix}A-\lambda I\\C\end{bmat
 ### Worked example: on the car
 
 1. Car: each mode has a shape. The pitch mode's still point is at the centre of gravity on the symmetric car and at $x = +0.56$ m on the main car.
-2. A push at a point $x$ is $B = (0, 0, 1/m, x/J)$. For a mechanical model like this one, $w^\mathsf{T}B$ is proportional to how far the mode's shape moves at the push point, so it is zero at the still point: that mode is uncontrollable.
+2. A push at a point $x$ is $B = (0, 0, 1/m, x/J)$. For a mechanical model like this one, $w^\mathsf{T}B$ is proportional to how far the mode's shape moves at the push point, so it is zero at the still point: that mode is uncontrollable. A still point exists only because the mode shapes are real (the shocks are proportional to the springs); with complex shapes no point stays exactly still, and the push is only nearly blind.
 3. Likewise a height sensor at $x$, $C = [1, x, 0, 0]$, gives $Cv$ = the shape's motion at $x$: zero at the still point, so the mode is unobservable there.
 
 **Exam-style example.** A = [[−1, 0, 0], [−2, −2, 0], [1, 1, −3]] with eigenvalues −1, −2, −3, right eigenvectors (−2, 4, 1), (0, 1, 1), (0, 0, 1). The sensor c = [0, f, g] gives Cv = 4f + g, f + g and g. So the pair is observable iff g ≠ 0, f + g ≠ 0 and 4f + g ≠ 0. (This is review problem B2.)

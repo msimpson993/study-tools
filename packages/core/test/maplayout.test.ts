@@ -93,7 +93,7 @@ describe('map view: Fit to screen vs Actual size', () => {
 const BEFORE: Record<string, [number, number][]> = {
   'control-systems/chain': [[12, 13], [12, 11], [7, 2], [3, 1], [3, 1]], 'control-systems/splane': [[0, 0], [0, 0], [0, 0], [0, 0], [0, 0]],
   // linear-systems was rebuilt (Nov 2026) as Big picture + Full detail, and again on Nov 18 to the 14-box pop-up format; these maps never had the old layout, so their ceilings are what the current layout draws.
-  'linear-systems/big': [[1, 0], [1, 0], [1, 0], [1, 0], [1, 0]], 'linear-systems/full': [[6, 0], [6, 0], [3, 0], [3, 0], [2, 0]],
+  'linear-systems/big': [[1, 0], [1, 0], [1, 0], [1, 0], [1, 0]], 'linear-systems/full': [[7, 0], [7, 0], [3, 0], [3, 0], [2, 0]], // Nov 18 tutor review: Controllability box under 'Do inside and outside match?' (Kalman box folded into it) adds one crossing on phones
   'pid-tuning/chain': [[21, 271], [21, 271], [47, 12], [30, 4], [39, 1]],
   'transforms/chain': [[2, 1], [2, 1], [1, 0], [1, 0], [1, 0]],
 };

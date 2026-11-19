@@ -63,7 +63,7 @@ The Laplace integral ∫x(t)e^(−st)dt converges only for some s, because e^(�
 
 The ROC tells you which signal a formula means; it doesn't give the signal back. For that you invert, pole by pole.
 
-**Next question.** How do you invert term by term once the ROC is fixed? Each pole inside the inner edge contributes a right-sided term, each pole outside the outer edge a left-sided one. See *Going back*.
+**Next question.** How do you invert term by term once the ROC is fixed? In s, each pole to the left of the ROC contributes a right-sided term and each pole to its right a left-sided one (in z: poles inside the ring, outside the ring). See *Going back*.
 
 ### Common pitfalls
 

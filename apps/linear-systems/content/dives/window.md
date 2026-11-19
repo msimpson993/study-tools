@@ -2,7 +2,7 @@
 id: window
 order: 16
 title: Windowing and leakage
-addsToExample: "Takes a steady 690 Hz hum near the resonance, 64 samples at 8 kHz. The bins are 125 Hz apart and 690 Hz falls between bins 5 and 6, so its peak reads about 4 dB low on both and smears over the neighbours; a tapered (Hann) window lowers the far skirts at the cost of a wider peak. (The click ring itself is no test of leakage: it has died out, to 4 × 10⁻⁵, well before 64 samples, and its spectrum is wide because of damping.)"
+addsToExample: "Takes a steady 690 Hz hum near the resonance, 64 samples at 8 kHz. The bins are 125 Hz apart and 690 Hz falls between bins 5 and 6, so its peak reads 4.7 dB low in bin 5, 3.2 dB in bin 6, and smears over the neighbours; a tapered (Hann) window lowers the far skirts at the cost of a wider peak. (The click ring itself is no test of leakage: it has died out, to 4 × 10⁻⁵, well before 64 samples, and its spectrum is wide because of damping.)"
 accountsFor: "Why the DFT of a pure tone is not one clean spike, and why the ANC chip's frequency estimates need a window."
 category: signals
 neighbors:

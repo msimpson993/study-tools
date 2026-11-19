@@ -54,7 +54,7 @@ Taking the (zero-state) Laplace transform of the state equations and eliminating
 ### Worked example: on the earbud
 
 1. The earbud's poles sit at $-1{,}267 \pm j4{,}322$ rad/s, damping ratio ζ ≈ 0.28.
-2. Walk up the jω axis: near $\omega \approx 4{,}130$ rad/s (658 Hz) the distance to the upper pole is smallest, so the gain peaks at ×1.85.
+2. Walk up the jω axis. The distance to the upper pole alone is smallest at 688 Hz, level with it ($\omega = 4{,}322$ rad/s). The gain is set by the product of the distances to both poles, and that product is smallest a little lower, at 658 Hz ($\omega \approx 4{,}132$ rad/s): the gain peaks there at ×1.85.
 3. Far above, both distances grow like ω, so the gain falls like $1/\omega^2$: 40 dB per decade.
 
 **Exam-style example.** For A = [[0, 1], [−2, −3]] (ÿ + 3ẏ + 2y = u), with B = [0, 1]ᵀ and C = [1, 0], (sI − A)⁻¹ = 1/(s² + 3s + 2) · [[s + 3, 1], [−2, s]], so G(s) = 1/((s + 1)(s + 2)). Partial fractions: 1/(s+1) − 1/(s+2), hence h(t) = (e^(−t) − e^(−2t)) u(t), matching C e^(At) B. With the uncontrollable B = [1, −2]ᵀ the same algebra yields (s+1)/((s+1)(s+2)) = 1/(s+2): the cancelled pole is exactly the hidden eigenvalue.
@@ -68,5 +68,5 @@ H(s) is the outside view: it shows only what gets from input to output. It doesn
 ### Common pitfalls
 
 - G(s) is the zero-state i/o map. Initial conditions produce an extra term C(sI − A)⁻¹ x(0).
-- Poles of G(s) equal eigenvalues of A if and only if the realization is minimal. Always ask whether a cancellation already happened.
+- Poles of G(s) equal the eigenvalues of A (counted with multiplicity) if and only if the realization is minimal. Always ask whether a cancellation already happened.
 - MIMO systems have a matrix G(s). Transmission zeros are not the zeros of the individual entries.

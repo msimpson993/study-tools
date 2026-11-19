@@ -139,6 +139,12 @@
       kr: 42000
     about: "The modes mix the other way: watch the still points move."
 - id: diag
+  pair:
+    forward: pose
+    inverse: modal
+    forwardName: "Analysis: q = V⁻¹(z, θ)"
+    inverseName: "Synthesis: (z, θ) = V q"
+    strip: "The columns of V are the bounce shape and the pitch shape: any pose = q₁·(bounce) + q₂·(pitch)."
   title: "Mode coordinates: any pose of the body is some bounce plus some pitch"
   x: position (m) or bounce amount q₁
   y: height or pitch amount q₂
@@ -191,12 +197,6 @@
       z0: 1
       th0: -1
     about: Both parts.
-  pair:
-    forward: pose
-    inverse: modal
-    forwardName: "Analysis: q = V⁻¹(z, θ)"
-    inverseName: "Synthesis: (z, θ) = V q"
-    strip: "The columns of V are the bounce shape and the pitch shape: any pose = q₁·(bounce) + q₂·(pitch)."
 - id: flow
   title: "A bump: the front response plus a delayed copy for the rear wheel"
   x: time t (s)
@@ -341,10 +341,10 @@
       wear: 0
     about: "Poles on the axis: rings for ever."
   - id: bad
-    label: Wired backwards (−0.2)
+    label: Active damper wired backwards
     set:
       wear: -0.2
-    about: "Poles in the right half-plane: unstable."
+    about: "ζ −0.058 and −0.071: poles in the right half-plane; the motion grows about 2× every 1.66 s."
 - id: ctrl
   title: "Controllability of the car: can a push at one point move both modes?"
   x: position (m) or mode
@@ -604,7 +604,7 @@
     color: var(--muted)
     dash: true
   howToRead: "Pontryagin's principle (or the Gramian formula) gives the force profile with the least ∫|u|²dt that takes the body from 2° nose-down, at rest, to level and still at time T: u(t) = −Bᵀe^(Aᵀ(T−t))W(T)⁻¹e^(AT)x₀. Left: the forces. Right: the pitch with that input (solid) and with no input (dashed)."
-  lookFor: "T = 0.5 s with front and rear actuators: peaks of 476 N front and 652 N rear, E = 96,160 N²·s. Both start small; the front peaks part-way through, the rear right at the end. With T = 1 s about 120 N is enough."
+  lookFor: "T = 0.5 s with front and rear actuators: peaks of 476 N front and 652 N rear, E = 96,160 N²·s. Both start small and change sign twice; the front peaks (−476 N) at 0.28 s, the rear (−652 N) right at the end. With T = 1 s about 120 N is enough."
   controls:
   - id: T
     label: time allowed T
@@ -1545,3 +1545,63 @@
       sys: delay
       test: shift
     about: "Passes all three tests: a pure delay is LTI."
+- id: skyhook
+  title: "Feedback: skyhook active damping on the car"
+  x: Re s (1/s) or time t (s)
+  y: Im s (1/s) or heave (mm)
+  legend:
+  - label: bounce poles
+    color: var(--cyan)
+  - label: pitch poles
+    color: var(--org)
+  - label: path as the gain rises
+    color: var(--muted)
+  - label: passive car
+    color: var(--muted)
+    dash: true
+  howToRead: "Each axle actuator pushes against the body's vertical speed at that axle, F = −c·(body speed): u = −Kx, a damper to the sky. Left: the closed-loop poles (faint dots: the passive car; grey: their path as the gain runs from 0 to 1.5 times the design gain). Right: heave after the 5 cm bump at 15 m/s, passive (dashed) and with the feedback (solid), with the ±1 mm band dotted."
+  lookFor: "Design gain (1×, c_f = 4,317 and c_r = 4,771 N·s/m, proportional to the springs): bounce −5.062 ± 5.164j (ζ 0.700), pitch −7.691 ± 4.506j (ζ 0.863), the same 1.151 and 1.419 Hz natural frequencies. The bump peak falls from 8.77 to 6.25 mm and the body is within 1 mm by 0.50 s instead of 1.17 s; the actuators peak at 958 N front and 1,412 N rear."
+  controls:
+  - id: gain
+    label: feedback gain (× the ζ 0.7 design)
+    type: range
+    min: 0
+    max: 1.5
+    step: 0.05
+    default: 1
+    group: primary
+  - id: gains
+    label: gains
+    type: select
+    default: prop
+    group: more
+    options:
+    - value: prop
+      label: proportional to the springs
+    - value: equal
+      label: equal at both axles
+  presets:
+  - id: 'off'
+    label: Feedback off
+    set:
+      gain: 0
+      gains: prop
+    about: "The passive car: ζ 0.289 and 0.357, above 1 mm until 1.17 s."
+  - id: design
+    label: "Skyhook, ζ 0.7"
+    set:
+      gain: 1
+      gains: prop
+    about: "Bounce ζ 0.700, pitch ζ 0.863; peak heave 6.25 mm."
+  - id: equal
+    label: "Equal gains (4,355 N·s/m)"
+    set:
+      gain: 1
+      gains: equal
+    about: "One gain at both axles: ζ 0.700 bounce, 0.823 pitch."
+  - id: half
+    label: Half gain
+    set:
+      gain: 0.5
+      gains: prop
+    about: "Halfway: the poles move left along the same circles."

@@ -16,7 +16,7 @@ level: Some algebra
 check: [c-ss-1, c-ss-2]
 ---
 
-**The question:** which states does ẋ = Ax keep on a straight line? This is the box *State: what it remembers*. Write the system as ẋ = Ax + Bu, y = Cx; the eigenvectors of A are its modes.
+**The question:** what does the system remember, and how does that memory change? This is the box *State: what it remembers*. The memory is the state x; write how it changes as ẋ = Ax + Bu, and what a sensor reads as y = Cx + Du.
 
 ### The big idea
 

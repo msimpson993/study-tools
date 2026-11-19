@@ -713,7 +713,7 @@
   kind: compute
   q: "The speaker's H(s) = (Bl/Re)/(Mms s² + R s + 1/Cms) has poles at −1,267 ± j4,322 rad/s. What ring frequency and decay time does a click show?"
   choices:
-  - "About 690 Hz, decaying with time constant ≈ 0.8 ms"
+  - "About 688 Hz, decaying with time constant ≈ 0.8 ms"
   - "About 717 Hz, decaying with time constant ≈ 4.3 ms"
   - "About 1,267 Hz, decaying with time constant ≈ 0.23 ms"
   - "About 4,322 Hz, with no decay"
@@ -876,12 +876,12 @@
   kind: compute
   q: "The speaker's click ring (688 Hz) is sampled at 8 kHz. Where does its DTFT peak on the Ω axis?"
   choices:
-  - "Near Ω = 2π·688/8000 ≈ 0.54 rad (about 31°), and again at every Ω ± 2π"
+  - "Near Ω ≈ 0.52 rad (≈660 Hz), just below the 0.54 rad pole angle, and again every 2π"
   - At Ω = 688 rad
-  - "Only at Ω = 0.54 rad, nowhere else"
+  - "Only at Ω = 0.52 rad, nowhere else"
   - "At Ω = π, the Nyquist frequency"
   answer: 0
-  why: "Ω = 2πf/f_s = 2π·688/8000 ≈ 0.54 rad, the angle of the sampled poles. The DTFT repeats every 2π, so the same peak sits at 0.54 + 2πk (and its mirror at −0.54 + 2πk)."
+  why: "The sampled poles sit at angle 2π·688/8000 ≈ 0.54 rad; the peak is a little lower, Ω ≈ 0.52 rad (≈ 660 Hz), because the mirror pole at −0.54 rad pulls it down. The DTFT repeats every 2π, so the same peak sits at 0.52 + 2πk (and its mirror at −0.52 + 2πk)."
 - id: c-dft-1
   tags:
   - dft

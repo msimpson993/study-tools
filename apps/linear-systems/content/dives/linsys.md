@@ -83,7 +83,7 @@ Linear and time-invariant are two separate properties. Convolution needs both; a
 
 ### Worked example: on the earbud
 
-Drive the earbud with u₁ = 0.2 V at 200 Hz and u₂ = 0.12 V at 690 Hz. Its small-signal gain at 200 Hz is 42.8 µm/V × |H(200 Hz)| ≈ 45.8 µm/V, so u₁ alone moves the cone about 9.2 µm peak (the linear model; 9.1 µm with the soft limit). The response to u₁ + u₂ matches the sum of the two responses to within 0.5%, and doubling u₁ doubles the motion to within 0.7%. At 2 V the linear model predicts about 92 µm, close to the illustrative ±100 µm limit, and through the soft limit the cone actually peaks at about 72 µm. At 4 V the linear model would give 183 µm, but the cone reaches only about 95 µm, well short of 2 × 72 ≈ 145 µm: T{2u₁} falls 29% (rms) short of 2·T{u₁}.
+Drive the earbud with u₁ = 0.2 V at 200 Hz and u₂ = 0.12 V at 690 Hz. Its small-signal gain at 200 Hz is 42.8 µm/V × |H(200 Hz)| ≈ 45.8 µm/V, so u₁ alone moves the cone about 9.2 µm peak (the linear model; 9.1 µm with the soft limit). The response to u₁ + u₂ matches the sum of the two responses to within 0.5%, and doubling u₁ doubles the motion to within 0.7%. At 2 V the linear model predicts about 92 µm, close to the illustrative ±100 µm limit, and through the soft limit the cone actually peaks at about 72 µm. At 4 V the linear model would give 183 µm, but the cone reaches only about 95 µm, well short of 2 × 72 ≈ 145 µm: T{4 V} falls 29% (rms) short of 2·T{2 V}.
 
 ### What it can't do
 

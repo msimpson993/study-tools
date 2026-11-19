@@ -58,7 +58,7 @@ The system (A, B) is controllable when the input can move the state from any x(0
 
 1. One actuator force $F$ at a point $x$ metres ahead of the centre of gravity: $B = (0, 0, 1/m, x/J)$, a heave push $F/m$ plus a torque $xF/J$.
 2. Main car, push at the centre ($x = 0$): no direct torque, but heave and pitch are coupled in $A$, so $AB$, $A^2B$ and $A^3B$ fill in the rest: rank 4, controllable.
-3. Symmetric car, push at the centre: the pitch mode is decoupled and the push makes no torque, so pitch can never start: rank 2 of 4. On the main car the same failure happens at $x = +0.56$ m, the pitch mode's still point.
+3. Symmetric car, push at the centre: the pitch mode is decoupled and the push makes no torque, so pitch can never start: rank 2 of 4. On the main car the same failure happens at $x = +0.56$ m, the pitch mode's still point (exact only because the shocks are proportional to the springs, C = 0.08 s·K; with ordinary shocks it is only nearly blind).
 
 **Exam-style example.** For A = [[0, 1], [−2, −3]] (ÿ + 3ẏ + 2y = u), B = [0, 1]ᵀ gives Ctrb = [B, AB] = [[0, 1], [1, −3]], with det = −1 and rank 2 — controllable (as a companion form should be). The left eigenvector at λ = −1 is w₁ = [2, 1]ᵀ, and w₁ᵀ B = 1 ≠ 0. Now take B = [1, −2]ᵀ, which is actually v₂. Then w₁ᵀ B = 0, so the −1 mode is invisible to u. Indeed AB = −2 B, so Ctrb = [[1, −2], [−2, 4]] has rank 1. PBH at λ = −1: [λI − A, B] = [[−1, −1, 1], [2, 2, −2]] has rank 1, not 2; at λ = −2 the same test still has rank 2. Only the −1 mode is uncontrollable.
 

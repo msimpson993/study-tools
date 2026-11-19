@@ -2,7 +2,7 @@
 id: lti
 order: 1
 title: Convolution, LTI & eigenfunctions
-addsToExample: "Clicks the speaker with a short voltage pulse: the diaphragm rings at about 690 Hz and dies away within a few milliseconds. That ring is the impulse response h(t), and any input is a row of scaled, shifted clicks."
+addsToExample: "Clicks the speaker with a short voltage pulse: the diaphragm rings at 688 Hz and dies away within a few milliseconds. That ring is the impulse response h(t), and any input is a row of scaled, shifted clicks."
 accountsFor: "Why the speaker's response to music, or to anti-noise, can be predicted from that one ring."
 category: foundations
 neighbors:
@@ -59,7 +59,7 @@ A system is linear and time-invariant if and only if it is convolution with a fi
 
 Convolution is exact but tedious: every output sample is a whole integral over the past. It also hides what the system does to a given pitch. The next box looks for inputs that come out with the same shape, so the integral collapses to one multiplication.
 
-**Next question.** How do I actually write a given signal in the exponential basis? That splits by whether time is continuous or discrete, and whether the signal is periodic or aperiodic — plus Laplace and Z when you need an ROC.
+**Next question.** Convolving every input is tedious. Is there an input that comes out with the same shape? (Yes: exponentials and sine waves, which is why the rest of the course writes signals in that basis.)
 
 ### Common pitfalls
 

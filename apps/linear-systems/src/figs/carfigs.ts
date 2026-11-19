@@ -1,5 +1,6 @@
 /** Live figures on the car (half-car suspension model in core carModel.ts, tutor's parameters, numbers tested in test/car.test.ts). */
 import { figureOf, rangeFrame, curve, tline, polyline, dot, text, wipe, col, linspace, type Frame } from '@study/core';
+import { withSky, skyGains, skyEqualGain, skyBump } from './car';
 import { CAR, CAR_SYM, worn, carA, forceB, roadB, carModes, sim, bumpInput, minEnergy, gramian, expm, mvec, mmul, rank, ctrbM, obsvM, mck, DEG, BUMP, type CarP, type Mat } from './car';
 import { num, fmt, graph, note } from './util';
 
@@ -248,3 +249,21 @@ export const optimalFigure = figureOf((c) => {
         note(g, `level and still at T = ${fmt(T, 2)} s`, f.box.r - 4, f.box.b - 8, col.e(), 'right', 10); } },
   ];
 });
+
+/* ───────────── feedback: skyhook active damping (u = −Kx moves the poles) ───────────── */
+const skyOf = (v: V) => { const k = num(v, 'gain'), g = v.gains === 'equal' ? { cf: skyEqualGain(CAR) * k, cr: skyEqualGain(CAR) * k } : (() => { const s = skyGains(CAR); return { cf: s.cf * k, cr: s.cr * k }; })(); return g; };
+export const skyhookFigure = figureOf((c) => [
+  { id: 'poles', title: 'Closed-loop poles as the skyhook gain rises', x: 'Re s (1/s)', y: 'Im s (1/s)',
+    draw(g, w, h) { wipe(g, w, h); const f = graph(g, w, h, [-9, 0.5], [-10, 10], 'Re s (1/s)', 'Im s (1/s)'), base = skyGains(CAR), eq = skyEqualGain(CAR);
+      for (const k of linspace(0, 1.5, 31)) for (const m of carModes(withSky(CAR, c.values.gains === 'equal' ? { cf: eq * k, cr: eq * k } : { cf: base.cf * k, cr: base.cr * k }))) { dot(g, f, [m.s[0], m.s[1]], col.muted(), 1.6); dot(g, f, [m.s[0], -m.s[1]], col.muted(), 1.6); }
+      for (const [m, i] of carModes(CAR).map((m, i) => [m, i] as const)) for (const sg of [1, -1]) { g.save(); g.globalAlpha = 0.45; dot(g, f, [m.s[0], sg * m.s[1]], i ? col.b() : col.a(), 4); g.restore(); }
+      const md = carModes(withSky(CAR, skyOf(c.values))); md.forEach((m, i) => { for (const sg of [1, -1]) dot(g, f, [m.s[0], sg * m.s[1]], i ? col.b() : col.a(), 5.5); });
+      note(g, md.length === 2 ? `ζ bounce ${fmt(md[0].zeta, 3)}, pitch ${fmt(md[1].zeta, 3)} · ${fmt(md[0].fn, 3)} / ${fmt(md[1].fn, 3)} Hz` : 'a mode is overdamped', f.box.l + 4, f.box.t + 10, col.text(), 'left', 10); } },
+  { id: 'bump', title: 'Heave after the 5 cm bump: passive (dashed) and with skyhook (solid)', x: 'time t (s)', y: 'z (mm)',
+    draw(g, w, h) { wipe(g, w, h); const P = skyBump(CAR, { cf: 0, cr: 0 }, 3, 5e-4), S = skyBump(CAR, skyOf(c.values), 3, 5e-4), f = graph(g, w, h, [0, 3], [-6, 10], 'time t (s)', 'heave (mm)');
+      tline(g, f, [0, 1], [3, 1], col.muted(), 1, [2, 3]); tline(g, f, [0, -1], [3, -1], col.muted(), 1, [2, 3]);
+      curve(g, f, P.ts, P.xs.map((x) => x[0] * 1000), col.muted(), 1.6, [5, 3]); curve(g, f, S.ts, S.xs.map((x) => x[0] * 1000), col.a(), 2.4);
+      const pk = Math.max(...S.xs.map((x) => Math.abs(x[0]))) * 1000, fp = S.F.map((u) => u.map(Math.abs)).reduce((a, u) => [Math.max(a[0], u[0]), Math.max(a[1], u[1])], [0, 0]);
+      let last = 0; S.xs.forEach((x, i) => { if (Math.abs(x[0]) > 1e-3) last = S.ts[i]; });
+      note(g, `peak ${fmt(pk, 2)} mm · within 1 mm after ${fmt(last, 2)} s · actuators ${Math.round(fp[0]).toLocaleString('en-US')} / ${Math.round(fp[1]).toLocaleString('en-US')} N`, f.box.r - 4, f.box.b - 10, col.text(), 'right', 10); } },
+]);

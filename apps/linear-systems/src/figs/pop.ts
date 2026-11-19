@@ -41,7 +41,7 @@ const kick: QuizFigureDef = { aspect: 1.25, maxWidth: 260, draw(g, w, h, p) {
     const tot = ts.map((_, i) => parts.reduce((a, q) => a + q[i], 0)), m = Math.max(...tot.map(Math.abs)) * 1.2, f = fr(g, w, h, [0, 5], [-m, m], 't (ms)', 'x');
     parts.forEach((q) => curve(g, f, ts, q, col.muted(), 1)); curve(g, f, ts, tot, col.a(), 2.2);
     shifts.forEach((s) => tline(g, f, [s + 0.03, 0], [s + 0.03, m * 0.45], col.e(), 2));
-    title(g, '1 ms pulse = 4 clicks → sum of rings', w);
+    title(g, '4 clicks → sum of 4 rings', w);
   }
 } };
 
@@ -94,7 +94,7 @@ const pz: QuizFigureDef = { aspect: 1.9, maxWidth: 400, draw(g, w, h) {
   for (const q of p.poles) { cross(g, f, q as [number, number], col.b(), 6); tline(g, f, q as [number, number], [0, wz], col.b(), 1, [4, 3]); }
   dot(g, f, [0, wz], col.e(), 4);
   text(g, 'poles −1.27 ± 4.32j', f.X(-2.9), f.Y(4.9), col.b(), 'left', 10);
-  text(g, 'jω at 658 Hz: closest', f.X(0.08), f.Y(wz) + 12, col.e(), 'left', 10);
+  text(g, 'jω at 658 Hz', f.X(-0.08), f.Y(wz) + 14, col.e(), 'right', 10);
 } };
 
 /** a small side-view car (body outline + wheels) at heave z, pitch th, in a w×h box */
@@ -121,7 +121,7 @@ const carmode: QuizFigureDef = { aspect: 1.5, maxWidth: 220, draw(g, w, h, p) {
   if (k) dot(g, rangeFrame(w, h, [0, w], [h, 0], 0, 0, 0, 0), [r.X(m.node), r.yb], col.e(), 3);
   title(g, k ? `pitch ${m.fn.toFixed(2)} Hz` : `bounce ${m.fn.toFixed(2)} Hz`, w, k ? col.b() : col.a());
 } };
-/** Box 3: the bump reaches the rear wheel 0.18 s after the front; the response is the front response plus a delayed copy. */
+/** Box 2 (the core idea): the bump reaches the rear wheel 0.18 s after the front; the response is the front response plus a delayed copy. */
 const bump: QuizFigureDef = { aspect: 2.4, maxWidth: 440, draw(g, w, h) {
   const A = carA(CAR), B = roadB(CAR), b = bumpInput(CAR), T = 2;
   const fr_ = sim(A, B, (t) => { const u = b.u(t); return [u[0], 0, u[2], 0]; }, [0, 0, 0, 0], T, 4e-3), rr = sim(A, B, (t) => { const u = b.u(t); return [0, u[1], 0, u[3]]; }, [0, 0, 0, 0], T, 4e-3);
@@ -139,7 +139,7 @@ const carsettle: QuizFigureDef = { aspect: 1.5, maxWidth: 220, draw(g, w, h, p) 
 /** Box 13: symmetric car, a push at the centre: bounce moves, pitch never starts. */
 const carhidden: QuizFigureDef = { aspect: 2.4, maxWidth: 440, draw(g, w, h) {
   const u = (t: number) => [t > 0.1 && t < 0.3 ? 1500 * Math.sin((Math.PI * (t - 0.1)) / 0.2) : 0], r = sim(carA(CAR_SYM), forceB(CAR_SYM, [0]), u, [0, 0, 0, 0], 3, 4e-3);
-  const zs = r.xs.map((x) => x[0] * 1000), m = Math.max(...zs.map(Math.abs)) * 1.2, f = fr(g, w, h, [0, 3], [-m, m], 't (s)', 'heave (mm) / pitch', 26);
+  const zs = r.xs.map((x) => x[0] * 1000), m = Math.max(...zs.map(Math.abs)) * 1.2, f = fr(g, w, h, [0, 3], [-m, m], 't (s)', 'heave (mm) / pitch', 34);
   curve(g, f, r.ts, zs, col.a(), 2); curve(g, f, r.ts, r.xs.map((x) => x[1] * DEG * 100), col.b(), 3);
   text(g, 'heave: the push moves it', f.X(0.9), f.Y(m * 0.7), col.a(), 'left', 10); text(g, 'pitch: stays exactly 0', f.X(1.4), f.Y(-m * 0.25), col.b(), 'left', 10);
 } };
@@ -148,7 +148,7 @@ const caropt: QuizFigureDef = { aspect: 2.4, maxWidth: 440, draw(g, w, h) {
   const r = minEnergy(CAR, [CAR.a, -CAR.b], [0, -2 / DEG, 0, 0], 0.5), ts = linspace(0, 0.5, 101), U = ts.map((t) => r.u(t));
   const f = fr(g, w, h, [0, 0.5], [-750, 750], 't (s)', 'force (N)', 34);
   tline(g, f, [0, 0], [0.5, 0], col.muted(), 1); curve(g, f, ts, U.map((u) => u[0]), col.a(), 2); curve(g, f, ts, U.map((u) => u[1]), col.b(), 2);
-  text(g, 'front (peak 476 N)', f.X(0.02), f.Y(-560), col.a(), 'left', 10); text(g, 'rear (peak 652 N)', f.X(0.02), f.Y(600), col.b(), 'left', 10);
+  text(g, 'front: peaks 476 N part-way', f.X(0.02), f.Y(-600), col.a(), 'left', 10); text(g, 'rear: 652 N at the end', f.X(0.02), f.Y(600), col.b(), 'left', 10);
 } };
 
 /** Box 12: where the pole sits decides: left → settles, on the axis → rings for ever, right → grows. */

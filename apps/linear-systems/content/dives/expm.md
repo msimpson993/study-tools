@@ -24,7 +24,7 @@ How the unforced state moves, and why diagonalization turns a matrix ODE into n 
 
 ### See it
 
-**Picture it first.** e^(At) is a movie: start the car in any state and it plays the motion that follows with no input. First a bump: the response is the front wheel's plus the rear wheel's, 0.18 s later.
+**Picture it first.** e^(At) is a movie: start the car in any state and it plays the motion that follows with no input. First, for contrast, a forced response (not e^(At)x(0)): a bump drives the car through B, and the response is the front wheel's plus the rear wheel's, 0.18 s later.
 
 ```figure:flow
 ```

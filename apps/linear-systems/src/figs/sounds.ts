@@ -40,7 +40,7 @@ const dB = (x: number) => 20 * Math.log10(Math.max(1e-9, x));
 
 export const sounds: AudioRegistry = {
   'snd-clip': {
-    label: 'Play 440 Hz into the earbud', note: 'Turn the drive up: the cone runs into its (illustrative ±100 µm) soft limit, the wave flattens and harmonics at 1320 Hz, 2200 Hz… appear. Loudness is held fixed so you hear only the change in tone.',
+    label: 'Play 440 Hz into the earbud', note: 'What you hear: at low drive, a pure 440 Hz tone. Turn the drive up and the cone runs into its (illustrative ±100 µm) soft limit: the wave flattens and new pitches at 1320, 2200 Hz… (odd harmonics) make it buzzy. A linear system never creates new pitches. Plot: clean wave dashed, limited wave solid; loudness is held fixed, so only the tone changes.',
     controls: [{ key: 'v', label: 'drive', min: 0.1, max: 6, step: 0.1, value: 0.2, fmt: (v) => `${v.toFixed(1)} V` }],
     render: (fs, v) => clipped440(fs, v.v),
     view: { aspect: 2.4, alt: 'One and a half cycles of the 440 Hz cone motion: clean (dashed) and through the soft limit (solid), with the third harmonic level.',
@@ -50,21 +50,21 @@ export const sounds: AudioRegistry = {
         text(g, `3rd harmonic ${harmonicDb(v.v, 3).toFixed(0)} dB`, w - 8, 8, col.b(), 'right', 10); } },
   },
   'snd-ping': {
-    label: 'Play the earbud ping', note: `Four clicks; each comes out as the earbud's impulse response h(t), a ring at its damped frequency ${spk().fd.toFixed(1)} Hz that dies within a few milliseconds. Short: it sounds like a tick.`,
+    label: 'Play the earbud ping', note: `What you hear: four clicks, each turned into the earbud's impulse response h(t) (plotted): a ring at its damped frequency ${spk().fd.toFixed(1)} Hz that dies within a few milliseconds, so it sounds like a short tick.`,
     render: (fs) => pings(fs, 1, 4, 0.3),
     view: { aspect: 2.4, alt: 'The earbud impulse response h(t) over the first 5 ms.',
       draw(g, w, h) { const ts = linspace(0, 5, 301), ys = ts.map((t) => hImp(t)), m = Math.max(...ys.map(Math.abs)) * 1.1, f = fr(g, w, h, [0, 5], [-m, m], 't (ms)', 'h');
         curve(g, f, ts, ys, col.a(), 2); text(g, `rings at ${spk().fd.toFixed(1)} Hz, τ = ${(1 / spk().sigma).toFixed(2)} ms`, w - 8, 8, col.text(), 'right', 10); } },
   },
   'snd-ping-x': {
-    label: 'EXAGGERATED: play a low-damping ping', note: `Not the real earbud: the damping is cut to 3% so the ring lasts long enough to hear as a pitch (${spk(0.03).fd.toFixed(0)} Hz, τ = ${(1 / spk(0.03).sigma).toFixed(0)} ms).`,
+    label: 'EXAGGERATED: play a low-damping ping', note: `What you hear: NOT the real earbud. With the damping cut to 3% the ring lasts long enough (τ = ${(1 / spk(0.03).sigma).toFixed(0)} ms) to hear as a clear pitch, ${spk(0.03).fd.toFixed(0)} Hz: the system's own natural ring.`,
     render: (fs) => pings(fs, 0.03, 3, 0.6),
     view: { aspect: 2.4, alt: 'An exaggerated, lightly damped ring over 60 ms.',
       draw(g, w, h) { const ts = linspace(0, 60, 1201), ys = ts.map((t) => hImp(t, 0.03)), m = Math.max(...ys.map(Math.abs)) * 1.1, f = fr(g, w, h, [0, 60], [-m, m], 't (ms)', 'h');
         curve(g, f, ts, ys, col.bad(), 1.4); text(g, 'EXAGGERATED (damping × 0.03)', w - 8, 8, col.bad(), 'right', 10); } },
   },
   'snd-sweep': {
-    label: 'Play a sweep through the earbud', note: 'A 6 s sweep from 100 Hz to 5 kHz, filtered by the earbud model (a digital biquad: bilinear transform, prewarped). Listen for the bump near 658 Hz, then the fade above 1 kHz; less damping makes the bump stand out.',
+    label: 'Play a sweep through the earbud', note: 'What you hear: a 6 s tone gliding from 100 Hz to 5 kHz through the earbud model (a digital biquad: bilinear transform, prewarped). It swells near 658 Hz, the gain peak, and fades above about 1 kHz; the cursor on the gain curve follows the pitch. Less damping makes the swell louder.',
     controls: [{ key: 'd', label: 'damping', min: 0.3, max: 2, step: 0.05, value: 1, fmt: (v) => `× ${v.toFixed(2)}` }],
     render: (fs, v) => biquadRun(earbudBiquad(fs, v.d), logSweep(fs, SWEEP.f1, SWEEP.f2, SWEEP.T)),
     view: { aspect: 2.2, alt: 'The earbud gain against pitch on a log axis, with a cursor at the sweep frequency.',
@@ -77,7 +77,7 @@ export const sounds: AudioRegistry = {
         else text(g, `peak ${Math.max(...ys).toFixed(1)} dB`, w - 8, 8, col.text(), 'right', 10); } },
   },
   'snd-square': {
-    label: 'Play the square-wave build-up', note: 'A 200 Hz square wave built from its odd harmonics, 200, 600, 1000 Hz…, each at 1/k of the first. Add them one at a time: the plot and the sound change together.',
+    label: 'Play the square-wave build-up', note: 'What you hear: a pure 200 Hz tone that turns into a buzz as you add odd harmonics (200, 600, 1000 Hz…, each at 1/k of the first). The plot (solid) closes in on the square wave (dashed) as the sound brightens.',
     controls: [{ key: 'n', label: 'odd harmonics', min: 1, max: 15, step: 1, value: 1, fmt: (v) => `${v} (to ${(2 * v - 1) * 200} Hz)` }],
     render: (fs, v) => squarePartial(fs, v.n),
     view: { aspect: 2.4, alt: 'Two periods of the partial sum and the ideal square wave.',
@@ -86,7 +86,7 @@ export const sounds: AudioRegistry = {
         curve(g, f, ts, ts.map((t) => { let s = 0; for (let k = 1; k <= v.n; k++) s += Math.sin(TAU * (2 * k - 1) * 0.2 * t) / (2 * k - 1); return (4 / Math.PI) * s; }), col.a(), 1.8); } },
   },
   'snd-alias': {
-    label: 'Play a tone sampled at 8 kHz', note: 'The tone rises from 200 Hz to 7.8 kHz, but it is sampled at 8 kHz: above 4 kHz (fs/2) what comes back out is the folded pitch fs − f, which falls again. This is what an ideal 8 kHz converter would play back.',
+    label: 'Play a tone sampled at 8 kHz', note: 'What you hear: a tone rising from 200 Hz to 7.8 kHz, sampled at 8 kHz. Past 4 kHz (fs/2) the pitch you hear turns round and falls (heard = fs − f): aliasing. Dashed: the true pitch; solid: what an ideal 8 kHz converter plays back.',
     render: (fs) => chirp(fs, ALIAS.T, (t) => foldFreq(aliasTrue(t), ALIAS.fs)),
     view: { aspect: 2.2, alt: 'True frequency rising in a straight line and the apparent frequency folding back at 4 kHz, with a cursor.',
       draw(g, w, h, _v, t) { const ts = linspace(0, ALIAS.T, 241), f = fr(g, w, h, [0, ALIAS.T], [0, 8], 't (s)', 'kHz', 26);
@@ -96,7 +96,7 @@ export const sounds: AudioRegistry = {
         else text(g, 'dashed: true · solid: heard', w - 8, 8, col.text(), 'right', 10); } },
   },
   'snd-beat': {
-    label: 'Play 690 Hz + 700 Hz', note: 'Two tones 10 Hz apart beat ten times a second. A 64-sample block at 8 kHz (8 ms, bins 125 Hz apart) cannot split them: in the windowed spectrum they are one blurred peak.',
+    label: 'Play 690 Hz + 700 Hz', note: 'What you hear: one tone whose loudness pulses ten times a second (beating: the two tones are 10 Hz apart). A 64-sample block at 8 kHz (8 ms, bins 125 Hz apart) cannot split them: leakage blurs them into one peak in the windowed spectrum.',
     render: (fs) => { const n = Math.round(fs * 3), y = new Float32Array(n); for (let i = 0; i < n; i++) y[i] = Math.sin((TAU * 690 * i) / fs) + Math.sin((TAU * 700 * i) / fs); return y; },
     view: { aspect: 2.4, alt: 'The sum of 690 and 700 Hz over 0.3 s, with its 10 Hz beat envelope.',
       draw(g, w, h) { const ts = linspace(0, 300, 3001), f = fr(g, w, h, [0, 300], [-2.2, 2.2], 't (ms)', '');

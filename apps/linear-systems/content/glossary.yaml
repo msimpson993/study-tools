@@ -1,4 +1,4 @@
-# Glossary (rebuilt Nov 2026): 95 terms in 8 sections. The original 19 terms are kept (wording unchanged except e^(...) notation).
+# Glossary (rebuilt Nov 2026): 101 terms in 8 sections. The original 19 terms are kept (wording unchanged except e^(...) notation).
 - term: Linear
   meaning: "Superposition holds: the response to $a x_1 + b x_2$ is $a y_1 + b y_2$. Doubling the input doubles the output."
   section: Systems and the eigen idea
@@ -13,6 +13,9 @@
   section: Systems and the eigen idea
 - term: Homogeneity
   meaning: "Scaling the input scales the output by the same factor: $T\\{a u\\} = a\\,T\\{u\\}$. With additivity it makes a system linear; taking $a = 0$ shows zero in must give zero out."
+  section: Systems and the eigen idea
+- term: Superposition
+  meaning: "For a linear system, split the input into pieces, find each piece's response, and add them: the response to the sum is the sum of the responses. The car's bump response is the front wheel's response plus the rear wheel's response to the same bump, 0.18 s later."
   section: Systems and the eigen idea
 - term: Affine
   meaning: "Linear plus a constant, like $y = 2u + 1$: a straight-line graph that misses the origin. Not linear, but linear in the deviations $\\delta y = 2\\,\\delta u$ about an operating point."
@@ -297,4 +300,19 @@
   section: Car on its suspension
 - term: Sensor at the balance point
   meaning: "A height sensor at the centre of gravity of the symmetric car reads only heave: pitch moves the nose and tail but not the centre, so pitch is unobservable."
+  section: Car on its suspension
+- term: Heave
+  meaning: "Up-and-down motion of the whole car body, z (m, + up), measured at the centre of gravity."
+  section: Car on its suspension
+- term: "Still point (node)"
+  meaning: "The point along the body that does not move in a mode: the pitch mode turns about x = +0.56 m on the main car. It exists exactly only because the mode shapes are real (proportional damping); with ordinary shocks a point is only nearly still."
+  section: Car on its suspension
+- term: Proportional damping
+  meaning: "Shocks proportional to the springs, C = βK (here C = 0.08 s·K). The damped modes then have the same real shapes as the undamped ones, so each mode has an exact still point."
+  section: Car on its suspension
+- term: "Feedback, closed loop"
+  meaning: "Computing the input from what is measured, u = −Kx. The loop changes A to A − BK, so it moves the poles: it can steady a system, or destabilise it if wired the wrong way round."
+  section: Car on its suspension
+- term: Skyhook damping
+  meaning: "Active damping that pushes against the body's own vertical speed, F = −c·(body speed), as if a damper were hooked to the sky. On the car, c_f = 4,317 and c_r = 4,771 N·s/m raise ζ to 0.700 (bounce) and 0.863 (pitch) at the same natural frequencies."
   section: Car on its suspension

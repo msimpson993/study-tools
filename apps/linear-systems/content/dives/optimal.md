@@ -3,7 +3,7 @@ id: optimal
 order: 29
 title: "Application: optimal control (Pontryagin's principle)"
 addsToExample: "Finds the least-energy front and rear actuator forces (active suspension) that bring the body from 2° nose-down to level and still in 0.5 s. With ∫|u|² dt as the cost the costate obeys λ̇ = −Aᵀλ, so u(t) = −Bᵀλ(t)/2 is built from the car's modes run backwards from T: small at first, the front force peaking at 476 N part-way through and the rear at 652 N right at the end, with E = 96,160 N²·s. Given 1 s, about 120 N is enough."
-accountsFor: "Why the cheapest levelling force starts small and does its hardest work late, and why a shorter time costs so much more."
+accountsFor: "Why the cheapest levelling forces start small, swing in sign, and do their hardest work in the second half, and why a shorter time costs so much more."
 category: structure
 neighbors:
   - gramian

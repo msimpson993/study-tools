@@ -129,3 +129,13 @@ for (const app of APPS) {
     });
   });
 }
+
+test('linear-systems: map figures are captioned and panels labelled (box 3 and box 2)', async ({ page }) => {
+  await open(page, 'linear-systems');
+  await page.locator('[data-testid=map-node][data-node="LIN"]').dispatchEvent('click');
+  const cap = page.getByTestId('pop-figcap');
+  await expect(cap).toBeVisible(); await expect(cap).toContainText('(a)'); await expect(cap).toContainText('(b)'); await expect(cap).toContainText('homogeneity');
+  await expect(page.locator('.pop-figs .qfig-cap').first()).toHaveText('(a) 0.2 V');
+  await page.locator('[data-testid=map-node][data-node="SUP"]').dispatchEvent('click');
+  await expect(page.getByTestId('pop-figcap')).toContainText('superposition plus a time shift');
+});

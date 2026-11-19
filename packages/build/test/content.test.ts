@@ -31,7 +31,7 @@ describe('shipped content', () => {
     expect(content.quiz.length).toBe(97);
     expect(content.quiz.filter((q) => q.tags?.includes('variants')).length).toBe(21);
   });
-  it('linear-systems Big-picture boxes follow the fixed pop-up template (answer, rough words, running example, next question; ≤ ~140 words)', () => {
+  it('linear-systems Big-picture boxes follow the fixed pop-up template (answer, rough words, running example, next question; every figure captioned; ≤ ~180 words incl. captions)', () => {
     const { content } = loadApp(path.join(repoRoot, 'apps', 'linear-systems'));
     const big = content.maps.find((m) => m.id === 'big')!;
     expect(big.nodes.length).toBe(15);
@@ -44,8 +44,12 @@ describe('shipped content', () => {
       const next = n.pop?.next ?? big.edges.find((e) => e.from === n.id && !e.dashed)?.question;
       if (n.id !== 'WORK') expect(next, n.id).toBeTruthy();
       if (n.id !== 'root') expect(n.pop?.ask, `${n.id} has an intuition question`).toBeTruthy();
-      const total = words(n.short ?? '') + words(n.pop?.rough ?? '') + words(example ?? '') + words(next ?? '') + words(n.pop?.eqKey ?? '');
-      expect(total, `${n.id} pop-up words`).toBeLessThanOrEqual(140);
+      const figs = n.pop?.figures ?? [];
+      // every figure strip has a caption saying what it shows and what it proves; several panels are labelled (a), (b)… and walked through in order
+      if (figs.length) expect(n.pop?.figCaption, `${n.id} figure caption`).toBeTruthy();
+      if (figs.length > 1) figs.forEach((f, i) => { const L = String.fromCharCode(97 + i); expect(f.caption ?? '', `${n.id} panel ${L} label`).toMatch(new RegExp(`^\\(${L}\\)`)); const cap = (n.pop?.figCaption ?? '').replace(/\((\w)–(\w)\)/g, (_, x: string, y: string) => Array.from({ length: y.charCodeAt(0) - x.charCodeAt(0) + 1 }, (_, j) => `(${String.fromCharCode(x.charCodeAt(0) + j)})`).join(' ')); expect(cap, `${n.id} caption walks through (${L})`).toContain(`(${L})`); });
+      const total = words(n.short ?? '') + words(n.pop?.rough ?? '') + words(example ?? '') + words(next ?? '') + words(n.pop?.eqKey ?? '') + words(n.pop?.figCaption ?? '') + figs.reduce((a, f) => a + words(f.caption ?? ''), 0);
+      expect(total, `${n.id} pop-up words`).toBeLessThanOrEqual(180);
       expect((n.pop?.figures ?? []).length, n.id).toBeLessThanOrEqual(4);
     }
     // every outgoing edge carries the question the box ends on
@@ -72,9 +76,9 @@ describe('shipped content', () => {
       expect(d.html.trimStart().startsWith('<p><strong>The question:</strong>'), d.id).toBe(true);
     }
   });
-  it('linear-systems glossary: 95 terms, every one in a section, no raw ^{…} outside math', () => {
+  it('linear-systems glossary: 101 terms, every one in a section, no raw ^{…} outside math', () => {
     const { content } = loadApp(path.join(repoRoot, 'apps', 'linear-systems'));
-    expect(content.glossary.length).toBe(95);
+    expect(content.glossary.length).toBe(101);
     expect(content.glossary.every((t) => !!t.section)).toBe(true);
     expect(new Set(content.glossary.map((t) => t.section)).size).toBe(8);
     for (const t of content.glossary) expect(t.meaning.replace(/<span class="katex[\s\S]*?<\/math>/g, '')).not.toMatch(/\^\{/);
