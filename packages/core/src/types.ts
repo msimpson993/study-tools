@@ -145,6 +145,8 @@ export interface FigureDef {
 export interface SectionDef { id: string; title: string; kind: 'map' | 'dives' | 'md' | 'quiz' | 'board' | 'glossary' | 'figures' | 'review'; html?: string }
 export interface Subject {
   id: string;
+  /** practice sets that belong to no box (never in a box or subtree quiz); questions carry the tag, cards show the label */
+  quizSets?: { tag: string; label: string }[];
   title: string;
   centralQuestion: string;
   blurb: string;

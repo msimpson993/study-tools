@@ -329,7 +329,8 @@ export function mountApp(content: AppContent, hooks: AppHooks = {}): void {
       if (!def || !mounter) { slot.append(h('p', { class: 'st-hint' }, `(figure ${id} is not available)`)); return; }
       slot.classList.add('viz-embed');
       slot.dataset.testid = 'viz';
-      const stop = mounter(slot, def, new ControlSet(def.controls, def.presets));
+      const d = slot.dataset.look ? { ...def, lookFor: slot.dataset.look } : def; // a dive's own look-for for a reused figure
+      const stop = mounter(slot, d, new ControlSet(def.controls, def.presets));
       if (typeof stop === 'function') stops.push(stop);
     });
     // ```picture:<id> caption``` slots: static captioned pictures drawn by the subject's quiz-figure renderers

@@ -34,7 +34,9 @@ export function createMarkdown(errors: MathErrors, where: () => string) {
     if (info.startsWith('figure:')) {
       const id = info.slice('figure:'.length).trim();
       errors.figureRefs.push({ id, where: where() });
-      return `<div class="viz-slot" data-figure="${esc(id)}"></div>\n`;
+      // optional body `lookFor: …` gives this embed its own look-for line (a figure reused by another dive)
+      const look = /^lookFor:\s*([\s\S]+)$/.exec(t.content.trim())?.[1]?.trim();
+      return `<div class="viz-slot" data-figure="${esc(id)}"${look ? ` data-look="${esc(look)}"` : ''}></div>\n`;
     }
     if (info.startsWith('picture:')) { // a static captioned picture from the quiz-figure registry: ```picture:<id> Caption text```, body = alt text
       const [id, ...cap] = info.slice('picture:'.length).trim().split(/\s+/);

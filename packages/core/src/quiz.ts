@@ -19,6 +19,7 @@ export function tagLabel(content: AppContent, tag: string): string {
   if (d) return d.title;
   for (const m of content.maps) { const n = m.nodes.find((x) => (x.quizTag ?? x.dive ?? x.id) === tag); if (n) return n.label; }
   for (const r of content.review ?? []) { if (r.quizTag === tag) return r.title; const sub = r.quizSubsets?.find((x) => x.tag === tag); if (sub) return sub.label; }
+  const set = content.subject.quizSets?.find((x) => x.tag === tag); if (set) return set.label;
   return tag;
 }
 
@@ -46,7 +47,7 @@ export function mountQuiz(host: HTMLElement, content: AppContent, progress: Prog
   // a copied reference (#/quiz?qid=…) opens on that question, once
   let pendingQid: string | null = typeof location !== 'undefined' ? new URLSearchParams(location.hash.split('?')[1] ?? '').get('qid') : null;
 
-  const subsetLabel = (q: Question) => (content.review ?? []).flatMap((r) => r.quizSubsets ?? []).find((x) => q.tags.includes(x.tag))?.label ?? '';
+  const subsetLabel = (q: Question) => [...(content.review ?? []).flatMap((r) => r.quizSubsets ?? []), ...(content.subject.quizSets ?? [])].find((x) => q.tags.includes(x.tag))?.label ?? '';
 
   /** map order: rank each question by the first box (on the first map, main chain order) whose quiz tag it carries; a box's own quick check leads its group */
   function chainOrder(qs: Question[]): Question[] {

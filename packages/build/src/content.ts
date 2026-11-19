@@ -311,6 +311,7 @@ export function loadApp(appDir: string): { content: AppContent; warnings: string
   // quiz figures: when the subject lists its renderers, every figure.id must be one of them (otherwise ids are checked at runtime, with a visible fallback)
   for (const q of quiz) if (q.figure && subject.quizFigures && !subject.quizFigures.includes(q.figure.id)) problems.push(`quiz.yaml ${q.id}: figure "${q.figure.id}" is not in subject.yaml quizFigures [${subject.quizFigures.join(', ')}]`);
   const reviewTags = new Set(review.flatMap((r) => [r.quizTag, ...(r.quizSubsets ?? []).map((x) => x.tag)]).filter(Boolean) as string[]);
+  for (const s of (subject as { quizSets?: { tag: string }[] }).quizSets ?? []) reviewTags.add(s.tag); // off-map practice sets
   for (const q of quiz) {
     for (const t of q.tags) if (!tags.has(t) && !diveIds.has(t) && !reviewTags.has(t)) problems.push(`quiz.yaml ${q.id}: tag "${t}" matches no node/dive/review page`);
   }

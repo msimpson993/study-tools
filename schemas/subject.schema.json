@@ -19,6 +19,7 @@
       "type": "string",
       "minLength": 3
     },
+    "quizSets": { "type": "array", "description": "practice sets that belong to no box: kept off the map, labelled on their quiz cards", "items": { "type": "object", "required": ["tag", "label"], "additionalProperties": false, "properties": { "tag": { "type": "string" }, "label": { "type": "string" } } } },
     "quizOrder": {
       "enum": ["authored", "chain"],
       "description": "chain: the quiz runs in map order (box 1's questions first, each box's quick check leading), so it opens on an easy foundational question"
