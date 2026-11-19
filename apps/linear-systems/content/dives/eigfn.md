@@ -16,11 +16,11 @@ level: Conceptual
 check: [c-eigfn-1, c-eigfn-2, pop-tone]
 ---
 
-**The question:** which signals does convolution only scale? This is the box *Pieces: steady sine waves*. For any LTI system the answer is the exponentials e^(st) (and zⁿ in discrete time): they come out as H(s) e^(st), the same shape times one complex number.
+**The question:** which signals does convolution only scale? This is the box *Pieces: steady sine waves*. For any LTI system the answer starts with the pure tone e^(jωt): it comes out as H(jω) e^(jωt), the same tone times one complex number (a gain and a delay). The same holds for every exponential e^(st), growing or dying (and zⁿ in discrete time): out comes H(s) e^(st).
 
 ### The big idea
 
-Why the transfer function is the whole system: knowing H(s) for every s means knowing the scale factor for every eigen-piece, and any input can be split into those pieces.
+Some inputs come out of an LTI system with their shape unchanged, only scaled: the pure tone e^(jωt) is the everyday example. If we know the scale factor for every tone, we know the system, because any input is a sum of tones. The transfer function is that list of scale factors.
 
 ### See it
 

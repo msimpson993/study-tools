@@ -20,7 +20,7 @@ check: [c-pbh-1, c-ctrl-1, c-obs-1]
 
 ### The big idea
 
-Which mode fails, and what parameter values make it fail. It turns "find the conditions on b, f, g" into one dot product per mode.
+The rank tests say whether some mode is unreachable or unseen, but not which one. The PBH test (Popov–Belevitch–Hautus) checks each mode on its own: a mode is lost if the input's push on its shape, or the sensor's view of it, is zero. One small calculation per mode.
 
 ### See it
 

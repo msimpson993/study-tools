@@ -20,7 +20,7 @@ check: [c-lti-2, pop-kick, q1]
 
 ### The big idea
 
-Why exponentials are the preferred basis for LTI systems, and why every frequency-domain tool in the class is a change of basis that turns convolution into multiplication.
+Linear, time-invariant systems treat exponentials specially: an exponential goes in and the same exponential comes out, only scaled. That is why every frequency-domain tool works: it rewrites the input as exponentials, so the hard convolution in time becomes a simple multiplication.
 
 ### See it
 

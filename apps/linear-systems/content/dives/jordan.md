@@ -20,7 +20,7 @@ check: [c-jor-1, m4]
 
 ### The big idea
 
-What to do when the eigenbasis is incomplete, and why a repeated pole can produce t e^(λt) (and t^k e^(λt) for a larger block).
+Diagonalizing needs a full set of eigenvectors, and a repeated eigenvalue sometimes supplies only one. Then the best we can do is nearly diagonal, with a 1 just above the diagonal, the Jordan form. That 1 adds motions like t·e^(λt): a rise before the fade, as at critical damping.
 
 ### See it
 

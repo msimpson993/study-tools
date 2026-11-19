@@ -20,9 +20,7 @@ check: [c-linsys-1, c-linsys-3, c-linsys-5]
 
 ### The big idea
 
-What the word "linear" promises (sums and scaling pass through), what "time-invariant" adds (delays pass through), and why that pair is worth a whole course.
-
-**Big picture.** A system is a rule that turns an input signal into an output signal. It is linear if it respects sums and scaling, and time-invariant if it behaves the same today as tomorrow. Linearity lets you split any input into simple pieces, find the response to each piece, and add the responses back up; that idea, superposition, is the whole course. Real systems are never exactly linear, but nearly all of them are close to linear for small signals, and for linear systems we have closed-form tools that work the same way in every field.
+A system is a rule that turns an input signal into an output signal. It is linear if it respects sums and scaling, and time-invariant if it behaves the same today as tomorrow. Linearity lets you split any input into simple pieces, find the response to each piece, and add the responses back up; that idea, superposition, is the whole course. Real systems are never exactly linear, but nearly all of them are close to linear for small signals, and for linear systems we have closed-form tools that work the same way in every field.
 
 ### A system is a rule: y = T{u}
 
@@ -66,6 +64,8 @@ Play the earbud quietly, then 10 times louder. Does the diaphragm move exactly 1
 
 ```figure:lintest
 ```
+
+**From superposition to convolution.** Any input can be cut into a row of short, narrow pulses. Each pulse gives a copy of the system's impulse response h(t), scaled by the pulse's height and delayed to its time (linearity gives the scaling and the sum, time invariance the delay). Adding all those copies is **convolution**, y = h ∗ u: at each time t, flip h, slide it to t, multiply by the input and take the area. The next figure does exactly that for the earbud.
 
 ```figure:lti
 ```

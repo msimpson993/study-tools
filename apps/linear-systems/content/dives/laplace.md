@@ -20,7 +20,7 @@ check: [c-laplace-1, q1]
 
 ### The big idea
 
-Where transients, ROC, and system poles live, and how Fourier analysis sits inside Laplace / Z when the axis is in the ROC.
+Fourier uses steady sines, which last forever, so it cannot describe a switch-on, a dying ring or a signal that grows. The Laplace transform uses growing and dying exponentials e^(st) as its pieces instead. On the imaginary axis, where they neither grow nor die, it becomes Fourier again.
 
 ### See it
 

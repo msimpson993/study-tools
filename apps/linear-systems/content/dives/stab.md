@@ -20,7 +20,7 @@ check: [c-stab-1, m7, c-eig-2]
 
 ### The big idea
 
-When the unforced state goes to 0, and how that is read off the poles of a minimal realization — or off the eigenvalues of A directly.
+A system settles if, left alone, every motion in it dies away. Each mode moves as e^(λt), so it settles exactly when every eigenvalue has a negative real part (for sampled systems: every pole inside the unit circle). Reading stability is reading where the poles sit.
 
 ### See it
 

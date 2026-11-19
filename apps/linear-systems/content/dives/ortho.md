@@ -20,7 +20,7 @@ check: [c-fs-1, m16]
 
 ### The big idea
 
-How to read off coordinates with inner products, and why the analysis formula of every Fourier tool is an inner product against an exponential.
+To find how much of one harmonic a signal holds, we line the signal up against that harmonic and measure the overlap. This works because different harmonics are orthogonal, like perpendicular axes, so measuring one never picks up another. Every Fourier formula is such an overlap.
 
 ### See it
 

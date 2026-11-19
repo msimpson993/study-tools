@@ -59,12 +59,31 @@ test.describe('linear-systems: six-domains board (migrated 1:1 from the retired 
   test('hand-dialling an example\'s settings switches the About box to it and clears "(modified)"', async ({ page }) => {
     await page.evaluate("__apply('under')");
     await page.evaluate(REV1);
-    expect(await page.locator('#exsum').textContent()).toContain('(modified)');
+    // REV1 picks a new transform pair by hand: that drops the preset (no "(modified)", no highlighted preset)
+    expect(await page.locator('#exsum').textContent()).toBe('About: your own setting');
+    expect(await page.evaluate("document.querySelectorAll('#presets button.on').length")).toBe(0);
     await page.evaluate(REV2);
     expect(await page.locator('#exsum').textContent()).not.toContain('(modified)');
     expect(await page.evaluate("[...document.querySelectorAll('#presets button.on')].map(b=>b.dataset.id)")).toEqual(['offbin']);
     await page.evaluate(REV3);
     expect(await page.locator('#exsum').textContent()).toContain('(modified)');
+  });
+
+  test('Earbud preset: labels show the units it uses (1/ms, kHz, ms); deep links load a preset unmodified', async ({ page }) => {
+    await page.evaluate("__apply('earbud')");
+    const lab = async () => page.evaluate("[...document.querySelectorAll('.legacy-board [data-u]')].map(e=>e.textContent).join(',')");
+    expect(await lab()).toBe('1/ms,kHz,1/ms,kHz');
+    expect(await page.locator('#oT').textContent()).toContain('µs');
+    expect(await page.locator('#exsum').textContent()).not.toContain('(modified)');
+    await page.evaluate("__apply('under')");
+    expect(await lab()).toBe('1/s,Hz,1/s,Hz');
+    for (const q of ['pair=lap&preset=earbud', 'pair=dft&preset=offbin', 'pair=lap']) {
+      await page.goto(`/linear-systems/index.html#/board?${q}`); await page.waitForTimeout(400);
+      expect(await page.locator('#exsum').textContent(), q).not.toContain('(modified)');
+    }
+    // opened on a pair without a preset: the earbud, in its units
+    expect(await page.locator('#exsum').textContent()).toContain('Earbud');
+    expect(await lab()).toBe('1/ms,kHz,1/ms,kHz');
   });
 
   test('expanded view: controls stay usable, main controls drive it, Esc / margin close it', async ({ page }) => {

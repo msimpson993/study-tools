@@ -20,7 +20,7 @@ check: [c-ft-1, c-ft-2]
 
 ### The big idea
 
-The frequency content of a nonperiodic continuous-time signal, and the continuous-time half of the convolution theorem: convolution in t is multiplication in ω.
+A one-off signal, like a click, does not repeat, so it needs every frequency, not just harmonics. The Fourier transform gives its spectrum as a continuous curve. Its most useful property: passing through a system, which is a convolution in time, becomes plain multiplication in frequency.
 
 ### See it
 

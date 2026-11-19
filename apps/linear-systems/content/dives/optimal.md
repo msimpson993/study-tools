@@ -20,7 +20,7 @@ check: [c-opt-1, c-opt-2, c-opt-3]
 
 ### The big idea
 
-How to turn "best" into equations you can solve with the tools you already have: another state transition matrix, this time of the Hamiltonian system.
+Many ways of pushing reach the same target, and some cost far less than others. Optimal control finds the cheapest one: write the cost down, add a second running variable, the costate, that keeps track of what each push will cost later, and solve both together. For a linear system it comes down to one more e^(Mt).
 
 ### See it
 

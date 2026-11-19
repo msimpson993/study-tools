@@ -20,7 +20,7 @@ check: [c-kal-1, c-stab-1, q3]
 
 ### The big idea
 
-Why a pole of the state model can disappear from G(s), and what minimal actually means.
+A model can have more states than its transfer function shows. Some modes cannot be reached by the input, some cannot be seen at the output, and those drop out of G(s). The Kalman decomposition sorts the state into the four groups and shows which part the input–output view really describes.
 
 ### See it
 

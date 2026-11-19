@@ -71,7 +71,7 @@ const u = (k: number) => (k >= 0 ? 1 : 0);
 describe('earbud speaker (Mms 0.084 g, Rms 0.173 kg/s, Cms 0.587 mm/N, Bl 0.545 T·m, Re 7.47 Ω, Le 0.04 mH)', () => {
   const Mms = 0.084e-3, Rms = 0.173, Cms = 0.587e-3, Bl = 0.545, Re = 7.47, Le = 0.04e-3;
   const k = 1 / Cms, ws = Math.sqrt(k / Mms);
-  it('stiffness k ≈ 1704 N/m and resonance fs ≈ 717 Hz', () => {
+  it('stiffness k ≈ 1704 N/m and natural frequency fₙ ≈ 717 Hz', () => {
     expect(k).toBeCloseTo(1703.6, 1);
     expect(ws).toBeCloseTo(4503, 0);
     expect(ws / (2 * Math.PI)).toBeCloseTo(716.7, 1);

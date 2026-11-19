@@ -20,7 +20,7 @@ check: [c-roc-1, c-roc-2, c-roc-3]
 
 ### The big idea
 
-Which of several signals a formula like 1/((z − ½)(z + 2)(z + 3)) means: with four possible regions (|z| < ½, ½ < |z| < 2, 2 < |z| < 3, |z| > 3) there are four different sequences. Only |z| > 3 is right-sided, and it is not stable, because the unit circle |z| = 1 is not in it.
+The same transform formula can belong to several different signals. What tells them apart is the region of convergence: the set of s (or z) where the transform's sum or integral stays finite. Its shape says whether the signal runs forward, backward or both ways in time, and whether it is stable.
 
 ### See it
 

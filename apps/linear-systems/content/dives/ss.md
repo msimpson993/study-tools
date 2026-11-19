@@ -20,7 +20,7 @@ check: [c-ss-1, c-ss-2]
 
 ### The big idea
 
-A common language for dynamics, modes, inputs, and outputs — the setting in which e^(At), controllability, observability, and G(s) are defined.
+A transfer function only links input to output. A state-space model keeps the inside too: a few numbers, the state, that remember everything that matters, and a rule for how they change. It is the setting for modes, e^(At), controllability and observability.
 
 ### See it
 

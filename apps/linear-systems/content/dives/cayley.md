@@ -20,7 +20,7 @@ check: [c-ch-1, c-ch-2]
 
 ### The big idea
 
-How to compute e^(At) (or Aᵏ, or any analytic function of A) from the eigenvalues alone, without finding eigenvectors.
+Computing e^(At) usually means finding A's eigenvectors first, which is slow and fails when there are too few. There is a shortcut: every square matrix obeys its own characteristic equation, so any power of A, and so e^(At), can be written with just I, A, …, A^(n−1). The weights come from the eigenvalues alone.
 
 ### See it
 

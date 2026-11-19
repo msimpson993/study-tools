@@ -20,7 +20,7 @@ check: [c-ctrl-1, c-ctrl-2, m8]
 
 ### The big idea
 
-Whether every mode is reachable from the input, as a concrete linear-algebra question (range of Ctrb; left eigenvectors not orthogonal to B).
+Before designing an actuator, check that it can do the job at all. A system is controllable if the input, given time, can steer the state to any value; if it is not, some mode moves on its own whatever you push. The test is a rank check on B, AB, A²B and so on.
 
 ### See it
 

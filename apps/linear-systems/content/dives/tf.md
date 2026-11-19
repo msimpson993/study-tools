@@ -2,8 +2,8 @@
 id: tf
 order: 8
 title: Transfer functions
-addsToExample: "Reads the speaker's peak from its pole pair: ζ ≈ 0.28, so the poles sit fairly close to the jω axis and |H| peaks near 660 Hz, a little below fs = 717 Hz."
-accountsFor: "Why lighter damping would make a sharper, louder resonance, and why the peak is below fs."
+addsToExample: "Reads the speaker's peak from its pole pair: ζ ≈ 0.28, so the poles sit fairly close to the jω axis and |H| peaks near 658 Hz, a little below the natural frequency fₙ = 717 Hz."
+accountsFor: "Why lighter damping would make a sharper, louder resonance, and why the peak is below fₙ."
 category: signals
 neighbors:
   - ss
@@ -20,7 +20,7 @@ check: [c-laplace-1, c-ft-1, q3]
 
 ### The big idea
 
-The i/o map in the s-domain, and the precise sense in which poles are the eigenvalues of A.
+The transfer function H(s) is the system's whole input–output behaviour as one fraction: the output's transform divided by the input's. Its poles are the system's natural rhythms, and they are the eigenvalues of A, unless a mode is hidden from the input or the output. (Some books, and the state-space dives here, call it G(s); G(s) and H(s) are the same function.)
 
 ### See it
 
@@ -33,16 +33,16 @@ The i/o map in the s-domain, and the precise sense in which poles are the eigenv
 ```
 
 ```eq
-G(s) = C (sI − A)⁻¹ B + D
+H(s) = C (sI − A)⁻¹ B + D
 ```
 
 ```eq
-Y(s) = G(s) U(s)    (zero state)
+Y(s) = H(s) U(s)    (zero state)
 ```
 
 ### The math
 
-Taking the (zero-state) Laplace transform of the state equations and eliminating X(s) produces G(s). This is the same object as the Laplace transform of the impulse response. In the best-basis language, each mode contributes a term r / (s − λ), unless that mode is uncontrollable or unobservable, in which case its residue is zero and the pole cancels.
+Taking the (zero-state) Laplace transform of the state equations and eliminating X(s) produces H(s). This is the same object as the Laplace transform of the impulse response. In the best-basis language, each mode contributes a term r / (s − λ), unless that mode is uncontrollable or unobservable, in which case its residue is zero and the pole cancels.
 
 **What each symbol means.**
 
@@ -57,16 +57,16 @@ Taking the (zero-state) Laplace transform of the state equations and eliminating
 2. Walk up the jω axis. The distance to the upper pole alone is smallest at 688 Hz, level with it ($\omega = 4{,}322$ rad/s). The gain is set by the product of the distances to both poles, and that product is smallest a little lower, at 658 Hz ($\omega \approx 4{,}132$ rad/s): the gain peaks there at ×1.85.
 3. Far above, both distances grow like ω, so the gain falls like $1/\omega^2$: 40 dB per decade.
 
-**Exam-style example.** For A = [[0, 1], [−2, −3]] (ÿ + 3ẏ + 2y = u), with B = [0, 1]ᵀ and C = [1, 0], (sI − A)⁻¹ = 1/(s² + 3s + 2) · [[s + 3, 1], [−2, s]], so G(s) = 1/((s + 1)(s + 2)). Partial fractions: 1/(s+1) − 1/(s+2), hence h(t) = (e^(−t) − e^(−2t)) u(t), matching C e^(At) B. With the uncontrollable B = [1, −2]ᵀ the same algebra yields (s+1)/((s+1)(s+2)) = 1/(s+2): the cancelled pole is exactly the hidden eigenvalue.
+**Exam-style example.** For A = [[0, 1], [−2, −3]] (ÿ + 3ẏ + 2y = u), with B = [0, 1]ᵀ and C = [1, 0], (sI − A)⁻¹ = 1/(s² + 3s + 2) · [[s + 3, 1], [−2, s]], so H(s) = 1/((s + 1)(s + 2)). Partial fractions: 1/(s+1) − 1/(s+2), hence h(t) = (e^(−t) − e^(−2t)) u(t), matching C e^(At) B. With the uncontrollable B = [1, −2]ᵀ the same algebra yields (s+1)/((s+1)(s+2)) = 1/(s+2): the cancelled pole is exactly the hidden eigenvalue.
 
 ### What it can't do
 
 H(s) is the outside view: it shows only what gets from input to output. It doesn't show what the system stores inside, and it can hide modes that cancel.
 
-**Next question.** G(s) forgets hidden modes and initial conditions. If you need the full natural response, stay with the state, or put x(0) back into the Laplace identity sX − x(0) = AX + BU.
+**Next question.** H(s) forgets hidden modes and initial conditions. If you need the full natural response, stay with the state, or put x(0) back into the Laplace identity sX − x(0) = AX + BU.
 
 ### Common pitfalls
 
-- G(s) is the zero-state i/o map. Initial conditions produce an extra term C(sI − A)⁻¹ x(0).
-- Poles of G(s) equal the eigenvalues of A (counted with multiplicity) if and only if the realization is minimal. Always ask whether a cancellation already happened.
-- MIMO systems have a matrix G(s). Transmission zeros are not the zeros of the individual entries.
+- H(s) is the zero-state i/o map. Initial conditions produce an extra term C(sI − A)⁻¹ x(0).
+- Poles of H(s) equal the eigenvalues of A (counted with multiplicity) if and only if the realization is minimal. Always ask whether a cancellation already happened.
+- MIMO systems have a matrix H(s). Transmission zeros are not the zeros of the individual entries.

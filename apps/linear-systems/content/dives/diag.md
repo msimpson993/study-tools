@@ -20,7 +20,7 @@ check: [c-diag-1, m3]
 
 ### The big idea
 
-How to pick coordinates so the operator is as simple as possible: independent scalar multiplies, one per mode.
+A coupled system is hard because every variable pushes on the others. Choose the coordinates well, along the eigenvectors, and the coupling disappears: the system becomes n separate first-order systems, one per mode. Nothing physical changes, only the way we write it down.
 
 ### See it
 

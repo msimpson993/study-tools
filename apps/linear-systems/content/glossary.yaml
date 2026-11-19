@@ -89,7 +89,7 @@
   meaning: Root of the denominator (a mode the system can show) and root of the numerator (a frequency it blocks).
   section: "Laplace, Z and inverses"
 - term: "G(s), H(s)"
-  meaning: "Transfer function: $G(s) = C(sI - A)^{-1}B + D$. The eigenvalue an LTI system assigns to $e^{st}$."
+  meaning: "Transfer function: $G(s) = C(sI - A)^{-1}B + D$. The eigenvalue an LTI system assigns to $e^{st}$. G(s) and H(s) are the same thing: the earbud boxes write H(s), the state-space pages G(s), as textbooks do."
   section: "Laplace, Z and inverses"
 - term: Partial fractions
   meaning: Splitting $X(s)$ into $\sum c_p/(s-p)$ so each term inverts to one exponential (a repeated pole adds $c/(s-p)^k$ terms).
@@ -291,8 +291,8 @@
   meaning: "Coil resistance and inductance. Their ratio gives the fast coil pole −Re/Le ≈ −186,750 rad/s."
   units: "Ω (7.47), mH (0.04)"
   section: Earbud speaker
-- term: fs (resonance)
-  meaning: "Mechanical resonance $f_s = \\frac{1}{2\\pi\\sqrt{M_{ms}C_{ms}}}$ ≈ 717 Hz. Not the sample rate fs (same letters, context tells)."
+- term: fₙ (natural frequency)
+  meaning: "The earbud's undamped natural frequency $f_n = \\frac{1}{2\\pi\\sqrt{M_{ms}C_{ms}}}$ ≈ 717 Hz (speaker data sheets call it fs; this course keeps fs for the sample rate). Damping slows the ring to f_d = 688 Hz; the gain peaks at 658 Hz."
   units: Hz
   section: Earbud speaker
 - term: ζ (damping ratio)

@@ -20,7 +20,7 @@ check: [c-expm-1, m5, m6]
 
 ### The big idea
 
-How the unforced state moves, and why diagonalization turns a matrix ODE into n scalar ones.
+With no input, the state of ẋ = Ax moves on its own, and one matrix, e^(At), carries any starting state forward in time. In mode coordinates it is simple: each mode just follows its own exponential. Back in ordinary coordinates, it mixes those exponentials.
 
 ### See it
 

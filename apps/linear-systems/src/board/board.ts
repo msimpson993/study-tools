@@ -16,6 +16,14 @@ const DEF={A:1,wave:'free',mode:'under',sig:0.6,f0:1,dl:1,fs:8,M:32,N:64,win:'re
 /* View toggles that picking a transform sets (a visible convenience; the toggles can be overridden afterwards) */
 const viewFor=sel=>({ctv:sel==='fs'?'per':'sig',cop:sel==='dtft'||sel==='samp'||sel==='map'});
 let S=Object.assign({},DEF);
+/* Units: the Earbud preset is drawn with time in ms and frequency in kHz, so every label follows it (sticky until another preset is loaded). */
+let UNITS_MS=false;
+function UMS(){return UNITS_MS;}
+function UH(){return UNITS_MS?'kHz':'Hz';}
+function UT(){return UNITS_MS?'ms':'s';}
+function UI(){return UNITS_MS?'1/ms':'1/s';}
+function UR(){return UNITS_MS?'rad/ms':'rad/s';}
+function unitLabels(){document.querySelectorAll('.legacy-board [data-u]').forEach(el=>{el.textContent=({hz:UH(),inv:UI(),t:UT()})[el.dataset.u];});}
 
 const D=()=>derive(S);
 const xt=(t,d)=>mxt(t,d,S);
@@ -88,12 +96,12 @@ function drawCT(d,x,cv=cvCT){
   const n=700,ts=[],ys=[];for(let i=0;i<n;i++){const t=tr[0]+(tr[1]-tr[0])*i/(n-1);ts.push(t);ys.push(xt(t,d));}
   let ymax=0;ts.forEach((t,i)=>{if(t<=Math.max(L,Tp)*1.1)ymax=Math.max(ymax,Math.abs(ys[i]))});ymax=Math.max(ymax,1e-3)*1.15;
   const F=frame(g,4,4,W-8,H-17*FK,tr,[-ymax,ymax]);
-  axes(F,{xl:'t (s)'});
+  axes(F,{xl:'t ('+UT()+')'});
   if(fsSel){ // periodic extension of the windowed, truncated record, period N*T
     const pe=ts.map(t=>{let tau=((t%Tp)+Tp)%Tp;return tau<d.L*d.T?xt(tau,d)*win(tau/d.T,S.M):0;});
     line(F,ts,ys,COL.yel,1.2,null,.35);line(F,ts,pe,COL.org,2);
     for(let k=-1;k<=2;k++)vmark(F,k*Tp,COL.org,k===1?'NT':'',[2,4],true);
-    text(g,'periodic extension, period NT = '+Tp.toFixed(2)+' s',F.x+4,F.y+2,COL.org);
+    text(g,'periodic extension, period NT = '+Tp.toFixed(2)+' '+UT(),F.x+4,F.y+2,COL.org);
     return;
   }
   line(F,ts,ys,COL.yel,2);
@@ -142,7 +150,7 @@ function drawCF(d,cv=cvCF){
   vmark(F,-d.nyq,COL.pink,'−fs/2');vmark(F,d.nyq,COL.pink,'fs/2');vmark(F,S.fs,COL.pink,'fs',[1,4]);vmark(F,-S.fs,COL.pink,'',[1,4]);
   if(stab<=1e-12)text(g,stab<-1e-12?(small?'unstable: no FT/DTFT':'unstable pole: FT/DTFT do not exist (showing X(s) at s=jω)'):(small?'marginal: impulses':'pole on jω axis: FT/DTFT contain impulses (spikes)'),F.x+4,F.y+12,COL.warn||'#f0b54a');
   const P=frame(g,4,hm+12*FK,W-8,H-hm-25*FK,fr,[-Math.PI,Math.PI]);
-  axes(P,{xl:'f (Hz)',yl:'Phase'});
+  axes(P,{xl:'f ('+UH()+')',yl:'Phase'});
   line(P,f,ph,COL.yel,1.5,null,stab>0?1:.5);if(dtftOK)line(P,f,dp,COL.grn,1.2,[5,3]);
   vmark(P,-d.nyq,COL.pink,'');vmark(P,d.nyq,COL.pink,'');
 }
@@ -158,8 +166,8 @@ function drawDF(d,X,xw,cv=cvDF){
   else stems(F,kf,km,COL.cyan,dots);
   vmark(F,d.nyq,COL.pink,'fs/2');
   if(d.mode==='under'&&S.f0<=S.fs)vmark(F,S.f0>d.nyq?S.fs-S.f0:S.f0,COL.yel,'',[1,3]);
-  if(!small)text(g,'Δf = '+d.df.toPrecision(3)+' Hz',F.x+F.w-2,F.y+2,COL.cyan,'right');
-  const P=frame(g,4,hm+12*FK,W-8,H-hm-25*FK,fr,[-Math.PI,Math.PI]);axes(P,{xl:'f = k·fs/N (Hz)',yl:'Phase'});
+  if(!small)text(g,'Δf = '+d.df.toPrecision(3)+' '+UH(),F.x+F.w-2,F.y+2,COL.cyan,'right');
+  const P=frame(g,4,hm+12*FK,W-8,H-hm-25*FK,fr,[-Math.PI,Math.PI]);axes(P,{xl:'f = k·fs/N ('+UH()+')',yl:'Phase'});
   line(P,fc,cpz,COL.grn,1,[4,3],.6);
   const kp=X.map((v,i)=>km[i]<1e-6*mx?0:carg(v));stems(P,kf,kp,COL.cyan,dots,1.2);
 }
@@ -252,15 +260,15 @@ const TX={
         'Tones above <i>f</i><sub>s</sub>/2 alias to |<i>f</i><sub>0</sub> − <i>k f</i><sub>s</sub>|. Try the ideal-sinc reconstruction: it rebuilds the <i>alias</i>, not the original.',
         'ZOH: staircase, <i>T</i>/2 delay, sinc(<i>fT</i>) droop. FOH: smoother, sinc² droop. Ideal sinc is non-causal and infinitely long (truncated here, so it rings at the record edges and at the <i>t</i> = 0 step).'],
   ml:'x = xfun((0:M-1)*T);  interp1(t_n,x,t,"previous"/"linear");  c2d(sys,T,"zoh"/"foh")',
-  live:d=>d.mode!=='under'?`Real poles (${MH(d).tag}): nothing oscillates, so there's no tone to alias. The spectrum is still not band-limited: |X| at fs/2 is ${cabs(Xjw(Math.PI/d.T,d)).toExponential(2)} vs ${cabs(Xjw(0,d)).toFixed(3)} at DC, and that tail aliases.`:d.aliased?`f₀ = ${S.f0.toFixed(2)} Hz is above Nyquist ${d.nyq.toFixed(2)} Hz → the samples look like ${d.fa.toFixed(2)} Hz.`:`f₀ = ${S.f0.toFixed(2)} Hz is below Nyquist ${d.nyq.toFixed(2)} Hz (${(S.fs/S.f0).toFixed(1)} samples per cycle). No aliasing of the main tone, but the u(t) step and the exponential tail are not band-limited.`},
+  live:d=>d.mode!=='under'?`Real poles (${MH(d).tag}): nothing oscillates, so there's no tone to alias. The spectrum is still not band-limited: |X| at fs/2 is ${cabs(Xjw(Math.PI/d.T,d)).toExponential(2)} vs ${cabs(Xjw(0,d)).toFixed(3)} at DC, and that tail aliases.`:d.aliased?`f₀ = ${S.f0.toFixed(2)} ${UH()} is above Nyquist ${d.nyq.toFixed(2)} ${UH()} → the samples look like ${d.fa.toFixed(2)} ${UH()}.`:`f₀ = ${S.f0.toFixed(2)} ${UH()} is below Nyquist ${d.nyq.toFixed(2)} ${UH()} (${(S.fs/S.f0).toFixed(1)} samples per cycle). No aliasing of the main tone, but the u(t) step and the exponential tail are not band-limited.`},
  ft:{c:COL.yel,name:'(Inverse) Fourier transform',pair:'Continuous Time ⇄ Continuous Frequency',ends:['pCT','pCF'],
   eq:d=>`<div class="eq box"><i>X</i>(<i>j</i>ω) = <span class="big">∫</span><sub>−∞</sub><sup>∞</sup> <i>x</i>(<i>t</i>) <i>e</i><sup>−<i>j</i>ω<i>t</i></sup> <i>dt</i>, &nbsp;&nbsp; <i>x</i>(<i>t</i>) = <span class="frac"><span>1</span><span>2π</span></span><span class="big">∫</span> <i>X</i>(<i>j</i>ω) <i>e</i><sup><i>j</i>ω<i>t</i></sup> <i>d</i>ω</div>
       <div class="eq box">Here: <i>X</i>(<i>j</i>ω) = <i>X</i>(<i>s</i>)|<sub><i>s</i>=<i>j</i>ω</sub>, &nbsp; <i>X</i>(<i>s</i>) = ${MH(d).Xs}<span class="note">exists only if every pole is in the LHP (the jω axis must be inside the ROC). Currently ${stabTxt(d)}.</span></div>`,
-  vars:[['ω = 2πf','angular frequency (rad/s)'],['σ','decay rate. The −3 dB width of the peak ≈ 2σ rad/s'],['ω<sub>d</sub>','ringing frequency, peak location']],
+  vars:[['ω = 2πf','angular frequency (rad/s; rad/ms on the Earbud preset)'],['σ','decay rate. The −3 dB width of the peak ≈ 2σ (rad/s, or rad/ms on the Earbud preset)'],['ω<sub>d</sub>','ringing frequency, peak location']],
   lost:['Nothing is lost; the transform is invertible. Time detail and frequency detail trade off: faster decay (bigger σ) gives a broader peak.',
         'Needs ∫|x| &lt; ∞, so growing signals (σ &lt; 0) have no FT. The Laplace transform handles them.'],
   ml:'b=[A A*sig]; a=[1 2*sig sig^2+wd^2];  H=freqs(b,a,w);  bode(tf(b,a))',
-  live:d=>d.pmax>=0?'Pole on or right of the jω axis: no Fourier transform (shown faded as X(s) evaluated on the jω axis).':d.mode==='under'?`Peak ≈ |X(jω<sub>d</sub>)| ≈ ${cabs(Xjw(d.wd,d)).toFixed(3)} at ${S.f0.toFixed(2)} Hz; −3 dB bandwidth ≈ ${(S.sig/Math.PI).toFixed(3)} Hz.`:`Low-pass shape with no resonant peak (${MH(d).tag}): |X(0)| = ${cabs(Xjw(0,d)).toFixed(3)}, and |X| falls ≈ A/ω (−20 dB/dec) at high ω.`},
+  live:d=>d.pmax>=0?'Pole on or right of the jω axis: no Fourier transform (shown faded as X(s) evaluated on the jω axis).':d.mode==='under'?`Peak ≈ |X(jω<sub>d</sub>)| ≈ ${cabs(Xjw(d.wd,d)).toFixed(3)} at ${S.f0.toFixed(2)} ${UH()}; −3 dB bandwidth ≈ ${(S.sig/Math.PI).toFixed(3)} ${UH()}.`:`Low-pass shape with no resonant peak (${MH(d).tag}): |X(0)| = ${cabs(Xjw(0,d)).toFixed(3)}, and |X| falls ≈ A/ω (−20 dB/dec) at high ω.`},
  dft:{c:COL.yel,name:'(Inverse) Discrete Fourier Transform',pair:'Discrete Time ⇄ Discrete Frequency',ends:['pDT','pDF'],
   eq:`<div class="eq box"><i>X</i>[<i>k</i>] = <span class="lim"><small><i>N</i>−1</small><b>Σ</b><small><i>n</i>=0</small></span> <i>w</i>[<i>n</i>]<i>x</i>[<i>n</i>] <i>e</i><sup>−<i>j</i>2π<i>kn</i>/<i>N</i></sup>, &nbsp; <i>x</i>[<i>n</i>] = <span class="frac"><span>1</span><span><i>N</i></span></span><span class="lim"><small><i>N</i>−1</small><b>Σ</b><small><i>k</i>=0</small></span> <i>X</i>[<i>k</i>] <i>e</i><sup><i>j</i>2π<i>kn</i>/<i>N</i></sup></div>
       <div class="eq box"><i>f</i><sub>k</sub> = <i>k</i>·<i>f</i><sub>s</sub>/<i>N</i>, &nbsp; Δ<i>f</i> = <i>f</i><sub>s</sub>/<i>N</i>, &nbsp; resolution ≈ 1/(<i>MT</i>)</div>`,
@@ -269,7 +277,7 @@ const TX={
         'Leakage: a tone that doesn\'t complete a whole number of cycles in the record, or a decay that gets cut off, spreads into every bin. Hann lowers the sidelobes and widens the main lobe.',
         'Zero-padding (N &gt; M) samples the same DTFT more finely. It does not improve resolution; only a longer record does. N &lt; M truncates, like MATLAB fft(x,N).'],
   ml:'X = fft(x.*w, N);  f = (0:N-1)*fs/N;  stem(f, T*abs(X))',
-  live:d=>d.mode!=='under'?`Δf = ${d.df.toPrecision(3)} Hz; record resolution 1/(MT) = ${(S.fs/S.M).toPrecision(3)} Hz. Real poles give a low-pass spectrum, so leakage shows up as the window's sidelobe floor, not around a tone.`:`Δf = ${d.df.toPrecision(3)} Hz; record resolution 1/(MT) = ${(S.fs/S.M).toPrecision(3)} Hz; the tone sits at bin ${((d.aliased?d.fa:S.f0)/d.df).toFixed(2)}${Math.abs(((d.aliased?d.fa:S.f0)/d.df)%1-0.5)<0.25?' (between bins, so expect scalloping/leakage)':''}.`},
+  live:d=>d.mode!=='under'?`Δf = ${d.df.toPrecision(3)} ${UH()}; record resolution 1/(MT) = ${(S.fs/S.M).toPrecision(3)} ${UH()}. Real poles give a low-pass spectrum, so leakage shows up as the window's sidelobe floor, not around a tone.`:`Δf = ${d.df.toPrecision(3)} ${UH()}; record resolution 1/(MT) = ${(S.fs/S.M).toPrecision(3)} ${UH()}; the tone sits at bin ${((d.aliased?d.fa:S.f0)/d.df).toFixed(2)}${Math.abs(((d.aliased?d.fa:S.f0)/d.df)%1-0.5)<0.25?' (between bins, so expect scalloping/leakage)':''}.`},
  fs:{c:COL.org,name:'Fourier series',pair:'Continuous Time ⇄ Discrete Frequency',ends:['pCT','pDF'],
   eq:`<div class="eq box"><i>c</i><sub>k</sub> = <span class="frac"><span>1</span><span><i>T</i><sub>p</sub></span></span><span class="big">∫</span><sub>0</sub><sup><i>T</i><sub>p</sub></sup> <i>x̃</i>(<i>t</i>) <i>e</i><sup>−<i>j</i>2π<i>kt</i>/<i>T</i><sub>p</sub></sup><i>dt</i>, &nbsp; <i>x̃</i>(<i>t</i>) = <span class="lim"><small>&nbsp;</small><b>Σ</b><small><i>k</i></small></span> <i>c</i><sub>k</sub><i>e</i><sup><i>j</i>2π<i>kt</i>/<i>T</i><sub>p</sub></sup></div>
       <div class="eq box"><i>T</i><sub>p</sub> = <i>NT</i>: &nbsp; <span class="frac"><span><i>X</i>[<i>k</i>]</span><span><i>N</i></span></span> = <span class="lim"><small>&nbsp;</small><b>Σ</b><small><i>m</i></small></span> <i>c</i><sub><i>k</i>+<i>mN</i></sub><span class="note">The DFT of the samples gives the Fourier-series coefficients, aliased in k</span></div>`,
@@ -277,7 +285,7 @@ const TX={
   lost:['A periodic signal has a discrete line spectrum. Here the record is forced to be periodic, which is the hidden assumption behind the DFT.',
         'The jump where one period meets the next (x(0) = A vs. ≈ 0 at the end) causes Gibbs ringing and slow 1/k decay of c<sub>k</sub>. Sampling folds those coefficients together (aliasing in k).'],
   ml:'ck ≈ fft(x,N)/N;   % line spectrum at (0:N-1)/(N*T)',
-  live:d=>`Period T<sub>p</sub> = NT = ${(S.N*d.T).toFixed(3)} s, so the lines are spaced 1/T<sub>p</sub> = ${d.df.toPrecision(3)} Hz. The DF stems T·X[k] = T<sub>p</sub>·c<sub>k</sub> (aliased).`},
+  live:d=>`Period T<sub>p</sub> = NT = ${(S.N*d.T).toFixed(3)} ${UT()}, so the lines are spaced 1/T<sub>p</sub> = ${d.df.toPrecision(3)} ${UH()}. The DF stems T·X[k] = T<sub>p</sub>·c<sub>k</sub> (aliased).`},
  dtft:{c:COL.grn,name:'(Inverse) Discrete-Time Fourier Transform',pair:'Discrete Time ⇄ Continuous Frequency',ends:['pDT','pCF'],
   eq:`<div class="eq box"><i>X</i>(<i>e</i><sup><i>j</i>Ω</sup>) = <span class="lim"><small>∞</small><b>Σ</b><small><i>n</i>=−∞</small></span> <i>x</i>[<i>n</i>]<i>e</i><sup>−<i>j</i>Ω<i>n</i></sup>, &nbsp; <i>x</i>[<i>n</i>] = <span class="frac"><span>1</span><span>2π</span></span><span class="big">∫</span><sub>−π</sub><sup>π</sup><i>X</i>(<i>e</i><sup><i>j</i>Ω</sup>)<i>e</i><sup><i>j</i>Ω<i>n</i></sup><i>d</i>Ω, &nbsp; Ω = ω<i>T</i></div>
       <div class="eq box"><i>X</i>(<i>e</i><sup><i>j</i>ω<i>T</i></sup>) = <span class="frac"><span>1</span><span><i>T</i></span></span><span class="lim"><small>∞</small><b>Σ</b><small><i>k</i>=−∞</small></span> <i>X</i>(<i>j</i>(ω − 2π<i>k</i>/<i>T</i>)) <span style="color:var(--muted)">+ <i>A</i>/2</span><span class="note">Poisson sum: periodic copies of the CT spectrum, scaled by 1/T. The extra A/2 appears because x(t) jumps at t = 0 and the copy sum converges to the midpoint x(0⁺)/2, while x[0] = A.</span></div>`,
@@ -293,7 +301,7 @@ const TX={
   lost:['Sampling in frequency means repeating in time with period N. If the signal is longer than N, the repeats overlap (time-domain aliasing). That is why fft(x,N) with N &lt; M is lossy.',
         'A peak that falls between bins is under-read (picket-fence/scalloping). Denser sampling (zero-padding) shows the true curve, and interpolating with P<sub>N</sub> is exact.'],
   ml:'X1 = fft(x, N);  X2 = fft(x, 8*N);   % same DTFT, denser samples',
-  live:d=>`${S.N} samples of the continuous spectrum over [0, fs), every ${d.df.toPrecision(3)} Hz. ${S.N<S.M?'N < M, so the record is truncated.':S.N>S.M?'N > M: zero-padded, finer sampling of the same curve.':'N = M.'}`},
+  live:d=>`${S.N} samples of the continuous spectrum over [0, fs), every ${d.df.toPrecision(3)} ${UH()}. ${S.N<S.M?'N < M, so the record is truncated.':S.N>S.M?'N > M: zero-padded, finer sampling of the same curve.':'N = M.'}`},
  lap:{c:COL.cyan,name:'(Inverse) Laplace transform',pair:'Continuous Time ⇄ S-domain',ends:['pCT','pS'],
   eq:d=>`<div class="eq box"><i>X</i>(<i>s</i>) = <span class="big">∫</span><sub>0</sub><sup>∞</sup><i>x</i>(<i>t</i>)<i>e</i><sup>−<i>st</i></sup><i>dt</i>, &nbsp; <i>x</i>(<i>t</i>) = <span class="frac"><span>1</span><span>2π<i>j</i></span></span><span class="big">∫</span><sub><i>c</i>−<i>j</i>∞</sub><sup><i>c</i>+<i>j</i>∞</sup><i>X</i>(<i>s</i>)<i>e</i><sup><i>st</i></sup><i>ds</i></div>
       <div class="eq box"><i>x</i>(<i>t</i>) = ${MH(d).xt} &nbsp;⇒&nbsp; <i>X</i>(<i>s</i>) = ${MH(d).Xs}<span class="note">${MH(d).tag}: poles ${MH(d).ps} (✕), zero s = ${S.wave==='cos'?'−σ':'−2σ'} = ${d.z0.re.toFixed(2)} (○), ROC Re{s} &gt; ${d.pmax.toFixed(2)}. ${S.wave==='cos'?'Damped-cosine waveform: x(0) = A, x′(0) = −σA. In the repeated-pole case the zero cancels one pole.':'This is the free response of s² + 2ζω<sub>n</sub>s + ω<sub>n</sub>² released from rest: x(0) = A, x′(0) = 0.'}</span></div>`,
@@ -301,7 +309,7 @@ const TX={
   lost:['Gained over the FT: works for growing signals and initial conditions, and the pole locations are the modes e<sup>pt</sup>.',
         'Stable ⇔ all poles in the open left half-plane. FT = X(s) on the jω axis, only when the ROC includes it.'],
   ml:'sys = tf(A*[1 2*sig],[1 2*sig wn^2]);  % damped cosine: tf(A*[1 sig],[1 2*sig wn^2]);  pole(sys), damp(sys), pzmap(sys), impulse(sys)',
-  live:d=>`Poles at ${PS(d)} rad/s → ${stabTxt(d)}. ${isFinite(d.zeta)?`ζ = ${d.zeta.toFixed(3)}, ω<sub>n</sub> = ${d.wn.toFixed(2)} rad/s`:'ζ, ω<sub>n</sub> undefined (p₁p₂ ≤ 0)'}.`},
+  live:d=>`Poles at ${PS(d)} ${UR()} → ${stabTxt(d)}. ${isFinite(d.zeta)?`ζ = ${d.zeta.toFixed(3)}, ω<sub>n</sub> = ${d.wn.toFixed(2)} ${UR()}`:'ζ, ω<sub>n</sub> undefined (p₁p₂ ≤ 0)'}.`},
  zt:{c:COL.cyan,name:'(Inverse) Z-transform',pair:'Discrete Time ⇄ Z-domain',ends:['pDT','pZ'],
   eq:d=>`<div class="eq box"><i>X</i>(<i>z</i>) = <span class="lim"><small>∞</small><b>Σ</b><small><i>n</i>=0</small></span><i>x</i>[<i>n</i>]<i>z</i><sup>−<i>n</i></sup>, &nbsp; <i>x</i>[<i>n</i>] = <span class="frac"><span>1</span><span>2π<i>j</i></span></span><span class="big">∮</span><i>X</i>(<i>z</i>)<i>z</i><sup><i>n</i>−1</sup><i>dz</i></div>
       <div class="eq box"><i>x</i>[<i>n</i>] = ${MH(d).xn} &nbsp;⇒&nbsp; <i>X</i>(<i>z</i>) = ${MH(d).Xz}<span class="note">r = e<sup>−σT</sup>; poles ${MH(d).zp}; zeros 0 and ${MH(d).z1} = ${f3(d.zz.re)}; ROC |z| &gt; ${d.qmax.toFixed(3)}</span></div>`,
@@ -318,7 +326,7 @@ const TX={
         'Exact for the <i>poles</i> of a sampled impulse response (impulse invariance), and also the pole map used by c2d ZOH/FOH. <i>Zeros do not map this way</i>: the s-zero (at −2σ for the free response, −σ for the damped cosine) would land at e<sup>z₀T</sup>, but the actual z-zeros are 0 and z<sub>1</sub> (see the Z-transform card).',
         'Tustin (bilinear) s ≈ (2/T)(z−1)/(z+1) is a different, warped approximation.'],
   ml:'zp = exp(pole(sys)*T);  sysd = c2d(sys,T,"impulse");  % or "zoh"',
-  live:d=>d.mode!=='under'?`Real s-poles ${PS(d)} ↦ z = ${PZ(d)} on the positive real axis. Zero angle, so the poles can't alias.`:`Ω<sub>d</sub> = ω<sub>d</sub>T = ${d.Wd.toFixed(3)} rad${d.aliased?` > π, so it wraps to ${d.Wwrap.toFixed(3)} rad (looks like ${d.fa.toFixed(2)} Hz)`:''}; r = e<sup>−σT</sup> = ${d.r.toFixed(4)}.`},
+  live:d=>d.mode!=='under'?`Real s-poles ${PS(d)} ↦ z = ${PZ(d)} on the positive real axis. Zero angle, so the poles can't alias.`:`Ω<sub>d</sub> = ω<sub>d</sub>T = ${d.Wd.toFixed(3)} rad${d.aliased?` > π, so it wraps to ${d.Wwrap.toFixed(3)} rad (looks like ${d.fa.toFixed(2)} ${UH()})`:''}; r = e<sup>−σT</sup> = ${d.r.toFixed(4)}.`},
 };
 
 const I=v=>`<i>${v}</i>`;
@@ -334,8 +342,8 @@ const DIRS={
        i:['DT','CT','Interpolation (reconstruction)',(d,compact)=>{const o=k=>S.interp===k?' class="on"':(compact?' hidden':'');return `${I('x')}<sub>r</sub>(${I('t')}) = ${SUM('','<i>n</i>')} ${I('x')}[${I('n')}] ${I('h')}(${I('t')} − ${I('nT')}) &nbsp; with &nbsp;<span class="opts"><span${o('zoh')}>ZOH: ${I('h')} = 1 on [0, ${I('T')})</span><span${o('foh')}>FOH: ${I('h')} = Λ(${I('t')}/${I('T')}) = max(0, 1 − |${I('t')}|/${I('T')})</span><span${o('sinc')}>ideal: ${I('h')} = sinc(${I('t')}/${I('T')}) = sin(π${I('t')}/${I('T')})/(π${I('t')}/${I('T')})</span></span>`;},
         'Cannot undo aliasing: it rebuilds the alias, not the original. Exact only for a band-limited x, the ideal sinc kernel and infinitely many samples; ZOH/FOH add droop and images.',
         d=>{const fa=d.mode==='under'?(d.aliased?d.fa:S.f0):null,dr=f=>(20*Math.log10(Math.abs(sincv(f/S.fs))**(S.interp==='foh'?2:1))).toFixed(2);
-          if(S.interp==='sinc')return `Ideal sinc = brick-wall low-pass at f<sub>s</sub>/2 = ${d.nyq.toFixed(2)} Hz${fa!==null?`: rebuilds a ${fa.toFixed(2)} Hz tone${d.aliased?` (not the original ${S.f0.toFixed(2)} Hz)`:''}`:''}. Truncated to M = ${S.M} samples, so it rings at the record edges.`;
-          return `${S.interp==='zoh'?`ZOH: delay T/2 = ${(500/S.fs).toFixed(1)} ms; |H|/T = |sinc(fT)|`:'FOH (linear): no delay; |H|/T = sinc²(fT)'} → ${dr(S.fs/2)} dB at f<sub>s</sub>/2${fa!==null?`, ${dr(fa)} dB at ${fa.toFixed(2)} Hz`:''}.`;}]},
+          if(S.interp==='sinc')return `Ideal sinc = brick-wall low-pass at f<sub>s</sub>/2 = ${d.nyq.toFixed(2)} ${UH()}${fa!==null?`: rebuilds a ${fa.toFixed(2)} ${UH()} tone${d.aliased?` (not the original ${S.f0.toFixed(2)} ${UH()})`:''}`:''}. Truncated to M = ${S.M} samples, so it rings at the record edges.`;
+          return `${S.interp==='zoh'?`ZOH: delay T/2 = ${(500/S.fs).toFixed(1)} ${UMS()?'µs':'ms'}; |H|/T = |sinc(fT)|`:'FOH (linear): no delay; |H|/T = sinc²(fT)'} → ${dr(S.fs/2)} dB at f<sub>s</sub>/2${fa!==null?`, ${dr(fa)} dB at ${fa.toFixed(2)} ${UH()}`:''}.`;}]},
  ft:{f:['CT','CF','Fourier transform',d=>`${I('X')}(${I('j')}ω) = ${INT_('−∞','∞')} ${I('x')}(${I('t')}) ${I('e')}<sup>−${I('j')}ω${I('t')}</sup> ${I('dt')}`,
        'Nothing, if it exists (needs ∫|x| dt &lt; ∞: every pole in the LHP). Growing signals have no FT.',d=>TX.ft.live(d)],
      i:['CF','CT','Inverse Fourier transform',d=>`${I('x')}(${I('t')}) = ${FRc('1','2π')} ${INT_('−∞','∞')} ${I('X')}(${I('j')}ω) ${I('e')}<sup>${I('j')}ω${I('t')}</sup> ${I('d')}ω`,
@@ -348,7 +356,7 @@ const DIRS={
  fs:{f:['CT','DF','Fourier-series analysis',d=>`${I('c')}<sub>k</sub> = ${FRc('1','<i>T</i><sub>p</sub>')} ${INT_('0','<i>T</i><sub>p</sub>')} ${I('x̃')}(${I('t')}) ${I('e')}<sup>−${I('j')}2π${I('kt')}/${I('T')}<sub>p</sub></sup> ${I('dt')}, &nbsp; ${I('T')}<sub>p</sub> = ${I('NT')}`,
        'Everything outside one period: x is replaced by its periodic extension x̃ (windowed record, zero-padded to NT). The DFT gets c<sub>k</sub> only aliased: X[k]/N = Σ<sub>m</sub> c<sub>k+mN</sub>.',d=>TX.fs.live(d)],
      i:['DF','CT','Fourier-series synthesis',d=>`${I('x̃')}(${I('t')}) = ${SUM('∞','<i>k</i>=−∞')} ${I('c')}<sub>k</sub> ${I('e')}<sup>${I('j')}2π${I('kt')}/${I('T')}<sub>p</sub></sup>`,
-       'Rebuilds the periodic x̃(t), not the one-shot x(t). Gibbs overshoot (≈ 9%) at every period edge if the sum is truncated.',d=>`Lines every 1/T<sub>p</sub> = ${d.df.toPrecision(3)} Hz rebuild a waveform repeating every NT = ${(S.N*d.T).toFixed(3)} s.`]},
+       'Rebuilds the periodic x̃(t), not the one-shot x(t). Gibbs overshoot (≈ 9%) at every period edge if the sum is truncated.',d=>`Lines every 1/T<sub>p</sub> = ${d.df.toPrecision(3)} ${UH()} rebuild a waveform repeating every NT = ${(S.N*d.T).toFixed(3)} ${UT()}.`]},
  dtft:{f:['DT','CF','DTFT',d=>`${I('X')}(${I('e')}<sup>${I('j')}Ω</sup>) = ${SUM('∞','<i>n</i>=−∞')} ${I('x')}[${I('n')}] ${I('e')}<sup>−${I('j')}Ω${I('n')}</sup>, &nbsp; Ω = ω${I('T')}`,
         'Nothing, if it exists (Σ|x[n]| &lt; ∞). The result is 2π-periodic in Ω (period f<sub>s</sub> in f): equal to (1/T)Σ<sub>k</sub> X(j(ω − 2πk/T)) + A/2, i.e. the aliased CT spectrum.',d=>TX.dtft.live(d)],
        i:['CF','DT','Inverse DTFT',d=>`${I('x')}[${I('n')}] = ${FRc('1','2π')} ${INT_('−π','π')} ${I('X')}(${I('e')}<sup>${I('j')}Ω</sup>) ${I('e')}<sup>${I('j')}Ω${I('n')}</sup> ${I('d')}Ω &nbsp; (any 2π interval)`,
@@ -373,7 +381,7 @@ const DIRS={
       i:['Z','S','s = (1/T) ln z',d=>`${I('s')} = ${FRc('1','<i>T</i>')} Ln ${I('z')} = ${FRc('1','<i>T</i>')}(ln|${I('z')}| + ${I('j')}∠${I('z')}), &nbsp; ∠${I('z')} ∈ (−π, π] &nbsp; (principal branch; also ${I('s')} + ${I('j')}2π${I('k')}/${I('T')})`,
         'Which strip the pole came from: it returns the principal value |Im s| ≤ π/T. Aliased poles come back at the alias frequency. z on the negative real axis or z = 0 has no unique / finite s.',
         d=>{if(d.mode!=='under')return `z = ${PZ(d)} ↦ s = ${PS(d)} (real, positive z: unique).`;const w=Math.abs(d.Wwrap)/d.T;
-          return `z = ${d.r.toFixed(4)}∠±${Math.abs(d.Wwrap).toFixed(3)} ↦ s = ${(Math.log(d.r)/d.T).toFixed(2)} ± j${w.toFixed(2)}${d.aliased?` ≠ the original ±j${d.wd.toFixed(2)} (differs by a multiple of j2π/T = j${(TAU/d.T).toFixed(2)}): ${d.fa.toFixed(2)} Hz instead of ${S.f0.toFixed(2)} Hz`:' (= the original pole)'}.`;}]},
+          return `z = ${d.r.toFixed(4)}∠±${Math.abs(d.Wwrap).toFixed(3)} ↦ s = ${(Math.log(d.r)/d.T).toFixed(2)} ± j${w.toFixed(2)}${d.aliased?` ≠ the original ±j${d.wd.toFixed(2)} (differs by a multiple of j2π/T = j${(TAU/d.T).toFixed(2)}): ${d.fa.toFixed(2)} ${UH()} instead of ${S.f0.toFixed(2)} ${UH()}`:' (= the original pole)'}.`;}]},
 };
 const DOMN={CT:'Continuous Time',DT:'Discrete Time',CF:'Continuous Freq.',DF:'Discrete Freq.',S:'S-domain',Z:'Z-domain'};
 function dirRow(id,w,d,full){const r=DIRS[id][w],live=r[5]?r[5](d):'';
@@ -442,7 +450,7 @@ function markSel(){
   mapEl.querySelectorAll('.tl').forEach(b=>b.classList.toggle('on',b.dataset.id===S.sel));
   const t=TX[S.sel];document.querySelectorAll('.panel').forEach(p=>{const on=t.ends.includes(p.id);p.classList.toggle('hl',on);p.style.setProperty('--hc',t.c);});
 }
-function pick(id){select(id);openPair(id);}   // direct user choice of a transform: highlight + split view of its two panels
+function pick(id){userPair=true;try{select(id);}finally{userPair=false;}openPair(id);}   // direct user choice of a transform: highlight + split view of its two panels
 function select(id){S.sel=id;Object.assign(S,viewFor(id));syncControls();markSel();renderExplain();changed();schedule();}
 let explMode=null;
 /* the card's own eq boxes: drop the generic transform-pair boxes (now shown per direction above), keep the model-specific ones */
@@ -469,11 +477,11 @@ function renderReadout(d){
     ['','z-poles  z = e<sup>sT</sup>',PZ(d)],
     ['','Ω = ω<sub>d</sub>T (rad/sample)',U?`${d.Wd.toFixed(3)}${d.aliased?' → '+d.Wwrap.toFixed(3):''} (${deg(Math.abs(d.Wwrap))})`:'0 (real poles)'],
     ['','r = e<sup>−σT</sup>'+(d.mode==='over'?' (centre)':''),Math.exp(-S.sig*d.T).toFixed(4)],
-    ['','fs = 1/T',`${S.fs.toFixed(2)} Hz · T=${(1000*d.T).toFixed(1)} ms`],
-    [d.aliased?'warn':'','Nyquist fs/2',`${d.nyq.toFixed(2)} Hz`],
-    U?[d.aliased?'bad':'ok','f₀ → apparent freq.',d.aliased?`${S.f0.toFixed(2)} → ${d.fa.toFixed(2)} Hz`:`${S.f0.toFixed(2)} Hz (no alias)`]:['','f₀','none (no oscillation)'],
-    ['','DFT bin Δf = fs/N',`${d.df.toPrecision(3)} Hz`],
-    ['','Record MT · res 1/(MT)',`${(S.M*d.T).toFixed(2)} s · ${(S.fs/S.M).toPrecision(3)} Hz`],
+    ['','fs = 1/T',`${S.fs.toFixed(2)} ${UH()} · T=${(1000*d.T).toFixed(1)} ${UMS()?'µs':'ms'}`],
+    [d.aliased?'warn':'','Nyquist fs/2',`${d.nyq.toFixed(2)} ${UH()}`],
+    U?[d.aliased?'bad':'ok','f₀ → apparent freq.',d.aliased?`${S.f0.toFixed(2)} → ${d.fa.toFixed(2)} ${UH()}`:`${S.f0.toFixed(2)} ${UH()} (no alias)`]:['','f₀','none (no oscillation)'],
+    ['','DFT bin Δf = fs/N',`${d.df.toPrecision(3)} ${UH()}`],
+    ['','Record MT · res 1/(MT)',`${(S.M*d.T).toFixed(2)} ${UT()} · ${(S.fs/S.M).toPrecision(3)} ${UH()}`],
     ['','ζ, ω<sub>n</sub>',isFinite(d.zeta)?`${d.zeta.toFixed(3)}${zl}, ${d.wn.toFixed(2)} r/s`:'n/a (p₁p₂ ≤ 0)'],
     [sStab[0],'s-plane stability',sStab[1]],
     [zStab[0],'z-plane stability',zStab[1]],
@@ -482,7 +490,7 @@ function renderReadout(d){
   const st=document.getElementById('status');const msgs=[];
   if(d.pmax>1e-12)msgs.push(['bad','Unstable: an s-pole is in the RHP and a z-pole is outside the unit circle. No FT or DTFT.']);
   else if(d.pmax>=-1e-12)msgs.push(['warn','Marginally stable: a pole sits on the jω axis and the unit circle. The FT/DTFT contain impulses.']);
-  if(d.aliased)msgs.push(['warn',`Aliasing: f₀ > fs/2. The z-pole angle wraps, and the samples look like ${d.fa.toFixed(2)} Hz.`]);
+  if(d.aliased)msgs.push(['warn',`Aliasing: f₀ > fs/2. The z-pole angle wraps, and the samples look like ${d.fa.toFixed(2)} ${UH()}.`]);
   else if(U&&S.f0>0.4*S.fs)msgs.push(['warn','Close to Nyquist: few samples per cycle, and the spectral copies are starting to overlap.']);
   if(!msgs.length)msgs.push(['ok',U?'Stable, no aliasing of the main tone.':`Stable, ${MH(d).tag.replace('&lt;','<').replace('&gt;','>')}: no oscillation.`]);
   st.innerHTML=msgs.map(m=>`<div class="status ${m[0]}">${m[1]}</div>`).join('');
@@ -500,7 +508,7 @@ function renderWinInfo(){
    <tr><th>ENBW</th><td class="v">${m.enbw.toFixed(3)} bins (${(10*Math.log10(m.enbw)).toFixed(2)} dB)</td></tr>
    <tr><th>Scallop loss (½-bin tone)</th><td class="v">${m.scal.toFixed(2)} dB</td></tr>
    <tr><th>Coherent gain Σw/M</th><td class="v">${m.cg.toFixed(3)}</td></tr></table>
-   <p style="color:var(--muted)">1 bin = f<sub>s</sub>/M = ${(S.fs/S.M).toPrecision(3)} Hz. Computed live from this ${S.M}-point window with a 64× zero-padded FFT. Cosine-sum windows use MATLAB's "periodic" (DFT-even) form; Kaiser, Tukey and Bartlett are symmetric, as MATLAB defines them.</p>
+   <p style="color:var(--muted)">1 bin = f<sub>s</sub>/M = ${(S.fs/S.M).toPrecision(3)} ${UH()}. Computed live from this ${S.M}-point window with a 64× zero-padded FFT. Cosine-sum windows use MATLAB's "periodic" (DFT-even) form; Kaiser, Tukey and Bartlett are symmetric, as MATLAB defines them.</p>
    <h5>MATLAB</h5><code>w = ${ml};  X = fft(x(:).*w(:), ${S.N});</code>`;
 }
 
@@ -512,7 +520,7 @@ const numStr=v=>String(+(+v).toFixed(6));
 function syncControls(){
   document.querySelectorAll('input[type=range][data-k]').forEach(i=>{i.value=S[i.dataset.k];});
   document.querySelectorAll('input.num[data-n]').forEach(i=>{if(document.activeElement!==i)i.value=numStr(S[i.dataset.n]);});
-  $('oT').textContent='T = '+numStr((1000/S.fs).toFixed(2))+' ms';
+  $('oT').textContent='T = '+numStr((1000/S.fs).toFixed(2))+(UNITS_MS?' µs':' ms');
   $('selWave').value=S.wave;$('selSel').value=S.sel;
   $('selWin').value=S.win;$('rowBeta').hidden=S.win!=='kaiser';$('rowAlpha').hidden=S.win!=='tukey';
   segSet('segMode',S.mode);$('rowDl').hidden=S.mode!=='over';const U=S.mode==='under';
@@ -547,7 +555,7 @@ $('segCop').onclick=e=>{if(e.target.dataset.v){S.cop=e.target.dataset.v==='on';a
 const CATS=content.extra.examples.categories;
 const DAMPTAB=content.extra.examples.defs.damptab;
 const EX=content.extra.examples.examples.map(e=>({...e,extra:e.extra?content.extra.examples.defs[e.extra]:undefined}));
-let activeEx='under',exModified=false,activeCat=0;
+let activeEx='under',exModified=false,activeCat=0,exFree=false,userPair=false;
 /* An example IS a setting of the visible controls: DEF + the view toggles its transform implies + its overrides. */
 function exState(ex){const sel=ex.sel||DEF.sel;return Object.assign({},DEF,viewFor(sel),ex.p,{sel});}
 /* keys that the visible controls expose (sliders that are hidden/disabled in the current mode don't count) */
@@ -557,17 +565,21 @@ function sameState(a,b){const k=relKeys(a);if(k.join()!==relKeys(b).join())retur
 function changed(){ // keep the active example + "(modified)" flag in step with the controls
   const cur=EX.find(e=>e.id===activeEx);let id=activeEx,mod=!sameState(S,exState(cur));
   if(mod){const m=EX.find(e=>sameState(S,exState(e)));if(m){id=m.id;mod=false;}}
-  if(id!==activeEx){activeEx=id;activeCat=EX.find(e=>e.id===id).cat;exModified=mod;renderCats();renderExInfo();}
+  // a new transform pair picked by hand is a new view, not an edit of the preset: drop the preset and its "(modified)" flag
+  const free=mod&&(userPair||exFree);if(free)mod=false;
+  if(!mod&&!free&&id!==activeEx||(!free&&exFree)){const u=EX.find(e=>e.id===id).units==='ms';if(u!==UNITS_MS){UNITS_MS=u;unitLabels();}}
+  if(id!==activeEx||free!==exFree){activeEx=id;activeCat=EX.find(e=>e.id===id).cat;exModified=mod;exFree=free;renderCats();renderExInfo();}
   else if(mod!==exModified){exModified=mod;renderExInfo();}}
-function applyExample(id){
+function applyExample(id,sel){
   const ex=EX.find(e=>e.id===id)||EX[0];
   // full reset: every parameter AND every piece of view/selection state comes from DEF + this example only
   S=exState(ex);
-  drag=null;activeEx=ex.id;exModified=false;activeCat=ex.cat;
+  if(sel&&TX[sel]){S.sel=sel;Object.assign(S,viewFor(sel));} // opened on a given pair (deep link): still this preset, not "modified"
+  drag=null;activeEx=ex.id;exModified=false;exFree=false;activeCat=ex.cat;UNITS_MS=ex.units==='ms';unitLabels();
   syncControls();renderCats();renderExInfo();markSel();renderExplain();schedule();
 }
 const SETL={wave:['Waveform',v=>v==='cos'?'damped cosine':'free response'],mode:['Pole pair',v=>({under:'complex ζ<1',crit:'repeated ζ=1',over:'real ζ>1'})[v]],
-  sig:['σ',v=>numStr(v)+' 1/s'],f0:['f₀',v=>numStr(v)+' Hz'],dl:['δ',v=>numStr(v)+' 1/s'],fs:['fs',v=>numStr(v)+' Hz'],M:['M',numStr],N:['N',numStr],
+  sig:['σ',v=>numStr(v)+' '+UI()],f0:['f₀',v=>numStr(v)+' '+UH()],dl:['δ',v=>numStr(v)+' '+UI()],fs:['fs',v=>numStr(v)+' '+UH()],M:['M',numStr],N:['N',numStr],
   win:['Window',v=>WINS[v].n.replace(/ \(.*\)/,'')],beta:['β',numStr],alpha:['α',numStr],interp:['Interp.',v=>({zoh:'ZOH',foh:'FOH',sinc:'ideal sinc'})[v]],
   db:['Scale',v=>v?'dB':'linear'],sel:['Transform',v=>TX[v].name.replace('e^{sT}','e^(sT)')],ctv:['CT panel',v=>v==='per'?'periodic ext.':'signal + recon.'],cop:['CF copies',v=>v?'show':'hide']};
 const SETORDER=['wave','mode','sig','f0','dl','fs','M','N','win','beta','alpha','interp','db','sel','ctv','cop'];
@@ -575,12 +587,13 @@ function settingsHTML(ex){const st=exState(ex),rk=relKeys(st);
   return SETORDER.filter(k=>rk.includes(k)).map(k=>{const t=`${SETL[k][0]} ${SETL[k][1](st[k])}`;return st[k]!==DEF[k]?`<b>${t}</b>`:t;}).join(' · ');}
 function renderCats(){
   $('cats').innerHTML=CATS.map((c,i)=>`<button data-i="${i}" class="${i===activeCat?'on':''}">${c}</button>`).join('');
-  $('presets').innerHTML=EX.filter(e=>e.cat===activeCat).map(e=>`<button data-id="${e.id}" class="${e.id===activeEx?'on':''}">${e.n}</button>`).join('');
+  $('presets').innerHTML=EX.filter(e=>e.cat===activeCat).map(e=>`<button data-id="${e.id}" class="${e.id===activeEx&&!exFree?'on':''}">${e.n}</button>`).join('');
 }
 $('cats').onclick=e=>{const b=e.target.closest('button');if(b){activeCat=+b.dataset.i;renderCats();}};
 $('presets').onclick=e=>{const b=e.target.closest('button');if(b)applyExample(b.dataset.id);};
 function renderExInfo(){
   const ex=EX.find(e=>e.id===activeEx);
+  if(exFree){$('exsum').innerHTML='About: your own setting';$('exbody').innerHTML='<p>You picked a different transform pair, so no preset is active. Pick a preset above to load a described example.</p>';return;}
   $('exsum').innerHTML=`About: ${ex.n}${exModified?'<span class="mod">(modified)</span>':''}`;
   $('exbody').innerHTML=`<h5>Settings <span style="text-transform:none;letter-spacing:0;font-weight:500">(bold = changed from Reset)</span></h5><div class="sets">${settingsHTML(ex)}</div><h5>What to look at</h5><p>${ex.look}</p><h5>Why</h5><p>${ex.why}</p>${ex.extra?`<h5>Under vs. critical vs. over</h5>${ex.extra}`:''}<h5>Key relation</h5><div class="eqi">${ex.eq}</div><h5>MATLAB tip</h5><code>${ex.ml}</code>`;
 }
@@ -758,8 +771,10 @@ define('S',()=>S);define('MOD',()=>MOD);define('VIEWS',()=>VIEWS);define('TX',()
 Object.assign(window,{D,closeModal,openModal,openPair,pick,render,setLegend,moreBadge,applyExample,renderStrip,layoutArrows,schedule,viewFor,DEF,exState,sameState});
 const show=(q)=>{
   const preset=q&&q.get('preset'),pair=q&&q.get('pair');
-  if(preset&&EX.some(e=>e.id===preset))applyExample(preset);
-  if(pair&&TX[pair]){pick(pair);openPair(pair);}
+  const hasPre=preset&&EX.some(e=>e.id===preset);
+  // a board opened on a pair (from a box) loads that preset on that pair, or the earbud if none is named; never "(modified)" on load
+  if(pair&&TX[pair]){applyExample(hasPre?preset:'earbud',pair);openPair(pair);}
+  else if(hasPre)applyExample(preset);
   else if(!pair&&MOD.k&&q&&q.get('view')==='board')closeModal();
   layoutArrows();schedule();
 };

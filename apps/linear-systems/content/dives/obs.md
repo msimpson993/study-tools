@@ -20,7 +20,7 @@ check: [c-obs-1, m9]
 
 ### The big idea
 
-Whether every mode is visible at the output, as a null-space question (ker O = {0}; right eigenvectors not in ker C).
+A sensor might not see everything going on inside. A system is observable if watching the output for a while is enough to work out the starting state; if not, some mode can move unseen. The test is a rank check on C, CA, CA² and so on.
 
 ### See it
 

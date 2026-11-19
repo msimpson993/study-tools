@@ -20,7 +20,7 @@ check: [c-eig-1, c-eig-2, m1]
 
 ### The big idea
 
-Which directions are already simple for A, and what gain each one sees. For the car, two complex pairs: bounce at 1.151 Hz and pitch at 1.419 Hz; for ÿ + 3ẏ + 2y = u, λ = −1 and λ = −2.
+Most directions get twisted when A acts on them, but a few special ones are only stretched. Those are the eigenvectors, and the stretch factor is the eigenvalue. For a system, each such direction is a mode: started along it, the state stays on it and grows or fades at its own rate.
 
 ### See it
 

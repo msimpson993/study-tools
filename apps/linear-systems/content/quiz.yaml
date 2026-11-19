@@ -718,7 +718,7 @@
   - "About 1,267 Hz, decaying with time constant ≈ 0.23 ms"
   - "About 4,322 Hz, with no decay"
   answer: 0
-  why: "Ring at ω_d/2π = 4,322/2π ≈ 688 Hz; envelope e^(−σt) with 1/σ = 1/1,267 s ≈ 0.79 ms. fs = 717 Hz is the undamped frequency."
+  why: "Ring at ω_d/2π = 4,322/2π ≈ 688 Hz; envelope e^(−σt) with 1/σ = 1/1,267 s ≈ 0.79 ms. fₙ = 717 Hz is the undamped natural frequency."
 - id: c-roc-1
   tags:
   - roc
@@ -810,14 +810,14 @@
   - ft
   - tf
   kind: compute
-  q: "The speaker's undamped resonance is fs ≈ 717 Hz with ζ ≈ 0.28. Where is the peak of |X/V|?"
+  q: "The speaker's undamped natural frequency is fₙ ≈ 717 Hz with ζ ≈ 0.28. Where is the peak of |X/V|?"
   choices:
-  - "A little below fs, near 660 Hz (ω_s√(1 − 2ζ²))"
+  - "A little below fₙ, near 658 Hz (ωₙ√(1 − 2ζ²))"
   - Exactly at 717 Hz
   - "Above fs, near 780 Hz"
   - "At 0 Hz: a speaker is a low-pass filter with no peak"
   answer: 0
-  why: For a second-order low-pass the magnitude peak is at ω_s√(1 − 2ζ²) = 717·√(1 − 0.157) ≈ 658 Hz.
+  why: For a second-order low-pass the magnitude peak is at ωₙ√(1 − 2ζ²), i.e. fₙ√(1 − 2ζ²) = 717·√(1 − 0.157) ≈ 658 Hz.
 - id: c-ft-2
   tags:
   - ft

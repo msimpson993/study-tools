@@ -20,7 +20,7 @@ check: [c-pars-1, c-fs-1]
 
 ### The big idea
 
-Where a signal's energy is, and how to compute energy in whichever domain is easier.
+A signal's energy can be added up in time or across frequencies, and the two totals agree. That is Parseval's theorem, Pythagoras for signals. It lets us compute energy wherever it is easier.
 
 ### See it
 

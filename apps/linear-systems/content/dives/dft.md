@@ -20,7 +20,7 @@ check: [c-dft-1, m16, c-win-1]
 
 ### The big idea
 
-The computable transform, its implicit periodic extension in time, and when a tone lands cleanly on a bin (or leaks).
+A computer holds a finite block of samples, not a whole signal, so it needs a finite transform. The DFT (discrete Fourier transform) turns N samples into N frequency bins; it quietly treats the block as if it repeated forever. A tone that fits the block a whole number of times lands in one bin; any other tone leaks into its neighbours.
 
 ### See it
 

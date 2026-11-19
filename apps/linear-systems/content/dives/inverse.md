@@ -20,7 +20,7 @@ check: [c-inv-1, c-inv-2]
 
 ### The big idea
 
-How a formula becomes a signal, and why the same formula with a different ROC is a different signal. Worked out in full in the Review area (A1 and A2).
+A transform is only useful if we can get the signal back. Split the transform into simple fractions, one per pole, and each turns back into an exponential. The region of convergence decides whether each piece runs forward or backward in time, so the same formula can mean different signals.
 
 ### See it
 

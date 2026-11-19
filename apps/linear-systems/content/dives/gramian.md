@@ -20,7 +20,7 @@ check: [c-gram-1, c-gram-2]
 
 ### The big idea
 
-How controllable a system is, not just whether. The observability Gramian answers the dual question: how much output energy each initial state produces, so which states are hard to see.
+Controllable says yes or no, but some directions take far more effort to reach than others. The controllability Gramian measures, direction by direction, how easily the input can push the state, and so the least energy each move costs. Its twin, the observability Gramian, measures how clearly each starting state shows up at the output.
 
 ### See it
 

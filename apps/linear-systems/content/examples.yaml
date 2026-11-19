@@ -296,6 +296,7 @@ examples:
   - id: earbud
     cat: 0
     n: Earbud (ms / kHz)
+    units: ms
     p:
       sig: 1.267
       f0: 0.688

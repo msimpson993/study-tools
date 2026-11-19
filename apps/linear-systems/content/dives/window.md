@@ -20,7 +20,7 @@ check: [c-win-1, c-win-2]
 
 ### The big idea
 
-Why a tone that fits a whole number of periods in the block lands in one bin, and any other tone leaks into all of them.
+Cutting a block out of a long signal is like looking through a window. A tone that fits the window a whole number of times lands in one frequency bin; any other tone smears across its neighbours (leakage). Tapering the window's edges trades a slightly wider peak for much less smear.
 
 ### See it
 

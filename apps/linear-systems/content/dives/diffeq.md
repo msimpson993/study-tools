@@ -20,7 +20,7 @@ check: [c-deq-1, c-deq-2]
 
 ### The big idea
 
-Where the shape of the answer comes from: one term for each pole of the input (the forced response) and one for each pole of the system (the natural response).
+Differential and difference equations become algebra once transformed. Solving them that way also shows where each part of the answer comes from: the input's own rhythms give the forced response, and the system's poles give the natural response it adds on top.
 
 ### See it
 

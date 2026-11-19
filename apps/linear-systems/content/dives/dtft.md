@@ -20,7 +20,7 @@ check: [c-dtft-1, c-samp-1, q4]
 
 ### The big idea
 
-The frequency content of a sequence, why discrete time forces a periodic frequency axis, and the discrete-time convolution theorem.
+A sampled signal has a spectrum too, and it has a twist: samples cannot tell a pitch from that pitch plus the sample rate. So the spectrum of a sampled signal repeats forever along the frequency axis. The DTFT (discrete-time Fourier transform) is that spectrum.
 
 ### See it
 

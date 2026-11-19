@@ -20,7 +20,7 @@ check: [c-fs-1, c-pars-1]
 
 ### The big idea
 
-How a periodic continuous-time signal is a discrete set of harmonic phasors, and why periodic time ⇔ discrete frequency.
+A signal that repeats every T seconds is built from sines at whole multiples of its repeat rate, its harmonics. The Fourier series lists how much of each harmonic it holds. Repeating in time means the spectrum is a set of separate lines.
 
 ### See it
 

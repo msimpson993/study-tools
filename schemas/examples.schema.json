@@ -16,7 +16,8 @@
           "p": { "type": "object" }, "sel": { "type": "string" },
           "extra": { "type": "string", "description": "key into defs" },
           "look": { "type": "string", "minLength": 10 }, "why": { "type": "string", "minLength": 10 },
-          "eq": { "type": "string" }, "ml": { "type": "string" }
+          "eq": { "type": "string" }, "ml": { "type": "string" },
+          "units": { "enum": ["ms"], "description": "Board labels show ms, kHz, 1/ms and rad/ms while this preset is active (the values are in those units)." }
         }
       }
     },

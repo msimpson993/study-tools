@@ -20,7 +20,7 @@ check: [c-samp-1, m14, m15]
 
 ### The big idea
 
-The precise link between the s- and z-planes, why aliases share a z-pole, and why stability regions match under that map.
+Sampling a signal every T seconds keeps only snapshots, and a fast pitch can look exactly like a slow one: aliasing. The map z = e^(sT) carries each continuous pole to a discrete one. Stable continuous poles land inside the unit circle, so stability carries over.
 
 ### See it
 

@@ -20,7 +20,7 @@ check: [c-real-1, c-ss-2]
 
 ### The big idea
 
-How to go from a transfer function to a state model, and why many state models (any T⁻¹AT, T⁻¹B, CT) give the same H(s). A realization is **minimal**, with the fewest possible states, exactly when it is controllable and observable.
+Often we know a system only from its transfer function, but the state tools need A, B and C. A realization wires integrators so that the given H(s) comes out. Many wirings work; the minimal ones, with the fewest states, are exactly those that are controllable and observable.
 
 ### See it
 
