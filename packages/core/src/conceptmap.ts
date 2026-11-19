@@ -93,6 +93,7 @@ export function mountConceptMap(host: HTMLElement, content: AppContent, progress
   };
   /** open a box (never toggles it shut): used by the Next/Back chain controls */
   const openNode = (id: string) => { progress.markSeen(st.mapId, id); setPick({ kind: 'node', id }); panel.scrollTop = 0; };
+  const openEdge = (key: string) => { setPick({ kind: 'edge', id: key }); panel.scrollTop = 0; };
   const toggleEdge = (key: string) => setPick(st.pick?.kind === 'edge' && st.pick.id === key ? null : { kind: 'edge', id: key });
 
   function renderTop() {
@@ -316,28 +317,45 @@ export function mountConceptMap(host: HTMLElement, content: AppContent, progress
     }
     const ex = p.example ?? n.addsToExample;
     if (ex) out.push(row('pop-example', 'On the running example:', ex, 'adds-to-example'));
-    // the chain: each outgoing (solid) line's question is a link that opens the box it leads to
+    // the chain goes THROUGH the lines: each outgoing (solid) line's question is a link that opens that line's pop-up
     const outs = m.edges.filter((e) => e.from === n.id && !e.dashed);
+    const link = (e: MapEdge, testid: string) => h('a', { href: '#', class: 'pop-next-link', dataset: { testid, edge: edgeKey(e.from, e.to), to: e.to }, onclick: (ev: Event) => { ev.preventDefault(); openEdge(edgeKey(e.from, e.to)); }, html: e.question });
     if (outs.length) {
       const r = h('div', { class: 'pop-row pop-next', dataset: { testid: 'pop-next' } }, h('b', { class: 'pop-lead' }, outs.length > 1 ? 'Next questions:' : 'Next question:'));
       const ul = h('ul', { class: 'pop-next-list' });
-      for (const e of outs) ul.append(h('li', null, h('a', { href: '#', class: 'pop-next-link', dataset: { testid: 'pop-next-link', to: e.to }, onclick: (ev: Event) => { ev.preventDefault(); openNode(e.to); }, html: e.question })));
+      for (const e of outs) ul.append(h('li', null, link(e, 'pop-next-link')));
       r.append(ul); out.push(r);
     } else if (p.next) out.push(row('pop-next', 'Next question:', p.next, 'pop-next'));
+    // a dashed line touching this box joins it to another box that uses the same idea
+    const side = m.edges.filter((e) => e.dashed && (e.from === n.id || e.to === n.id));
+    if (side.length) { const ul = h('ul', { class: 'pop-next-list' }); for (const e of side) ul.append(h('li', null, link(e, 'pop-side-link'))); out.push(h('div', { class: 'pop-row pop-side', dataset: { testid: 'pop-side' } }, h('b', { class: 'pop-lead' }, 'Look across:'), ul)); }
     const q = p.ask ? content.quiz.find((x) => x.id === p.ask) : undefined;
     if (q) { const d = h('details', { class: 'fold pop-ask', open: askOpen.has(n.id), dataset: { testid: 'pop-ask' } }, h('summary', null, 'Quick check'), miniCheck(q, progress)); d.addEventListener('toggle', () => { if (d.open) askOpen.add(n.id); else askOpen.delete(n.id); }); out.push(d); }
     return out;
   }
 
-  /** Back (each incoming solid line, main chain first) and Next (each outgoing solid line) buttons for a box */
+  /** Back (each incoming solid line, main chain first) and Next (each outgoing solid line) buttons for a box; both open the LINE, whose own Back / Next open the boxes */
   function chainNav(id: string, m: MapDef): HTMLElement {
     const nav2 = h('div', { class: 'chain-nav', dataset: { testid: 'chain-nav' } });
-    const label = (x: string) => m.nodes.find((q) => q.id === x)?.label ?? x;
     const ins = m.edges.filter((e) => e.to === id && !e.dashed), main = pathToRoot(id, m.edges), prev = main.length > 1 ? main[main.length - 2] : undefined;
     ins.sort((a, b) => Number(b.from === prev) - Number(a.from === prev));
-    for (const e of ins) nav2.append(h('button', { class: 'tbtn chain-back', dataset: { testid: 'chain-back', to: e.from }, onclick: () => openNode(e.from) }, h('span', { class: 'ch-dir' }, '← Back'), h('span', { class: 'ch-name' }, label(e.from))));
-    for (const e of m.edges.filter((x) => x.from === id && !x.dashed)) nav2.append(h('button', { class: 'tbtn on chain-next', dataset: { testid: 'chain-next', to: e.to }, onclick: () => openNode(e.to) }, h('span', { class: 'ch-dir' }, 'Next →'), h('span', { class: 'ch-name' }, label(e.to))));
+    const btn = (e: MapEdge, back: boolean) => h('button', { class: back ? 'tbtn chain-back' : 'tbtn on chain-next', dataset: { testid: back ? 'chain-back' : 'chain-next', edge: edgeKey(e.from, e.to), to: back ? e.from : e.to }, onclick: () => openEdge(edgeKey(e.from, e.to)) },
+      h('span', { class: 'ch-dir' }, back ? '← Back: the question that led here' : 'Next question →'), h('span', { class: 'ch-name', html: e.question }));
+    for (const e of ins) nav2.append(btn(e, true));
+    for (const e of m.edges.filter((x) => x.from === id && !x.dashed)) nav2.append(btn(e, false));
     return nav2;
+  }
+
+  /** the edge's "why ask it here": what the last box left open, why it matters, what answer we want; optional captioned figures */
+  function whyBox(e: MapEdge): HTMLElement {
+    const cb = h('div', { class: 'cb', html: e.why! });
+    if (e.whyFigures?.length) {
+      const strip = h('div', { class: `pop-figs n${e.whyFigures.length}`, dataset: { testid: 'edge-why-figures' } });
+      for (const f of e.whyFigures) { const mf = mountQuizFigure(f, nav.figures); popStops.push(mf.destroy); strip.append(mf.el); }
+      cb.append(strip);
+      if (e.whyFigCaption) cb.append(h('p', { class: 'pop-figcap', dataset: { testid: 'edge-why-figcap' }, html: e.whyFigCaption }));
+    }
+    return h('aside', { class: 'callout c-why', dataset: { testid: 'edge-why' } }, h('b', { class: 'lead' }, 'Why ask it here'), cb);
   }
 
   function renderPanel() {
@@ -385,14 +403,16 @@ export function mountConceptMap(host: HTMLElement, content: AppContent, progress
       const head = h('div', { class: 'cm-head' }, h('h3', null, e.reverse ? `${t.label} ⇢ ${f.label}` : `${f.label} → ${t.label}`), copyRefButton(() => edgeReference(content, e, f, t, m.id)), close);
       panel.append(head, h('div', { class: 'st-hint' }, e.dashed ? 'Dashed: the same idea in another language' : 'Next step in the chain of questions'),
         h('aside', { class: 'callout c-predict' }, h('b', { class: 'lead' }, 'The question this line answers'), h('div', { class: 'cb', html: `<p>${e.question}</p>` })),
-        ...(e.why ? [h('aside', { class: 'callout c-why', dataset: { testid: 'edge-why' } }, h('b', { class: 'lead' }, 'Why ask it here'), h('div', { class: 'cb', html: `<p>${e.why}</p>` }))] : []),
-        h('div', { html: `<p>${e.idea}</p>` }));
+        ...(e.why ? [whyBox(e)] : []),
+        e.why ? h('div', { class: 'edge-idea', dataset: { testid: 'edge-idea' } }, h('b', { class: 'pop-lead' }, 'The answer, in short: '), h('span', { html: e.idea })) : h('div', { html: `<p>${e.idea}</p>` }));
       if (e.eq) panel.append(h('div', { class: 'st-eq' }, e.eq));
       const pl = pathToRoot(e.from, m.edges); if (pl[pl.length - 1] !== e.to) pl.push(e.to);
       panel.append(pathChips(pl, m));
+      // a reversed (dashed) line is read from its arrow's tail: `to` looks back at `from`
+      const [src, dst] = e.reverse ? [t, f] : [f, t];
       panel.append(h('div', { class: 'chain-nav', dataset: { testid: 'chain-nav' } },
-        h('button', { class: 'tbtn chain-back', dataset: { testid: 'edge-back', to: e.from }, onclick: () => openNode(e.from) }, h('span', { class: 'ch-dir' }, '← Back'), h('span', { class: 'ch-name' }, f.label)),
-        h('button', { class: 'tbtn on chain-next', dataset: { testid: 'edge-next', to: e.to }, onclick: () => openNode(e.to) }, h('span', { class: 'ch-dir' }, 'Next →'), h('span', { class: 'ch-name' }, t.label))));
+        h('button', { class: 'tbtn chain-back', dataset: { testid: 'edge-back', to: src.id }, onclick: () => openNode(src.id) }, h('span', { class: 'ch-dir' }, '← Back to the box'), h('span', { class: 'ch-name' }, src.label)),
+        h('button', { class: 'tbtn on chain-next', dataset: { testid: 'edge-next', to: dst.id }, onclick: () => openNode(dst.id) }, h('span', { class: 'ch-dir' }, 'Next box →'), h('span', { class: 'ch-name' }, dst.label))));
       const acts = h('div', { class: 'acts' });
       const dv = t.dive ?? f.dive;
       if (dv) acts.append(h('button', { class: 'tbtn on', onclick: () => nav.openDive(dv) }, 'Deep dive'));

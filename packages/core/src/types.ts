@@ -51,8 +51,11 @@ export interface MapEdge {
   question: string;
   /** the idea behind the link (rendered HTML) */
   idea: string;
-  /** why you would ask this question at this point: the gap in the previous box that motivates it (rendered HTML) */
+  /** why you would ask this question at this point (rendered HTML, may be several paragraphs): what the previous box left unanswered, why that gap matters, and what kind of answer we are looking for */
   why?: string;
+  /** optional figures for the why text (reuse quiz-figure renderers), with one caption saying what they show and demonstrate */
+  whyFigures?: QuizFigureRef[];
+  whyFigCaption?: string;
   eq?: string;
 }
 

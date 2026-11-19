@@ -120,7 +120,9 @@ export function loadApp(appDir: string): { content: AppContent; warnings: string
           from: e.from, to: e.to, label: e.label, dashed: e.dashed, eq: e.eq, ...(e.reverse ? { reverse: true } : {}),
           question: inline(e.question, `graph.yaml ${m.id}/${e.from}->${e.to}`),
           idea: inline(e.idea, `graph.yaml ${m.id}/${e.from}->${e.to}`),
-          ...(e.why ? { why: inline(e.why, `graph.yaml ${m.id}/${e.from}->${e.to}`) } : {}),
+          ...(e.why ? { why: block(e.why, `graph.yaml ${m.id}/${e.from}->${e.to}`) } : {}),
+          ...(e.whyFigures ? { whyFigures: e.whyFigures } : {}),
+          ...(e.whyFigCaption ? { whyFigCaption: inline(e.whyFigCaption, `graph.yaml ${m.id}/${e.from}->${e.to}`) } : {}),
         })),
       });
     }

@@ -338,7 +338,45 @@
                 "why": {
                   "type": "string",
                   "minLength": 20,
-                  "description": "why you would ask this question at this point: the gap in the previous box that motivates it"
+                  "description": "why you would ask this question at this point (markdown, may be several paragraphs): what the previous box left unanswered, why that gap matters, and what kind of answer we are looking for"
+                },
+                "whyFigures": {
+                  "type": "array",
+                  "maxItems": 2,
+                  "items": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": [
+                      "id",
+                      "alt"
+                    ],
+                    "properties": {
+                      "id": {
+                        "type": "string"
+                      },
+                      "params": {
+                        "type": "object",
+                        "additionalProperties": {
+                          "type": [
+                            "number",
+                            "string",
+                            "boolean"
+                          ]
+                        }
+                      },
+                      "alt": {
+                        "type": "string",
+                        "minLength": 8
+                      },
+                      "caption": {
+                        "type": "string"
+                      }
+                    }
+                  }
+                },
+                "whyFigCaption": {
+                  "type": "string",
+                  "minLength": 20
                 },
                 "eq": {
                   "type": "string"

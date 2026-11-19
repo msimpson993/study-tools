@@ -310,3 +310,11 @@ details.derivation{margin:.7rem 0}details.derivation>summary{font-weight:650}
 .pop-next-list{margin:.15rem 0 0 1.1rem;padding:0}.pop-next-list li{margin:.2rem 0}.pop-next-link{font-weight:600}
 .chain-nav{display:flex;flex-wrap:wrap;gap:.45rem;margin:.6rem 0 .2rem;padding-top:.55rem;border-top:1px solid var(--border)}.chain-nav .tbtn{flex:1 1 9.5rem;min-height:44px;display:flex;flex-direction:column;align-items:flex-start;justify-content:center;text-align:left;padding:.35rem .65rem;line-height:1.2}.chain-nav .chain-next{align-items:flex-end;text-align:right}.chain-nav .ch-dir{font-size:.72rem;opacity:.8;font-weight:600}.chain-nav .ch-name{font-size:.88rem;font-weight:600}
 .callout.c-why{border-color:var(--border-strong)}
+
+/* edge pop-ups: the why text can run to a few paragraphs and carry a figure */
+.callout.c-why .cb p { margin: 0 0 .45rem; }
+.callout.c-why .cb p:last-child { margin-bottom: 0; }
+.callout.c-why .pop-figs { margin-top: .5rem; }
+.edge-idea { margin: .6rem 0; }
+.pop-side .pop-lead { color: var(--muted, inherit); }
+.chain-nav .tbtn .ch-name { white-space: normal; }
