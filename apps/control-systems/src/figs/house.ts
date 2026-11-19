@@ -285,6 +285,8 @@ export const sensFigure = figureOf(() => [
 /* ── NOISE · figure:sc ── */
 /** L(jω) of the P or PI thermostat: PI multiplies by (1 + Ki/(Kp s)). */
 const scL = (v: V, s: Cx): Cx => { const Kp = num(v, 'Kp', 1100), pi = str(v, 'ctrl', 'p') === 'pi', G = houseG2(), L = tfEval(tf(G.num.map((q) => q * Kp), G.den), s); return pi ? cmul(L, cadd(C(1), cdiv(C(THERMOSTAT.Ki / Kp), s))) : L; };
+/** both traces fit, with headroom above for the two-line legend */
+const roomRange = ([lo, hi]: [number, number]): [number, number] => [lo, hi + 0.3 * (hi - lo)];
 export const scFigure = figureOf(() => [
   {
     id: 'sc', title: '|S| and |C| over frequency (preview: frequency response)', x: 'ω (rad/h, log)', y: 'magnitude',
@@ -303,7 +305,7 @@ export const scFigure = figureOf(() => [
       const n = t.map((tt) => bias + (flick ? 0.6 * Math.sign(Math.sin(6 * tt)) : 0));
       const k = houseG2().num[0], Cs = pi ? tf([k * Kp, k * THERMOSTAT.Ki], polyAdd(polyMul(housePoly(), [1, 0]), [k * Kp, k * THERMOSTAT.Ki])) : tf([k * Kp], polyAdd(housePoly(), [k * Kp]));
       const r = lsim(Cs, n, t), room = r.y.map((q) => -q), reading = room.map((q, i) => q + n[i]);
-      const fr = plotFrame(g, w, h, [0, T], [Math.min(-bias * 1.2 - (flick ? 0.6 : 0), -0.5), Math.max(bias * 1.6 + (flick ? 0.6 : 0), 0.6)], 'time (h)', 'K from set point');
+      const fr = plotFrame(g, w, h, [0, T], roomRange(range([room, reading], 0.06, Math.min(-bias * 1.2 - (flick ? 0.6 : 0), -0.5), Math.max(bias * 1.6 + (flick ? 0.6 : 0), 0.6))), 'time (h)', 'K from set point');
       tline(g, fr, [0, 0], [T, 0], col.muted(), 1, [5, 4]); curve(g, fr, t, reading, col.muted(), 1.4); curve(g, fr, t, room, col.a(), 2.4);
       legend(g, fr, [{ label: `room: ends ${f(room[room.length - 1], 2)} K`, color: col.a() }, { label: 'what the thermostat reads', color: col.muted() }], 'tl');
     },

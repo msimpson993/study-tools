@@ -34,18 +34,24 @@ const draw = (g: CanvasRenderingContext2D, w: number, h: number, p: Plot) => {
 const PB = () => col.b(), FX = () => col.c();
 type Run = { t: number[]; u: number[] };
 /** the control signal of the problem run against the fixed one: the second panel every case shows */
+/** a y range that holds every finite sample of the given traces inside x range xr (plus the optional fixed values), padded; nothing is clipped */
+const fitY = (ys: { t: ArrayLike<number>; y: ArrayLike<number> }[], xr: V2, pad = 0.1, also: number[] = [], cap = Infinity): V2 => {
+  let lo = Infinity, hi = -Infinity;
+  for (const v of also) { lo = Math.min(lo, v); hi = Math.max(hi, v); }
+  for (const s of ys) for (let i = 0; i < s.y.length; i++) { const v = s.y[i]; if (s.t[i] >= xr[0] && s.t[i] <= xr[1] && Number.isFinite(v)) { lo = Math.min(lo, v); hi = Math.max(hi, v); } }
+  if (!(hi > lo)) { lo -= 1; hi += 1; }
+  const p = (hi - lo) * pad; return [Math.max(-cap, lo - p), Math.min(cap, hi + p)];
+};
 const uPlot = (a: Run, b: Run, xr: V2, extra: Partial<Plot> = {}): Plot => {
-  const all = [...a.u, ...b.u].filter(Number.isFinite).sort((x, y) => x - y), lo = all[Math.floor(0.01 * (all.length - 1))], hi = all[Math.floor(0.99 * (all.length - 1))], pad = (hi - lo) * 0.1 || 0.5;
-  return { title: 'Control signal u(t)', y: 'control u', xr, yr: [Math.max(-8, lo - pad), Math.min(8, hi + pad)], series: [{ t: a.t, y: a.u, color: PB(), width: 1.6 }, { t: b.t, y: b.u, color: FX(), dash: true }], ...extra };
+  return { title: 'Control signal u(t)', y: 'control u', xr, yr: fitY([{ t: a.t, y: a.u }, { t: b.t, y: b.u }], xr, 0.1, [], 1e3), series: [{ t: a.t, y: a.u, color: PB(), width: 1.6 }, { t: b.t, y: b.u, color: FX(), dash: true }], ...extra };
 };
 
 
 /** the torque of the problem run against the fixed one (dish cards, N·m) */
-const tPlot = (a: Run, b: Run, xr: V2, extra: Partial<Plot> = {}, full = false): Plot => {
-  const inX = (r: Run) => r.u.filter((_, i) => r.t[i] >= xr[0] && r.t[i] <= xr[1] && Number.isFinite(r.u[i]));
-  // full: fit both runs' whole range (keeps a short starting spike in view); otherwise trim the extreme 0.5 % each side
-  const all = [...inX(a), ...inX(b)].sort((x, y) => x - y), q = full ? 0 : 0.005, lo = all[Math.floor(q * (all.length - 1))] ?? -1, hi = all[full ? all.length - 1 : Math.floor(0.995 * (all.length - 1))] ?? 1, pad = (hi - lo) * 0.12 || 10;
-  return { title: 'Motor torque', y: 'torque (N·m)', xr, yr: [Math.max(-2000, lo - pad), Math.min(5000, hi + pad)], series: [{ t: a.t, y: a.u, color: PB(), width: 1.6 }, { t: b.t, y: b.u, color: FX(), dash: true }], ...extra };
+const tPlot = (a: Run, b: Run, xr: V2, extra: Partial<Plot> = {}): Plot => {
+  // fits both runs' whole range, so a short starting spike stays in view (an unstable run still runs off the capped axis, on purpose)
+  const [lo, hi] = fitY([{ t: a.t, y: a.u }, { t: b.t, y: b.u }], xr, 0.12);
+  return { title: 'Motor torque', y: 'torque (N·m)', xr, yr: [Math.max(-2000, lo), Math.min(5000, hi)], series: [{ t: a.t, y: a.u, color: PB(), width: 1.6 }, { t: b.t, y: b.u, color: FX(), dash: true }], ...extra };
 };
 /* ── dish runs: numbers.py [F] at dt = 1e-4, cached, thinned for drawing ── */
 const cache = new Map<string, ReturnType<typeof dishCard>>();
@@ -62,11 +68,11 @@ const pct = (x: number) => (Math.abs(x) > 1e4 ? 'unstable' : `${Math.max(0, x).t
 const mtxt = (m: ReturnType<typeof cardMet>, T: number) => (m.unstable ? 'unstable: the swing grows' : `%OS ${pct(m.OS)}, Ts ${m.Ts >= T - 0.01 ? `> ${T.toFixed(0)} s (still ringing)` : `${m.Ts.toFixed(2)} s`}, Tr ${m.Tr.toFixed(3)} s`);
 const wtxt = (w: ReturnType<typeof cardWind>, T: number) => `wind peak ${w.peak.toFixed(2)}°, ${Math.abs(w.final) > 0.05 ? `stays ${Math.abs(w.final).toFixed(2)}° off` : `cleared in ${w.recover >= T - 0.01 ? `> ${T.toFixed(0)}` : w.recover.toFixed(1)} s`}`;
 /** a dish step card: angle / target and torque, problem (solid) against the fix (dashed), with the [F] read-outs */
-function stepCard(title: string, a: CardOpts, b: CardOpts, xr: V2, opt: { r?: number; yr?: V2; upto?: number; fullTorque?: boolean } = {}): Plot[] {
+function stepCard(title: string, a: CardOpts, b: CardOpts, xr: V2, opt: { r?: number; yr?: V2; upto?: number } = {}): Plot[] {
   const r = opt.r ?? R0, sa = card(a), sb = card(b), T = a.T ?? 10, ma = cardMet(sa.t, sa.y, r, opt.upto), mb = cardMet(sb.t, sb.y, r, opt.upto);
   const pa = thin(sa, (y) => y / r), pb = thin(sb, (y) => y / r);
   return [{ title, y: 'angle ÷ target', xr, yr: opt.yr ?? [0, 2], series: [{ ...pa, color: PB() }, { ...pb, color: FX(), dash: true }], hl: [{ y: 1, label: `target ${r === R0 ? '0.1 rad' : `${r} rad`}` }], notes: [`solid: ${mtxt(ma, T)}`, `dashed: ${mtxt(mb, b.T ?? 10)}`] },
-    tPlot({ t: pa.t, u: pa.u }, { t: pb.t, u: pb.u }, xr, {}, opt.fullTorque)];
+    tPlot({ t: pa.t, u: pa.u }, { t: pb.t, u: pb.u }, xr)];
 }
 /** a dish wind card: pointing error after a 20 N·m gust at tw, problem against the fix */
 function windCard(title: string, a: CardOpts, b: CardOpts, tw: number, T: number): Plot[] {
@@ -78,7 +84,7 @@ function windCard(title: string, a: CardOpts, b: CardOpts, tw: number, T: number
 
 type Case = (v: V) => Plot[];
 const CASES: Record<string, Case> = {
-  slow: (v) => stepCard('Slow response on the dish', { ...gains(v), T: 20 }, { ...TUNED, T: 20 }, [0, 8], { yr: [0, 1.4], fullTorque: true }),
+  slow: (v) => stepCard('Slow response on the dish', { ...gains(v), T: 20 }, { ...TUNED, T: 20 }, [0, 8], { yr: [0, 1.4] }),
   offset: (v) => windCard('Steady-state offset in the wind', gains(v), { Kp: 1000, Ki: 500, Kd: 120 }, 10, 40),
   overshoot: (v) => stepCard('Overshoot', { ...gains(v), T: 20 }, { Kp: 1000, Ki: 500, Kd: 120, T: 20 }, [0, 6]),
   oscillation: (v) => stepCard('Sustained oscillation (Ki near the 2Kp bound)', { ...gains(v), T: 20 }, { Kp: 1000, Ki: 500, Kd: 120, T: 20 }, [0, 20], { yr: [-0.2, 2.2] }),
@@ -86,13 +92,13 @@ const CASES: Record<string, Case> = {
   noise: (v) => {
     const o = { ...TUNED, noise: (DISH.noiseDeg * Math.PI) / 180, seed: 7, T: 4, dt: 1e-4, every: 10 }, filt = on(v, 'filter'), a = dishSim({ ...o, Kd: n(v, 'Kd'), Nf: filt ? n(v, 'Nf') : 1 / o.dt }), b = dishSim({ ...o, Nf: DISH.Nf });
     const rms = (u: number[]) => { const tail = u.slice(Math.floor(u.length / 2)); const m = tail.reduce((s, x) => s + x, 0) / tail.length; return Math.sqrt(tail.reduce((s, x) => s + (x - m) ** 2, 0) / tail.length); };
-    return [{ title: 'Torque: chatter from differentiated sensor noise', y: 'torque (N·m)', xr: [0, 4], yr: [-250, 250], series: [{ t: a.t, y: a.u, color: PB(), width: 1.2 }, { t: b.t, y: b.u, color: FX(), dash: true }], notes: [`solid: torque jitter ${rms(a.u).toFixed(0)} N·m rms (last 2 s)`, `dashed: Kd 200 with N_f = ${DISH.Nf} rad/s: ${rms(b.u).toFixed(0)} N·m rms`] },
+    return [{ title: 'Torque: chatter from differentiated sensor noise', y: 'torque (N·m)', xr: [0, 4], yr: fitY([a, b].map((r) => ({ t: r.t, y: r.u })), [0, 4], 0.08, [-250, 250]), series: [{ t: a.t, y: a.u, color: PB(), width: 1.2 }, { t: b.t, y: b.u, color: FX(), dash: true }], notes: [`solid: torque jitter ${rms(a.u).toFixed(0)} N·m rms (last 2 s)`, `dashed: Kd 200 with N_f = ${DISH.Nf} rad/s: ${rms(b.u).toFixed(0)} N·m rms`] },
       { title: 'Angle ÷ target: the dish itself barely notices', y: 'angle ÷ target', xr: [0, 4], yr: [0, 1.4], series: [{ t: a.t, y: a.y.map((y) => y / R0), color: PB() }, { t: b.t, y: b.y.map((y) => y / R0), color: FX(), dash: true }], hl: [{ y: 1, label: 'target 0.1 rad' }] }];
   },
   windup: (v) => {
     const r = n(v, 'slew'), a = dishSat(TUNED.Kp, TUNED.Ki, TUNED.Kd, r, DISH.Tmax, v.aw === 'clamp'), b = dishSat(TUNED.Kp, TUNED.Ki, TUNED.Kd, r, DISH.Tmax, true);
     return [{ title: 'Windup on a long slew (200 N·m limit)', y: 'angle ÷ target', xr: [0, 8], yr: [0, 1.5], series: [{ t: a.t, y: a.y.map((y) => y / r), color: PB() }, { t: b.t, y: b.y.map((y) => y / r), color: FX(), dash: true }], hl: [{ y: 1, label: `target ${r} rad` }], notes: [`solid: %OS ${a.OS.toFixed(1)} %, Ts ${a.Ts.toFixed(2)} s`, `dashed (clamping): %OS ${b.OS.toFixed(1)} %, Ts ${b.Ts.toFixed(2)} s`] },
-      { title: 'Torque and the integrator\'s share', y: 'torque (N·m)', xr: [0, 8], yr: [-260, 400], series: [{ t: a.t, y: a.u, color: PB() }, { t: a.t, y: a.ii, color: col.d(), width: 1.4 }, { t: b.t, y: b.u, color: FX(), dash: true }], hl: [{ y: DISH.Tmax, label: 'limit 200 N·m' }] }];
+      { title: 'Torque and the integrator\'s share', y: 'torque (N·m)', xr: [0, 8], yr: fitY([{ t: a.t, y: a.u }, { t: a.t, y: a.ii }, { t: b.t, y: b.u }], [0, 8], 0.08, [-260, 400]), series: [{ t: a.t, y: a.u, color: PB() }, { t: a.t, y: a.ii, color: col.d(), width: 1.4 }, { t: b.t, y: b.u, color: FX(), dash: true }], hl: [{ y: DISH.Tmax, label: 'limit 200 N·m' }] }];
   },
   kick: (v) => {
     const a = card({ ...TUNED, dm: !!v.dm, Nf: DISH.Nf, T: 5, umax: on(v, 'limit') ? DISH.Tmax : null }), b = card({ ...TUNED, dm: true, Nf: DISH.Nf, T: 5 }), ma = cardMet(a.t, a.y, R0), mb = cardMet(b.t, b.y, R0);
