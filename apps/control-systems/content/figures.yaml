@@ -57,7 +57,7 @@
       color: var(--org)
     - label: bedroom x₂
       color: var(--cyan)
-  howToRead: "Top: the house in steady state, arrow widths ∝ heat flow (W). Bottom: both rooms warming from outdoor temperature after the heater switches on, with the two ODEs and their live coefficients. Time is in hours."
+  howToRead: "Left: the house in steady state, arrow widths ∝ heat flow (W). Right (below on phones): both rooms warming from outdoor temperature after the heater switches on, with the two ODEs and their live coefficients. Time is in hours."
   lookFor: "The bedroom has no heater, yet ends only 4 K cooler than the living room: the inner wall passes heat five times more easily than the outer walls leak it."
   controls:
     - id: u
