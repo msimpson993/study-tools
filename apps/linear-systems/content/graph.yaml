@@ -5,11 +5,11 @@ maps:
   title: Big picture
   caption: "The whole course as fourteen questions. Tap any box: a one-line answer, the formula in rough words, a picture where words aren't enough, what it means for the earbud or the car, and the next question (the line out of the box). The dashed line joins two boxes that use the same trick."
   seriesNames: &id001
-  - "Linearity: the idea"
-  - "Signals: tones and transforms"
-  - "State: inside the system"
+  - Linearity
+  - Signals
+  - State
   - Hidden modes
-  - Application
+  - Applications
   nodes:
   - id: root
     label: Predict the output for ANY input?
