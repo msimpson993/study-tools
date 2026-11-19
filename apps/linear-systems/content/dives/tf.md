@@ -57,7 +57,7 @@ Taking the (zero-state) Laplace transform of the state equations and eliminating
 
 ### Worked example: on the earbud
 
-1. The earbud's poles sit at $-1{,}267 \pm j4{,}322$ rad/s, damping ratio ζ ≈ 0.28.
+1. The earbud's poles sit at $-1{,}266 \pm j4{,}322$ rad/s, damping ratio ζ ≈ 0.28.
 2. Walk up the jω axis. The distance to the upper pole alone is smallest at 688 Hz, level with it ($\omega = 4{,}322$ rad/s). The gain is set by the product of the distances to both poles, and that product is smallest a little lower, at 658 Hz ($\omega \approx 4{,}132$ rad/s): the gain peaks there at ×1.85.
 3. Far above, both distances grow like ω, so the gain falls like $1/\omega^2$: 40 dB per decade.
 

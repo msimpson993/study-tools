@@ -62,7 +62,7 @@ If X(z) has a factor z upstairs, expand X(z)/z instead and use z/(z − a) ↔ a
 
 ### Worked example: on the earbud
 
-1. The earbud's H(s) has two poles, $-\sigma \pm j\omega_d$ with $\sigma \approx 1{,}267$ /s and $\omega_d \approx 4{,}322$ rad/s.
+1. The earbud's H(s) has two poles, $-\sigma \pm j\omega_d$ with $\sigma \approx 1{,}266$ /s and $\omega_d \approx 4{,}322$ rad/s.
 2. Each gives a term (residue) × $e^{pt}$; the conjugate pair combines into one real sine.
 3. So $h(t) \propto e^{-\sigma t}\sin(\omega_d t)\,u(t)$: a 688 Hz ring with decay time constant 0.79 ms, exactly the click response.
 

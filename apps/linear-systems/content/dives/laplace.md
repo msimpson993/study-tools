@@ -55,7 +55,7 @@ Laplace (continuous time) and Z (discrete time) are the natural transforms for c
 
 1. Newton's law for the cone, $M\ddot x + R\dot x + kx = (Bl/R_e)V$, becomes $(Ms^2 + Rs + k)X(s) = (Bl/R_e)V(s)$: each derivative is a factor $s$.
 2. Divide: $H(s) = X/V$, a fraction with $s^2$ in the denominator. Normalised to 1 at low pitch, $H(s) = a_0/(s^2 + a_1 s + a_0)$ with $a_0 \approx 2.03\times10^7\ \text{s}^{-2}$ and $a_1 \approx 2{,}533\ \text{s}^{-1}$.
-3. Its poles, the roots of the denominator, are $-1{,}267 \pm j4{,}322$ rad/s.
+3. Its poles, the roots of the denominator, are $-1{,}266 \pm j4{,}322$ rad/s.
 
 **Exam-style example.** L{e^(−t) u(t)} = 1/(s+1) with ROC Re(s) &gt; −1. The Z-transform of its samples at T = ln 2 is the Z-transform of (1/2)^n u[n], namely 1 / (1 − ½ z^(−1)) with ROC |z| &gt; 1/2. That is the same pole, mapped by z = e^(s T): e^(−1 · ln 2) = 1/2. On the jω axis the Laplace transform is the FT 1/(1+jω); on the unit circle the Z-transform is the DTFT 1 / (1 − ½ e^(−jΩ)).
 
