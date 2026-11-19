@@ -611,9 +611,9 @@ function renderExInfo(){
   const ex=EX.find(e=>e.id===activeEx);
   if(exFree){$('exsum').innerHTML='About: your own setting';$('exbody').innerHTML='<p>You picked a different transform pair, so no preset is active. Pick a preset above to load a described example.</p>';return;}
   $('exsum').innerHTML=`About: ${ex.n}${exModified?'<span class="mod">(modified)</span>':''}`;
-  $('exbody').innerHTML=`<h5>Settings <span style="text-transform:none;letter-spacing:0;font-weight:500">(bold = changed from Reset)</span></h5><div class="sets">${settingsHTML(ex)}</div><h5>What to look at</h5><p>${ex.look}</p><h5>Why</h5><p>${ex.why}</p>${ex.extra?`<h5>Under vs. critical vs. over</h5>${ex.extra}`:''}<h5>Key relation</h5><div class="eqi">${ex.eq}</div><h5>MATLAB tip</h5><code>${ex.ml}</code>`;
+  $('exbody').innerHTML=`<h5>Settings <span style="text-transform:none;letter-spacing:0;font-weight:500">(bold = changed from the generic ring)</span></h5><div class="sets">${settingsHTML(ex)}</div><h5>What to look at</h5><p>${ex.look}</p><h5>Why</h5><p>${ex.why}</p>${ex.extra?`<h5>Under vs. critical vs. over</h5>${ex.extra}`:''}<h5>Key relation</h5><div class="eqi">${ex.eq}</div><h5>MATLAB tip</h5><code>${ex.ml}</code>`;
 }
-$('btnReset').onclick=()=>applyExample('under');
+$('btnReset').onclick=()=>applyExample('earbud'); // Reset returns to the board's opening preset, the earbud
 
 /* try-this list: same applyExample path */
 const TRY=content.extra.examples.tryThis.map(t=>[t.id,t.head,t.text,t.box]);
