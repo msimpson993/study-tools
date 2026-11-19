@@ -17,7 +17,9 @@ Before designing with the states, check that the actuator can steer each one and
 
 ### See it
 
-The corner draws B and AB in the state plane; the house cases show when the test fails. With two equal heaters on one dial, both rooms always warm together; no setting makes the bedroom warmer than the living room.
+The corner draws B and AB in the state plane.
+
+The corner passes both tests, so to see a failure we go back to the house. Put a 2.5 kW heater in *each* room on one dial: both rooms rise to 45.0 K together with τ = 5 h. Their difference never moves, so no input can make one room warmer than the other.
 
 ```figure:cc
 ```
@@ -43,10 +45,8 @@ P_c = [[0, 0.0025], [0.0025, −0.01]], det −6.25 × 10⁻⁶ ≠ 0: controlla
 - A sensor reading the average: unobservable (the difference mode).
 - The outdoor temperature is likewise an input that can't steer the difference mode, which is why outdoor → bedroom is first order (*Transfer function G(s)*).
 
-### Exam examples
-
-LN4 slides 4–12.
-
 ### What it can't do
 
 It's yes/no: a nearly singular P_c means "controllable" but needing huge force.
+
+<p class="src">Sources: LN4 s.4–12.</p>

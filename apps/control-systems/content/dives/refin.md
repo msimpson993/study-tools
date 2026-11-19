@@ -45,12 +45,10 @@ At rest ẋ = 0, so x_ss = −(A − BK)⁻¹BN̄r and y_ss = −C(A − BK)⁻�
 
 ### Worked example: on the corner, raise 2 cm
 
-1.5 % overshoot, Tₛ 0.38 s. The force is 800 N at the start (N̄r) and 512 N steady (= k × 2 cm, the spring's extra load). With the spring 10 % stiffer than modelled the car stops 6.0 % short.
-
-### Exam example
-
-LN4 slides 41–44.
+1.5 % overshoot, Tₛ 0.38 s. The actuator starts at N̄r = 800 N and settles at 512 N, exactly the spring's extra load for 2 cm (25.6 kN/m × 2 cm). With the spring 10 % stiffer than modelled the car stops 6.0 % short.
 
 ### What it can't do
 
 It leaves an offset under model error or a steady load (luggage); integral action on the height error would remove it (look back to *One pole: the yardstick* and *Integral action*).
+
+<p class="src">Sources: LN4 s.41–44 (the notes write N̄ as N, and also show feeding the observer y − r).</p>

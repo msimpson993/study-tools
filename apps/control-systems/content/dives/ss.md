@@ -18,6 +18,9 @@ To predict the corner's future you need its height *and* its velocity now; heigh
 
 The two-integrator diagram (force/m → acceleration → ∫ → velocity → ∫ → height, with −64 and −4 fed back) and the phase portrait (z, ż). Every start spirals into the origin along the same shape: the eigenvalues set it.
 
+```figure:ssblock
+```
+
 ```figure:states
 ```
 
@@ -35,12 +38,10 @@ Corner: A = [[0, 1], [−64, −4]], B = [0, 0.0025]ᵀ, C = [1, 0], D = 0; eig(
 
 ### Worked example: on the corner, released 5 cm high
 
-The body swings to −2.22 cm at 0.41 s, then spirals in. G(s) can't describe this start; state space can. The eigenvalues of A are −2 ± 7.75j, the same as G's poles (*From states back to G(s)*).
+The body swings to −2.22 cm at 0.41 s, then spirals in. G(s) can't describe this start; state space can. The eigenvalues of A are −2 ± 7.75j, the same as G's poles (*From A, B, C back to G(s)*).
 
 ### What it can't do
 
 It's still a linear model, and the choice of states isn't unique (any invertible change of variables works).
 
-### Slides
-
-Taught in LN1, for Mini exam 1.
+<p class="src">Sources: LN1 s.21–27, 33–37. Exam practice: Review › Mini exam 1.</p>

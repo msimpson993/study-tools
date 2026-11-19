@@ -39,11 +39,8 @@ Target ζ = 0.8, ωₙ = 10: s² + 16s + 100, so (k + k₁)/m = 100 and (c + k�
 - 1 kN load: sag 2.5 cm (against 3.9), 1.5 % overshoot, Tₛ 0.38 s.
 - Speed bump (5 cm for 0.2 s): passive peak 3.89 cm, dip −1.73 cm, peak acceleration 5.71 m/s², 0.77 cm still moving after 1 s. Active: 1.93 cm, 3.51 m/s², ≤ 0.001 cm after 1 s, peak force 987 N.
 
-### Exam examples
-
-- LN4 slides 17–18: y‴ + 5ÿ + 3ẏ + 2y = u with poles from (s² + 9.6s + 36)(s + 4.8) = s³ + 14.4s² + 82.08s + 172.8, giving K = [170.8, 79.08, 9.4].
-- Ackermann on 1/s² with poles −1 ± j: K = [2, 2].
-
 ### What it can't do
 
 It needs every state (*Estimate what we can't measure*); faster poles need more force; a model error moves the poles.
+
+<p class="src">Sources: LN4 s.17–21 (pole placement, Ackermann s.19–21). Exam practice: Review › Mini exam 2, LN4 worked examples.</p>

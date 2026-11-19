@@ -100,7 +100,7 @@ maps:
     accountsFor: Why no heater schedule can ever make the bedroom overshoot its final temperature.
     pop:
       rough: real part → fading speed; imaginary part → ringing speed
-      eqKey: σ = decay rate; ω = ringing frequency (both per hour here).
+      eqKey: 'σ = decay rate; ω = ringing frequency (per hour).'
       figures:
       - id: pop-housemodes
         params:
@@ -112,8 +112,8 @@ maps:
           panel: b
         alt: 'The two motions: both rooms cooling together (slow), and the rooms evening out (fast).'
         caption: (b)
-      figCaption: '<b>(a)</b> Two real poles: no ringing. <b>(b)</b> Slow mode (τ = 5 h): the house warms as a whole. Fast mode (27 min): the rooms even out.'
-      example: The slow pole decides how long the house takes; the fast one fades within about two hours.
+      figCaption: '<b>(a)</b> Two real poles: no ringing. <b>(b)</b> Each motion alone, from a 1 K start: slow (τ = 5 h), the house warming as a whole; fast (27 min), the rooms evening out.'
+      example: 'The slow pole sets how long the house takes; the fast one is gone in two hours.'
       ask: q-poles
   - id: FIRST
     label: 'One pole: the yardstick'
@@ -175,7 +175,7 @@ maps:
     label: 'Specs: overshoot, settling, peak time'
     detail: ride comfort in numbers
     series: 1
-    short: Read four numbers off the step response. *Percent overshoot* (%OS), how far it swings past the final value, depends on ζ alone. *Settling time* Tₛ, until it stays within 2 %, depends on the decay rate σ = ζωₙ. *Peak time* Tₚ is when the first peak comes. *Rise time* is how fast it first gets there.
+    short: 'Four numbers off the step response. *Percent overshoot* (%OS), the swing past the final value, depends on ζ alone. *Settling time* Tₛ (to stay within 2 %) depends on the decay rate σ = ζωₙ. *Peak time* Tₚ: the first peak. *Rise time* T_r: until it first reaches the final value (10–90 % if it never overshoots).'
     eq: '%OS = 100e^(−ζπ/√(1−ζ²)),  Tₛ = 4/(ζωₙ),  Tₚ = π/ω_d'
     dive: second
     live: figure:specs
@@ -188,7 +188,7 @@ maps:
       figures:
       - id: pop-specs
         alt: The body after a 1 kN load, with %OS, Tₚ and the 2 % band marked.
-      figCaption: '1 kN of luggage: the body dips to 5.64 cm, 44 % past its final 3.91 cm, at 0.41 s, and settles by 1.8 s (formula: 2 s).'
+      figCaption: '1 kN of luggage: the body dips to 5.64 cm, 44 % past its final 3.91 cm, at 0.41 s, and stays inside the green ±2 % band from 1.8 s (formula: 2 s).'
       example: A firmer shock (ζ = 0.7) cuts overshoot to 4.6 % but passes a sharper jolt from every bump.
       ask: q-specs
   - id: LOOP
@@ -231,8 +231,8 @@ maps:
     addsToExample: 'Points the dish with a P loop: stiff but bouncy at Kp = 1000.'
     accountsFor: Why a stiffer pointing loop rings more unless something adds damping.
     pop:
-      rough: torque = gain × error; more gain → faster swing, same friction → more bounce
-      eqKey: J = 10 kg·m² inertia; B = 20 N·m·s/rad friction; Kp in N·m per rad.
+      rough: 'torque = gain × error; more gain → faster but bouncier'
+      eqKey: 'J = 10 kg·m²; B = 20 N·m·s/rad; Kp in N·m/rad.'
       figures:
       - id: pop-pgain
         params:
@@ -244,14 +244,14 @@ maps:
           panel: b
         alt: Steps at Kp = 40 and 1000.
         caption: (b)
-      figCaption: '<b>(a)</b> As Kp rises the poles meet at −1 and climb straight up (root locus, preview). <b>(b)</b> Kp = 40: 16 % overshoot; Kp = 1000: 73 %.'
+      figCaption: '<b>(a)</b> The poles'' path as Kp rises, the *root locus* (not in lecture notes): they meet at −1 at Kp = 10 (yellow dot), then rise straight up. <b>(b)</b> 0.1 rad (5.73°) step: 16 % overshoot at Kp = 40, 73 % at 1000.'
       example: Kp = 1000 gives ωₙ = 10 rad/s but ζ = 0.1.
       ask: q-pgain
   - id: SSE
     label: Why it stops short
     detail: steady-state error
     series: 2
-    short: A steady push. In still air the dish ends exactly on target, because its angle keeps integrating the motor's speed. But a steady wind torque must be held by an equal motor torque, and P makes torque only from an error, so some *steady-state error* e_ss remains. The *final-value theorem* reads it off G(s) at s → 0, if the loop is stable.
+    short: 'A steady push. In still air the dish ends exactly on target, because its angle keeps integrating the motor''s speed: one integrator in the loop makes it *type 1*. But a steady wind torque must be held by an equal motor torque, and P makes torque only from an error, so some *steady-state error* e_ss remains. The *final-value theorem* reads it off at s → 0, if the loop is stable.'
     eq: e_ss(step) = 0,  e_ss(wind) = −T_d/Kp,  e_ss(ramp ω) = Bω/Kp
     dive: sse
     live: figure:sse
@@ -288,7 +288,7 @@ maps:
     accountsFor: Why integral action alone can't fix a lightly damped servo.
     pop:
       rough: integral torque = Ki × error added up over time
-      eqKey: Ki = integral gain; stable only while Ki < 2Kp (Routh test, added).
+      eqKey: 'Ki = integral gain; stable only while Ki < 2Kp (Routh test: a sign check on the polynomial''s coefficients; not in lecture notes).'
       figures:
       - id: pop-int
         params:
@@ -301,13 +301,13 @@ maps:
         alt: The step, Kp = 1000, Ki = 0, 500, 1000.
         caption: (b)
       figCaption: '<b>(a)</b> 20 N·m gust: P stays 1.15° off; PI (Ki = 500) returns to zero. <b>(b)</b> More Ki, more overshoot: 73 % → 80 % → 87 %.'
-      example: 'Kp = 1000, Ki = 500: no wind error, but 80 % overshoot. It needs damping first.'
+      example: 'Kp = 1000, Ki = 500: no wind error, but 80 % overshoot.'
       ask: q-int
   - id: DER
     label: Derivative action
     detail: brake before you arrive
     series: 2
-    short: 'A torque against how fast the angle is changing, so the dish brakes before it arrives: *derivative (D) action*. It works like extra friction, just as a car''s shock absorber does. Taking D from the measured angle (a *tachometer*) instead of the error avoids an extra overshoot. P, I and D together make *PID control*.'
+    short: 'A torque against the angle''s rate of change, so the dish brakes before it arrives: *derivative (D) action*, extra friction like a car''s shock absorber. Taking it from the measured angle (a *tachometer*), not the error, avoids extra overshoot. I is set aside here; P, I and D return together as *PID control* in Box 12.'
     eq: Js² + (B + Kd)s + Kp = 0,  ζ = (B + Kd)/(2√(KpJ))
     dive: derivative
     live: figure:derivative
@@ -315,7 +315,7 @@ maps:
     addsToExample: 'Adds a tachometer: Kd = 120 gives ζ = 0.7.'
     accountsFor: Why servos take D from the tachometer, not from the error.
     pop:
-      rough: derivative torque = −Kd × rate of turn; damping = friction + Kd
+      rough: 'damping = friction + Kd'
       eqKey: Kd = derivative gain (N·m·s/rad).
       figures:
       - id: pop-der
@@ -328,8 +328,8 @@ maps:
           panel: b
         alt: The poles moving from ζ = 0.1 to 0.7.
         caption: (b)
-      figCaption: '<b>(a)</b> Kd = 120 (ζ = 0.7): 4.6 % overshoot with D on the measurement, 15.6 % with D on the error. <b>(b)</b> The poles move left, from ζ = 0.1 to 0.7.'
-      example: Kd = 120 turns the 73 % ring into 4.6 %, but the wind error stays 1.15°.
+      figCaption: '<b>(a)</b> Kd = 120 (ζ = 0.7): 4.6 % overshoot with D on the measurement, 15.6 % on the error. <b>(b)</b> Grey rings: P alone (ζ = 0.1); ×: with Kd; yellow rays: ζ = 0.1 and 0.7.'
+      example: 'P alone overshoots 73 %; Kd = 120 cuts it to 4.6 %, but the 1.15° wind error stays until I returns.'
       ask: q-der
   - id: TUNE
     label: Choosing the three gains
@@ -348,7 +348,7 @@ maps:
       figures:
       - id: pop-tune
         alt: Three panels from (2000, 1000, 200), each raising one gain; dashed ghost = start.
-      figCaption: 'Each panel raises one gain from (2000, 1000, 200): more Kp, 14 % overshoot; more Ki, 17 %; more Kd, sluggish.'
+      figCaption: 'Each panel raises one gain from (2000, 1000, 200) on a 0.1 rad (5.73°) step: more Kp, 14 % overshoot; more Ki, 17 %; more Kd, sluggish.'
       example: '(Kp, Ki, Kd) = (2000, 1000, 200): 7.4 % overshoot, wind peak 0.56°, back on target in 4.8 s.'
       ask: q-tune
   - id: DIST
@@ -377,7 +377,7 @@ maps:
         alt: 'Bedroom temperature after a −5 K cold front: open loop, P, PI.'
         caption: (b)
       figCaption: '<b>(a)</b> The thermostat compares the bedroom with its set point. <b>(b)</b> Outdoors drops 5 K: open loop −5 K, P −0.5 K, PI back to zero.'
-      example: Either way the heater ends up adding 611 W; P needs a 0.5 K error to be told to.
+      example: 'Holding the bedroom needs 611 W more (5 K ÷ 8.18 K/kW): PI gives it all; P gives 550 W, pushing only while 0.5 K low.'
       ask: q-dist
   - id: SENS
     label: What if the model is wrong?
@@ -403,7 +403,7 @@ maps:
     label: Why not infinite gain?
     detail: S + C = 1
     series: 3
-    short: 'Because the loop believes its sensor: it drives the *reading* to the set point, not the room. What it rejects plus what it passes always adds to one: S + C = 1, with C = L/(1 + L) the *complementary sensitivity*. Large L makes S small, so C ≈ 1: sensor errors go straight into the room.'
+    short: 'Because the loop trusts its sensor: it drives the *reading*, not the room, to the set point. S is the share of weather and model error that gets through; C = L/(1 + L), the *complementary sensitivity*, is the share of command and sensor error reaching the room. They add to one, so large L makes C ≈ 1: sensor errors go straight in.'
     eq: E = S·R − S·G_d·D + C·N,  S + C = 1
     dive: fb
     live: figure:sc
@@ -411,27 +411,27 @@ maps:
     addsToExample: Puts the sun on the thermostat.
     accountsFor: Why a well-placed sensor matters more than a clever controller.
     pop:
-      rough: rejected + passed = 1; big gain trusts the sensor completely
-      eqKey: C(0) = 0.9 for P, 1 for PI.
+      rough: 'S + C = 1; big gain trusts the sensor'
+      eqKey: 'C(0) = 0.9 (P), 1 (PI).'
       figures:
       - id: pop-sc
         params:
           panel: a
-        alt: '|S| and |C| for the P thermostat vs frequency (preview).'
+        alt: '|S| and |C| for the P thermostat vs frequency (not in lecture notes).'
         caption: (a)
       - id: pop-sc
         params:
           panel: b
         alt: Bedroom temperature when the thermostat reads 1 K high.
         caption: (b)
-      figCaption: '<b>(a)</b> Slow changes: S ≈ 0.1, C ≈ 0.9 (frequency response, preview). <b>(b)</b> Sun on the thermostat (+1 K): P runs the room 0.9 K cold, PI 1 K.'
+      figCaption: '<b>(a)</b> Gain versus sine speed, the *frequency response* (not in lecture notes), log axis: S ≈ 0.1, C ≈ 0.9 when slow; S peaks at 1.33 near 2.6 rad/h. <b>(b)</b> Reading 1 K high: P runs the room 0.9 K cold, PI 1 K.'
       example: High gain also costs heater effort and damping.
       ask: q-noise
   - id: STATE
     label: 'Look inside: state space'
     detail: ẋ = Ax + Bu
     series: 4
-    short: 'Know more than the output: the body''s height *and* velocity, the least you need to predict its future. That set is the *state* x. Writing the plant as first-order equations in the states is *state space*. It keeps the starting conditions G(s) ignores, and its poles are the eigenvalues of A.'
+    short: 'Feed back more than the output. Feeding back the output alone, as P did, changes just one coefficient of the polynomial. The body''s height *and* velocity, the least you need to predict its future, form the *state* x; first-order equations in the states are *state space*. It keeps the starting conditions G(s) ignores, and its poles are A''s eigenvalues.'
     eq: ẋ = [[0, 1], [−64, −4]]x + [0, 1/400]ᵀu,  y = [1, 0]x
     dive: ss
     live: figure:states
@@ -452,14 +452,14 @@ maps:
           panel: b
         alt: The phase portrait after release from 5 cm.
         caption: (b)
-      figCaption: '<b>(a)</b> Inside the corner: force gives acceleration, integrate for velocity, again for height; spring and shock feed back. <b>(b)</b> Released 5 cm high, the state spirals in.'
+      figCaption: '<b>(a)</b> Inside the corner: force gives acceleration, integrate for velocity, again for height; spring and shock feed back. <b>(b)</b> Released 5 cm high (yellow dot), the state spirals into rest (green dot).'
       example: Let go from 5 cm, the body swings to 2.2 cm below at 0.41 s.
       ask: q-state
   - id: CC
     label: Can we reach and see every state?
     detail: controllable, observable
     series: 4
-    short: 'Check two matrices first. If the input can steer the state anywhere, the plant is *controllable*: Pc = [B AB] is invertible. If the output reveals every state over time, it is *observable*: Po = [C; CA] is invertible. A mode that fails either test vanishes from G(s) but still moves inside.'
+    short: 'Only if the force can push every state somewhere new and the readings reveal every state. Two matrices test it. If Pc = [B AB] is invertible, the plant is *controllable*. If Po = [C; CA] is invertible, it is *observable*. A mode that fails either test vanishes from G(s) but still moves inside.'
     eq: Pc = [B, AB],  Po = [C; CA],  full rank ⇔ yes
     dive: cc
     live: figure:cc
@@ -480,7 +480,7 @@ maps:
           panel: b
         alt: A house with two equal heaters on one dial, where the "difference" mode can't be steered.
         caption: (b)
-      figCaption: '<b>(a)</b> The force pushes velocity, which moves height: B and AB point different ways. <b>(b)</b> Two equal heaters on one dial can never make one room warmer.'
+      figCaption: '<b>(a)</b> Directions only, equal length: B (force → speed, in m/s² per N) and AB (speed → height) point different ways. <b>(b)</b> A failing case, back in the house: one dial driving a heater in each room warms both rooms identically, so their difference can''t be steered.'
       example: 'The corner passes both: one height sensor reveals velocity too.'
       ask: q-cc
   - id: SF
@@ -509,13 +509,13 @@ maps:
         alt: A 5 cm speed bump, passive vs active body motion.
         caption: (b)
       figCaption: '<b>(a)</b> Poles from −2 ± 7.75j to −8 ± 6j. <b>(b)</b> 5 cm speed bump: the passive body rises 3.9 cm and rings, the active one 1.9 cm and settles.'
-      example: K = [14 400 N/m, 4 800 N·s/m]; a 1 kN load sags 2.5 cm with 1.5 % overshoot.
+      example: 'K = [14 400 N/m, 4 800 N·s/m]: a 1 kN load sags 2.5 cm, 1.5 % overshoot.'
       ask: q-sf
   - id: OBS
     label: Estimate what we can't measure
     detail: the observer
     series: 4
-    short: Run a copy of the model in software, driven by the same actuator force. Compare its predicted height with the measured one and nudge every estimated state by L times the difference. This *observer* gives an estimate x̂ whose error obeys ė = (A − LC)e, so choosing L by pole placement makes the error die out as fast as we like.
+    short: 'Run a copy of the model in software, driven by the same actuator force. Compare its predicted height with the measured one and nudge every estimated state by L times the difference. This *observer*''s error obeys ė = (A − LC)e, so placing those poles makes the error die out as fast as we like.'
     eq: x̂̇ = Ax̂ + Bu + L(y − Cx̂),  ė = (A − LC)e
     dive: obs
     live: figure:obs
@@ -524,11 +524,11 @@ maps:
     accountsFor: How the actuator gets the velocity the design needs.
     pop:
       rough: estimate = model copy + correction × (measured − predicted)
-      eqKey: 'L = [l₁, l₂] (observer gain); error poles chosen 5× faster than the controller: −40 ± 30j.'
+      eqKey: 'L = [l₁, l₂] (observer gain); error poles 5× faster than the controller: −40 ± 30j.'
       figures:
       - id: pop-obs
         alt: The real body and the ghost estimate, starting 1 cm apart and merging.
-      figCaption: The estimate (ghost) starts 1 cm off. With error poles at −40 ± 30j it locks on within about 0.15 s, much faster than the body moves.
+      figCaption: 'A 1 kN load sags the actively held body to −2.5 cm (1 kN ÷ 40 kN/m). The estimate (ghost) starts 1 cm off and locks on within about 0.15 s.'
       example: s² + (4 + l₁)s + (64 + 4l₁ + l₂) = s² + 80s + 2500 → L = [76, 2132].
       ask: q-obs
   - id: SEP
@@ -555,7 +555,7 @@ maps:
     label: Follow a command
     detail: the reference gain N̄
     series: 4
-    short: 'Add the command into the force, scaled so that the final height equals it. Without it the design is a *regulator*, returning every state to zero; with u = −Kx̂ + N̄r it is a *tracker*. N̄ (written N in LN4) is one over the closed loop''s DC gain: FIRST''s DC-gain idea again. The notes'' alternative feeds the observer y − r instead.'
+    short: 'Add the command into the force, scaled so the final height equals it. Without it the design is a *regulator*, returning every state to zero; with u = −Kx̂ + N̄r it is a *tracker*. N̄ is one over the closed loop''s DC gain: the same s → 0 reading that gave the house''s final temperature in Box 4.'
     eq: N̄ = 1/(−C(A − BK)⁻¹B) = k + k₁ = 40 000 N/m
     dive: refin
     live: figure:refin
@@ -568,7 +568,7 @@ maps:
       figures:
       - id: pop-ref
         alt: 'Raise the car 2 cm for a rough road: with N̄ vs without.'
-      figCaption: 'Raise the ride height 2 cm: with N̄ = 40 000 N/m the body arrives in about 0.4 s with 1.5 % overshoot. The actuator starts at 800 N and settles at 512 N, exactly the spring''s extra 2 cm.'
+      figCaption: 'Raise the ride height 2 cm: with N̄ the body arrives in about 0.4 s (1.5 % overshoot); without it, it stops at 0.72 cm.'
       example: 'If the real spring is 10 % stiffer than the model, the body stops 6 % short: N̄ trusts the model (integral action would fix that).'
       ask: q-ref
   edges:
@@ -685,7 +685,7 @@ maps:
   - from: INT
     to: DER
     label: calm it
-    question: I made the bounce worse. What adds damping?
+    question: 'Integral action made the bounce worse. What adds damping?'
     idea: 'A torque against the rate of turn: derivative action, best taken from the tachometer.'
     why: |-
       **Still open:** Box 10's dish overshoots 80 %, and the friction B is fixed.
@@ -730,7 +730,7 @@ maps:
     to: NOISE
     label: why not huge gain?
     question: If gain shrinks disturbances and model errors, why not make it huge?
-    idea: 'S + C = 1: what the loop stops rejecting it passes, and big gain obeys the sensor''s errors exactly.'
+    idea: 'S + C = 1: whatever share of the weather the loop keeps out, the same share of sensor error gets in.'
     why: |-
       **Still open:** Boxes 13–14 both said "more L is better".
 
@@ -743,11 +743,11 @@ maps:
     question: Output feedback only slides poles along fixed paths. How could we place them anywhere?
     idea: 'Back to the car: an active suspension needs more than one output to feed back, its height *and* velocity. That needs state space.'
     why: |-
-      **Still open:** in Box 8, P could only move the poles straight up at a fixed decay rate; PID added zeros we didn't want.
+      **Still open:** the dish loop could only ever see the angle. P turned that into torque, which changed just one coefficient of the polynomial, the stiffness. D needed a second signal, the rate of turn (a tachometer). With one measured output, the poles only slide along fixed paths.
 
-      **Why it matters:** the corner's specs (comfort *and* quick settling) need both coefficients of its polynomial set at will.
+      **Why it matters:** the corner's specs, comfort *and* quick settling, need both coefficients of its polynomial set at will: stiffness and damping.
 
-      **What we want:** a description of the corner by its internal states, ready for feedback of every state.
+      **What we want:** measure (or estimate) every quantity that stores energy, height and velocity, and feed back all of them.
   - from: STATE
     to: CC
     label: reach and see?
@@ -821,12 +821,16 @@ maps:
     dashed: true
     question: P control slid the poles along a path. What changes when every state is fed back?
     idea: 'The same goal (move the poles) with more freedom: one gain per state, so the poles can leave the path.'
+    whyFigures:
+    - id: pop-slideplace
+      alt: 'One s-plane in rad/s: the dish''s P path rises straight up at −1; the corner''s poles move from −2 ± 7.75j to −8 ± 6j.'
+    whyFigCaption: 'P can only slide the dish''s poles along one fixed path; its decay rate stays at 1 /s whatever Kp. Feeding back both states puts the corner''s poles exactly where we chose.'
     why: |-
       **Still open:** Box 8's poles could only climb at −1 ± jω; Box 18 puts the corner's at −8 ± 6j. Both "move the poles", so how do they differ?
 
       **Why it matters:** side by side, they show what the state-space detour bought: the decay rate is no longer fixed by the friction.
 
-      **What we want:** one s-plane picture with the P path and the placed poles (dish and corner on the same axes, normalised).
+      **What we want:** one s-plane picture, in rad/s with no normalising: the dish's P path rising straight up at −1, and the corner's poles moved from −2 ± 7.75j to −8 ± 6j.
   - from: FIRST
     to: REF
     label: DC gain, again
@@ -938,7 +942,7 @@ maps:
     accountsFor: Why no heater schedule can ever make the bedroom overshoot its final temperature.
     pop:
       rough: real part → fading speed; imaginary part → ringing speed
-      eqKey: σ = decay rate; ω = ringing frequency (both per hour here).
+      eqKey: 'σ = decay rate; ω = ringing frequency (per hour).'
       figures:
       - id: pop-housemodes
         params:
@@ -950,8 +954,8 @@ maps:
           panel: b
         alt: 'The two motions: both rooms cooling together (slow), and the rooms evening out (fast).'
         caption: (b)
-      figCaption: '<b>(a)</b> Two real poles: no ringing. <b>(b)</b> Slow mode (τ = 5 h): the house warms as a whole. Fast mode (27 min): the rooms even out.'
-      example: The slow pole decides how long the house takes; the fast one fades within about two hours.
+      figCaption: '<b>(a)</b> Two real poles: no ringing. <b>(b)</b> Each motion alone, from a 1 K start: slow (τ = 5 h), the house warming as a whole; fast (27 min), the rooms evening out.'
+      example: 'The slow pole sets how long the house takes; the fast one is gone in two hours.'
       ask: q-poles
   - id: FIRST
     label: 'One pole: the yardstick'
@@ -1013,7 +1017,7 @@ maps:
     label: 'Specs: overshoot, settling, peak time'
     detail: ride comfort in numbers
     series: 1
-    short: Read four numbers off the step response. *Percent overshoot* (%OS), how far it swings past the final value, depends on ζ alone. *Settling time* Tₛ, until it stays within 2 %, depends on the decay rate σ = ζωₙ. *Peak time* Tₚ is when the first peak comes. *Rise time* is how fast it first gets there.
+    short: 'Four numbers off the step response. *Percent overshoot* (%OS), the swing past the final value, depends on ζ alone. *Settling time* Tₛ (to stay within 2 %) depends on the decay rate σ = ζωₙ. *Peak time* Tₚ: the first peak. *Rise time* T_r: until it first reaches the final value (10–90 % if it never overshoots).'
     eq: '%OS = 100e^(−ζπ/√(1−ζ²)),  Tₛ = 4/(ζωₙ),  Tₚ = π/ω_d'
     dive: second
     live: figure:specs
@@ -1026,7 +1030,7 @@ maps:
       figures:
       - id: pop-specs
         alt: The body after a 1 kN load, with %OS, Tₚ and the 2 % band marked.
-      figCaption: '1 kN of luggage: the body dips to 5.64 cm, 44 % past its final 3.91 cm, at 0.41 s, and settles by 1.8 s (formula: 2 s).'
+      figCaption: '1 kN of luggage: the body dips to 5.64 cm, 44 % past its final 3.91 cm, at 0.41 s, and stays inside the green ±2 % band from 1.8 s (formula: 2 s).'
       example: A firmer shock (ζ = 0.7) cuts overshoot to 4.6 % but passes a sharper jolt from every bump.
       ask: q-specs
   - id: LOOP
@@ -1069,8 +1073,8 @@ maps:
     addsToExample: 'Points the dish with a P loop: stiff but bouncy at Kp = 1000.'
     accountsFor: Why a stiffer pointing loop rings more unless something adds damping.
     pop:
-      rough: torque = gain × error; more gain → faster swing, same friction → more bounce
-      eqKey: J = 10 kg·m² inertia; B = 20 N·m·s/rad friction; Kp in N·m per rad.
+      rough: 'torque = gain × error; more gain → faster but bouncier'
+      eqKey: 'J = 10 kg·m²; B = 20 N·m·s/rad; Kp in N·m/rad.'
       figures:
       - id: pop-pgain
         params:
@@ -1082,14 +1086,14 @@ maps:
           panel: b
         alt: Steps at Kp = 40 and 1000.
         caption: (b)
-      figCaption: '<b>(a)</b> As Kp rises the poles meet at −1 and climb straight up (root locus, preview). <b>(b)</b> Kp = 40: 16 % overshoot; Kp = 1000: 73 %.'
+      figCaption: '<b>(a)</b> The poles'' path as Kp rises, the *root locus* (not in lecture notes): they meet at −1 at Kp = 10 (yellow dot), then rise straight up. <b>(b)</b> 0.1 rad (5.73°) step: 16 % overshoot at Kp = 40, 73 % at 1000.'
       example: Kp = 1000 gives ωₙ = 10 rad/s but ζ = 0.1.
       ask: q-pgain
   - id: SSE
     label: Why it stops short
     detail: steady-state error
     series: 2
-    short: A steady push. In still air the dish ends exactly on target, because its angle keeps integrating the motor's speed. But a steady wind torque must be held by an equal motor torque, and P makes torque only from an error, so some *steady-state error* e_ss remains. The *final-value theorem* reads it off G(s) at s → 0, if the loop is stable.
+    short: 'A steady push. In still air the dish ends exactly on target, because its angle keeps integrating the motor''s speed: one integrator in the loop makes it *type 1*. But a steady wind torque must be held by an equal motor torque, and P makes torque only from an error, so some *steady-state error* e_ss remains. The *final-value theorem* reads it off at s → 0, if the loop is stable.'
     eq: e_ss(step) = 0,  e_ss(wind) = −T_d/Kp,  e_ss(ramp ω) = Bω/Kp
     dive: sse
     live: figure:sse
@@ -1126,7 +1130,7 @@ maps:
     accountsFor: Why integral action alone can't fix a lightly damped servo.
     pop:
       rough: integral torque = Ki × error added up over time
-      eqKey: Ki = integral gain; stable only while Ki < 2Kp (Routh test, added).
+      eqKey: 'Ki = integral gain; stable only while Ki < 2Kp (Routh test: a sign check on the polynomial''s coefficients; not in lecture notes).'
       figures:
       - id: pop-int
         params:
@@ -1139,13 +1143,13 @@ maps:
         alt: The step, Kp = 1000, Ki = 0, 500, 1000.
         caption: (b)
       figCaption: '<b>(a)</b> 20 N·m gust: P stays 1.15° off; PI (Ki = 500) returns to zero. <b>(b)</b> More Ki, more overshoot: 73 % → 80 % → 87 %.'
-      example: 'Kp = 1000, Ki = 500: no wind error, but 80 % overshoot. It needs damping first.'
+      example: 'Kp = 1000, Ki = 500: no wind error, but 80 % overshoot.'
       ask: q-int
   - id: DER
     label: Derivative action
     detail: brake before you arrive
     series: 2
-    short: 'A torque against how fast the angle is changing, so the dish brakes before it arrives: *derivative (D) action*. It works like extra friction, just as a car''s shock absorber does. Taking D from the measured angle (a *tachometer*) instead of the error avoids an extra overshoot. P, I and D together make *PID control*.'
+    short: 'A torque against the angle''s rate of change, so the dish brakes before it arrives: *derivative (D) action*, extra friction like a car''s shock absorber. Taking it from the measured angle (a *tachometer*), not the error, avoids extra overshoot. I is set aside here; P, I and D return together as *PID control* in Box 12.'
     eq: Js² + (B + Kd)s + Kp = 0,  ζ = (B + Kd)/(2√(KpJ))
     dive: derivative
     live: figure:derivative
@@ -1153,7 +1157,7 @@ maps:
     addsToExample: 'Adds a tachometer: Kd = 120 gives ζ = 0.7.'
     accountsFor: Why servos take D from the tachometer, not from the error.
     pop:
-      rough: derivative torque = −Kd × rate of turn; damping = friction + Kd
+      rough: 'damping = friction + Kd'
       eqKey: Kd = derivative gain (N·m·s/rad).
       figures:
       - id: pop-der
@@ -1166,8 +1170,8 @@ maps:
           panel: b
         alt: The poles moving from ζ = 0.1 to 0.7.
         caption: (b)
-      figCaption: '<b>(a)</b> Kd = 120 (ζ = 0.7): 4.6 % overshoot with D on the measurement, 15.6 % with D on the error. <b>(b)</b> The poles move left, from ζ = 0.1 to 0.7.'
-      example: Kd = 120 turns the 73 % ring into 4.6 %, but the wind error stays 1.15°.
+      figCaption: '<b>(a)</b> Kd = 120 (ζ = 0.7): 4.6 % overshoot with D on the measurement, 15.6 % on the error. <b>(b)</b> Grey rings: P alone (ζ = 0.1); ×: with Kd; yellow rays: ζ = 0.1 and 0.7.'
+      example: 'P alone overshoots 73 %; Kd = 120 cuts it to 4.6 %, but the 1.15° wind error stays until I returns.'
       ask: q-der
   - id: TUNE
     label: Choosing the three gains
@@ -1186,7 +1190,7 @@ maps:
       figures:
       - id: pop-tune
         alt: Three panels from (2000, 1000, 200), each raising one gain; dashed ghost = start.
-      figCaption: 'Each panel raises one gain from (2000, 1000, 200): more Kp, 14 % overshoot; more Ki, 17 %; more Kd, sluggish.'
+      figCaption: 'Each panel raises one gain from (2000, 1000, 200) on a 0.1 rad (5.73°) step: more Kp, 14 % overshoot; more Ki, 17 %; more Kd, sluggish.'
       example: '(Kp, Ki, Kd) = (2000, 1000, 200): 7.4 % overshoot, wind peak 0.56°, back on target in 4.8 s.'
       ask: q-tune
   - id: DIST
@@ -1215,7 +1219,7 @@ maps:
         alt: 'Bedroom temperature after a −5 K cold front: open loop, P, PI.'
         caption: (b)
       figCaption: '<b>(a)</b> The thermostat compares the bedroom with its set point. <b>(b)</b> Outdoors drops 5 K: open loop −5 K, P −0.5 K, PI back to zero.'
-      example: Either way the heater ends up adding 611 W; P needs a 0.5 K error to be told to.
+      example: 'Holding the bedroom needs 611 W more (5 K ÷ 8.18 K/kW): PI gives it all; P gives 550 W, pushing only while 0.5 K low.'
       ask: q-dist
   - id: SENS
     label: What if the model is wrong?
@@ -1241,7 +1245,7 @@ maps:
     label: Why not infinite gain?
     detail: S + C = 1
     series: 3
-    short: 'Because the loop believes its sensor: it drives the *reading* to the set point, not the room. What it rejects plus what it passes always adds to one: S + C = 1, with C = L/(1 + L) the *complementary sensitivity*. Large L makes S small, so C ≈ 1: sensor errors go straight into the room.'
+    short: 'Because the loop trusts its sensor: it drives the *reading*, not the room, to the set point. S is the share of weather and model error that gets through; C = L/(1 + L), the *complementary sensitivity*, is the share of command and sensor error reaching the room. They add to one, so large L makes C ≈ 1: sensor errors go straight in.'
     eq: E = S·R − S·G_d·D + C·N,  S + C = 1
     dive: fb
     live: figure:sc
@@ -1249,27 +1253,27 @@ maps:
     addsToExample: Puts the sun on the thermostat.
     accountsFor: Why a well-placed sensor matters more than a clever controller.
     pop:
-      rough: rejected + passed = 1; big gain trusts the sensor completely
-      eqKey: C(0) = 0.9 for P, 1 for PI.
+      rough: 'S + C = 1; big gain trusts the sensor'
+      eqKey: 'C(0) = 0.9 (P), 1 (PI).'
       figures:
       - id: pop-sc
         params:
           panel: a
-        alt: '|S| and |C| for the P thermostat vs frequency (preview).'
+        alt: '|S| and |C| for the P thermostat vs frequency (not in lecture notes).'
         caption: (a)
       - id: pop-sc
         params:
           panel: b
         alt: Bedroom temperature when the thermostat reads 1 K high.
         caption: (b)
-      figCaption: '<b>(a)</b> Slow changes: S ≈ 0.1, C ≈ 0.9 (frequency response, preview). <b>(b)</b> Sun on the thermostat (+1 K): P runs the room 0.9 K cold, PI 1 K.'
+      figCaption: '<b>(a)</b> Gain versus sine speed, the *frequency response* (not in lecture notes), log axis: S ≈ 0.1, C ≈ 0.9 when slow; S peaks at 1.33 near 2.6 rad/h. <b>(b)</b> Reading 1 K high: P runs the room 0.9 K cold, PI 1 K.'
       example: High gain also costs heater effort and damping.
       ask: q-noise
   - id: STATE
     label: 'Look inside: state space'
     detail: ẋ = Ax + Bu
     series: 4
-    short: 'Know more than the output: the body''s height *and* velocity, the least you need to predict its future. That set is the *state* x. Writing the plant as first-order equations in the states is *state space*. It keeps the starting conditions G(s) ignores, and its poles are the eigenvalues of A.'
+    short: 'Feed back more than the output. Feeding back the output alone, as P did, changes just one coefficient of the polynomial. The body''s height *and* velocity, the least you need to predict its future, form the *state* x; first-order equations in the states are *state space*. It keeps the starting conditions G(s) ignores, and its poles are A''s eigenvalues.'
     eq: ẋ = [[0, 1], [−64, −4]]x + [0, 1/400]ᵀu,  y = [1, 0]x
     dive: ss
     live: figure:states
@@ -1290,14 +1294,14 @@ maps:
           panel: b
         alt: The phase portrait after release from 5 cm.
         caption: (b)
-      figCaption: '<b>(a)</b> Inside the corner: force gives acceleration, integrate for velocity, again for height; spring and shock feed back. <b>(b)</b> Released 5 cm high, the state spirals in.'
+      figCaption: '<b>(a)</b> Inside the corner: force gives acceleration, integrate for velocity, again for height; spring and shock feed back. <b>(b)</b> Released 5 cm high (yellow dot), the state spirals into rest (green dot).'
       example: Let go from 5 cm, the body swings to 2.2 cm below at 0.41 s.
       ask: q-state
   - id: CC
     label: Can we reach and see every state?
     detail: controllable, observable
     series: 4
-    short: 'Check two matrices first. If the input can steer the state anywhere, the plant is *controllable*: Pc = [B AB] is invertible. If the output reveals every state over time, it is *observable*: Po = [C; CA] is invertible. A mode that fails either test vanishes from G(s) but still moves inside.'
+    short: 'Only if the force can push every state somewhere new and the readings reveal every state. Two matrices test it. If Pc = [B AB] is invertible, the plant is *controllable*. If Po = [C; CA] is invertible, it is *observable*. A mode that fails either test vanishes from G(s) but still moves inside.'
     eq: Pc = [B, AB],  Po = [C; CA],  full rank ⇔ yes
     dive: cc
     live: figure:cc
@@ -1318,7 +1322,7 @@ maps:
           panel: b
         alt: A house with two equal heaters on one dial, where the "difference" mode can't be steered.
         caption: (b)
-      figCaption: '<b>(a)</b> The force pushes velocity, which moves height: B and AB point different ways. <b>(b)</b> Two equal heaters on one dial can never make one room warmer.'
+      figCaption: '<b>(a)</b> Directions only, equal length: B (force → speed, in m/s² per N) and AB (speed → height) point different ways. <b>(b)</b> A failing case, back in the house: one dial driving a heater in each room warms both rooms identically, so their difference can''t be steered.'
       example: 'The corner passes both: one height sensor reveals velocity too.'
       ask: q-cc
   - id: SF
@@ -1347,13 +1351,13 @@ maps:
         alt: A 5 cm speed bump, passive vs active body motion.
         caption: (b)
       figCaption: '<b>(a)</b> Poles from −2 ± 7.75j to −8 ± 6j. <b>(b)</b> 5 cm speed bump: the passive body rises 3.9 cm and rings, the active one 1.9 cm and settles.'
-      example: K = [14 400 N/m, 4 800 N·s/m]; a 1 kN load sags 2.5 cm with 1.5 % overshoot.
+      example: 'K = [14 400 N/m, 4 800 N·s/m]: a 1 kN load sags 2.5 cm, 1.5 % overshoot.'
       ask: q-sf
   - id: OBS
     label: Estimate what we can't measure
     detail: the observer
     series: 4
-    short: Run a copy of the model in software, driven by the same actuator force. Compare its predicted height with the measured one and nudge every estimated state by L times the difference. This *observer* gives an estimate x̂ whose error obeys ė = (A − LC)e, so choosing L by pole placement makes the error die out as fast as we like.
+    short: 'Run a copy of the model in software, driven by the same actuator force. Compare its predicted height with the measured one and nudge every estimated state by L times the difference. This *observer*''s error obeys ė = (A − LC)e, so placing those poles makes the error die out as fast as we like.'
     eq: x̂̇ = Ax̂ + Bu + L(y − Cx̂),  ė = (A − LC)e
     dive: obs
     live: figure:obs
@@ -1362,11 +1366,11 @@ maps:
     accountsFor: How the actuator gets the velocity the design needs.
     pop:
       rough: estimate = model copy + correction × (measured − predicted)
-      eqKey: 'L = [l₁, l₂] (observer gain); error poles chosen 5× faster than the controller: −40 ± 30j.'
+      eqKey: 'L = [l₁, l₂] (observer gain); error poles 5× faster than the controller: −40 ± 30j.'
       figures:
       - id: pop-obs
         alt: The real body and the ghost estimate, starting 1 cm apart and merging.
-      figCaption: The estimate (ghost) starts 1 cm off. With error poles at −40 ± 30j it locks on within about 0.15 s, much faster than the body moves.
+      figCaption: 'A 1 kN load sags the actively held body to −2.5 cm (1 kN ÷ 40 kN/m). The estimate (ghost) starts 1 cm off and locks on within about 0.15 s.'
       example: s² + (4 + l₁)s + (64 + 4l₁ + l₂) = s² + 80s + 2500 → L = [76, 2132].
       ask: q-obs
   - id: SEP
@@ -1393,7 +1397,7 @@ maps:
     label: Follow a command
     detail: the reference gain N̄
     series: 4
-    short: 'Add the command into the force, scaled so that the final height equals it. Without it the design is a *regulator*, returning every state to zero; with u = −Kx̂ + N̄r it is a *tracker*. N̄ (written N in LN4) is one over the closed loop''s DC gain: FIRST''s DC-gain idea again. The notes'' alternative feeds the observer y − r instead.'
+    short: 'Add the command into the force, scaled so the final height equals it. Without it the design is a *regulator*, returning every state to zero; with u = −Kx̂ + N̄r it is a *tracker*. N̄ is one over the closed loop''s DC gain: the same s → 0 reading that gave the house''s final temperature in Box 4.'
     eq: N̄ = 1/(−C(A − BK)⁻¹B) = k + k₁ = 40 000 N/m
     dive: refin
     live: figure:refin
@@ -1406,7 +1410,7 @@ maps:
       figures:
       - id: pop-ref
         alt: 'Raise the car 2 cm for a rough road: with N̄ vs without.'
-      figCaption: 'Raise the ride height 2 cm: with N̄ = 40 000 N/m the body arrives in about 0.4 s with 1.5 % overshoot. The actuator starts at 800 N and settles at 512 N, exactly the spring''s extra 2 cm.'
+      figCaption: 'Raise the ride height 2 cm: with N̄ the body arrives in about 0.4 s (1.5 % overshoot); without it, it stops at 0.72 cm.'
       example: 'If the real spring is 10 % stiffer than the model, the body stops 6 % short: N̄ trusts the model (integral action would fix that).'
       ask: q-ref
   - id: ORDER
@@ -1482,7 +1486,7 @@ maps:
   - id: DOM
     label: Which poles matter? (the wheel we left out)
     series: 1
-    short: 'When one pair is much slower than the rest. Fast poles die out early, so the slow, *dominant* pair sets the shape. The usual rule (*added*) is that the others decay at least 5–10× faster. That is why the single-mass corner was allowed: the wheel''s own bounce, *wheel hop*, is far faster than the body''s.'
+    short: 'When one pair is much slower than the rest. Fast poles die out early, so the slow, *dominant* pair sets the shape. A rule of thumb (not in lecture notes): the others should decay at least 5–10× faster. That is why the single-mass corner was allowed: the wheel''s own bounce, *wheel hop*, is far faster than the body''s.'
     eq: body ≈ −1.6 ± 7.4j;  wheel hop ≈ −20.4 ± 71.4j
     dive: dominant
     live: figure:dominant
@@ -1490,7 +1494,7 @@ maps:
     addsToExample: Puts the wheel back for one box, and shows why we may leave it out.
     pop:
       rough: slowest pair rules if the rest decay ≥ 5–10× faster
-      eqKey: wheel mass 40 kg, tyre stiffness 200 kN/m (added to the 400 kg corner).
+      eqKey: wheel mass 40 kg, tyre stiffness 200 kN/m (the wheel Box 5 left out).
       example: 'Wheel hop at 11.8 Hz decays 12.8× faster than the body. The four-pole corner overshoots 51 % (vs 44 %) and settles in 2.25 s (vs 1.77): close, not identical.'
       ask: q-dom
   - id: BLOCKALG
@@ -1536,9 +1540,9 @@ maps:
       example: 'The dish''s speed responds with τ = 0.5 s. A speed loop with K_ω = 80 makes it 0.1 s (5×). The notes'' motor with a tachometer: 5 s → 0.83 s (6×).'
       ask: q-speed
   - id: TYPE
-    label: System type and error constants (added practice)
+    label: System type and error constants
     series: 2
-    short: Count the integrators (poles at s = 0) in L; the count is the *system type*. Type 0 leaves a step error. Type 1 removes the step error but leaves a ramp error of ω/K_v. Type 2 tracks a ramp exactly. *Added practice, not in LN2.*
+    short: 'Count the integrators (poles at s = 0) in L; the count is the *system type*. Type 0 leaves a step error. Type 1 removes the step error but leaves a ramp error of ω/K_v. Type 2 tracks a ramp exactly. (System type: not in lecture notes.)'
     eq: 'step: 1/(1 + K_pos);  ramp: ω/K_v, with K_v = lim s·L(s)'
     dive: sse
     live: figure:sse?preset=ramp
@@ -1552,7 +1556,7 @@ maps:
   - id: WINDUP
     label: When the push hits its limit
     series: 2
-    short: The torque is clipped, but the integrator keeps adding up error as if it weren't. By the time the dish arrives, the stored-up integral pushes it past the target. This is *integrator windup*. *Anti-windup* stops integrating while the torque is clipped (clamping) or bleeds off the excess (back-calculation). *Added, not in the notes.*
+    short: The torque is clipped, but the integrator keeps adding up error as if it weren't. By the time the dish arrives, the stored-up integral pushes it past the target. This is *integrator windup*. *Anti-windup* stops integrating while the torque is clipped (clamping) or bleeds off the excess (back-calculation). (not in lecture notes)
     eq: stop integrating while |u| = u_max
     dive: windup
     live: figure:windup
@@ -1580,7 +1584,7 @@ maps:
   - id: METHODS
     label: 'Recipes: by hand, Ziegler–Nichols, PID Tuner'
     series: 2
-    short: 'Three routes. Tune *by hand* from the cause-and-effect table. Use *Ziegler–Nichols* (ZN): raise P until the loop just oscillates (gain K_u, period T_u), then read the gains from a table. Or use MATLAB''s *PID Tuner*, whose sliders set speed and robustness. All give starting points. *Added, not in the notes; used in Project 1.*'
+    short: 'Three routes. Tune *by hand* from the cause-and-effect table. Use *Ziegler–Nichols* (ZN): raise P until the loop just oscillates (gain K_u, period T_u), then read the gains from a table. Or use MATLAB''s *PID Tuner*, whose sliders set speed and robustness. All give starting points. (not in lecture notes)'
     eq: 'ZN PID: Kp = 0.6K_u, Ti = T_u/2, T_D = T_u/8'
     dive: methods
     live: figure:zn
@@ -1617,7 +1621,7 @@ maps:
     pop:
       rough: score = total error over time; best gain = lowest score
       eqKey: K_r = rate (tachometer) gain at Kp = 1000; a₁ = damping coefficient of s² + a₁s + 100.
-      example: ISE is lowest at K_r = 80 (ζ = 0.5), IAE at 112.5 (ζ = 0.66), ITAE (added) at 130.5 (ζ = 0.75). The hand choice, 120 (ζ = 0.7), sits between.
+      example: ISE is lowest at K_r = 80 (ζ = 0.5), IAE at 112.5 (ζ = 0.66), ITAE at 130.5 (ζ = 0.75). The hand choice, 120 (ζ = 0.7), sits between.
       ask: q-index
   - id: SS2TF
     label: From A, B, C back to G(s)
@@ -1761,7 +1765,7 @@ maps:
   - from: INT
     to: DER
     label: calm it
-    question: I made the bounce worse. What adds damping?
+    question: 'Integral action made the bounce worse. What adds damping?'
     idea: 'A torque against the rate of turn: derivative action, best taken from the tachometer.'
     why: |-
       **Still open:** Box 10's dish overshoots 80 %, and the friction B is fixed.
@@ -1806,7 +1810,7 @@ maps:
     to: NOISE
     label: why not huge gain?
     question: If gain shrinks disturbances and model errors, why not make it huge?
-    idea: 'S + C = 1: what the loop stops rejecting it passes, and big gain obeys the sensor''s errors exactly.'
+    idea: 'S + C = 1: whatever share of the weather the loop keeps out, the same share of sensor error gets in.'
     why: |-
       **Still open:** Boxes 13–14 both said "more L is better".
 
@@ -1819,11 +1823,11 @@ maps:
     question: Output feedback only slides poles along fixed paths. How could we place them anywhere?
     idea: 'Back to the car: an active suspension needs more than one output to feed back, its height *and* velocity. That needs state space.'
     why: |-
-      **Still open:** in Box 8, P could only move the poles straight up at a fixed decay rate; PID added zeros we didn't want.
+      **Still open:** the dish loop could only ever see the angle. P turned that into torque, which changed just one coefficient of the polynomial, the stiffness. D needed a second signal, the rate of turn (a tachometer). With one measured output, the poles only slide along fixed paths.
 
-      **Why it matters:** the corner's specs (comfort *and* quick settling) need both coefficients of its polynomial set at will.
+      **Why it matters:** the corner's specs, comfort *and* quick settling, need both coefficients of its polynomial set at will: stiffness and damping.
 
-      **What we want:** a description of the corner by its internal states, ready for feedback of every state.
+      **What we want:** measure (or estimate) every quantity that stores energy, height and velocity, and feed back all of them.
   - from: STATE
     to: CC
     label: reach and see?
@@ -1897,12 +1901,16 @@ maps:
     dashed: true
     question: P control slid the poles along a path. What changes when every state is fed back?
     idea: 'The same goal (move the poles) with more freedom: one gain per state, so the poles can leave the path.'
+    whyFigures:
+    - id: pop-slideplace
+      alt: 'One s-plane in rad/s: the dish''s P path rises straight up at −1; the corner''s poles move from −2 ± 7.75j to −8 ± 6j.'
+    whyFigCaption: 'P can only slide the dish''s poles along one fixed path; its decay rate stays at 1 /s whatever Kp. Feeding back both states puts the corner''s poles exactly where we chose.'
     why: |-
       **Still open:** Box 8's poles could only climb at −1 ± jω; Box 18 puts the corner's at −8 ± 6j. Both "move the poles", so how do they differ?
 
       **Why it matters:** side by side, they show what the state-space detour bought: the decay rate is no longer fixed by the friction.
 
-      **What we want:** one s-plane picture with the P path and the placed poles (dish and corner on the same axes, normalised).
+      **What we want:** one s-plane picture, in rad/s with no normalising: the dish's P path rising straight up at −1, and the corner's poles moved from −2 ± 7.75j to −8 ± 6j.
   - from: FIRST
     to: REF
     label: DC gain, again
@@ -1922,11 +1930,11 @@ maps:
     question: Why does the house have exactly two poles?
     idea: 'One pole per independent energy store: two rooms.'
     why: |-
-      **Still open:** Box 1 had two equations, but we didn't say why.
+      **Still open:** Box 1 wrote two heat balances, one per room, without saying why two, and not one or three.
 
-      **Why it matters:** Miscounting the stores gives the wrong model size.
+      **Why it matters:** the number of equations fixes how many poles the model can have, so a miscount changes every prediction downstream: one store can never ring, two can.
 
-      **What we want:** A counting rule based on the physical parts.
+      **What we want:** a rule that counts the order from the physical parts, before writing any equation.
   - from: MODEL
     to: CIRC
     side: true
@@ -1934,11 +1942,11 @@ maps:
     question: How do we get G(s) for a circuit or an op-amp stage?
     idea: Impedances R, sL, 1/(sC) in the usual divider and op-amp rules; the house is an RC circuit.
     why: |-
-      **Still open:** We modelled heat flow.
+      **Still open:** we modelled heat flow, but the controller, the sensors and the motor driver are electronic.
 
-      **Why it matters:** Controllers and sensors are circuits (LN1 40–45).
+      **Why it matters:** a PID is often built from op-amps, and the house is itself an RC circuit, so one recipe covers both.
 
-      **What we want:** The same G(s) recipe for electrical parts.
+      **What we want:** G(s) for resistors, capacitors, inductors and op-amp stages straight from impedances, without a differential equation.
   - from: POLES
     to: INV
     side: true
@@ -1946,11 +1954,11 @@ maps:
     question: How do we get y(t) back from Y(s)?
     idea: 'Partial fractions: one term per pole, each a known motion.'
     why: |-
-      **Still open:** Box 3 gave a motion per pole but not their weights.
+      **Still open:** Box 3 said each pole contributes one motion, but not how much of each appears in a given response.
 
-      **Why it matters:** Exams ask for y(t) (the telescope's response).
+      **Why it matters:** two plants with the same poles can respond very differently. The house's fast motion starts at only a tenth of the final rise, and that's why the one-pole stand-in in Box 4 works.
 
-      **What we want:** A mechanical way to invert.
+      **What we want:** a mechanical way to split Y(s) into one term per pole and read off each weight.
   - from: POLES
     to: PLANE
     side: true
@@ -1958,23 +1966,23 @@ maps:
     question: Is there a picture of G(s) over the whole s-plane?
     idea: '|G| as a landscape: poles are peaks and zeros are pits; the jω axis gives the frequency response.'
     why: |-
-      **Still open:** Poles are points, but G is a function everywhere.
+      **Still open:** poles are single points, but G(s) has a value everywhere on the plane.
 
-      **Why it matters:** The landscape explains resonance and zeros at a glance.
+      **Why it matters:** seeing |G| as a surface explains at once why the corner amplifies bumps near 7.5 rad/s, and why a zero kills a frequency.
 
-      **What we want:** One picture that holds poles, zeros and frequency response.
+      **What we want:** one picture that holds poles, zeros and the response to sines.
   - from: FIRST
     to: REDUCE
     side: true
     label: shrink it
     question: Can we replace a high-order model with a smaller one that behaves the same?
-    idea: Drop far poles keeping the DC gain, or match the low-frequency response (M₂q = Δ₂q).
+    idea: 'Drop far poles but keep the DC gain, or choose the smaller model whose response to slow sines matches the original''s.'
     why: |-
-      **Still open:** Box 4 used a one-pole stand-in without a recipe.
+      **Still open:** Box 4 replaced the two-pole house by a one-pole stand-in without saying how to choose it or when it is safe.
 
-      **Why it matters:** LN2 29–34 is exam material.
+      **Why it matters:** smaller models are quicker to analyse and to tune against. A careless cut changes the final value, or the speed, or both.
 
-      **What we want:** Two recipes, with a worked check.
+      **What we want:** two recipes, each checked on an example: drop the far poles keeping the DC gain, or match the low-frequency response.
   - from: SPECS
     to: DOM
     side: true
@@ -1982,11 +1990,11 @@ maps:
     question: Real plants have more poles. When do the formulas still work?
     idea: 'When one pair is much slower: the wheel hops 12.8× faster than the body.'
     why: |-
-      **Still open:** Box 6 assumed exactly two poles, and we left out the wheel.
+      **Still open:** Box 6's formulas assume exactly two poles, and we left the 40 kg wheel out of the corner.
 
-      **Why it matters:** Every real plant has extra poles.
+      **Why it matters:** every real plant has extra poles. If they are too slow, the overshoot and settling numbers are simply wrong (with the wheel: 50.8 % instead of 44.4 %).
 
-      **What we want:** A rule for when to ignore them.
+      **What we want:** a test for when the extra poles can be ignored.
   - from: LOOP
     to: BLOCKALG
     side: true
@@ -1994,11 +2002,11 @@ maps:
     question: The diagram has several loops and inputs. How do we get one transfer function?
     idea: Series ×, parallel +, loop = forward/(1 + loop), one input at a time.
     why: |-
-      **Still open:** Box 7 handled one loop.
+      **Still open:** Box 7 handled one loop with one input.
 
-      **Why it matters:** Exam diagrams have several (LN1 18–20).
+      **Why it matters:** a real loop has a controller, plant, sensor and disturbance in it, sometimes nested loops. One wrong reduction step gives the wrong closed-loop poles.
 
-      **What we want:** Rules that always reduce to one block.
+      **What we want:** a few rules that always reduce a diagram to one transfer function per input.
   - from: PGAIN
     to: MENU
     side: true
@@ -2008,9 +2016,9 @@ maps:
     why: |-
       **Still open:** Box 8 used P only.
 
-      **Why it matters:** The notes classify controllers (LN1 10–17).
+      **Why it matters:** the controller box can hold other laws, from on/off to PID. The notes write them with Kp, Ti and T_D, which is a different notation from our Kp, Ki and Kd.
 
-      **What we want:** The menu and its notation.
+      **What we want:** the list of controller types and how the two notations convert.
   - from: PGAIN
     to: SPEED
     side: true
@@ -2018,11 +2026,11 @@ maps:
     question: Besides accuracy, does closing the loop change how fast the plant responds?
     idea: 'Yes: τ shrinks by 1 + loop gain (dish speed 0.5 → 0.1 s).'
     why: |-
-      **Still open:** Box 8 showed faster ringing, not a general speed-up.
+      **Still open:** Box 8 showed P making the dish ring faster, not a general speed-up.
 
-      **Why it matters:** Speed is one of feedback's main benefits in LN2.
+      **Why it matters:** speed is one of feedback's main benefits besides accuracy. It explains why a slow plant can be made quick without a bigger motor, up to the actuator's limit.
 
-      **What we want:** The speed-up factor.
+      **What we want:** how much faster the loop is than the plant (the time constant divides by 1 + loop gain).
   - from: SSE
     to: TYPE
     side: true
@@ -2030,11 +2038,11 @@ maps:
     question: What about tracking a moving satellite, and is there a shortcut by counting integrators?
     idea: System type = integrators in L; type 1 leaves ramp error ω/K_v.
     why: |-
-      **Still open:** Box 9 handled steady wind only.
+      **Still open:** Box 9 handled a steady push. A satellite crossing the sky is a target moving at constant speed.
 
-      **Why it matters:** Review Problem 5 uses it (added practice).
+      **Why it matters:** a loop with no error in still air can still lag a moving target. Counting integrators predicts which inputs leave an error, without solving anything.
 
-      **What we want:** A lookup by type.
+      **What we want:** the lag for steps and ramps, read off from the number of integrators.
   - from: INT
     to: WINDUP
     side: true
@@ -2042,11 +2050,11 @@ maps:
     question: What if the motor can't give the torque the controller asks for?
     idea: The integrator winds up while the torque is clipped; anti-windup stops it.
     why: |-
-      **Still open:** Box 10 assumed unlimited torque.
+      **Still open:** Box 10 assumed the motor gives whatever torque the controller asks for.
 
-      **Why it matters:** Real motors saturate (Project 1).
+      **Why it matters:** the dish motor stops at 200 N·m. While the torque is clipped the integrator keeps adding up error, and on a long slew that stored-up push overshoots badly (21.6 % at 2 rad).
 
-      **What we want:** The symptom and the fix.
+      **What we want:** how to recognise windup, and how to stop the integrator from causing it.
   - from: TUNE
     to: LAB
     side: true
@@ -2054,11 +2062,11 @@ maps:
     question: Can I feel the trade-offs myself?
     idea: 'The PID Lab: sliders on the dish, with wind, noise and a torque limit.'
     why: |-
-      **Still open:** Box 12 described the trade-offs in words.
+      **Still open:** Box 12 described the trade-offs in words and three fixed panels.
 
-      **Why it matters:** Feeling them builds intuition.
+      **Why it matters:** gains interact. Seeing overshoot, wind error and torque move together as you drag one slider shows which knob to turn next far better than a table does.
 
-      **What we want:** A live, honest sandbox.
+      **What we want:** a live dish loop with the real torque limit, sensor noise and wind, where every claim in the PID boxes can be reproduced.
   - from: TUNE
     to: METHODS
     side: true
@@ -2066,11 +2074,11 @@ maps:
     question: Is there a systematic way to find the gains?
     idea: By hand, Ziegler–Nichols, or the PID Tuner, all as starting points.
     why: |-
-      **Still open:** Box 12 gave a table, not a procedure.
+      **Still open:** Box 12 gave a cause-and-effect table, not a procedure.
 
-      **Why it matters:** Project 1 uses the PID Tuner.
+      **Why it matters:** tuning three interacting gains by trial is slow. A recipe gives a sensible starting point, and knowing its limits tells you how far to trust it.
 
-      **What we want:** Recipes and their limits.
+      **What we want:** step-by-step recipes (by hand, Ziegler–Nichols, a software tuner) and what each one gets wrong.
   - from: TUNE
     to: FAIL
     side: true
@@ -2078,11 +2086,11 @@ maps:
     question: The loop misbehaves. How do I tell what's wrong and which knob fixes it?
     idea: Match the picture to one of 14 symptom cards.
     why: |-
-      **Still open:** Box 12 assumed an ideal loop.
+      **Still open:** Box 12 assumed an ideal loop: no delay, no lag, no friction, no torque limit.
 
-      **Why it matters:** Real loops have delay, lag, noise and limits.
+      **Why it matters:** on real hardware the response often looks wrong in a recognisable way, and the right fix is often not a gain.
 
-      **What we want:** A diagnostic lookup.
+      **What we want:** a lookup from what the plot shows to the cause and the one change that fixes it.
   - from: TUNE
     to: INDEX
     side: true
@@ -2090,11 +2098,11 @@ maps:
     question: Can one number say which gain is best?
     idea: Minimise ISE, IAE or ITAE; each prefers different damping.
     why: |-
-      **Still open:** Box 12 traded specs by eye.
+      **Still open:** Box 12 traded overshoot against speed by eye.
 
-      **Why it matters:** LN2 23–28 is exam material (telescope).
+      **Why it matters:** "best" depends on what you penalise. A single score turns the choice into a minimum you can compute, and different scores favour different damping.
 
-      **What we want:** A score and its optimum.
+      **What we want:** error scores (ISE, IAE, ITAE) and the gain that minimises each, on the dish.
   - from: STATE
     to: SS2TF
     side: true
@@ -2102,11 +2110,11 @@ maps:
     question: How do state space and the transfer function connect?
     idea: G = C(sI − A)⁻¹B + D, and the poles are eig(A).
     why: |-
-      **Still open:** Box 16 introduced a second description.
+      **Still open:** Box 16 introduced a second description of the same plant beside G(s).
 
-      **Why it matters:** Exams convert both ways (LN1 28–38).
+      **Why it matters:** each answers different questions. Moving between them shows that A's eigenvalues are G's poles, and catches modes that G hides.
 
-      **What we want:** The formula and the realization forms.
+      **What we want:** the formula from A, B, C to G(s), and a standard way back.
   - from: SF
     to: ACK
     side: true
@@ -2114,8 +2122,8 @@ maps:
     question: Is there a formula for K that skips matching coefficients?
     idea: 'Ackermann: K = [0 … 1] Pc⁻¹ q(A).'
     why: |-
-      **Still open:** Matching coefficients is easy only in companion form.
+      **Still open:** matching coefficients by hand worked because the corner's A is already in companion form.
 
-      **Why it matters:** LN4 19–21 uses it.
+      **Why it matters:** for any other A, or more states, the hand match gets messy and error-prone.
 
-      **What we want:** A general single-input formula.
+      **What we want:** one formula that gives K for any controllable single-input plant.

@@ -37,10 +37,8 @@ u = −K(x − e), so ẋ = (A − BK)x + BKe, and ė = (A − LC)e. Stacked: [[
 
 Poles −8 ± 6j and −40 ± 30j. Raise the ride height 2 cm with the estimate 1 cm off: the largest difference is 0.441 cm at 0.144 s, down to 0.014 cm at 0.5 s.
 
-### Exam example
-
-LN4 slides 30–40, the inverted pendulum: the same procedure on a 4-state unstable plant.
-
 ### What it can't do
 
-Separation holds for the nominal model; with model error the halves interact and robustness isn't guaranteed (*preview*).
+Separation holds for the nominal model; with model error the halves interact and robustness isn't guaranteed.
+
+<p class="src">Sources: LN4 s.30–40. Not in lecture notes: robustness under model error. Exam practice: Review › Mini exam 2, LN4 worked examples (inverted pendulum).</p>

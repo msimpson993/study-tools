@@ -44,3 +44,5 @@ Frequency matching gives 20.45/(5.021s + 1), with a largest step gap of 1.447 K 
 ### What it can't do
 
 It keeps low-frequency behaviour only. A reduced model with more zeros than poles is not causal.
+
+<p class="src">Sources: LN2 s.29–34 (s.31 for M₂q = Δ₂q). Exam practice: Review › Mini exam 2, Problem 6.</p>

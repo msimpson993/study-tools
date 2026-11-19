@@ -28,6 +28,19 @@ Move the poles and watch each term change. The solid curve is always their sum. 
 - Complex pair: complete the square, (s + σ)² + ω_d², to get e^(−σt)(cos ω_d t, sin ω_d t) terms (LN1 slides 51–53).
 - For a step from rest, y(0) = 0, so the residues sum to zero.
 
+**What each symbol means.**
+
+- **Y(s)**: the response in the Laplace domain (output × time, e.g. K·h).
+- **y(t)**: the response in time (K above outdoors for the house).
+- **p_k**: the k-th pole, a root of the denominator (1/h). The house has −0.2 and −2.2.
+- **A_k**: the residue, the weight of the motion e^(p_k t), in output units. House with a 2.5 kW step:
+  - 20.45 K is the final rise;
+  - −22.5 K is the slow motion's weight;
+  - +2.05 K is the fast motion's weight.
+- **U(s)**: the input in the Laplace domain; a 2500 W step is 2500/s.
+- **X₂(s)**: the bedroom's response in the Laplace domain.
+- **σ, ω_d**: decay rate and ringing frequency of a complex pair, after completing the square (1/h, rad/h).
+
 ### Worked example: on the house
 
 The heater steps to 2.5 kW, so U = 2500/s and X₂ = 9/(s(s + 0.2)(s + 2.2)).
@@ -37,15 +50,8 @@ The heater steps to 2.5 kW, so U = 2500/s and X₂ = 9/(s(s + 0.2)(s + 2.2)).
 
 So x₂(t) = 20.45 − 22.5e^(−0.2t) + 2.05e^(−2.2t) K. At 1 h: 20.45 − 18.42 + 0.23 = 2.26 K. The residues sum to 0, as they must.
 
-### Exam examples
-
-LN1 slides 51–53 (second-order step by inverse Laplace; the corner's step in *Two poles* uses the same completed square). LN2 slide 27 (the telescope's y(t)).
-
 ### What it can't do
 
 Repeated poles need extra terms (t·e^(pt)), and the algebra grows quickly with order. For design you rarely need the full y(t): the poles and the spec formulas say most of it.
 
-
-### Slides
-
-LN1 slides 51–53; LN2 slide 27.
+<p class="src">Sources: LN1 s.51–53. Exam practice: Review › Mini exam 2, Problem 4 (the telescope, LN2 s.27).</p>

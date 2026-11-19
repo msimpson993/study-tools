@@ -16,7 +16,7 @@ A disturbance is an input we didn't choose. A cold front pulls heat out of both 
 
 ### See it
 
-A −5 K cold front over 24 h, with no controller, P or PI. However you tune it, the heater ends up adding 611 W; P just needs a 0.5 K error to be told to.
+A −5 K cold front over 24 h, with no controller, P or PI. Watch the right panel. PI ends up adding 611 W, enough to hold the bedroom exactly. P adds less, 550 W, because it only pushes while the bedroom is 0.5 K low, and that cooler bedroom leaks less.
 
 ```figure:regulate
 ```
@@ -32,11 +32,15 @@ U = Kp(R − X₂)  ⇒  X₂/D = G_d/(1 + KpG₂);   droop = D·G_d(0)/(1 + L(0
 ```
 
 - PI: L has an integrator, L(0) = ∞, so the droop is 0.
-- Steady extra heat = 5 K × 2 × 55.6 W/K = 611 W, whatever the controller.
+- Steady extra heat = (5 K − droop) ÷ G₂(0). PI: 5 ÷ 8.18 K/kW = 611 W. P: 4.5 ÷ 8.18 = 550 W, which is also Kp × 0.5 K.
+- Where PI's 611 W goes: the bedroom, 5 K further above outdoors, leaks 55.56 × 5 = 278 W more. That 278 W has to cross the inner wall, which needs the living room 1 K warmer (278 W ÷ 277.8 W/K), so 6 K further above outdoors. 55.56 × (6 + 5) = 611 W.
 
 **What each symbol means.** d: the outdoor temperature change (K); Kp (W/K); Ki (W/(K·h)); L(0) = Kp·G₂(0). The thermostat here is Kp = 1100 W per K of error and, for PI, Ki = 200 W per K·h.
 
 ### Worked example: on the house, −5 K cold front
+
+```figure:heatbars
+```
 
 | controller | after 24 h | worst | extra heat (24 h) |
 |---|---|---|---|
@@ -44,11 +48,8 @@ U = Kp(R − X₂)  ⇒  X₂/D = G_d/(1 + KpG₂);   droop = D·G_d(0)/(1 + L(0
 | P 1100 | −0.50 K | −0.61 K | 550 W (peak 666) |
 | PI 1100/200 | −0.007 K | −0.58 K | 611 W (peak 737) |
 
-### Exam examples
-
-- LN1 slides 65–68: P leaves −T_d/Kp and PI removes it (the dish, in *Why it stops short* and *Integral action*).
-- The steel mill (LN2 slides 11–13): the speed drop under load is reduced to 0.0385 of open loop (slides ≈ 0.04); the amplifier gain K_a ≥ 196 for a ratio of 0.02.
-
 ### What it can't do
 
-It can't reject what the heater can't supply: a −30 K front would need more than 2.5 kW. And it acts only after the room has started to cool (feedforward from an outdoor sensor would act earlier; *added*).
+It can't reject what the heater can't supply: a −30 K front would need more than 2.5 kW. And it acts only after the room has started to cool (feedforward from an outdoor sensor would act earlier).
+
+<p class="src">Sources: LN1 s.65–68 (P leaves −T_d/Kp, PI removes it); LN2 s.10–13. Not in lecture notes: feedforward. Exam practice: Review › Mini exam 2, Problem 2 (steel mill).</p>

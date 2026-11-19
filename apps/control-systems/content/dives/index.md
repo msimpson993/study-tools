@@ -24,7 +24,7 @@ The shaded area is the index; the lower curve is the index against the gain, wit
 ### The math
 
 ```eq
-ISE = ∫e² dt,   IAE = ∫|e| dt,   ITAE = ∫t|e| dt   (ITAE added)
+ISE = ∫e² dt,   IAE = ∫|e| dt,   ITAE = ∫t|e| dt   (ITAE: not in lecture notes)
 ```
 
 ```eq
@@ -41,8 +41,10 @@ The telescope (LN2 slides 26–28): ISE = 1/K₃ + 0.1K₃, so the optimum is K�
 
 ### Worked example: on the dish's rate gain
 
-The ISE minimum is at a₁ = 10, so K_r = 80 (ζ 0.5, ISE 0.1); IAE's is at 112.5 (ζ 0.662); ITAE's at 130.5 (ζ 0.752, *added*). The hand-tuned Kd = 120 (ζ 0.7) sits between. At Kp = 2000 the optima are 121.4 (ISE), 167.4 (IAE) and 192.8 (ITAE), against the tuned 200.
+The ISE minimum is at a₁ = 10, so K_r = 80 (ζ 0.5, ISE 0.1); IAE's is at 112.5 (ζ 0.662); ITAE's at 130.5 (ζ 0.752). The hand-tuned Kd = 120 (ζ 0.7) sits between. At Kp = 2000 the optima are 121.4 (ISE), 167.4 (IAE) and 192.8 (ITAE), against the tuned 200.
 
 ### What it can't do
 
 It ignores torque, noise and robustness, and a different index gives a different "best".
+
+<p class="src">Sources: LN2 s.23–28 (ISE, IAE, ITSE). Not in lecture notes: ITAE. Exam practice: Review › Mini exam 2, Problem 4.</p>

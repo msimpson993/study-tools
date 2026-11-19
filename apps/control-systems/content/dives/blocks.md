@@ -21,9 +21,9 @@ Step the corner from drawing to loop: Σ → (cs + k) → 1/(ms²) → z, fed ba
 ```figure:loop
 ```
 
-Why feed back at all? An open-loop command is calibrated once; a closed loop measures and corrects. The legacy teaching plant below shows the difference under a load change.
+Why feed back at all? An open-loop heater setting is calibrated once; a thermostat measures and corrects. Below, outdoors drops 5 K: with the heater left alone the bedroom falls 4.96 K in 24 h; with a P thermostat (Kp = 1100 W/K) it ends only 0.50 K low (0.61 K at worst).
 
-```figure:problem
+```figure:coldfront
 ```
 
 ### The math
@@ -42,7 +42,7 @@ C/R = GcG/(1 + GcGH),   C/D = G/(1 + GcGH)
 
 **What each symbol means.** G_f: the forward path from that input; L: the loop gain (everything around the loop); W: road height; U: an active force; R, C, D, H: the slides' command, output, disturbance and sensor (LN1 slides 18–20).
 
-<a id="blockalg"></a>**Reduction rules.** Series blocks multiply, parallel blocks add, a loop becomes forward/(1 + loop); summing and branch points can be moved past blocks; take one input at a time (superposition). The board's s4 pair works one through.
+<a id="blockalg"></a>**Reduction rules.** Series blocks multiply, parallel blocks add, a loop becomes forward/(1 + loop); summing and branch points can be moved past blocks; take one input at a time (superposition). The *Reducing a block diagram* box shows one reduction step by step.
 
 ````callout:derivation Full derivation
 E = R − HC and C = GcG·E, so C(1 + GcGH) = GcG·R. With D at the plant input: C = G(D + GcE), so C/D = G/(1 + GcGH).
@@ -52,8 +52,10 @@ E = R − HC and C = GcG·E, so C(1 + GcGH) = GcG·R. With D at the plant input:
 
 - 5 cm road step: final 5 cm (the DC gain of Z/W is 1), peak 7.53 cm (50.6 %), Tₚ 0.34 s, Tₛ 1.71 s.
 - 1 kN force: 3.91 cm (DC gain 1/k).
-- The shock acts like D and the spring like P (look back from *The derivative*).
+- The shock acts like D and the spring like P (look back from *Derivative action*).
 
 ### What it can't do
 
 The passive loop can't follow any command but the road, and its "gains" c and k are fixed hardware. Next: a motor we command (*Turn up the gain*).
+
+<p class="src">Sources: LN1 s.6–9, 18–20.</p>

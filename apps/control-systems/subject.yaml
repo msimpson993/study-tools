@@ -1,6 +1,8 @@
 id: control-systems
 title: Control systems (EECE5130)
 quizOrder: chain   # the quiz opens on box 1's quick check and follows the map
+quizSets:   # practice that belongs to no box: kept off the map, labelled on its cards
+  - { tag: project-1, label: "Project 1" }
 centralQuestion: How do we make a system we only know approximately do what we command, and predict how it will behave before we build it?
 blurb: "A question-chain map of the course (models, transfer functions and poles, time response, P, I and D, what feedback buys, and state-space design) over three running examples: a two-room house with a thermostat, a car's suspension corner, and an antenna dish on a motor. Includes the PID Lab, 14 tuning failure cards, the interactive course guide, a self-test and the two mini-exam reviews."
 archetype: guide
@@ -18,7 +20,7 @@ sections:
   - { id: quiz, title: Self-check, kind: quiz }
   - { id: review, title: Review (mini exams), kind: review }
   - { id: glossary, title: Variables & terms, kind: glossary }
-quizFigures: [pid-step, hero-three, pop-heatflow, pop-ode2tf, pop-housemodes, pop-first, pop-zeta, pop-specs, pop-loopcorner, pop-pgain, pop-wind, pop-int, pop-der, pop-tune, pop-coldfront, pop-sens, pop-sc, pop-states, pop-cc, pop-sf, pop-obs, pop-sep, pop-ref]
+quizFigures: [pid-step, hero-three, pop-heatflow, pop-ode2tf, pop-housemodes, pop-first, pop-zeta, pop-specs, pop-loopcorner, pop-pgain, pop-wind, pop-int, pop-der, pop-tune, pop-coldfront, pop-sens, pop-sc, pop-states, pop-cc, pop-sf, pop-obs, pop-sep, pop-ref, pop-slideplace]
 board:
   pairs: [overview, s1, splane, sp1, sp-meaning, sp2, sp3, sp4, sp5, sp6, sp7, sp8, s2, s3, s4, s5, s6, s7, s8, s9, s10, s11, s12, s13, cheatsec, glossary]
 runningExample:

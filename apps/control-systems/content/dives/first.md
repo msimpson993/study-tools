@@ -30,6 +30,17 @@ G(s) = K/(τs + 1),   y(t) = K·u·(1 − e^(−t/τ))
 - Tₛ (2 %) = 4τ; T_r (10–90 %) = 2.2τ.
 - K: the DC gain (K per W); τ: the time constant (h).
 
+**What each symbol means.**
+
+- **K**: the DC gain, the final output per unit of steady input. For the house, 8.18 K per kW. The letter is the gain; the unit "K" after a number is kelvin.
+- **τ**: the time constant, the time to cover 63 % of the way (h). The house's stand-in has τ = 5 h.
+- **u**: the steady input step (W).
+- **y(t)**: the output over time (K above outdoors).
+- **t**: time (h).
+- **Tₛ**: 2 % settling time, 4τ (h).
+- **T_r**: 10–90 % rise time, 2.2τ (h).
+- **x₂(t)**: the true bedroom temperature above outdoors (K), for comparison.
+
 ### Worked example: on the house
 
 - True: x₂(t) = 20.45 − 22.5e^(−0.2t) + 2.05e^(−2.2t): 2.26 K at 1 h, 12.18 K at 5 h (59.5 %), 17.41 K at 10 h; it settles (2 %) at 20.0 h, and the 10–90 % rise takes 11.1 h.
@@ -38,3 +49,5 @@ G(s) = K/(τs + 1),   y(t) = K·u·(1 − e^(−t/τ))
 ### What it can't do
 
 A first-order model can't overshoot or ring, and it misses the early delay. For the bedroom that delay is only about 25 min, so it doesn't matter; for the corner it would.
+
+<p class="src">Sources: LN1 s.47–49.</p>

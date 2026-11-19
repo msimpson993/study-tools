@@ -16,7 +16,7 @@ Derivative action opposes motion, so the dish brakes before it arrives. Mathemat
 
 ### See it
 
-Switch between D on error and D on measurement: same poles, two overshoots, 15.6 % against 4.6 %. The difference is the zero at −Kp/Kd. Turn noise on to see what D does to the torque.
+Switch between D on error and D on measurement: same poles, two overshoots, 15.6 % against 4.6 %. The figure filters D at N_f = 200 rad/s, as a real loop must, so it reads 3.8 % (on the measurement) and 16.1 % (on the error); the unfiltered values are 4.6 % and 15.6 %. The difference is the zero at −Kp/Kd. Turn noise on to see what D does to the torque.
 
 ```figure:derivative
 ```
@@ -43,10 +43,8 @@ Kp = 1000, Kd = 120 gives ζ = 0.7, poles −7 ± 7.14j. D on error: 15.6 %, T�
 
 **Look back to the corner.** The corner's force c·ż is D on the measurement and k(w − z) is P on the error; the road input enters through both, which is the zero at −k/c = −16 seen in *Close the loop*.
 
-### Exam example
-
-The boring machine's Gc = K + 11s (see *Why it stops short*) is a PD; LN1 slides 69–72 show PD adding damping to an inertia load.
-
 ### What it can't do
 
 D amplifies sensor noise (its gain grows with frequency), so it needs a filter N_f in practice; it can't remove steady error.
+
+<p class="src">Sources: LN1 s.69–72. Exam practice: Review › Mini exam 2, Problem 3 (boring machine).</p>

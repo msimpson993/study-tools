@@ -49,6 +49,22 @@ Each panel rebuilds one example's loop a box at a time. Step a slider back to 0 
 
 *Big picture* is the main chain (21 boxes). *Full detail* adds the side questions (17 more boxes) hanging off their parents. Tap a box for its short answer, tap a line for the question that leads there, and open the deep dive for the full story.
 
+**What each symbol means.**
+
+- **u**: the input we command: heater power (W), force on the car body (N), motor torque (N·m).
+- **y**: the output we care about: bedroom temperature above outdoors (K), body height (m), dish angle (rad).
+- **G(s)**: the plant as one fraction, output over input in the Laplace variable s. Units: output per input, e.g. K/W.
+- **s**: the Laplace variable, a complex frequency (1/h for the house, 1/s for the car and dish).
+- **x₁, x₂**: living-room and bedroom temperatures above outdoors (K).
+- **z**: body height from rest (m).
+- **θ**: dish pointing angle (rad; 0.1 rad = 5.73°).
+- **m, k, c**: body mass 400 kg; spring stiffness 25.6 kN/m; shock damping 1.6 kN·s/m.
+- **ωₙ, ζ**: natural frequency (rad/s) and damping ratio (no unit) of a two-pole plant: 8 rad/s and 0.25 for the corner.
+- **Kp, Ki, Kd**: proportional, integral and derivative gains. On the dish: N·m per rad, N·m per rad·s, N·m·s per rad.
+- **T_d**: steady wind torque on the dish (20 N·m).
+
 ### What it can't do
 
-The map is a route, not the whole course: the slides' tools that are only previewed here (Bode, root locus, Nyquist, Routh, Ziegler–Nichols) are marked *added* or *preview* where they appear.
+The map is a route, not the whole course. Each deep dive ends with a small source line: *LN1 s.28–38* means Lecture Notes 1, slides 28–38 (LN = lecture notes). Anything the notes don't cover, such as root locus, Bode plots, the Routh test or Ziegler–Nichols, is marked *(not in lecture notes)*. The three running examples (house, car corner, dish) are this site's own illustrations of the notes' methods. Their numbers aren't in the notes; the exam problems live in Review.
+
+<p class="src">Sources: LN1, LN2, LN4 (LN = lecture notes). The house, car corner and dish are this site's examples (not in lecture notes).</p>

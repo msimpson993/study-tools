@@ -18,6 +18,9 @@ In the s-domain every passive part behaves like a resistance that depends on s, 
 
 Choose the "house as RC" preset. The two rooms are capacitors, the walls are resistors, and the heater is a current source. The circuit's step response is the bedroom's warm-up.
 
+```figure:rlcschem
+```
+
 ```figure:rlc
 ```
 
@@ -26,26 +29,37 @@ Choose the "house as RC" preset. The two rooms are capacitors, the walls are res
 - Impedances: Z_R = R, Z_L = sL, Z_C = 1/(sC).
 - Divider: V_out/V_in = Z₂/(Z₁ + Z₂). Series RLC with the output across C: 1/(LCs² + RCs + 1).
 - Inverting op-amp: V_out/V_in = −Z_f/Z_in. With Z_in = R and Z_f = 1/(sC) it is an integrator, −1/(RCs); swap them and it is a differentiator, −RCs. The op-amp PID is built from these stages.
-- **Analogy table:**
+- **Analogy table.** Two analogies are in use. The house uses the **force–current** one: temperature is like voltage, heat flow like current. The series RLC in the figure uses the **force–voltage** one: force is like voltage, velocity like current. Both give the same equations; pick one and stay with it.
 
-| thermal (house) | electrical | mechanical (corner) |
-|---|---|---|
-| temperature (K) | voltage | velocity |
-| heat flow (W) | current | force |
-| heat capacity C_th (1 MJ/K per room) | capacitance C | mass m |
-| 1/conductance: inner wall 3.6 mK/W, each outer wall 18 mK/W | resistance R | 1/c (shock) |
-| heater | current source | applied force |
-| — | inductance L | 1/k (spring) |
+| electrical | thermal (house; force–current) | mechanical, force–current | mechanical, force–voltage (the figure's RLC) |
+|---|---|---|---|
+| voltage | temperature (K) | velocity | force |
+| current | heat flow (W) | force | velocity |
+| capacitance C | heat capacity C_th (1 MJ/K per room) | mass m | 1/k (spring) |
+| resistance R | 1/conductance: inner wall 3.6 mK/W, each outer wall 18 mK/W | 1/c (shock) | c (shock) |
+| inductance L | none (so heat can't ring) | 1/k (spring) | mass m |
+| source | heater = current source | applied force = current source | applied force = voltage source |
+
+In force–voltage form the corner, z/F = 1/(ms² + cs + k), is the RLC's charge response 1/(Ls² + Rs + 1/C) with L = m, R = c, C = 1/k.
+
+**What each symbol means.**
+
+- **R, L, C**: resistance (Ω), inductance (H), capacitance (F). L and C here are circuit parts, not the loop gain L or the complementary sensitivity C used elsewhere.
+- **Z**: impedance, the s-domain "resistance" (Ω): Z_R = R, Z_L = sL, Z_C = 1/(sC).
+- **V_in, V_out**: input and output voltages (V).
+- **Z_in, Z_f**: an op-amp stage's input and feedback impedances (Ω).
+- **s**: the Laplace variable (1/s).
+- **C_th**: room heat capacity (1 MJ/K), the house's "capacitor".
+- **R_in, R_out**: thermal resistances, the wall's 1/conductance: inner 3.6 mK/W, each outer 18 mK/W.
+- **u**: heater power (W), the house's "current source".
+- **m, c, k, F**: corner mass (kg), damping (N·s/m), stiffness (N/m), force (N), for the analogy columns.
 
 ### Worked example: on the house
 
-The node equations of the RC network, C_th·ẋ₁ = u − (x₁ − x₂)/R_in − x₁/R_out and C_th·ẋ₂ = (x₁ − x₂)/R_in − x₂/R_out, are exactly Box 1's heat balances. Dividing by C_th = 10⁶ J/K and timing in hours gives ẋ₁ = −1.2x₁ + x₂ + 0.0036u, and the same G₂ = 0.0036/((s + 0.2)(s + 2.2)) K/W. A thermal network has no inductor, so it can't ring.
+The node equations of the RC network, C_th·ẋ₁ = u − (x₁ − x₂)/R_in − x₁/R_out and C_th·ẋ₂ = (x₁ − x₂)/R_in − x₂/R_out, are exactly the heat balances of *Write the plant down*. Dividing by C_th = 10⁶ J/K and timing in hours gives ẋ₁ = −1.2x₁ + x₂ + 0.0036u, and the same G₂ = 0.0036/((s + 0.2)(s + 2.2)) K/W. A thermal network has no inductor, so it can't ring.
 
 ### What it can't do
 
 Impedances assume linear parts starting at rest. Real op-amps saturate at their supply rails and have finite bandwidth. The pure differentiator −RCs amplifies noise without limit, which is why practical D terms are filtered.
 
-
-### Slides
-
-LN1 slides 38–45.
+<p class="src">Sources: LN1 s.38–45. The thermal–electrical analogy table: not in lecture notes.</p>

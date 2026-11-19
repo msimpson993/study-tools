@@ -39,10 +39,8 @@ Choosing L is pole placement on Aᵀ, Cᵀ (duality).
 
 ×5 the controller poles (−40 ± 30j): s² + 80s + 2500, so L = [76, 2132]. ×2: [28, 224]. ×10: [156, 9312].
 
-### Exam example
-
-LN4 slides 22–29: A = [[2, 3], [−1, 4]], C = [1, 0], ζ 0.8, ωₙ 10 give L = [22, 59].
-
 ### What it can't do
 
-It trusts the model: a wrong k biases the velocity estimate. The "2–10× faster" rule is *added*, not from the notes.
+It trusts the model: a wrong k biases the velocity estimate.
+
+<p class="src">Sources: LN4 s.22–29. Not in lecture notes: the "2–10× faster" rule. Exam practice: Review › Mini exam 2, LN4 worked examples.</p>

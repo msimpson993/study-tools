@@ -23,8 +23,6 @@ The shaded stretch is where the motor is pinned at its limit. At 0.2 rad windup 
 
 ### The math
 
-*Added*, not in the notes:
-
 - Clamping: İ = 0 while |u| = u_max and e has the same sign as u.
 - Back-calculation: İ = e + (u_sat − u)/T_t.
 
@@ -39,4 +37,6 @@ The shaded stretch is where the motor is pinned at its limit. At 0.2 rad windup 
 
 ### What it can't do
 
-Anti-windup can't make the motor stronger: the slew still takes as long as the torque allows. (No slides: this is *added*, from Project 1.)
+Anti-windup can't make the motor stronger: the slew still takes as long as the torque allows.
+
+<p class="src">Not in lecture notes: windup and anti-windup.</p>

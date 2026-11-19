@@ -10,6 +10,8 @@ quizSubsets:
 ---
 **How to use this page.** The page has two parts: Lecture Notes 2 (the first checklist, the first formula sheet and problems 1–7), then a clearly marked **LN1 carry-over** (slides 50–72, not on Mini exam 1) in case the exam draws on it. Tick through the checklist and open the map link for anything you cannot explain in a sentence. Then do the worked problems with the solution closed, compare step by step (an exam is graded by steps, so write the steps), and finish with the self-test. The formula sheet prints on its own page. No exam date is assumed here.
 
+Project 1 uses MATLAB's PID Tuner (see *Recipes*) and anti-windup (see *When the push hits its limit*). Neither is in the lecture notes.
+
 ````callout:trap Practise this one by hand
 A performance-index problem that also needs an inverse Laplace transform appeared on a prior-year exam. **Problem 4** below is that type (inverse Laplace, then $\int y^2\,dt$, then minimise over a gain). Do it with the solution closed.
 ````
@@ -20,18 +22,18 @@ Notation follows the slides: the controller is $G_c$, the plant $G$, the loop ga
 
 | Slides | Topic: can you…? | Where it is on the map |
 |---|---|---|
-| 1–2 | tell open loop from closed loop, and name every block and signal ($G_c$, $G$, sensor $H$, $T_d$, $N$) | [What feedback buys, and what it costs](#/dive/fb) |
-| 3–4 | write the tracking error $E = SR - SGT_d + CN$ and define $S = 1/(1+L)$, $C = L/(1+L)$; explain why $S + C = 1$ means you cannot make both small at one frequency | [What feedback buys, and what it costs](#/dive/fb) |
-| 5–6 | show a plant change $\Delta G$ changes the error by $\approx -\Delta G/(LG)$, a factor $1+L$ smaller | [What feedback buys, and what it costs](#/dive/fb) |
-| 7–9 | define system sensitivity $S = \partial\ln T/\partial\ln G$, give open loop = 1 and closed loop $S_G^T = 1/(1+G_cG)$, and use the chain rule $S_\alpha^T = S_G^T S_\alpha^G$ and $S_\alpha^N - S_\alpha^D$ | [What feedback buys, and what it costs](#/dive/fb) |
-| 10–13 | derive $E = -S\,G\,T_d$ (disturbance rejection) and work the steel-mill speed loop: open loop, then with a tachometer, then the ratio (usually under 0.02) | [What feedback buys, and what it costs](#/dive/fb) |
-| 14 | state the noise flip side: $E = CN$, so $Y \approx -N$ for large $L$ (the lecture treats it briefly) | [What feedback buys, and what it costs](#/dive/fb) |
-| 15–18 | compare open-loop and closed-loop transient: time constant $\tau_1 \to \tau_1/(1+K_aK_tK_1)$ | [What feedback buys, and what it costs](#/dive/fb) |
-| 19–22 | define the steady-state error $e_{ss}$; write the open-loop error $E_0 = (1 - G_cG)R$ and the closed-loop error $E_c = R/(1 + G_cG)$; apply the final-value theorem; work the boring machine (step command: $e_{ss} = 0$; unit-step disturbance: $y_{ss} = 1/K$). *Added practice, not in LN2:* system type, error constants $K_p$, $K_v$ and ramp errors (Problem 5 and a self-test question) | [What feedback buys, and what it costs](#/dive/fb); added practice: [Why P leaves an error and I removes it](#/dive/sse) |
-| 23–28 | define ISE, IAE, ITAE, ITSE; minimise an index with $dI/dK = 0$; quote the telescope result (ISE: $K_3 = \sqrt{10} \approx 3.2$, $\zeta = 0.5$; IAE: $K_3 = 4.2$, $\zeta = 0.665$) | [What feedback buys, and what it costs](#/dive/fb) |
-| 29–34 | reduce a model two ways: drop a far pole and keep the DC gain, or match the frequency response ($M_{2q} = \Delta_{2q}$); know the $6/((s+1)(s+2)(s+3))$ example and that more zeros than poles is not causal | [Which poles matter](#/dive/dominant), [What feedback buys, and what it costs](#/dive/fb) |
+| 1–2 | tell open loop from closed loop, and name every block and signal ($G_c$, $G$, sensor $H$, $T_d$, $N$) | [Why not infinite gain? The price of feedback](#/dive/fb) |
+| 3–4 | write the tracking error $E = SR - SGT_d + CN$ and define $S = 1/(1+L)$, $C = L/(1+L)$; explain why $S + C = 1$ means you cannot make both small at one frequency | [Why not infinite gain? The price of feedback](#/dive/fb) |
+| 5–6 | show a plant change $\Delta G$ changes the error by $\approx -\Delta G/(LG)$, a factor $1+L$ smaller | [Why not infinite gain? The price of feedback](#/dive/fb) |
+| 7–9 | define system sensitivity $S = \partial\ln T/\partial\ln G$, give open loop = 1 and closed loop $S_G^T = 1/(1+G_cG)$, and use the chain rule $S_\alpha^T = S_G^T S_\alpha^G$ and $S_\alpha^N - S_\alpha^D$ | [Why not infinite gain? The price of feedback](#/dive/fb) |
+| 10–13 | derive $E = -S\,G\,T_d$ (disturbance rejection) and work the steel-mill speed loop: open loop, then with a tachometer, then the ratio (usually under 0.02) | [Why not infinite gain? The price of feedback](#/dive/fb) |
+| 14 | state the noise flip side: $E = CN$, so $Y \approx -N$ for large $L$ (the lecture treats it briefly) | [Why not infinite gain? The price of feedback](#/dive/fb) |
+| 15–18 | compare open-loop and closed-loop transient: time constant $\tau_1 \to \tau_1/(1+K_aK_tK_1)$ | [Why not infinite gain? The price of feedback](#/dive/fb) |
+| 19–22 | define the steady-state error $e_{ss}$; write the open-loop error $E_0 = (1 - G_cG)R$ and the closed-loop error $E_c = R/(1 + G_cG)$; apply the final-value theorem; work the boring machine (step command: $e_{ss} = 0$; unit-step disturbance: $y_{ss} = 1/K$). *(Not in lecture notes.)* System type, error constants $K_p$, $K_v$ and ramp errors (Problem 5 and a self-test question) | [Why not infinite gain? The price of feedback](#/dive/fb); not in lecture notes: [Why it stops short](#/dive/sse) |
+| 23–28 | define ISE, IAE and ITSE (ITAE: not in lecture notes); minimise an index with $dI/dK = 0$; quote the telescope result (ISE: $K_3 = \sqrt{10} = 3.16$, $\zeta = 0.5$; IAE: $K_3 = 4.2$, $\zeta = 0.665$) | [Why not infinite gain? The price of feedback](#/dive/fb) |
+| 29–34 | reduce a model two ways: drop a far pole and keep the DC gain, or match the frequency response ($M_{2q} = \Delta_{2q}$); know the $6/((s+1)(s+2)(s+3))$ example and that more zeros than poles is not causal | [Which poles matter](#/dive/dominant), [Why not infinite gain? The price of feedback](#/dive/fb) |
 
-Underlying ideas elsewhere on the map: [the loop](#/dive/blocks) (where a disturbance enters), [P, I and D](#/dive/ctrl) and the [ζ and ωₙ](#/dive/second) read-offs the boring-machine problem uses.
+Underlying ideas elsewhere on the map: [the loop](#/dive/blocks) (where a disturbance enters), [Turn up the gain (P), the controller menu, and faster loops](#/dive/ctrl) and the [ζ and ωₙ](#/dive/second) read-offs the boring-machine problem uses.
 
 <div class="formula-sheet">
 
@@ -62,7 +64,7 @@ Underlying ideas elsewhere on the map: [the loop](#/dive/blocks) (where a distur
 
 - Open loop $G = \dfrac{K_1}{\tau_1 s + 1}$; closed loop $\dfrac{K_aG}{1 + K_aK_tG}$ has time constant $\dfrac{\tau_1}{1 + K_aK_tK_1}$
 - $e_{ss} = \lim_{s\to0} sE(s)$ (stable loop only). Open loop $E_0 = (1 - G_cG)R$; closed loop $E_c = \dfrac{R}{1 + G_cG}$ (slides 19–22)
-- *Added practice, not in LN2:* step: $e_{ss} = \dfrac{1}{1+K_p}$ with $K_p = \lim_{s\to0}L(s)$; ramp: $e_{ss} = \dfrac{1}{K_v}$ with $K_v = \lim_{s\to0}sL(s)$. Type 0: step $\dfrac{1}{1+K_p}$, ramp $\infty$. Type 1: step $0$, ramp $\dfrac{1}{K_v}$. Type 2: step $0$, ramp $0$. This $K_p$ is the loop's position error constant, not the telescope's position-feedback gain $K_p$ (slides 26–27)
+- *(Not in lecture notes.)* step: $e_{ss} = \dfrac{1}{1+K_p}$ with $K_p = \lim_{s\to0}L(s)$; ramp: $e_{ss} = \dfrac{1}{K_v}$ with $K_v = \lim_{s\to0}sL(s)$. Type 0: step $\dfrac{1}{1+K_p}$, ramp $\infty$. Type 1: step $0$, ramp $\dfrac{1}{K_v}$. Type 2: step $0$, ramp $0$. This $K_p$ is the loop's position error constant, not the telescope's position-feedback gain $K_p$ (slides 26–27)
 
 #### Boring machine ($G_c = K + 11s$, $G = \dfrac{1}{s(s+1)}$)
 
@@ -76,7 +78,7 @@ Underlying ideas elsewhere on the map: [the loop](#/dive/blocks) (where a distur
 - Minimise over a gain $K$: write $I(K)$, solve $dI/dK = 0$, check $d^2I/dK^2 > 0$
 - $\int_0^\infty y^2dt$ for $Y = \dfrac{b_1s + b_0}{s^2 + a_1s + a_0}$: $\dfrac{b_1^2a_0 + b_0^2}{2a_0a_1}$
 - Telescope time response (slide 27, unit step $T_d$): $y(t) = \dfrac{\sqrt{10}}{\beta}\,e^{-0.25K_3t}\sin\!\left(\dfrac{\beta}{2}t + \psi\right)$, $\beta = \sqrt{10 - K_3^2/4}$ (needs $K_3 < \sqrt{40}$). The slide does not define $\psi$; matching $Y = \dfrac{s + 0.5K_3}{s^2 + 0.5K_3s + 2.5}$ gives $\tan\psi = 2\beta/K_3$ and $y(0) = 1$
-- Telescope ($Y/T_d = \dfrac{s(s+K_1K_3)}{s^2 + K_1K_3s + K_1K_2K_p}$, $K_1 = 0.5$, $K_1K_2K_p = 2.5$): $I_{ISE} = \dfrac{1}{K_3} + 0.1K_3$, minimum at $K_3 = \sqrt{10} = 3.2$, $\zeta = 0.5$; IAE minimum at $K_3 = 4.2$, $\zeta = 0.665$
+- Telescope ($Y/T_d = \dfrac{s(s+K_1K_3)}{s^2 + K_1K_3s + K_1K_2K_p}$, $K_1 = 0.5$, $K_1K_2K_p = 2.5$): $I_{ISE} = \dfrac{1}{K_3} + 0.1K_3$, minimum at $K_3 = \sqrt{10} = 3.16$, $\zeta = 0.5$; IAE minimum at $K_3 = 4.2$, $\zeta = 0.665$
 
 #### Model reduction
 
@@ -147,7 +149,7 @@ $G_c = K + 11s$ and $G = \dfrac{1}{s(s+1)}$ in a unity-feedback loop.
 4. (d) $s^2 + 12s + K$ matches $s^2 + 2\zeta\omega_ns + \omega_n^2$, so $\omega_n = \sqrt K$ and $\zeta = 6/\sqrt K$. For $K = 100$: $\omega_n = 10$, $\zeta = 0.6$, $y_{ss} = 0.01$. For $K = 20$: $\omega_n = 4.47$, $\zeta = 1.34$ (overdamped), $y_{ss} = 0.05$.
 5. (e) $1/K \le 0.02 \Rightarrow K \ge 50$, where $\zeta = 6/\sqrt{50} = 0.85$.
 
-**Check and trade-off:** a larger $K$ rejects the disturbance better and is faster, but lowers $\zeta$. Even at $K = 20$ the reference step overshoots (about 4 %) because the PD zero at $s = -K/11$ adds overshoot that the $\zeta$ formula does not include.
+**Check and trade-off:** a larger $K$ rejects the disturbance better and is faster, but lowers $\zeta$. Even at $K = 20$ the reference step overshoots (about 4 %) because the PD zero at $s = -K/11$ adds overshoot that the $\zeta$ formula does not include. Including the PD zero, the step overshoots 22.0 % (K = 100), 12.9 % (K = 50), 3.9 % (K = 20).
 
 </details>
 
@@ -166,11 +168,11 @@ For a unit step disturbance the output of a loop is $Y(s) = \dfrac{s + K}{s^2 + 
 4. (c) Keeping $K$ symbolic, the same integral (or the standard table entry $I = \dfrac{b_1^2a_0 + b_0^2}{2a_0a_1}$ with $b_1 = 1$, $b_0 = a_1 = K$, $a_0 = 4$) gives $I(K) = \dfrac{4 + K^2}{8K} = \dfrac{1}{2K} + \dfrac{K}{8}$.
 5. $\dfrac{dI}{dK} = -\dfrac{1}{2K^2} + \dfrac18 = 0 \Rightarrow K^2 = 4 \Rightarrow K = 2$. $\dfrac{d^2I}{dK^2} = \dfrac{1}{K^3} > 0$, so it is a minimum, with $I_{\min} = \dfrac12$ (agreeing with part (b)). Damping: $2\zeta\omega_n = K$ and $\omega_n = 2$, so $\zeta = K/4 = 0.5$.
 
-**Check and link to the lecture:** the telescope example (slides 26–28) has the same form with $a_1 = 0.5K_3$, $a_0 = 2.5$, giving $I = 1/K_3 + 0.1K_3$, a minimum at $K_3 = \sqrt{10} \approx 3.2$ and again $\zeta = 0.5$. The ITAE and IAE optima are more damped (IAE: $\zeta = 0.665$).
+**Check and link to the lecture:** the telescope example (slides 26–28) has the same form with $a_1 = 0.5K_3$, $a_0 = 2.5$, giving $I = 1/K_3 + 0.1K_3$, a minimum at $K_3 = \sqrt{10} = 3.16$ and again $\zeta = 0.5$. The ITAE and IAE optima are more damped (IAE: $\zeta = 0.665$).
 
 </details>
 
-#### Problem 5: Steady-state error by system type (uses the final-value theorem from slides 19–22; system type and $K_v$ are not in LN2, included as practice)
+#### Problem 5: Steady-state error by system type (uses the final-value theorem from slides 19–22; system type and $K_v$: not in lecture notes)
 
 A unity-feedback loop has $L(s) = \dfrac{10(s + 3)}{s(s + 2)(s + 5)}$.
 
@@ -225,7 +227,7 @@ A speed-control motor has $R_a = 1$, $J = 10$, $b = 1$, $K_b = K_m = 1$, so $G =
 
 ### LN1 carry-over (slides 50–72, not on Mini exam 1)
 
-[Mini exam 1](#/review/mini-exam-1) stops at the first-order impulse response (slide 49). Everything below is the rest of Lecture Notes 1: second-order systems and what P, I and D do. It sits on this page in case Mini exam 2 draws on it. In this section $K_p$ is the proportional gain of the controller, as on the slides. The question map covers these in [ζ and ωₙ](#/dive/second), [P, I and D](#/dive/ctrl) and [Why P leaves an error and I removes it](#/dive/sse).
+[Mini exam 1](#/review/mini-exam-1) stops at the first-order impulse response (slide 49). Everything below is the rest of Lecture Notes 1: second-order systems and what P, I and D do. It sits on this page in case Mini exam 2 draws on it. In this section $K_p$ is the proportional gain of the controller, as on the slides. The question map covers these in [ζ and ωₙ](#/dive/second), [Turn up the gain (P), the controller menu, and faster loops](#/dive/ctrl) and [Why it stops short](#/dive/sse).
 
 | Slides | Topic: can you…? | Where it is on the map |
 |---|---|---|
@@ -234,9 +236,9 @@ A speed-control motor has $R_a = 1$, $J = 10$, $b = 1$, $K_b = K_m = 1$, so $G =
 | 56–57 | read the family of step responses (slide 56) and impulse responses (slide 57) against ζ: small ζ rings for a long time, ζ = 1 and above is sluggish | [ζ and ωₙ](#/dive/second) |
 | 58–60 | define rise time $T_r$ (the 0–100 % rise time for an underdamped response with overshoot), peak time $T_p$, settling time $T_s$ (2 % criterion $e^{-\zeta\omega_nT_s} < 0.02$, so $\zeta\omega_nT_s \approx 4$) and percent overshoot, and use $T_p = \dfrac{\pi}{\omega_n\sqrt{1-\zeta^2}}$, $\;\%OS = 100e^{-\zeta\pi/\sqrt{1-\zeta^2}}$, $\;T_s = \dfrac{4}{\zeta\omega_n}$, $\;T_{r1} = \dfrac{2.16\zeta + 0.60}{\omega_n}$ ($0.3 \le \zeta \le 0.8$); for an overdamped system there is no peak, so use the 10–90 % rise time $T_{r1}$ | [ζ and ωₙ](#/dive/second) |
 | 61 | read an impulse response from pole location: left half-plane decays, imaginary axis oscillates forever, right half-plane grows; farther left is faster, farther from the real axis is a faster oscillation | [ζ and ωₙ](#/dive/second), [Poles and zeros](#/dive/splane) |
-| 62–64 | show that proportional control of $K/(Ts+1)$ leaves $e_{ss} = \dfrac{1}{K + 1}$ for a unit step, and that an integral term removes the offset ($e_{ss} = 0$) at the risk of oscillation | [Why P leaves an error and I removes it](#/dive/sse), [P, I and D](#/dive/ctrl) |
-| 65–68 | find the steady-state error from a step torque disturbance on an inertia load: P gives $e_{ss} = -T_d/K_p$ (raising $K_p$ shrinks it but adds oscillation); PI makes it 0, but the loop becomes third order, $Js^3 + Bs^2 + K_ps + K_p/T_i$, and can go unstable (the stability test $a_2a_1 > a_0a_3$ is *added practice, not on the slides*; Carry-over problem 4) | [Why P leaves an error and I removes it](#/dive/sse) |
-| 69–72 | say what derivative action does (anticipates the error, adds damping); see that P on an inertia load $1/(Js^2)$ has imaginary poles and oscillates forever; for PD on $\dfrac{1}{s(Js+B)}$ (slide 71 writes it $K_p(1 + T_ds)$, so $K_d = K_pT_d$) get $\zeta = \dfrac{B + K_d}{2\sqrt{K_pJ}}$ and ramp error $B/K_p$; the design advice is small $B$, large $K_p$, then pick $K_d$ for $\zeta$ between 0.4 and 0.7 | [P, I and D](#/dive/ctrl), [ζ and ωₙ](#/dive/second) |
+| 62–64 | show that proportional control of $K/(Ts+1)$ leaves $e_{ss} = \dfrac{1}{K + 1}$ for a unit step, and that an integral term removes the offset ($e_{ss} = 0$) at the risk of oscillation | [Why it stops short](#/dive/sse), [Turn up the gain (P), the controller menu, and faster loops](#/dive/ctrl) |
+| 65–68 | find the steady-state error from a step torque disturbance on an inertia load: P gives $e_{ss} = -T_d/K_p$ (raising $K_p$ shrinks it but adds oscillation); PI makes it 0, but the loop becomes third order, $Js^3 + Bs^2 + K_ps + K_p/T_i$, and can go unstable (the stability test $a_2a_1 > a_0a_3$ *(not in lecture notes)*; Carry-over problem 4) | [Why it stops short](#/dive/sse) |
+| 69–72 | say what derivative action does (anticipates the error, adds damping); see that P on an inertia load $1/(Js^2)$ has imaginary poles and oscillates forever; for PD on $\dfrac{1}{s(Js+B)}$ (slide 71 writes it $K_p(1 + T_ds)$, so $K_d = K_pT_d$) get $\zeta = \dfrac{B + K_d}{2\sqrt{K_pJ}}$ and ramp error $B/K_p$; the design advice is small $B$, large $K_p$, then pick $K_d$ for $\zeta$ between 0.4 and 0.7 | [Turn up the gain (P), the controller menu, and faster loops](#/dive/ctrl), [ζ and ωₙ](#/dive/second) |
 
 <div class="formula-sheet page2">
 
@@ -266,7 +268,7 @@ A speed-control motor has $R_a = 1$, $J = 10$, $b = 1$, $K_b = K_m = 1$, so $G =
 - P on $\dfrac{K}{Ts+1}$: $e_{ss} = \dfrac{1}{K + 1}$ for a unit step (with a controller gain $K_p$ in front of a plant gain $K$, replace $K$ by $K_pK$)
 - Integral action: $e_{ss} = 0$ for a step, possibly oscillatory. PI on a step torque disturbance: $e_{ss} = 0$, but the loop is one order higher
 - P on a step torque disturbance $T_d$, plant $\dfrac{1}{s(Js+b)}$ (slides 65–66): $\dfrac{C}{D} = \dfrac{1}{Js^2 + bs + K_p}$, $e_{ss} = -\dfrac{T_d}{K_p}$ (output offset $T_d/K_p$): larger $K_p$ gives less error but more oscillation
-- PI on the same disturbance (slides 67–68): $\dfrac{C}{D} = \dfrac{s}{Js^3 + bs^2 + K_ps + K_p/T_i}$, $e_{ss} = 0$, but the loop is third order and can go unstable. *Added, not on the slides:* for $a_3s^3 + a_2s^2 + a_1s + a_0$ (all $a_i > 0$) stable if $a_2a_1 > a_0a_3$, here $bK_p > JK_p/T_i$, i.e. $T_i > J/b$ (the $K_p$ cancels)
+- PI on the same disturbance (slides 67–68): $\dfrac{C}{D} = \dfrac{s}{Js^3 + bs^2 + K_ps + K_p/T_i}$, $e_{ss} = 0$, but the loop is third order and can go unstable. *(Not in lecture notes.)* For $a_3s^3 + a_2s^2 + a_1s + a_0$ (all $a_i > 0$) stable if $a_2a_1 > a_0a_3$, here $bK_p > JK_p/T_i$, i.e. $T_i > J/b$ (the $K_p$ cancels)
 - P on an inertia load $\dfrac{1}{Js^2}$: $\dfrac{K_p}{Js^2 + K_p}$, poles $\pm j\sqrt{K_p/J}$, oscillates forever
 - PD (slide 71 writes $K_p(1 + T_ds)$, so $K_d = K_pT_d$) on an inertia load: $Js^2 + K_pT_ds + K_p = 0$, damping added. PD on $\dfrac{1}{s(Js+B)}$ (slide 72): $\zeta = \dfrac{B + K_d}{2\sqrt{K_pJ}}$, ramp $e_{ss} = \dfrac{B}{K_p}$. Design advice: small $B$, large $K_p$ (small ramp error), then $K_d$ so that $\zeta$ is between 0.4 and 0.7 (small overshoot)
 
@@ -334,7 +336,7 @@ A load with inertia $J = 1$ and viscous friction $B = 2$ has the plant $\dfrac{1
 1. (a) With P control, $\dfrac{C}{D} = \dfrac{1}{Js^2 + Bs + K_p} = \dfrac{1}{s^2 + 2s + 4}$, which is stable. For $E = -C$ and a step $D = 1/s$: $e_{ss} = -\lim_{s\to0} \dfrac{s}{s^2 + 2s + 4}\dfrac1s = -\dfrac14 = -\dfrac{T_d}{K_p}$ (the output sits at $0.25$ instead of $0$). Here $\omega_n = 2$ and $\zeta = \dfrac{B}{2\sqrt{JK_p}} = \dfrac{2}{4} = 0.5$. The disturbance response $C/D$ overshoots its final value $1/K_p = 0.25$ by about 16 %.
 2. (b) With $K_p = 16$: $\dfrac{1}{s^2 + 2s + 16}$, $e_{ss} = -\dfrac{1}{16} = -0.0625$, $\omega_n = 4$ and $\zeta = \dfrac{2}{2\cdot4} = 0.25$. The disturbance response $C/D$ overshoots its final value $1/K_p = 0.0625$ by about 44 %. Four times the gain gives four times less error, but the response rings much more.
 3. (c) With PI, $L = K_p\dfrac{T_is + 1}{T_is}\cdot\dfrac{1}{s(Js + B)}$, so $1 + L = 0$ gives $Js^3 + Bs^2 + K_ps + \dfrac{K_p}{T_i} = 0$, which for the numbers is $s^3 + 2s^2 + 4s + 2 = 0$. The loop is now third order. The disturbance transfer function is $\dfrac{C}{D} = \dfrac{s}{s^3 + 2s^2 + 4s + 2}$.
-4. Stability of the cubic $a_3s^3 + a_2s^2 + a_1s + a_0$ with all coefficients positive: it is stable if $a_2a_1 > a_0a_3$. This test is *added practice, not in the notes* (it is the Routh condition for a cubic). Here $a_2a_1 = 2\cdot4 = 8 > a_0a_3 = 2$, so it is stable (the poles are $-0.64$ and $-0.68 \pm j1.63$).
+4. Stability of the cubic $a_3s^3 + a_2s^2 + a_1s + a_0$ with all coefficients positive: it is stable if $a_2a_1 > a_0a_3$. This test is the Routh condition for a cubic. *(Not in lecture notes.)* Here $a_2a_1 = 2\cdot4 = 8 > a_0a_3 = 2$, so it is stable (the poles are $-0.64$ and $-0.68 \pm j1.63$).
 5. Then $e_{ss} = -\lim_{s\to0} s\cdot\dfrac{s}{s^3 + 2s^2 + 4s + 2}\dfrac1s = 0$. The integral action removes the disturbance error that P left (slide 68).
 6. (d) For the general cubic $Js^3 + Bs^2 + K_ps + K_p/T_i$: $a_2a_1 > a_0a_3$ reads $BK_p > J\dfrac{K_p}{T_i}$, so the loop is stable for $T_i > J/B = 0.5$. The $K_p$ cancels out of this condition. At $T_i = 0.5$ the cubic is $s^3 + 2s^2 + 4s + 8 = (s + 2)(s^2 + 4)$, with poles $-2$ and $\pm j2$: marginal, it rings forever. At $T_i = 0.25$ it is $s^3 + 2s^2 + 4s + 16$, where $8 < 16$, so it is unstable (poles $-2.71$ and $+0.35 \pm j2.41$) and the disturbance response grows.
 
@@ -344,6 +346,15 @@ A load with inertia $J = 1$ and viscous friction $B = 2$ has the plant $\dfrac{1
 
 </details>
 
+### LN4 worked examples (not on Mini exam 2)
+
+The state-space examples from Lecture Notes 4, moved here from the *Feed back every state*, *Estimate what we can't measure* and *Use the estimate (separation)* deep dives.
+
+- **Pole placement (LN4 s.17–18):** y‴ + 5ÿ + 3ẏ + 2y = u with poles from (s² + 9.6s + 36)(s + 4.8) = s³ + 14.4s² + 82.08s + 172.8, giving K = [170.8, 79.08, 9.4].
+- **Ackermann (LN4 s.19–21):** on 1/s² with poles −1 ± j: K = [2, 2].
+- **Observer (LN4 s.22–29):** A = [[2, 3], [−1, 4]], C = [1, 0], ζ 0.8, ωₙ 10 give L = [22, 59].
+- **Inverted pendulum (LN4 s.30–40):** the separation principle on a four-state unstable plant; work it from the slides.
+
 ### Self-test
 
-The self-test has 37 questions. 22 are on Lecture Notes 2: the eleven already in the course quiz (feedback and the final-value theorem) plus eleven new ones on the problems above (one of them, the unit-ramp error, is added practice, not in LN2). The other 15 are the **LN1 carry-over**: eight existing questions on second-order systems and P, I, D, plus seven new ones. The **LN1 carry-over only** button runs just those 15, and each of them is labelled "LN1 carry-over" on its card. Use the **Take the self-test** button above; each answer links back to the map.
+The self-test has 37 questions. 22 are on Lecture Notes 2: the eleven already in the course quiz (feedback and the final-value theorem) plus eleven new ones on the problems above (one of them, the unit-ramp error, is not in lecture notes). The other 15 are the **LN1 carry-over**: eight existing questions on second-order systems and P, I, D, plus seven new ones. The **LN1 carry-over only** button runs just those 15, and each of them is labelled "LN1 carry-over" on its card. Use the **Take the self-test** button above; each answer links back to the map.

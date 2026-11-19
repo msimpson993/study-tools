@@ -56,8 +56,10 @@ Y(s) = ωₙ²/(s(s² + 2ζωₙs + ωₙ²)). Partial fractions with the comple
 - %OS 44.4 %, Tₚ 0.41 s, Tₛ 2.0 s (formula; simulated 1.77 s), bounce period 0.81 s. Static sag under its own weight 15.3 cm; critical damping would need c = 6400 N·s/m.
 - 1 kN of luggage: sags 3.91 cm, dips to 5.64 cm first.
 - **Comfort vs bounce:** ζ 0.4 (c 2560): load overshoot 25.4 %. ζ 0.7 (c 4480): 4.6 %, settles in 0.75 s, but the road step still overshoots 21 %, because the shock itself transmits the road.
-- **Specs check:** the smallest c for Tₛ ≤ 1 s (formula) is 3200 N·s/m (σ = c/800 ≥ 4); for %OS ≤ 10 % it is 3780 N·s/m (ζ ≥ 0.591).
+- **Specs check:** the smallest c for Tₛ ≤ 1 s (formula) is 3200 N·s/m (σ = c/800 ≥ 4); for %OS ≤ 10 % it is 3783 N·s/m (ζ ≥ 0.591).
 
 ### What it can't do
 
 The formulas are exact for two poles and no zeros. The road input has a zero at −16 (the shock pushes on the body when the road moves), so a road step overshoots 50.6 %, not 44.4 %. A third pole (the wheel) changes things a little (*Which poles matter?*).
+
+<p class="src">Sources: LN1 s.50–60 (Tₛ = 4/σ: s.59; rise-time fit: s.60).</p>

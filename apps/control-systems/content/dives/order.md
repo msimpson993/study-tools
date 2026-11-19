@@ -19,6 +19,7 @@ Count the places where the plant can store energy independently. Each one needs 
 Turn on the heat-stored bars. Each room's bar is its heat capacity times its temperature rise. Two bars that can differ give two states and two poles.
 
 ```figure:house
+lookFor: Turn on the heat-stored bars. The two bars rise at different rates: two independent stores, so two states and two poles.
 ```
 
 ### The math
@@ -27,6 +28,16 @@ Turn on the heat-stored bars. Each room's bar is its heat capacity times its tem
 - House: two heat stores, C_th·x₁ and C_th·x₂ (C_th = 1 MJ/K per room), so n = 2.
 - Corner: spring energy ½kz² and body energy ½mż², so n = 2.
 - "Independent" matters. Two capacitors in parallel share one voltage and count as one store, and so would two rooms with no wall between them.
+
+**What each symbol means.**
+
+- **n**: the order: highest power of s in G's denominator = number of states = number of independent energy stores.
+- **C_th**: heat capacity of one room, 1 MJ/K (the heat to warm it 1 K).
+- **x₁, x₂**: room temperatures above outdoors (K). C_th·x is the heat stored (J).
+- **k, z**: spring stiffness (N/m) and stretch (m); ½kz² is the spring's stored energy (J).
+- **m, ż**: body mass (kg) and velocity (m/s); ½mż² is its kinetic energy (J).
+- **c**: shock damping (N·s/m). It turns motion into heat and stores nothing.
+- **m_u, k_t**: wheel mass 40 kg and tyre stiffness 200 kN/m: two more stores, so order 4.
 
 ### Worked example: on the house and the corner
 
@@ -38,7 +49,4 @@ Turn on the heat-stored bars. Each room's bar is its heat capacity times its tem
 
 It counts the states; it doesn't say where the poles are or which ones matter. A model can also have more stores than you care to keep: the wheel's two are real but fast, and we leave them out on purpose. And it applies to lumped models only: a wall with a temperature gradient through it really has infinitely many stores, and we chose to treat it as one heat path.
 
-
-### Slides
-
-LN1 slides 21–27 (states of a mass–spring system) and 38–41 (one state per storage element in circuits).
+<p class="src">Sources: LN1 s.21–27 (states of a mass–spring system), s.38–41 (one state per energy store).</p>

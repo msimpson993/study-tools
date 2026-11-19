@@ -50,3 +50,5 @@ Take the outdoor temperature as the input instead. Both rooms leak to it equally
 ### What it can't do
 
 G(s) hides initial conditions and internal states (a room that starts warm), and it only exists for linear time-invariant models.
+
+<p class="src">Sources: LN1 s.3–5.</p>

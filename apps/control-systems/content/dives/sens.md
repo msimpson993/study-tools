@@ -49,10 +49,8 @@ The leak goes from 0.2 to 0.24 /h, so G₂(0) drops from 8.18 to 6.70 K/kW (−1
 - PI: 0 %. With PI the steady value doesn't depend on the walls at all.
 - |S| peaks at 1.33 near 2.6 rad/h: around that speed, feedback slightly *amplifies* model errors.
 
-### Exam example
-
-The steel mill (LN2 slides 11–13): the open-loop to closed-loop sensitivity ratio is 0.0385.
-
 ### What it can't do
 
 It's a small-change, low-frequency result; |S| > 1 near crossover means feedback can make things worse at some speeds.
+
+<p class="src">Sources: LN2 s.5–9, 11–13. Exam practice: Review › Mini exam 2, Problems 1–2.</p>

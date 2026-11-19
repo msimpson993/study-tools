@@ -54,3 +54,5 @@ Dividing by C_th and timing in hours:
 ### What it can't do
 
 Real rooms have stratified air, sun through windows, people and doors opening (nonlinear and time-varying, the "approximately" in the central question). The model also has no heater limit; limits come back with windup later.
+
+<p class="src">Sources: LN1 s.3–5 (transfer functions and why we model). The two-room heat balance is this site's example.</p>

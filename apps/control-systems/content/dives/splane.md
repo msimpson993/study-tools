@@ -40,3 +40,5 @@ The pole ratio is 2.2/0.2 = 11, so after about 2 h the difference has evened out
 ### What it can't do
 
 Poles say what motions exist, not how much of each appears. That takes the zeros and the input (see *Back to time: partial fractions*).
+
+<p class="src">Sources: LN1 s.61 (pole location).</p>

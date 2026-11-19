@@ -12,7 +12,7 @@ check: [q-tune, ck-tune-1, ck-tune-2]
 
 ### The big idea
 
-Each gain moves one thing you want and one you don't. Tuning is walking that trade-off with the specs as the finish line: P for stiffness against wind, D until the damping is right, then just enough I to kill the offset in reasonable time, checking the torque against the motor's limit. (The procedure is *added*.)
+Each gain moves one thing you want and one you don't. Tuning is walking that trade-off with the specs as the finish line: P for stiffness against wind, D until the damping is right, then just enough I to kill the offset in reasonable time, checking the torque against the motor's limit.
 
 ### See it
 
@@ -53,4 +53,6 @@ Gc = Kp + Ki/s + Kd·s  (D on measurement):  s³ + (2 + 0.1Kd)s² + 0.1Kp s + 0.
 
 ### What it can't do
 
-It gives no robustness margin (*preview*: Bode, phase margin) and no single "best"; performance indices offer one-number scores.
+It gives no robustness margin (Bode plots and phase margin: not in lecture notes) and no single "best"; *The best gain in one number* offers one-number scores.
+
+<p class="src">Sources: LN1 s.62–72 (what P, I and D each do). Not in lecture notes: the tuning procedure and the trade-off table.</p>

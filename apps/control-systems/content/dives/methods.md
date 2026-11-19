@@ -1,7 +1,7 @@
 ---
 id: methods
 order: 20
-title: "Recipes: Ziegler–Nichols and the PID Tuner"
+title: "Recipes: by hand, Ziegler–Nichols, PID Tuner"
 category: pid
 neighbors: [tuning, lab, index]
 level: Worked calculation
@@ -23,8 +23,6 @@ The default plant is the dish with a 0.05 s amplifier lag. Press "find Ku", then
 
 ### The math
 
-*Added*, not in the notes:
-
 ```eq
 Kp = 0.6K_u,   Ti = T_u/2,   T_D = T_u/8;   Ki = Kp/Ti,   Kd = Kp·T_D
 ```
@@ -38,12 +36,9 @@ Kp = 0.6K_u,   Ti = T_u/2,   T_D = T_u/8;   Ki = Kp/Ti,   Kd = Kp·T_D
 3. ZN: Kp 264, Ti 0.497 s, T_D 0.124 s, so Ki 531.5 and Kd 32.8.
 4. Result: 63.8 % overshoot with D on error, 77.6 % with D on measurement.
 
-**Legacy example (p3 = 1/(s + 1)³):** K_u = 8 and T_u = 3.63 s give Kp = 4.8; overshoot 40.6 % with ideal D, 43.0 % with the derivative filter N = 20 (the old PID site's "43 %").
-
-### MATLAB PID Tuner (Project 1)
+### MATLAB's PID Tuner
 
 - Response time slider to the left: slower, lower bandwidth, less overshoot. Transient behaviour toward Robust: more phase margin, less overshoot.
-- The project's starting design: 2 s, 7.5 % overshoot. Slower: 4 s, 0 %, nearly integral-only. Then 3.4 → 1.5 s and 0.6 → 0.72: 0 % and under 2 s.
 - *Update Block*, then verify on the nonlinear model.
 
 ### Writing it up
@@ -52,4 +47,6 @@ Lead with the requirement and end with the check; put the designs in one table. 
 
 ### What it can't do
 
-It needs a plant that can oscillate under P, ignores torque limits and noise, and gives large overshoot. (No slides: this is *added*, from Project 1.)
+It needs a plant that can oscillate under P, ignores torque limits and noise, and gives large overshoot.
+
+<p class="src">Not in lecture notes: Ziegler–Nichols and MATLAB's PID Tuner.</p>
