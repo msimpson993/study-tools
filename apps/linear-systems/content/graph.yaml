@@ -15,7 +15,7 @@ maps:
     label: Predict the output for ANY input?
     detail: "Inputs in, outputs out"
     kind: terminal
-    short: "Find a shortcut: learn what the system does to a few simple pieces, then build the answer for any input out of those pieces. The fourteen boxes below are that shortcut, step by step."
+    short: "Superposition: learn the system's response to a few simple pieces (impulses, sinusoids, exponentials), then add those responses up to get the output for any input. The fourteen boxes below are that shortcut, step by step."
     pop: &id002
       rough: any output = sum of the outputs of simple pieces
       example: "Two running examples, drawn on the map: an earbud speaker (voltage in, cone motion out) and a car on its suspension (road bumps in, body heave and pitch out) for the state boxes."
@@ -29,7 +29,7 @@ maps:
     detail: "Input in, output out"
     kind: box
     series: 0
-    short: Anything that turns an input signal into an output signal.
+    short: "A system is an operator T: a rule that maps a whole input signal u(t) to a whole output signal y(t) = T{u}."
     pop: &id004
       rough: "output = the system's rule applied to the input, y = T{u}"
       example: "Earbud: drive voltage in, cone motion out. Car: road heights under the wheels in, body heave and pitch out."
@@ -42,7 +42,7 @@ maps:
     detail: "Split, respond, add"
     kind: box
     series: 0
-    short: "If the system is linear, break the input into simple pieces, find each piece's output, and add those outputs up."
+    short: "Superposition: if the system is linear, split the input into simple pieces, find each piece's response, and add the responses up."
     pop: &id005
       rough: output of (piece 1 + piece 2) = output of piece 1 + output of piece 2
       example: "Feed the earbud a tone plus a click: the cone motion is the tone's motion plus the click's ring."
@@ -55,7 +55,7 @@ maps:
     detail: Sums and scaling pass
     kind: box
     series: 0
-    short: Linear means it plays fair with sums and scaling; time-invariant means it behaves the same today as tomorrow.
+    short: "Linear means additivity (sum in, sum out) and homogeneity (scale in, scale out). Time invariance (delay in, delay out) means it behaves the same at any time. Both together: LTI."
     eq: "T{a u₁ + b u₂} = a T{u₁} + b T{u₂}"
     pop: &id006
       audio:
@@ -84,7 +84,7 @@ maps:
     detail: Linear up close
     kind: box
     series: 0
-    short: "Nearly every smooth system is linear for small signals around its operating point (linearization), and linear systems come with exact tools: convolution, transforms, e^(At), eigenvalues."
+    short: "Linearization: around an operating point a smooth system's small-signal model is linear (the slope is the derivative there), and linear systems come with exact tools: convolution, transforms, e^(At), eigenvalues."
     pop: &id007
       rough: small change out ≈ slope × small change in
       figures:
@@ -100,7 +100,7 @@ maps:
     detail: Impulse response h(t)
     kind: box
     series: 0
-    short: "Use sharp kicks (impulses) as the pieces. The response to one kick is the impulse response h(t); any input is a row of scaled, shifted kicks, so the output is the same row of scaled, shifted copies of h, added up: convolution."
+    short: "Use impulses (sharp kicks) as the pieces. The impulse response h(t) is the output for one unit kick. Any input is a row of scaled, shifted kicks, so the output is their convolution y = h ∗ u: scaled, shifted copies of h, added up."
     eq: y(t) = ∫ h(τ) u(t − τ) dτ
     pop: &id008
       audio:
@@ -127,7 +127,7 @@ maps:
     detail: "H(jω): the fingerprint"
     kind: box
     series: 1
-    short: "Feed a linear system a pure tone and a tone of the same pitch comes out; only its loudness and timing change. Sweep every pitch and you get H(jω), the system's fingerprint."
+    short: "Sinusoids are eigenfunctions of an LTI system (same shape in and out): a tone comes out at the same pitch, only scaled and delayed. The frequency response H(jω) is that gain and phase lag at every pitch."
     pop: &id009
       audio:
       - snd-sweep
@@ -157,7 +157,7 @@ maps:
     detail: "Series, FT, DTFT, DFT"
     kind: box
     series: 1
-    short: "Any practical signal is a sum of sines: harmonics for a repeating signal (Fourier series), a continuum for a one-off (Fourier transform), the DTFT for samples and the DFT for a finite block on a computer. Sampling too slowly aliases; a finite block leaks."
+    short: "Fourier analysis writes a signal as a sum of sinusoids: the Fourier series (harmonics) for a periodic signal, the Fourier transform for a one-off, the DTFT for samples, the DFT for a finite block. Aliasing: too slow a sampling rate folds a pitch down. Leakage: a finite block smears it."
     pop: &id010
       audio:
       - snd-square
@@ -179,7 +179,7 @@ maps:
     detail: Growing and dying e^(st)
     kind: box
     series: 1
-    short: "Allow tones that grow or die: e^(st) with s = σ + jω (zⁿ for samples). Laplace and Z expand signals in them, so differential and difference equations become algebra."
+    short: "The Laplace transform (the Z-transform for samples) expands signals in exponentials e^(st), s = σ + jω, that may grow or die. A derivative becomes multiplication by s, so differential equations become algebra and the transfer function is H(s) = Y(s)/U(s)."
     eq: Y(s) = H(s) U(s)
     pop: &id012
       rough: "d/dt becomes × s, a one-sample delay becomes × z⁻¹, and output = H(s) × input"
@@ -200,7 +200,7 @@ maps:
     detail: Natural rhythms
     kind: box
     series: 1
-    short: "Poles are the system's natural rhythms: the values of s where H(s) blows up, each a mode e^(pt) it can ring with. Zeros are inputs it blocks. The gain at any pitch is set by the distances from jω to the poles and zeros."
+    short: "Poles: values of s where H(s) is infinite; each is a natural mode e^(pt) the system rings with. Zeros: values where H(s) = 0, inputs it blocks. The gain at any pitch is set by the distances from jω to the poles and zeros."
     pop: &id014
       rough: "gain at a pitch = (product of distances to the zeros) ÷ (product of distances to the poles), times a constant"
       figures:
@@ -217,7 +217,7 @@ maps:
     detail: "ẋ = Ax + Bu, y = Cx + Du"
     kind: box
     series: 2
-    short: "The state is the handful of memory quantities that, with the future input, fixes everything that happens next. In a linear system their rate of change is a matrix times the state plus a matrix times the input."
+    short: "The state x is the system's memory: the few numbers that, with the future input, fix everything next. A state-space model writes its rate of change as a matrix times the state plus a matrix times the input."
     eq: "ẋ = Ax + Bu,  y = Cx + Du"
     pop: &id015
       rough: rate of change of the memory = (how the memory drives itself) + (how the input pushes); output = a reading of the memory
@@ -235,7 +235,7 @@ maps:
     detail: Eigenvectors of A
     kind: box
     series: 2
-    short: "Find the directions A only stretches, its eigenvectors. Along each one the state changes on its own, as e^(λt), and any state is a mix of these modes. The rates λ are exactly the poles."
+    short: "An eigenvector of A is a direction A only stretches; its eigenvalue λ is the rate. Along it the state evolves on its own as e^(λt): a mode. Any state is a mix of modes, and the eigenvalues are exactly the poles."
     eq: Av = λv
     pop: &id016
       rough: state = Σ (amount of each mode) × (its shape) × e^(its rate × t)
@@ -259,7 +259,7 @@ maps:
     detail: Every mode must fade
     kind: box
     series: 2
-    short: "It settles exactly when every mode fades: every pole (eigenvalue) has negative real part, or lies inside the unit circle for a sampled system. One growing mode is enough to blow up."
+    short: "Asymptotic stability: every mode decays, i.e. every eigenvalue (pole) has negative real part (inside the unit circle for a sampled system). One unstable, growing mode is enough to blow up."
     pop: &id017
       rough: settles ⇔ every natural rhythm dies away
       figures:
@@ -281,7 +281,7 @@ maps:
     detail: Hidden modes
     kind: decision
     series: 3
-    short: "Not always. A mode the input cannot affect (uncontrollable) or the output cannot reveal (unobservable) is hidden from H(s): it cancels as a pole–zero pair, yet it is still inside, and can still be unstable."
+    short: "Not always. A mode is uncontrollable if the input cannot affect it, unobservable if the output cannot reveal it. Such a hidden mode cancels from H(s) as a pole–zero pair, yet it is still inside, and can still be unstable."
     pop: &id018
       rough: H(s) shows only the modes the input can affect and the output can reveal
       figures:
@@ -297,7 +297,7 @@ maps:
     detail: Design with the tools
     kind: box
     series: 4
-    short: "Design with the same tools: filters shape H(jω), feedback moves the poles, and optimal control picks the cheapest input that reaches a target."
+    short: "Design with the same tools: filters shape the frequency response H(jω); feedback (input computed from the measured output) moves the poles; optimal control picks the least-cost input, and the controllability Gramian says what each target costs."
     pop: &id019
       rough: choose the system (or the input) so the output does what you want
       figures:
@@ -417,7 +417,7 @@ maps:
     label: Predict the output for ANY input?
     detail: "Inputs in, outputs out"
     kind: terminal
-    short: "Find a shortcut: learn what the system does to a few simple pieces, then build the answer for any input out of those pieces. The fourteen boxes below are that shortcut, step by step."
+    short: "Superposition: learn the system's response to a few simple pieces (impulses, sinusoids, exponentials), then add those responses up to get the output for any input. The fourteen boxes below are that shortcut, step by step."
     pop: *id002
     accountsFor: "Why the same handful of ideas predicts a 717 Hz speaker resonance and a car's 1.15 Hz bounce."
     link: *id003
@@ -426,7 +426,7 @@ maps:
     detail: "Input in, output out"
     kind: box
     series: 0
-    short: Anything that turns an input signal into an output signal.
+    short: "A system is an operator T: a rule that maps a whole input signal u(t) to a whole output signal y(t) = T{u}."
     pop: *id004
     addsToExample: "Names the two running examples as systems: voltage ↦ cone motion for the earbud, road heights ↦ heave and pitch for the car."
     dive: linsys
@@ -436,7 +436,7 @@ maps:
     detail: "Split, respond, add"
     kind: box
     series: 0
-    short: "If the system is linear, break the input into simple pieces, find each piece's output, and add those outputs up."
+    short: "Superposition: if the system is linear, split the input into simple pieces, find each piece's response, and add the responses up."
     pop: *id005
     addsToExample: "Feeds the earbud a tone plus a click: the motion is the tone's response plus the click's response."
     dive: linsys
@@ -446,7 +446,7 @@ maps:
     detail: Sums and scaling pass
     kind: box
     series: 0
-    short: Linear means it plays fair with sums and scaling; time-invariant means it behaves the same today as tomorrow.
+    short: "Linear means additivity (sum in, sum out) and homogeneity (scale in, scale out). Time invariance (delay in, delay out) means it behaves the same at any time. Both together: LTI."
     eq: "T{a u₁ + b u₂} = a T{u₁} + b T{u₂}"
     pop: *id006
     addsToExample: "Names the two running examples as systems: voltage ↦ cone motion for the earbud, road heights ↦ heave and pitch for the car."
@@ -458,7 +458,7 @@ maps:
     detail: Linear up close
     kind: box
     series: 0
-    short: "Nearly every smooth system is linear for small signals around its operating point (linearization), and linear systems come with exact tools: convolution, transforms, e^(At), eigenvalues."
+    short: "Linearization: around an operating point a smooth system's small-signal model is linear (the slope is the derivative there), and linear systems come with exact tools: convolution, transforms, e^(At), eigenvalues."
     pop: *id007
     addsToExample: "The earbud at normal listening levels moves only a few micrometres, well inside its range, so its small-signal model is linear; the car model is linear for small motions: small angles, linear springs and shocks, rigid tyres."
     dive: linsys
@@ -468,7 +468,7 @@ maps:
     detail: Impulse response h(t)
     kind: box
     series: 0
-    short: "Use sharp kicks (impulses) as the pieces. The response to one kick is the impulse response h(t); any input is a row of scaled, shifted kicks, so the output is the same row of scaled, shifted copies of h, added up: convolution."
+    short: "Use impulses (sharp kicks) as the pieces. The impulse response h(t) is the output for one unit kick. Any input is a row of scaled, shifted kicks, so the output is their convolution y = h ∗ u: scaled, shifted copies of h, added up."
     eq: y(t) = ∫ h(τ) u(t − τ) dτ
     pop: *id008
     addsToExample: "Clicks the speaker: one voltage click makes the diaphragm ring at about 690 Hz for a few milliseconds. That ring is h(t)."
@@ -479,7 +479,7 @@ maps:
     detail: "H(jω): the fingerprint"
     kind: box
     series: 1
-    short: "Feed a linear system a pure tone and a tone of the same pitch comes out; only its loudness and timing change. Sweep every pitch and you get H(jω), the system's fingerprint."
+    short: "Sinusoids are eigenfunctions of an LTI system (same shape in and out): a tone comes out at the same pitch, only scaled and delayed. The frequency response H(jω) is that gain and phase lag at every pitch."
     pop: *id009
     addsToExample: "Plays a 500 Hz tone: after a brief transient the diaphragm moves at exactly 500 Hz, scaled by |H| and delayed by ∠H."
     accountsFor: "Why a speaker never changes the pitch of a note, only its loudness and timing."
@@ -489,7 +489,7 @@ maps:
     detail: "Series, FT, DTFT, DFT"
     kind: box
     series: 1
-    short: "Any practical signal is a sum of sines: harmonics for a repeating signal (Fourier series), a continuum for a one-off (Fourier transform), the DTFT for samples and the DFT for a finite block on a computer. Sampling too slowly aliases; a finite block leaks."
+    short: "Fourier analysis writes a signal as a sum of sinusoids: the Fourier series (harmonics) for a periodic signal, the Fourier transform for a one-off, the DTFT for samples, the DFT for a finite block. Aliasing: too slow a sampling rate folds a pitch down. Leakage: a finite block smears it."
     pop: *id010
     addsToExample: "Plots the speaker's frequency response |H(j2πf)|: flat in the bass, a peak near 660 Hz, then −40 dB per decade."
     accountsFor: "Why earbuds sound the way they do across the band, and which frequencies the ANC has to fight."
@@ -500,7 +500,7 @@ maps:
     detail: Growing and dying e^(st)
     kind: box
     series: 1
-    short: "Allow tones that grow or die: e^(st) with s = σ + jω (zⁿ for samples). Laplace and Z expand signals in them, so differential and difference equations become algebra."
+    short: "The Laplace transform (the Z-transform for samples) expands signals in exponentials e^(st), s = σ + jω, that may grow or die. A derivative becomes multiplication by s, so differential equations become algebra and the transfer function is H(s) = Y(s)/U(s)."
     eq: Y(s) = H(s) U(s)
     pop: *id012
     addsToExample: "Gives the speaker's transfer function from voltage to motion, H(s) = (Bl/Re)/(Mms s² + R s + 1/Cms), with R = Rms + Bl²/Re (the coil's back-EMF adds damping) and poles at −1,267 ± j4,322 rad/s."
@@ -512,7 +512,7 @@ maps:
     detail: Natural rhythms
     kind: box
     series: 1
-    short: "Poles are the system's natural rhythms: the values of s where H(s) blows up, each a mode e^(pt) it can ring with. Zeros are inputs it blocks. The gain at any pitch is set by the distances from jω to the poles and zeros."
+    short: "Poles: values of s where H(s) is infinite; each is a natural mode e^(pt) the system rings with. Zeros: values where H(s) = 0, inputs it blocks. The gain at any pitch is set by the distances from jω to the poles and zeros."
     pop: *id014
     addsToExample: "Reads the speaker's peak from its pole pair: lightly damped (ζ ≈ 0.28), so the poles sit fairly close to the jω axis and |H| peaks near 660 Hz."
     accountsFor: "Why lighter damping would give a sharper, louder resonance."
@@ -522,7 +522,7 @@ maps:
     detail: "ẋ = Ax + Bu, y = Cx + Du"
     kind: box
     series: 2
-    short: "The state is the handful of memory quantities that, with the future input, fixes everything that happens next. In a linear system their rate of change is a matrix times the state plus a matrix times the input."
+    short: "The state x is the system's memory: the few numbers that, with the future input, fix everything next. A state-space model writes its rate of change as a matrix times the state plus a matrix times the input."
     eq: "ẋ = Ax + Bu,  y = Cx + Du"
     pop: *id015
     addsToExample: "Writes the car as ẋ = Ax + Bu with x = (z, θ, ż, θ̇): the springs and shocks at the two axles couple heave and pitch."
@@ -533,7 +533,7 @@ maps:
     detail: Eigenvectors of A
     kind: box
     series: 2
-    short: "Find the directions A only stretches, its eigenvectors. Along each one the state changes on its own, as e^(λt), and any state is a mix of these modes. The rates λ are exactly the poles."
+    short: "An eigenvector of A is a direction A only stretches; its eigenvalue λ is the rate. Along it the state evolves on its own as e^(λt): a mode. Any state is a mix of modes, and the eigenvalues are exactly the poles."
     eq: Av = λv
     pop: *id016
     addsToExample: "Finds the pieces both examples only scale: tones for the speaker, and the bounce and pitch modes for the car."
@@ -544,7 +544,7 @@ maps:
     detail: Every mode must fade
     kind: box
     series: 2
-    short: "It settles exactly when every mode fades: every pole (eigenvalue) has negative real part, or lies inside the unit circle for a sampled system. One growing mode is enough to blow up."
+    short: "Asymptotic stability: every mode decays, i.e. every eigenvalue (pole) has negative real part (inside the unit circle for a sampled system). One unstable, growing mode is enough to blow up."
     pop: *id017
     addsToExample: "Checks the car: all four eigenvalues have negative real part, so after a bump it always comes back to rest; worn shocks move them toward the axis."
     accountsFor: "Why worn shocks make a car float: the poles creep toward the axis, so the ringing lasts about 8 cycles instead of 1.6."
@@ -554,7 +554,7 @@ maps:
     detail: Hidden modes
     kind: decision
     series: 3
-    short: "Not always. A mode the input cannot affect (uncontrollable) or the output cannot reveal (unobservable) is hidden from H(s): it cancels as a pole–zero pair, yet it is still inside, and can still be unstable."
+    short: "Not always. A mode is uncontrollable if the input cannot affect it, unobservable if the output cannot reveal it. Such a hidden mode cancels from H(s) as a pole–zero pair, yet it is still inside, and can still be unstable."
     pop: *id018
     addsToExample: "Asks the car: on the symmetric car a push at the centre of gravity cannot start pitch and a height sensor there cannot see it; on the main car a push at the centre moves both modes."
     accountsFor: "Which actuator and sensor placements can actually control the car, and which leave a mode hidden."
@@ -564,7 +564,7 @@ maps:
     detail: Design with the tools
     kind: box
     series: 4
-    short: "Design with the same tools: filters shape H(jω), feedback moves the poles, and optimal control picks the cheapest input that reaches a target."
+    short: "Design with the same tools: filters shape the frequency response H(jω); feedback (input computed from the measured output) moves the poles; optimal control picks the least-cost input, and the controllability Gramian says what each target costs."
     pop: *id019
     addsToExample: "Finds the least-energy front and rear actuator forces that level the body from 2° nose-down in 0.5 s: peaks of 476 N and 652 N."
     accountsFor: "Why the cheapest forces start small and grow toward the end, and why a shorter time or a single actuator costs so much more."
