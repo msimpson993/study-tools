@@ -275,6 +275,7 @@ export function loadApp(appDir: string): { content: AppContent; warnings: string
     else if (sceneId) warnings.push(`dives/${d.id}: no exampleScene; the scene's default overlays are shown`);
   }
   for (const ref of mathErrors.figureRefs) if (!figures.some((f) => f.id === ref.id)) problems.push(`${ref.where}: figure:${ref.id} is not in figures.yaml`);
+  for (const ref of mathErrors.pictureRefs) if (subject.quizFigures && !subject.quizFigures.includes(ref.id)) problems.push(`${ref.where}: picture:${ref.id} is not in subject.yaml quizFigures`);
 
   // ---------- cross checks ----------
   const diveIds = new Set(dives.map((d) => d.id));

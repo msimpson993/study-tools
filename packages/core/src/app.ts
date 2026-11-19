@@ -8,7 +8,7 @@ import { mountScene } from './scene';
 import { mountConceptMap, newMapState, type MapState } from './conceptmap';
 import { miniCheck } from './minicheck';
 import { mountQuiz } from './quiz';
-import type { QuizFigureRegistry } from './quizfig';
+import { mountQuizFigure, type QuizFigureRegistry } from './quizfig';
 import type { PopAudioHook } from './conceptmap';
 import { ControlSet } from './controls';
 import { createFullscreen, replaceUrl } from './fullscreen';
@@ -331,6 +331,11 @@ export function mountApp(content: AppContent, hooks: AppHooks = {}): void {
       slot.dataset.testid = 'viz';
       const stop = mounter(slot, def, new ControlSet(def.controls, def.presets));
       if (typeof stop === 'function') stops.push(stop);
+    });
+    // ```picture:<id> caption``` slots: static captioned pictures drawn by the subject's quiz-figure renderers
+    root.querySelectorAll<HTMLElement>('.pic-slot[data-pic]').forEach((slot) => {
+      const m = mountQuizFigure({ id: slot.dataset.pic!, caption: slot.dataset.cap || undefined, alt: slot.dataset.alt || slot.dataset.pic! }, hooks.quizFigures);
+      m.el.classList.add('dive-pic'); m.el.dataset.testid = 'dive-picture'; slot.append(m.el); stops.push(m.destroy);
     });
     return stops;
   }

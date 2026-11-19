@@ -41,8 +41,44 @@ export function rangeFrame(w: number, h: number, xr: V2, yr: V2, L = 40, R = 10,
 export function wipe(g: CanvasRenderingContext2D, w: number, h: number) { g.setLineDash([]); g.clearRect(0, 0, w, h); }
 export function clipBox(g: CanvasRenderingContext2D, f: Frame) { g.beginPath(); g.rect(f.box.l, f.box.t, f.box.r - f.box.l, f.box.b - f.box.t); g.clip(); }
 
+/** Where a label of this size fits inside the canvas: shrinks it (to 72% at most), then slides it in from the edge, then splits it
+ * into two lines, so an in-plot note never runs off the panel. Works in device pixels, so translated or scaled sub-panels are handled. */
+export interface TextFit { size: number; x: number; lines: string[]; x0: number; x1: number }
+export function fitText(g: CanvasRenderingContext2D, s: string, x: number, align: CanvasTextAlign, size: number): TextFit {
+  const font = (z: number) => `${z}px system-ui,sans-serif`;
+  const m = typeof g.getTransform === 'function' ? g.getTransform() : null;
+  const k = m && m.a > 0 ? m.a : 1, e = m ? m.e : 0, W = (g.canvas?.width || Infinity) / k, ox = -e / k; // canvas in user units: [ox, ox + W]
+  const lo = ox + 2, hi = ox + W - 2;
+  const span = (w: number, xx: number) => (align === 'center' ? [xx - w / 2, xx + w / 2] : align === 'right' || align === 'end' ? [xx - w, xx] : [xx, xx + w]);
+  g.font = font(size); let w = g.measureText(s).width, z = size, lines = [s];
+  if (m && (Math.abs(m.b) > 1e-9 || Math.abs(m.c) > 1e-9)) { const [r0, r1] = span(w, x); return { size, x, lines, x0: r0, x1: r1 }; } // rotated (axis titles): leave as drawn
+  const room = (() => { const [a0, a1] = span(w, x); return w - Math.max(0, lo - a0) - Math.max(0, a1 - hi); })();
+  if (w > room + 0.5 && Number.isFinite(W)) {
+    z = Math.max(size * 0.72, size * Math.max(room, 1) / w); g.font = font(z); w = g.measureText(s).width;
+    if (w > hi - lo) { // still wider than the whole panel: two lines, split at the space nearest the middle
+      const sp = [...s.matchAll(/ /g)].map((q) => q.index as number); const mid = s.length / 2;
+      const cut = sp.length ? sp.reduce((p, q) => (Math.abs(q - mid) < Math.abs(p - mid) ? q : p)) : -1;
+      if (cut > 0) { lines = [s.slice(0, cut), s.slice(cut + 1)]; w = Math.max(...lines.map((l) => g.measureText(l).width)); }
+    }
+  }
+  let [a0, a1] = span(w, x);
+  if (a0 < lo) { x += lo - a0; } else if (a1 > hi) { x -= a1 - hi; }
+  [a0, a1] = span(w, x);
+  return { size: z, x, lines, x0: a0, x1: a1 };
+}
 export function text(g: CanvasRenderingContext2D, s: string, x: number, y: number, color = col.text(), align: CanvasTextAlign = 'left', size = 11, base: CanvasTextBaseline = 'middle') {
-  g.fillStyle = color; g.font = `${size}px system-ui,sans-serif`; g.textAlign = align; g.textBaseline = base; g.fillText(s, x, y);
+  const f = fitText(g, s, x, align, size);
+  g.fillStyle = color; g.font = `${f.size}px system-ui,sans-serif`; g.textAlign = align; g.textBaseline = base;
+  if (f.lines.length === 1) g.fillText(s, f.x, y);
+  else f.lines.forEach((l, i) => g.fillText(l, f.x, y + (i - (f.lines.length - 1) / 2) * f.size * 1.15));
+  logText(g, s, f, size, x);
+}
+/** Test hook: when window.__textLog is an array, every label drawn records its extent against the canvas (device px). */
+function logText(g: CanvasRenderingContext2D, s: string, f: TextFit, size: number, x: number) {
+  const log = (globalThis as unknown as { __textLog?: unknown[] }).__textLog; if (!Array.isArray(log)) return;
+  const m = g.getTransform(); const cv = g.canvas as HTMLCanvasElement;
+  if (Math.abs(m.b) > 1e-9 || Math.abs(m.c) > 1e-9) return;
+  log.push({ s, x0: m.a * f.x0 + m.e, x1: m.a * f.x1 + m.e, W: cv.width, id: cv.closest?.('[data-fig]')?.getAttribute('data-fig') || cv.id || '', fitted: f.lines.length > 1 || f.size < size - 0.01 || Math.abs(f.x - x) > 0.5 });
 }
 export function tline(g: CanvasRenderingContext2D, f: Frame, a: V2, b: V2, color: string, width = 1.5, dash: number[] = []) {
   g.strokeStyle = color; g.lineWidth = width; g.setLineDash(dash); g.beginPath(); g.moveTo(f.X(a[0]), f.Y(a[1])); g.lineTo(f.X(b[0]), f.Y(b[1])); g.stroke(); g.setLineDash([]);
@@ -89,6 +125,22 @@ export function axes2(g: CanvasRenderingContext2D, f: Frame, xl = '', yl = '', s
   if (yl) text(g, yl, f.X(0) + 6, f.box.t + 6, col.muted(), 'left', 11);
   void step;
 }
+/** Tick numbers on a complex-plane frame (s-plane, z-plane): small ticks on the axes every `step` (x) and `ystep` (y), numbers inside the
+ * box along its bottom and left edges so they never collide with the curves at the axes. Units belong in the axis names (axes2). */
+export function planeTicks(g: CanvasRenderingContext2D, f: Frame, step: number, ystep = step) {
+  const x0 = f.ix(f.box.l), x1 = f.ix(f.box.r), y0 = f.iy(f.box.b), y1 = f.iy(f.box.t), lab = (v: number) => String(+v.toFixed(3)).replace('-', '−');
+  const ax = Math.min(Math.max(f.Y(0), f.box.t), f.box.b), ay = Math.min(Math.max(f.X(0), f.box.l), f.box.r);
+  g.save(); g.strokeStyle = col.strong(); g.lineWidth = 1; g.setLineDash([]);
+  for (let x = Math.ceil(x0 / step) * step; x <= x1 + 1e-9; x += step) {
+    const px = f.X(x); g.beginPath(); g.moveTo(px, ax - 3); g.lineTo(px, ax + 3); g.stroke();
+    if (Math.abs(x) > 1e-9) text(g, lab(x), px, f.box.b - 7, col.muted(), 'center', 10);
+  }
+  for (let y = Math.ceil(y0 / ystep) * ystep; y <= y1 + 1e-9; y += ystep) {
+    const py = f.Y(y); g.beginPath(); g.moveTo(ay - 3, py); g.lineTo(ay + 3, py); g.stroke();
+    if (Math.abs(y) > 1e-9) text(g, lab(y), f.box.l + 3, py, col.muted(), 'left', 10);
+  }
+  g.restore();
+}
 /** The integer grid pushed through M (a plane transformation): the 3Blue1Brown picture of a matrix. */
 export function gridT(g: CanvasRenderingContext2D, f: Frame, M: M2, n = 6, color = col.grid(), width = 1, step = 1, alpha = 1) {
   g.save(); clipBox(g, f); g.strokeStyle = color; g.lineWidth = width; g.globalAlpha = alpha;
@@ -113,11 +165,11 @@ export function heat(g: CanvasRenderingContext2D, f: Frame, fn: (x: number, y: n
   g.save(); g.imageSmoothingEnabled = true; g.drawImage(cv, f.box.l, f.box.t, bw, bh); g.restore();
 }
 /** Simple axes + x ticks for a graph drawn through a rangeFrame. */
-export function graphAxes(g: CanvasRenderingContext2D, f: Frame, xr: V2, yr: V2, xLabel: string, yLabel: string, xs = 0, ys = 0) {
+export function graphAxes(g: CanvasRenderingContext2D, f: Frame, xr: V2, yr: V2, xLabel: string, yLabel: string, xs = 0, ys = 0, xfmt?: (x: number) => string) {
   const nice = (span: number, n: number) => { const raw = span / n, p = Math.pow(10, Math.floor(Math.log10(raw))), m = raw / p; return (m < 1.5 ? 1 : m < 3.5 ? 2 : m < 7.5 ? 5 : 10) * p; };
   const sx = xs || nice(xr[1] - xr[0], 6), sy = ys || nice(yr[1] - yr[0], 4);
   g.lineWidth = 1; g.setLineDash([]);
-  for (let x = Math.ceil(xr[0] / sx) * sx; x <= xr[1] + 1e-9; x += sx) { g.strokeStyle = col.grid(); g.beginPath(); g.moveTo(f.X(x), f.box.t); g.lineTo(f.X(x), f.box.b); g.stroke(); text(g, String(+x.toFixed(3)), f.X(x), f.box.b + 9, col.muted(), 'center', 10); }
+  for (let x = Math.ceil(xr[0] / sx) * sx; x <= xr[1] + 1e-9; x += sx) { g.strokeStyle = col.grid(); g.beginPath(); g.moveTo(f.X(x), f.box.t); g.lineTo(f.X(x), f.box.b); g.stroke(); text(g, xfmt ? xfmt(x) : String(+x.toFixed(3)), f.X(x), f.box.b + 9, col.muted(), 'center', 10); }
   for (let y = Math.ceil(yr[0] / sy) * sy; y <= yr[1] + 1e-9; y += sy) { g.strokeStyle = col.grid(); g.beginPath(); g.moveTo(f.box.l, f.Y(y)); g.lineTo(f.box.r, f.Y(y)); g.stroke(); text(g, String(+y.toFixed(3)), f.box.l - 4, f.Y(y), col.muted(), 'right', 10); }
   g.strokeStyle = col.strong();
   if (yr[0] < 0 && yr[1] > 0) { g.beginPath(); g.moveTo(f.box.l, f.Y(0)); g.lineTo(f.box.r, f.Y(0)); g.stroke(); }

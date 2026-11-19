@@ -7,7 +7,7 @@ const LEADS: Record<string, string> = {
   short: 'Short answer', why: 'Why it matters', recognize: 'Recognize', trap: 'Trap', predict: 'Predict', note: 'Note', derivation: 'Full derivation',
 };
 
-export class MathErrors { list: string[] = []; figureRefs: { id: string; where: string }[] = [] }
+export class MathErrors { list: string[] = []; figureRefs: { id: string; where: string }[] = []; pictureRefs: { id: string; where: string }[] = [] }
 
 /** Create a renderer. KaTeX errors are collected (not swallowed) so the build can fail on them. */
 export function createMarkdown(errors: MathErrors, where: () => string) {
@@ -35,6 +35,12 @@ export function createMarkdown(errors: MathErrors, where: () => string) {
       const id = info.slice('figure:'.length).trim();
       errors.figureRefs.push({ id, where: where() });
       return `<div class="viz-slot" data-figure="${esc(id)}"></div>\n`;
+    }
+    if (info.startsWith('picture:')) { // a static captioned picture from the quiz-figure registry: ```picture:<id> Caption text```, body = alt text
+      const [id, ...cap] = info.slice('picture:'.length).trim().split(/\s+/);
+      errors.pictureRefs.push({ id, where: where() });
+      if (!cap.length) errors.list.push(`${where()}: picture:${id} needs a caption after the id`);
+      return `<div class="pic-slot" data-pic="${esc(id)}" data-cap="${esc(cap.join(' '))}" data-alt="${esc(t.content.trim())}"></div>\n`;
     }
     if (info.startsWith('callout:')) {
       const [head, ...rest] = info.slice('callout:'.length).split(/\s+/);
