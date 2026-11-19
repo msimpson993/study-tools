@@ -26,7 +26,7 @@ Controllable says yes or no, but some directions take far more effort to reach t
 
 **Picture it first.** B and AB are the directions the input can push in, and the Gramian weighs how far each gets per unit of energy. The states you can reach with one unit of energy form an ellipse (an ellipsoid in n dimensions) whose axes are the eigenvectors of W_c, with half-lengths √(eigenvalues). A long axis is a cheap direction and a short axis an expensive one; if some eigenvalue is zero the ellipse is flat and that direction is unreachable.
 
-```picture:pic-gram-ellipse The heave and pitch the body can reach in 0.5 s on the 96,160 N²·s budget (any final speed): wide with front and rear actuators (blue), a thin sliver with the front one alone (red).
+```picture:pic-gram-ellipse The heave and pitch the body can reach from rest in 0.5 s on the 96,160 N²·s budget (any final speed): wide with front and rear actuators (blue), a thin sliver with the front one alone (red).
 Ellipses of reachable heave and pitch: wide for two actuators, a thin sliver for the front actuator alone.
 ```
 

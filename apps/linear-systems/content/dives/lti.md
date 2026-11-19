@@ -20,7 +20,7 @@ check: [c-lti-2, pop-kick, q1]
 
 ### The big idea
 
-Linear, time-invariant systems treat exponentials specially: an exponential goes in and the same exponential comes out, only scaled. That is why every frequency-domain tool works: it rewrites the input as exponentials, so the hard convolution in time becomes a simple multiplication.
+An LTI (linear, time-invariant) system is described completely by one measured response: its ring after a single sharp kick, the impulse response h(t). Any input is a row of scaled, shifted kicks, so any output is the same row of scaled, shifted rings added up: the convolution y = h ∗ u. Exponentials are special: they pass through only scaled, which is why transforms turn this convolution into multiplication.
 
 ### See it
 
@@ -36,7 +36,7 @@ The earbud's impulse response: one click makes the cone ring and die away within
 ```
 
 ```eq
-y = h ∗ x,    Y(s) = H(s) X(s)
+y = h ∗ u,    Y(s) = H(s) U(s)
 ```
 
 $$H\{e^{st}\} = H(s)\,e^{st},\qquad H(s)=\int_{-\infty}^{\infty} h(t)\,e^{-st}\,dt$$
@@ -55,7 +55,7 @@ A system is linear and time-invariant if and only if it is convolution with a fi
 
 ### Worked example: on the earbud
 
-1. Click the earbud once with a short voltage pulse. The cone rings at about 688 Hz (period ≈ 1.45 ms; undamped it would ring at 717 Hz, and damping slows it to 688 Hz), and the ring's envelope decays with time constant 1/σ ≈ 0.79 ms (σ ≈ 1,267 /s): that ring is $h(t)$.
+1. Click the earbud once with a short voltage pulse. The cone rings at about 688 Hz (period ≈ 1.45 ms; undamped it would ring at 717 Hz, and damping slows it to 688 Hz), and the ring's envelope decays with time constant 1/σ ≈ 0.79 ms (σ ≈ 1,266 /s): that ring is $h(t)$.
 2. A 1 ms pulse is about four back-to-back clicks. Linearity scales each ring; time invariance shifts each one to its own start time.
 3. Add the four shifted rings: that sum is the cone motion for the pulse, $y = h * u$. No new measurement is needed for any other input.
 

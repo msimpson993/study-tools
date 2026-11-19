@@ -16,7 +16,7 @@ level: Some algebra
 check: [c-sky-1, c-sky-2, c-stab-1]
 ---
 
-**The question:** what happens when the output drives the input? This is the Full-detail box *Feedback: active damping*, after *Design and work*: feeding the measured body speed back to the actuators changes A itself, so it moves the poles.
+**The question:** what happens when the output drives the input? This is the Full-detail box *Feedback: active damping*, after *Put it to work*: feeding the measured body speed back to the actuators changes A itself, so it moves the poles.
 
 ### The big idea
 
@@ -49,7 +49,7 @@ u = −K x    ⇒    ẋ = (A − B K) x,    poles = eig(A − B K)
 3. Over the 5 cm bump at 15 m/s the heave peak falls from 8.77 to 6.25 mm, pitch from 0.222° to 0.170°, and the body is within 1 mm after 0.50 s instead of 1.17 s. The actuators peak at 958 N front and 1,412 N rear.
 4. The front-road heave resonance disappears: its peak drops from ×1.18 to ×0.57, about the low-frequency level b/(a + b) = 0.56.
 
-One equal gain at both axles, 4,355 N·s/m, also gives bounce ζ 0.700, with pitch ζ 0.823. Wire the actuator the wrong way round (push with the body speed) and the same algebra moves the poles right: with a NET damping of −0.2 × the shocks', ζ −0.058 and −0.071, and the motion grows about 2× every 1.66 s.
+One equal gain at both axles, 4,355 N·s/m, also gives bounce ζ 0.700, with pitch ζ 0.823. Wire the actuator the wrong way round (push with the body speed) and the same algebra moves the poles right: at a net damping of −0.2 × the shocks', ζ is −0.058 (bounce) and −0.071 (pitch); the bounce doubles about every 1.66 s and the pitch every 1.09 s.
 
 ### What it can't do
 

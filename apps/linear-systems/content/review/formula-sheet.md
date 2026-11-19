@@ -74,6 +74,7 @@ covers: "Everything the practice problems A1–A4 and B1–B3 use, plus the Four
 
 #### Application: optimal control (Pontryagin)
 
+- (The map and the optimal-control dive write the Hamiltonian as 𝓗 and the costate as p; same objects, many textbooks use H and λ.)
 - $H = L + \lambda^{\mathsf T}f$; $\partial H/\partial u = 0$
 - $\dot x = \partial H/\partial\lambda$, $\dot\lambda = -\partial H/\partial x$
 - $x(T)$ fixed: solve $\lambda(0)$ from $\Phi_M(T)$; $x(T)$ free: $\lambda(T) = 0$

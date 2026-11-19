@@ -47,11 +47,11 @@ const jordanShear: QuizFigureDef = { aspect: 2.1, maxWidth: 460, draw(g, w, h) {
     }
     g.restore();
     g.strokeStyle = col.e(); g.lineWidth = 2.4; g.beginPath(); g.moveTo(X(-2.2), Y(0)); g.lineTo(X(2.2), Y(0)); g.stroke();
-    text(g, title, x0 + half / 2, 9, color, 'center', 10.5);
+    const [t1, t2] = title.split(': '); text(g, t1 + ':', x0 + half / 2, 7, color, 'center', 10); text(g, t2, x0 + half / 2, 19, color, 'center', 10); // two short lines, so the two titles never meet
   };
   panel(0, [[1.25, 0], [0, 0.8]], 'two eigenvectors: a pure stretch', col.a());
   panel(half, [[1, 0.9], [0, 1]], 'one eigenvector (yellow): a shear', col.b());
-  text(g, 'yellow line: the only direction that is just stretched', w / 2, h - 6, col.e(), 'center', 10);
+  text(g, 'yellow line: an eigenvector (left: one of two; right: the only one, left unchanged since λ = 1)', w / 2, h - 6, col.e(), 'center', 10);
 } };
 
 /** Fourier series: the 200 Hz square-wave drive as a chain of rotating arrows (k = 1, 3, 5) whose tip draws the partial sum. */
@@ -99,7 +99,7 @@ const diagGrid: QuizFigureDef = { aspect: 2, maxWidth: 460, draw(g, w, h) {
   g.restore();
   arrowTo(g, f, [0, 0], [ub[0] * 1.8, ub[1] * 1.8], col.a(), 2.6); arrowTo(g, f, [0, 0], [up[0] * 1.6, up[1] * 1.6], col.b(), 2.6);
   text(g, 'blue: bounce axis', f.X(ub[0] * 1.9) + 4, f.Y(ub[1] * 1.9), col.a(), 'left', 10); text(g, 'orange: pitch axis', f.X(up[0] * 1.7) + 4, f.Y(up[1] * 1.7) - 6, col.b(), 'left', 10);
-  text(g, 'along either axis, A only stretches (and fades) the pose', f.box.l + 6, f.box.t + 10, col.muted(), 'left', 10);
+  text(g, 'started on either axis, the pose stays on it: it only swings and fades', f.box.l + 6, f.box.t + 10, col.muted(), 'left', 10);
 } };
 
 /** Optimal control: the least-energy path from 2° nose-down to level in 0.5 s, in the (θ, θ̇) plane, against the free motion. */

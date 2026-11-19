@@ -36,7 +36,7 @@ The first figure opens on the symmetric car: it is the blind-spot case from Box 
 ```figure:obs
 ```
 
-*Look for here:* put the height sensor at the pitch still point, x = +0.56 m, and the pitch reading goes flat: that mode drops out of G(s) as in the table above.
+*Look for here:* put the height sensor at the pitch still point, x = +0.56 m, and the pure-pitch trace goes flat: that mode drops out of G(s) as in the table above.
 
 ```eq
 G(s) depends only on the CO subsystem

@@ -24,9 +24,9 @@ A coupled system is hard because every variable pushes on the others. Choose the
 
 ### See it
 
-**Picture it first.** Ask the plane to use the eigenvectors as its grid. In those coordinates, A has nothing left to do but stretch each axis.
+**Picture it first.** Ask the plane to use the eigenvectors as its grid. In those coordinates, each axis just swings and fades on its own.
 
-```picture:pic-diag-grid The main car's bounce shape (blue) and pitch shape (orange) as the axes of the heave–pitch plane. Along either axis A only stretches and fades; that is what diagonal means.
+```picture:pic-diag-grid The main car's bounce shape (blue) and pitch shape (orange) as the axes of the heave–pitch plane. Started on either axis, the pose stays on it, only swinging along it and fading; that is what diagonal means.
 A skewed grid in the heave–pitch plane, its two axes the bounce and pitch shapes.
 ```
 

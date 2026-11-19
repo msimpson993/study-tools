@@ -20,11 +20,11 @@ check: [c-opt-1, c-opt-2, c-opt-3]
 
 ### The big idea
 
-Many ways of pushing reach the same target, and some cost far less than others. Optimal control finds the cheapest one: write the cost down, add a second running variable, the costate, that keeps track of what each push will cost later, and solve both together. For a linear system it comes down to one more e^(Mt).
+Many ways of pushing reach the same target, and some cost far less than others. Optimal control finds the cheapest one: write the cost down, add a second running variable, the costate, the price of each unit of state: how much the remaining cost changes if the state moves, and solve both together. For a linear system it comes down to one more e^(Mt).
 
 ### See it
 
-**Picture it first.** The body starts 2° nose-down and at rest, and must be level and at rest exactly at T. Of all the force histories that do it, the least-energy one takes the path below. Finding it is a two-point problem: the state runs forward from the start while its costate p, the price of each push, runs back from the target.
+**Picture it first.** The body starts 2° nose-down and at rest, and must be level and at rest exactly at T. Of all the force histories that do it, the least-energy one takes the path below. Finding it is a two-point problem: the state runs forward from the start while its costate p, the price of each unit of state, runs back from the target.
 
 ```picture:pic-opt-path The least-energy path (yellow) takes the body from 2° nose-down at rest to level at rest in exactly 0.5 s, in the pitch–pitch-rate plane; left alone (dashed) it swings past and settles more slowly.
 A path from a red start point to a green target point in the pitch-angle, pitch-rate plane, with the free motion dashed.
