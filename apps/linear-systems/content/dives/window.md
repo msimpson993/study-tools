@@ -42,7 +42,7 @@ $$x[n]\,w[n]\;\longleftrightarrow\;\frac{1}{2\pi}\int X(e^{j\theta})\,W(e^{j(\Om
 - $W(e^{j\Omega})$: the window's own spectrum; its main lobe width and side lobes set the smearing.
 - $X(e^{j\Omega})$: the true spectrum, smeared by $W$.
 
-**Choosing a window.** Two numbers describe the damage a finite block does. *Scalloping loss* is how far a tone's peak reads low when it sits exactly half a bin from the nearest bin centre. *ENBW* (equivalent noise bandwidth) is how many bins' worth of noise the window lets into each bin, $M\sum w^2/(\sum w)^2$. For a 64-sample block:
+**Choosing a window.** Two numbers describe the damage a finite block does. *Scalloping loss* is how far a tone's peak reads low when it sits exactly half a bin from the nearest bin centre. *ENBW* (equivalent noise bandwidth) is how many bins' worth of noise the window lets into each bin, $M\sum w^2/(\sum w)^2$. For a 64-sample block, every window in its periodic (DFT-even) form, as MATLAB's `hann(M,'periodic')`, with ENBW in bins of that form:
 
 | window | peak side lobe | scalloping loss | ENBW | main lobe (null to null) | use it for |
 |---|---|---|---|---|---|
@@ -50,7 +50,7 @@ $$x[n]\,w[n]\;\longleftrightarrow\;\frac{1}{2\pi}\int X(e^{j\theta})\,W(e^{j(\Om
 | Hann | −31 dB | 1.4 dB | 1.50 bins | 4 bins | general purpose |
 | Blackman–Harris (4-term) | −92 dB | 0.8 dB | 2.00 bins | 8 bins | weak tones next to strong ones |
 | flat-top | −88 dB | 0.01 dB | 3.77 bins | 10 bins | reading a tone's amplitude |
-| Kaiser, β = 6 | −44 dB | 1.5 dB | 1.49 bins | about 4.4 bins | a tunable trade: larger β, lower side lobes, wider lobe |
+| Kaiser, β = 6 | −44 dB | 1.5 dB | 1.47 bins | about 4.3 bins | a tunable trade: larger β, lower side lobes, wider lobe |
 
 **Resolution.** Two tones closer than about one main lobe merge into one peak, and the main lobe is a fixed number of bins of width $f_s/M$, where $M$ is the number of samples recorded. So resolution comes from the record length (and the window), not from the DFT length $N$: zero-padding ($N > M$) only samples the same smeared curve more finely.
 

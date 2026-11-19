@@ -25,7 +25,8 @@ export function I0(x: number): number {
   return s;
 }
 
-export interface WindowParams { beta?: number; alpha?: number }
+/** `periodic`: use the DFT-even form for Kaiser/Tukey/Bartlett too (an (M+1)-point symmetric window with the last point dropped); cosine sums are always periodic */
+export interface WindowParams { beta?: number; alpha?: number; periodic?: boolean }
 
 /**
  * Window value at (possibly fractional) index n of an M-point window.
@@ -36,7 +37,7 @@ export function windowAt(kind: WindowKind, n: number, M: number, p: WindowParams
   if (kind === 'rect') return 1;
   if (W.a) { let v = 0; W.a.forEach((a, k) => { v += (k % 2 ? -1 : 1) * a * Math.cos(TAU * k * n / M); }); return v; }
   if (M <= 1) return 1;
-  const x = n / (M - 1);
+  const x = p.periodic ? n / M : n / (M - 1);
   if (kind === 'kaiser') {
     const beta = p.beta ?? 6; const u = 2 * x - 1;
     return u < -1 || u > 1 ? 0 : I0(beta * Math.sqrt(Math.max(0, 1 - u * u))) / I0(beta);
