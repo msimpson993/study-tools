@@ -67,7 +67,7 @@ List of `{id, tags[], kind, q, …}`. `kind: recall` needs `a`; every other kind
 ## figures.yaml (core Figure component)
 `{id, title, x, y, legend[{label,color,dash?}], howToRead, controls[], presets[], pair?, lookFor?, animate?{control,speed,loop?}, height?}`. `lookFor` is a one-line "what to watch" under the figure; `animate` adds ▶/⏸ driving one range control (speed = control units/s; its slider is the scrubber; with `prefers-reduced-motion` it becomes a Step button). Controls: `{id,label,type: range|select|seg|toggle, min,max,step,default,group: primary|more,unit?}`. Presets are `{id,label,set:{controlId: value}, about?}`; they may only set declared (visible) controls, and serialize to the URL (`#/figure/<id>?a1=…`). The app's `src/main.ts` supplies the drawing code per figure id (see `apps/linear-systems`).
 
-## examples.yaml (transforms board)
+## examples.yaml (six-domains board, linear-systems)
 `categories[], defs{name: html}, examples[{id,cat,n,p,sel,extra?,look,why,eq,ml}], tryThis[{id,head,text}]`. `p` is a partial assignment of the board's visible controls; `sel` must be one of `board.pairs`; `extra` is a key into `defs`.
 
 ## Hash routes

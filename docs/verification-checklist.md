@@ -28,4 +28,4 @@ Look at it (screenshots, `npm run shots`, then open `shots/*.png`):
 - [ ] Ported pages: `expect:` counts unchanged, every legacy feature still present (compare to the original side by side).
 - [ ] CI green on GitHub; Pages URL returns 200 for the hub and each app.
 
-Full legacy pairwise check for the transforms board (slow, ~10 min): `npm run test:e2e:full`.
+Full legacy pairwise check for the six-domains board (now in linear-systems; slow, ~10 min): `npm run test:e2e:full`.
