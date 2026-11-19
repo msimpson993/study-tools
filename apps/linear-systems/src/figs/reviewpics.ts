@@ -31,7 +31,8 @@ function planeAxes(g: CanvasRenderingContext2D, p: Pl, re: string, im: string) {
   text(g, re, p.r - 2, p.Y(0) - 9, col.muted(), 'right', 10); if (p.X(0) > p.l && p.X(0) < p.r) text(g, im, p.X(0) + 4, p.t + 6, col.muted(), 'left', 10);
 }
 /** tick marks and values along the real axis */
-function reTicks(g: CanvasRenderingContext2D, p: Pl, vals: number[]) { for (const v of vals) { seg(g, p.X(v), p.Y(0) - 3, p.X(v), p.Y(0) + 3, col.strong()); if (v) text(g, String(v).replace('-', '−'), p.X(v), p.Y(0) + 15, col.muted(), 'center', 9); } }
+/** tick numbers under the real axis; values in `beside` (where a dashed boundary runs down) get their number just right of the line */
+function reTicks(g: CanvasRenderingContext2D, p: Pl, vals: number[], beside: number[] = []) { for (const v of vals) { seg(g, p.X(v), p.Y(0) - 3, p.X(v), p.Y(0) + 3, col.strong()); const b = beside.includes(v); if (v) text(g, String(v).replace('-', '−'), p.X(v) + (b ? 4 : 0), p.Y(0) + 15, col.muted(), b ? 'left' : 'center', 9); } }
 /** shade where the predicate holds, column by column (σ ranges) or by radius (|z| ranges) */
 function shadeRe(g: CanvasRenderingContext2D, p: Pl, lo: number, hi: number, fill: string) {
   const a = Math.max(p.l, p.X(lo)), b = Math.min(p.r, p.X(hi)); if (b > a) { g.save(); g.fillStyle = fill; g.fillRect(a, p.t, b - a, p.b - p.t); g.restore(); }
@@ -211,7 +212,7 @@ const picRocStrip: QuizFigureDef = { ...PH, draw(g, w, h) {
   const lk: Line[][] = [[['blue: h’s ROC Re s > −1', col.a()], ['orange: x’s ROC Re s < 2', col.b()], ['yellow: the overlap −1 < Re s < 2, Y’s ROC', col.e()]],
     [['y is two-sided (a strip ROC):', col.e()], ['⅓e^(2t) for t < 0', col.b()], ['⅓e^(−t) for t > 0', col.a()]]], n = heads(lk);
   const p = planeIn(header(g, A, lk[0], n), 0.5, 0, 2.2);
-  shadeRe(g, p, -1, 99, BLUE); shadeRe(g, p, -99, 2, ORANGE); shadeRe(g, p, -1, 2, 'rgba(255,220,90,.10)'); planeAxes(g, p, 'Re s', 'Im s'); reTicks(g, p, [-2, -1, 1, 2, 3]);
+  shadeRe(g, p, -1, 99, BLUE); shadeRe(g, p, -99, 2, ORANGE); shadeRe(g, p, -1, 2, 'rgba(255,220,90,.10)'); planeAxes(g, p, 'Re s', 'Im s'); reTicks(g, p, [-2, -1, 1, 2, 3], [-1, 2]);
   seg(g, p.X(-1), p.t, p.X(-1), p.b, col.a(), 1.2, [4, 3]); seg(g, p.X(2), p.t, p.X(2), p.b, col.b(), 1.2, [4, 3]);
   cross(g, p.X(-1), p.Y(0), col.a()); cross(g, p.X(2), p.Y(0), col.b());
   const ts = linspace(-2.5, 3, 221), f = frameIn(w, h, header(g, B, lk[1], n), [-2.5, 3], [0, 0.42]);
