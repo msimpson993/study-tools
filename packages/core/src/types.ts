@@ -38,7 +38,7 @@ export interface MapNode {
   /** opt-in fixed pop-up template (HTML strings); when present the pop-up shows only this */
   pop?: NodePop;
 }
-export interface NodePop { rough: string; eqKey?: string; figures?: QuizFigureRef[]; /** opt-in sound examples (ids registered with the app's `audio` hook; see audio.ts) */ audio?: string[]; example?: string; next?: string; ask?: string }
+export interface NodePop { rough: string; eqKey?: string; figures?: QuizFigureRef[]; /** HTML caption for the figure strip: what each panel shows and what it demonstrates (label panels (a), (b)… via each figure's caption) */ figCaption?: string; /** opt-in sound examples (ids registered with the app's `audio` hook; see audio.ts) */ audio?: string[]; example?: string; next?: string; ask?: string }
 
 export interface MapEdge {
   from: string;

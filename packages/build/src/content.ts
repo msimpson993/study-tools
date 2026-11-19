@@ -114,7 +114,7 @@ export function loadApp(appDir: string): { content: AppContent; warnings: string
           addsToExample: n.addsToExample ? inline(n.addsToExample, `${m.id}/${n.id}`) : undefined,
           accountsFor: n.accountsFor ? inline(n.accountsFor, `${m.id}/${n.id}`) : undefined,
           exampleScene: n.exampleScene, dive: n.dive, live: n.live, quizTag: n.quizTag, link: n.link,
-          ...(n.pop ? { pop: { rough: inline(n.pop.rough, `${m.id}/${n.id} pop`), eqKey: n.pop.eqKey ? inline(n.pop.eqKey, `${m.id}/${n.id} pop`) : undefined, figures: n.pop.figures, audio: n.pop.audio, example: n.pop.example ? inline(n.pop.example, `${m.id}/${n.id} pop`) : undefined, next: n.pop.next ? inline(n.pop.next, `${m.id}/${n.id} pop`) : undefined, ask: n.pop.ask } } : {}),
+          ...(n.pop ? { pop: { rough: inline(n.pop.rough, `${m.id}/${n.id} pop`), eqKey: n.pop.eqKey ? inline(n.pop.eqKey, `${m.id}/${n.id} pop`) : undefined, figures: n.pop.figures, figCaption: n.pop.figCaption ? inline(n.pop.figCaption, `${m.id}/${n.id} pop`) : undefined, audio: n.pop.audio, example: n.pop.example ? inline(n.pop.example, `${m.id}/${n.id} pop`) : undefined, next: n.pop.next ? inline(n.pop.next, `${m.id}/${n.id} pop`) : undefined, ask: n.pop.ask } } : {}),
         })),
         edges: (m.edges ?? []).map((e: any) => ({
           from: e.from, to: e.to, label: e.label, dashed: e.dashed, eq: e.eq, ...(e.reverse ? { reverse: true } : {}),

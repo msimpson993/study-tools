@@ -271,6 +271,11 @@
                         }
                       }
                     },
+                    "figCaption": {
+                      "type": "string",
+                      "minLength": 20,
+                      "description": "HTML caption under the figure strip: what each panel shows and what it demonstrates, walking through panels (a), (b)… in order"
+                    },
                     "example": {
                       "type": "string",
                       "minLength": 10,

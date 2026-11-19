@@ -305,6 +305,7 @@ export function mountConceptMap(host: HTMLElement, content: AppContent, progress
       const strip = h('div', { class: `pop-figs n${narrow}`, dataset: { testid: 'pop-figures' } });
       for (const f of p.figures) { const mf = mountQuizFigure(f, nav.figures); popStops.push(mf.destroy); if (wide(f)) mf.el.style.gridColumn = '1 / -1'; strip.append(mf.el); }
       out.push(strip);
+      if (p.figCaption) out.push(h('p', { class: 'pop-figcap', dataset: { testid: 'pop-figcap' }, html: p.figCaption }));
     }
     if (p.audio?.length && nav.audio) {
       const box = h('div', { class: 'pop-audio', dataset: { testid: 'pop-audio' } });
