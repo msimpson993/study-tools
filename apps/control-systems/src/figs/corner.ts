@@ -57,7 +57,7 @@ export const cornerFigure = figureOf(cornerPanels);
 export const zetaForOS = (os: number) => { const l = Math.log(os / 100); return -l / Math.sqrt(Math.PI ** 2 + l * l); };
 export const specsPanels = (c: { values: V; set(k: string, v: number | string | boolean): void }): FigurePanel[] => [
   {
-    id: 'plane', title: 'Allowed region for the poles (shaded); the corner\'s poles', x: 'σ (1/s)', y: 'jω (rad/s)',
+    id: 'plane', title: 'Allowed region for the poles (shaded, LN1 slide 61); the corner\'s poles', x: 'σ (1/s)', y: 'jω (rad/s)',
     draw(g, w, h, v) {
       const os = num(v, 'os', 10), ts = num(v, 'ts', 1), z = zetaForOS(os), p = cornerParams(v), nb = cornerNumbers(p), sig = 4 / ts;
       const poles: Cx[] = nb.zeta < 1 ? [C(-nb.sigma, nb.wd), C(-nb.sigma, -nb.wd)] : roots([p.m, p.c, p.k]);

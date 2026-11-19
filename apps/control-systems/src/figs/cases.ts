@@ -1,17 +1,19 @@
-/** Kept from pid-tuning: the 14 symptom cards on their legacy teaching plants (not re-plotted on the dish: see the tutor list). */
+/** The 14 symptom cards (kept from pid-tuning). Build 1: twelve run on the antenna dish, G = 0.1/(s(s + 2)), with the tutor's numbers.py [F] settings;
+ *  the nonlinearity and limit-cycle cards keep their generic teaching plant (the dish model has no nonlinearity). */
 /**
  * The 14 "things that go wrong" of the appendix as live core Figures. Each case runs the PROBLEM at the slider settings against the FIXED version
  * (dashed): the core simulator (simulatePid) where it can, the app-local `runLoop` for the delay, sensor lag, nonlinearity, rate limit, set-point filter and dead zone.
  */
 import { figureOf, rangeFrame, graphAxes, curve, tline, dot, text, wipe, col, type FigurePanel, type V2 } from '@study/core';
-import { simulatePid, pidMetrics, type PidSimOptions, type PlantId } from '@study/core/dsp';
 import { runLoop } from './loopsim';
+import { dishCard, cardMet, cardWind, dishSat, dishSim, deg, type CardOpts } from '../model/plants';
+import { DISH, DISH_TUNED } from '../model/params';
 
 type V = Record<string, number | string | boolean>;
 interface Series { t: ArrayLike<number>; y: ArrayLike<number>; color: string; dash?: boolean; width?: number }
-interface Plot { title: string; y: string; xr: V2; yr: V2; series: Series[]; hl?: { y: number; label?: string }[]; vl?: { x: number; label?: string }[]; peak?: { t: number; y: number; label: string } }
+interface Plot { title: string; y: string; xr: V2; yr: V2; series: Series[]; hl?: { y: number; label?: string }[]; vl?: { x: number; label?: string }[]; peak?: { t: number; y: number; label: string }; notes?: string[] }
 const n = (v: V, k: string) => v[k] as number;
-const sim = (o: PidSimOptions) => simulatePid({ dt: 0.01, N: 20, ...o });
+const on = (v: V, k: string) => v[k] === true || v[k] === 'true';
 const nz = (a: number | undefined) => a ?? 0;
 
 const draw = (g: CanvasRenderingContext2D, w: number, h: number, p: Plot) => {
@@ -19,13 +21,14 @@ const draw = (g: CanvasRenderingContext2D, w: number, h: number, p: Plot) => {
   const f = rangeFrame(w, h, p.xr, p.yr, 46, 14, 10, 32);
   graphAxes(g, f, p.xr, p.yr, 'time (s)', p.y);
   for (const l of p.hl ?? []) { tline(g, f, [p.xr[0], l.y], [p.xr[1], l.y], col.muted(), 1, [5, 4]); if (l.label) text(g, l.label, f.box.r - 4, f.Y(l.y) - 8, col.muted(), 'right', 10); }
-  for (const l of p.vl ?? []) { tline(g, f, [l.x, p.yr[0]], [l.x, p.yr[1]], col.c(), 1, [3, 3]); if (l.label) text(g, l.label, f.X(l.x) + 4, f.box.t + 10, col.c(), 'left', 10); }
+  for (const l of p.vl ?? []) { tline(g, f, [l.x, p.yr[0]], [l.x, p.yr[1]], col.c(), 1, [3, 3]); if (l.label) text(g, l.label, f.X(l.x) + 4, f.box.b - 8, col.c(), 'left', 10); }
   const clip = (a: ArrayLike<number>) => Array.from(a, (y) => Math.max(p.yr[0] - (p.yr[1] - p.yr[0]), Math.min(p.yr[1] + (p.yr[1] - p.yr[0]), y)));
   for (const s of [...p.series].sort((a, b) => Number(!!b.dash) - Number(!!a.dash))) {
     const m = s.t.length, step = Math.max(1, Math.floor(m / 800)), xs: number[] = [], ys: number[] = [];
     for (let i = 0; i < m; i += step) { xs.push(s.t[i]); ys.push(s.y[i]); }
     curve(g, f, xs, clip(ys), s.color, s.width ?? (s.dash ? 2 : 2.4), s.dash ? [6, 4] : []);
   }
+  (p.notes ?? []).forEach((l, i) => text(g, l, f.box.l + 6, f.box.t + 12 + i * 13, i ? FX() : PB(), 'left', 10));
   if (p.peak) { dot(g, f, [p.peak.t, p.peak.y], col.b(), 4); text(g, p.peak.label, f.X(p.peak.t) + 8, f.Y(p.peak.y) - 8, col.b(), 'left', 10.5); }
   };
 const PB = () => col.b(), FX = () => col.c();
@@ -35,38 +38,85 @@ const uPlot = (a: Run, b: Run, xr: V2, extra: Partial<Plot> = {}): Plot => {
   const all = [...a.u, ...b.u].filter(Number.isFinite).sort((x, y) => x - y), lo = all[Math.floor(0.01 * (all.length - 1))], hi = all[Math.floor(0.99 * (all.length - 1))], pad = (hi - lo) * 0.1 || 0.5;
   return { title: 'Control signal u(t)', y: 'control u', xr, yr: [Math.max(-8, lo - pad), Math.min(8, hi + pad)], series: [{ t: a.t, y: a.u, color: PB(), width: 1.6 }, { t: b.t, y: b.u, color: FX(), dash: true }], ...extra };
 };
-const pk = (s: { t: number[]; y: number[] }, tEnd?: number): Plot['peak'] => { const m = pidMetrics({ ...s, r: s.y.map(() => 1), u: s.y, e: s.y, ym: s.y, up: s.y, ui: s.y, ud: s.y, d: s.y, unstable: false, substeps: 1, dt: 0.01, warnings: [] } as never, { tEnd }); return m.overshootPct > 1 ? { t: m.peakTime, y: m.peak, label: `≈ ${Math.round(m.overshootPct)} % over` } : undefined; };
+
+
+/** the torque of the problem run against the fixed one (dish cards, N·m) */
+const tPlot = (a: Run, b: Run, xr: V2, extra: Partial<Plot> = {}): Plot => {
+  const inX = (r: Run) => r.u.filter((_, i) => r.t[i] >= xr[0] && r.t[i] <= xr[1] && Number.isFinite(r.u[i]));
+  const all = [...inX(a), ...inX(b)].sort((x, y) => x - y), lo = all[Math.floor(0.005 * (all.length - 1))] ?? -1, hi = all[Math.floor(0.995 * (all.length - 1))] ?? 1, pad = (hi - lo) * 0.12 || 10;
+  return { title: 'Motor torque', y: 'torque (N·m)', xr, yr: [Math.max(-2000, lo - pad), Math.min(5000, hi + pad)], series: [{ t: a.t, y: a.u, color: PB(), width: 1.6 }, { t: b.t, y: b.u, color: FX(), dash: true }], ...extra };
+};
+/* ── dish runs: numbers.py [F] at dt = 1e-4, cached, thinned for drawing ── */
+const cache = new Map<string, ReturnType<typeof dishCard>>();
+const card = (o: CardOpts) => { const k = JSON.stringify(o); let r = cache.get(k); if (!r) { r = dishCard(o); if (cache.size > 40) cache.clear(); cache.set(k, r); } return r; };
+const thin = (s: { t: ArrayLike<number>; y: ArrayLike<number>; u: ArrayLike<number> }, f: (y: number) => number = (y) => y, t0 = -Infinity) => {
+  const t: number[] = [], y: number[] = [], u: number[] = [], step = Math.max(1, Math.floor(s.t.length / 1600));
+  for (let i = 0; i < s.t.length; i += step) if (s.t[i] >= t0) { t.push(s.t[i]); y.push(f(s.y[i])); u.push(s.u[i]); }
+  return { t, y, u };
+};
+const TUNED = { Kp: DISH_TUNED.Kp, Ki: DISH_TUNED.Ki, Kd: DISH_TUNED.Kd };
+const gains = (v: V) => ({ Kp: n(v, 'Kp'), Ki: n(v, 'Ki'), Kd: n(v, 'Kd') });
+const R0 = DISH.step, WIND = DISH.wind;
+const pct = (x: number) => (Math.abs(x) > 1e4 ? 'unstable' : `${Math.max(0, x).toFixed(1)} %`);
+const mtxt = (m: ReturnType<typeof cardMet>, T: number) => (m.unstable ? 'unstable: the swing grows' : `%OS ${pct(m.OS)}, Ts ${m.Ts >= T - 0.01 ? `> ${T.toFixed(0)} s (still ringing)` : `${m.Ts.toFixed(2)} s`}, Tr ${m.Tr.toFixed(3)} s`);
+const wtxt = (w: ReturnType<typeof cardWind>, T: number) => `wind peak ${w.peak.toFixed(2)}°, ${Math.abs(w.final) > 0.05 ? `stays ${Math.abs(w.final).toFixed(2)}° off` : `cleared in ${w.recover >= T - 0.01 ? `> ${T.toFixed(0)}` : w.recover.toFixed(1)} s`}`;
+/** a dish step card: angle / target and torque, problem (solid) against the fix (dashed), with the [F] read-outs */
+function stepCard(title: string, a: CardOpts, b: CardOpts, xr: V2, opt: { r?: number; yr?: V2; upto?: number } = {}): Plot[] {
+  const r = opt.r ?? R0, sa = card(a), sb = card(b), T = a.T ?? 10, ma = cardMet(sa.t, sa.y, r, opt.upto), mb = cardMet(sb.t, sb.y, r, opt.upto);
+  const pa = thin(sa, (y) => y / r), pb = thin(sb, (y) => y / r);
+  return [{ title, y: 'angle ÷ target', xr, yr: opt.yr ?? [0, 2], series: [{ ...pa, color: PB() }, { ...pb, color: FX(), dash: true }], hl: [{ y: 1, label: `target ${r === R0 ? '0.1 rad' : `${r} rad`}` }], notes: [`solid: ${mtxt(ma, T)}`, `dashed: ${mtxt(mb, b.T ?? 10)}`] },
+    tPlot({ t: pa.t, u: pa.u }, { t: pb.t, u: pb.u }, xr)];
+}
+/** a dish wind card: pointing error after a 20 N·m gust at tw, problem against the fix */
+function windCard(title: string, a: CardOpts, b: CardOpts, tw: number, T: number): Plot[] {
+  const sa = card({ ...a, T, wind: WIND, twind: tw }), sb = card({ ...b, T, wind: WIND, twind: tw }), wa = cardWind(sa.t, sa.y, tw), wb = cardWind(sb.t, sb.y, tw);
+  const err = (y: number) => -deg(y - R0), pa = thin(sa, err, tw - 2), pb = thin(sb, err, tw - 2), top = Math.max(1, Math.ceil(Math.max(wa.peak, wb.peak) * 1.3 * 2) / 2);
+  return [{ title, y: 'pointing error (°)', xr: [tw - 2, T], yr: [-0.3, top], series: [{ ...pa, color: PB() }, { ...pb, color: FX(), dash: true }], hl: [{ y: 0, label: 'on target' }], vl: [{ x: tw, label: `${WIND} N·m wind` }], notes: [`solid: ${wtxt(wa, T - tw)}`, `dashed: ${wtxt(wb, T - tw)}`] },
+    tPlot({ t: pa.t, u: pa.u }, { t: pb.t, u: pb.u }, [tw - 2, T])];
+}
 
 type Case = (v: V) => Plot[];
 const CASES: Record<string, Case> = {
-  slow: (v) => { const a = sim({ plant: 'p2', Kp: n(v, 'Kp'), Ki: n(v, 'Ki'), T: 30 }), b = sim({ plant: 'p2', Kp: 1.5, Ki: 1, T: 30 }); return [{ title: 'Slow response', y: 'output y', xr: [0, 30], yr: [0, 1.2], series: [{ ...a, color: PB() }, { ...b, color: FX(), dash: true }], hl: [{ y: 1, label: 'r = 1' }] }, uPlot(a, b, [0, 30])]; },
-  offset: (v) => { const a = sim({ plant: 'p2', Kp: n(v, 'Kp'), Ki: n(v, 'Ki'), T: 20 }), b = sim({ plant: 'p2', Kp: 2, Ki: 1, T: 20 }); return [{ title: 'Steady-state offset', y: 'output y', xr: [0, 20], yr: [0, 1.3], series: [{ ...a, color: PB() }, { ...b, color: FX(), dash: true }], hl: [{ y: 1, label: 'r = 1' }] }, uPlot(a, b, [0, 20])]; },
-  overshoot: (v) => { const a = sim({ plant: 'p2', Kp: n(v, 'Kp'), Ki: n(v, 'Ki'), Kd: n(v, 'Kd'), T: 15 }), b = sim({ plant: 'p2', Kp: 2, Ki: 1, T: 15 }); return [{ title: 'Overshoot', y: 'output y', xr: [0, 15], yr: [0, 1.6], series: [{ ...a, color: PB() }, { ...b, color: FX(), dash: true }], hl: [{ y: 1, label: 'r = 1' }], peak: pk(a) }, uPlot(a, b, [0, 15])]; },
-  oscillation: (v) => { const a = sim({ plant: 'p3', Kp: n(v, 'Kp'), T: 20 }), b = sim({ plant: 'p3', Kp: 2, T: 20 }); return [{ title: 'Sustained oscillation / instability (Kᵤ = 8)', y: 'output y', xr: [0, 20], yr: [-1.5, 3.5], series: [{ ...a, color: PB() }, { ...b, color: FX(), dash: true }], hl: [{ y: 1, label: 'r = 1' }] }, uPlot(a, b, [0, 20])]; },
-  disturbance: (v) => { const o = { plant: 'p2' as PlantId, r: 0, T: 20, dist: { t: 1, amp: 1 } }, a = sim({ ...o, Kp: n(v, 'Kp'), Ki: n(v, 'Ki') }), b = sim({ ...o, Kp: 3, Ki: 3 }); return [{ title: 'Poor disturbance rejection (r = 0)', y: 'output y', xr: [0, 20], yr: [-0.1, 0.6], series: [{ ...a, color: PB() }, { ...b, color: FX(), dash: true }], hl: [{ y: 0, label: 'target' }], vl: [{ x: 1, label: 'load d = 1 hits' }] }, uPlot(a, b, [0, 20])]; },
-  noise: (v) => { const o = { plant: 'p2' as PlantId, Kp: 2, Ki: 1, noise: 0.02, T: 10 }, a = sim({ ...o, Kd: n(v, 'Kd'), N: n(v, 'N') }), b = sim({ ...o, Kd: 0.5, N: 10 }); return [
-    { title: 'Output', y: 'output y', xr: [0, 10], yr: [0, 1.3], series: [{ ...a, color: PB() }, { ...b, color: FX(), dash: true }], hl: [{ y: 1 }] },
-    { title: 'Control signal', y: 'control u', xr: [0, 10], yr: [-3, 6], series: [{ t: a.t, y: a.u, color: PB(), width: 1.4 }, { t: b.t, y: b.u, color: FX(), dash: true }] }]; },
-  windup: (v) => { const o = { plant: 'p1' as PlantId, Kp: n(v, 'Kp'), Ki: n(v, 'Ki'), umax: 1.2, T: 6 }, a = sim({ ...o, aw: v.aw as never }), b = sim({ plant: 'p1', Kp: 2, Ki: 4, umax: 1.2, aw: 'clamp', T: 6 }); return [
-    { title: 'Output', y: 'output y', xr: [0, 6], yr: [0, 1.4], series: [{ ...a, color: PB() }, { ...b, color: FX(), dash: true }], hl: [{ y: 1, label: 'r = 1' }], peak: pk(a) },
-    { title: 'Control (limit ±1.2)', y: 'control u', xr: [0, 6], yr: [-0.6, 2.2], series: [{ t: a.t, y: a.u, color: PB() }, { t: b.t, y: b.u, color: FX(), dash: true }], hl: [{ y: 1.2, label: 'limit +1.2' }] }]; },
-  kick: (v) => { const o = { plant: 'p2' as PlantId, Kp: 2, Ki: 1, T: 1.5 }, a = sim({ ...o, Kd: n(v, 'Kd'), N: n(v, 'N'), dOnMeasurement: !!v.dm }), b = sim({ ...o, Kd: 0.5, N: 20, dOnMeasurement: true }); return [{ title: 'Control signal at a set-point step', y: 'control u', xr: [0, 1.5], yr: [0, 13], series: [{ t: a.t, y: a.u, color: PB() }, { t: b.t, y: b.u, color: FX(), dash: true }] }, { title: 'Output y(t)', y: 'output y', xr: [0, 1.5], yr: [0, 1.3], series: [{ ...a, color: PB() }, { ...b, color: FX(), dash: true }], hl: [{ y: 1, label: 'r = 1' }] }]; },
-  limits: (v) => {
-    const a = sim({ plant: 'p2', Kp: 2, Ki: n(v, 'Ki'), r: 2, umax: n(v, 'umax'), aw: 'clamp', T: 12 }), b = sim({ plant: 'p2', Kp: 2, Ki: n(v, 'Ki'), r: 2, T: 12 });
-    const c1 = runLoop({ taus: [1, 1, 1], Kp: 3, Ki: 0.8, T: 25, dt: 0.01 }), c2 = runLoop({ taus: [1, 1, 1], Kp: 3, Ki: 0.8, rmax: n(v, 'rmax'), T: 25, dt: 0.01 });
-    return [{ title: 'Amplitude limit |u| ≤ umax', y: 'output y', xr: [0, 12], yr: [0, 2.4], series: [{ ...a, color: PB() }, { ...b, color: FX(), dash: true }], hl: [{ y: 2, label: 'r = 2' }] },
-      { title: 'Rate limit on u', y: 'output y', xr: [0, 25], yr: [0, 2], series: [{ ...c2, color: PB() }, { ...c1, color: FX(), dash: true }], hl: [{ y: 1, label: 'r = 1' }] }]; },
-  delay: (v) => { const a = runLoop({ taus: [1], delay: n(v, 'delay'), Kp: n(v, 'Kp'), Ki: n(v, 'Ki'), T: 30, dt: 0.01 }), b = runLoop({ taus: [1], delay: n(v, 'delay'), Kp: 0.5, Ki: 0.4, T: 30, dt: 0.01 }); return [{ title: 'Time delay (dead time)', y: 'output y', xr: [0, 30], yr: [-1, 2.5], series: [{ ...a, color: PB() }, { ...b, color: FX(), dash: true }], hl: [{ y: 1, label: 'r = 1' }] }, uPlot(a, b, [0, 30])]; },
-  sensorlag: (v) => { const o = { taus: [1, 0.5], sensTau: n(v, 'sensTau'), T: 25, dt: 0.01 }, a = runLoop({ ...o, Kp: n(v, 'Kp'), Ki: n(v, 'Ki') }), b = runLoop({ ...o, Kp: 0.8, Ki: 0.4 }); return [{ title: 'Measurement (sensor) lag', y: 'output y', xr: [0, 25], yr: [0, 2], series: [{ t: a.t, y: a.ym, color: col.d(), dash: true, width: 1.6 }, { t: a.t, y: a.y, color: PB() }, { t: b.t, y: b.y, color: FX(), dash: true }], hl: [{ y: 1, label: 'r = 1' }] }, uPlot(a, b, [0, 25])]; },
+  slow: (v) => stepCard('Slow response on the dish', { ...gains(v), T: 20 }, { ...TUNED, T: 20 }, [0, 8], { yr: [0, 1.4] }),
+  offset: (v) => windCard('Steady-state offset in the wind', gains(v), { Kp: 1000, Ki: 500, Kd: 120 }, 10, 40),
+  overshoot: (v) => stepCard('Overshoot', { ...gains(v), T: 20 }, { Kp: 1000, Ki: 500, Kd: 120, T: 20 }, [0, 6]),
+  oscillation: (v) => stepCard('Sustained oscillation (Ki near the 2Kp bound)', { ...gains(v), T: 20 }, { Kp: 1000, Ki: 500, Kd: 120, T: 20 }, [0, 20], { yr: [-0.2, 2.2] }),
+  disturbance: (v) => windCard('Poor disturbance rejection', gains(v), TUNED, 10, 40),
+  noise: (v) => {
+    const o = { ...TUNED, noise: (DISH.noiseDeg * Math.PI) / 180, seed: 7, T: 4, dt: 1e-4, every: 10 }, filt = on(v, 'filter'), a = dishSim({ ...o, Kd: n(v, 'Kd'), Nf: filt ? n(v, 'Nf') : 1 / o.dt }), b = dishSim({ ...o, Nf: DISH.Nf });
+    const rms = (u: number[]) => { const tail = u.slice(Math.floor(u.length / 2)); const m = tail.reduce((s, x) => s + x, 0) / tail.length; return Math.sqrt(tail.reduce((s, x) => s + (x - m) ** 2, 0) / tail.length); };
+    return [{ title: 'Torque: chatter from differentiated sensor noise', y: 'torque (N·m)', xr: [0, 4], yr: [-250, 250], series: [{ t: a.t, y: a.u, color: PB(), width: 1.2 }, { t: b.t, y: b.u, color: FX(), dash: true }], notes: [`solid: torque jitter ${rms(a.u).toFixed(0)} N·m rms (last 2 s)`, `dashed: Kd 200 with N_f = ${DISH.Nf} rad/s: ${rms(b.u).toFixed(0)} N·m rms`] },
+      { title: 'Angle ÷ target: the dish itself barely notices', y: 'angle ÷ target', xr: [0, 4], yr: [0, 1.4], series: [{ t: a.t, y: a.y.map((y) => y / R0), color: PB() }, { t: b.t, y: b.y.map((y) => y / R0), color: FX(), dash: true }], hl: [{ y: 1, label: 'target 0.1 rad' }] }];
+  },
+  windup: (v) => {
+    const r = n(v, 'slew'), a = dishSat(TUNED.Kp, TUNED.Ki, TUNED.Kd, r, DISH.Tmax, v.aw === 'clamp'), b = dishSat(TUNED.Kp, TUNED.Ki, TUNED.Kd, r, DISH.Tmax, true);
+    return [{ title: 'Windup on a long slew (200 N·m limit)', y: 'angle ÷ target', xr: [0, 8], yr: [0, 1.5], series: [{ t: a.t, y: a.y.map((y) => y / r), color: PB() }, { t: b.t, y: b.y.map((y) => y / r), color: FX(), dash: true }], hl: [{ y: 1, label: `target ${r} rad` }], notes: [`solid: %OS ${a.OS.toFixed(1)} %, Ts ${a.Ts.toFixed(2)} s`, `dashed (clamping): %OS ${b.OS.toFixed(1)} %, Ts ${b.Ts.toFixed(2)} s`] },
+      { title: 'Torque and the integrator\'s share', y: 'torque (N·m)', xr: [0, 8], yr: [-260, 400], series: [{ t: a.t, y: a.u, color: PB() }, { t: a.t, y: a.ii, color: col.d(), width: 1.4 }, { t: b.t, y: b.u, color: FX(), dash: true }], hl: [{ y: DISH.Tmax, label: 'limit 200 N·m' }] }];
+  },
+  kick: (v) => {
+    const a = card({ ...TUNED, dm: !!v.dm, Nf: DISH.Nf, T: 5, umax: on(v, 'limit') ? DISH.Tmax : null }), b = card({ ...TUNED, dm: true, Nf: DISH.Nf, T: 5 }), ma = cardMet(a.t, a.y, R0), mb = cardMet(b.t, b.y, R0);
+    const peak = (u: ArrayLike<number>) => Array.from(u).reduce((s, x) => Math.max(s, Math.abs(x)), 0), pa = thin(a), pb = thin(b);
+    return [{ title: 'Torque at the command step', y: 'torque (N·m)', xr: [0, 0.5], yr: [-300, Math.max(400, Math.ceil(peak(a.u) / 500) * 500 + 200)], series: [{ t: pa.t, y: pa.u, color: PB() }, { t: pb.t, y: pb.u, color: FX(), dash: true }], notes: [`solid: peak torque ${peak(a.u).toFixed(0)} N·m`, `dashed (D on measurement): ${peak(b.u).toFixed(0)} N·m`] },
+      { title: 'Angle ÷ target', y: 'angle ÷ target', xr: [0, 3], yr: [0, 1.4], series: [{ t: pa.t, y: pa.y.map((y) => y / R0), color: PB() }, { t: pb.t, y: pb.y.map((y) => y / R0), color: FX(), dash: true }], hl: [{ y: 1, label: 'target 0.1 rad' }], notes: [`solid: ${mtxt(ma, 5)}`, `dashed: ${mtxt(mb, 5)}`] }];
+  },
+  limits: (v) => stepCard('Torque limit on a 2 rad slew (clamping on)', { ...TUNED, r: 2, T: 12, umax: n(v, 'umax'), aw: true }, { ...TUNED, r: 2, T: 12, umax: 1000, aw: true }, [0, 2], { r: 2, yr: [0, 1.3] }),
+  delay: (v) => stepCard('Time delay in the measurement', { ...gains(v), T: 15, delay: n(v, 'delay') }, { Kp: 800, Ki: 200, Kd: 110, T: 15, delay: n(v, 'delay') }, [0, 5], { yr: [-0.5, 2.5] }),
+  sensorlag: (v) => stepCard('Sensor lag in the measurement', { ...TUNED, T: 15, lag: n(v, 'lag') }, { ...TUNED, T: 15, lag: 0.02 }, [0, 4], { yr: [0, 1.6] }),
   nonlinear: (v) => {
     const f = (u: number) => Math.max(0, u) ** 2, r = n(v, 'r'), run = (rr: number, kp: number, ki: number) => { const s = runLoop({ taus: [1, 0.5], f, Kp: kp, Ki: ki, T: 30, dt: 0.01, r: () => rr }); return { t: s.t, y: s.y.map((y) => y / rr), u: s.u }; };
     const pb = run(r, n(v, 'Kp'), n(v, 'Ki')), fx = run(r, 2 / 3, 0.5);
     return [{ title: 'Nonlinearity: the plant gain depends on the operating point', y: 'normalised output y / r', xr: [0, 30], yr: [0, 2.4], series: [{ ...run(1, 2, 1.5), color: col.a() }, { ...pb, color: PB() }, { ...fx, color: FX(), dash: true }], hl: [{ y: 1, label: 'y / r = 1' }] }, uPlot(pb, fx, [0, 30])]; },
-  twodof: (v) => { const d = (t: number) => (t >= 15 ? -1 : 0), tf = n(v, 'tauf'), o = { taus: [1, 0.5], T: 30, dt: 0.01, d, Kp: n(v, 'Kp'), Ki: n(v, 'Ki') }, a = runLoop({ ...o, r: (t) => (tf > 0 ? 1 - Math.exp(-t / tf) : 1) }), b = runLoop({ ...o, Kp: 1.5, Ki: 4, r: (t) => 1 - Math.exp(-t / 1.5) }); return [{ title: 'Set-point response against disturbance response', y: 'output y', xr: [0, 30], yr: [0, 1.7], series: [{ ...a, color: PB() }, { ...b, color: FX(), dash: true }], hl: [{ y: 1, label: 'r = 1' }], vl: [{ x: 15, label: 'load −1 hits' }] }, uPlot(a, b, [0, 30], { vl: [{ x: 15, label: 'load −1 hits' }] })]; },
+  twodof: (v) => {
+    const a = card({ ...TUNED, T: 40, b: n(v, 'b'), wind: WIND, twind: 20 }), b = card({ ...TUNED, T: 40, b: 0.9, wind: WIND, twind: 20 }), pa = thin(a, (y) => y / R0), pb = thin(b, (y) => y / R0);
+    const t1 = (s: typeof a) => { const m = cardMet(s.t, s.y, R0, 20); return `%OS ${pct(m.OS)}, Ts ${m.Ts.toFixed(2)} s; ${wtxt(cardWind(s.t, s.y, 20), 20)}`; };
+    return [{ title: 'Set-point weight b: the step, then a 20 N·m gust at 20 s', y: 'angle ÷ target', xr: [0, 30], yr: [0, 1.4], series: [{ ...pa, color: PB() }, { ...pb, color: FX(), dash: true }], hl: [{ y: 1, label: 'target 0.1 rad' }], vl: [{ x: 20, label: 'wind' }], notes: [`solid: ${t1(a)}`, `dashed (b = 0.9): ${t1(b)}`] },
+      tPlot({ t: pa.t, u: pa.u }, { t: pb.t, u: pb.u }, [0, 30], { vl: [{ x: 20, label: 'wind' }] })];
+  },
   limitcycle: (v) => { const o = { taus: [1, Infinity], Kp: 0.5, dz: n(v, 'dz'), T: 100, dt: 0.02 }, a = runLoop({ ...o, Ki: n(v, 'Ki') }), b = runLoop({ ...o, dz: 0.3, Ki: 0.3 }); return [{ title: 'Limit cycle from a dead zone', y: 'output y', xr: [0, 100], yr: [-0.5, 2.5], series: [{ ...a, color: PB() }, { ...b, color: FX(), dash: true }], hl: [{ y: 1, label: 'r = 1' }] }, uPlot(a, b, [0, 100])]; },
 };
 void nz;
-const DUMMY: V = { Kp: 1, Ki: 1, Kd: 0, N: 20, aw: 'none', dm: false, umax: 2.5, rmax: 0.5, delay: 1, sensTau: 1.5, r: 9, tauf: 0, dz: 0.3 };
+/** values used once to build each card's panel list (titles do not depend on them) */
+const DUMMY: V = { Kp: 2000, Ki: 1000, Kd: 200, N: 20, aw: 'none', dm: false, limit: false, umax: 200, slew: 2, delay: 0.05, lag: 0.05, b: 1, filter: false, Nf: 200, rmax: 0.5, sensTau: 1.5, r: 9, tauf: 0, dz: 0.3 };
 export const caseFigure = (id: string) => figureOf((): FigurePanel[] => {
   const run = CASES[id], plots = run(DUMMY);
   return plots.map((p, i) => ({ id: `p${i}`, title: p.title, x: 'time (s)', y: p.y, draw: (g: CanvasRenderingContext2D, w: number, h: number, v: V) => draw(g, w, h, run(v)[i]) }));

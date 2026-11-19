@@ -164,12 +164,13 @@ export const gainsFigure = figureOf(() => [gainPanel('Kp', 'Raise Kp'), gainPane
 
 /* ── TUNE · figure:tunetable ── */
 export const TUNE_ROWS: [string, string, string, string, string, string, string][] = [
-  ['raise Kp 2000→4000', 'faster (0.16→0.09 s)', '↑ 7.4→14.3 %', '↓ 2.2→0.31 s', '↓ 0.556→0.319°', '↑ 4.8→7.0 s', '↑ more'],
-  ['raise Ki 1000→3000', '~ (0.16→0.14 s)', '↑ 7.4→16.8 %', '↓ 2.2→1.45 s', '~ 0.556→0.518°', '↓ 4.8→1.6 s', '~'],
-  ['raise Kd 200→400', 'slower (0.16→0.33 s)', '~ 7.4→7.6 %', '↑ 2.2→3.6 s', '↓ 0.556→0.488°', '~ 4.8→4.8 s', '↑ much more'],
+  ['raise Kp 2000→4000', 'faster (0.16→0.09 s)', '↑ 7.4→14.3 %', '↓ 2.2→0.31 s', '↓ 0.556→0.319°', '↑ 4.8→7.0 s', '↑ more chatter'],
+  ['raise Ki 1000→3000', '~ (0.16→0.14 s)', '↑ 7.4→16.8 %', '↓ 2.2→1.45 s', '~ 0.556→0.518°', '↓ 4.8→1.6 s', '– no change'],
+  ['raise Kd 200→400', 'slower (0.16→0.33 s)', '~ 7.4→7.6 %', '↑ 2.2→3.6 s', '↓ 0.556→0.488°', '~ 4.8→4.8 s', '↑ much more chatter'],
 ];
-/** The table's overshoot and wind-recovery numbers [P10], for the bar panel. */
-const TUNE_NUM = [{ id: 'Kp', os: 14.3, rec: 7.0 }, { id: 'Ki', os: 16.8, rec: 1.6 }, { id: 'Kd', os: 7.6, rec: 4.8 }];
+/** The table's overshoot, settling and wind-peak numbers [P10], for the bar panel (the noise column is qualitative and left out). */
+export const TUNE_START = { os: 7.4, ts: 2.2, wind: 0.556 };
+export const TUNE_NUM = [{ id: 'Kp', os: 14.3, ts: 0.31, wind: 0.319 }, { id: 'Ki', os: 16.8, ts: 1.45, wind: 0.518 }, { id: 'Kd', os: 7.6, ts: 3.6, wind: 0.488 }];
 export const tunetableFigure = figureOf(() => [
   {
     id: 'table', title: 'Raise one gain from (2000, 1000, 200): what changes', x: 'effect', y: 'gain raised', height: 260,
@@ -181,17 +182,17 @@ export const tunetableFigure = figureOf(() => [
     },
   },
   {
-    id: 'bars', title: 'Overshoot and wind recovery: start vs one gain raised', x: 'gain raised', y: '%OS · recovery (s)', height: 200,
+    id: 'bars', title: 'Overshoot, settling and wind peak: one gain raised, against the start', x: 'gain raised', y: 'value ÷ start value', height: 220,
     draw(g, w, h, v) {
       g.clearRect(0, 0, w, h); const pick = str(v, 'row'), rows = TUNE_NUM.filter((r) => pick === 'all' || !pick || r.id === pick);
-      const fr = plotFrame(g, w, h, [0, rows.length], [0, 18], 'gain raised (from 2000, 1000, 200)', '%OS (bars) · recovery s (dots)');
+      const fr = plotFrame(g, w, h, [0, rows.length], [0, 2.6], 'gain raised (from 2000, 1000, 200)', 'value ÷ start (1 = no change)');
+      tline(g, fr, [0, 1], [rows.length, 1], col.muted(), 1, [5, 4]);
+      const keys: ['os' | 'ts' | 'wind', string, () => string][] = [['os', '%OS', col.a], ['ts', 'Ts', col.b], ['wind', 'wind peak', col.d]];
       rows.forEach((r, i) => {
-        const x0 = fr.X(i + 0.2), x1 = fr.X(i + 0.5), x2 = fr.X(i + 0.8), y0 = fr.Y(0);
-        g.fillStyle = col.muted(); g.fillRect(x0, fr.Y(7.4), x1 - x0 - 2, y0 - fr.Y(7.4));
-        g.fillStyle = col.a(); g.fillRect(x1, fr.Y(r.os), x2 - x1 - 2, y0 - fr.Y(r.os));
-        dot(g, fr, [i + 0.5, r.rec], col.d(), 4); text(g, `${r.id}: ${f(r.os, 1)} %, ${f(r.rec, 1)} s`, fr.X(i + 0.5), fr.box.t + 8, col.text(), 'center', 10);
+        keys.forEach(([k, , c], j) => { const x0 = fr.X(i + 0.15 + j * 0.24), x1 = fr.X(i + 0.37 + j * 0.24), q = r[k] / TUNE_START[k]; g.fillStyle = c(); g.fillRect(x0, fr.Y(Math.min(q, 2.6)), x1 - x0, fr.Y(0) - fr.Y(Math.min(q, 2.6))); });
+        text(g, `${r.id}: ${f(r.os, 1)} %, ${f(r.ts, 2)} s, ${f(r.wind, 3)}°`, fr.X(i + 0.5), fr.box.t + 8 + (rows.length > 1 ? (i % 2) * 12 : 0), col.text(), 'center', 9.5);
       });
-      legend(g, fr, [{ label: 'start: 7.4 %, recovery 4.8 s', color: col.muted() }, { label: 'raised', color: col.a() }, { label: 'wind recovery (s)', color: col.d() }], 'tr');
+      legend(g, fr, [...keys.map(([, l, c]) => ({ label: l, color: c() })), { label: 'start: 7.4 %, 2.2 s, 0.556°', color: col.muted(), dash: true }], 'tr');
     },
   },
 ] as FigurePanel[]);

@@ -232,7 +232,7 @@
       color: var(--org)
       dash: true
   howToRead: "The bedroom after 2.5 kW from cold (solid) against a one-pole curve with gain K and time constant τ (dashed). Marks: 63 % at τ and 98 % at 4τ."
-  lookFor: "τ = 5 h and K = 8.18 K/kW: the two curves never differ by more than 1.5 K."
+  lookFor: "τ = 5 h and K = 8.18 K/kW: the gap peaks at 1.46 K, 1.2 h after switch-on, then closes."
   controls:
     - id: tau
       label: time constant τ
@@ -274,7 +274,7 @@
       color: var(--org)
       dash: true
   howToRead: Step response of the full model and of a reduced one. "Drop" removes the far pole but keeps the DC gain; "match" is LN2's frequency matching (Δ terms). For the LN2 example, choose order 1 or 2.
-  lookFor: "The house: dropping −2.2 gives τ = 5 h; matching gives 5.02 h. The curves differ by at most 1.45 K either way."
+  lookFor: "The house: dropping −2.2 gives τ = 5 h, matching gives 5.02 h. The step responses differ by at most 1.46 K (drop) or 1.45 K (match)."
   controls:
     - id: plant
       label: plant
@@ -348,7 +348,7 @@
       color: var(--vio)
       dash: true
   howToRead: X₂(s) = 9/(s(s + 0.2)(s + 2.2)) splits into a step term and one decaying exponential per pole. The solid curve is their sum; move the poles to see each term change.
-  lookFor: "The fast term is small and gone within an hour: that is why one pole describes the house."
+  lookFor: "The fast term starts at only a tenth of the rise. About 0.2 K of it is left after 1 h, and it is gone within two hours: that is why one pole describes the house."
   controls:
     - id: p1
       label: slow pole
@@ -787,7 +787,7 @@
       color: var(--ok)
     - label: the corner's poles
       color: var(--cyan)
-  howToRead: "Left: %OS ≤ gives a ζ ray, Tₛ ≤ gives σ ≥ 4/Tₛ; the allowed region is shaded. Drag the pole (or the shock slider) to move the corner's poles. Right: the 1 kN load step with the measured %OS and Tₛ against the limits."
+  howToRead: "Left: %OS ≤ gives a ζ ray, Tₛ ≤ gives σ ≥ 4/Tₛ; the allowed region is shaded (pole location, LN1 slide 61). Drag the pole (or the shock slider) to move the corner's poles. Right: the 1 kN load step with the measured %OS and Tₛ against the limits."
   lookFor: Tₛ ≤ 1 s needs c = 3200 N·s/m by the formula; %OS ≤ 10 % needs 3783.
   controls:
     - id: os
@@ -1605,7 +1605,7 @@
   legend:
     - label: measured on the dish
       color: var(--yel)
-  howToRead: Each row raises one gain from the tuned (2000, 1000, 200), D on measurement; each cell gives the direction and the measured values [P10]. The noise column is qualitative.
+  howToRead: Each row raises one gain from the tuned (2000, 1000, 200), D on measurement; each cell gives the direction and the measured values [P10]. The noise column is qualitative, so it is shown as arrows (↑ more chatter, – no change) and left out of the bars. The bars compare %OS, Tₛ and the wind peak with the start.
   lookFor: "Every gain buys one thing and costs another: no row is all improvements."
   controls:
     - id: row
@@ -2526,358 +2526,352 @@
 - id: fail-slow
   title: A1 · Slow response
   x: time (s)
-  y: output y
-  legend:
+  y: angle · torque
+  legend: &a1
     - label: problem (solid)
       color: var(--org)
     - label: fixed version (dashed)
       color: var(--grn)
       dash: true
-    - label: reference r
+    - label: target / reference
       color: var(--muted)
       dash: true
-  howToRead: The solid trace is the failure (plant 1/((s+1)(0.5s+1)) with a PI that is too timid); the dashed trace is a fixed version, for contrast. The sliders move the solid run, so you can walk it to the fix or away from it. Teaching plant, not the engine model.
-  lookFor: "Raise Kp and Ki toward the dashed fix: the rise and settling times shrink."
+  howToRead: "The antenna dish, G = 0.1/(s(s + 2)) (J = 10 kg·m², B = 20 N·m·s/rad), D on the measurement, a 0.1 rad step. Solid: the problem at the slider settings; dashed: the fix, for contrast. Read-outs use the tutor's definitions (numbers.py [F])."
+  lookFor: The problem (400, 100, 80) overshoots only 7.7 % but takes 4.92 s to settle; the tuned (2000, 1000, 200) settles in 2.20 s with a rise of 0.156 s instead of 0.352 s.
   controls:
     - id: Kp
       label: Kp
       type: range
       min: 0
-      max: 4
-      step: 0.05
-      default: 0.3
+      max: 4000
+      step: 10
+      default: 400
       group: primary
+      unit: N·m/rad
     - id: Ki
       label: Ki
       type: range
       min: 0
-      max: 4
-      step: 0.05
-      default: 0.2
+      max: 3000
+      step: 10
+      default: 100
       group: primary
+      unit: N·m/(rad·s)
+    - id: Kd
+      label: Kd
+      type: range
+      min: 0
+      max: 400
+      step: 5
+      default: 80
+      group: primary
+      unit: N·m·s/rad
   presets:
     - id: problem
       label: The problem
       set:
-        Kp: 0.3
-        Ki: 0.2
+        Kp: 400
+        Ki: 100
+        Kd: 80
     - id: fixed
       label: The fix
       set:
-        Kp: 1.5
-        Ki: 1
+        Kp: 2000
+        Ki: 1000
+        Kd: 200
 - id: fail-offset
   title: A2 · Steady-state offset
   x: time (s)
-  y: output y
-  legend:
-    - label: problem (solid)
-      color: var(--org)
-    - label: fixed version (dashed)
-      color: var(--grn)
-      dash: true
-    - label: reference r
-      color: var(--muted)
-      dash: true
-  howToRead: The solid trace is the failure (P only against PI); the dashed trace is a fixed version, for contrast. The sliders move the solid run, so you can walk it to the fix or away from it. Teaching plant, not the engine model.
-  lookFor: "Raise Kp: the offset shrinks but never vanishes. Add Ki: it is gone."
+  y: angle · torque
+  legend: *a1
+  howToRead: "The antenna dish, G = 0.1/(s(s + 2)) (J = 10 kg·m², B = 20 N·m·s/rad), D on the measurement, a 0.1 rad step, then 20 N·m of wind from 10 s. The plot shows the pointing error after the gust. Solid: the problem at the slider settings; dashed: the fix, for contrast. Read-outs use the tutor's definitions (numbers.py [F])."
+  lookFor: PD (1000, 0, 120) is left 1.146° off for good; adding Ki = 500 peaks at 1.13° and clears the error (< 0.05°) in 6.09 s.
   controls:
     - id: Kp
       label: Kp
       type: range
       min: 0
-      max: 6
-      step: 0.05
-      default: 2
+      max: 4000
+      step: 10
+      default: 1000
       group: primary
+      unit: N·m/rad
     - id: Ki
       label: Ki
       type: range
       min: 0
-      max: 4
-      step: 0.05
+      max: 3000
+      step: 10
       default: 0
       group: primary
+      unit: N·m/(rad·s)
+    - id: Kd
+      label: Kd
+      type: range
+      min: 0
+      max: 400
+      step: 5
+      default: 120
+      group: primary
+      unit: N·m·s/rad
   presets:
     - id: problem
       label: The problem
       set:
-        Kp: 2
+        Kp: 1000
         Ki: 0
+        Kd: 120
     - id: fixed
       label: The fix
       set:
-        Kp: 2
-        Ki: 1
+        Kp: 1000
+        Ki: 500
+        Kd: 120
 - id: fail-overshoot
   title: A3 · Overshoot
   x: time (s)
-  y: output y
-  legend:
-    - label: problem (solid)
-      color: var(--org)
-    - label: fixed version (dashed)
-      color: var(--grn)
-      dash: true
-    - label: reference r
-      color: var(--muted)
-      dash: true
-  howToRead: The solid trace is the failure (PI with an integral term too strong for the plant); the dashed trace is a fixed version, for contrast. The sliders move the solid run, so you can walk it to the fix or away from it. Teaching plant, not the engine model.
-  lookFor: Lower Ki first; or add Kd to damp it.
+  y: angle · torque
+  legend: *a1
+  howToRead: "The antenna dish, G = 0.1/(s(s + 2)) (J = 10 kg·m², B = 20 N·m·s/rad), D on the measurement, a 0.1 rad step. Solid: the problem at the slider settings; dashed: the fix, for contrast. Read-outs use the tutor's definitions (numbers.py [F])."
+  lookFor: PI (1000, 500, 0) with no D overshoots 80.2 %; Kd = 120 brings it to 11.7 %, settling in 2.68 s.
   controls:
     - id: Kp
       label: Kp
       type: range
       min: 0
-      max: 6
-      step: 0.05
-      default: 2
+      max: 4000
+      step: 10
+      default: 1000
       group: primary
+      unit: N·m/rad
     - id: Ki
       label: Ki
       type: range
       min: 0
-      max: 6
-      step: 0.05
-      default: 3.5
+      max: 3000
+      step: 10
+      default: 500
       group: primary
+      unit: N·m/(rad·s)
     - id: Kd
       label: Kd
       type: range
       min: 0
-      max: 2
-      step: 0.05
+      max: 400
+      step: 5
       default: 0
       group: primary
+      unit: N·m·s/rad
   presets:
     - id: problem
       label: The problem
       set:
-        Kp: 2
-        Ki: 3.5
+        Kp: 1000
+        Ki: 500
         Kd: 0
     - id: fixed
       label: The fix
       set:
-        Kp: 2
-        Ki: 1
-        Kd: 0
-    - id: damp
-      label: Damp
-      set:
-        Kp: 2
-        Ki: 3.5
-        Kd: 0.6
+        Kp: 1000
+        Ki: 500
+        Kd: 120
 - id: fail-oscillation
-  title: A4 · Sustained oscillation / instability
+  title: A4 · Sustained oscillation
   x: time (s)
-  y: output y
-  legend:
-    - label: problem (solid)
-      color: var(--org)
-    - label: fixed version (dashed)
-      color: var(--grn)
-      dash: true
-    - label: reference r
-      color: var(--muted)
-      dash: true
-  howToRead: The solid trace is the failure (P only on 1/(s+1)³ at its ultimate gain); the dashed trace is a fixed version, for contrast. The sliders move the solid run, so you can walk it to the fix or away from it. Teaching plant, not the engine model.
-  lookFor: "Kp = 8 rings forever, 12 grows, 2 is calm: back the gain off."
+  y: angle · torque
+  legend: *a1
+  howToRead: "The antenna dish, G = 0.1/(s(s + 2)) (J = 10 kg·m², B = 20 N·m·s/rad), D on the measurement, a 0.1 rad step, 20 s window. With D off the loop is stable only while Ki < 2Kp. Solid: the problem at the slider settings; dashed: the fix, for contrast. Read-outs use the tutor's definitions (numbers.py [F])."
+  lookFor: "(1000, 1900, 0) sits just inside the 2Kp bound: 98.8 % overshoot and still ringing at 20 s. (1000, 500, 120): 11.7 %, settled in 2.68 s."
   controls:
     - id: Kp
       label: Kp
       type: range
       min: 0
-      max: 14
-      step: 0.1
-      default: 8
+      max: 4000
+      step: 10
+      default: 1000
       group: primary
+      unit: N·m/rad
+    - id: Ki
+      label: Ki
+      type: range
+      min: 0
+      max: 3000
+      step: 10
+      default: 1900
+      group: primary
+      unit: N·m/(rad·s)
+    - id: Kd
+      label: Kd
+      type: range
+      min: 0
+      max: 400
+      step: 5
+      default: 0
+      group: primary
+      unit: N·m·s/rad
   presets:
     - id: problem
       label: The problem
       set:
-        Kp: 8
+        Kp: 1000
+        Ki: 1900
+        Kd: 0
     - id: fixed
       label: The fix
       set:
-        Kp: 2
-    - id: grows
-      label: Grows
-      set:
-        Kp: 12
+        Kp: 1000
+        Ki: 500
+        Kd: 120
 - id: fail-disturbance
   title: A5 · Poor disturbance rejection
   x: time (s)
-  y: output y
-  legend:
-    - label: problem (solid)
-      color: var(--org)
-    - label: fixed version (dashed)
-      color: var(--grn)
-      dash: true
-    - label: reference r
-      color: var(--muted)
-      dash: true
-  howToRead: The solid trace is the failure (a push on the plant input with the set-point at 0); the dashed trace is a fixed version, for contrast. The sliders move the solid run, so you can walk it to the fix or away from it. Teaching plant, not the engine model.
-  lookFor: Stronger Kp and Ki shrink the excursion and speed the return.
+  y: angle · torque
+  legend: *a1
+  howToRead: "The antenna dish, G = 0.1/(s(s + 2)) (J = 10 kg·m², B = 20 N·m·s/rad), D on the measurement, a 0.1 rad step, then 20 N·m of wind from 10 s. The plot shows the pointing error after the gust. Solid: the problem at the slider settings; dashed: the fix, for contrast. Read-outs use the tutor's definitions (numbers.py [F])."
+  lookFor: "(500, 250, 100): the gust knocks the dish 2.08° off and takes 7.16 s to clear; tuned (2000, 1000, 200): 0.554°, cleared in 4.82 s."
   controls:
     - id: Kp
       label: Kp
       type: range
       min: 0
-      max: 6
-      step: 0.05
-      default: 0.8
+      max: 4000
+      step: 10
+      default: 500
       group: primary
+      unit: N·m/rad
     - id: Ki
       label: Ki
       type: range
       min: 0
-      max: 6
-      step: 0.05
-      default: 0.4
+      max: 3000
+      step: 10
+      default: 250
       group: primary
+      unit: N·m/(rad·s)
+    - id: Kd
+      label: Kd
+      type: range
+      min: 0
+      max: 400
+      step: 5
+      default: 100
+      group: primary
+      unit: N·m·s/rad
   presets:
     - id: problem
       label: The problem
       set:
-        Kp: 0.8
-        Ki: 0.4
+        Kp: 500
+        Ki: 250
+        Kd: 100
     - id: fixed
       label: The fix
       set:
-        Kp: 3
-        Ki: 3
+        Kp: 2000
+        Ki: 1000
+        Kd: 200
 - id: fail-noise
-  title: A6 · Noisy / jittery actuator
+  title: A6 · Noisy, jittery actuator
   x: time (s)
-  y: output y
-  legend:
-    - label: problem (solid)
-      color: var(--org)
-    - label: fixed version (dashed)
-      color: var(--grn)
-      dash: true
-    - label: reference r
-      color: var(--muted)
-      dash: true
-  howToRead: The solid trace is the failure (D acting on a noisy measurement); the dashed trace is a fixed version, for contrast. The sliders move the solid run, so you can walk it to the fix or away from it. Teaching plant, not the engine model.
-  lookFor: The output looks fine; the control does not. Lower N.
+  y: angle · torque
+  legend: *a1
+  howToRead: "The antenna dish, G = 0.1/(s(s + 2)) (J = 10 kg·m², B = 20 N·m·s/rad), D on the measurement, a 0.1 rad step, tuned (2000, 1000, 200) with 0.01° rms sensor noise. The D term differentiates the noise. Solid: the problem at the slider settings; dashed: the fix, for contrast. Read-outs use the tutor's definitions (numbers.py [F])."
+  lookFor: Without a filter Kd = 200 turns the noise into torque chatter; the D filter (N_f = 200 rad/s) or a smaller Kd (120) calms it. The angle barely changes (qualitative, as in the PID Lab).
   controls:
     - id: Kd
       label: Kd
       type: range
       min: 0
-      max: 2
-      step: 0.05
-      default: 0.5
+      max: 400
+      step: 5
+      default: 200
       group: primary
-    - id: N
-      label: Derivative filter N
+      unit: N·m·s/rad
+    - id: filter
+      label: D filter on
+      type: toggle
+      default: false
+      group: primary
+    - id: Nf
+      label: D filter N_f
       type: range
-      min: 1
-      max: 100
-      step: 1
-      default: 100
+      min: 20
+      max: 1000
+      step: 10
+      default: 200
       group: primary
+      unit: rad/s
   presets:
     - id: problem
       label: The problem
       set:
-        Kd: 0.5
-        N: 100
+        Kd: 200
+        filter: false
     - id: fixed
       label: The fix
       set:
-        Kd: 0.5
-        N: 10
+        Kd: 200
+        filter: true
+        Nf: 200
+    - id: kd120
+      label: Kd 120, no filter
+      set:
+        Kd: 120
+        filter: false
 - id: fail-windup
-  title: A7 · Integrator windup (actuator saturation)
+  title: A7 · Integrator windup (torque limit)
   x: time (s)
-  y: output y
-  legend:
-    - label: problem (solid)
-      color: var(--org)
-    - label: fixed version (dashed)
-      color: var(--grn)
-      dash: true
-    - label: reference r
-      color: var(--muted)
-      dash: true
-  howToRead: The solid trace is the failure (PI against |u| ≤ 1.2); the dashed trace is a fixed version, for contrast. The sliders move the solid run, so you can walk it to the fix or away from it. Teaching plant, not the engine model.
-  lookFor: "Switch on clamping: the overshoot after saturation disappears."
+  y: angle · torque
+  legend: *a1
+  howToRead: "The tuned dish (2000, 1000, 200) slewing against its 200 N·m limit (numbers.py [P7]). The thin line is the integrator's share of the torque. Solid: the problem at the slider settings; dashed: the fix, for contrast. Read-outs use the tutor's definitions (numbers.py [F])."
+  lookFor: A 2 rad slew with no anti-windup overshoots 21.6 % and settles in 4.64 s; with clamping 3.8 % and 0.79 s. A small 0.2 rad move barely saturates.
   controls:
-    - id: Kp
-      label: Kp
+    - id: slew
+      label: slew size
       type: range
-      min: 0
-      max: 6
-      step: 0.05
+      min: 0.1
+      max: 2
+      step: 0.1
       default: 2
       group: primary
-    - id: Ki
-      label: Ki
-      type: range
-      min: 0
-      max: 8
-      step: 0.1
-      default: 4
-      group: primary
+      unit: rad
     - id: aw
-      label: Anti-windup
+      label: anti-windup
       type: select
       options:
         - value: none
           label: off
         - value: clamp
           label: clamping
-        - value: backcalc
-          label: back-calculation
       default: none
       group: primary
   presets:
     - id: problem
       label: The problem
       set:
+        slew: 2
         aw: none
     - id: fixed
       label: The fix
       set:
+        slew: 2
         aw: clamp
 - id: fail-kick
   title: A8 · Derivative kick
   x: time (s)
-  y: output y
-  legend:
-    - label: problem (solid)
-      color: var(--org)
-    - label: fixed version (dashed)
-      color: var(--grn)
-      dash: true
-    - label: reference r
-      color: var(--muted)
-      dash: true
-  howToRead: The solid trace is the failure (D on the error at a set-point step); the dashed trace is a fixed version, for contrast. The sliders move the solid run, so you can walk it to the fix or away from it. Teaching plant, not the engine model.
-  lookFor: "Put D on the measurement: the spike in u at t = 0 vanishes."
+  y: angle · torque
+  legend: *a1
+  howToRead: "The tuned dish (2000, 1000, 200) with the D filter N_f = 200 rad/s, at a 0.1 rad command step. Solid: the problem at the slider settings; dashed: the fix, for contrast. Read-outs use the tutor's definitions (numbers.py [F])."
+  lookFor: "D on the error spikes the torque to 4200 N·m (17.0 % overshoot unlimited, 6.4 % at the 200 N·m limit). D on the measurement starts at 200 N·m: 6.6 %."
   controls:
-    - id: Kd
-      label: Kd
-      type: range
-      min: 0
-      max: 2
-      step: 0.05
-      default: 0.5
-      group: primary
-    - id: N
-      label: Derivative filter N
-      type: range
-      min: 1
-      max: 100
-      step: 1
-      default: 20
-      group: primary
     - id: dm
       label: D on measurement
+      type: toggle
+      default: false
+      group: primary
+    - id: limit
+      label: 200 N·m limit
       type: toggle
       default: false
       group: primary
@@ -2886,163 +2880,134 @@
       label: The problem
       set:
         dm: false
+        limit: false
     - id: fixed
       label: The fix
       set:
         dm: true
+        limit: false
 - id: fail-limits
-  title: A9 · Actuator saturation and rate limits
+  title: A9 · Actuator limits
   x: time (s)
-  y: output y
-  legend:
-    - label: problem (solid)
-      color: var(--org)
-    - label: fixed version (dashed)
-      color: var(--grn)
-      dash: true
-    - label: reference r
-      color: var(--muted)
-      dash: true
-  howToRead: The solid trace is the failure (a limit on the size and on the speed of u); the dashed trace is a fixed version, for contrast. The sliders move the solid run, so you can walk it to the fix or away from it. Teaching plant, not the engine model.
-  lookFor: "Tighten the limits: the response slows and a rate limit adds lag. Dashed is the unlimited loop."
+  y: angle · torque
+  legend: *a1
+  howToRead: "The tuned dish (2000, 1000, 200) on a 2 rad slew with clamping anti-windup, against the motor's torque limit. Solid: the problem at the slider settings; dashed: the fix, for contrast. Read-outs use the tutor's definitions (numbers.py [F])."
+  lookFor: "At 200 N·m the rise takes 0.362 s: the limit sets the pace. 400 N·m: 0.260 s; 1000 N·m: 0.188 s. A bigger motor, not more gain."
   controls:
     - id: umax
-      label: Amplitude limit |u| ≤
+      label: torque limit
       type: range
-      min: 1
-      max: 5
-      step: 0.1
-      default: 2.5
+      min: 100
+      max: 1000
+      step: 10
+      default: 200
       group: primary
-    - id: Ki
-      label: Ki
-      type: range
-      min: 0
-      max: 4
-      step: 0.05
-      default: 1.5
-      group: primary
-    - id: rmax
-      label: Rate limit (1/s)
-      type: range
-      min: 0.1
-      max: 3
-      step: 0.05
-      default: 0.5
-      group: primary
+      unit: N·m
   presets:
     - id: problem
       label: The problem
       set:
-        umax: 2.5
-        rmax: 0.5
-    - id: ideal
-      label: Ideal
+        umax: 200
+    - id: fixed
+      label: The fix
       set:
-        umax: 5
-        rmax: 3
+        umax: 1000
+    - id: m400
+      label: 400 N·m
+      set:
+        umax: 400
 - id: fail-delay
-  title: A10 · Time delay (dead time)
+  title: A10 · Time delay (added)
   x: time (s)
-  y: output y
-  legend:
-    - label: problem (solid)
-      color: var(--org)
-    - label: fixed version (dashed)
-      color: var(--grn)
-      dash: true
-    - label: reference r
-      color: var(--muted)
-      dash: true
-  howToRead: The solid trace is the failure (a delay of 1 s inside the loop); the dashed trace is a fixed version, for contrast. The sliders move the solid run, so you can walk it to the fix or away from it. Teaching plant, not the engine model.
-  lookFor: "The gains that were fine without delay oscillate with it: lower them, or shrink the delay."
+  y: angle · torque
+  legend: *a1
+  howToRead: "The antenna dish, G = 0.1/(s(s + 2)) (J = 10 kg·m², B = 20 N·m·s/rad), D on the measurement, a 0.1 rad step, with a pure delay in the measurement. The dashed fix is (800, 200, 110) at the same delay. Solid: the problem at the slider settings; dashed: the fix, for contrast. Read-outs use the tutor's definitions (numbers.py [F])."
+  lookFor: "Tuned gains: 6.5 % at 20 ms, 40.3 % at 50 ms, unstable at 80 ms. At 50 ms, (800, 200, 110) gives 13.0 %, settling in 3.07 s."
   controls:
-    - id: Kp
-      label: Kp
-      type: range
-      min: 0
-      max: 4
-      step: 0.05
-      default: 2
-      group: primary
-    - id: Ki
-      label: Ki
-      type: range
-      min: 0
-      max: 4
-      step: 0.05
-      default: 2
-      group: primary
     - id: delay
-      label: Delay (s)
+      label: delay
       type: range
       min: 0
-      max: 2
-      step: 0.05
-      default: 1
+      max: 0.1
+      step: 0.005
+      default: 0.05
       group: primary
-  presets:
-    - id: problem
-      label: The problem
-      set:
-        Kp: 2
-        Ki: 2
-    - id: fixed
-      label: The fix
-      set:
-        Kp: 0.5
-        Ki: 0.4
-- id: fail-sensorlag
-  title: A11 · Measurement (sensor) lag
-  x: time (s)
-  y: output y
-  legend:
-    - label: problem (solid)
-      color: var(--org)
-    - label: fixed version (dashed)
-      color: var(--grn)
-      dash: true
-    - label: reference r
-      color: var(--muted)
-      dash: true
-  howToRead: The solid trace is the failure (a slow sensor, 1.5 s); the dashed trace is a fixed version, for contrast. The sliders move the solid run, so you can walk it to the fix or away from it. Teaching plant, not the engine model.
-  lookFor: The controller reacts to the lagged copy, so the true output rings; lower the gains or fix the sensor.
-  controls:
+      unit: s
     - id: Kp
       label: Kp
       type: range
       min: 0
-      max: 4
-      step: 0.05
-      default: 2
+      max: 4000
+      step: 10
+      default: 2000
       group: primary
+      unit: N·m/rad
     - id: Ki
       label: Ki
       type: range
       min: 0
-      max: 4
-      step: 0.05
-      default: 1
+      max: 3000
+      step: 10
+      default: 1000
       group: primary
-    - id: sensTau
-      label: Sensor time constant (s)
+      unit: N·m/(rad·s)
+    - id: Kd
+      label: Kd
       type: range
       min: 0
-      max: 3
-      step: 0.05
-      default: 1.5
+      max: 400
+      step: 5
+      default: 200
       group: primary
+      unit: N·m·s/rad
   presets:
     - id: problem
       label: The problem
       set:
-        Kp: 2
-        Ki: 1
+        delay: 0.05
+        Kp: 2000
+        Ki: 1000
+        Kd: 200
     - id: fixed
       label: The fix
       set:
-        Kp: 0.8
-        Ki: 0.4
+        delay: 0.05
+        Kp: 800
+        Ki: 200
+        Kd: 110
+    - id: d80
+      label: 80 ms (unstable)
+      set:
+        delay: 0.08
+        Kp: 2000
+        Ki: 1000
+        Kd: 200
+- id: fail-sensorlag
+  title: A11 · Sensor lag (added)
+  x: time (s)
+  y: angle · torque
+  legend: *a1
+  howToRead: "The antenna dish, G = 0.1/(s(s + 2)) (J = 10 kg·m², B = 20 N·m·s/rad), D on the measurement, a 0.1 rad step, tuned (2000, 1000, 200), with a first-order lag in the sensor. The dashed fix is a faster sensor (20 ms). Solid: the problem at the slider settings; dashed: the fix, for contrast. Read-outs use the tutor's definitions (numbers.py [F])."
+  lookFor: "A 50 ms sensor lag: 32.1 % overshoot; a 20 ms sensor: 7.6 %. The fix is the faster sensor."
+  controls:
+    - id: lag
+      label: sensor lag
+      type: range
+      min: 0
+      max: 0.1
+      step: 0.005
+      default: 0.05
+      group: primary
+      unit: s
+  presets:
+    - id: problem
+      label: The problem
+      set:
+        lag: 0.05
+    - id: fixed
+      label: The fix
+      set:
+        lag: 0.02
 - id: fail-nonlinear
   title: A12 · Nonlinearity / operating-point change
   x: time (s)
@@ -3056,7 +3021,7 @@
     - label: reference r
       color: var(--muted)
       dash: true
-  howToRead: The solid trace is the failure (a plant whose gain grows with the operating point); the dashed trace is a fixed version, for contrast. The sliders move the solid run, so you can walk it to the fix or away from it. Teaching plant, not the engine model.
+  howToRead: "Generic teaching plant (not the dish): the effect needs a nonlinearity the dish model doesn't have. The solid trace is the failure (a plant whose gain grows with the operating point); the dashed trace is a fixed version, for contrast. The sliders move the solid run, so you can walk it to the fix or away from it."
   lookFor: "Gains tuned at r = 1 are three times too hot at r = 9: divide them, or gain-schedule."
   controls:
     - id: Kp
@@ -3097,54 +3062,34 @@
         Ki: 0.5
         r: 9
 - id: fail-twodof
-  title: A13 · Set-point against disturbance (2-DOF)
+  title: A13 · Tracking against gust rejection
   x: time (s)
-  y: output y
-  legend:
-    - label: problem (solid)
-      color: var(--org)
-    - label: fixed version (dashed)
-      color: var(--grn)
-      dash: true
-    - label: reference r
-      color: var(--muted)
-      dash: true
-  howToRead: The solid trace is the failure (a PI tuned for disturbances overshoots on set-point steps); the dashed trace is a fixed version, for contrast. The sliders move the solid run, so you can walk it to the fix or away from it. Teaching plant, not the engine model.
-  lookFor: "Add a set-point filter: the overshoot goes, the disturbance response is untouched."
+  y: angle · torque
+  legend: *a1
+  howToRead: "The tuned dish (2000, 1000, 200): a 0.1 rad step, then 20 N·m of wind from 20 s. The set-point weight b scales the command in the P term only. Solid: the problem at the slider settings; dashed: the fix, for contrast. Read-outs use the tutor's definitions (numbers.py [F])."
+  lookFor: "b = 1: 7.4 % overshoot, wind peak 0.556°, cleared in 4.82 s. b = 0.9: no overshoot, Tₛ 1.67 s, the same wind response. b = 0.5 is too slow (Tₛ 6.07 s)."
   controls:
-    - id: Kp
-      label: Kp
+    - id: b
+      label: set-point weight b
       type: range
       min: 0
-      max: 4
+      max: 1
       step: 0.05
-      default: 1.5
-      group: primary
-    - id: Ki
-      label: Ki
-      type: range
-      min: 0
-      max: 8
-      step: 0.1
-      default: 4
-      group: primary
-    - id: tauf
-      label: Set-point filter τ (s)
-      type: range
-      min: 0
-      max: 3
-      step: 0.05
-      default: 0
+      default: 1
       group: primary
   presets:
     - id: problem
       label: The problem
       set:
-        tauf: 0
+        b: 1
     - id: fixed
       label: The fix
       set:
-        tauf: 1.5
+        b: 0.9
+    - id: b05
+      label: b = 0.5 (too slow)
+      set:
+        b: 0.5
 - id: fail-limitcycle
   title: A14 · Limit cycle from dead zone / backlash
   x: time (s)
@@ -3158,7 +3103,7 @@
     - label: reference r
       color: var(--muted)
       dash: true
-  howToRead: The solid trace is the failure (an integrator plant behind a dead zone); the dashed trace is a fixed version, for contrast. The sliders move the solid run, so you can walk it to the fix or away from it. Teaching plant, not the engine model.
+  howToRead: "Generic teaching plant (not the dish): the effect needs a nonlinearity the dish model doesn't have. The solid trace is the failure (an integrator plant behind a dead zone); the dashed trace is a fixed version, for contrast. The sliders move the solid run, so you can walk it to the fix or away from it."
   lookFor: "The integral drives u across the dead zone again and again: lower Ki or shrink the dead zone."
   controls:
     - id: Ki

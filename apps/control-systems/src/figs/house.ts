@@ -273,7 +273,7 @@ export const sensFigure = figureOf(() => [
     },
   },
   {
-    id: 'S', title: '|S(jω)| of the P thermostat: how much model error gets through', x: 'ω (rad/h, log)', y: '|S|',
+    id: 'S', title: '|S(jω)| of the P thermostat: how much model error gets through (preview: frequency response)', x: 'ω (rad/h, log)', y: '|S|',
     draw(g, w, h, v) {
       const Kp = num(v, 'Kp', 1100), ws = lin(-2, 1.5, 300).map((e) => 10 ** e), S = ws.map((q) => houseSC(Kp, q).S), lx = ws.map(Math.log10);
       const fr = plotFrame(g, w, h, [-2, 1.5], [0, Math.max(1.5, Math.max(...S) * 1.1)], 'log₁₀ ω (rad/h)', '|S|'); hline(g, fr, 1, [-2, 1.5], '1 = no help');
