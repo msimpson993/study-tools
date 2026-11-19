@@ -1,73 +1,59 @@
 ---
 id: blocks
-order: 11
-title: "The loop: command path and disturbance path"
-category: loop
-chain:
-  - title: "How does G(s) sit in a loop with a controller and a disturbance?"
-  - title: "How does the plant sit in a loop with a controller and a disturbance?"
-  - title: "standard feedback loop, where the disturbance enters"
-    detail: "Y = GcG/(1 + GcG)·R + G/(1 + GcG)·D"
-neighbors:
-  - tf
-  - ctrl
-  - fb
-exampleScene: { overlays: [disturb], params: { K: 7, d: -2, td: 4 }, diagram: [loop, disturb], caption: "Panel 1 is the loop itself: command r, controller Gc, plant G and the sensor feeding y back. Panel 2 adds a 2 N shove d at the plant input at 4 s; with K = 7 the cart is at 0.78 m, then the shove pushes it back." }
+order: 12
+title: "Close the loop: block diagrams and T = G_f/(1 + L)"
+category: pid
+neighbors: [second, ctrl, sens, failures]
+level: Some algebra
+check: [q-loop, q-blockalg, ck-loop-1]
 ---
-**How does the plant sit in a loop with a controller and a disturbance?**
 
-**Picture it first.** One loop, two paths: the same K that speeds up the command path (solid) shrinks the effect of a push (dashed on the right).
+**The question:** what does "feedback" mean as a diagram, and how does any loop collapse to one block? This is the box *Close the loop* (and its side box *Reducing a block diagram*), after *Specs*.
+
+### The big idea
+
+Feedback means measuring the output, comparing it with what you want, and acting on the difference. A car corner is a feedback loop with no electronics: the spring and shock push on the gap between road and body, so the body follows the road. Any loop collapses to one block, forward/(1 + loop gain), and every input to that loop shares the same 1 + L, so the same poles.
+
+### See it
+
+Step the corner from drawing to loop: Σ → (cs + k) → 1/(ms²) → z, fed back. Switch the input between the road and an active force.
 
 ```figure:loop
 ```
 
-Close the loop on the measured output: error E = R − Y feeds a controller Gc, the disturbance D adds somewhere in the loop, and the plant G produces Y. Closed-loop transfer functions follow from the series, parallel and feedback rules, and where D enters decides how it is transformed.
+Why feed back at all? An open-loop command is calibrated once; a closed loop measures and corrects. The legacy teaching plant below shows the difference under a load change.
 
-### What does the standard feedback loop look like, and what is C/R?
+```figure:problem
+```
 
-Reference <i>R</i> minus measured output gives error <i>E</i>. The controller <i>G</i><sub>c</sub> turns <i>E</i> into actuation, the plant <i>G</i> produces output <i>C</i> (or <i>Y</i>), and a disturbance <i>T</i><sub>d</sub> enters along the way. With unity feedback, <i>C</i>/<i>R</i> = <i>G</i><sub>c</sub><i>G</i>/(1 + <i>G</i><sub>c</sub><i>G</i>).
+### The math
 
-````callout:note Notation: the notes' symbols versus this page's
-Your lecture notes call the controller <i>G</i><sub>c</sub> and the output <i>C</i>(<i>s</i>), so they write <i>C</i>/<i>R</i>. This page keeps the notes' <i>G</i><sub>c</sub> for the controller, and calls the output <i>Y</i> (as MATLAB does). Read the notes' <i>C</i>/<i>R</i> as <i>Y</i>/<i>R</i> here. In the feedback dive <i>C</i>(<i>s</i>) means the complementary sensitivity, and in state space <i>C</i> is the output matrix. The glossary lists all three.
+```eq
+T = G_f/(1 + L);   corner: L = (cs + k)/(ms²)
+```
+
+```eq
+Z/W = (cs + k)/(ms² + cs + k),   Z/U = 1/(ms² + cs + k)
+```
+
+```eq
+C/R = GcG/(1 + GcGH),   C/D = G/(1 + GcGH)
+```
+
+**What each symbol means.** G_f: the forward path from that input; L: the loop gain (everything around the loop); W: road height; U: an active force; R, C, D, H: the slides' command, output, disturbance and sensor (LN1 slides 18–20).
+
+<a id="blockalg"></a>**Reduction rules.** Series blocks multiply, parallel blocks add, a loop becomes forward/(1 + loop); summing and branch points can be moved past blocks; take one input at a time (superposition). The board's s4 pair works one through.
+
+````callout:derivation Full derivation
+E = R − HC and C = GcG·E, so C(1 + GcGH) = GcG·R. With D at the plant input: C = G(D + GcE), so C/D = G/(1 + GcGH).
 ````
 
-*From the guide's static figure: <b>The loop you'll see on every exam.</b> Two inputs (<i>R</i> and <i>T</i><sub>d</sub>), one output, one loop gain <i>L</i> = <i>G</i><sub>c</sub><i>G</i>.*
+### Worked example: on the corner
 
-<div class="eqbox"><span class="frac"><span><i>C</i></span><span><i>R</i></span></span> = <span class="frac"><span><i>G</i><sub>c</sub><i>G</i></span><span>1 + <i>G</i><sub>c</sub><i>G</i></span></span> <span class="frac"><span><i>C</i></span><span><i>T</i><sub>d</sub></span></span> = <span class="frac"><span><i>G</i></span><span>1 + <i>G</i><sub>c</sub><i>G</i></span></span></div>
+- 5 cm road step: final 5 cm (the DC gain of Z/W is 1), peak 7.53 cm (50.6 %), Tₚ 0.34 s, Tₛ 1.71 s.
+- 1 kN force: 3.91 cm (DC gain 1/k).
+- The shock acts like D and the spring like P (look back from *The derivative*).
 
-### How do I get C/D (output due to the disturbance)?
+### What it can't do
 
-Set <i>R</i> = 0 and redraw with <i>T</i><sub>d</sub> as the input. The forward path from <i>T</i><sub>d</sub> to <i>C</i> is just <i>G</i>, and the loop is unchanged, so <i>C</i>/<i>T</i><sub>d</sub> = <i>G</i>/(1 + <i>G</i><sub>c</sub><i>G</i>).
-
-Rule of thumb for any input: <b>numerator = forward path from that input to the output; denominator = 1 + loop gain</b>. That's why <i>C</i>/<i>R</i> and <i>C</i>/<i>T</i><sub>d</sub> share a denominator. With both inputs present, superposition gives <i>C</i> = [<i>G</i><sub>c</sub><i>G</i>·<i>R</i> + <i>G</i>·<i>T</i><sub>d</sub>]/(1 + <i>G</i><sub>c</sub><i>G</i>).
-
-````callout:recognize Recognize
-
-
-- <b>Same characteristic equation</b> 1 + <i>G</i><sub>c</sub><i>G</i> = 0 for every input. Stability and the transient “personality” (ζ, ω<sub>n</sub>) belong to the <em>loop</em>, not to the input.
-- Only the <b>numerator</b> changes with the input, so the final value and the zeros differ.
-````
-
-### Why does it matter where the disturbance enters?
-
-It changes the numerator. A disturbance entering at the plant <em>input</em> is filtered by <i>G</i>, giving <i>G</i>/(1+<i>L</i>). One at the plant <em>output</em> gives 1/(1+<i>L</i>). In both cases, making the loop gain large where the disturbance lives is what suppresses it.
-
-````callout:predict Predict
-<i>G</i><sub>c</sub> = <i>K</i> (P only), <i>G</i> = 1/(<i>s</i>+1), unit-step disturbance at the plant input, <i>R</i> = 0. Where does <i>C</i> settle?<br>Check with the final-value theorem: <i>C</i>(∞) = lim <i>s</i>·<span class="frac"><span>1/(<i>s</i>+1)</span><span>1 + <i>K</i>/(<i>s</i>+1)</span></span>·<span class="frac"><span>1</span><span><i>s</i></span></span> = 1/(1+<i>K</i>). Bigger <i>K</i> shrinks the effect but never removes it. For that you need integral action in <i>G</i><sub>c</sub> (see “Why does P leave an error and I remove it?” later on the map).
-````
-
-````callout:note Key takeaway
-High loop gain helps reject disturbances, and an integrator <em>in the controller, upstream of where the disturbance enters</em> drives the steady-state effect of a constant disturbance to zero.
-````
-
-````callout:predict Predict
-Before you touch a slider, predict what it will do. Raise K: the command path gets faster and its error smaller, and the push is held back harder, but the command path starts to ring.
-````
-
-````callout:note Symbols used here
-- **G(s)**: the cart's transfer function from force u to position y: 1/((s + 1)(s + 2))
-- **zeros**: the roots of the numerator: they set how much of each mode appears
-- **ζ, ωn**: damping ratio and natural frequency of a pole pair
-- **K**: the proportional gain in u = K(r − y); K = 7 gives ζ = 0.5, ωn = 3
-- **Gc(s)**: the controller transfer function (PID: Kp + Ki/s + Kd·s)
-````
+The passive loop can't follow any command but the road, and its "gains" c and k are fixed hardware. Next: a motor we command (*Turn up the gain*).

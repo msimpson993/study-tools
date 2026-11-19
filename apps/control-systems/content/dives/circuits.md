@@ -1,61 +1,36 @@
 ---
 id: circuits
 order: 7
-title: "Getting G(s) for real hardware: circuits and op-amps"
+title: "G(s) for circuits and op-amps"
 category: describe
-chain:
-  - title: "How do I get G(s) for a circuit or op-amp stage?"
-  - title: "How do I get G(s) for real hardware?"
-  - title: "impedances, op-amp stages"
-    detail: "R → R,  L → sL,  C → 1/(sC);  inverting stage −Zf/Zin"
-neighbors:
-  - model
-exampleScene: { overlays: [push, poles], caption: "The same second-order equation as an RLC circuit: one step response, two poles at −1 and −2." }
+neighbors: [model, tf]
+level: Some algebra
+check: [q-circ, ck-circ-1]
 ---
-**How do I get G(s) for real hardware?**
 
-**Picture it first.** An RLC circuit is the cart in disguise: L is the mass, R the damper and 1/C the spring. Change R and the poles move exactly as they did when c changed.
+**The question:** how do we write G(s) for an electrical circuit, and why does the house look like one? This is the side box *G(s) for circuits*, under *Transfer function G(s)*.
+
+### The big idea
+
+Impedances make circuits algebra: R, sL and 1/(sC) combine like resistors, and dividers and op-amps follow simple rules. The same equations describe heat flow, so the house is an RC network.
+
+### See it
+
+The "house as RC" preset draws the two rooms as capacitors and the walls as resistors; its step response is the house's.
 
 ```figure:rlc
 ```
 
-Treat each element by its impedance (R, sL, 1/(sC)) and use voltage dividers; for an ideal inverting op-amp the stage gain is −Z_f/Z_in. The same second-order equation as the cart appears as a series RLC.
+### The math
 
-### What's the fastest way to get a circuit's transfer function?
+- Impedances: R, sL, 1/(sC). Voltage divider: Z₂/(Z₁ + Z₂). Inverting op-amp: −Z_f/Z_in.
+- **Analogy table:** temperature ↔ voltage; heat flow ↔ current; C_th ↔ C (1 MJ/K per room); 1/G ↔ R (3.6 mK/W inner wall, 18 mK/W outer); heater ↔ current source.
+- Mechanical (the corner): m ↔ L, c ↔ R, k ↔ 1/C.
 
-Replace each element with its impedance (<i>R</i>, <i>sL</i>, 1/(<i>sC</i>)) and use voltage dividers, KVL, and KCL as if it were a resistor network. No differential equations needed.
+### Worked example: on the house
 
-| Circuit | Transfer function | Read off |
-|---|---|---|
-| Series RL, output across R | <i>V</i><sub>R</sub>/<i>V</i> = <i>R</i>/(<i>sL</i>+<i>R</i>) = 1/((<i>L</i>/<i>R</i>)<i>s</i>+1) | 1st order, τ = <i>L</i>/<i>R</i>, DC gain 1 |
-| RC low-pass | 1/(<i>RCs</i>+1) | τ = <i>RC</i> |
-| Series RLC, output across C | 1/(<i>LCs</i>² + <i>RCs</i> + 1) | ω<sub>n</sub> = 1/√(<i>LC</i>), ζ = (<i>R</i>/2)√(<i>C</i>/<i>L</i>) |
+Two capacitors of 1 MJ/K from each room node to ground (outdoor temperature), a 3.6 mK/W resistor between the nodes, an 18 mK/W resistor from each node to ground, and a current source into node 1. Writing the node equations gives exactly ẋ₁ = −1.2x₁ + x₂ + 0.0036u and ẋ₂ = x₁ − 1.2x₂.
 
+### What it can't do
 
-ζ = 1/(2<i>Q</i>) for the series RLC. A high-Q tank is a lightly damped second-order system that rings, and that's exactly the overshoot of the second-order dive.
-
-### How do I read an inverting op-amp stage?
-
-<i>V</i><sub>o</sub>/<i>V</i><sub>i</sub> = −<i>Z</i><sub>f</sub>/<i>Z</i><sub>in</sub>. Whatever impedances you choose for feedback and input set the transfer function, which is how you build integrators, differentiators, filters, and PI/PD controllers.
-
-````callout:recognize Recognize the filter from its poles and zeros
-
-
-- <b>Pole at the origin</b> → integrator (infinite DC gain, −90° phase).
-- <b>Zero at the origin</b> → differentiator / high-pass (zero DC gain).
-- <b>One LHP pole, no zeros</b> → low-pass with corner at |<i>p</i>|.
-- <b>Zero at 0 plus an LHP pole</b> → high-pass. <b>Pole at 0 plus an LHP zero</b> → PI.
-````
-
-````callout:predict Predict
-Before you touch a slider, predict what it will do. Raise R: the poles are pulled onto the real axis (overdamped). Lower R: they approach the jω axis and the capacitor voltage rings.
-````
-
-````callout:note Symbols used here
-- **G(s)**: the cart's transfer function from force u to position y: 1/((s + 1)(s + 2))
-- **poles**: the roots of the denominator: the exponentials e^(pt) the plant can make. The cart's are −1 and −2
-- **zeros**: the roots of the numerator: they set how much of each mode appears
-- **DC gain**: the steady output for a unit steady input, G(0), if the plant is stable. For the cart, 0.5 m per N
-- **%OS, Ts**: overshoot and 2 % settling time of the step response
-- **Gc(s)**: the controller transfer function (PID: Kp + Ki/s + Kd·s)
-````
+The analogy covers linear lumped elements only; real op-amps saturate and real walls are distributed.

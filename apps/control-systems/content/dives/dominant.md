@@ -1,59 +1,34 @@
 ---
 id: dominant
-order: 10
-title: "Which poles matter"
-category: time
-chain:
-  - title: "Real plants have more than two poles. Which ones decide the response?"
-  - title: "Which poles matter?"
-  - title: "dominant poles"
-    detail: "keep the slowest poles, match the DC gain"
-neighbors:
-  - second
-  - blocks
-exampleScene: {  overlays: [push, poles], diagram: poles, caption: "The pole at −1 is only twice as slow as the pole at −2, so neither can be dropped: both show in the step response."  }
+order: 11
+title: "Which poles matter? Dominant poles"
+category: predict
+neighbors: [second, reduce]
+level: Conceptual
+check: [q-dom, ck-dom-1]
 ---
-**Which poles matter?**
 
-**Picture it first.** Slide the extra pole from far away to close: far away, you can drop it; close, it stretches the response.
+**The question:** a real plant has more than two poles, so why do second-order specs still work? This is the side box *Which poles matter?*, under *Two poles: ζ and ωₙ*.
+
+### The big idea
+
+Each pole's motion decays at its own rate. One five times farther left decays e⁵ ≈ 150 times faster, so it's gone before the slow one has moved much. The slow, *dominant* pair shapes the response, which is why second-order specs work on real hardware, and why the single-mass corner was allowed. (The 5–10× rule is *added*, a rule of thumb.)
+
+### See it
+
+Turn the wheel on (40 kg on a 200 kN/m tyre), then soften the tyre: wheel hop comes down toward the body's frequency and the single-mass model breaks.
 
 ```figure:dominant
 ```
 
-The pole closest to the imaginary axis decays slowest and dominates the response once the faster ones are gone. A pole about five times farther left is usually safe to ignore, provided the DC gain is kept.
+### The math
 
-### Why do some poles matter more than others?
+Two masses: the body m (400 kg) and the wheel m_u (40 kg), with the suspension k, c between them and the tyre k_t below. Four poles: the body pair at −1.60 ± 7.45j and wheel hop at −20.4 ± 71.4j (11.8 Hz, ζ = 0.275). When dropping a pole, keep the DC gain.
 
-Each pole contributes a mode <i>e</i><sup><i>pt</i></sup>. Poles far to the left die out fast; the poles <b>closest to the imaginary axis</b> are still alive when everything else is gone, so they <em>dominate</em> what you see. If a pole is roughly 5–10× farther left than the dominant ones, you can usually drop it.
+### Worked example: on the corner with its wheel
 
-A pole at −30 decays 15× faster than one at −2. By the time the slow mode has done anything visible, the fast one has disappeared. That's why design often uses a first- or second-order approximation and why the second-order specs (ζ, ωₙ, %OS) are defined for the second-order template.
+The decay ratio is 20.4/1.6 = 12.8×, so the body pair dominates. Under a 1 kN load: overshoot 50.8 % (single mass 44.4 %), Tₛ 2.25 s (1.77 s).
 
-````callout:recognize Recognize
+### What it can't do
 
-
-- Pole ratio ≥ ~5 → the extra pole barely matters. Ratio near 1 → it's no longer negligible (slower, more sluggish response).
-- When you drop a pole, <b>keep the DC gain</b>: <i>K</i>/(<i>s</i>(<i>s</i>+2)(<i>s</i>+30)) ≈ (<i>K</i>/30)/(<i>s</i>(<i>s</i>+2)), because (<i>s</i>+30) ≈ 30 at low frequency (Lecture Notes 2).
-- A zero near a pole nearly cancels it, which also removes that pole's influence.
-````
-
-````callout:predict Predict
-Before you touch a slider, predict what it will do. Slide p from 20 down to 1: the extra pole stops being negligible and slows the rise. Beyond about 5× the pair, you can drop it.
-````
-
-
-
-### Second reduction method: match the frequency response
-
-Dropping a far-left pole while keeping G(0) is the first method, and the one this dive's figure is built around. There is a second, which the professor says you must know even though he will not use it in class: pick a lower-order model whose **frequency response** (the first few moments, i.e. the derivatives of G at s = 0) matches the original near s = 0.
-
-The worked numbers live in the [feedback dive](#/dive/fb), under "Simplification of linear systems": G_H = 6/((s+1)(s+2)(s+3)) is matched by G_L = 1.60/(s² + 2.590s + 1.60). Both have DC gain 1, and the reduced poles (−1.024, −1.565) give a slightly overdamped response with T_s ≈ 3 s, almost indistinguishable from the original on a step.
-
-````callout:trap Trap
-A reduced model with more zeros than poles is not causal and cannot be built. Match moments to a proper (or strictly proper) G_L; do not "fit" your way into a numerator of higher degree than the denominator.
-````
-
-````callout:note Symbols used here
-- **poles**: the roots of the denominator: the exponentials e^(pt) the plant can make. The cart's are −1 and −2
-- **zeros**: the roots of the numerator: they set how much of each mode appears
-- **DC gain**: the steady output for a unit steady input, G(0), if the plant is stable. For the cart, 0.5 m per N
-````
+The rule is a rule of thumb. A zero near the dominant poles, or a slow pole in the controller (PI's), breaks it; see the tuned dish's −0.53 pole in *Tuning by hand*.

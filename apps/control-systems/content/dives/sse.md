@@ -1,67 +1,59 @@
 ---
 id: sse
-order: 13
-title: "Why P leaves an error and I removes it"
-category: loop
-chain:
-  - title: "With a plain gain in the loop, does the output end up exactly at the command?"
-  - title: "Why does P leave an error and I remove it?"
-  - title: "steady-state error, system type"
-    detail: "e_ss = 1/(1 + Kp·G(0))   (P-only, step)"
-neighbors:
-  - ctrl
-  - second
-exampleScene: { overlays: [loop], params: { K: 7 }, diagram: error, caption: "With K = 7 the cart settles at 7/9 ≈ 0.78 m, not 1 m: the push K·e shrinks as the error e shrinks, so a gap of 0.22 m is left. The highlighted error e is what the controller needs to keep pushing." }
+order: 14
+title: "Why it stops short: steady-state error and system type"
+category: pid
+neighbors: [ctrl, integral, dist]
+level: Some algebra
+check: [q-sse, q-type, ck-sse-1]
 ---
-**Why does P leave an error and I remove it?**
 
-**Picture it first.** Raise Kp and the predicted error 1/(1 + Kp·G(0)) shrinks but never reaches zero; set Ki above zero and it goes to zero.
+**The question:** once the motion stops, how far from the target does the dish end up, and why? This is the box *Why it stops short* (and its side box *System type*), after *Turn up the gain (P)*.
+
+### The big idea
+
+Steady-state error is what's left once the motion stops. The final-value theorem (FVT) reads it from s → 0 without solving anything. The dish's angle is the integral of its speed, so with no load it always reaches the target exactly. But a steady wind torque must be held by an equal motor torque, and P makes torque only from error, so an error remains.
+
+### See it
+
+Pick step, wind or ramp, and P or PI. The band shows the beam's 3 dB footprint against the pointing error. Doubling Kp halves the wind error; switching to PI removes it.
 
 ```figure:sse
 ```
 
-With pure P the output needs a nonzero error to keep the controller output up, so it stops short: e_ss = 1/(1 + K·G(0)) for a step. An integrator keeps growing while any error remains, so at rest the error must be exactly zero (system type 1).
+### The math
 
-### How do I compute steady-state error?
+```eq
+e(∞) = lim_{s→0} s·E(s)   (only if the closed loop is stable)
+```
 
-With unity feedback, <i>E</i>(<i>s</i>) = <i>R</i>(<i>s</i>)/(1 + <i>L</i>(<i>s</i>)). The final-value theorem gives <i>e</i><sub>ss</sub> = lim<sub><i>s</i>→0</sub> <i>s</i><i>E</i>(<i>s</i>), but <b>only if the closed loop is stable</b>.
+```eq
+Wind: E/T_d = −1/(Js² + Bs + Kp)  ⇒  e_ss = −T_d/Kp
+```
 
-<div class="eqbox"><i>e</i><sub>ss</sub> = lim<sub><i>s</i>→0</sub> <i>s</i> · <span class="frac"><span>1</span><span>1 + <i>G</i><sub>c</sub>(<i>s</i>)<i>G</i>(<i>s</i>)</span></span> · <i>R</i>(<i>s</i>) → unit step: <i>e</i><sub>ss</sub> = <span class="frac"><span>1</span><span>1 + <i>L</i>(0)</span></span></div>
+```eq
+Ramp θ_r = ωt: e_ss = Bω/Kp = ω/K_v,  K_v = Kp/B
+```
 
-````callout:trap Trap: an unstable loop has no steady state
-The final-value theorem will still happily give you a number for an unstable closed loop, and that number is meaningless. Always check stability (all closed-loop poles in the LHP) <em>first</em>.
+**What each symbol means.** E: the error r − θ; T_d: wind torque at the motor (N·m); ω: the command's slew rate (rad/s); K_v: velocity constant (1/s). LN1 slides 65–66 and 72.
+
+<a id="type"></a>**System type** (*added* practice). The type is the number of integrators in L. Step error 1/(1 + K_pos); ramp error ω/K_v; type 2 tracks ramps.
+
+````callout:derivation Full derivation
+E(s) = R − Θ. With R = 1/s and P: E = (Js² + Bs)/(Js² + Bs + Kp)·(1/s), so sE → 0. With a wind step T_d/s: sE → −T_d/Kp. With a ramp R = ω/s²: sE → ω·B/Kp.
 ````
 
-### Why does pure P leave an error, and why does I remove it?
+### Worked example: on the dish
 
-<b>P:</b> <i>u</i> = <i>K</i><sub>p</sub><i>e</i>. To hold the output at a nonzero value, a type-0 plant needs a nonzero <i>u</i>, which means a nonzero <i>e</i>. So <i>e</i><sub>ss</sub> = 1/(1 + <i>K</i><sub>p</sub><i>G</i>(0)), which shrinks with gain but never reaches zero. <b>I:</b> in steady state every signal is constant, including the integrator's output. An integrator's output is constant only if its input is zero, so <b><i>e</i> = 0</b>.
+- Kp = 1000, T_d = 20 N·m: −0.02 rad = 1.15°.
+- A 1.2 m Ku-band (12 GHz) dish has a 3 dB beam ≈ 70λ/D = 1.46° wide; 1.15° off costs ≈ 12(θ/θ₃)² = 7.4 dB, most of the signal (approximation *added*).
+- For 0.1° under P you'd need Kp ≥ 11 459 (ζ = 0.03).
+- Ramp 1°/s: 0.020°, K_v = 50 /s.
 
-In transfer-function terms, the integrator puts a pole at <i>s</i> = 0 in <i>L</i>, so <i>L</i>(0) = ∞ and 1/(1+<i>L</i>(0)) = 0. The plant can supply that integrator itself (a <b>type-1</b> plant like 1/(<i>s</i>(<i>s</i>+1)) in the boring machine). That's why the boring machine has zero step error even with a PD controller.
+### Exam example
 
-| System type (integrators in L) | Step error | Ramp error |
-|---|---|---|
-| Type 0 | 1/(1+<i>K</i><sub>p</sub>), <i>K</i><sub>p</sub> = <i>L</i>(0) | ∞ |
-| Type 1 | 0 | 1/<i>K</i><sub>v</sub>, <i>K</i><sub>v</sub> = lim <i>sL</i>(<i>s</i>) |
-| Type 2 | 0 | 0 |
+The notes' boring machine (LN2 slides 19–22), Gc = K + 11s, G = 1/(s(s + 1)): K = 100 / 50 / 20 gives ζ = 0.60 / 0.85 / 1.34 and overshoot 22.0 / 12.9 / 3.9 %; the ramp error is 1/K.
 
+### What it can't do
 
-````callout:recognize Recognize
-
-
-- Flat line below the target with P only → that's 1/(1+<i>K</i><sub>p</sub><i>G</i>(0)) of error. Raising <i>K</i><sub>p</sub> shrinks it but adds overshoot.
-- Adding I: the output creeps up and lands exactly on target. Too much I: overshoot, oscillation, and eventually instability (for the cart, the closed-loop polynomial is <i>s</i>³ + 3<i>s</i>² + (2 + <i>K</i><sub>p</sub>)<i>s</i> + <i>K</i><sub>i</sub>, which goes unstable once <i>K</i><sub>i</sub> &gt; 3(2 + <i>K</i><sub>p</sub>) = 6 + 3<i>K</i><sub>p</sub>).
-````
-
-````callout:predict Predict
-Before you touch a slider, predict what it will do. Raise Kp: the predicted error shrinks as 1/(1 + 0.5·Kp) but never reaches zero. Set Ki > 0: the error is driven to zero.
-````
-
-````callout:note Symbols used here
-- **poles**: the roots of the denominator: the exponentials e^(pt) the plant can make. The cart's are −1 and −2
-- **zeros**: the roots of the numerator: they set how much of each mode appears
-- **DC gain**: the steady output for a unit steady input, G(0), if the plant is stable. For the cart, 0.5 m per N
-- **K**: the proportional gain in u = K(r − y); K = 7 gives ζ = 0.5, ωn = 3
-- **e_ss**: the error r − y once everything has settled
-- **%OS, Ts**: overshoot and 2 % settling time of the step response
-- **Gc(s)**: the controller transfer function (PID: Kp + Ki/s + Kd·s)
-````
+The FVT gives nonsense for an unstable loop, and says nothing about how long the error takes to settle.

@@ -1,72 +1,52 @@
 ---
 id: cc
-order: 15
-title: "Controllability and observability"
+order: 28
+title: "Can we reach and see every state?"
 category: state
-chain:
-  - title: "Output feedback can only slide the poles along a fixed path. To place them anywhere we would have to act on the plant's internal states. When is that possible?"
-  - title: "When can we place every pole, and when can we work out states we don't measure?"
-  - title: "controllability, observability"
-    detail: "rank Pc = n and rank Po = n"
-neighbors:
-  - fb
-  - ss2tf
-  - sf
-exampleScene: { overlays: [forces, sensor, phase], diagram: states, caption: "The plant block opened up (from the state-space box): the state (x, ẋ) is the plane the force must be able to reach, and that a position sensor must be able to reconstruct." }
-addsToExample: "Cart: Pc=[[0,1],[1,−3]] (det −1) and Po=[[1,0],[0,1]] are both invertible, so the force can steer any position and velocity, and measuring position alone is enough to recover velocity."
-accountsFor: "Why a mode cancelled out of G(s) can be neither moved nor seen, and when the design steps that follow are possible at all."
+neighbors: [ss, ss2tf, sf, obs]
+level: Some algebra
+check: [q-cc, ck-cc-1, ck-cc-2]
+addsToExample: "The house's failure cases: two heaters on one dial can't change the difference between the rooms, and an averaging sensor can't see it."
 ---
-**When can we place every pole, and when can we work out states we don't measure?**
 
-**Picture it first.** The cart's state is a point in the (x, ẋ) plane. Toggle the cancelled-mode preset: G(s) can look fine while a mode inside is neither reached by the force nor seen at the sensor.
+**The question:** before designing with the states, can the actuator steer each one, and can the sensor reveal each one? This is the box *Can we reach and see every state?*, after *Look inside: state space*.
+
+### The big idea
+
+Before designing with the states, check that the actuator can steer each one and the sensor can reveal each one. If a mode fails, it cancels out of G(s): invisible from outside, but still moving inside.
+
+### See it
+
+The corner draws B and AB in the state plane; the house cases show when the test fails. With two equal heaters on one dial, both rooms always warm together; no setting makes the bedroom warmer than the living room.
 
 ```figure:cc
 ```
 
-**Why now, and what it needs.** The feedback chapter ended on a limit: one gain on the output can only slide the poles along a fixed path. To place them anywhere we have to act on the plant's internal states, which is why this box uses the state-space model (the side branch off the model box: the matrices A, B and C, and G = C(sI − A)⁻¹B + D). The question here is whether that is possible at all.
+### The math
 
-If the system is **controllable** and **observable**, the design steps that follow are possible: we can place every closed-loop pole, and we can reconstruct the states we do not measure. Both tests are rank tests on a matrix built from A, B and C.
+```eq
+P_c = [B, AB],   P_o = [C; CA]   (n = 2)
+```
 
-### The two tests
+Full rank ⇔ controllable / observable (LN4 slides 4–12).
 
-A system is completely controllable if there is an unconstrained input u(t) that takes any initial state to any desired state in finite time. For a single input the **controllability matrix**
+**What each symbol means.** P_c: the controllability matrix; P_o: the observability matrix; full rank means det ≠ 0 for n = 2.
 
-Pc = [B  AB  …  A<sup>n−1</sup>B]
+### Worked example: on the corner
 
-is n × n; the plant is completely controllable if and only if det Pc ≠ 0 (equivalently, rank Pc = n).
+P_c = [[0, 0.0025], [0.0025, −0.01]], det −6.25 × 10⁻⁶ ≠ 0: controllable. P_o = I with the height sensor: observable. A velocity-only sensor gives det P_o = 64: also observable.
 
-A system is completely observable if the initial state can be recovered from the output history y(t) on a finite interval (with the input known). The **observability matrix**
+### The house cases
 
-Po = [C;  CA;  …;  CA<sup>n−1</sup>]
+- Heater in room 1 and sensor in room 2: det P_c = b² = 1.3 × 10⁻⁵ and det P_o = −1, so both are fine.
+- Two equal heaters on one dial: AB ∥ B, uncontrollable (the difference mode).
+- A sensor reading the average: unobservable (the difference mode).
+- The outdoor temperature is likewise an input that can't steer the difference mode, which is why outdoor → bedroom is first order (*Transfer function G(s)*).
 
-is n × n; the plant is completely observable if and only if det Po ≠ 0.
+### Exam examples
 
-### The cart
+LN4 slides 4–12.
 
-A = [[0, 1], [−2, −3]], B = (0, 1)<sup>T</sup>, C = (1, 0). Then AB = (1, −3)<sup>T</sup>, so
+### What it can't do
 
-Pc = [[0, 1], [1, −3]],  det Pc = −1,
-
-Po = [[1, 0], [0, 1]],  det Po = 1.
-
-Both are invertible. The force can steer any position and velocity, and measuring position alone is enough to recover velocity. That is why the rest of this chapter can be carried out on the cart.
-
-### When G(s) hides a mode
-
-A pole-zero cancellation in G(s) = C(sI − A)<sup>−1</sup>B hides a mode that is uncontrollable, unobservable, or both. G(s) can look stable while an internal eigenvalue sits in the right half-plane.
-
-A textbook counter-example: A = diag(−1, +1), B = (1, 0)<sup>T</sup>, C = (1, 0). Then G(s) = 1/(s + 1), which is fine, but det Pc = det Po = 0 and the +1 eigenvalue is neither reached by u nor seen at y. Use the cancelled-mode preset on the figure.
-
-### Stabilizable, detectable, Kalman
-
-If a plant is not completely controllable, the remaining question is whether the unreachable modes are already stable (**stabilizable**). If it is not completely observable, the question is whether the unseen modes are already stable (**detectable**). Complete controllability implies stabilizable; complete observability implies detectable. The **Kalman decomposition** splits the state into four parts (reachable and observable, reachable and not, and so on) so you can see which combinations are hidden. This course uses plants that pass both tests, like the cart.
-
-````callout:trap Trap
-A pole-zero cancellation in G(s) hides an uncontrollable or unobservable mode; G(s) looks fine while an internal state misbehaves.
-````
-
-````callout:recognize Recognize
-- det Pc ≠ 0  ⇔  every pole can be placed by state feedback.
-- det Po ≠ 0  ⇔  a Luenberger observer can be built that reconstructs every state from y.
-- An eigenvalue of A missing from G(s) is a cancelled mode. Check Pc and Po before you trust the transfer function alone.
-````
+It's yes/no: a nearly singular P_c means "controllable" but needing huge force.

@@ -14,7 +14,8 @@
   meaning: Plant input / actuator command (e.g. voltage <i>e</i><sub>i</sub>, throttle).
   section: Signals
 - term: y, Y(s)
-  meaning: Output. Class notes often call the output <i>C</i>(<i>s</i>) in <i>C</i>/<i>R</i>, which is <b>not</b> the C matrix or complementary sensitivity.
+  meaning: Output. Class notes often call the output <i>C</i>(<i>s</i>) in <i>C</i>/<i>R</i>, which is
+    <b>not</b> the C matrix or complementary sensitivity.
   section: Signals
 - term: R(s)
   meaning: Reference / desired input (set-point).
@@ -23,7 +24,8 @@
   meaning: Error = <i>R</i> − <i>Y</i> (unity feedback). Input to the controller.
   section: Signals
 - term: T_d(s), D
-  meaning: Disturbance input (load torque, cutter force). <i>D</i>/<i>s</i> = step of size <i>D</i>. Not the derivative time <i>T</i><sub>d</sub>.
+  meaning: Disturbance input (load torque, cutter force). <i>D</i>/<i>s</i> = step of size <i>D</i>. Not the
+    derivative time <i>T</i><sub>d</sub>.
   section: Signals
 - term: N(s)
   meaning: Sensor / measurement noise, added at the sensor.
@@ -41,10 +43,13 @@
   meaning: Loop gain <i>G</i><sub>c</sub><i>G</i>(<i>H</i>). Large |<i>L</i>| ⇒ small <i>S</i>.
   section: Transfer functions & loop
 - term: T(s)
-  meaning: Closed-loop transfer function <i>Y</i>/<i>R</i> = <i>L</i>/(1+<i>L</i>) for unity feedback. (Also called the complementary sensitivity <i>C</i>(<i>s</i>) in the notes. <i>τ</i> is the time constant of a first-order response, not <i>T</i>.)
+  meaning: Closed-loop transfer function <i>Y</i>/<i>R</i> = <i>L</i>/(1+<i>L</i>) for unity feedback. (Also
+    called the complementary sensitivity <i>C</i>(<i>s</i>) in the notes. <i>τ</i> is the time constant of a
+    first-order response, not <i>T</i>.)
   section: Transfer functions & loop
 - term: K
-  meaning: "A gain. First order: DC gain of <i>K</i>/(<i>τs</i>+1). Boring machine: controller gain in <i>K</i> + 11<i>s</i>."
+  meaning: "A gain. First order: DC gain of <i>K</i>/(<i>τs</i>+1). Boring machine: controller gain in <i>K</i>
+    + 11<i>s</i>."
   section: Transfer functions & loop
 - term: n, m
   meaning: "Denominator degree (= order, # states) and numerator degree. Strictly proper: <i>m</i> &lt; <i>n</i>."
@@ -62,7 +67,8 @@
   meaning: "<i>n</i>×<i>m</i> input matrix: where the input pushes (column for SISO)."
   section: State space
 - term: C (matrix)
-  meaning: "<i>p</i>×<i>n</i> output matrix: which state combination is measured (row for SISO). Not the complementary sensitivity <i>C</i>(<i>s</i>)."
+  meaning: "<i>p</i>×<i>n</i> output matrix: which state combination is measured (row for SISO). Not the
+    complementary sensitivity <i>C</i>(<i>s</i>)."
   section: State space
 - term: D (matrix)
   meaning: "<i>p</i>×<i>m</i> feedthrough: input straight to output (usually 0)."
@@ -74,13 +80,15 @@
   meaning: Resolvent. Denominator det(<i>sI</i>−<i>A</i>) = characteristic polynomial.
   section: State space
 - term: x₁, x₂
-  meaning: "Phase variables: <i>x</i>₁ = <i>y</i>, <i>x</i>₂ = <i>ẏ</i> (LRC: <i>e</i><sub>o</sub>, <i>ė</i><sub>o</sub>)."
+  meaning: "Phase variables: <i>x</i>₁ = <i>y</i>, <i>x</i>₂ = <i>ẏ</i> (LRC: <i>e</i><sub>o</sub>,
+    <i>ė</i><sub>o</sub>)."
   section: State space
 - term: aᵢ, bᵢ
   meaning: Denominator / numerator coefficients. Bottom row of companion <i>A</i> = −<i>a</i>₀, −<i>a</i>₁, …
   section: State space
 - term: R, L, C
-  meaning: Resistance (Ω), inductance (H), capacitance (F). Impedances <i>R</i>, <i>sL</i>, 1/(<i>sC</i>). (Here <i>L</i> is not loop gain.)
+  meaning: Resistance (Ω), inductance (H), capacitance (F). Impedances <i>R</i>, <i>sL</i>, 1/(<i>sC</i>). (Here
+    <i>L</i> is not loop gain.)
   section: Physical / circuit
 - term: eᵢ, e_o
   meaning: Input / output voltage of the LRC example (slide 40).
@@ -100,8 +108,10 @@
 - term: K_d
   meaning: Derivative gain = <i>K</i><sub>p</sub><i>T</i><sub>d</sub>.
   section: Controller
-- term: Tᵢ, T_d
-  meaning: Integral time and derivative time (standard form). Bigger <i>T</i><sub>i</sub> = weaker I. This <i>T</i><sub>d</sub> is not the disturbance.
+- term: Tᵢ, T_D
+  meaning: Integral time and derivative time (standard form). Bigger <i>T</i><sub>i</sub> = weaker I. This
+    <i>T</i><sub>d</sub> is not the disturbance. Here the derivative time is written T_D, because T_d is the
+    wind torque on the dish (the slides write Td).
   section: Controller
 - term: T (τ)
   meaning: "Time constant (s) of <i>K</i>/(<i>Ts</i>+1): 63.2% at <i>t</i> = <i>T</i>."
@@ -131,16 +141,20 @@
   meaning: Velocity constant lim <i>sL</i>(<i>s</i>); ramp error 1/<i>K</i><sub>v</sub>.
   section: Time response
 - term: S(s)
-  meaning: "Sensitivity 1/(1+<i>L</i>): multiplies <i>R</i> in <i>E</i>, scales disturbances, and equals <i>S</i><sup><i>T</i></sup><sub><i>G</i></sub>."
+  meaning: "Sensitivity 1/(1+<i>L</i>): multiplies <i>R</i> in <i>E</i>, scales disturbances, and equals
+    <i>S</i><sup><i>T</i></sup><sub><i>G</i></sub>."
   section: Feedback (LN2)
 - term: C(s) (LN2)
-  meaning: Complementary sensitivity <i>L</i>/(1+<i>L</i>). Multiplies noise <i>N</i>. <i>S</i> + <i>C</i> = 1. Also called <i>T</i>(<i>s</i>) elsewhere; not the C matrix and not the controller (<i>G</i><sub>c</sub>).
+  meaning: Complementary sensitivity <i>L</i>/(1+<i>L</i>). Multiplies noise <i>N</i>. <i>S</i> + <i>C</i> = 1.
+    Also called <i>T</i>(<i>s</i>) elsewhere; not the C matrix and not the controller (<i>G</i><sub>c</sub>).
   section: Feedback (LN2)
 - term: S^T_G
-  meaning: "System sensitivity (∂<i>T</i>/<i>T</i>)/(∂<i>G</i>/<i>G</i>): 1 open loop, 1/(1+<i>G</i><sub>c</sub><i>G</i>) closed loop."
+  meaning: "System sensitivity (∂<i>T</i>/<i>T</i>)/(∂<i>G</i>/<i>G</i>): 1 open loop,
+    1/(1+<i>G</i><sub>c</sub><i>G</i>) closed loop."
   section: Feedback (LN2)
 - term: α
-  meaning: A parameter inside <i>G</i>; <i>S</i><sup><i>T</i></sup><sub>α</sub> = <i>S</i><sup><i>T</i></sup><sub><i>G</i></sub><i>S</i><sup><i>G</i></sup><sub>α</sub>.
+  meaning: A parameter inside <i>G</i>; <i>S</i><sup><i>T</i></sup><sub>α</sub> =
+    <i>S</i><sup><i>T</i></sup><sub><i>G</i></sub><i>S</i><sup><i>G</i></sup><sub>α</sub>.
   section: Feedback (LN2)
 - term: K_a, K_m, K_b, K_t
   meaning: "Steel mill / DC motor: amplifier gain, motor torque constant, back-EMF constant, tachometer gain."
@@ -155,104 +169,247 @@
   meaning: Crossover frequency where |<i>L</i>(<i>j</i>ω)| = 1 (≈ loop bandwidth).
   section: Feedback (LN2)
 - term: ISE, IAE, ITAE, ITSE
-  meaning: ∫<i>e</i>², ∫|<i>e</i>|, ∫<i>t</i>|<i>e</i>|, ∫<i>t</i><i>e</i>² over [0, <i>T</i>]. Time-weighted ones punish late error.
+  meaning: ∫<i>e</i>², ∫|<i>e</i>|, ∫<i>t</i>|<i>e</i>|, ∫<i>t</i><i>e</i>² over [0, <i>T</i>]. Time-weighted
+    ones punish late error.
   section: Feedback (LN2)
 - term: ×  /  ○
-  meaning: "Pole (×): root of denominator, |G| → ∞, a natural mode. Zero (○): root of numerator, G = 0, a transmission null."
+  meaning: "Pole (×): root of denominator, |G| → ∞, a natural mode. Zero (○): root of numerator, G = 0, a
+    transmission null."
   section: s-plane map
 - term: RHP zero
-  meaning: "Zero with Re > 0: non-minimum phase. Not a mode (never makes anything grow). Same |G(jω)| as its LHP mirror but extra phase lag; wrong-way start; limits achievable bandwidth (M10)."
+  meaning: "Zero with Re > 0: non-minimum phase. Not a mode (never makes anything grow). Same |G(jω)| as its LHP
+    mirror but extra phase lag; wrong-way start; limits achievable bandwidth (M10)."
   section: s-plane map
 - term: rᵢ
-  meaning: "Residue at pole <i>p</i><sub>i</sub>: amplitude of mode <i>e</i><sup><i>p</i><sub>i</sub><i>t</i></sup> in <i>y</i>(<i>t</i>). Zeros change residues."
+  meaning: "Residue at pole <i>p</i><sub>i</sub>: amplitude of mode
+    <i>e</i><sup><i>p</i><sub>i</sub><i>t</i></sup> in <i>y</i>(<i>t</i>). Zeros change residues."
   section: s-plane map
 - term: a (shift)
-  meaning: "<i>e</i><sup>−<i>at</i></sup><i>f</i>(<i>t</i>) ↔ <i>F</i>(<i>s</i>+<i>a</i>): every mark slides left by <i>a</i>. Time scaling <i>f</i>(<i>at</i>) instead stretches marks radially ×<i>a</i>."
+  meaning: "<i>e</i><sup>−<i>at</i></sup><i>f</i>(<i>t</i>) ↔ <i>F</i>(<i>s</i>+<i>a</i>): every mark slides
+    left by <i>a</i>. Time scaling <i>f</i>(<i>at</i>) instead stretches marks radially ×<i>a</i>."
   section: s-plane map
 - term: e^−sT
-  meaning: "Pure time delay T: no finite poles/zeros, |·| = 1, phase −ω<i>T</i>. Padé ≈ (1−<i>sT</i>/2)/(1+<i>sT</i>/2)."
+  meaning: "Pure time delay T: no finite poles/zeros, |·| = 1, phase −ω<i>T</i>. Padé ≈
+    (1−<i>sT</i>/2)/(1+<i>sT</i>/2)."
   section: s-plane map
 - term: rel. degree
   meaning: "#poles − #zeros. Sets the initial behavior (IVT) and high-frequency roll-off."
   section: s-plane map
 - term: K (locus)
-  meaning: "Loop gain swept 0 → ∞: closed-loop poles (roots of 1 + <i>KL</i> = 0) start at open-loop ×'s, end at ○'s or ∞."
+  meaning: "Loop gain swept 0 → ∞: closed-loop poles (roots of 1 + <i>KL</i> = 0) start at open-loop ×'s, end at
+    ○'s or ∞."
   section: s-plane map
 - term: ω (drive)
-  meaning: The frequency of the sine you apply. Picks the lookup spot s = jω on the jω axis. Not a pole, not the signal itself.
+  meaning: The frequency of the sine you apply. Picks the lookup spot s = jω on the jω axis. Not a pole, not the
+    signal itself.
   section: s-plane map
 - term: e^st probe ◆
-  meaning: "Test signal at address s = σ + jω: σ = growth/decay rate, ω = oscillation. If drive ~ e<sup><i>st</i></sup>, response/probe = G(s). Real inputs are sums of many probes (Fourier: on jω; Laplace: anywhere)."
+  meaning: "Test signal at address s = σ + jω: σ = growth/decay rate, ω = oscillation. If drive ~
+    e<sup><i>st</i></sup>, response/probe = G(s). Real inputs are sums of many probes (Fourier: on jω;
+    Laplace: anywhere)."
   section: s-plane map
 - term: "|s − p|, |s − z|"
-  meaning: Length of the vector from a pole × / zero ○ to the lookup point ◆ (dashed lines in the explorer). |<i>G</i>| = |<i>C</i>|·Π(zero distances)/Π(pole distances); vector angles add up to ∠<i>G</i>. Not the same as ω<sub><i>n</i></sub> = |<i>p</i>| (distance from the origin).
+  meaning: Length of the vector from a pole × / zero ○ to the lookup point ◆ (dashed lines in the explorer).
+    |<i>G</i>| = |<i>C</i>|·Π(zero distances)/Π(pole distances); vector angles add up to ∠<i>G</i>. Not the
+    same as ω<sub><i>n</i></sub> = |<i>p</i>| (distance from the origin).
   section: s-plane map
 - term: "|G(jω)|, ∠G(jω)"
-  meaning: "Surface height and phase at the lookup point: output/input amplitude ratio and phase shift for a steady sine."
+  meaning: "Surface height and phase at the lookup point: output/input amplitude ratio and phase shift for a
+    steady sine."
   section: s-plane map
 - term: G_H, G_L
   meaning: High-order original and lower-order approximation (same DC gain).
   section: Feedback (LN2)
 - term: controllable
-  meaning: Every state can be reached from any other in finite time by some input u(t). Equivalent (SISO, n states) to det Pc ≠ 0. The cart is completely controllable.
+  meaning: Every state can be reached from any other in finite time by some input u(t). Equivalent (SISO, n
+    states) to det Pc ≠ 0. The cart is completely controllable.
   section: State feedback
 - term: observable
-  meaning: The initial state can be recovered from a finite record of y(t) (with u known). Equivalent to det Po ≠ 0. The cart is completely observable from position alone.
+  meaning: The initial state can be recovered from a finite record of y(t) (with u known). Equivalent to det Po
+    ≠ 0. The cart is completely observable from position alone.
   section: State feedback
 - term: controllability matrix
-  meaning: Pc = [B AB … A<sup>n−1</sup>B]. Full rank (det Pc ≠ 0) iff the plant is completely controllable. For the cart, Pc = [[0, 1], [1, −3]] and det Pc = −1.
+  meaning: Pc = [B AB … A<sup>n−1</sup>B]. Full rank (det Pc ≠ 0) iff the plant is completely controllable. For
+    the cart, Pc = [[0, 1], [1, −3]] and det Pc = −1.
   section: State feedback
 - term: observability matrix
-  meaning: Po = [C; CA; …; CA<sup>n−1</sup>]. Full rank iff the plant is completely observable. For the cart, Po = I and det Po = 1.
+  meaning: Po = [C; CA; …; CA<sup>n−1</sup>]. Full rank iff the plant is completely observable. For the cart, Po
+    = I and det Po = 1.
   section: State feedback
 - term: stabilizable
-  meaning: Every uncontrollable mode is already stable. Complete controllability implies stabilizable; the converse allows unstable plants as long as those unstable modes can be reached by u.
+  meaning: Every uncontrollable mode is already stable. Complete controllability implies stabilizable; the
+    converse allows unstable plants as long as those unstable modes can be reached by u.
   section: State feedback
 - term: detectable
   meaning: Every unobservable mode is already stable. Complete observability implies detectable.
   section: State feedback
 - term: Ackermann's formula
-  meaning: The SISO formula K = [0 … 0 1] Pc<sup>−1</sup> q(A) that places the eigenvalues of A − BK at the roots of the desired polynomial q(s). Requires Pc invertible. On the cart, q(s) = s² + 8s + 25 gives K = [23, 5].
+  meaning: The SISO formula K = [0 … 0 1] Pc<sup>−1</sup> q(A) that places the eigenvalues of A − BK at the
+    roots of the desired polynomial q(s). Requires Pc invertible. On the cart, q(s) = s² + 8s + 25 gives K =
+    [23, 5].
   section: State feedback
 - term: observer (Luenberger)
-  meaning: A copy of the plant, corrected by the output error, x̂' = A x̂ + Bu + L(y − C x̂). The error obeys e' = (A − LC)e. For observer poles −20 ± 15j on the cart, L = [37, 512].
+  meaning: A copy of the plant, corrected by the output error, x̂' = A x̂ + Bu + L(y − C x̂). The error obeys e'
+    = (A − LC)e. For observer poles −20 ± 15j on the cart, L = [37, 512].
   section: State feedback
 - term: separation principle
-  meaning: With u = −K x̂ the closed-loop poles are exactly those of A − BK and of A − LC, so K and L can be designed independently.
+  meaning: With u = −K x̂ the closed-loop poles are exactly those of A − BK and of A − LC, so K and L can be
+    designed independently.
   section: State feedback
 - term: compensator
-  meaning: The transfer function from y to u after eliminating the estimate, U(s) = −K(sI − (A − BK − LC))⁻¹ L Y(s). It need not be stable on its own, even when the loop is.
+  meaning: The transfer function from y to u after eliminating the estimate, U(s) = −K(sI − (A − BK − LC))⁻¹ L
+    Y(s). It need not be stable on its own, even when the loop is.
   section: State feedback
 - term: reference gain
-  meaning: N̄ in u = −Kx + N̄ r, chosen so the DC gain from r to y is 1. For the cart with K = [23, 5], N̄ = 25. The notes also write a more general (M, N) structure, or feed y − r to the observer.
+  meaning: N̄ in u = −Kx + N̄ r, chosen so the DC gain from r to y is 1. For the cart with K = [23, 5], N̄ = 25.
+    The notes also write a more general (M, N) structure, or feed y − r to the observer.
   section: State feedback
 - term: pole, zero
-  meaning: "A pole is a root of G's denominator (G → ∞): a built-in motion e^(pt) the plant makes on its own. A zero is a root of the numerator (G = 0): an input shape the plant blocks. Drawn × and ○ on the s-plane."
+  meaning: "A pole is a root of G's denominator (G → ∞): a built-in motion e^(pt) the plant makes on its own. A
+    zero is a root of the numerator (G = 0): an input shape the plant blocks. Drawn × and ○ on the s-plane."
   section: Transfer functions & loop
 - term: stable / unstable
-  meaning: "Stable = every pole in the left half-plane (Re p < 0), so every free motion dies out. A pole in the right half-plane grows without bound, however small the input. On the jω axis the motion never dies (borderline)."
+  meaning: Stable = every pole in the left half-plane (Re p < 0), so every free motion dies out. A pole in the
+    right half-plane grows without bound, however small the input. On the jω axis the motion never dies
+    (borderline).
   section: Transfer functions & loop
 - term: LTI
-  meaning: "Linear time-invariant. Linear = superposition holds (no saturation or dead zones); time-invariant = the parameters (m, c, k, R, L, C) don't drift. Transfer functions are defined for LTI plants."
+  meaning: Linear time-invariant. Linear = superposition holds (no saturation or dead zones); time-invariant =
+    the parameters (m, c, k, R, L, C) don't drift. Transfer functions are defined for LTI plants.
   section: Transfer functions & loop
 - term: DC gain
-  meaning: "G(0): the steady output per unit steady input, provided the plant is stable (otherwise the output never settles, so G(0) says nothing about it). For the cart, a 1 N push settles at 0.5 m."
+  meaning: "G(0): the steady output per unit steady input, provided the plant is stable (otherwise the output
+    never settles, so G(0) says nothing about it). For the cart, a 1 N push settles at 0.5 m."
   section: Time response
 - term: order
-  meaning: "Highest power of s in the denominator of G, equal to the number of independent energy stores and the number of poles (and of states)."
+  meaning: Highest power of s in the denominator of G, equal to the number of independent energy stores and the
+    number of poles (and of states).
   section: Transfer functions & loop
 - term: open loop, closed loop
-  meaning: "Open loop applies an input and hopes. Closed loop measures the output, compares it with the command and acts on the error, so it can notice disturbances and plant changes."
+  meaning: Open loop applies an input and hopes. Closed loop measures the output, compares it with the command
+    and acts on the error, so it can notice disturbances and plant changes.
   section: Transfer functions & loop
 - term: state
-  meaning: "The smallest set of numbers you must remember to predict the future of the plant when you know the input (cart: position and velocity). One state per independent energy store."
+  meaning: "The smallest set of numbers you must remember to predict the future of the plant when you know the
+    input (cart: position and velocity). One state per independent energy store."
   section: State space
 - term: eigenvalue
-  meaning: "A number λ with det(λI − A) = 0. The eigenvalues of A are the poles of G(s) (unless cancelled): the same two numbers −1 and −2 for the cart."
+  meaning: "A number λ with det(λI − A) = 0. The eigenvalues of A are the poles of G(s) (unless cancelled): the
+    same two numbers −1 and −2 for the cart."
   section: State space
 - term: root locus
-  meaning: "The paths the closed-loop poles follow as one loop gain K grows from 0. They start at the open-loop poles and end at the zeros (or infinity). With output feedback the poles can only sit on this path; state feedback can place them anywhere."
+  meaning: The paths the closed-loop poles follow as one loop gain K grows from 0. They start at the open-loop
+    poles and end at the zeros (or infinity). With output feedback the poles can only sit on this path; state
+    feedback can place them anywhere.
   section: Feedback (LN2)
 - term: dominant pole
-  meaning: "The pole closest to the jω axis: it decays slowest, so it shapes the response once the faster modes have died out. A pole about 5× farther left can usually be dropped, provided the DC gain is kept."
+  meaning: "The pole closest to the jω axis: it decays slowest, so it shapes the response once the faster modes
+    have died out. A pole about 5× farther left can usually be dropped, provided the DC gain is kept."
   section: Time response
+- term: xᵢ
+  meaning: Integrator state, ∫<i>e</i> dt (what “I” remembers).
+  section: Signals
+- term: K, τ
+  meaning: "First-order plant <i>K</i>/(τ<i>s</i>+1): <i>K</i> = DC gain, τ = time constant (s)."
+  section: Transfer functions & loop
+- term: T_r
+  meaning: Rise time (s), 10–90%.
+  section: Time response
+- term: θ
+  meaning: Pole angle from the negative real axis; cos θ = ζ.
+  section: Time response
+- term: PM
+  meaning: "Phase margin (°) = 180° + ∠<i>L</i>(<i>j</i>ω<sub>c</sub>). More = calmer; ζ ≈ PM/100. <i>Preview:
+    not in LN1/2/4.</i>"
+  section: s-plane map
+- term: Bandwidth
+  meaning: "Frequency range the closed loop tracks (≈ ω<sub>c</sub>). Slider: Response time ↔ BW. <i>Preview:
+    not in LN1/2/4.</i>"
+  section: s-plane map
+- term: K_u
+  meaning: "Ultimate gain: P-only gain at sustained oscillation (= 8 for 1/(s+1)³)."
+  section: Controller
+- term: T_u
+  meaning: Ultimate period (s) of that oscillation (≈ 3.63 s here); ω<sub>u</sub> = 2π/<i>T</i><sub>u</sub>.
+  section: Controller
+- term: K, L, T
+  meaning: "Z–N reaction curve: plant gain <i>K</i>, dead time <i>L</i> (s), time constant <i>T</i> (s)."
+  section: Controller
+- term: "|u| ≤ 1.2"
+  meaning: Actuator saturation limit on the legacy teaching plants (failure cards, legacy Lab plants). The dish
+    uses ±200 N·m.
+  section: Signals
+- term: T_dead
+  meaning: "Dead time / transport delay (s): y starts responding only this long after <i>u</i> changes (A10).
+    Not <i>T</i><sub>d</sub>, which is derivative time."
+  section: Transfer functions & loop
+- term: τ_m
+  meaning: "Sensor lag time constant (s): the controller sees <i>y</i> through 1/(τ<sub>m</sub><i>s</i>+1) (A11)."
+  section: Transfer functions & loop
+- term: u_max
+  meaning: Actuator amplitude limit, |<i>u</i>| ≤ <i>u</i><sub>max</sub> (A7, A9).
+  section: Signals
+- term: "|du/dt|_max"
+  meaning: Actuator rate (slew) limit, units of <i>u</i> per second (A9).
+  section: Signals
+- term: δ
+  meaning: "Actuator dead-zone half-width: nothing moves while |<i>u</i>| ≤ δ (A14)."
+  section: Transfer functions & loop
+- term: b, T_f
+  meaning: "2-DOF set-point shaping: weight <i>b</i> (0–1) on the P term, or set-point filter time constant
+    <i>T</i><sub>f</sub> (s) (A13)."
+  section: Controller
+- term: Response time / Transient behavior
+  meaning: "PID Tuner sliders (Project 1: 3.4 → 1.5 s, 0.6 → 0.72). Response time is a design target, not
+    measured <i>T</i><sub>s</sub>."
+  section: Controller
+- term: "House: x₁, x₂"
+  meaning: Living-room and bedroom temperatures above outdoor (K). Time in the house is in <b>hours</b>.
+  section: Running examples
+- term: "House: u, C_th, G_in, G_out"
+  meaning: Heater power in the living room (W, up to 2.5 kW); heat capacity 1 MJ/K per room; inner-wall
+    conductance 277.8 W/K; each room's leak outdoors 55.6 W/K.
+  section: Running examples
+- term: "Corner: m, k, c"
+  meaning: "The quarter car: 400 kg of body on a 25.6 kN/m spring and a 1.6 kN·s/m shock (ωₙ = 8 rad/s, ζ = 0.25)."
+  section: Running examples
+- term: "Corner: z, w"
+  meaning: Body height from rest (m, + up) and road height under the wheel (m).
+  section: Running examples
+- term: "Dish: θ, J, B"
+  meaning: Antenna pointing angle (rad); inertia J = 10 kg·m²; viscous friction B = 20 N·m·s/rad. Θ/T = 0.1/(s(s
+    + 2)).
+  section: Running examples
+- term: "Dish: T, T_d"
+  meaning: Motor torque at the axis (N·m, limit ±200) and wind (disturbance) torque (N·m, 20 in the examples).
+  section: Running examples
+- term: N_f
+  meaning: "Derivative filter bandwidth (rad/s): K_d·N_f·s/(s + N_f); 200 on the dish. The legacy PID pages wrote N."
+  section: Controller
+- term: N̄
+  meaning: "Reference gain for state feedback, u = −Kx̂ + N̄r; the slides write N. Corner: N̄ = k + k₁ = 40 000 N/m."
+  section: State feedback
+- term: k₁, k₂
+  meaning: State-feedback gains, K = [k₁, k₂]. On the corner k₁ adds to the spring (N/m) and k₂ to the shock (N·s/m).
+  section: State feedback
+- term: L (observer)
+  meaning: "Observer gain column [l₁, l₂]ᵀ, not the loop gain L(s). Corner (×5): L = [76, 2132]."
+  section: State feedback
+- term: K_pos
+  meaning: Position error constant, L(0); step error 1/(1 + K_pos). Written K_pos so it doesn't clash with the P
+    gain Kp.
+  section: Time response
+- term: K_r
+  meaning: Rate (tachometer) feedback gain on the dish (N·m·s/rad), used with the performance indices. Not K_v.
+  section: Controller
+- term: K_ω
+  meaning: "Speed-loop gain on the dish (N·m·s/rad): time constant J/(B + K_ω)."
+  section: Controller
+- term: D on measurement
+  meaning: "Taking the derivative of the measured angle instead of the error: the same damping without the zero
+    at −Kp/Kd, and no kick at a command step. The default on the dish."
+  section: Controller
+- term: anti-windup
+  meaning: Stopping the integrator while the actuator is saturated (clamping) or bleeding the excess off
+    (back-calculation). Added, not in the notes.
+  section: Controller

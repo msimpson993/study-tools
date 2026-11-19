@@ -1,70 +1,68 @@
 ---
 id: ctrl
-order: 12
-title: "What P, I and D each do"
-category: loop
-chain:
-  - title: "What can the controller do?"
-  - title: "What can P, I and D each do about it?"
-  - title: "controllers at a glance"
-    detail: "Gc(s) = Kp + Ki/s + Kd·s"
-neighbors:
-  - blocks
-  - sse
-exampleScene: { overlays: [loop, poles], params: { K: 7 }, diagram: pid, caption: "The block diagram expands Gc into its P, I and D branches. u = K·e is the proportional part: with K = 7 (I and D off) the cart overshoots about 16 % and stops short of 1 m; the closed-loop poles are in the right-hand plot." }
+order: 13
+title: "Turn up the gain (P), the controller menu, and faster loops"
+category: pid
+neighbors: [blocks, sse, integral, derivative]
+level: Some algebra
+check: [q-pgain, q-menu, q-speed]
 ---
-**What can P, I and D each do about it?**
 
-**Picture it first.** Add one term at a time to the cart: P is fast but leaves an offset, I removes it and slows things down, D calms the ringing. The closed-loop poles are in the third plot.
+**The question:** a car corner only follows the road; what happens when a motor we command pushes in proportion to the error? This is the box *Turn up the gain (P)*, with its side boxes *The controller menu* and *Feedback makes it faster*, after *Close the loop*.
 
-```figure:pidcart
+### The big idea
+
+P control pushes in proportion to the error. On the dish, torque Kp·e acts like a spring pulling the antenna onto the satellite. A stiffer spring is faster, but the friction that damps it is fixed, so the decay rate stays at B/(2J) = 1 /s while the swing gets faster: more gain, more bounce.
+
+**The plant.** A satellite-tracking pedestal, azimuth axis. J = 10 kg·m² (a ~1.2 m dish on its mount), B = 20 N·m·s/rad (bearing and motor viscous friction), the motor and gearing modelled as a pure torque source up to ±200 N·m at the axis. Θ/T = 1/(Js² + Bs) = 0.1/(s(s + 2)).
+
+### See it
+
+The dish, the satellite marker and the error angle. Raise Kp: past Kp = 10 the poles split and climb straight up, faster swing, same decay.
+
+```figure:antenna
 ```
 
-Proportional acts on the present error (faster, leaves some error), integral accumulates past error (removes steady-state error, can add overshoot and windup), derivative anticipates (adds damping, amplifies noise). Parallel and standard forms use different symbols for the same controller.
+The same path for every Kp at once (*preview: root locus, added*):
 
-### What does each term fix, and what does it cost?
+```figure:locus
+```
 
-<b>P</b> reacts to the present error: faster, but leaves a steady-state error on type-0 plants. <b>I</b> reacts to the accumulated past: removes step steady-state error, but slows things down and adds overshoot. <b>D</b> reacts to the trend (the future): adds damping and cuts overshoot, but amplifies noise.
+### The math
 
-| Term | G<sub>c</sub>(s) | Fixes | Costs / watch for |
-|---|---|---|---|
-| P | <i>K</i><sub>p</sub> | Rise time, reduces (but doesn't eliminate) SSE | Too much → overshoot, oscillation |
-| I | <i>K</i><sub>i</sub>/<i>s</i> | Step SSE → 0 (adds a pole at the origin) | Slower, more overshoot, windup |
-| D | <i>K</i><sub>d</sub><i>s</i> | Damping, less overshoot | Noise amplification, derivative kick |
-| PI | <i>K</i><sub>p</sub> + <i>K</i><sub>i</sub>/<i>s</i> | Accuracy + reasonable speed | The industrial default (Project 1 is PI) |
-| PD | <i>K</i><sub>p</sub> + <i>K</i><sub>d</sub><i>s</i> | Speed + damping (adds a zero) | The boring machine's <i>K</i> + 11<i>s</i> is a PD! |
-| PID | <i>K</i><sub>p</sub> + <i>K</i><sub>i</sub>/<i>s</i> + <i>K</i><sub>d</sub><i>s</i> | All three | Three knobs to tune |
+```eq
+Js² + Bs + Kp = 0  ⇒  s² + 2s + 0.1Kp = 0
+```
 
+```eq
+ωₙ = √(Kp/J),   ζ = B/(2√(JKp)),   critical at Kp = B²/(4J) = 10
+```
 
-The class example (Lecture 2): you ask cruise control for 70 mph and get 72 mph forever. That's the steady-state error P-only leaves behind. The integral term keeps “learning” until the error is gone.
+**What each symbol means.** θ: pointing angle (rad); T: motor torque (N·m); J: inertia (kg·m²); B: viscous friction (N·m·s/rad); Kp: proportional gain (N·m/rad).
 
-### Parallel vs standard form: why two sets of symbols?
+<a id="menu"></a>**The controller menu.** On/off, P, I, PI, PD and PID, each with its op-amp circuit (board pair s5). The standard form is Gc = Kp(1 + 1/(Ti s) + T_D s), with Ki = Kp/Ti and Kd = Kp·T_D (LN1 slides 10–17). The slides write the derivative time Td; here it is T_D, because T_d is the wind torque.
 
-Same controller, two parameterizations. Parallel: <i>K</i><sub>p</sub> + <i>K</i><sub>i</sub>/<i>s</i> + <i>K</i><sub>d</sub><i>s</i>. Standard (ISA): <i>K</i><sub>p</sub>(1 + 1/(<i>T</i><sub>i</sub><i>s</i>) + <i>T</i><sub>d</sub><i>s</i>). They're related by <i>K</i><sub>i</sub> = <i>K</i><sub>p</sub>/<i>T</i><sub>i</sub> and <i>K</i><sub>d</sub> = <i>K</i><sub>p</sub><i>T</i><sub>d</sub>.
+<a id="speed"></a>**Feedback makes it faster.** Around a first-order plant, feedback divides the time constant: τ_cl = τ/(1 + loop gain). The dish's speed is Ω/T = 1/(Js + B); with a speed loop K_ω the time constant becomes J/(B + K_ω).
 
-````callout:trap Trap
+```figure:speed
+```
 
+### Worked example: on the dish
 
-- In standard form, a <b>bigger</b> <i>T</i><sub>i</sub> means a <b>weaker</b> integral.
-- <i>T</i><sub>d</sub> is overloaded: derivative time here, but <i>T</i><sub>d</sub>(<i>s</i>) is the <em>disturbance</em> in Lecture Notes 2. Context tells you which (the Vars panel lists both).
-````
+| Kp (N·m/rad) | ωₙ | ζ | %OS | Tₛ |
+|---|---|---|---|---|
+| 10 | 1 | 1 | 0 | 5.8 s |
+| 40 | 2 | 0.5 | 16.3 % | 4.0 s |
+| 250 | 5 | 0.2 | 52.7 % | 3.9 s |
+| 1000 | 10 | 0.1 | 72.9 % | 3.8 s |
 
-````callout:note Go deeper
-Tuning methods, the PID Tuner sliders, windup, and the derivative filter are in the PID tuning guide, with a quiz &amp; flashcards.
-````
+Settling barely changes (σ = 1 fixed); overshoot explodes. Speed loop: K_ω = 80 takes τ from 0.5 s to 0.1 s; 180 to 0.05 s.
 
-Choosing the three numbers is its own map: [open the PID tuning map](../pid-tuning/index.html). It uses this same cart as plant 2.
+### Exam examples
 
-````callout:predict Predict
-Before you touch a slider, predict what it will do. P alone settles short of 1 (the offset is 1/(1 + Kp·G(0)) = 0.4 at Kp = 3). Adding Ki closes the gap, at the cost of a slower settle; add a lot of Ki and it overshoots. Kd speeds the settle up again.
-````
+- LN1's servo (slides 50–51, 62): the same structure with symbols.
+- LN2's tachometer (slides 15–18): τ 5 s → 0.833 s, a factor of 6; the final value 10 → 1.67.
 
-````callout:note Symbols used here
-- **poles**: the roots of the denominator: the exponentials e^(pt) the plant can make. The cart's are −1 and −2
-- **zeros**: the roots of the numerator: they set how much of each mode appears
-- **DC gain**: the steady output for a unit steady input, G(0), if the plant is stable. For the cart, 0.5 m per N
-- **K**: the proportional gain in u = K(r − y); K = 7 gives ζ = 0.5, ωn = 3
-- **e_ss**: the error r − y once everything has settled
-- **%OS, Ts**: overshoot and 2 % settling time of the step response
-- **Gc(s)**: the controller transfer function (PID: Kp + Ki/s + Kd·s)
-````
+### What it can't do
+
+One knob can't set speed and damping separately; with a steady wind it also leaves an error (*Why it stops short*).

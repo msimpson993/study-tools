@@ -16,9 +16,9 @@
     <a href="#s12"><div class="n">12</div><div class="t">Where it ends up</div><div class="d">Final-value theorem, why P leaves error and I removes it</div></a>
     <a href="#s13"><div class="n">13</div><div class="t">What feedback buys</div><div class="d">S + C = 1, sensitivity, disturbances, transients, indices</div></a>
     <a href="#cheat"><div class="n">★</div><div class="t">Recognize-this sheet</div><div class="d">One-page review + glossary</div></a>
-    <a href="../pid-tuning/index.html"><div class="n">↗ sibling</div><div class="t">PID tuning guide</div><div class="d">The deep dive on choosing K<sub>p</sub>, K<sub>i</sub>, K<sub>d</sub> (Project 1)</div></a>
+    <a href="#/dive/tuning"><div class="n">↗ deep dive</div><div class="t">Choosing the three gains</div><div class="d">Tuning K<sub>p</sub>, K<sub>i</sub>, K<sub>d</sub> on the antenna dish, the PID Lab and Project 1</div></a>
   </div>
-  <p class="ui" style="font-size:.85rem;color:var(--muted)">How to use: the <b>Short answer</b> boxes alone are a decent review. Purple <b>Recognize</b> boxes are the “on sight” patterns, red <b>Trap</b> boxes are common exam mistakes, and yellow <b>Predict</b> boxes ask you to guess before reading on. Press <b>v</b> (or the <i>Vars</i> button) for the symbols used in the section you're reading. PID <em>tuning</em> lives in the <a href="../pid-tuning/index.html">PID guide</a>; self-test with this guide's <a href="#/quiz">quiz &amp; flashcards</a>, the <a href="#/quiz?tags=mini-exam&title=Mini-exam%201">mini-exam quiz</a> and the <a href="../pid-tuning/index.html#/quiz">PID quiz</a>.</p>
+  <p class="ui" style="font-size:.85rem;color:var(--muted)">How to use: the <b>Short answer</b> boxes alone are a decent review. Purple <b>Recognize</b> boxes are the “on sight” patterns, red <b>Trap</b> boxes are common exam mistakes, and yellow <b>Predict</b> boxes ask you to guess before reading on. Press <b>v</b> (or the <i>Vars</i> button) for the symbols used in the section you're reading. PID <em>tuning</em> lives in the deep dive <a href="#/dive/tuning">Choosing the three gains</a>; self-test with this guide's <a href="#/quiz">quiz &amp; flashcards</a>, the <a href="#/quiz?tags=mini-exam&title=Mini-exam%201">mini-exam quiz</a> and the <a href="#/quiz?tags=tuning&title=PID%20tuning">PID tuning quiz</a>.</p>
 </section>
 
 <!-- ================= 1 ================= -->
@@ -489,7 +489,7 @@ Lay the s-plane flat and, above every point <i>s</i>, raise a surface to height 
 <!-- ================= 5 ================= -->
 <section data-stage="5" id="s5">
 <h2>5 · Controllers at a glance (P, I, PI, PD, PID)</h2>
-<div class="where"><div class="ic">📍</div><div><b class="h">Where are we in the big picture?</b>The <i>G</i><sub>c</sub> block from Stage 4. This is the recognition-level summary. How to <em>choose</em> the gains is the whole subject of the <a href="../pid-tuning/index.html">PID tuning guide</a>.
+<div class="where"><div class="ic">📍</div><div><b class="h">Where are we in the big picture?</b>The <i>G</i><sub>c</sub> block from Stage 4. This is the recognition-level summary. How to <em>choose</em> the gains is the whole subject of the <a href="#/dive/tuning">Choosing the three gains</a> deep dive.
 <div class="mini"><span>Describe</span><i>→</i><span class="on">Loop</span><i>→</i><span>State space</span><i>→</i><span>Response</span><i>→</i><span>SSE</span><i>→</i><span>Feedback</span></div></div></div>
 
 <div class="q" id="q13"><span class="badge">Q13</span><h3>What does each term fix, and what does it cost?</h3></div>
@@ -511,7 +511,7 @@ Lay the s-plane flat and, above every point <i>s</i>, raise a surface to height 
 <div class="ansr">
 <div class="short">Same controller, two parameterizations. Parallel: <i>K</i><sub>p</sub> + <i>K</i><sub>i</sub>/<i>s</i> + <i>K</i><sub>d</sub><i>s</i>. Standard (ISA): <i>K</i><sub>p</sub>(1 + 1/(<i>T</i><sub>i</sub><i>s</i>) + <i>T</i><sub>d</sub><i>s</i>). They're related by <i>K</i><sub>i</sub> = <i>K</i><sub>p</sub>/<i>T</i><sub>i</sub> and <i>K</i><sub>d</sub> = <i>K</i><sub>p</sub><i>T</i><sub>d</sub>.</div>
 <div class="trap"><b class="h">Trap</b><ul><li>In standard form, a <b>bigger</b> <i>T</i><sub>i</sub> means a <b>weaker</b> integral.</li><li><i>T</i><sub>d</sub> is overloaded: derivative time here, but <i>T</i><sub>d</sub>(<i>s</i>) is the <em>disturbance</em> in Lecture Notes 2. Context tells you which (the Vars panel lists both).</li></ul></div>
-<div class="note"><b class="h">Go deeper</b>Tuning methods, the PID Tuner sliders, windup, and the derivative filter are in the <a href="../pid-tuning/index.html">PID tuning guide</a>, with a <a href="../pid-tuning/index.html#/quiz">quiz &amp; flashcards</a>.</div>
+<div class="note"><b class="h">Go deeper</b>Tuning methods, the PID Tuner sliders, windup, and the derivative filter are in the deep dives <a href="#/dive/tuning">Choosing the three gains</a>, <a href="#/dive/methods">Recipes</a>, <a href="#/dive/windup">windup</a> and the <a href="#/dive/lab">PID Lab</a>.</div>
 </div>
 </section>
 <!-- ================= 6 ================= -->
@@ -954,7 +954,7 @@ Lay the s-plane flat and, above every point <i>s</i>, raise a surface to height 
 <dt>Model reduction</dt><dd>Replacing a high-order model with a lower-order one that keeps the dominant dynamics and DC gain.</dd>
 </dl>
 
-<div class="endcta"><b class="ui">Next stops</b><div class="linkrow"><a class="tbtn primary" href="#/quiz">Quiz &amp; flashcards →</a><a class="tbtn" href="../pid-tuning/index.html">PID tuning guide</a><a class="tbtn" href="../pid-tuning/index.html#/quiz">PID quiz &amp; flashcards</a><a class="tbtn" href="#/quiz?tags=mini-exam&title=Mini-exam%201">Mini-exam 1 quiz</a></div></div>
+<div class="endcta"><b class="ui">Next stops</b><div class="linkrow"><a class="tbtn primary" href="#/quiz">Quiz &amp; flashcards →</a><a class="tbtn" href="#/dive/tuning">Choosing the three gains</a><a class="tbtn" href="#/dive/lab">PID Lab</a><a class="tbtn" href="#/quiz?tags=mini-exam&title=Mini-exam%201">Mini-exam 1 quiz</a></div></div>
 <footer>EECE5130 Control Systems · UML · Fall 2026 · Study guide built from Lecture Notes 1–2, Lectures 1–3, and the Oct 23 lecture. Formulas are checked, but verify any grading-critical detail against the slides.</footer>
 </section>
 </main></div>

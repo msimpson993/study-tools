@@ -1,333 +1,2104 @@
+# Generated from the tutor's batch 1 (v2, three running examples) by /workspace/cs-build/gen_graph.py; edit the source and regenerate.
+# Big picture: root + 21 boxes, 24 lines (21 chain + 3 dashed look-backs). Full detail: 39 boxes, 41 lines (+17 side questions).
 maps:
-  - id: chain
-    title: The question chain
-    caption: Read top to bottom. Each box is the question the previous box leaves open; tap a box for its short answer and what it does for the cart, tap a line for the question that leads on. "Open the guide" shows the full interactive section.
-    seriesNames: ["Modeling and transfer functions", "Time response", "Feedback and control", "State space", "Designing with state feedback"]
-    nodes:
-      - id: root
-        label: How do we make an approximately-known system do what we command?
-        detail: quickly, smoothly, despite disturbances and noise, predicted from its poles
-        kind: decision
-        series: 0
-        short: "The whole course in one question. We only have a model of the plant, so we need (1) a way to describe it, (2) a way to predict its behaviour from that description (poles), and (3) a feedback loop that makes the real system follow the command even when the model is wrong. The map reads top to bottom in that order: model, poles, response, feedback, then the plant's inside (state space) and design with it."
-        why: Control is the art of getting behaviour you can specify (settle in 2 s, overshoot under 10 %, ignore a push) from hardware you can only approximate.
-      - id: model
-        label: "How do we write the plant's ODE so it's easy to combine and close loops on?"
-        dive: model
-        detail: Laplace, LTI, zero initial conditions
-        series: 0
-        short: "Physics states laws as rates of change, so every lumped plant is an ODE. For a linear, time-invariant (LTI) plant starting at rest, the Laplace transform rewrites that same ODE as G(s) = Y(s)/U(s), output over input: nothing is lost, but blocks in series simply multiply, and later a feedback loop with controller Gc becomes GcG/(1 + GcG)."
-        eq: "G(s) = Y(s) / U(s), zero initial conditions"
-        addsToExample: "The cart's ẍ + 3ẋ + 2x = u (mass and spring: two stores, second order) and G(s) = 1/(s² + 3s + 2) are the same model, force in, position out. The denominator is the ODE's characteristic polynomial; its roots −1 and −2 are the e^(−t) and e^(−2t) you would get solving by hand."
-        accountsFor: "Design means trying many controllers on one plant. In the time domain each try is a new convolution or a new closed-loop ODE to solve; with G(s) it is a line of algebra, and the result can be predicted from where the roots move."
-        recognize: "A ratio of polynomials in s. The roots of the denominator are the poles; they decide which exponentials e^(pt) the free motion is made of."
-        trap: "G(s) assumes the plant starts at rest and describes only input to output. A cart already moving or a pre-charged capacitor needs the full ODE or state space."
-        live: "board:s1"
-      - id: splane
-        label: What is a pole or a zero, physically?
-        dive: splane
-        detail: the s-plane as a map
-        series: 0
-        short: "A pole is one of the plant's built-in motions: something it does on its own when nothing pushes it, like the cart creeping back as e^(−t). Each pole is drawn as × at s = σ + jω on the s-plane: σ is the decay rate (left of the vertical jω axis it dies out, which is stable; right of it, it grows, which is unstable) and ω the ringing frequency. Zeros (○) are where G(s) = 0 and decide how strongly a given push excites each motion."
-        eq: "pole p = σ + jω  →  mode e^(σt)·cos(ωt)"
-        addsToExample: "Places two × on the negative real axis at −1 and −2 for the cart: no ω, so it can never ring, and the −1 pole is the slower one, so it decides how long the response takes."
-        accountsFor: "Why a pushed cart creeps back as a sum of e^(−t) and e^(−2t) without oscillating, and what moving a pole (stiffer spring, more damping) would do."
-        live: "board:splane"
-      - id: tf
-        label: What can I read off any transfer function?
-        dive: tf
-        detail: order, DC gain, time constants
-        series: 0
-        short: "Three numbers: the order (highest power of s in the denominator), the DC gain G(0) (final output per unit constant input) and the time constants 1/|p| (how long each pole takes to cover 63 % of its way). With those, and the poles you just met, you can sketch the step response before computing anything."
-        eq: "G(0) = lim s→0 G(s)   τ = 1/|p|"
-        addsToExample: "For the cart: order 2, DC gain G(0) = 1/2 (a 1 N push settles at 0.5 m), time constants 1 s and 0.5 s."
-        accountsFor: "How slow the unaided cart is (it needs about 4.6 s to settle within 2 % of 0.5 m) and why a 1 N push moves it only 0.5 m."
-        live: "board:s2"
-      - id: order
-        label: Why does a plant have the order it has?
-        dive: order
-        detail: energy-storage elements
-        series: 0
-        short: "The order equals the number of independent energy-storage elements (inductors, capacitors, masses, springs): each stores energy in a state, one number you must remember to predict the future, such as position or velocity. Dampers and resistors dissipate energy and add no state."
-        eq: "order = number of independent energy stores"
-        addsToExample: "The cart stores energy in two places, the spring (position) and the mass (velocity); the damper only burns energy. Hence second order and two poles."
-        accountsFor: "Why the cart has exactly two poles and why careless counting (two masses with a rigid link, for example) gives the wrong order."
-        live: "board:s3"
-      - id: ss
-        label: Is there a description that tracks the inside too?
-        dive: ss
-        detail: state space ẋ = Ax + Bu, y = Cx + Du
-        series: 3
-        short: "State space writes the plant as first-order equations in the energy-storage variables (the states x): ẋ = Ax + Bu and y = Cx + Du. It keeps initial conditions and internal motion that a transfer function hides, and it is the language of the design chapter that follows."
-        eq: "ẋ = Ax + Bu,  y = Cx + Du"
-        addsToExample: "For the cart, x = (position, velocity), A = [[0, 1], [−2, −3]], B = (0, 1)ᵀ, C = (1, 0), D = 0: the matrices of the linear-systems map."
-        accountsFor: "How the cart behaves when released with an initial stretch or velocity (zero input), which G(s) alone could not say."
-        live: "board:s6"
-      - id: ss2tf
-        label: How do the two descriptions connect?
-        dive: ss2tf
-        detail: G(s) = C(sI − A)⁻¹B + D
-        series: 3
-        short: "Taking the Laplace transform of the state equations and eliminating x gives G(s) = C(sI − A)⁻¹B + D. The poles of G are the eigenvalues of A (the roots of det(sI − A)), so stability and modes can be read from either description."
-        eq: "G(s) = C(sI − A)⁻¹B + D"
-        addsToExample: "Plugging the cart's A, B, C into C(sI − A)⁻¹B returns exactly 1/(s² + 3s + 2); eig(A) = −1, −2 are its poles."
-        accountsFor: "Why state space and transfer function agree about the cart's modes, and why a cancelled mode could hide in G(s) but not in A."
-        live: "board:s7"
-      - id: circuits
-        label: How do I get G(s) for real hardware?
-        dive: circuits
-        detail: impedances, op-amp stages
-        series: 0
-        short: "Treat each element by its impedance (R, sL, 1/(sC)) and use voltage dividers; for an ideal inverting op-amp the stage gain is −Z_f/Z_in. The same second-order equation as the cart appears as a series RLC."
-        eq: "R → R,  L → sL,  C → 1/(sC);  inverting stage −Zf/Zin"
-        addsToExample: "The cart's m, c, k map to a series RLC's L, R and 1/C, so the same G(s) = 1/(s² + 3s + 2) describes a circuit; an op-amp stage is how a controller Gc(s) is built."
-        accountsFor: "Why the cart can be studied with an electronic analogue, and how a physical PI or PID would be realized with op-amps."
-        live: "board:s8"
-      - id: first
-        label: How does the simplest plant respond?
-        dive: first
-        detail: first-order, K/(τs + 1)
-        series: 1
-        short: "A first-order system K/(τs + 1) has a step response K(1 − e^(−t/τ)): 63 % of the way after τ, about 98 % after 4τ, with no overshoot. It is the shape to compare everything else against."
-        eq: "y(t) = K(1 − e^(−t/τ))"
-        addsToExample: "Keeping only the cart's slower pole gives G ≈ 0.5/(s + 1): K = 0.5, τ = 1 s, a rough picture of its step response once the faster mode has died out (after about 2 s). How good a picture that is comes two boxes later."
-        accountsFor: "Why the cart's step response looks roughly like a simple exponential even though it is second order."
-        live: "board:s9"
-      - id: second
-        label: What do ζ and ωₙ say about two poles?
-        dive: second
-        detail: second-order specs
-        series: 1
-        short: "A second-order system s² + 2ζωₙs + ωₙ² has overshoot %OS = 100·e^(−πζ/√(1 − ζ²)), settling time about 4/(ζωₙ), and peak time π/ω_d. ζ sets how much it rings, ωₙ how fast."
-        eq: "%OS = 100·e^(−πζ/√(1 − ζ²))   Ts ≈ 4/(ζωₙ)"
-        addsToExample: "Open-loop the cart has ζ = 3/(2√2) ≈ 1.06, so no overshoot. Once we feed it back with a gain of 7 (set up in the feedback steps), ωₙ = 3 and ζ = 0.5: about 16 % overshoot and a settling time of Ts ≈ 2.7 s."
-        accountsFor: "Why raising K speeds up the cart but makes it overshoot, in numbers we can check."
-        live: "board:s11"
-      - id: dominant
-        label: Which poles matter?
-        dive: dominant
-        detail: dominant poles
-        series: 1
-        short: "The pole closest to the imaginary axis decays slowest and dominates the response once the faster ones are gone. A pole about five times farther left is usually safe to ignore, provided the DC gain is kept."
-        eq: "keep the slowest poles, match the DC gain"
-        addsToExample: "The cart's −1 pole is only 2× slower than −2, so the approximation 0.5/(s + 1) is rough (about 0.12 m of error at its worst on a 0.5 m step); it improves if the damper is made larger."
-        accountsFor: "When it is fair to model the cart as first order, and how much error that costs."
-        live: "board:s10"
-      - id: blocks
-        label: How does the plant sit in a loop with a controller and a disturbance?
-        dive: blocks
-        detail: standard feedback loop, where the disturbance enters
-        series: 2
-        short: "Measure the output y, subtract it from the command r to get the error e, and let a controller Gc turn that error into a push on the plant G; a disturbance d can hit somewhere along the way. The series, parallel and feedback rules give Y/R = GcG/(1 + GcG) and Y/D = G/(1 + GcG); where d enters decides which one applies."
-        eq: "Y = GcG/(1 + GcG)·R + G/(1 + GcG)·D"
-        addsToExample: "Wraps the cart in a position loop: r is the commanded position, d a push on the cart, y the measured position; gives the numbers GcG/(1 + GcG) and G/(1 + GcG) to evaluate."
-        accountsFor: "How a push on the cart shows up in the position, and why the same push enters differently if it hits the cart or the sensor."
-        live: "board:s4"
-      - id: ctrl
-        label: What can P, I and D each do about it?
-        dive: ctrl
-        detail: controllers at a glance
-        series: 2
-        short: "Proportional acts on the present error (faster, leaves some error), integral accumulates past error (removes steady-state error, can add overshoot and windup), derivative anticipates (adds damping, amplifies noise). Parallel and standard forms use different symbols for the same controller."
-        eq: "Gc(s) = Kp + Ki/s + Kd·s"
-        addsToExample: "Replaces the cart's open-loop push with u = K(r − y). With K = 7 the closed-loop denominator becomes s² + 3s + 9: faster, but now it rings."
-        accountsFor: "Why the cart with only a proportional loop is faster but overshoots 16 % and stops short of the command."
-        live: "board:s5"
-      - id: pid-tuning
-        label: How do I choose the gains?
-        dive: ctrl
-        quizTag: pid-tuning
-        detail: the PID tuning map (separate page)
-        series: 2
-        short: "Choosing Kp, Ki and Kd is its own chain of questions: what each gain does, why I removes offset, what D costs, tuning methods (manual, Ziegler–Nichols, automatic), a worked project and a gallery of failures. It continues this map on its own page, with the interactive PID Lab."
-        addsToExample: "Takes the cart's proportional loop (K = 7 rings 16 %, stops 22 % short) and tunes P, then PI, then PID until it tracks a position step despite a push and sensor noise."
-        accountsFor: "How to pick the three numbers, not just recognize what each does."
-        link: { href: "../pid-tuning/index.html", label: "Open the PID tuning map" }
-      - id: sse
-        label: Why does P leave an error and I remove it?
-        dive: sse
-        detail: steady-state error, system type
-        series: 2
-        short: "With pure P the output needs a nonzero error to keep the controller output up, so it stops short: e_ss = 1/(1 + K·G(0)) for a step. An integrator keeps growing while any error remains, so at rest the error must be exactly zero (the loop then has one integrator: system type 1, the number of integrators in the loop)."
-        eq: "e_ss = 1/(1 + Kp·G(0))   (P-only, step)"
-        addsToExample: "For the cart with K = 7: e_ss = 1/(1 + 7·0.5) = 2/9, about 22 % short of the commanded position; adding I makes it 0."
-        accountsFor: "Why the cart stops 0.22 m short of a 1 m command with proportional control, and what the integrator buys."
-        live: "board:s12"
-      - id: fb
-        label: What does feedback buy us, and what does it cost?
-        dive: fb
-        detail: sensitivity, disturbance, transient, indices
-        series: 2
-        short: "Feedback makes the output insensitive to what we don't know (a drifting spring, a push) by roughly the factor 1 + GcG, speeds the transient, and drives steady-state error down. The cost: a sensor whose noise now enters the loop, more hardware, and the risk of instability when the gain is pushed too far. The sensitivity S and complementary sensitivity C (the notes' name; many books call it T) obey S + C = 1: that is the trade."
-        eq: "S = 1/(1 + GcG)   C = GcG/(1 + GcG)   S + C = 1"
-        addsToExample: "With K = 7 the cart's loop gain at DC is 3.5, so a constant push is reduced by 1/(1 + 3.5) ≈ 0.22 and a 10 % spring change moves the output about 22 % as much."
-        accountsFor: "Why the loop shrinks the effect of the push and of a drifting spring, and why the same loop passes sensor noise to the output (the complementary sensitivity C is not zero)."
-        live: "board:s13"
-      - id: cc
-        label: "When can we place every pole, and when can we work out states we don't measure?"
-        dive: cc
-        detail: controllability, observability
-        series: 4
-        short: "(Uses the state-space model from the side branch off the model box.) Two yes/no questions about the plant: can the input push every state (controllable), and can the output reveal every state (observable)? Both are rank tests. Pc = [B AB … A^(n−1)B] full rank ⇒ the input can reach every state and poles can be placed anywhere; Po = [C; CA; …] full rank ⇒ the states can be reconstructed from y."
-        eq: "rank Pc = n  and  rank Po = n"
-        addsToExample: "With the cart's states x = (position, velocity) and its A and B from the state-space box: Pc=[[0,1],[1,−3]] (det −1) and Po=[[1,0],[0,1]] are both invertible, so the force can steer any position and velocity, and measuring position alone is enough to recover velocity."
-        accountsFor: "Why a mode cancelled out of G(s) can be neither moved nor seen, and when the design steps that follow are possible at all."
-        trap: "A pole-zero cancellation in G(s) hides an uncontrollable or unobservable mode; G(s) looks fine while an internal state misbehaves."
-        live: "figure:cc"
-      - id: sf
-        label: "If we can measure every state, how do we put the poles exactly where we want?"
-        dive: sf
-        detail: full-state feedback, Ackermann
-        series: 4
-        short: "When every state is measured, u = −Kx places the closed-loop poles at the eigenvalues of A − BK. If the plant is controllable those poles can sit anywhere, not only on the path a single output-feedback gain can reach (the root locus; see the s-plane map). Ackermann's formula (or coefficient matching) produces K."
-        eq: "u = −Kx,   ẋ = (A − BK)x"
-        addsToExample: "Pick ζ = 0.8 and 1 s settling: poles −4 ± 3j, desired s² + 8s + 25. A − BK gives s² + (3+k₂)s + (2+k₁), so K = [23, 5]: a spring-like gain on position and a damper-like gain on velocity."
-        accountsFor: "Placing both poles independently, which P control (stuck on the root locus) cannot do."
-        live: "figure:sf"
-      - id: obs
-        label: "How do we estimate the states we can't measure?"
-        dive: obs
-        detail: Luenberger observer
-        series: 4
-        short: "A Luenberger observer runs a copy of the plant and corrects it with the output error: x̂' = A x̂ + Bu + L(y − C x̂). The error obeys e' = (A − LC)e, so the observer poles can be placed if the plant is observable."
-        eq: "x̂' = A x̂ + Bu + L(y − C x̂),   e' = (A − LC)e"
-        addsToExample: "The cart's sensor reads position only; the observer runs a copy of the cart and corrects it with the position error. Example: observer poles −20 ± 15j (5× the controller's) give L = [37, 512]."
-        accountsFor: "Using full-state feedback when only some states are measured, and the speed vs. noise tradeoff in choosing observer poles (2–10× faster than the controller)."
-        live: "figure:obs"
-      - id: sep
-        label: "How do we plug the estimate into the control law, and why can we design the two separately?"
-        dive: sep
-        detail: compensator, separation principle
-        series: 4
-        short: "Using u = −K x̂, the closed-loop poles are the controller's and the observer's together: det(sI − (A−BK)) · det(sI − (A−LC)). K and L are designed independently. The compensator (observer plus K, a controller from y to u) need not be stable on its own."
-        eq: "det(sI − (A−BK)) · det(sI − (A−LC))"
-        addsToExample: "u = −K x̂ on the cart: closed-loop poles are the controller's −4 ± 3j plus the observer's −20 ± 15j. With a 0.2 m initial error in the position estimate, a 1 m step differs from full-state feedback by about 7 cm around 0.3 s, then the two responses match."
-        accountsFor: "Why K and L are designed independently, and that the resulting compensator U(s) = −K(sI − (A−BK−LC))⁻¹ L Y(s) need not be stable on its own."
-        live: "figure:sep"
-      - id: refin
-        label: "How do we make it follow a command instead of just returning to zero?"
-        dive: refin
-        detail: reference input
-        series: 4
-        short: "u = −Kx is a regulator: every state returns to zero. Adding a reference gain, u = −Kx + N̄ r, turns it into a tracker. N̄ is chosen so the DC gain from r to y is 1. The notes also describe an M, N structure and the option of feeding y − r to the observer."
-        eq: "u = −Kx + N̄ r"
-        addsToExample: "Plain u = −Kx drives the cart back to 0. With u = −Kx + N̄ r and K = [23, 5], DC gain from r to x is N̄/25, so N̄ = 25 makes it track a 1 m step."
-        accountsFor: "The difference between a regulator and a tracker, and the notes' M and N reference-gain structure (or feeding y − r to the observer)."
-        live: "figure:refin"
-    edges:
-      - { from: root, to: model, label: "describe it", question: "What do we need before we can predict anything?", idea: "A model. Physics hands us an ODE; the Laplace transform rewrites that same ODE as a transfer function, so wiring blocks together becomes algebra." }
-      - { from: model, to: splane, label: "poles?", question: "G(s) is a ratio of polynomials. What do its roots mean?", idea: "Each pole is a natural mode e^(pt) and each zero a transmission null. Plotting them on the s-plane makes behaviour visible." }
-      - { from: model, to: ss, label: "inside?", question: "A transfer function only relates input to output, starting from rest. What if I also need the internal states, initial conditions, or several inputs and outputs?", idea: "State space is a modeling language: it tracks the energy-storage variables themselves, keeps initial conditions and handles several inputs and outputs. G(s) is its input-output summary." }
-      - { from: model, to: circuits, label: "hardware", question: "How do I get G(s) for a circuit or op-amp stage?", idea: "Impedances turn circuits into algebra; the same second-order equation appears as mass-spring-damper and as RLC." }
-      - { from: splane, to: tf, label: "read G(s)", question: "With poles understood, what else can I read off G(s) before simulating?", idea: "Order, DC gain and time constants (from the poles) are enough to sketch the step response." }
-      - { from: tf, to: order, label: "why order?", question: "Why is the order what it is?", idea: "One state per independent energy store; dampers and resistors only dissipate." }
-      - { from: tf, to: first, label: "simplest plant", question: "To sketch a response, what does the simplest plant (one pole) do, as a yardstick?", idea: "First order is an exponential with time constant τ; other plants are compared to it." }
-      - { from: first, to: second, label: "two poles", question: "One pole gives a plain exponential. With two poles, like the cart, can the response ring, and what sets how much?", idea: "Damping ratio ζ and natural frequency ωₙ give overshoot, settling time and peak time." }
-      - { from: second, to: dominant, label: "more poles", question: "Real plants have more than two poles. Which ones decide the response?", idea: "The slowest stable poles dominate; far-left poles can be dropped if the DC gain is kept." }
-      - { from: dominant, to: blocks, label: "close the loop", question: "We can now predict how one plant responds. How do we make it do what we command instead?", idea: "Wrap it in a loop: a sensor measures y, a summing junction compares it with the command r, and a controller Gc acts on the error. Block-diagram algebra (series, parallel, feedback) gives GcG/(1 + GcG) and G/(1 + GcG)." }
-      - { from: blocks, to: ctrl, label: "what is Gc?", question: "What can the controller do?", idea: "P, I and D each trade speed, error, damping and noise; standard and parallel forms are the same controller." }
-      - { from: ctrl, to: pid-tuning, label: "tune it", question: "How do I choose the three gains?", idea: "Tune P, then I, then D against a spec: the PID tuning map continues from here." }
-      - { from: ctrl, to: sse, label: "error?", question: "With a plain gain in the loop, does the output end up exactly at the command?", idea: "A P controller needs an error to hold its output; an integrator forces zero error at rest (system type 1)." }
-      - { from: sse, to: fb, label: "worth it?", question: "P leaves an error and I removes it. Stepping back: what does closing the loop buy us overall, and what does it cost?", idea: "Lower sensitivity and disturbance effect and a faster transient, at the cost of noise, hardware and stability risk (S + C = 1)." }
-      - { from: fb, to: cc, label: "any poles?", question: "Output feedback can only slide the poles along a fixed path. To place them anywhere we would have to act on the plant's internal states, using the state-space model from the 'inside?' branch. When is that possible?", idea: "First check whether the input reaches every state and the output reveals every state." }
-      - { from: ss, to: ss2tf, label: "link back", question: "How are the two descriptions related?", idea: "G(s) = C(sI − A)⁻¹B + D; eigenvalues of A are the poles of G." }
-      - { from: cc, to: sf, label: "place poles", question: "If we can measure every state, how do we put the poles exactly where we want?", idea: "u = −Kx places the poles of A − BK anywhere, if the plant is controllable. Output feedback cannot leave the root locus." }
-      - { from: sf, to: obs, label: "missing states?", question: "How do we estimate the states we can't measure?", idea: "A Luenberger observer copies the plant and corrects the estimate with L(y − C x̂)." }
-      - { from: obs, to: sep, label: "put them together", question: "How do we plug the estimate into the control law, and why can we design the two separately?", idea: "u = −K x̂. The closed-loop poles are those of A − BK and of A − LC, designed independently (separation)." }
-      - { from: sep, to: refin, label: "a command", question: "How do we make it follow a command instead of just returning to zero?", idea: "A reference gain N̄ (or feeding y − r to the observer) turns the regulator into a tracker." }
-  - id: splane
-    title: The s-plane as a map
-    caption: Section 1½ of the guide, as its own chain of questions. Start from "what is a point?" and follow what each idea lets you read from the plane.
-    seriesNames: ["Poles and zeros", "Reading the plane", "Closing the loop"]
-    nodes:
-      - id: root
-        label: What does a point on the s-plane mean?
-        detail: s = σ + jω and the |G(s)| surface
-        kind: decision
-        series: 0
-        short: "A point s = σ + jω is a complex exponential e^(st): σ is how fast it grows or decays, ω how fast it oscillates. G(s) is the transfer function evaluated at that point; |G| plotted over the plane is a rubber sheet pinned to infinity at the poles and to zero at the zeros."
-        live: "board:sp-meaning"
-      - id: sp1
-        label: How are poles and zeros drawn?
-        dive: sp1
-        detail: × and ○
-        series: 0
-        short: "A pole is drawn ×, a zero ○. A pole is a root of the denominator (|G| → ∞, a natural mode); a zero is a root of the numerator (G = 0, a transmission null). Complex ones come in conjugate pairs."
-        addsToExample: "Marks the cart's two poles as × at −1 and −2 and shows there are no zeros (no ○)."
-        accountsFor: "How to read the cart's modes straight off a pole-zero map such as MATLAB pzmap."
-        live: "board:sp1"
-      - id: sp2
-        label: What is the difference between a pole and a zero?
-        dive: sp2
-        detail: modes versus how much of each
-        series: 0
-        short: "Poles decide which exponentials appear; zeros decide how much of each. A zero creates no new mode but reshapes the residues; a right-half-plane zero (non-minimum phase) makes the response start in the wrong direction."
-        addsToExample: "Adding a zero to the cart, for example (s + 1.1) in the numerator, would nearly cancel its −1 pole and make the response look first-order and faster."
-        accountsFor: "Why a controller zero near the cart's dominant pole can speed it up, and why a right-half-plane zero would push it the wrong way first."
-        live: "board:sp2"
-      - id: sp3
-        label: How do I read a location on the plane?
-        dive: sp3
-        detail: left or right, near or far, up or down
-        series: 1
-        short: "Left of the imaginary axis decays, right grows. Farther left is faster. Higher up is faster oscillation. The angle from the negative real axis is cos⁻¹ ζ and the distance from the origin is ωₙ."
-        eq: "ζ = cos θ, ωₙ = |p|"
-        addsToExample: "The cart's poles sit on the negative real axis (θ = 0, ζ ≈ 1.06): they are far left and non-oscillating; K = 7 moves them to −1.5 ± j2.6 (θ = 60°)."
-        accountsFor: "Why raising the loop gain drags the cart's poles together and then off the real axis, which is where the overshoot comes from."
-        live: "board:sp3"
-      - id: sp4
-        label: What happens if I move a pole pair and a zero?
-        dive: sp4
-        detail: explorer
-        series: 1
-        short: "An interactive explorer: drag a pole pair and a zero and watch the pole-zero map, the step response and the |G(jω)| curve change together. It turns the rules of thumb above into feel."
-        addsToExample: "Set the poles to −1 and −2 for the cart, then slide one pole or add a zero to see what a spring or damper change, or a controller zero, would do."
-        accountsFor: "How each change to the cart's parameters changes the step response."
-        live: "board:sp4"
-      - id: sp5
-        label: Which time-domain operations are moves on the plane?
-        dive: sp5
-        detail: operations dictionary
-        series: 1
-        short: "Differentiating multiplies by s (adds a zero at 0), integrating divides by s (a pole at 0), a delay multiplies by e^(−sT), a time shift or scaling moves the pattern. Each operation has a picture on the map."
-        addsToExample: "An integrator added to the cart's loop is a new pole at the origin; a derivative term is a zero at 0 pulling the poles left."
-        accountsFor: "Why adding I or D to the cart's controller changes the shape of its response in these particular ways."
-        live: "board:sp5"
-      - id: sp6
-        label: How does the inverse Laplace transform look here?
-        dive: sp6
-        detail: partial fractions and residues
-        series: 1
-        short: "Partial fractions write G(s) as a sum of terms A_k/(s − p_k); each pole contributes A_k e^(p_k t), with the residue A_k set by the zeros. The step response adds the input's own pole at 0."
-        eq: "y(t) = Σ A_k e^(p_k t)"
-        addsToExample: "For the cart's step: Y(s) = 0.5/s − 1/(s + 1) + 0.5/(s + 2), so y(t) = 0.5 − e^(−t) + 0.5e^(−2t)."
-        accountsFor: "The exact shape of the cart's step response, mode by mode."
-        live: "board:sp6"
-      - id: sp7
-        label: What do the final- and initial-value theorems mean?
-        dive: sp7
-        detail: FVT and IVT on the map
-        series: 1
-        short: "The final value is lim s→0 s·Y(s) (valid only if all other poles of sY are in the left half-plane); the initial value is lim s→∞ s·Y(s). They read the end points without inverting the transform."
-        eq: "y(∞) = lim s→0 sY(s)   y(0⁺) = lim s→∞ sY(s)"
-        addsToExample: "For the cart's step, s·G(s)/s at s → 0 gives 0.5 m; the initial value is 0 (no instant jump)."
-        accountsFor: "Why the cart settles at G(0) = 0.5 m for a 1 N push and starts at rest."
-        live: "board:sp7"
-      - id: sp8
-        label: What does closing the loop do on the map?
-        dive: sp8
-        detail: root-locus preview
-        series: 2
-        short: "As the loop gain K grows, the closed-loop poles move along paths that start at the open-loop poles and end at its zeros. Watching those paths shows which gains are stable and how the response changes."
-        addsToExample: "For the cart with P control, the two poles −1 and −2 slide together to −1.5, then split into −1.5 ± j√(K − 0.25): the poles at K = 7 are −1.5 ± j2.6."
-        accountsFor: "Why more gain speeds the cart up and makes it ring, with the exact pole positions at each gain."
-        live: "figure:locus"
-    edges:
-      - { from: root, to: sp1, label: "draw them", question: "How do I mark poles and zeros?", idea: "× for roots of the denominator, ○ for roots of the numerator." }
-      - { from: sp1, to: sp2, label: "which is which?", question: "What is the difference between a pole and a zero?", idea: "Poles are the modes; zeros set how strongly each mode is excited." }
-      - { from: sp1, to: sp3, label: "locations", question: "How do I read where a pole sits?", idea: "Left means decay, up means oscillation, distance from the origin is ωₙ, the angle gives ζ." }
-      - { from: sp3, to: sp4, label: "try it", question: "What happens when I move them?", idea: "Drag and watch the response to build the intuition." }
-      - { from: sp4, to: sp5, label: "operations", question: "Which time-domain operations correspond to simple moves?", idea: "Derivative, integral, delay and shifts each have a signature on the plane." }
-      - { from: sp4, to: sp6, label: "time response", question: "How do I get the time response back from the plane?", idea: "Partial fractions: each pole gives a mode, the residue is set by the zeros." }
-      - { from: sp6, to: sp7, label: "end points", question: "Can I get the end points without inverting?", idea: "Final- and initial-value theorems read y(∞) and y(0⁺) from sY(s)." }
-      - { from: sp6, to: sp8, label: "feedback", question: "What changes when I close a loop?", idea: "The poles move along root-locus paths as the gain changes." }
+- id: big
+  title: Big picture
+  caption: 'The main chain: 21 boxes from a model of the plant to a controller that follows a command. Three plants carry it: a two-room house, a car corner and an antenna dish. Tap a box for its answer; tap a line for the question that leads there.'
+  seriesNames:
+  - Describe the plant
+  - Predict the response
+  - 'Close the loop: P, I, D'
+  - What feedback buys
+  - Design from the inside (state space)
+  nodes:
+  - id: root
+    label: How do we make an approximately-known system do what we command?
+    detail: and predict how it behaves before we build it
+    kind: terminal
+    short: 'Write the plant down as a model. Learn to predict its response from a few numbers (its poles). Then wrap it in feedback: measure the output, compare it with the command, and correct the input. Feedback is what makes a rough model good enough. Three everyday plants carry the story: a house that warms slowly, a car corner that bounces, and an antenna that must point where we say.'
+    dive: overview
+    quizTag: overview
+    accountsFor: Why the same handful of ideas predicts a house, a car and an antenna, and makes each obey despite a rough model.
+    pop:
+      rough: command → controller → plant → output, with the output measured and fed back
+      figures:
+      - id: hero-three
+        alt: House H0, corner C0 and antenna A0, each with its finished loop dimmed behind it.
+      figCaption: 'Bright: the three plants as they come, a heater warming two rooms, a car corner on its spring and shock, and a dish on its motor. Dimmed: the loops the course builds around them. Each box lights up one piece of one picture.'
+      example: House (heater in, bedroom temperature out); car corner (force in, body height out); antenna (motor torque in, pointing angle out). Each box adds one piece to one of their pictures.
+  - id: MODEL
+    label: Write the plant down
+    detail: physics gives an ODE
+    series: 0
+    short: 'A model: an equation for how the output responds to the input. Physics supplies it, because its laws are about rates of change: a room''s temperature rises at a rate set by the net heat flowing in. Write one such *heat balance* per room, idealising each wall as one *lumped* conductance and each room as one heat capacity. The result is a set of *ordinary differential equations* (ODEs).'
+    eq: ẋ₁ = −1.2x₁ + x₂ + 0.0036u,  ẋ₂ = x₁ − 1.2x₂
+    dive: model
+    live: figure:house
+    quizTag: model
+    addsToExample: 'Writes the house down: two heat balances, heater in, temperatures out.'
+    accountsFor: Why a 2.5 kW heater ends at exactly 20.45 K in the bedroom and 24.55 K in the living room.
+    pop:
+      rough: heat capacity × rate of warming = heater − flow to the other room − leak outdoors
+      eqKey: x₁, x₂ = room temperatures above outdoor (K); time in hours; u = heater power in room 1 (W); 1 /h = flow between rooms, 0.2 /h = leak outdoors.
+      figures:
+      - id: pop-heatflow
+        params:
+          panel: a
+        alt: 'The two rooms with heat arrows: heater into room 1, room 1 → room 2, both → outdoors.'
+        caption: (a)
+      - id: pop-heatflow
+        params:
+          panel: b
+        alt: The two ODEs with each term coloured like its arrow.
+        caption: (b)
+      figCaption: <b>(a)</b> Heat in from the heater, across the shared wall, and out through the outside walls. <b>(b)</b> Each room's balance as one equation; each term has its arrow's colour.
+      example: 'Run the 2.5 kW heater for a day: the bedroom settles 20.45 K above outdoors (25.5 °C on a 5 °C day), where the leaks balance the heater.'
+      ask: q-model
+  - id: TF
+    label: Transfer function G(s)
+    detail: Y/U as one fraction
+    series: 0
+    short: 'Yes: write output over input as one fraction. The *Laplace transform* turns "take a derivative" into "multiply by s", so the ODEs become algebra. Eliminate x₁, and the heater-to-bedroom link is the *transfer function* G(s) = X₂(s)/U(s), defined with the house starting at rest. Its denominator is the characteristic polynomial, and blocks in a chain simply multiply.'
+    eq: ẍ₂ + 2.4ẋ₂ + 0.44x₂ = 0.0036u  →  G(s) = 0.0036/(s² + 2.4s + 0.44)
+    dive: tf
+    live: figure:tfbuild
+    quizTag: tf
+    addsToExample: 'Draws the house as one block: heater in, bedroom out.'
+    accountsFor: Why the bedroom's steady rise is just G(0) times the heater power.
+    pop:
+      rough: output = (a fraction in s) × input
+      eqKey: s = Laplace variable (1/h here); X₂, U = transforms of bedroom temperature and heater power.
+      figures:
+      - id: pop-ode2tf
+        params:
+          panel: a
+        alt: The two room equations.
+        caption: (a)
+      - id: pop-ode2tf
+        params:
+          panel: b
+        alt: Eliminate x₁ to get one second-order ODE.
+        caption: (b)
+      - id: pop-ode2tf
+        params:
+          panel: c
+        alt: The fraction, with matching colours.
+        caption: (c)
+      figCaption: '<b>(a)</b> Two first-order heat balances. <b>(b)</b> Substituting room 1 into room 2 gives one second-order equation. <b>(c)</b> Laplace turns it into a fraction: each coefficient lands in one place.'
+      example: G(0) = 0.0036/0.44 = 8.18 K per kW, so 2.5 kW gives 20.45 K, the same as Box 1, now in one line.
+      ask: q-tf
+  - id: POLES
+    label: Poles and zeros
+    detail: built-in motions
+    series: 0
+    short: 'They are the motions the plant makes on its own. Each root p gives one motion e^(pt); these roots are the *poles* (×). The real part sets decay: left of the vertical axis it dies out (*stable*). The imaginary part sets ringing, and the house has none: both its poles are real, so it can never overshoot on its own. Numerator roots, the *zeros* (○), only weight the motions.'
+    eq: p = σ + jω  →  e^(σt)(cos ωt, sin ωt)
+    dive: splane
+    live: figure:splane
+    quizTag: splane
+    addsToExample: Marks the house's poles, −0.2 and −2.2 per hour, and what each one does.
+    accountsFor: Why no heater schedule can ever make the bedroom overshoot its final temperature.
+    pop:
+      rough: 'each pole = one motion: real part = how fast it fades, imaginary part = how fast it rings'
+      eqKey: 'σ = decay rate (1/h here); ω = ringing frequency; the house: p = −0.2 and −2.2 /h, ω = 0.'
+      figures:
+      - id: pop-housemodes
+        params:
+          panel: a
+        alt: The poles on the s-plane.
+        caption: (a)
+      - id: pop-housemodes
+        params:
+          panel: b
+        alt: 'The two motions: both rooms cooling together (slow), and the rooms evening out (fast).'
+        caption: (b)
+      figCaption: '<b>(a)</b> Two real poles: no ringing, ever. <b>(b)</b> Slow mode (−0.2 /h, τ = 5 h): the whole house warms or cools together. Fast mode (−2.2 /h, 27 min): a hot room and a cold room even out.'
+      example: The slow pole −0.2 /h (time constant 5 h) decides how long the house takes; the fast one has faded within about two hours.
+      ask: q-poles
+  - id: FIRST
+    label: 'One pole: the yardstick'
+    detail: K and τ
+    series: 1
+    short: 'One pole gives a smooth rise to the final value with no overshoot: 63 % of the way after one *time constant* τ = 1/|p|, 98 % after 4τ. The final value per unit input is the *DC gain* K = G(0). The house''s poles are 11× apart, so it behaves almost like its slow pole alone: a first-order plant with τ = 5 h.'
+    eq: G ≈ K/(τs + 1),  y(t) = K·u(1 − e^(−t/τ))
+    dive: first
+    live: figure:first
+    quizTag: first
+    addsToExample: 'Gives the house its yardstick: K = 8.18 K/kW, τ = 5 h.'
+    accountsFor: Why a heater left on overnight has done almost all its work by morning.
+    pop:
+      rough: gap left = e^(−t/τ) of the start; 4τ to settle
+      eqKey: K = DC gain (8.18 K per kW); τ = time constant (5 h); u = constant heater power.
+      figures:
+      - id: pop-first
+        params:
+          panel: a
+        alt: The true warming curve vs the first-order stand-in.
+        caption: (a)
+      - id: pop-first
+        params:
+          panel: b
+        alt: Τ and 4τ marked.
+        caption: (b)
+      figCaption: '<b>(a)</b> 2.5 kW from cold: the true house (solid) and 20.45(1 − e^(−t/5)) (dashed) never differ by more than 1.5 K. <b>(b)</b> 63 % at τ, 98 % at 4τ = 20 h.'
+      example: 'Switch on 2.5 kW: the bedroom is 2.3 K warmer after 1 h, 12.2 K after 5 h (60 %, not 63 %, because of the fast pole), and within 2 % after 20 h.'
+      ask: q-first
+  - id: SECOND
+    label: 'Two poles: ζ and ωₙ'
+    detail: bounce vs comfort
+    series: 1
+    short: 'Two energy stores that trade energy back and forth, like a car body on its spring, while the shock absorber drains it. Two numbers describe the whole family: the *natural frequency* ωₙ, how fast the trade happens, and the *damping ratio* ζ, how much each swing loses. ζ < 1 means the poles are complex: the body overshoots and rings (*underdamped*).'
+    eq: m z̈ + c ż + k z = u  →  s² + 2ζωₙs + ωₙ² = s² + 4s + 64
+    dive: second
+    live: figure:corner
+    quizTag: second
+    addsToExample: 'Puts the car corner on its spring and shock: ωₙ = 8 rad/s, ζ = 0.25.'
+    accountsFor: Why a car with worn shocks keeps bouncing after a dip.
+    pop:
+      rough: ωₙ = √(stiffness ÷ mass), ζ = damping ÷ critical damping
+      eqKey: m = 400 kg body; k = 25.6 kN/m spring; c = 1.6 kN·s/m shock; ωₙ = √(k/m) = 8 rad/s; ζ = c/(2√(km)) = 0.25.
+      figures:
+      - id: pop-zeta
+        params:
+          panel: a
+        alt: The corner's poles at −2 ± 7.75j with the ζ angle.
+        caption: (a)
+      - id: pop-zeta
+        params:
+          panel: b
+        alt: The body after a load, for ζ = 0.25, 0.7 and 1.
+        caption: (b)
+      figCaption: '<b>(a)</b> The poles sit on a circle of radius ωₙ = 8; cos θ = ζ = 0.25. <b>(b)</b> Same spring, three shocks: 0.25 bounces, 0.7 barely overshoots, 1 just creeps in.'
+      example: fₙ = 8/2π = 1.27 Hz, the gentle bounce car makers aim for; ζ = 0.25 is a soft, floaty shock.
+      ask: q-second
+  - id: SPECS
+    label: 'Specs: overshoot, settling, peak time'
+    detail: ride comfort in numbers
+    series: 1
+    short: 'With read-offs from the step response. *Percent overshoot* (%OS), how far it swings past the final value, depends on ζ alone. *Settling time* Tₛ, staying within 2 %, is set by the decay rate ζωₙ. *Peak time* Tₚ is the first peak. *Rise time*: the notes use 0–100 % when underdamped and 10–90 % (T_r1) otherwise. Comfort trades against control: a softer shock bounces more, a firmer one passes more of the road''s jolt.'
+    eq: '%OS = 100e^(−ζπ/√(1−ζ²)),  Tₛ = 4/(ζωₙ),  Tₚ = π/ω_d'
+    dive: second
+    live: figure:specs
+    quizTag: second
+    addsToExample: 'Measures the corner''s bounce: 44 % overshoot, peak at 0.41 s, settled in about 2 s.'
+    accountsFor: Why 'ride comfort' becomes a choice of ζ.
+    pop:
+      rough: overshoot ← ζ only; settling ← decay rate; peak ← ringing frequency
+      eqKey: ω_d = ωₙ√(1 − ζ²) = 7.75 rad/s; ζωₙ = σ = 2 /s.
+      figures:
+      - id: pop-specs
+        alt: The body after a 1 kN load, with %OS, Tₚ and the 2 % band marked.
+      figCaption: 'A 1 kN load (about 100 kg of luggage): the body sinks to 5.64 cm (44 % past its final 3.91 cm) at 0.41 s and is inside the 2 % band by 1.8 s (the formula 4/σ says 2 s).'
+      example: ζ = 0.25 gives 44.4 % overshoot. A firmer shock (c = 4.48 kN·s/m, ζ = 0.7) cuts it to 4.6 % but sends a sharper jolt from every bump.
+      ask: q-specs
+  - id: LOOP
+    label: Close the loop
+    detail: measure, compare, correct
+    series: 2
+    short: 'Measure where it is, compare with where it should be, and act on the difference: *feedback*. A car corner already does this. The spring and shock push on the gap between body and road, the *error*, so the body follows the road. Every such loop collapses into one block: the forward path over 1 + the *loop gain* L, the product of everything around the loop.'
+    eq: 'T = G_f/(1 + L);  corner: Z/W = (cs + k)/(ms² + cs + k)'
+    dive: blocks
+    live: figure:loop
+    quizTag: blocks
+    addsToExample: Redraws the corner as a loop with the road as its command.
+    accountsFor: 'Why the body ends exactly at the road''s new height: a passive loop with error feedback.'
+    pop:
+      rough: closed loop = forward path ÷ (1 + loop gain)
+      eqKey: 'w = road height (the "command"); z = body height; G_f = L = (cs + k)/(ms²): spring + shock acting on a mass.'
+      figures:
+      - id: pop-loopcorner
+        params:
+          panel: a
+        alt: 'The corner redrawn as a loop: road → error → spring+shock → force → mass → height, fed back.'
+        caption: (a)
+      - id: pop-loopcorner
+        params:
+          panel: b
+        alt: One block.
+        caption: (b)
+      figCaption: '<b>(a)</b> The suspension as a feedback loop: the spring and shock push on the error w − z. <b>(b)</b> The feedback rule makes it one block; an active force u at the body sees the same denominator.'
+      example: 'A 5 cm step in the road: the body follows to 5 cm but first overshoots to 7.5 cm (51 %), because the road also pushes through the shock (a zero at −16).'
+      ask: q-loop
+  - id: PGAIN
+    label: Turn up the gain (P)
+    detail: a virtual spring
+    series: 2
+    short: 'Push in proportion to the error: *proportional (P) control*. On an antenna, a motor torque Kp × (pointing error) acts like a spring tying the dish to the target. A stiffer virtual spring swings it there faster but bouncier, because the friction B that damps it hasn''t changed: the decay rate stays at B/(2J) = 1 /s while ωₙ grows.'
+    eq: Js² + Bs + Kp = 0,  ωₙ = √(Kp/J),  ζ = B/(2√(JKp))
+    dive: ctrl
+    live: figure:antenna
+    quizTag: ctrl
+    addsToExample: 'Points the dish with a P loop: stiff but bouncy at Kp = 1000.'
+    accountsFor: Why a stiffer pointing loop rings more unless something adds damping.
+    pop:
+      rough: torque = gain × pointing error;  ωₙ = √(gain ÷ inertia), ζ = friction ÷ (2√(gain × inertia))
+      eqKey: J = 10 kg·m² dish inertia; B = 20 N·m·s/rad friction; Kp = gain (N·m per rad of error).
+      figures:
+      - id: pop-pgain
+        params:
+          panel: a
+        alt: The poles as Kp rises (they meet at −1 when Kp = 10, then move straight up).
+        caption: (a)
+      - id: pop-pgain
+        params:
+          panel: b
+        alt: Steps at Kp = 40 and 1000.
+        caption: (b)
+      figCaption: '<b>(a)</b> More gain: the poles split at Kp = 10 and climb at a fixed decay rate of 1 /s (a root locus; preview). <b>(b)</b> Kp = 40: 16 % overshoot; Kp = 1000: 73 %.'
+      example: G = 0.1/(s(s + 2)). Kp = 40 gives ζ = 0.5; Kp = 1000 (a stiff 17 N·m per degree) gives ωₙ = 10 rad/s but ζ = 0.1.
+      ask: q-pgain
+  - id: SSE
+    label: Why it stops short
+    detail: steady-state error
+    series: 2
+    short: 'A steady push P control has to fight. With no wind, the angle integrates the motor''s speed, so the error goes to zero. A steady wind torque T_d must be held by an equal motor torque, and P only makes torque from an error. So some *steady-state error* e_ss remains. The *final-value theorem* (FVT) gives it, if the loop is stable: y(∞) = s·Y(s) as s → 0.'
+    eq: e_ss(step) = 0,  e_ss(wind) = −T_d/Kp,  e_ss(ramp ω) = Bω/Kp
+    dive: sse
+    live: figure:sse
+    quizTag: sse
+    addsToExample: 'Adds wind: the dish sits 1.15° off under P.'
+    accountsFor: Why a P-only pedestal points well in still air and badly in wind.
+    pop:
+      rough: leftover error = push to be held ÷ gain
+      eqKey: T_d = wind torque (N·m); ω = target's angular rate (rad/s); Kp = P gain.
+      figures:
+      - id: pop-wind
+        params:
+          panel: a
+        alt: The dish leaning off-target in a steady wind.
+        caption: (a)
+      - id: pop-wind
+        params:
+          panel: b
+        alt: The angle after a 20 N·m gust under P.
+        caption: (b)
+      figCaption: '<b>(a)</b> In steady wind the motor must hold 20 N·m; with P that takes an error of 20/Kp. <b>(b)</b> Kp = 1000: the dish rings, then settles 1.15° off. The beam is 1.46° wide, so that costs 7.4 dB.'
+      example: 'Ku-band, 1.2 m dish: the 0.02 rad (1.15°) wind error throws away most of the signal. Tracking a LEO satellite at 1°/s leaves only 0.02°.'
+      ask: q-sse
+  - id: INT
+    label: Integral action
+    detail: keeps pushing until zero
+    series: 2
+    short: Add a torque that keeps growing while any error remains. It can stop growing only when the error is exactly zero, and then it holds whatever torque the wind needs. This is *integral (I) action*; with P it makes *PI control*. The price is a third pole. On the bouncy dish, I makes the ringing worse, and too much makes the loop unstable.
+    eq: Gc = Kp + Ki/s;  s³ + 2s² + 0.1Kp s + 0.1Ki = 0,  stable iff Ki < 2Kp
+    dive: integral
+    live: figure:integral
+    quizTag: integral
+    addsToExample: 'Adds Ki: no wind error, but even more bounce.'
+    accountsFor: Why integral action alone can't fix a lightly damped servo.
+    pop:
+      rough: integral torque = Ki × (accumulated error); stable only while Ki < (B/J)·Kp
+      eqKey: Ki = integral gain (N·m per rad·s); the bound is the cubic (Routh) test, *added*.
+      figures:
+      - id: pop-int
+        params:
+          panel: a
+        alt: Wind response, P vs PI.
+        caption: (a)
+      - id: pop-int
+        params:
+          panel: b
+        alt: The step, Kp = 1000, Ki = 0, 500, 1000.
+        caption: (b)
+      figCaption: '<b>(a)</b> 20 N·m gust: P settles 1.15° off; PI (Ki = 500) peaks at 1.9° and then returns to zero. <b>(b)</b> The step overshoots more with I: 73 % → 80 % → 87 %. At Ki = 2000 it rings forever.'
+      example: 'Kp = 1000, Ki = 500: the wind error goes to zero, but the dish now overshoots 80 % on a step. It needs damping first.'
+      ask: q-int
+  - id: DER
+    label: Derivative action
+    detail: brake before you arrive
+    series: 2
+    short: A torque that opposes how fast the angle is changing, so the dish brakes before it arrives. This is *derivative (D) action*. It acts like extra friction, adding Kd to B, which is just what the car's shock absorber does. Taking D from the measured angle (a *tachometer*) rather than the error avoids a zero that adds overshoot. All three terms make *PID control*.
+    eq: Js² + (B + Kd)s + Kp = 0,  ζ = (B + Kd)/(2√(KpJ))
+    dive: derivative
+    live: figure:derivative
+    quizTag: derivative
+    addsToExample: 'Adds a tachometer: Kd = 120 gives ζ = 0.7.'
+    accountsFor: Why servos take D from the tachometer, not from the error.
+    pop:
+      rough: derivative torque = −Kd × rate of turn;  damping = friction + Kd
+      eqKey: Kd = derivative gain (N·m·s/rad); T_D = Kd/Kp = derivative time (s).
+      figures:
+      - id: pop-der
+        params:
+          panel: a
+        alt: 'Kp = 1000 step: P vs PD with D on error vs PD with D on measurement.'
+        caption: (a)
+      - id: pop-der
+        params:
+          panel: b
+        alt: The poles moving from ζ = 0.1 to 0.7.
+        caption: (b)
+      figCaption: '<b>(a)</b> Kd = 120 gives ζ = 0.7. D on the error: 15.6 % overshoot (its zero at −8.3 adds the extra). D on the measurement: 4.6 %, as the formula says. <b>(b)</b> The poles move from −1 ± 9.95j to −7 ± 7.1j.'
+      example: 'Kd = 120 turns the 73 % ring into 4.6 % overshoot, settling in 0.6 s, but D can''t touch the wind error: still 1.15°.'
+      ask: q-der
+  - id: TUNE
+    label: Choosing the three gains
+    detail: the trade-off, then the specs
+    series: 2
+    short: 'Learn what each knob does, then trade against the specs. Kp sets stiffness against wind (and bounce), Ki removes the leftover error (and adds overshoot), Kd adds damping (and passes sensor noise). *Tuning* means picking gains that meet the specs without asking for more torque than the motor has: by hand from a cause-and-effect table, from a recipe, or with a tool.'
+    eq: Gc = Kp + Ki/s + Kd·s  (D on the measurement)
+    dive: tuning
+    live: figure:gains
+    quizTag: tuning
+    addsToExample: 'Tunes the dish: (2000, 1000, 200) meets all three specs.'
+    accountsFor: How three numbers trade stiffness, accuracy and bounce.
+    pop:
+      rough: stiffer (Kp) → less wind error; Kd to keep ζ ≈ 0.7–0.8; just enough Ki
+      eqKey: 'specs here: overshoot < 10 %, wind peak < 0.6°, zero steady error; torque ≤ 200 N·m.'
+      figures:
+      - id: pop-tune
+        alt: Three panels from (2000, 1000, 200), each raising one gain; dashed ghost = start.
+      figCaption: 'Each panel raises one gain from (2000, 1000, 200). Kp 4000: wind peak 0.32°, overshoot 14 %. Ki 3000: wind cleared in 1.6 s, overshoot 17 %. Kd 400: sluggish, settling 3.6 s.'
+      example: 'Double Kp to 2000 (halving the wind error), raise Kd to 200 (ζ = 0.78), add Ki = 1000: 7.4 % overshoot, wind peak 0.56°, back on target in 4.8 s.'
+      ask: q-tune
+  - id: DIST
+    label: A push we didn't command
+    detail: the cold front
+    series: 3
+    short: 'A *disturbance* is an input we didn''t choose, like a cold front pulling heat out through the walls. Feedback sees the room cool and turns up the heater, dividing the disturbance''s effect by 1 + L. Under P a small *droop* remains, because the extra heat needs a standing error. PI removes it: the integrator keeps raising the heater until the room is back exactly.'
+    eq: Y/D = G_d/(1 + L),  L(0) = Kp·G(0) = 1100 × 0.00818 = 9
+    dive: dist
+    live: figure:regulate
+    quizTag: dist
+    addsToExample: Closes the thermostat loop and sends in a cold front.
+    accountsFor: Why a simple proportional thermostat lets the house run a little cold in cold weather, and a PI one doesn't.
+    pop:
+      rough: 'P: droop = (open-loop effect) ÷ (1 + L(0)); PI: no droop'
+      eqKey: d = outdoor temperature change (K); Kp = 1100 W per K of error; Ki = 200 W per K·h.
+      figures:
+      - id: pop-coldfront
+        params:
+          panel: a
+        alt: The house with the thermostat loop.
+        caption: (a)
+      - id: pop-coldfront
+        params:
+          panel: b
+        alt: 'Bedroom temperature after a −5 K cold front: open loop, P, PI.'
+        caption: (b)
+      figCaption: '<b>(a)</b> The thermostat compares the bedroom with its set point and sets the heater. <b>(b)</b> Outdoors drops 5 K: without the loop the bedroom falls 5 K; P holds it to −0.5 K; PI dips 0.58 K, then returns to zero.'
+      example: PI adds the 611 W the extra leak needs; P adds only 550 W, which is why 0.5 K remains.
+      ask: q-dist
+  - id: SENS
+    label: What if the model is wrong?
+    detail: sensitivity S
+    series: 3
+    short: In open loop, a 10 % error in the plant is a 10 % error in the result. In closed loop, the thermostat measures the result and corrects, so only the fraction S = 1/(1 + L) of the plant error gets through. That fraction is the *sensitivity*. With a large L, the room depends on the thermostat you built, not the walls you guessed. With PI, the steady value doesn't depend on the walls at all.
+    eq: (ΔT/T) ≈ S·(ΔG/G),  S = 1/(1 + L)
+    dive: sens
+    live: figure:sens
+    quizTag: sens
+    addsToExample: Gives the house leakier walls and shows the thermostat barely notices.
+    accountsFor: Why a thermostat works even though nobody measured the walls.
+    pop:
+      rough: '% change in output ≈ S × % change in plant'
+      eqKey: T = closed-loop transfer function; S(0) = 1/(1 + 9) = 0.1 for the P thermostat.
+      figures:
+      - id: pop-sens
+        alt: 'Warming with nominal and leakier walls: open loop vs P thermostat.'
+      figCaption: 'Leak 20 % worse. Open loop: the bedroom''s rise falls by 18 %. P thermostat: by 2.2 % (S predicts 1.8 %; the gap is because the change isn''t small). PI: by 0 % once settled.'
+      example: 'Insulation 20 % worse: the heater-only house loses 18 % of its warmth; the P thermostat loses 2.2 %; the PI thermostat makes it up completely.'
+      ask: q-sens
+  - id: NOISE
+    label: Why not infinite gain?
+    detail: S + C = 1
+    series: 3
+    short: 'Because the loop believes its sensor: it drives the *reading* to the set point, not the room. At each frequency, what the loop rejects plus what it passes is one: S + C = 1, where C = L/(1 + L) is the *complementary sensitivity*. Large L makes S small, but then C ≈ 1, so sensor errors go straight into the room. High gain also costs actuator effort and damping.'
+    eq: E = S·R − S·G_d·D + C·N,  S + C = 1
+    dive: fb
+    live: figure:sc
+    quizTag: fb
+    addsToExample: Puts the sun on the thermostat.
+    accountsFor: Why a well-placed sensor matters more than a clever controller.
+    pop:
+      rough: rejected + passed = 1; big gain trusts the sensor completely
+      eqKey: N = sensor error (K); C(0) = 0.9 (P thermostat), 1 (PI).
+      figures:
+      - id: pop-sc
+        params:
+          panel: a
+        alt: '|S| and |C| for the P thermostat vs frequency (preview).'
+        caption: (a)
+      - id: pop-sc
+        params:
+          panel: b
+        alt: Bedroom temperature when the thermostat reads 1 K high.
+        caption: (b)
+      figCaption: '<b>(a)</b> Slow changes: S ≈ 0.1, C ≈ 0.9. They cross near 1.5 rad/h; fast sensor flicker is filtered (preview: frequency response). <b>(b)</b> Sun on the thermostat (+1 K): P runs the room 0.9 K cold, PI the full 1 K.'
+      example: 'The same integral action that removes the cold-front droop makes the room obey a biased thermostat exactly: 1 K high reading, 1 K cold room.'
+      ask: q-noise
+  - id: STATE
+    label: 'Look inside: state space'
+    detail: ẋ = Ax + Bu
+    series: 4
+    short: 'Knowing more than the output: the body''s full condition, height *and* velocity, the minimum needed to predict its future. That is the *state* x. Writing the plant as first-order equations in the states is *state space*. It keeps the initial conditions and internal motion that G(s) hides, and its poles are the eigenvalues of A. (Taught in LN1, for Mini exam 1.)'
+    eq: ẋ = [[0, 1], [−64, −4]]x + [0, 1/400]ᵀu,  y = [1, 0]x
+    dive: ss
+    live: figure:states
+    quizTag: ss
+    addsToExample: 'Gives the corner two state gauges: height and velocity.'
+    accountsFor: Why the poles of G and the eigenvalues of A are the same numbers.
+    pop:
+      rough: rate of state = A·state + B·force;  output = C·state
+      eqKey: x₁ = body height z (m), x₂ = velocity ż (m/s); −64 = −k/m, −4 = −c/m.
+      figures:
+      - id: pop-states
+        params:
+          panel: a
+        alt: 'The corner as two integrators: force → acceleration → velocity → height, spring and shock feeding back.'
+        caption: (a)
+      - id: pop-states
+        params:
+          panel: b
+        alt: The phase portrait after release from 5 cm.
+        caption: (b)
+      figCaption: '<b>(a)</b> Inside the corner: force/m gives acceleration, integrate for velocity, again for height; the spring (−64) and shock (−4) feed back. <b>(b)</b> Released 5 cm high, the state spirals into the origin: a start G(s) can''t describe.'
+      example: Lifted 5 cm and let go, the body swings to 2.2 cm below at 0.41 s, then spirals in. The eigenvalues of A are −2 ± 7.75j, the same as G's poles.
+      ask: q-state
+  - id: CC
+    label: Can we reach and see every state?
+    detail: controllable, observable
+    series: 4
+    short: 'Check two matrices. If the input can steer the state anywhere, the plant is *controllable*: the *controllability matrix* Pc = [B AB] is invertible. If the output reveals every state over time, it is *observable*: Po = [C; CA] is invertible. A mode that fails either test cancels out of G(s), invisible from outside, yet still moves inside.'
+    eq: Pc = [B, AB],  Po = [C; CA],  full rank ⇔ yes
+    dive: cc
+    live: figure:cc
+    quizTag: cc
+    addsToExample: 'Checks the corner: one force steers both states; one height sensor sees both.'
+    accountsFor: Why we may estimate velocity from a position sensor.
+    pop:
+      rough: push direction + where it spreads span the space → controllable; reading + its rate pin the state → observable
+      eqKey: Pc = controllability matrix; Po = observability matrix; n = 2 states here.
+      figures:
+      - id: pop-cc
+        params:
+          panel: a
+        alt: B and AB in the state plane for the corner.
+        caption: (a)
+      - id: pop-cc
+        params:
+          panel: b
+        alt: A house with two equal heaters on one dial, where the "difference" mode can't be steered.
+        caption: (b)
+      figCaption: '<b>(a)</b> The force enters the velocity, which then moves the height: B and AB point different ways. <b>(b)</b> Two identical heaters on one dial warm both rooms equally, so no setting can make one room warmer than the other.'
+      example: 'Corner: det Pc = −1/400² ≠ 0, Po = I. A height sensor alone reveals velocity through how the height changes, so an observer can work.'
+      ask: q-cc
+  - id: SF
+    label: Feed back every state
+    detail: pole placement
+    series: 4
+    short: 'Yes. Push with a weighted sum of the states, u = −Kx, and choose the weights so the closed loop''s characteristic polynomial is the one we want: *state feedback* by *pole placement*. An actuator between body and wheel adds k₁ to the spring and k₂ to the shock, so both coefficients are ours. Any pole locations are reachable when the plant is controllable.'
+    eq: s² + ((c + k₂)/m)s + (k + k₁)/m = s² + 16s + 100
+    dive: sf
+    live: figure:sf
+    quizTag: sf
+    addsToExample: Adds an actuator with K = [14 400, 4 800].
+    accountsFor: How an active suspension makes a soft car stop bouncing.
+    pop:
+      rough: choose poles from specs → desired polynomial → match coefficients
+      eqKey: K = [k₁, k₂] (N/m, N·s/m); target ζ = 0.8, ωₙ = 10 → poles −8 ± 6j.
+      figures:
+      - id: pop-sf
+        params:
+          panel: a
+        alt: Passive poles vs placed poles.
+        caption: (a)
+      - id: pop-sf
+        params:
+          panel: b
+        alt: A 5 cm speed bump, passive vs active body motion.
+        caption: (b)
+      figCaption: '<b>(a)</b> From −2 ± 7.75j to −8 ± 6j. <b>(b)</b> A 5 cm, 0.2 s bump: the passive body rises 3.9 cm and rings; the active one rises 1.9 cm and is still within 0.01 mm after 1 s. Peak actuator force 990 N.'
+      example: k₁ = 100·400 − 25 600 = 14 400 N/m, k₂ = 16·400 − 1600 = 4 800 N·s/m. A 1 kN load now sags 2.5 cm with 1.5 % overshoot.
+      ask: q-sf
+  - id: OBS
+    label: Estimate what we can't measure
+    detail: the observer
+    series: 4
+    short: Run a copy of the model in software, driven by the same actuator force. Compare its predicted height with the measured one and nudge every estimated state by L times the difference. This *observer* gives an estimate x̂ whose error obeys ė = (A − LC)e, so choosing L by pole placement makes the error die out as fast as we like.
+    eq: x̂̇ = Ax̂ + Bu + L(y − Cx̂),  ė = (A − LC)e
+    dive: obs
+    live: figure:obs
+    quizTag: obs
+    addsToExample: Adds a ghost corner that estimates velocity from height.
+    accountsFor: How the actuator gets the velocity the design needs.
+    pop:
+      rough: estimate = model copy + correction × (measured − predicted)
+      eqKey: 'L = [l₁, l₂] (observer gain); error poles chosen 5× faster than the controller: −40 ± 30j.'
+      figures:
+      - id: pop-obs
+        alt: The real body and the ghost estimate, starting 1 cm apart and merging.
+      figCaption: The estimate (ghost) starts 1 cm off. With error poles at −40 ± 30j it locks on within about 0.15 s, much faster than the body moves.
+      example: s² + (4 + l₁)s + (64 + 4l₁ + l₂) = s² + 80s + 2500 → L = [76, 2132].
+      ask: q-obs
+  - id: SEP
+    label: Use the estimate (separation)
+    detail: design the two halves separately
+    series: 4
+    short: 'Yes. With u = −Kx̂, the estimation error evolves on its own, independent of the state. So the closed loop''s poles are just the controller''s poles plus the observer''s poles: the *separation principle*. Design K and L separately; the only cost is a brief blip while the estimate converges.'
+    eq: '[ẋ; ė] = [[A − BK, BK], [0, A − LC]]·[x; e]'
+    dive: sep
+    live: figure:sep
+    quizTag: sep
+    addsToExample: Wires the estimate into the actuator.
+    accountsFor: Why the observer and controller can be designed one at a time.
+    pop:
+      rough: closed-loop poles = controller poles ∪ observer poles
+      eqKey: e = x − x̂; block-triangular, so the eigenvalues split.
+      figures:
+      - id: pop-sep
+        alt: The ride-height step with true-state feedback vs estimate feedback, difference shaded.
+      figCaption: 'Raise the ride height 2 cm with the estimate starting 1 cm off: the two responses differ by at most 0.44 cm (at 0.14 s) and by 0.14 mm at 0.5 s.'
+      example: 'Four poles: −8 ± 6j (controller) and −40 ± 30j (observer).'
+      ask: q-sep
+  - id: REF
+    label: Follow a command
+    detail: the reference gain N̄
+    series: 4
+    short: 'Add the command into the force, scaled so that the final height equals it. Without it the design is a *regulator*, returning every state to zero; with u = −Kx̂ + N̄r it is a *tracker*. N̄ (written N in LN4) is one over the closed loop''s DC gain: FIRST''s DC-gain idea again. The notes'' alternative feeds the observer y − r instead.'
+    eq: N̄ = 1/(−C(A − BK)⁻¹B) = k + k₁ = 40 000 N/m
+    dive: refin
+    live: figure:refin
+    quizTag: refin
+    addsToExample: Gives the corner a ride-height dial. The car's loop is complete.
+    accountsFor: Why the command needs its own gain, and why that gain depends on the model.
+    pop:
+      rough: command gain = 1 ÷ (closed loop's DC gain)
+      eqKey: r = commanded ride-height change (m); N̄ = reference gain.
+      figures:
+      - id: pop-ref
+        alt: 'Raise the car 2 cm for a rough road: with N̄ vs without.'
+      figCaption: 'Raise the ride height 2 cm: with N̄ = 40 000 N/m the body arrives in about 0.4 s with 1.5 % overshoot. The actuator starts at 800 N and settles at 512 N, exactly the spring''s extra 2 cm.'
+      example: 'If the real spring is 10 % stiffer than the model, the body stops 6 % short: N̄ trusts the model (integral action would fix that).'
+      ask: q-ref
+  edges:
+  - from: root
+    to: MODEL
+    label: start here
+    question: What do we need before we can predict anything?
+    idea: 'A model: physics turns the two-room house into equations, heater power in, temperature out.'
+    why: |-
+      **Still open:** the central question asks us to predict and command a system, but all we have is a house with a heater, nothing to compute with.
+
+      **Why it matters:** without equations, every design is trial and error on the real building. "Approximately known" also needs something to be approximate *about*.
+
+      **What we want:** equations that tie heater power to room temperature, built from parts we can name (heat stores, walls).
+  - from: MODEL
+    to: TF
+    label: easier form?
+    question: Solving two coupled ODEs for every input, and again for every controller, is slow. Is there an easier form?
+    idea: 'Yes: the Laplace transform turns derivatives into powers of s, so the ODEs become one fraction, G(s).'
+    why: |-
+      **Still open:** Box 1 gave two coupled equations. Predicting the bedroom for a given heater schedule still means solving them, and adding a thermostat changes the equations themselves.
+
+      **Why it matters:** design means trying many controllers. If each try means solving new ODEs, design is slow, and we can't see *why* one controller beats another.
+
+      **What we want:** a form where connecting blocks is just multiplication, and where the plant's behaviour can be read from a few numbers.
+  - from: TF
+    to: POLES
+    label: what do the roots mean?
+    question: G(s) is a fraction of polynomials. What do its roots mean?
+    idea: The denominator's roots (poles) are the plant's built-in motions; the numerator's roots (zeros) set how strongly each one is excited.
+    why: |-
+      **Still open:** Box 2 rewrote the house as 0.0036/(s² + 2.4s + 0.44), but a fraction is not yet a picture of warming.
+
+      **Why it matters:** if those roots tell us how the house behaves, we can predict its response, and later steer it, by watching where the roots go instead of simulating.
+
+      **What we want:** a physical meaning for each root: how fast its motion dies out, whether it rings, and whether it grows.
+  - from: POLES
+    to: FIRST
+    label: simplest case
+    question: What does the simplest plant, with one pole, do? We need a yardstick.
+    idea: It rises smoothly to its final value, 63 % of the way in one time constant τ; the house nearly is one, because its slow pole dominates.
+    why: |-
+      **Still open:** Box 3 said each pole is a motion, but the house has two of them mixed together.
+
+      **Why it matters:** one pole gives two numbers anyone can read off a graph, the final value and τ, and they become the yardstick for every later response.
+
+      **What we want:** the one-pole response, its two numbers, and how well it stands in for the house.
+  - from: FIRST
+    to: SECOND
+    label: can it ring?
+    question: The house can't bounce. What does a plant that *can* bounce do, and what decides how much?
+    idea: 'The house can''t bounce: enter the suspension. A mass on a spring with a shock absorber is the standard plant that rings, and everyone has felt it.'
+    why: |-
+      **Still open:** real poles only gave smooth rises. Box 3 showed complex poles mean oscillation, but no plant so far has them.
+
+      **Why it matters:** most systems worth controlling can overshoot, and a car's ride, comfortable float or harsh bounce, is exactly that trade-off.
+
+      **What we want:** a second-order plant with one or two numbers that set how bouncy it is, on a car corner we can picture.
+  - from: SECOND
+    to: SPECS
+    label: in numbers?
+    question: '"Bouncy" isn''t a spec. What numbers describe the response, and how do they follow from the poles?'
+    idea: 'Overshoot depends on ζ alone, settling on ζωₙ, peak time on ω_d: each spec is a region of the s-plane.'
+    why: |-
+      **Still open:** Box 5 showed that ζ = 0.25 bounces, but not how much, or for how long.
+
+      **Why it matters:** a design brief says "overshoot < 10 %, settle in 1 s", not "less bouncy". We need to turn that into pole positions.
+
+      **What we want:** formulas from (ζ, ωₙ) to overshoot, settling, rise and peak time, and back.
+  - from: SPECS
+    to: LOOP
+    label: make it obey
+    question: So far we have only predicted. How does a system correct itself?
+    idea: 'Feedback: measure, compare, act on the error. The car corner was doing it all along, following the road.'
+    why: |-
+      **Still open:** Boxes 1–6 predict what a plant does by itself, but the central question asks how to make it do what we want, despite unknowns.
+
+      **Why it matters:** a fixed plan fails the moment the plant or the world differs from the model. Feedback corrects for that.
+
+      **What we want:** the feedback loop as a picture and as one formula, seen on a loop we already understand.
+  - from: LOOP
+    to: PGAIN
+    label: simplest controller
+    question: What is the simplest controller that makes a plant follow a command we choose?
+    idea: 'A car corner only follows the road; to follow our command we need a motor: enter the antenna positioner, LN1''s own servo.'
+    why: |-
+      **Still open:** in Box 7 the "command" was the road. Nobody chooses it, and the passive corner has no motor to obey anything else.
+
+      **Why it matters:** P, I and D are about commanding a motor, and LN1 slides 62–72 build all three on a servo with inertia J and friction B.
+
+      **What we want:** a motor-driven plant with a command we pick (an antenna angle) and the simplest rule that drives it there.
+  - from: PGAIN
+    to: SSE
+    label: why short?
+    question: The dish reaches the satellite in still air. What could still leave it pointing off?
+    idea: 'A steady push P must hold: wind torque T_d leaves e_ss = −T_d/Kp.'
+    why: |-
+      **Still open:** Box 8 showed speed and bounce rising with Kp, but in still air the angle ends exactly on target.
+
+      **Why it matters:** a 1.2 m Ku-band beam is only 1.46° wide, so a 1° error loses most of the signal.
+
+      **What we want:** the leftover error under a steady disturbance, and what sets it.
+  - from: SSE
+    to: INT
+    label: remove it
+    question: Can we cancel the wind error without an enormous Kp?
+    idea: 'Add a term that keeps growing until the error is exactly zero: integral action.'
+    why: |-
+      **Still open:** Box 9 needed Kp ≈ 11 500 for 0.1°, which drops ζ to 0.03.
+
+      **Why it matters:** raising gain trades accuracy for bounce. We need accuracy that doesn't depend on gain.
+
+      **What we want:** a controller that holds the wind's torque with zero error, and its price.
+  - from: INT
+    to: DER
+    label: calm it
+    question: I made the bounce worse. What adds damping?
+    idea: 'A torque against the rate of turn: derivative action, best taken from the tachometer.'
+    why: |-
+      **Still open:** Box 10's dish overshoots 80 %, and the friction B is fixed.
+
+      **Why it matters:** a dish that overshoots 80 % sweeps past the satellite on every move.
+
+      **What we want:** a gain that adds damping directly, and how to set it for a target ζ.
+  - from: DER
+    to: TUNE
+    label: choose the gains
+    question: P, I and D each fix one thing and cost another. How do we choose all three together?
+    idea: 'A cause-and-effect table plus the specs: raise Kp for stiffness, Kd to keep ζ ≈ 0.75, just enough Ki.'
+    why: |-
+      **Still open:** Boxes 8–11 tuned one gain at a time; Kd = 120 still leaves the 1.15° wind error, and Ki alone rings.
+
+      **Why it matters:** the gains interact, and the motor has only 200 N·m to give.
+
+      **What we want:** a procedure, and a tuned set that meets all the specs on this dish.
+  - from: TUNE
+    to: DIST
+    label: a push from outside?
+    question: How much does feedback really protect a system from the outside world?
+    idea: 'Back to the house: a thermostat''s whole job is holding steady against the weather, so it shows feedback''s benefits most plainly.'
+    why: |-
+      **Still open:** the wind on the dish was one example; LN2 asks in general what feedback buys: rejection, insensitivity, speed.
+
+      **Why it matters:** the house's open-loop model from Boxes 1–4 makes the before/after comparison exact.
+
+      **What we want:** the disturbance's effect with and without feedback, on a plant whose only job is regulation.
+  - from: DIST
+    to: SENS
+    label: model wrong?
+    question: The disturbance was outside. What if the error is in the model itself?
+    idea: 'Feedback divides plant errors too: sensitivity S = 1/(1 + L).'
+    why: |-
+      **Still open:** Box 13 assumed we know the walls exactly. In fact nobody measured the insulation.
+
+      **Why it matters:** "approximately known" plants are the central question's premise.
+
+      **What we want:** how much a plant error moves the result, open loop vs closed loop.
+  - from: SENS
+    to: NOISE
+    label: why not huge gain?
+    question: If gain shrinks disturbances and model errors, why not make it huge?
+    idea: 'S + C = 1: what the loop stops rejecting it passes, and big gain obeys the sensor''s errors exactly.'
+    why: |-
+      **Still open:** Boxes 13–14 both said "more L is better".
+
+      **Why it matters:** if that were the whole story, design would be trivial. The sensor is the limit.
+
+      **What we want:** the trade-off, and what it costs on the thermostat.
+  - from: NOISE
+    to: STATE
+    label: put poles anywhere?
+    question: Output feedback only slides poles along fixed paths. What would let us place them anywhere?
+    idea: 'Back to the car: an active suspension needs more than one output to feed back, its height *and* velocity. That needs state space.'
+    why: |-
+      **Still open:** in Box 8, P could only move the poles straight up at a fixed decay rate; PID added zeros we didn't want.
+
+      **Why it matters:** the corner's specs (comfort *and* quick settling) need both coefficients of its polynomial set at will.
+
+      **What we want:** a description of the corner by its internal states, ready for feedback of every state.
+  - from: STATE
+    to: CC
+    label: reach and see?
+    question: Can the actuator steer every state, and can the sensor reveal every state?
+    idea: 'Check Pc = [B AB] and Po = [C; CA]: invertible means yes.'
+    why: |-
+      **Still open:** Box 16 has two states and one actuator, one sensor.
+
+      **Why it matters:** a design that relies on an unreachable or invisible state can't work, however good its algebra.
+
+      **What we want:** a quick test, before designing.
+  - from: CC
+    to: SF
+    label: place the poles
+    question: 'Both states reachable: can we now put the poles exactly where the specs want them?'
+    idea: 'Yes: u = −Kx, match the characteristic polynomial; the actuator adds k₁ to the spring and k₂ to the shock.'
+    why: |-
+      **Still open:** Box 17 said the corner is controllable, but not how to use it.
+
+      **Why it matters:** a soft, comfortable spring with a quick settle is impossible passively.
+
+      **What we want:** K for poles at −8 ± 6j, and the ride it gives.
+  - from: SF
+    to: OBS
+    label: missing velocity?
+    question: The car measures only height. Where does the velocity in u = −Kx come from?
+    idea: 'An observer: a software copy of the corner, corrected by the measured height.'
+    why: |-
+      **Still open:** Box 18 assumed both states are measured.
+
+      **Why it matters:** differentiating a noisy height sensor is a bad velocity sensor; adding a real one costs money.
+
+      **What we want:** an estimate of velocity that converges fast, from the one sensor we have.
+  - from: OBS
+    to: SEP
+    label: use the estimate?
+    question: If we feed back the estimate, does Box 18's design still hold?
+    idea: 'Yes: the separation principle. The poles are the controller''s plus the observer''s.'
+    why: |-
+      **Still open:** Boxes 18 and 19 were designed apart.
+
+      **Why it matters:** if they interacted, every change would mean redesigning both.
+
+      **What we want:** proof that they don't, and the size of the brief blip while the estimate converges.
+  - from: SEP
+    to: REF
+    label: follow a command
+    question: The corner now returns to zero. How do we command a new ride height?
+    idea: Add N̄r to the force, with N̄ = 1/(DC gain) = 40 000 N/m.
+    why: |-
+      **Still open:** Boxes 18–20 built a *regulator*. There is no r anywhere in u = −Kx̂.
+
+      **Why it matters:** the central question is about doing what we *command*: raise the car for a rough road.
+
+      **What we want:** where to inject r, and the gain that makes the body land exactly on it.
+  - from: LOOP
+    to: DER
+    label: the shock was D all along
+    dashed: true
+    question: The car's shock absorber pushes against velocity. Isn't that derivative action?
+    idea: 'Yes: c·ż is D on the measurement, and the spring k·(w − z) is P. A passive suspension is a PD loop.'
+    why: |-
+      **Still open:** Box 11 added Kd to B on the dish; Box 7's corner already had c.
+
+      **Why it matters:** it shows D is a physical damper, not just a formula, and why D on the measurement avoids the zero the road brings in.
+
+      **What we want:** one picture: shock = Kd, spring = Kp.
+  - from: PGAIN
+    to: SF
+    label: slide vs place
+    dashed: true
+    question: P control slid the poles along a path. What changes when every state is fed back?
+    idea: 'The same goal (move the poles) with more freedom: one gain per state, so the poles can leave the path.'
+    why: |-
+      **Still open:** Box 8's poles could only climb at −1 ± jω; Box 18 puts the corner's at −8 ± 6j. Both "move the poles", so how do they differ?
+
+      **Why it matters:** side by side, they show what the state-space detour bought: the decay rate is no longer fixed by the friction.
+
+      **What we want:** one s-plane picture with the P path and the placed poles (dish and corner on the same axes, normalised).
+  - from: FIRST
+    to: REF
+    label: DC gain, again
+    dashed: true
+    question: Why is the reference gain the same idea as the final value of the house?
+    idea: Both read the DC gain (s → 0). N̄ divides by it so the final value equals the command.
+    why: |-
+      **Still open:** Box 4 read the house's final rise, 20.45 K, from G(0). Box 21 needs the actuated corner's DC gain, 1/40 000 m/N.
+
+      **Why it matters:** seeing the s → 0 reading as one tool makes both boxes easier. It also shows N̄'s weakness: like the P thermostat's droop, it depends on the model being right.
+
+      **What we want:** N̄ = 1/(DC gain), and why only integral action makes the final value independent of the model.
+- id: detail
+  title: Full detail
+  caption: The main chain plus 17 side questions (circuits, partial fractions, block-diagram algebra, the PID Lab, tuning recipes, the 14 symptom cards, Ackermann…). Side boxes end their branch; Back returns to the main chain.
+  seriesNames:
+  - Describe the plant
+  - Predict the response
+  - 'Close the loop: P, I, D'
+  - What feedback buys
+  - Design from the inside (state space)
+  nodes:
+  - id: root
+    label: How do we make an approximately-known system do what we command?
+    detail: and predict how it behaves before we build it
+    kind: terminal
+    short: 'Write the plant down as a model. Learn to predict its response from a few numbers (its poles). Then wrap it in feedback: measure the output, compare it with the command, and correct the input. Feedback is what makes a rough model good enough. Three everyday plants carry the story: a house that warms slowly, a car corner that bounces, and an antenna that must point where we say.'
+    dive: overview
+    quizTag: overview
+    accountsFor: Why the same handful of ideas predicts a house, a car and an antenna, and makes each obey despite a rough model.
+    pop:
+      rough: command → controller → plant → output, with the output measured and fed back
+      figures:
+      - id: hero-three
+        alt: House H0, corner C0 and antenna A0, each with its finished loop dimmed behind it.
+      figCaption: 'Bright: the three plants as they come, a heater warming two rooms, a car corner on its spring and shock, and a dish on its motor. Dimmed: the loops the course builds around them. Each box lights up one piece of one picture.'
+      example: House (heater in, bedroom temperature out); car corner (force in, body height out); antenna (motor torque in, pointing angle out). Each box adds one piece to one of their pictures.
+  - id: MODEL
+    label: Write the plant down
+    detail: physics gives an ODE
+    series: 0
+    short: 'A model: an equation for how the output responds to the input. Physics supplies it, because its laws are about rates of change: a room''s temperature rises at a rate set by the net heat flowing in. Write one such *heat balance* per room, idealising each wall as one *lumped* conductance and each room as one heat capacity. The result is a set of *ordinary differential equations* (ODEs).'
+    eq: ẋ₁ = −1.2x₁ + x₂ + 0.0036u,  ẋ₂ = x₁ − 1.2x₂
+    dive: model
+    live: figure:house
+    quizTag: model
+    addsToExample: 'Writes the house down: two heat balances, heater in, temperatures out.'
+    accountsFor: Why a 2.5 kW heater ends at exactly 20.45 K in the bedroom and 24.55 K in the living room.
+    pop:
+      rough: heat capacity × rate of warming = heater − flow to the other room − leak outdoors
+      eqKey: x₁, x₂ = room temperatures above outdoor (K); time in hours; u = heater power in room 1 (W); 1 /h = flow between rooms, 0.2 /h = leak outdoors.
+      figures:
+      - id: pop-heatflow
+        params:
+          panel: a
+        alt: 'The two rooms with heat arrows: heater into room 1, room 1 → room 2, both → outdoors.'
+        caption: (a)
+      - id: pop-heatflow
+        params:
+          panel: b
+        alt: The two ODEs with each term coloured like its arrow.
+        caption: (b)
+      figCaption: <b>(a)</b> Heat in from the heater, across the shared wall, and out through the outside walls. <b>(b)</b> Each room's balance as one equation; each term has its arrow's colour.
+      example: 'Run the 2.5 kW heater for a day: the bedroom settles 20.45 K above outdoors (25.5 °C on a 5 °C day), where the leaks balance the heater.'
+      ask: q-model
+  - id: TF
+    label: Transfer function G(s)
+    detail: Y/U as one fraction
+    series: 0
+    short: 'Yes: write output over input as one fraction. The *Laplace transform* turns "take a derivative" into "multiply by s", so the ODEs become algebra. Eliminate x₁, and the heater-to-bedroom link is the *transfer function* G(s) = X₂(s)/U(s), defined with the house starting at rest. Its denominator is the characteristic polynomial, and blocks in a chain simply multiply.'
+    eq: ẍ₂ + 2.4ẋ₂ + 0.44x₂ = 0.0036u  →  G(s) = 0.0036/(s² + 2.4s + 0.44)
+    dive: tf
+    live: figure:tfbuild
+    quizTag: tf
+    addsToExample: 'Draws the house as one block: heater in, bedroom out.'
+    accountsFor: Why the bedroom's steady rise is just G(0) times the heater power.
+    pop:
+      rough: output = (a fraction in s) × input
+      eqKey: s = Laplace variable (1/h here); X₂, U = transforms of bedroom temperature and heater power.
+      figures:
+      - id: pop-ode2tf
+        params:
+          panel: a
+        alt: The two room equations.
+        caption: (a)
+      - id: pop-ode2tf
+        params:
+          panel: b
+        alt: Eliminate x₁ to get one second-order ODE.
+        caption: (b)
+      - id: pop-ode2tf
+        params:
+          panel: c
+        alt: The fraction, with matching colours.
+        caption: (c)
+      figCaption: '<b>(a)</b> Two first-order heat balances. <b>(b)</b> Substituting room 1 into room 2 gives one second-order equation. <b>(c)</b> Laplace turns it into a fraction: each coefficient lands in one place.'
+      example: G(0) = 0.0036/0.44 = 8.18 K per kW, so 2.5 kW gives 20.45 K, the same as Box 1, now in one line.
+      ask: q-tf
+  - id: POLES
+    label: Poles and zeros
+    detail: built-in motions
+    series: 0
+    short: 'They are the motions the plant makes on its own. Each root p gives one motion e^(pt); these roots are the *poles* (×). The real part sets decay: left of the vertical axis it dies out (*stable*). The imaginary part sets ringing, and the house has none: both its poles are real, so it can never overshoot on its own. Numerator roots, the *zeros* (○), only weight the motions.'
+    eq: p = σ + jω  →  e^(σt)(cos ωt, sin ωt)
+    dive: splane
+    live: figure:splane
+    quizTag: splane
+    addsToExample: Marks the house's poles, −0.2 and −2.2 per hour, and what each one does.
+    accountsFor: Why no heater schedule can ever make the bedroom overshoot its final temperature.
+    pop:
+      rough: 'each pole = one motion: real part = how fast it fades, imaginary part = how fast it rings'
+      eqKey: 'σ = decay rate (1/h here); ω = ringing frequency; the house: p = −0.2 and −2.2 /h, ω = 0.'
+      figures:
+      - id: pop-housemodes
+        params:
+          panel: a
+        alt: The poles on the s-plane.
+        caption: (a)
+      - id: pop-housemodes
+        params:
+          panel: b
+        alt: 'The two motions: both rooms cooling together (slow), and the rooms evening out (fast).'
+        caption: (b)
+      figCaption: '<b>(a)</b> Two real poles: no ringing, ever. <b>(b)</b> Slow mode (−0.2 /h, τ = 5 h): the whole house warms or cools together. Fast mode (−2.2 /h, 27 min): a hot room and a cold room even out.'
+      example: The slow pole −0.2 /h (time constant 5 h) decides how long the house takes; the fast one has faded within about two hours.
+      ask: q-poles
+  - id: FIRST
+    label: 'One pole: the yardstick'
+    detail: K and τ
+    series: 1
+    short: 'One pole gives a smooth rise to the final value with no overshoot: 63 % of the way after one *time constant* τ = 1/|p|, 98 % after 4τ. The final value per unit input is the *DC gain* K = G(0). The house''s poles are 11× apart, so it behaves almost like its slow pole alone: a first-order plant with τ = 5 h.'
+    eq: G ≈ K/(τs + 1),  y(t) = K·u(1 − e^(−t/τ))
+    dive: first
+    live: figure:first
+    quizTag: first
+    addsToExample: 'Gives the house its yardstick: K = 8.18 K/kW, τ = 5 h.'
+    accountsFor: Why a heater left on overnight has done almost all its work by morning.
+    pop:
+      rough: gap left = e^(−t/τ) of the start; 4τ to settle
+      eqKey: K = DC gain (8.18 K per kW); τ = time constant (5 h); u = constant heater power.
+      figures:
+      - id: pop-first
+        params:
+          panel: a
+        alt: The true warming curve vs the first-order stand-in.
+        caption: (a)
+      - id: pop-first
+        params:
+          panel: b
+        alt: Τ and 4τ marked.
+        caption: (b)
+      figCaption: '<b>(a)</b> 2.5 kW from cold: the true house (solid) and 20.45(1 − e^(−t/5)) (dashed) never differ by more than 1.5 K. <b>(b)</b> 63 % at τ, 98 % at 4τ = 20 h.'
+      example: 'Switch on 2.5 kW: the bedroom is 2.3 K warmer after 1 h, 12.2 K after 5 h (60 %, not 63 %, because of the fast pole), and within 2 % after 20 h.'
+      ask: q-first
+  - id: SECOND
+    label: 'Two poles: ζ and ωₙ'
+    detail: bounce vs comfort
+    series: 1
+    short: 'Two energy stores that trade energy back and forth, like a car body on its spring, while the shock absorber drains it. Two numbers describe the whole family: the *natural frequency* ωₙ, how fast the trade happens, and the *damping ratio* ζ, how much each swing loses. ζ < 1 means the poles are complex: the body overshoots and rings (*underdamped*).'
+    eq: m z̈ + c ż + k z = u  →  s² + 2ζωₙs + ωₙ² = s² + 4s + 64
+    dive: second
+    live: figure:corner
+    quizTag: second
+    addsToExample: 'Puts the car corner on its spring and shock: ωₙ = 8 rad/s, ζ = 0.25.'
+    accountsFor: Why a car with worn shocks keeps bouncing after a dip.
+    pop:
+      rough: ωₙ = √(stiffness ÷ mass), ζ = damping ÷ critical damping
+      eqKey: m = 400 kg body; k = 25.6 kN/m spring; c = 1.6 kN·s/m shock; ωₙ = √(k/m) = 8 rad/s; ζ = c/(2√(km)) = 0.25.
+      figures:
+      - id: pop-zeta
+        params:
+          panel: a
+        alt: The corner's poles at −2 ± 7.75j with the ζ angle.
+        caption: (a)
+      - id: pop-zeta
+        params:
+          panel: b
+        alt: The body after a load, for ζ = 0.25, 0.7 and 1.
+        caption: (b)
+      figCaption: '<b>(a)</b> The poles sit on a circle of radius ωₙ = 8; cos θ = ζ = 0.25. <b>(b)</b> Same spring, three shocks: 0.25 bounces, 0.7 barely overshoots, 1 just creeps in.'
+      example: fₙ = 8/2π = 1.27 Hz, the gentle bounce car makers aim for; ζ = 0.25 is a soft, floaty shock.
+      ask: q-second
+  - id: SPECS
+    label: 'Specs: overshoot, settling, peak time'
+    detail: ride comfort in numbers
+    series: 1
+    short: 'With read-offs from the step response. *Percent overshoot* (%OS), how far it swings past the final value, depends on ζ alone. *Settling time* Tₛ, staying within 2 %, is set by the decay rate ζωₙ. *Peak time* Tₚ is the first peak. *Rise time*: the notes use 0–100 % when underdamped and 10–90 % (T_r1) otherwise. Comfort trades against control: a softer shock bounces more, a firmer one passes more of the road''s jolt.'
+    eq: '%OS = 100e^(−ζπ/√(1−ζ²)),  Tₛ = 4/(ζωₙ),  Tₚ = π/ω_d'
+    dive: second
+    live: figure:specs
+    quizTag: second
+    addsToExample: 'Measures the corner''s bounce: 44 % overshoot, peak at 0.41 s, settled in about 2 s.'
+    accountsFor: Why 'ride comfort' becomes a choice of ζ.
+    pop:
+      rough: overshoot ← ζ only; settling ← decay rate; peak ← ringing frequency
+      eqKey: ω_d = ωₙ√(1 − ζ²) = 7.75 rad/s; ζωₙ = σ = 2 /s.
+      figures:
+      - id: pop-specs
+        alt: The body after a 1 kN load, with %OS, Tₚ and the 2 % band marked.
+      figCaption: 'A 1 kN load (about 100 kg of luggage): the body sinks to 5.64 cm (44 % past its final 3.91 cm) at 0.41 s and is inside the 2 % band by 1.8 s (the formula 4/σ says 2 s).'
+      example: ζ = 0.25 gives 44.4 % overshoot. A firmer shock (c = 4.48 kN·s/m, ζ = 0.7) cuts it to 4.6 % but sends a sharper jolt from every bump.
+      ask: q-specs
+  - id: LOOP
+    label: Close the loop
+    detail: measure, compare, correct
+    series: 2
+    short: 'Measure where it is, compare with where it should be, and act on the difference: *feedback*. A car corner already does this. The spring and shock push on the gap between body and road, the *error*, so the body follows the road. Every such loop collapses into one block: the forward path over 1 + the *loop gain* L, the product of everything around the loop.'
+    eq: 'T = G_f/(1 + L);  corner: Z/W = (cs + k)/(ms² + cs + k)'
+    dive: blocks
+    live: figure:loop
+    quizTag: blocks
+    addsToExample: Redraws the corner as a loop with the road as its command.
+    accountsFor: 'Why the body ends exactly at the road''s new height: a passive loop with error feedback.'
+    pop:
+      rough: closed loop = forward path ÷ (1 + loop gain)
+      eqKey: 'w = road height (the "command"); z = body height; G_f = L = (cs + k)/(ms²): spring + shock acting on a mass.'
+      figures:
+      - id: pop-loopcorner
+        params:
+          panel: a
+        alt: 'The corner redrawn as a loop: road → error → spring+shock → force → mass → height, fed back.'
+        caption: (a)
+      - id: pop-loopcorner
+        params:
+          panel: b
+        alt: One block.
+        caption: (b)
+      figCaption: '<b>(a)</b> The suspension as a feedback loop: the spring and shock push on the error w − z. <b>(b)</b> The feedback rule makes it one block; an active force u at the body sees the same denominator.'
+      example: 'A 5 cm step in the road: the body follows to 5 cm but first overshoots to 7.5 cm (51 %), because the road also pushes through the shock (a zero at −16).'
+      ask: q-loop
+  - id: PGAIN
+    label: Turn up the gain (P)
+    detail: a virtual spring
+    series: 2
+    short: 'Push in proportion to the error: *proportional (P) control*. On an antenna, a motor torque Kp × (pointing error) acts like a spring tying the dish to the target. A stiffer virtual spring swings it there faster but bouncier, because the friction B that damps it hasn''t changed: the decay rate stays at B/(2J) = 1 /s while ωₙ grows.'
+    eq: Js² + Bs + Kp = 0,  ωₙ = √(Kp/J),  ζ = B/(2√(JKp))
+    dive: ctrl
+    live: figure:antenna
+    quizTag: ctrl
+    addsToExample: 'Points the dish with a P loop: stiff but bouncy at Kp = 1000.'
+    accountsFor: Why a stiffer pointing loop rings more unless something adds damping.
+    pop:
+      rough: torque = gain × pointing error;  ωₙ = √(gain ÷ inertia), ζ = friction ÷ (2√(gain × inertia))
+      eqKey: J = 10 kg·m² dish inertia; B = 20 N·m·s/rad friction; Kp = gain (N·m per rad of error).
+      figures:
+      - id: pop-pgain
+        params:
+          panel: a
+        alt: The poles as Kp rises (they meet at −1 when Kp = 10, then move straight up).
+        caption: (a)
+      - id: pop-pgain
+        params:
+          panel: b
+        alt: Steps at Kp = 40 and 1000.
+        caption: (b)
+      figCaption: '<b>(a)</b> More gain: the poles split at Kp = 10 and climb at a fixed decay rate of 1 /s (a root locus; preview). <b>(b)</b> Kp = 40: 16 % overshoot; Kp = 1000: 73 %.'
+      example: G = 0.1/(s(s + 2)). Kp = 40 gives ζ = 0.5; Kp = 1000 (a stiff 17 N·m per degree) gives ωₙ = 10 rad/s but ζ = 0.1.
+      ask: q-pgain
+  - id: SSE
+    label: Why it stops short
+    detail: steady-state error
+    series: 2
+    short: 'A steady push P control has to fight. With no wind, the angle integrates the motor''s speed, so the error goes to zero. A steady wind torque T_d must be held by an equal motor torque, and P only makes torque from an error. So some *steady-state error* e_ss remains. The *final-value theorem* (FVT) gives it, if the loop is stable: y(∞) = s·Y(s) as s → 0.'
+    eq: e_ss(step) = 0,  e_ss(wind) = −T_d/Kp,  e_ss(ramp ω) = Bω/Kp
+    dive: sse
+    live: figure:sse
+    quizTag: sse
+    addsToExample: 'Adds wind: the dish sits 1.15° off under P.'
+    accountsFor: Why a P-only pedestal points well in still air and badly in wind.
+    pop:
+      rough: leftover error = push to be held ÷ gain
+      eqKey: T_d = wind torque (N·m); ω = target's angular rate (rad/s); Kp = P gain.
+      figures:
+      - id: pop-wind
+        params:
+          panel: a
+        alt: The dish leaning off-target in a steady wind.
+        caption: (a)
+      - id: pop-wind
+        params:
+          panel: b
+        alt: The angle after a 20 N·m gust under P.
+        caption: (b)
+      figCaption: '<b>(a)</b> In steady wind the motor must hold 20 N·m; with P that takes an error of 20/Kp. <b>(b)</b> Kp = 1000: the dish rings, then settles 1.15° off. The beam is 1.46° wide, so that costs 7.4 dB.'
+      example: 'Ku-band, 1.2 m dish: the 0.02 rad (1.15°) wind error throws away most of the signal. Tracking a LEO satellite at 1°/s leaves only 0.02°.'
+      ask: q-sse
+  - id: INT
+    label: Integral action
+    detail: keeps pushing until zero
+    series: 2
+    short: Add a torque that keeps growing while any error remains. It can stop growing only when the error is exactly zero, and then it holds whatever torque the wind needs. This is *integral (I) action*; with P it makes *PI control*. The price is a third pole. On the bouncy dish, I makes the ringing worse, and too much makes the loop unstable.
+    eq: Gc = Kp + Ki/s;  s³ + 2s² + 0.1Kp s + 0.1Ki = 0,  stable iff Ki < 2Kp
+    dive: integral
+    live: figure:integral
+    quizTag: integral
+    addsToExample: 'Adds Ki: no wind error, but even more bounce.'
+    accountsFor: Why integral action alone can't fix a lightly damped servo.
+    pop:
+      rough: integral torque = Ki × (accumulated error); stable only while Ki < (B/J)·Kp
+      eqKey: Ki = integral gain (N·m per rad·s); the bound is the cubic (Routh) test, *added*.
+      figures:
+      - id: pop-int
+        params:
+          panel: a
+        alt: Wind response, P vs PI.
+        caption: (a)
+      - id: pop-int
+        params:
+          panel: b
+        alt: The step, Kp = 1000, Ki = 0, 500, 1000.
+        caption: (b)
+      figCaption: '<b>(a)</b> 20 N·m gust: P settles 1.15° off; PI (Ki = 500) peaks at 1.9° and then returns to zero. <b>(b)</b> The step overshoots more with I: 73 % → 80 % → 87 %. At Ki = 2000 it rings forever.'
+      example: 'Kp = 1000, Ki = 500: the wind error goes to zero, but the dish now overshoots 80 % on a step. It needs damping first.'
+      ask: q-int
+  - id: DER
+    label: Derivative action
+    detail: brake before you arrive
+    series: 2
+    short: A torque that opposes how fast the angle is changing, so the dish brakes before it arrives. This is *derivative (D) action*. It acts like extra friction, adding Kd to B, which is just what the car's shock absorber does. Taking D from the measured angle (a *tachometer*) rather than the error avoids a zero that adds overshoot. All three terms make *PID control*.
+    eq: Js² + (B + Kd)s + Kp = 0,  ζ = (B + Kd)/(2√(KpJ))
+    dive: derivative
+    live: figure:derivative
+    quizTag: derivative
+    addsToExample: 'Adds a tachometer: Kd = 120 gives ζ = 0.7.'
+    accountsFor: Why servos take D from the tachometer, not from the error.
+    pop:
+      rough: derivative torque = −Kd × rate of turn;  damping = friction + Kd
+      eqKey: Kd = derivative gain (N·m·s/rad); T_D = Kd/Kp = derivative time (s).
+      figures:
+      - id: pop-der
+        params:
+          panel: a
+        alt: 'Kp = 1000 step: P vs PD with D on error vs PD with D on measurement.'
+        caption: (a)
+      - id: pop-der
+        params:
+          panel: b
+        alt: The poles moving from ζ = 0.1 to 0.7.
+        caption: (b)
+      figCaption: '<b>(a)</b> Kd = 120 gives ζ = 0.7. D on the error: 15.6 % overshoot (its zero at −8.3 adds the extra). D on the measurement: 4.6 %, as the formula says. <b>(b)</b> The poles move from −1 ± 9.95j to −7 ± 7.1j.'
+      example: 'Kd = 120 turns the 73 % ring into 4.6 % overshoot, settling in 0.6 s, but D can''t touch the wind error: still 1.15°.'
+      ask: q-der
+  - id: TUNE
+    label: Choosing the three gains
+    detail: the trade-off, then the specs
+    series: 2
+    short: 'Learn what each knob does, then trade against the specs. Kp sets stiffness against wind (and bounce), Ki removes the leftover error (and adds overshoot), Kd adds damping (and passes sensor noise). *Tuning* means picking gains that meet the specs without asking for more torque than the motor has: by hand from a cause-and-effect table, from a recipe, or with a tool.'
+    eq: Gc = Kp + Ki/s + Kd·s  (D on the measurement)
+    dive: tuning
+    live: figure:gains
+    quizTag: tuning
+    addsToExample: 'Tunes the dish: (2000, 1000, 200) meets all three specs.'
+    accountsFor: How three numbers trade stiffness, accuracy and bounce.
+    pop:
+      rough: stiffer (Kp) → less wind error; Kd to keep ζ ≈ 0.7–0.8; just enough Ki
+      eqKey: 'specs here: overshoot < 10 %, wind peak < 0.6°, zero steady error; torque ≤ 200 N·m.'
+      figures:
+      - id: pop-tune
+        alt: Three panels from (2000, 1000, 200), each raising one gain; dashed ghost = start.
+      figCaption: 'Each panel raises one gain from (2000, 1000, 200). Kp 4000: wind peak 0.32°, overshoot 14 %. Ki 3000: wind cleared in 1.6 s, overshoot 17 %. Kd 400: sluggish, settling 3.6 s.'
+      example: 'Double Kp to 2000 (halving the wind error), raise Kd to 200 (ζ = 0.78), add Ki = 1000: 7.4 % overshoot, wind peak 0.56°, back on target in 4.8 s.'
+      ask: q-tune
+  - id: DIST
+    label: A push we didn't command
+    detail: the cold front
+    series: 3
+    short: 'A *disturbance* is an input we didn''t choose, like a cold front pulling heat out through the walls. Feedback sees the room cool and turns up the heater, dividing the disturbance''s effect by 1 + L. Under P a small *droop* remains, because the extra heat needs a standing error. PI removes it: the integrator keeps raising the heater until the room is back exactly.'
+    eq: Y/D = G_d/(1 + L),  L(0) = Kp·G(0) = 1100 × 0.00818 = 9
+    dive: dist
+    live: figure:regulate
+    quizTag: dist
+    addsToExample: Closes the thermostat loop and sends in a cold front.
+    accountsFor: Why a simple proportional thermostat lets the house run a little cold in cold weather, and a PI one doesn't.
+    pop:
+      rough: 'P: droop = (open-loop effect) ÷ (1 + L(0)); PI: no droop'
+      eqKey: d = outdoor temperature change (K); Kp = 1100 W per K of error; Ki = 200 W per K·h.
+      figures:
+      - id: pop-coldfront
+        params:
+          panel: a
+        alt: The house with the thermostat loop.
+        caption: (a)
+      - id: pop-coldfront
+        params:
+          panel: b
+        alt: 'Bedroom temperature after a −5 K cold front: open loop, P, PI.'
+        caption: (b)
+      figCaption: '<b>(a)</b> The thermostat compares the bedroom with its set point and sets the heater. <b>(b)</b> Outdoors drops 5 K: without the loop the bedroom falls 5 K; P holds it to −0.5 K; PI dips 0.58 K, then returns to zero.'
+      example: PI adds the 611 W the extra leak needs; P adds only 550 W, which is why 0.5 K remains.
+      ask: q-dist
+  - id: SENS
+    label: What if the model is wrong?
+    detail: sensitivity S
+    series: 3
+    short: In open loop, a 10 % error in the plant is a 10 % error in the result. In closed loop, the thermostat measures the result and corrects, so only the fraction S = 1/(1 + L) of the plant error gets through. That fraction is the *sensitivity*. With a large L, the room depends on the thermostat you built, not the walls you guessed. With PI, the steady value doesn't depend on the walls at all.
+    eq: (ΔT/T) ≈ S·(ΔG/G),  S = 1/(1 + L)
+    dive: sens
+    live: figure:sens
+    quizTag: sens
+    addsToExample: Gives the house leakier walls and shows the thermostat barely notices.
+    accountsFor: Why a thermostat works even though nobody measured the walls.
+    pop:
+      rough: '% change in output ≈ S × % change in plant'
+      eqKey: T = closed-loop transfer function; S(0) = 1/(1 + 9) = 0.1 for the P thermostat.
+      figures:
+      - id: pop-sens
+        alt: 'Warming with nominal and leakier walls: open loop vs P thermostat.'
+      figCaption: 'Leak 20 % worse. Open loop: the bedroom''s rise falls by 18 %. P thermostat: by 2.2 % (S predicts 1.8 %; the gap is because the change isn''t small). PI: by 0 % once settled.'
+      example: 'Insulation 20 % worse: the heater-only house loses 18 % of its warmth; the P thermostat loses 2.2 %; the PI thermostat makes it up completely.'
+      ask: q-sens
+  - id: NOISE
+    label: Why not infinite gain?
+    detail: S + C = 1
+    series: 3
+    short: 'Because the loop believes its sensor: it drives the *reading* to the set point, not the room. At each frequency, what the loop rejects plus what it passes is one: S + C = 1, where C = L/(1 + L) is the *complementary sensitivity*. Large L makes S small, but then C ≈ 1, so sensor errors go straight into the room. High gain also costs actuator effort and damping.'
+    eq: E = S·R − S·G_d·D + C·N,  S + C = 1
+    dive: fb
+    live: figure:sc
+    quizTag: fb
+    addsToExample: Puts the sun on the thermostat.
+    accountsFor: Why a well-placed sensor matters more than a clever controller.
+    pop:
+      rough: rejected + passed = 1; big gain trusts the sensor completely
+      eqKey: N = sensor error (K); C(0) = 0.9 (P thermostat), 1 (PI).
+      figures:
+      - id: pop-sc
+        params:
+          panel: a
+        alt: '|S| and |C| for the P thermostat vs frequency (preview).'
+        caption: (a)
+      - id: pop-sc
+        params:
+          panel: b
+        alt: Bedroom temperature when the thermostat reads 1 K high.
+        caption: (b)
+      figCaption: '<b>(a)</b> Slow changes: S ≈ 0.1, C ≈ 0.9. They cross near 1.5 rad/h; fast sensor flicker is filtered (preview: frequency response). <b>(b)</b> Sun on the thermostat (+1 K): P runs the room 0.9 K cold, PI the full 1 K.'
+      example: 'The same integral action that removes the cold-front droop makes the room obey a biased thermostat exactly: 1 K high reading, 1 K cold room.'
+      ask: q-noise
+  - id: STATE
+    label: 'Look inside: state space'
+    detail: ẋ = Ax + Bu
+    series: 4
+    short: 'Knowing more than the output: the body''s full condition, height *and* velocity, the minimum needed to predict its future. That is the *state* x. Writing the plant as first-order equations in the states is *state space*. It keeps the initial conditions and internal motion that G(s) hides, and its poles are the eigenvalues of A. (Taught in LN1, for Mini exam 1.)'
+    eq: ẋ = [[0, 1], [−64, −4]]x + [0, 1/400]ᵀu,  y = [1, 0]x
+    dive: ss
+    live: figure:states
+    quizTag: ss
+    addsToExample: 'Gives the corner two state gauges: height and velocity.'
+    accountsFor: Why the poles of G and the eigenvalues of A are the same numbers.
+    pop:
+      rough: rate of state = A·state + B·force;  output = C·state
+      eqKey: x₁ = body height z (m), x₂ = velocity ż (m/s); −64 = −k/m, −4 = −c/m.
+      figures:
+      - id: pop-states
+        params:
+          panel: a
+        alt: 'The corner as two integrators: force → acceleration → velocity → height, spring and shock feeding back.'
+        caption: (a)
+      - id: pop-states
+        params:
+          panel: b
+        alt: The phase portrait after release from 5 cm.
+        caption: (b)
+      figCaption: '<b>(a)</b> Inside the corner: force/m gives acceleration, integrate for velocity, again for height; the spring (−64) and shock (−4) feed back. <b>(b)</b> Released 5 cm high, the state spirals into the origin: a start G(s) can''t describe.'
+      example: Lifted 5 cm and let go, the body swings to 2.2 cm below at 0.41 s, then spirals in. The eigenvalues of A are −2 ± 7.75j, the same as G's poles.
+      ask: q-state
+  - id: CC
+    label: Can we reach and see every state?
+    detail: controllable, observable
+    series: 4
+    short: 'Check two matrices. If the input can steer the state anywhere, the plant is *controllable*: the *controllability matrix* Pc = [B AB] is invertible. If the output reveals every state over time, it is *observable*: Po = [C; CA] is invertible. A mode that fails either test cancels out of G(s), invisible from outside, yet still moves inside.'
+    eq: Pc = [B, AB],  Po = [C; CA],  full rank ⇔ yes
+    dive: cc
+    live: figure:cc
+    quizTag: cc
+    addsToExample: 'Checks the corner: one force steers both states; one height sensor sees both.'
+    accountsFor: Why we may estimate velocity from a position sensor.
+    pop:
+      rough: push direction + where it spreads span the space → controllable; reading + its rate pin the state → observable
+      eqKey: Pc = controllability matrix; Po = observability matrix; n = 2 states here.
+      figures:
+      - id: pop-cc
+        params:
+          panel: a
+        alt: B and AB in the state plane for the corner.
+        caption: (a)
+      - id: pop-cc
+        params:
+          panel: b
+        alt: A house with two equal heaters on one dial, where the "difference" mode can't be steered.
+        caption: (b)
+      figCaption: '<b>(a)</b> The force enters the velocity, which then moves the height: B and AB point different ways. <b>(b)</b> Two identical heaters on one dial warm both rooms equally, so no setting can make one room warmer than the other.'
+      example: 'Corner: det Pc = −1/400² ≠ 0, Po = I. A height sensor alone reveals velocity through how the height changes, so an observer can work.'
+      ask: q-cc
+  - id: SF
+    label: Feed back every state
+    detail: pole placement
+    series: 4
+    short: 'Yes. Push with a weighted sum of the states, u = −Kx, and choose the weights so the closed loop''s characteristic polynomial is the one we want: *state feedback* by *pole placement*. An actuator between body and wheel adds k₁ to the spring and k₂ to the shock, so both coefficients are ours. Any pole locations are reachable when the plant is controllable.'
+    eq: s² + ((c + k₂)/m)s + (k + k₁)/m = s² + 16s + 100
+    dive: sf
+    live: figure:sf
+    quizTag: sf
+    addsToExample: Adds an actuator with K = [14 400, 4 800].
+    accountsFor: How an active suspension makes a soft car stop bouncing.
+    pop:
+      rough: choose poles from specs → desired polynomial → match coefficients
+      eqKey: K = [k₁, k₂] (N/m, N·s/m); target ζ = 0.8, ωₙ = 10 → poles −8 ± 6j.
+      figures:
+      - id: pop-sf
+        params:
+          panel: a
+        alt: Passive poles vs placed poles.
+        caption: (a)
+      - id: pop-sf
+        params:
+          panel: b
+        alt: A 5 cm speed bump, passive vs active body motion.
+        caption: (b)
+      figCaption: '<b>(a)</b> From −2 ± 7.75j to −8 ± 6j. <b>(b)</b> A 5 cm, 0.2 s bump: the passive body rises 3.9 cm and rings; the active one rises 1.9 cm and is still within 0.01 mm after 1 s. Peak actuator force 990 N.'
+      example: k₁ = 100·400 − 25 600 = 14 400 N/m, k₂ = 16·400 − 1600 = 4 800 N·s/m. A 1 kN load now sags 2.5 cm with 1.5 % overshoot.
+      ask: q-sf
+  - id: OBS
+    label: Estimate what we can't measure
+    detail: the observer
+    series: 4
+    short: Run a copy of the model in software, driven by the same actuator force. Compare its predicted height with the measured one and nudge every estimated state by L times the difference. This *observer* gives an estimate x̂ whose error obeys ė = (A − LC)e, so choosing L by pole placement makes the error die out as fast as we like.
+    eq: x̂̇ = Ax̂ + Bu + L(y − Cx̂),  ė = (A − LC)e
+    dive: obs
+    live: figure:obs
+    quizTag: obs
+    addsToExample: Adds a ghost corner that estimates velocity from height.
+    accountsFor: How the actuator gets the velocity the design needs.
+    pop:
+      rough: estimate = model copy + correction × (measured − predicted)
+      eqKey: 'L = [l₁, l₂] (observer gain); error poles chosen 5× faster than the controller: −40 ± 30j.'
+      figures:
+      - id: pop-obs
+        alt: The real body and the ghost estimate, starting 1 cm apart and merging.
+      figCaption: The estimate (ghost) starts 1 cm off. With error poles at −40 ± 30j it locks on within about 0.15 s, much faster than the body moves.
+      example: s² + (4 + l₁)s + (64 + 4l₁ + l₂) = s² + 80s + 2500 → L = [76, 2132].
+      ask: q-obs
+  - id: SEP
+    label: Use the estimate (separation)
+    detail: design the two halves separately
+    series: 4
+    short: 'Yes. With u = −Kx̂, the estimation error evolves on its own, independent of the state. So the closed loop''s poles are just the controller''s poles plus the observer''s poles: the *separation principle*. Design K and L separately; the only cost is a brief blip while the estimate converges.'
+    eq: '[ẋ; ė] = [[A − BK, BK], [0, A − LC]]·[x; e]'
+    dive: sep
+    live: figure:sep
+    quizTag: sep
+    addsToExample: Wires the estimate into the actuator.
+    accountsFor: Why the observer and controller can be designed one at a time.
+    pop:
+      rough: closed-loop poles = controller poles ∪ observer poles
+      eqKey: e = x − x̂; block-triangular, so the eigenvalues split.
+      figures:
+      - id: pop-sep
+        alt: The ride-height step with true-state feedback vs estimate feedback, difference shaded.
+      figCaption: 'Raise the ride height 2 cm with the estimate starting 1 cm off: the two responses differ by at most 0.44 cm (at 0.14 s) and by 0.14 mm at 0.5 s.'
+      example: 'Four poles: −8 ± 6j (controller) and −40 ± 30j (observer).'
+      ask: q-sep
+  - id: REF
+    label: Follow a command
+    detail: the reference gain N̄
+    series: 4
+    short: 'Add the command into the force, scaled so that the final height equals it. Without it the design is a *regulator*, returning every state to zero; with u = −Kx̂ + N̄r it is a *tracker*. N̄ (written N in LN4) is one over the closed loop''s DC gain: FIRST''s DC-gain idea again. The notes'' alternative feeds the observer y − r instead.'
+    eq: N̄ = 1/(−C(A − BK)⁻¹B) = k + k₁ = 40 000 N/m
+    dive: refin
+    live: figure:refin
+    quizTag: refin
+    addsToExample: Gives the corner a ride-height dial. The car's loop is complete.
+    accountsFor: Why the command needs its own gain, and why that gain depends on the model.
+    pop:
+      rough: command gain = 1 ÷ (closed loop's DC gain)
+      eqKey: r = commanded ride-height change (m); N̄ = reference gain.
+      figures:
+      - id: pop-ref
+        alt: 'Raise the car 2 cm for a rough road: with N̄ vs without.'
+      figCaption: 'Raise the ride height 2 cm: with N̄ = 40 000 N/m the body arrives in about 0.4 s with 1.5 % overshoot. The actuator starts at 800 N and settles at 512 N, exactly the spring''s extra 2 cm.'
+      example: 'If the real spring is 10 % stiffer than the model, the body stops 6 % short: N̄ trusts the model (integral action would fix that).'
+      ask: q-ref
+  - id: ORDER
+    label: Why two poles? (order = energy stores)
+    series: 0
+    short: 'Because it stores heat in two independent places: the air and contents of each room. A plant''s *order*, the highest power of s in its denominator, equals its number of independent *energy stores*. Walls that only pass heat along store nothing here, so they add no order. The car corner is also second order: the spring stores energy in its stretch, the body in its motion.'
+    eq: order = number of independent heat capacities, masses, springs, inductors, capacitors
+    dive: order
+    live: board:s3
+    quizTag: order
+    addsToExample: Explains the house's two poles.
+    pop:
+      rough: order = number of independent energy stores
+      eqKey: 'independent": two rooms with no wall between them act as one store.'
+      example: Two rooms → second order. Add the car's wheel (a second mass and the tyre's spring) and the corner becomes fourth order (see DOM).
+      ask: q-order
+  - id: CIRC
+    label: G(s) for circuits and op-amps
+    series: 0
+    short: 'Treat each part as a resistance that depends on s, its *impedance*: R, sL or 1/(sC). Then apply the ordinary voltage-divider and op-amp rules. An inverting op-amp stage gives −Z_f/Z_in, which is how the op-amp PID is built. Heat flow follows the same rules, so the house is literally an RC circuit.'
+    eq: 'RLC (output across C): 1/(LCs² + RCs + 1);  op-amp: −Z_f/Z_in'
+    dive: circuits
+    live: figure:rlc?preset=house
+    quizTag: circuits
+    addsToExample: Redraws the house as a two-capacitor circuit.
+    pop:
+      rough: circuit G(s) = the divider or op-amp rule, with impedances in place of resistances
+      eqKey: temperature ↔ voltage, heat flow ↔ current, heat capacity ↔ capacitance, 1/conductance ↔ resistance.
+      example: Each room is a 1 MJ/K "capacitor"; the inner wall is a 3.6 mK/W "resistor" (277.8 W/K), each outer wall 18 mK/W; the heater is a current source. Same G₂(s).
+      ask: q-circ
+  - id: INV
+    label: 'Back to time: partial fractions'
+    series: 0
+    short: Split Y(s) into one simple fraction per pole; this is *partial fractions*. Each fraction is a known motion, and the weight on each, its *residue*, is set by the zeros and the input.
+    eq: Y(s) = Σ A_k/(s − p_k)  →  y(t) = Σ A_k e^(p_k t)
+    dive: inverse
+    live: figure:partial
+    quizTag: inverse
+    addsToExample: Writes the bedroom's warm-up mode by mode.
+    pop:
+      rough: response = Σ (weight × one pole's motion)
+      eqKey: p_k = pole; A_k = residue (its weight).
+      example: '2.5 kW on: X₂ = 9/(s(s + 0.2)(s + 2.2)) = 20.45/s − 22.5/(s + 0.2) + 2.05/(s + 2.2), so x₂(t) = 20.45 − 22.5e^(−0.2t) + 2.05e^(−2.2t) K. The fast mode''s weight is small.'
+      ask: q-inv
+  - id: PLANE
+    label: The s-plane as a landscape
+    series: 0
+    short: 'Yes: plot |G(s)| as a height over the plane. Poles are tall peaks and zeros are pits. Walking up the vertical axis reads off the response to sine waves, the *frequency response*. At any point, |G| is the product of the distances to the zeros divided by the product of the distances to the poles.'
+    eq: '|G(s₀)| = Π|s₀ − z_i| / Π|s₀ − p_k|'
+    dive: plane
+    live: figure:plane
+    quizTag: plane
+    addsToExample: Draws the house's |G| as a landscape.
+    pop:
+      rough: height = (distances to zeros) ÷ (distances to poles)
+      eqKey: s₀ = probe point; z_i, p_k = zeros and poles.
+      example: The bedroom's landscape has peaks at −0.2 and −2.2 /h; the heater room's (G₁) also has a pit at −1.2. Along the jω axis the height falls from 8.2 K/kW at ω = 0 to 4.9 K/kW for a heater cycled once a day.
+      ask: q-plane
+  - id: REDUCE
+    label: Shrink the model, keep the behaviour
+    series: 1
+    short: 'Yes, in two ways. Drop a far pole and keep the DC gain. Or choose the smaller model''s coefficients so its frequency response matches the big one''s at low frequency: the notes'' *frequency-matching* method, which solves M₂q = Δ₂q, one equation per unknown coefficient.'
+    eq: 6/((s+1)(s+2)(s+3)) ≈ 1.60/(s² + 2.59s + 1.60)  (LN2's example)
+    dive: reduce
+    live: figure:reduce
+    quizTag: reduce
+    addsToExample: Gives the house its best one-pole stand-in, τ = 5.02 h.
+    pop:
+      rough: small model = same DC gain + same low-frequency shape
+      eqKey: M₂q, Δ₂q = sums built from the derivatives of the numerator and denominator at s = 0 (LN2 slide 31).
+      example: 'House to first order: frequency matching gives 20.45/(5.02s + 1), within 1.45 K of the true warm-up; dropping −2.2 gives τ = 5 h, within 1.46 K. With an 11:1 pole ratio, both are fine.'
+      ask: q-reduce
+  - id: DOM
+    label: Which poles matter? (the wheel we left out)
+    series: 1
+    short: 'When one pair is much slower than the rest. Fast poles die out early, so the slow, *dominant* pair sets the shape. The usual rule (*added*) is that the others decay at least 5–10× faster. That is why the single-mass corner was allowed: the wheel''s own bounce, *wheel hop*, is far faster than the body''s.'
+    eq: body ≈ −1.6 ± 7.4j;  wheel hop ≈ −20.4 ± 71.4j
+    dive: dominant
+    live: figure:dominant
+    quizTag: dominant
+    addsToExample: Puts the wheel back for one box, and shows why we may leave it out.
+    pop:
+      rough: slowest pair rules if the rest decay ≥ 5–10× faster
+      eqKey: wheel mass 40 kg, tyre stiffness 200 kN/m (added to the 400 kg corner).
+      example: 'Wheel hop at 11.8 Hz decays 12.8× faster than the body. The four-pole corner overshoots 51 % (vs 44 %) and settles in 2.25 s (vs 1.77): close, not identical.'
+      ask: q-dom
+  - id: BLOCKALG
+    label: Reducing a block diagram
+    series: 2
+    short: 'Apply three rules until one block is left: *series* blocks multiply, *parallel* blocks add, and a *loop* becomes forward/(1 + loop). Move summing points and branch points past blocks when needed. Handle one input at a time, with the others set to zero (superposition).'
+    eq: C/R = GcG/(1 + GcGH),   C/D = G/(1 + GcGH)
+    dive: blocks
+    live: board:s4
+    quizTag: blocks
+    addsToExample: Derives the corner's two transfer functions from one diagram.
+    pop:
+      rough: series ×, parallel +, loop = forward/(1 + loop)
+      eqKey: C = output (the slides' letter); R = command; D = disturbance input.
+      example: 'Corner: road to body is (cs + k)/(ms² + cs + k); actuator force to body is 1/(ms² + cs + k). Different numerators, same poles.'
+      ask: q-blockalg
+  - id: MENU
+    label: The controller menu
+    series: 2
+    short: 'The classic choices, from crude to refined: *on/off* (full power or none, like a basic home thermostat), *P*, *I*, *PI*, *PD* and *PID*. The notes write PID with times rather than gains, Kp(1 + 1/(Ti s) + T_D s), so Ki = Kp/Ti and Kd = Kp·T_D. Each can be built from op-amps.'
+    eq: Gc = Kp(1 + 1/(Ti s) + T_D s)
+    dive: ctrl
+    live: board:s5
+    quizTag: ctrl
+    addsToExample: Names the dish's controller in the slides' notation.
+    pop:
+      rough: controller = some mix of the error now, its total so far, and its trend
+      eqKey: Ti = integral (reset) time; T_D = derivative time (the slides' Td; renamed so it can't be confused with wind torque).
+      example: 'The tuned positioner (2000, 1000, 200) in the notes'' form: Kp = 2000 N·m/rad, Ti = 2 s, T_D = 0.1 s.'
+      ask: q-menu
+  - id: SPEED
+    label: Feedback makes it faster
+    series: 2
+    short: Yes. A first-order plant's time constant shrinks by the factor 1 + loop gain. The final value shrinks by the same factor unless you raise the input to make up for it. Speed is bought with gain.
+    eq: 'τ_closed = τ₁/(1 + loop gain);  dish speed: J/(B + K_ω)'
+    dive: ctrl
+    live: figure:speed
+    quizTag: ctrl
+    addsToExample: Wraps a fast speed loop around the dish's motor.
+    pop:
+      rough: closed-loop time constant = open-loop time constant ÷ (1 + loop gain)
+      eqKey: K_ω = speed-loop gain (N·m per rad/s); τ₁ = J/B = 0.5 s.
+      example: 'The dish''s speed responds with τ = 0.5 s. A speed loop with K_ω = 80 makes it 0.1 s (5×). The notes'' motor with a tachometer: 5 s → 0.83 s (6×).'
+      ask: q-speed
+  - id: TYPE
+    label: System type and error constants (added practice)
+    series: 2
+    short: Count the integrators (poles at s = 0) in L; the count is the *system type*. Type 0 leaves a step error. Type 1 removes the step error but leaves a ramp error of ω/K_v. Type 2 tracks a ramp exactly. *Added practice, not in LN2.*
+    eq: 'step: 1/(1 + K_pos);  ramp: ω/K_v, with K_v = lim s·L(s)'
+    dive: sse
+    live: figure:sse?preset=ramp
+    quizTag: sse
+    addsToExample: Predicts how far the dish lags a moving satellite.
+    pop:
+      rough: each integrator in the loop removes one more kind of steady error
+      eqKey: K_pos = lim L(s) (position constant); K_v = velocity constant, here Kp/B = 50 /s.
+      example: 'The dish''s angle is a free integrator, so P control is already type 1: a 1°/s satellite pass leaves 0.02°. PI makes it type 2: zero.'
+      ask: q-type
+  - id: WINDUP
+    label: When the push hits its limit
+    series: 2
+    short: The torque is clipped, but the integrator keeps adding up error as if it weren't. By the time the dish arrives, the stored-up integral pushes it past the target. This is *integrator windup*. *Anti-windup* stops integrating while the torque is clipped (clamping) or bleeds off the excess (back-calculation). *Added, not in the notes.*
+    eq: stop integrating while |u| = u_max
+    dive: windup
+    live: figure:windup
+    quizTag: windup
+    addsToExample: Gives the dish's motor a 200 N·m limit.
+    pop:
+      rough: clipped torque + integrator still charging = extra overshoot
+      eqKey: u_max = motor torque limit, 200 N·m.
+      example: 'Re-point by 2 rad with the tuned PID: 7.4 % overshoot unlimited (it would ask 4000 N·m); 21.6 % at 200 N·m; 3.8 % with clamping.'
+      ask: q-windup
+  - id: LAB
+    label: 'PID Lab: drag the gains yourself'
+    series: 2
+    short: Yes. The PID Lab runs a PID with a filtered derivative on the antenna (or on alternate plants), with sliders for Kp, Ki, Kd, the filter and the time window. Toggles add a wind gust, sensor noise, a torque limit, anti-windup, D on measurement, and a ghost of the last run.
+    eq: Gc = Kp + Ki/s + Kd·N_f·s/(s + N_f)
+    dive: lab
+    live: figure:lab
+    quizTag: lab
+    addsToExample: Puts the whole tuning story on sliders.
+    pop:
+      rough: move a gain and watch the angle, the torque and the numbers change live
+      eqKey: N_f = derivative filter bandwidth (rad/s; not LN2's noise N).
+      example: Start at P 1000 (73 % overshoot), add Kd = 120, then go to (2000, 1000, 200), and watch Boxes 8–12 replay. A 0.1 rad step starts at exactly the 200 N·m limit.
+      ask: q-lab
+  - id: METHODS
+    label: 'Recipes: by hand, Ziegler–Nichols, PID Tuner'
+    series: 2
+    short: 'Three routes. Tune *by hand* from the cause-and-effect table. Use *Ziegler–Nichols* (ZN): raise P until the loop just oscillates (gain K_u, period T_u), then read the gains from a table. Or use MATLAB''s *PID Tuner*, whose sliders set speed and robustness. All give starting points. *Added, not in the notes; used in Project 1.*'
+    eq: 'ZN PID: Kp = 0.6K_u, Ti = T_u/2, T_D = T_u/8'
+    dive: methods
+    live: figure:zn
+    quizTag: methods
+    addsToExample: Tries ZN on the dish and shows why hand tuning won.
+    pop:
+      rough: find the edge of instability, then back off by a fixed recipe
+      eqKey: K_u = ultimate gain; T_u = the oscillation period at that gain.
+      example: 'The ideal dish never oscillates under P. Add the amplifier''s 0.05 s lag: K_u = 440, T_u = 0.99 s, so Kp = 264, Ki = 532, Kd = 33, giving 64 % overshoot. Hand tuning did far better.'
+      ask: q-methods
+  - id: FAIL
+    label: 'When it misbehaves: 14 symptom cards'
+    series: 2
+    short: 'Match the picture to a symptom card: slow, offset, overshoot, oscillation, poor gust rejection, noisy torque, windup, derivative kick, saturation, delay, sensor lag, nonlinearity, command vs gust trade-off, or limit cycle. Each card shows the bad loop, the fixed loop (dashed) and the knob to turn.'
+    eq: (none)
+    dive: failures
+    live: figure:fail-windup
+    quizTag: failures
+    addsToExample: Gives the dish 14 ways to fail, and their fixes.
+    pop:
+      rough: symptom picture → likely cause → one knob to turn
+      eqKey: (none)
+      example: Each card is the dish's PID loop with one thing wrong, such as a 1.15° wind offset (no I) or 22 % overshoot after a long slew (windup).
+      ask: q-fail
+  - id: INDEX
+    label: The best gain in one number
+    series: 2
+    short: 'Yes: add up the error over the whole response. A *performance index* like ISE (∫e²), IAE (∫|e|) or ITAE (∫t|e|) turns a response into a score; the best gain minimises it. Each index prefers different damping, so the choice of index is itself a design decision.'
+    eq: ISE = ∫₀^∞ e² dt = 1/(2a₁) + a₁/200,  a₁ = 2 + 0.1K_r
+    dive: index
+    live: figure:index
+    quizTag: index
+    addsToExample: Scores the dish's damping by one number.
+    pop:
+      rough: score = total error over time; best gain = lowest score
+      eqKey: K_r = rate (tachometer) gain at Kp = 1000; a₁ = damping coefficient of s² + a₁s + 100.
+      example: ISE is lowest at K_r = 80 (ζ = 0.5), IAE at 112.5 (ζ = 0.66), ITAE (added) at 130.5 (ζ = 0.75). The hand choice, 120 (ζ = 0.7), sits between.
+      ask: q-index
+  - id: SS2TF
+    label: From A, B, C back to G(s)
+    series: 4
+    short: 'Laplace-transform the state equations and eliminate x: G(s) = C(sI − A)⁻¹B + D. The denominator is det(sI − A), so the poles are A''s eigenvalues. Going the other way, any G(s) can be written in *phase-variable (companion) form*, and that realization is not unique.'
+    eq: G(s) = C(sI − A)⁻¹B + D
+    dive: ss2tf
+    live: board:s7
+    quizTag: ss2tf
+    addsToExample: Confirms that the corner's two descriptions agree.
+    pop:
+      rough: G = what the sensor sees of the states' response to the push
+      eqKey: (sI − A)⁻¹ = the states' response per unit of push, in s; det(sI − A) = the characteristic polynomial.
+      example: 'Corner: C(sI − A)⁻¹B = 0.0025/(s² + 4s + 64), and eig(A) = −2 ± 7.75j. The corner''s A is already in companion form.'
+      ask: q-ss2tf
+  - id: ACK
+    label: Ackermann's formula
+    series: 4
+    short: Yes, for a single input. *Ackermann's formula* builds K from the controllability matrix and the desired polynomial evaluated at A. It needs Pc to be invertible, which is why controllability comes first.
+    eq: K = [0 … 0 1] Pc⁻¹ q(A)
+    dive: sf
+    live: figure:sf?preset=ack
+    quizTag: sf
+    addsToExample: Re-derives the corner's K by formula.
+    pop:
+      rough: K = the last row of Pc⁻¹, times the desired polynomial applied to A
+      eqKey: q(A) = Aⁿ + αₙ₋₁Aⁿ⁻¹ + … + α₀I, the desired characteristic polynomial with A in place of s.
+      example: Corner, q = s² + 16s + 100 → K = [14 400, 4 800], as matched by hand. The notes' 1/s² example with poles −1 ± j gives K = [2, 2].
+      ask: q-ack
+  edges:
+  - from: root
+    to: MODEL
+    label: start here
+    question: What do we need before we can predict anything?
+    idea: 'A model: physics turns the two-room house into equations, heater power in, temperature out.'
+    why: |-
+      **Still open:** the central question asks us to predict and command a system, but all we have is a house with a heater, nothing to compute with.
+
+      **Why it matters:** without equations, every design is trial and error on the real building. "Approximately known" also needs something to be approximate *about*.
+
+      **What we want:** equations that tie heater power to room temperature, built from parts we can name (heat stores, walls).
+  - from: MODEL
+    to: TF
+    label: easier form?
+    question: Solving two coupled ODEs for every input, and again for every controller, is slow. Is there an easier form?
+    idea: 'Yes: the Laplace transform turns derivatives into powers of s, so the ODEs become one fraction, G(s).'
+    why: |-
+      **Still open:** Box 1 gave two coupled equations. Predicting the bedroom for a given heater schedule still means solving them, and adding a thermostat changes the equations themselves.
+
+      **Why it matters:** design means trying many controllers. If each try means solving new ODEs, design is slow, and we can't see *why* one controller beats another.
+
+      **What we want:** a form where connecting blocks is just multiplication, and where the plant's behaviour can be read from a few numbers.
+  - from: TF
+    to: POLES
+    label: what do the roots mean?
+    question: G(s) is a fraction of polynomials. What do its roots mean?
+    idea: The denominator's roots (poles) are the plant's built-in motions; the numerator's roots (zeros) set how strongly each one is excited.
+    why: |-
+      **Still open:** Box 2 rewrote the house as 0.0036/(s² + 2.4s + 0.44), but a fraction is not yet a picture of warming.
+
+      **Why it matters:** if those roots tell us how the house behaves, we can predict its response, and later steer it, by watching where the roots go instead of simulating.
+
+      **What we want:** a physical meaning for each root: how fast its motion dies out, whether it rings, and whether it grows.
+  - from: POLES
+    to: FIRST
+    label: simplest case
+    question: What does the simplest plant, with one pole, do? We need a yardstick.
+    idea: It rises smoothly to its final value, 63 % of the way in one time constant τ; the house nearly is one, because its slow pole dominates.
+    why: |-
+      **Still open:** Box 3 said each pole is a motion, but the house has two of them mixed together.
+
+      **Why it matters:** one pole gives two numbers anyone can read off a graph, the final value and τ, and they become the yardstick for every later response.
+
+      **What we want:** the one-pole response, its two numbers, and how well it stands in for the house.
+  - from: FIRST
+    to: SECOND
+    label: can it ring?
+    question: The house can't bounce. What does a plant that *can* bounce do, and what decides how much?
+    idea: 'The house can''t bounce: enter the suspension. A mass on a spring with a shock absorber is the standard plant that rings, and everyone has felt it.'
+    why: |-
+      **Still open:** real poles only gave smooth rises. Box 3 showed complex poles mean oscillation, but no plant so far has them.
+
+      **Why it matters:** most systems worth controlling can overshoot, and a car's ride, comfortable float or harsh bounce, is exactly that trade-off.
+
+      **What we want:** a second-order plant with one or two numbers that set how bouncy it is, on a car corner we can picture.
+  - from: SECOND
+    to: SPECS
+    label: in numbers?
+    question: '"Bouncy" isn''t a spec. What numbers describe the response, and how do they follow from the poles?'
+    idea: 'Overshoot depends on ζ alone, settling on ζωₙ, peak time on ω_d: each spec is a region of the s-plane.'
+    why: |-
+      **Still open:** Box 5 showed that ζ = 0.25 bounces, but not how much, or for how long.
+
+      **Why it matters:** a design brief says "overshoot < 10 %, settle in 1 s", not "less bouncy". We need to turn that into pole positions.
+
+      **What we want:** formulas from (ζ, ωₙ) to overshoot, settling, rise and peak time, and back.
+  - from: SPECS
+    to: LOOP
+    label: make it obey
+    question: So far we have only predicted. How does a system correct itself?
+    idea: 'Feedback: measure, compare, act on the error. The car corner was doing it all along, following the road.'
+    why: |-
+      **Still open:** Boxes 1–6 predict what a plant does by itself, but the central question asks how to make it do what we want, despite unknowns.
+
+      **Why it matters:** a fixed plan fails the moment the plant or the world differs from the model. Feedback corrects for that.
+
+      **What we want:** the feedback loop as a picture and as one formula, seen on a loop we already understand.
+  - from: LOOP
+    to: PGAIN
+    label: simplest controller
+    question: What is the simplest controller that makes a plant follow a command we choose?
+    idea: 'A car corner only follows the road; to follow our command we need a motor: enter the antenna positioner, LN1''s own servo.'
+    why: |-
+      **Still open:** in Box 7 the "command" was the road. Nobody chooses it, and the passive corner has no motor to obey anything else.
+
+      **Why it matters:** P, I and D are about commanding a motor, and LN1 slides 62–72 build all three on a servo with inertia J and friction B.
+
+      **What we want:** a motor-driven plant with a command we pick (an antenna angle) and the simplest rule that drives it there.
+  - from: PGAIN
+    to: SSE
+    label: why short?
+    question: The dish reaches the satellite in still air. What could still leave it pointing off?
+    idea: 'A steady push P must hold: wind torque T_d leaves e_ss = −T_d/Kp.'
+    why: |-
+      **Still open:** Box 8 showed speed and bounce rising with Kp, but in still air the angle ends exactly on target.
+
+      **Why it matters:** a 1.2 m Ku-band beam is only 1.46° wide, so a 1° error loses most of the signal.
+
+      **What we want:** the leftover error under a steady disturbance, and what sets it.
+  - from: SSE
+    to: INT
+    label: remove it
+    question: Can we cancel the wind error without an enormous Kp?
+    idea: 'Add a term that keeps growing until the error is exactly zero: integral action.'
+    why: |-
+      **Still open:** Box 9 needed Kp ≈ 11 500 for 0.1°, which drops ζ to 0.03.
+
+      **Why it matters:** raising gain trades accuracy for bounce. We need accuracy that doesn't depend on gain.
+
+      **What we want:** a controller that holds the wind's torque with zero error, and its price.
+  - from: INT
+    to: DER
+    label: calm it
+    question: I made the bounce worse. What adds damping?
+    idea: 'A torque against the rate of turn: derivative action, best taken from the tachometer.'
+    why: |-
+      **Still open:** Box 10's dish overshoots 80 %, and the friction B is fixed.
+
+      **Why it matters:** a dish that overshoots 80 % sweeps past the satellite on every move.
+
+      **What we want:** a gain that adds damping directly, and how to set it for a target ζ.
+  - from: DER
+    to: TUNE
+    label: choose the gains
+    question: P, I and D each fix one thing and cost another. How do we choose all three together?
+    idea: 'A cause-and-effect table plus the specs: raise Kp for stiffness, Kd to keep ζ ≈ 0.75, just enough Ki.'
+    why: |-
+      **Still open:** Boxes 8–11 tuned one gain at a time; Kd = 120 still leaves the 1.15° wind error, and Ki alone rings.
+
+      **Why it matters:** the gains interact, and the motor has only 200 N·m to give.
+
+      **What we want:** a procedure, and a tuned set that meets all the specs on this dish.
+  - from: TUNE
+    to: DIST
+    label: a push from outside?
+    question: How much does feedback really protect a system from the outside world?
+    idea: 'Back to the house: a thermostat''s whole job is holding steady against the weather, so it shows feedback''s benefits most plainly.'
+    why: |-
+      **Still open:** the wind on the dish was one example; LN2 asks in general what feedback buys: rejection, insensitivity, speed.
+
+      **Why it matters:** the house's open-loop model from Boxes 1–4 makes the before/after comparison exact.
+
+      **What we want:** the disturbance's effect with and without feedback, on a plant whose only job is regulation.
+  - from: DIST
+    to: SENS
+    label: model wrong?
+    question: The disturbance was outside. What if the error is in the model itself?
+    idea: 'Feedback divides plant errors too: sensitivity S = 1/(1 + L).'
+    why: |-
+      **Still open:** Box 13 assumed we know the walls exactly. In fact nobody measured the insulation.
+
+      **Why it matters:** "approximately known" plants are the central question's premise.
+
+      **What we want:** how much a plant error moves the result, open loop vs closed loop.
+  - from: SENS
+    to: NOISE
+    label: why not huge gain?
+    question: If gain shrinks disturbances and model errors, why not make it huge?
+    idea: 'S + C = 1: what the loop stops rejecting it passes, and big gain obeys the sensor''s errors exactly.'
+    why: |-
+      **Still open:** Boxes 13–14 both said "more L is better".
+
+      **Why it matters:** if that were the whole story, design would be trivial. The sensor is the limit.
+
+      **What we want:** the trade-off, and what it costs on the thermostat.
+  - from: NOISE
+    to: STATE
+    label: put poles anywhere?
+    question: Output feedback only slides poles along fixed paths. What would let us place them anywhere?
+    idea: 'Back to the car: an active suspension needs more than one output to feed back, its height *and* velocity. That needs state space.'
+    why: |-
+      **Still open:** in Box 8, P could only move the poles straight up at a fixed decay rate; PID added zeros we didn't want.
+
+      **Why it matters:** the corner's specs (comfort *and* quick settling) need both coefficients of its polynomial set at will.
+
+      **What we want:** a description of the corner by its internal states, ready for feedback of every state.
+  - from: STATE
+    to: CC
+    label: reach and see?
+    question: Can the actuator steer every state, and can the sensor reveal every state?
+    idea: 'Check Pc = [B AB] and Po = [C; CA]: invertible means yes.'
+    why: |-
+      **Still open:** Box 16 has two states and one actuator, one sensor.
+
+      **Why it matters:** a design that relies on an unreachable or invisible state can't work, however good its algebra.
+
+      **What we want:** a quick test, before designing.
+  - from: CC
+    to: SF
+    label: place the poles
+    question: 'Both states reachable: can we now put the poles exactly where the specs want them?'
+    idea: 'Yes: u = −Kx, match the characteristic polynomial; the actuator adds k₁ to the spring and k₂ to the shock.'
+    why: |-
+      **Still open:** Box 17 said the corner is controllable, but not how to use it.
+
+      **Why it matters:** a soft, comfortable spring with a quick settle is impossible passively.
+
+      **What we want:** K for poles at −8 ± 6j, and the ride it gives.
+  - from: SF
+    to: OBS
+    label: missing velocity?
+    question: The car measures only height. Where does the velocity in u = −Kx come from?
+    idea: 'An observer: a software copy of the corner, corrected by the measured height.'
+    why: |-
+      **Still open:** Box 18 assumed both states are measured.
+
+      **Why it matters:** differentiating a noisy height sensor is a bad velocity sensor; adding a real one costs money.
+
+      **What we want:** an estimate of velocity that converges fast, from the one sensor we have.
+  - from: OBS
+    to: SEP
+    label: use the estimate?
+    question: If we feed back the estimate, does Box 18's design still hold?
+    idea: 'Yes: the separation principle. The poles are the controller''s plus the observer''s.'
+    why: |-
+      **Still open:** Boxes 18 and 19 were designed apart.
+
+      **Why it matters:** if they interacted, every change would mean redesigning both.
+
+      **What we want:** proof that they don't, and the size of the brief blip while the estimate converges.
+  - from: SEP
+    to: REF
+    label: follow a command
+    question: The corner now returns to zero. How do we command a new ride height?
+    idea: Add N̄r to the force, with N̄ = 1/(DC gain) = 40 000 N/m.
+    why: |-
+      **Still open:** Boxes 18–20 built a *regulator*. There is no r anywhere in u = −Kx̂.
+
+      **Why it matters:** the central question is about doing what we *command*: raise the car for a rough road.
+
+      **What we want:** where to inject r, and the gain that makes the body land exactly on it.
+  - from: LOOP
+    to: DER
+    label: the shock was D all along
+    dashed: true
+    question: The car's shock absorber pushes against velocity. Isn't that derivative action?
+    idea: 'Yes: c·ż is D on the measurement, and the spring k·(w − z) is P. A passive suspension is a PD loop.'
+    why: |-
+      **Still open:** Box 11 added Kd to B on the dish; Box 7's corner already had c.
+
+      **Why it matters:** it shows D is a physical damper, not just a formula, and why D on the measurement avoids the zero the road brings in.
+
+      **What we want:** one picture: shock = Kd, spring = Kp.
+  - from: PGAIN
+    to: SF
+    label: slide vs place
+    dashed: true
+    question: P control slid the poles along a path. What changes when every state is fed back?
+    idea: 'The same goal (move the poles) with more freedom: one gain per state, so the poles can leave the path.'
+    why: |-
+      **Still open:** Box 8's poles could only climb at −1 ± jω; Box 18 puts the corner's at −8 ± 6j. Both "move the poles", so how do they differ?
+
+      **Why it matters:** side by side, they show what the state-space detour bought: the decay rate is no longer fixed by the friction.
+
+      **What we want:** one s-plane picture with the P path and the placed poles (dish and corner on the same axes, normalised).
+  - from: FIRST
+    to: REF
+    label: DC gain, again
+    dashed: true
+    question: Why is the reference gain the same idea as the final value of the house?
+    idea: Both read the DC gain (s → 0). N̄ divides by it so the final value equals the command.
+    why: |-
+      **Still open:** Box 4 read the house's final rise, 20.45 K, from G(0). Box 21 needs the actuated corner's DC gain, 1/40 000 m/N.
+
+      **Why it matters:** seeing the s → 0 reading as one tool makes both boxes easier. It also shows N̄'s weakness: like the P thermostat's droop, it depends on the model being right.
+
+      **What we want:** N̄ = 1/(DC gain), and why only integral action makes the final value independent of the model.
+  - from: MODEL
+    to: ORDER
+    label: why two?
+    question: Why does the house have exactly two poles?
+    idea: 'One pole per independent energy store: two rooms.'
+    why: |-
+      **Still open:** Box 1 had two equations, but we didn't say why.
+
+      **Why it matters:** Miscounting the stores gives the wrong model size.
+
+      **What we want:** A counting rule based on the physical parts.
+  - from: MODEL
+    to: CIRC
+    label: circuits?
+    question: How do we get G(s) for a circuit or an op-amp stage?
+    idea: Impedances R, sL, 1/(sC) in the usual divider and op-amp rules; the house is an RC circuit.
+    why: |-
+      **Still open:** We modelled heat flow.
+
+      **Why it matters:** Controllers and sensors are circuits (LN1 40–45).
+
+      **What we want:** The same G(s) recipe for electrical parts.
+  - from: POLES
+    to: INV
+    label: back to time
+    question: How do we get y(t) back from Y(s)?
+    idea: 'Partial fractions: one term per pole, each a known motion.'
+    why: |-
+      **Still open:** Box 3 gave a motion per pole but not their weights.
+
+      **Why it matters:** Exams ask for y(t) (the telescope's response).
+
+      **What we want:** A mechanical way to invert.
+  - from: POLES
+    to: PLANE
+    label: picture it
+    question: Is there a picture of G(s) over the whole s-plane?
+    idea: '|G| as a landscape: poles are peaks and zeros are pits; the jω axis gives the frequency response.'
+    why: |-
+      **Still open:** Poles are points, but G is a function everywhere.
+
+      **Why it matters:** The landscape explains resonance and zeros at a glance.
+
+      **What we want:** One picture that holds poles, zeros and frequency response.
+  - from: FIRST
+    to: REDUCE
+    label: shrink it
+    question: Can we replace a high-order model with a smaller one that behaves the same?
+    idea: Drop far poles keeping the DC gain, or match the low-frequency response (M₂q = Δ₂q).
+    why: |-
+      **Still open:** Box 4 used a one-pole stand-in without a recipe.
+
+      **Why it matters:** LN2 29–34 is exam material.
+
+      **What we want:** Two recipes, with a worked check.
+  - from: SPECS
+    to: DOM
+    label: more poles?
+    question: Real plants have more poles. When do the formulas still work?
+    idea: 'When one pair is much slower: the wheel hops 12.8× faster than the body.'
+    why: |-
+      **Still open:** Box 6 assumed exactly two poles, and we left out the wheel.
+
+      **Why it matters:** Every real plant has extra poles.
+
+      **What we want:** A rule for when to ignore them.
+  - from: LOOP
+    to: BLOCKALG
+    label: reduce it
+    question: The diagram has several loops and inputs. How do we get one transfer function?
+    idea: Series ×, parallel +, loop = forward/(1 + loop), one input at a time.
+    why: |-
+      **Still open:** Box 7 handled one loop.
+
+      **Why it matters:** Exam diagrams have several (LN1 18–20).
+
+      **What we want:** Rules that always reduce to one block.
+  - from: PGAIN
+    to: MENU
+    label: which controller?
+    question: What can the controller box be?
+    idea: On/off, P, I, PI, PD or PID, written with Kp, Ti, T_D in the notes.
+    why: |-
+      **Still open:** Box 8 used P only.
+
+      **Why it matters:** The notes classify controllers (LN1 10–17).
+
+      **What we want:** The menu and its notation.
+  - from: PGAIN
+    to: SPEED
+    label: faster too?
+    question: Besides accuracy, does closing the loop change how fast the plant responds?
+    idea: 'Yes: τ shrinks by 1 + loop gain (dish speed 0.5 → 0.1 s).'
+    why: |-
+      **Still open:** Box 8 showed faster ringing, not a general speed-up.
+
+      **Why it matters:** Speed is one of feedback's main benefits in LN2.
+
+      **What we want:** The speed-up factor.
+  - from: SSE
+    to: TYPE
+    label: moving target?
+    question: What about tracking a moving satellite, and is there a shortcut by counting integrators?
+    idea: System type = integrators in L; type 1 leaves ramp error ω/K_v.
+    why: |-
+      **Still open:** Box 9 handled steady wind only.
+
+      **Why it matters:** Review Problem 5 uses it (added practice).
+
+      **What we want:** A lookup by type.
+  - from: INT
+    to: WINDUP
+    label: limits?
+    question: What if the motor can't give the torque the controller asks for?
+    idea: The integrator winds up while the torque is clipped; anti-windup stops it.
+    why: |-
+      **Still open:** Box 10 assumed unlimited torque.
+
+      **Why it matters:** Real motors saturate (Project 1).
+
+      **What we want:** The symptom and the fix.
+  - from: TUNE
+    to: LAB
+    label: try it
+    question: Can I feel the trade-offs myself?
+    idea: 'The PID Lab: sliders on the dish, with wind, noise and a torque limit.'
+    why: |-
+      **Still open:** Box 12 described the trade-offs in words.
+
+      **Why it matters:** Feeling them builds intuition.
+
+      **What we want:** A live, honest sandbox.
+  - from: TUNE
+    to: METHODS
+    label: recipes?
+    question: Is there a systematic way to find the gains?
+    idea: By hand, Ziegler–Nichols, or the PID Tuner, all as starting points.
+    why: |-
+      **Still open:** Box 12 gave a table, not a procedure.
+
+      **Why it matters:** Project 1 uses the PID Tuner.
+
+      **What we want:** Recipes and their limits.
+  - from: TUNE
+    to: FAIL
+    label: it misbehaves
+    question: The loop misbehaves. How do I tell what's wrong and which knob fixes it?
+    idea: Match the picture to one of 14 symptom cards.
+    why: |-
+      **Still open:** Box 12 assumed an ideal loop.
+
+      **Why it matters:** Real loops have delay, lag, noise and limits.
+
+      **What we want:** A diagnostic lookup.
+  - from: TUNE
+    to: INDEX
+    label: one number?
+    question: Can one number say which gain is best?
+    idea: Minimise ISE, IAE or ITAE; each prefers different damping.
+    why: |-
+      **Still open:** Box 12 traded specs by eye.
+
+      **Why it matters:** LN2 23–28 is exam material (telescope).
+
+      **What we want:** A score and its optimum.
+  - from: STATE
+    to: SS2TF
+    label: connect them
+    question: How do state space and the transfer function connect?
+    idea: G = C(sI − A)⁻¹B + D, and the poles are eig(A).
+    why: |-
+      **Still open:** Box 16 introduced a second description.
+
+      **Why it matters:** Exams convert both ways (LN1 28–38).
+
+      **What we want:** The formula and the realization forms.
+  - from: SF
+    to: ACK
+    label: formula?
+    question: Is there a formula for K that skips matching coefficients?
+    idea: 'Ackermann: K = [0 … 1] Pc⁻¹ q(A).'
+    why: |-
+      **Still open:** Matching coefficients is easy only in companion form.
+
+      **Why it matters:** LN4 19–21 uses it.
+
+      **What we want:** A general single-input formula.

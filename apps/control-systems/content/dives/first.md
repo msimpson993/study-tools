@@ -1,51 +1,40 @@
 ---
 id: first
-order: 8
-title: "The simplest plant: K/(τs + 1)"
-category: time
-chain:
-  - title: "How does the simplest plant respond, as a yardstick?"
-  - title: "How does the simplest plant respond?"
-  - title: "first-order, K/(τs + 1)"
-    detail: "y(t) = K(1 − e^(−t/τ))"
-neighbors:
-  - tf
-  - second
-exampleScene: {  overlays: [push, trace], diagram: open, caption: "The −1 pole is the slow one: after the first half second the cart's step response looks first-order with τ ≈ 1 s."  }
+order: 4
+title: "One pole: the yardstick K/(τs + 1)"
+category: predict
+neighbors: [splane, second, reduce, dominant]
+level: Conceptual
+check: [q-first, ck-first-1, ck-first-2]
 ---
-**How does the simplest plant respond?**
 
-**Picture it first.** One pole, one time constant: it reaches 63 % of the final value at t = τ, and K sets where it ends.
+**The question:** what does a single real pole do, and how close is the house to one? This is the box *One pole: the yardstick*, after *Poles and zeros*.
+
+### The big idea
+
+A one-pole plant rises smoothly with no overshoot. Its final value is K × input, and it covers 63 % of the way in one time constant τ. The house's step response almost looks like this, because its fast pole has died out after the first couple of hours. So "τ ≈ 5 h, 8.2 K per kW" is a good one-line summary of the whole house.
+
+### See it
+
+Solid: the true two-pole house. Dashed: the stand-in. The stand-in runs ahead in the first hour (the real bedroom waits for heat to cross the inner wall), then the curves merge.
 
 ```figure:first
 ```
 
-A first-order system K/(τs + 1) has a step response K(1 − e^(−t/τ)): 63 % of the way after τ, about 98 % after 4τ, with no overshoot. It is the shape to compare everything else against.
+### The math
 
-### What does K/(τs + 1) do, and what's worth memorizing?
+```eq
+G(s) = K/(τs + 1),   y(t) = K·u·(1 − e^(−t/τ))
+```
 
-One real pole at −1/<i>τ</i>. A unit step gives <i>y</i>(<i>t</i>) = <i>K</i>(1 − <i>e</i><sup>−<i>t</i>/<i>τ</i></sup>): it reaches <b>63%</b> of the final value at <i>t</i> = <i>τ</i> and ~<b>98%</b> at 4<i>τ</i>, and it <b>never overshoots</b>. <i>K</i> sets <em>where</em> it ends; <i>τ</i> sets <em>how fast</em> it gets there.
+- Tₛ (2 %) = 4τ; T_r (10–90 %) = 2.2τ.
+- K: the DC gain (K per W); τ: the time constant (h).
 
-| Quantity | Value | Why you care |
-|---|---|---|
-| Final value <i>y</i>(∞) | <i>K</i> (= <i>G</i>(0)) | DC gain: read it off with <i>s</i> = 0 |
-| <i>y</i>(<i>τ</i>) | 0.632<i>K</i> | Measure <i>τ</i> from a plot: find 63% |
-| Initial slope | <i>K</i>/<i>τ</i> | The tangent at <i>t</i> = 0 hits <i>K</i> at <i>t</i> = <i>τ</i> |
-| Settling (2%) | ≈ 4<i>τ</i> | 3<i>τ</i> → 95%, 4<i>τ</i> → 98.2%, 5<i>τ</i> → 99.3% |
-| Impulse response | (<i>K</i>/<i>τ</i>)<i>e</i><sup>−<i>t</i>/<i>τ</i></sup> | Derivative of the step response |
+### Worked example: on the house
 
+- True: x₂(t) = 20.45 − 22.5e^(−0.2t) + 2.05e^(−2.2t): 2.26 K at 1 h, 12.18 K at 5 h (59.5 %), 17.41 K at 10 h; it settles (2 %) at 20.0 h, and the 10–90 % rise takes 11.1 h.
+- Stand-in (drop −2.2, keep the DC gain): 63 % at 5 h, Tₛ = 20 h. The largest gap is 1.46 K, early on.
 
-````callout:trap Trap
-<i>G</i> = 4/(<i>s</i>+2) is first order with <b><i>K</i> = 2, <i>τ</i> = 0.5 s</b>, not <i>K</i> = 4. Divide through so the constant in the denominator is 1 before reading <i>K</i> and <i>τ</i>.
-````
+### What it can't do
 
-````callout:predict Predict
-Before you touch a slider, predict what it will do. Double τ: the pole moves toward the origin, everything takes twice as long, the final value K does not change.
-````
-
-````callout:note Symbols used here
-- **poles**: the roots of the denominator: the exponentials e^(pt) the plant can make. The cart's are −1 and −2
-- **DC gain**: the steady output for a unit steady input, G(0), if the plant is stable. For the cart, 0.5 m per N
-- **τ (time constant)**: time for a first-order response to cover 63 % of the way: τ = 1/|p|
-- **%OS, Ts**: overshoot and 2 % settling time of the step response
-````
+A first-order model can't overshoot or ring, and it misses the early delay. For the bedroom that delay is only about 25 min, so it doesn't matter; for the corner it would.

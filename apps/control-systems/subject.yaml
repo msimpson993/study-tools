@@ -1,49 +1,73 @@
 id: control-systems
 title: Control systems (EECE5130)
+quizOrder: chain   # the quiz opens on box 1's quick check and follows the map
 centralQuestion: How do we make a system we only know approximately do what we command, and predict how it will behave before we build it?
-blurb: A question-chain map of the course (Laplace and poles, the s-plane, transfer functions, block diagrams, state space, time response, steady-state error, feedback) over one running example, a 1 kg cart. Opens the full interactive guide, a quiz with flashcards, and a Review area with two mini exams (topic checklists, formula sheets, worked problems and self-tests).
+blurb: "A question-chain map of the course (models, transfer functions and poles, time response, P, I and D, what feedback buys, and state-space design) over three running examples: a two-room house with a thermostat, a car's suspension corner, and an antenna dish on a motor. Includes the PID Lab, 14 tuning failure cards, the interactive course guide, a self-test and the two mini-exam reviews."
 archetype: guide
 categories:
   - { id: describe, label: Describe the plant }
-  - { id: loop, label: Close the loop }
-  - { id: state, label: State space }
-  - { id: time, label: Time response }
+  - { id: predict, label: Predict the response }
+  - { id: pid, label: "Close the loop: P, I, D" }
+  - { id: feedback, label: What feedback buys }
+  - { id: state, label: Design from the inside }
 sections:
   - { id: map, title: The question map, kind: map }
-  - { id: board, title: Interactive course guide, kind: board }
+  - { id: dives, title: Topic deep dives, kind: dives }
   - { id: figures, title: Live figures, kind: figures }
-  - { id: quiz, title: Quiz & flashcards, kind: quiz }
+  - { id: board, title: Interactive course guide, kind: board }
+  - { id: quiz, title: Self-check, kind: quiz }
   - { id: review, title: Review (mini exams), kind: review }
   - { id: glossary, title: Variables & terms, kind: glossary }
+quizFigures: [pid-step, hero-three, pop-heatflow, pop-ode2tf, pop-housemodes, pop-first, pop-zeta, pop-specs, pop-loopcorner, pop-pgain, pop-wind, pop-int, pop-der, pop-tune, pop-coldfront, pop-sens, pop-sc, pop-states, pop-cc, pop-sf, pop-obs, pop-sep, pop-ref]
 board:
   pairs: [overview, s1, splane, sp1, sp-meaning, sp2, sp3, sp4, sp5, sp6, sp7, sp8, s2, s3, s4, s5, s6, s7, s8, s9, s10, s11, s12, s13, cheatsec, glossary]
 runningExample:
-  scene:
-    id: cart
-    overlays: [loop]
-    diagram: loop
-    params: { K: 7 }
-    caption: "Where the course is headed: the cart G, a controller Gc, and a sensor feeding y back. Each box on the map adds one piece of this loop; later boxes open up the plant (its states) and replace Gc with state feedback."
-  title: A 1 kg cart on a spring and a damper
-  summary: "A 1 kg cart on a spring (k = 2 N/m) and a damper (c = 3 N·s/m). You push it with a force u(t) and a sensor reads its position y(t). One equation, ẍ + 3ẋ + 2x = u, gives G(s) = 1/(s² + 3s + 2) with poles at −1 and −2 and DC gain 0.5. The same cart is the plant of the linear-systems map and of the PID tuning map."
+  title: A house, a car corner and an antenna dish
+  summary: "Three plants, each where it teaches best. The **house** (two rooms, a heater, a thermostat) is slow and can't overshoot: models, poles and what feedback buys a regulator. The **car corner** (400 kg on a spring and a shock) bounces: second-order behaviour, then state-space design. The **antenna dish** (a motor turning a satellite dish) is the servo that P, I and D act on."
   details: |
-    | piece | in the cart | numbers |
-    |---|---|---|
-    | plant | force → position | G(s) = 1/((s + 1)(s + 2)) |
-    | poles | two real, left half-plane | −1 and −2 (time constants 1 s and 0.5 s) |
-    | DC gain | 1 N moves it 0.5 m at rest | G(0) = 0.5 |
-    | damping | ζ = c / (2√(km)) | ζ ≈ 1.06 (slightly overdamped), ωₙ = √2 rad/s |
-    | proportional loop | u = K(r − y) | closed loop s² + 3s + (2 + K) |
-    | K = 7 | ωₙ = 3, ζ = 0.5 | %OS ≈ 16 %, steady-state error 2/9 ≈ 22 % |
+    **The house** (time in hours; temperatures above outdoor)
 
-    Every box of the map says what its idea **adds to this cart** and what it lets us **account for**.
+    | stage | what is drawn | block diagram | box |
+    |---|---|---|---|
+    | H0 | two rooms, heater in room 1, thermostat in room 2, heat-flow arrows | none | MODEL |
+    | H1 | same | [u] → G(s) → [x₂] | TF |
+    | H2 | poles at −0.2 and −2.2 /h | G = 0.0036/((s + 0.2)(s + 2.2)) | POLES |
+    | H3 | the warming trace with τ = 5 h marked | same | FIRST |
+    | H4 | thermostat dial r; a cold front d at the walls | r → Σ → Gc → heater → house → y, fed back; d enters at the house | DIST |
+    | H5 | walls drawn thinner (worse insulation) | G marked "G + ΔG" | SENS |
+    | H6 | sun on the thermostat (sensor error n) | n enters at the sensor | NOISE |
+
+    **The car corner** (m = 400 kg, k = 25.6 kN/m, c = 1.6 kN·s/m: ωₙ = 8 rad/s, ζ = 0.25)
+
+    | stage | what is drawn | block diagram | box |
+    |---|---|---|---|
+    | C0 | body on spring and shock; a 1 kN load; the bounce trace | [u] → 1/(ms² + cs + k) → [z] | SECOND |
+    | C1 | spec marks on the trace (%OS, Tₚ, Tₛ band) | same | SPECS |
+    | C2 | road profile w with a step and a bump | w → Σ → (cs + k) → Σ (+u) → 1/(ms²) → z, fed back | LOOP |
+    | C3 | two gauges: height z, velocity ż | 1/(ms²) opens into ∫ → ∫ | STATE |
+    | C4 | an actuator between body and wheel | both states fed back through K = [k₁, k₂] | SF |
+    | C5 | position sensor; ghost body (the estimate) | observer corrected by L(y − ŷ) | OBS, SEP |
+    | C6 | ride-height dial r | r → N̄ → Σ → u | REF |
+
+    **The antenna dish** (J = 10 kg·m², B = 20 N·m·s/rad, motor ±200 N·m: Θ/T = 0.1/(s(s + 2)))
+
+    | stage | what is drawn | block diagram | box |
+    |---|---|---|---|
+    | A0 | dish pointed at θ, satellite at r | r → Σ → Kp → T → 1/(Js² + Bs) → θ, fed back | PGAIN |
+    | A1 | wind on the dish (T_d) | T_d enters at the torque | SSE |
+    | A2 | same | Kp opens to Kp + Ki/s | INT |
+    | A3 | tachometer on the motor | Kd·s from θ (on the measurement) | DER |
+    | A4 | torque-limit meter | sat block (±200 N·m) before the plant | TUNE |
+
+    Every box of the map says what its idea **adds to its example**.
 hub:
   order: 3
-# Porting guard: 2 maps (course chain + s-plane sub-chain), 30 boxes, 28 lines, 27 dives, 1 review page, the 83-question course quiz + the 22-question mini-exam 1 (mini-exam 2 questions are added on top)
+# Porting guard (rebuilt Nov 2026, question-chain format; pid-tuning folded in): 2 maps (Big picture 22 boxes / 24 lines,
+# Full detail 39 / 41), 33 dives, 2 review pages, 259 quiz questions (38 box asks + 52 dive checks + 123 kept CS + 46 kept PID).
 expect:
   maps: 2
-  nodes: 30
-  edges: 28
-  dives: 27
+  nodes: 61
+  edges: 65
+  dives: 33
   review: 2
-  quiz: 123
+  quiz: 259

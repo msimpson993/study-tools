@@ -1,371 +1,3188 @@
-- id: locus
-  title: "Root locus: what turning up the gain does to the cart's poles"
-  x: Re s (1/s)
-  y: Im s (rad/s)
+# Live figures for the three running examples (models in src/model, tested in test/numbers.test.ts) and the kept tools.
+# House: core HOUSE model, time in hours. Corner: m = 400 kg, k = 25.6 kN/m, c = 1.6 kN·s/m (src/model/params.ts). Dish: J = 10, B = 20.
+# Kept tools (batch 3 §E): cart, height, pz, shift, fvt, bode from the old CS page; problem, bodepid and the 14 fail-* cards from pid-tuning.
+- id: overview
+  title: "Three plants, three loops: built one box at a time"
+  x: picture and block diagram
+  y: stage
   legend:
-    - { label: "path the closed-loop poles take as K grows", color: "var(--accent)" }
-    - { label: "closed-loop poles now (stable)", color: "var(--grn)" }
-    - { label: "closed-loop poles now (unstable)", color: "var(--bad)" }
-    - { label: "settled value of the output", color: "var(--yel)", dash: true }
-  howToRead: "Left: the s-plane. The grey × are the open-loop poles of the cart, −1 and −2; the blue curves are where the closed-loop poles go as the gain K of the loop u = K(r − y) increases from 0; the green × are where they are at the current K (red in the shaded right half-plane would mean unstable). Right: the step response of the closed loop for a 1 m command, with the overshoot, 2 % settling time and final value printed. The dashed grey line is the command, the dotted yellow line is where the output actually settles."
-  lookFor: "Raise K from 0: the two real poles slide toward each other and meet at −1.5 (K = 0.25), then split up and down. From there the poles are complex, the response rings, and the final value creeps toward 1 but never reaches it with P alone."
-  height: 300
-  animate: { control: K, speed: 2, loop: true }
+    - label: "highlighted block: what this stage adds"
+      color: var(--yel)
+  howToRead: One panel per running example. Each slider steps through that example's stages (H0–H6 for the house, C0–C6 for the corner, A0–A4 for the dish); the block a stage adds is outlined in yellow and named underneath.
+  lookFor: "Every loop ends the same way: command → controller → plant → output, measured and fed back."
   controls:
-    - { id: K, label: "loop gain K", type: range, min: 0.01, max: 30, step: 0.01, default: 7, group: primary }
-    - { id: ctrl, label: "controller", type: seg, default: p, group: primary, options: [{ value: p, label: "P: u = K·e" }, { value: pd, label: "P + zero at −1.5" }] }
+    - id: hs
+      label: house stage
+      type: range
+      min: 0
+      max: 6
+      step: 1
+      default: 6
+      group: primary
+    - id: cs
+      label: corner stage
+      type: range
+      min: 0
+      max: 6
+      step: 1
+      default: 6
+      group: primary
+    - id: as
+      label: dish stage
+      type: range
+      min: 0
+      max: 4
+      step: 1
+      default: 4
+      group: primary
   presets:
-    - { id: open, label: "Almost open loop (K ≈ 0)", set: { K: 0.01, ctrl: p }, about: "The poles are still the cart's own: −1 and −2." }
-    - { id: critical, label: "Critically damped (K = 0.25)", set: { K: 0.25, ctrl: p }, about: "The two real poles have met at −1.5: the fastest response with no overshoot." }
-    - { id: k7, label: "The map's K = 7", set: { K: 7, ctrl: p }, about: "Poles −1.5 ± j2.6: ζ = 0.5, about 16 % overshoot, settles in about 2.7 s, stops at 7/9 of the command." }
-    - { id: high, label: "High gain (K = 30)", set: { K: 30, ctrl: p }, about: "Poles −1.5 ± j5.4: very fast ringing, still 6 % short of the command." }
-    - { id: zero, label: "Add a zero (K = 7)", set: { K: 7, ctrl: pd }, about: "A controller zero at −1.5 pulls the locus to the left: the same gain rings less." }
+    - id: start
+      label: as they come
+      set:
+        hs: 0
+        cs: 0
+        as: 0
+    - id: done
+      label: finished loops
+      set:
+        hs: 6
+        cs: 6
+        as: 4
+- id: house
+  title: "The two-room house: heat flows and temperatures"
+  x: time (h)
+  y: temperature above outdoor (K)
+  legend:
+    - label: living room x₁ (heater)
+      color: var(--org)
+    - label: bedroom x₂
+      color: var(--cyan)
+  howToRead: "Top: the house in steady state, arrow widths ∝ heat flow (W). Bottom: both rooms warming from outdoor temperature after the heater switches on, with the two ODEs and their live coefficients. Time is in hours."
+  lookFor: "The bedroom has no heater, yet ends only 4 K cooler than the living room: the inner wall passes heat five times more easily than the outer walls leak it."
+  controls:
+    - id: u
+      label: heater u
+      type: range
+      min: 0
+      max: 2500
+      step: 50
+      default: 2500
+      group: primary
+      unit: W
+    - id: Gin
+      label: inner-wall conductance
+      type: range
+      min: 100
+      max: 500
+      step: 0.1
+      default: 277.8
+      group: primary
+      unit: W/K
+    - id: Gout
+      label: outer leak per room
+      type: range
+      min: 20
+      max: 110
+      step: 0.1
+      default: 55.6
+      group: primary
+      unit: W/K
+    - id: Tout
+      label: outdoor temperature
+      type: range
+      min: -10
+      max: 15
+      step: 1
+      default: 5
+      group: primary
+      unit: °C
+    - id: store
+      label: show heat stored per room
+      type: toggle
+      default: false
+      group: more
+  presets:
+    - id: house
+      label: the house
+      set:
+        u: 2500
+        Gin: 277.8
+        Gout: 55.6
+    - id: leaky
+      label: leaky house (leak 66.7)
+      set:
+        Gout: 66.7
+    - id: thin
+      label: thin inner wall (100)
+      set:
+        Gin: 100
+    - id: order
+      label: heat stored (why two poles)
+      set:
+        store: true
+      about: "Two rooms, two stores of heat: two states, two poles."
+- id: tfbuild
+  title: From the room equations to G(s)
+  x: time (h)
+  y: rise above outdoor (K)
+  legend:
+    - label: bedroom G₂
+      color: var(--cyan)
+    - label: living room G₁
+      color: var(--org)
+  howToRead: "Left: the derivation, one step per click of the step slider (balances → Laplace → eliminate x₁ → fraction). Right: what the fraction predicts for the 2.5 kW heater from cold."
+  lookFor: "Every coefficient in the ODE lands in one place in the fraction: 2.4 and 0.44 in the denominator, 0.0036 on top."
+  controls:
+    - id: step
+      label: derivation step
+      type: range
+      min: 1
+      max: 4
+      step: 1
+      default: 4
+      group: primary
+    - id: out
+      label: output
+      type: seg
+      options:
+        - value: bed
+          label: bedroom
+        - value: living
+          label: living room
+      default: bed
+      group: primary
+  presets:
+    - id: bed
+      label: bedroom G₂
+      set:
+        out: bed
+        step: 4
+    - id: living
+      label: living room G₁ (zero at −1.2)
+      set:
+        out: living
+        step: 4
+    - id: start
+      label: "step 1: Laplace"
+      set:
+        step: 1
+- id: splane
+  title: The house's poles and the motions they stand for
+  x: σ (1/h) · time (h)
+  y: jω (rad/h) · rise (K)
+  legend:
+    - label: bedroom after 2.5 kW
+      color: var(--cyan)
+    - label: slow mode (rooms together)
+      color: var(--grn)
+      dash: true
+    - label: fast mode (rooms even out)
+      color: var(--vio)
+      dash: true
+  howToRead: "Left: the poles; drag them (grey rings = the real house, −0.2 and −2.2 /h). Right: the bedroom after the heater switches on, and with \"modes\" on, each pole's own term. Dragging the slow pole off the axis is a \"what if\": no house can ring."
+  lookFor: "Move the slow pole toward zero: the warm-up stretches out. The fast pole hardly matters after an hour."
+  controls:
+    - id: slow
+      label: slow pole
+      type: range
+      min: -1
+      max: -0.05
+      step: 0.01
+      default: -0.2
+      group: primary
+      unit: 1/h
+    - id: fast
+      label: fast pole
+      type: range
+      min: -4
+      max: -0.5
+      step: 0.05
+      default: -2.2
+      group: primary
+      unit: 1/h
+    - id: w
+      label: slow pole off the axis (what if)
+      type: range
+      min: 0
+      max: 1.5
+      step: 0.05
+      default: 0
+      group: more
+      unit: rad/h
+    - id: modes
+      label: show the two modes
+      type: toggle
+      default: true
+      group: primary
+  presets:
+    - id: house
+      label: the house
+      set:
+        slow: -0.2
+        fast: -2.2
+        w: 0
+- id: first
+  title: One pole as a stand-in for the house
+  x: time (h)
+  y: rise above outdoor (K)
+  legend:
+    - label: true house
+      color: var(--cyan)
+    - label: stand-in K(1 − e^(−t/τ))
+      color: var(--org)
+      dash: true
+  howToRead: "The bedroom after 2.5 kW from cold (solid) against a one-pole curve with gain K and time constant τ (dashed). Marks: 63 % at τ and 98 % at 4τ."
+  lookFor: "τ = 5 h and K = 8.18 K/kW: the two curves never differ by more than 1.5 K."
+  controls:
+    - id: tau
+      label: time constant τ
+      type: range
+      min: 1
+      max: 10
+      step: 0.1
+      default: 5
+      group: primary
+      unit: h
+    - id: K
+      label: gain K
+      type: range
+      min: 4
+      max: 12
+      step: 0.01
+      default: 8.18
+      group: primary
+      unit: K/kW
+    - id: truth
+      label: show true house
+      type: toggle
+      default: true
+      group: primary
+  presets:
+    - id: fit
+      label: best one-pole fit
+      set:
+        tau: 5
+        K: 8.18
+- id: reduce
+  title: Shrink the model, keep the behaviour
+  x: time (h or s)
+  y: output
+  legend:
+    - label: full model
+      color: var(--cyan)
+    - label: reduced model
+      color: var(--org)
+      dash: true
+  howToRead: Step response of the full model and of a reduced one. "Drop" removes the far pole but keeps the DC gain; "match" is LN2's frequency matching (Δ terms). For the LN2 example, choose order 1 or 2.
+  lookFor: "The house: dropping −2.2 gives τ = 5 h; matching gives 5.02 h. The curves differ by at most 1.45 K either way."
+  controls:
+    - id: plant
+      label: plant
+      type: select
+      options:
+        - value: house
+          label: house
+        - value: ln2
+          label: LN2 6/((s+1)(s+2)(s+3))
+      default: house
+      group: primary
+    - id: method
+      label: method
+      type: seg
+      options:
+        - value: drop
+          label: drop far pole
+        - value: match
+          label: frequency match
+      default: match
+      group: primary
+    - id: order
+      label: order (LN2)
+      type: seg
+      options:
+        - value: "1"
+          label: "1"
+        - value: "2"
+          label: "2"
+      default: "1"
+      group: primary
+  presets:
+    - id: match
+      label: house, frequency match
+      set:
+        plant: house
+        method: match
+        order: "1"
+    - id: drop
+      label: house, drop −2.2
+      set:
+        plant: house
+        method: drop
+        order: "1"
+    - id: ln2
+      label: LN2 example to 2nd order
+      set:
+        plant: ln2
+        method: match
+        order: "2"
+    - id: ln2d
+      label: LN2 example, drop far pole
+      set:
+        plant: ln2
+        method: drop
+        order: "2"
+- id: partial
+  title: "Back to time: one term per pole"
+  x: time (h)
+  y: bedroom rise (K)
+  legend:
+    - label: x₂(t), the sum
+      color: var(--cyan)
+    - label: step term
+      color: var(--muted)
+      dash: true
+    - label: slow term
+      color: var(--grn)
+      dash: true
+    - label: fast term
+      color: var(--vio)
+      dash: true
+  howToRead: X₂(s) = 9/(s(s + 0.2)(s + 2.2)) splits into a step term and one decaying exponential per pole. The solid curve is their sum; move the poles to see each term change.
+  lookFor: "The fast term is small and gone within an hour: that is why one pole describes the house."
+  controls:
+    - id: p1
+      label: slow pole
+      type: range
+      min: -1
+      max: -0.05
+      step: 0.01
+      default: -0.2
+      group: primary
+      unit: 1/h
+    - id: p2
+      label: fast pole
+      type: range
+      min: -4
+      max: -0.5
+      step: 0.05
+      default: -2.2
+      group: primary
+      unit: 1/h
+    - id: terms
+      label: show each term
+      type: toggle
+      default: true
+      group: primary
+  presets:
+    - id: house
+      label: the house
+      set:
+        p1: -0.2
+        p2: -2.2
+- id: rlc
+  title: "G(s) for circuits: RLC, and the house as an RC network"
+  x: schematic · time
+  y: output
+  legend:
+    - label: output
+      color: var(--cyan)
+  howToRead: "Left: the circuit and its G(s). Right: its step response. The house preset maps temperature to voltage and heat flow to current: two capacitors, three resistors, a current source."
+  lookFor: "Same equations, same G(s): the RC house warms exactly like the house."
+  controls:
+    - id: circ
+      label: circuit
+      type: seg
+      options:
+        - value: rlc
+          label: series RLC
+        - value: house
+          label: house as RC
+      default: rlc
+      group: primary
+    - id: R
+      label: R
+      type: range
+      min: 0.1
+      max: 4
+      step: 0.1
+      default: 1
+      group: primary
+      unit: Ω
+    - id: L
+      label: L
+      type: range
+      min: 0.1
+      max: 4
+      step: 0.1
+      default: 1
+      group: primary
+      unit: H
+    - id: Cap
+      label: C
+      type: range
+      min: 0.1
+      max: 4
+      step: 0.1
+      default: 1
+      group: primary
+      unit: F
+  presets:
+    - id: house
+      label: house as RC
+      set:
+        circ: house
+      about: C₁ = C₂ = 1 MJ/K, R between rooms 3.6 mK/W, R to outdoors 18 mK/W.
+    - id: rlc
+      label: series RLC
+      set:
+        circ: rlc
+- id: plane
+  title: "The s-plane as a landscape: |G(s)|"
+  x: σ · ω
+  y: jω · |G(jω)|
+  legend:
+    - label: "|G| colour: dark low, bright high"
+      color: var(--yel)
+  howToRead: "Left: |G(s)| over the s-plane as a height map (poles are peaks, zeros pits). Right: the slice along the jω axis, which is the frequency response (preview). The probe marks one frequency."
+  lookFor: "The daily heater cycle (0.262 rad/h) reaches the bedroom at 4.93 K/kW instead of 8.18: the slow pole filters it."
+  controls:
+    - id: plant
+      label: G(s)
+      type: seg
+      options:
+        - value: bed
+          label: house G₂
+        - value: living
+          label: house G₁ (zero)
+        - value: corner
+          label: corner
+      default: bed
+      group: primary
+    - id: omega
+      label: probe ω
+      type: range
+      min: 0
+      max: 2
+      step: 0.002
+      default: 0.262
+      group: primary
+  presets:
+    - id: bed
+      label: "house: bedroom (two peaks)"
+      set:
+        plant: bed
+        omega: 0.262
+    - id: living
+      label: "house: living room (pit at −1.2)"
+      set:
+        plant: living
+        omega: 0.262
+    - id: corner
+      label: corner (resonance ridge)
+      set:
+        plant: corner
+        omega: 7.5
+- id: regulate
+  title: Hold steady against a cold front
+  x: time (h)
+  y: bedroom change (K) · extra heat (W)
+  legend:
+    - label: bedroom
+      color: var(--cyan)
+    - label: extra heater power
+      color: var(--org)
+  howToRead: "Outdoors drops at t = 0; the thermostat (P or PI, in the bedroom) changes the heater. Left: the bedroom's change from its set point. Right: the extra heater power, with the steady need marked."
+  lookFor: However you tune it, the heater ends up adding 611 W; P just needs a 0.5 K error to be told to.
+  controls:
+    - id: ctrl
+      label: controller
+      type: seg
+      options:
+        - value: open
+          label: open loop
+        - value: p
+          label: P
+        - value: pi
+          label: PI
+      default: pi
+      group: primary
+    - id: Kp
+      label: Kp
+      type: range
+      min: 200
+      max: 2200
+      step: 50
+      default: 1100
+      group: primary
+      unit: W/K
+    - id: Ki
+      label: Ki
+      type: range
+      min: 0
+      max: 600
+      step: 10
+      default: 200
+      group: primary
+      unit: W/(K·h)
+    - id: d
+      label: cold front
+      type: range
+      min: -10
+      max: 0
+      step: 0.5
+      default: -5
+      group: primary
+      unit: K
+  presets:
+    - id: open
+      label: open loop
+      set:
+        ctrl: open
+    - id: p
+      label: P 1100
+      set:
+        ctrl: p
+        Kp: 1100
+    - id: pi
+      label: PI (1100, 200)
+      set:
+        ctrl: pi
+        Kp: 1100
+        Ki: 200
+- id: sens
+  title: What if the model is wrong? Leakier walls
+  x: time (h) · ω (rad/h)
+  y: response · |S|
+  legend:
+    - label: walls as modelled
+      color: var(--cyan)
+    - label: leakier walls
+      color: var(--org)
+      dash: true
+    - label: "|S(jω)|"
+      color: var(--grn)
+  howToRead: "Left: the bedroom's response with the walls as modelled and with the leak changed, normalised to the nominal final value, with the final change and S(0)·ΔG/G's prediction. Right: |S(jω)| for the P thermostat."
+  lookFor: "Open loop: an 18 % shortfall. P: 2 %. PI: none."
+  controls:
+    - id: Kp
+      label: Kp
+      type: range
+      min: 0
+      max: 2200
+      step: 50
+      default: 1100
+      group: primary
+      unit: W/K
+    - id: dleak
+      label: leak change
+      type: range
+      min: -30
+      max: 30
+      step: 1
+      default: 20
+      group: primary
+      unit: "%"
+    - id: ctrl
+      label: controller
+      type: seg
+      options:
+        - value: open
+          label: open loop
+        - value: p
+          label: P
+        - value: pi
+          label: PI
+      default: p
+      group: primary
+  presets:
+    - id: open
+      label: open loop, walls 20 % leakier
+      set:
+        ctrl: open
+        dleak: 20
+    - id: p
+      label: P 1100, walls 20 % leakier
+      set:
+        ctrl: p
+        Kp: 1100
+        dleak: 20
+    - id: p500
+      label: P 500
+      set:
+        ctrl: p
+        Kp: 500
+        dleak: 20
+    - id: pi
+      label: PI
+      set:
+        ctrl: pi
+        Kp: 1100
+        dleak: 20
+- id: sc
+  title: Why not infinite gain? S, C and sensor error
+  x: ω (rad/h) · time (h)
+  y: magnitude · K
+  legend:
+    - label: "|S|"
+      color: var(--grn)
+    - label: "|C|"
+      color: var(--vio)
+    - label: room
+      color: var(--cyan)
+    - label: reading
+      color: var(--muted)
+  howToRead: "Left (preview: frequency response): |S| is what the loop rejects, |C| what it passes from the sensor. Right: the room and the thermostat's reading when the sensor reads high by the bias (and flickers, if on)."
+  lookFor: "Slow bias: C ≈ 1, passed straight through. Fast flicker above ~1.5 rad/h: C falls, filtered out."
+  controls:
+    - id: Kp
+      label: Kp
+      type: range
+      min: 200
+      max: 2200
+      step: 50
+      default: 1100
+      group: primary
+      unit: W/K
+    - id: ctrl
+      label: controller
+      type: seg
+      options:
+        - value: p
+          label: P
+        - value: pi
+          label: PI
+      default: p
+      group: primary
+    - id: bias
+      label: sensor bias
+      type: range
+      min: 0
+      max: 2
+      step: 0.1
+      default: 1
+      group: primary
+      unit: K
+    - id: flicker
+      label: sensor flicker (fast noise)
+      type: toggle
+      default: false
+      group: primary
+  presets:
+    - id: sun
+      label: sun on the thermostat (+1 K), P 1100
+      set:
+        ctrl: p
+        Kp: 1100
+        bias: 1
+        flicker: false
+    - id: pi
+      label: same, PI
+      set:
+        ctrl: pi
+        Kp: 1100
+        bias: 1
+        flicker: false
+    - id: p500
+      label: P 500
+      set:
+        ctrl: p
+        Kp: 500
+        bias: 1
+        flicker: false
+    - id: flicker
+      label: fast flicker, no bias
+      set:
+        bias: 0
+        flicker: true
+- id: corner
+  title: "The car corner: spring, shock and bounce"
+  x: time (s)
+  y: body height z (cm)
+  legend:
+    - label: z(t)
+      color: var(--cyan)
+    - label: overshoot peak
+      color: var(--org)
+    - label: 2 % settling
+      color: var(--ok)
+  howToRead: "Left: one corner of the car (body mass m on spring k and shock c), animated; the readouts give ωₙ, ζ and the poles. Right: body height for the chosen input, with %OS, Tₚ and Tₛ marked. Press play to animate."
+  lookFor: "Double the shock (3.2 kN·s/m): overshoot drops from 44 % to 16 %, but the ride feels every ripple; halve it and the car floats and bounces."
+  controls:
+    - id: m
+      label: mass m
+      type: range
+      min: 250
+      max: 400
+      step: 5
+      default: 400
+      group: primary
+      unit: kg
+    - id: k
+      label: spring k
+      type: range
+      min: 15
+      max: 30
+      step: 0.1
+      default: 25.6
+      group: primary
+      unit: kN/m
+    - id: c
+      label: shock c
+      type: range
+      min: 0.5
+      max: 6.4
+      step: 0.05
+      default: 1.6
+      group: primary
+      unit: kN·s/m
+    - id: input
+      label: input
+      type: seg
+      options:
+        - value: load
+          label: 1 kN load
+        - value: road
+          label: 5 cm road step
+        - value: release
+          label: release from 5 cm
+      default: load
+      group: primary
+    - id: t
+      label: time
+      type: range
+      min: 0
+      max: 3
+      step: 0.01
+      default: 3
+      group: more
+      unit: s
+  presets:
+    - id: corner
+      label: the corner
+      set:
+        m: 400
+        k: 25.6
+        c: 1.6
+    - id: sporty
+      label: sporty (c 2.56)
+      set:
+        c: 2.56
+    - id: critical
+      label: critical (c 6.4)
+      set:
+        c: 6.4
+    - id: worn
+      label: worn shock (c 0.8)
+      set:
+        c: 0.8
+  animate:
+    control: t
+    speed: 0.5
+- id: specs
+  title: Specs as a region of the s-plane
+  x: σ (1/s) · time (s)
+  y: jω (rad/s) · z (cm)
+  legend:
+    - label: allowed region
+      color: var(--ok)
+    - label: the corner's poles
+      color: var(--cyan)
+  howToRead: "Left: %OS ≤ gives a ζ ray, Tₛ ≤ gives σ ≥ 4/Tₛ; the allowed region is shaded. Drag the pole (or the shock slider) to move the corner's poles. Right: the 1 kN load step with the measured %OS and Tₛ against the limits."
+  lookFor: Tₛ ≤ 1 s needs c = 3200 N·s/m by the formula; %OS ≤ 10 % needs 3783.
+  controls:
+    - id: os
+      label: "%OS limit"
+      type: range
+      min: 1
+      max: 50
+      step: 1
+      default: 10
+      group: primary
+      unit: "%"
+    - id: ts
+      label: Tₛ limit
+      type: range
+      min: 0.3
+      max: 3
+      step: 0.05
+      default: 1
+      group: primary
+      unit: s
+    - id: c
+      label: shock c
+      type: range
+      min: 0.5
+      max: 6.4
+      step: 0.05
+      default: 1.6
+      group: primary
+      unit: kN·s/m
+  presets:
+    - id: ts1
+      label: Tₛ ≤ 1 s by the formula
+      set:
+        c: 3.2
+    - id: os10
+      label: "%OS ≤ 10 %"
+      set:
+        c: 3.8
+- id: dominant
+  title: Which poles matter? Add the wheel
+  x: time (s) · σ (1/s)
+  y: z (cm) · jω (rad/s)
+  legend:
+    - label: body only
+      color: var(--cyan)
+    - label: with the wheel
+      color: var(--org)
+      dash: true
+  howToRead: "Left: the body after a 1 kN load, single mass vs with a 40 kg wheel on a tyre spring. Right: all poles; the grey rings are the single-mass pair."
+  lookFor: A softer tyre brings wheel hop down toward the body's frequency and the single-mass model breaks.
+  controls:
+    - id: wheel
+      label: wheel (40 kg, tyre spring)
+      type: toggle
+      default: true
+      group: primary
+    - id: kt
+      label: tyre stiffness
+      type: range
+      min: 50
+      max: 400
+      step: 5
+      default: 200
+      group: primary
+      unit: kN/m
+  presets:
+    - id: single
+      label: single mass (no wheel)
+      set:
+        wheel: false
+    - id: wheel
+      label: with the wheel (tyre 200 kN/m)
+      set:
+        wheel: true
+        kt: 200
+    - id: soft
+      label: soft tyre (50 kN/m)
+      set:
+        wheel: true
+        kt: 50
+- id: loop
+  title: The corner is already a feedback loop
+  x: block diagram · time (s)
+  y: z (cm)
+  legend:
+    - label: z(t)
+      color: var(--cyan)
+  howToRead: "Left: stage 0 is the picture, stage 1 the same corner redrawn as Σ → (cs + k) → 1/(ms²) → z with z fed back. Right: what the loop does for a 5 cm road step or a 1 kN active force."
+  lookFor: "Road input: the spring and shock push on the gap w − z, exactly what a controller does with an error."
+  controls:
+    - id: stage
+      label: redraw as loop
+      type: toggle
+      default: true
+      group: primary
+    - id: input
+      label: input
+      type: seg
+      options:
+        - value: road
+          label: road step
+        - value: force
+          label: active force u
+      default: road
+      group: primary
+    - id: c
+      label: shock c
+      type: range
+      min: 0.5
+      max: 6.4
+      step: 0.05
+      default: 1.6
+      group: primary
+      unit: kN·s/m
+    - id: k
+      label: spring k
+      type: range
+      min: 15
+      max: 30
+      step: 0.1
+      default: 25.6
+      group: primary
+      unit: kN/m
+  presets:
+    - id: road
+      label: the corner, road step
+      set:
+        stage: true
+        input: road
+        c: 1.6
+        k: 25.6
+    - id: force
+      label: the corner, 1 kN force
+      set:
+        stage: true
+        input: force
+        c: 1.6
+        k: 25.6
+    - id: drawing
+      label: as drawn (before the loop)
+      set:
+        stage: false
+  animate:
+    control: stage
+    speed: 0.5
+- id: states
+  title: "Look inside: the state (z, ż)"
+  x: z (cm) · time (s)
+  y: ż (m/s) · z (cm)
+  legend:
+    - label: trajectory
+      color: var(--cyan)
+    - label: start
+      color: var(--yel)
+  howToRead: "Left: the state plane, height against vertical speed, from the chosen start; the eigenvalues of A are printed. Right: the same motion against time."
+  lookFor: "Every start spirals into the origin along the same shape: the eigenvalues set it."
+  controls:
+    - id: z0
+      label: initial height
+      type: range
+      min: -5
+      max: 5
+      step: 0.1
+      default: 5
+      group: primary
+      unit: cm
+    - id: v0
+      label: initial velocity
+      type: range
+      min: -0.5
+      max: 0.5
+      step: 0.01
+      default: 0
+      group: primary
+      unit: m/s
+    - id: c
+      label: shock c
+      type: range
+      min: 0.5
+      max: 6.4
+      step: 0.05
+      default: 1.6
+      group: primary
+      unit: kN·s/m
+    - id: k
+      label: spring k
+      type: range
+      min: 15
+      max: 30
+      step: 0.1
+      default: 25.6
+      group: primary
+      unit: kN/m
+  presets:
+    - id: release
+      label: released 5 cm high
+      set:
+        z0: 5
+        v0: 0
+        c: 1.6
+        k: 25.6
+    - id: kick
+      label: kicked upward 0.5 m/s
+      set:
+        z0: 0
+        v0: 0.5
+        c: 1.6
+        k: 25.6
+    - id: stiff
+      label: twice the shock
+      set:
+        z0: 5
+        v0: 0
+        c: 3.2
+        k: 25.6
+- id: cc
+  title: Can we reach and see every state?
+  x: state 1
+  y: state 2
+  legend:
+    - label: B
+      color: var(--cyan)
+    - label: AB
+      color: var(--org)
+  howToRead: "Left: B and AB as directions in the state plane (normalised); if they line up, det P_c = 0 and some direction cannot be steered. det P_o tests the sensor the same way. Right: what the input does to each state."
+  lookFor: "Two equal heaters on one dial: both rooms always warm together; no setting makes the bedroom warmer than the living room."
+  controls:
+    - id: plant
+      label: case
+      type: select
+      options:
+        - value: corner
+          label: corner
+        - value: h1
+          label: "house: heater 1, sensor 2"
+        - value: two
+          label: "house: two heaters, one dial"
+        - value: avg
+          label: "house: average sensor"
+      default: corner
+      group: primary
+  presets:
+    - id: corner
+      label: the corner
+      set:
+        plant: corner
+    - id: h1
+      label: "house: heater room 1, sensor room 2"
+      set:
+        plant: h1
+    - id: two
+      label: "house: two heaters, one dial"
+      set:
+        plant: two
+    - id: avg
+      label: "house: average sensor"
+      set:
+        plant: avg
+- id: sf
+  title: "Feed back every state: place the poles"
+  x: σ (1/s) · time (s)
+  y: jω (rad/s) · z (cm)
+  legend:
+    - label: active
+      color: var(--cyan)
+    - label: passive
+      color: var(--muted)
+      dash: true
+  howToRead: "Left: drag the target pole pair (grey rings: the passive corner); K = [k₁, k₂] is computed for it. Right: the body after a 1 kN load or a 5 cm × 0.2 s speed bump, active vs passive, with peak force and acceleration."
+  lookFor: "Comfort is in acceleration: the active body sees 3.5 m/s² peak instead of 5.7."
+  controls:
+    - id: sigma
+      label: target decay σ
+      type: range
+      min: 1
+      max: 16
+      step: 0.5
+      default: 8
+      group: primary
+      unit: 1/s
+    - id: wd
+      label: target ωd
+      type: range
+      min: 0
+      max: 14
+      step: 0.5
+      default: 6
+      group: primary
+      unit: rad/s
+    - id: input
+      label: input
+      type: seg
+      options:
+        - value: load
+          label: 1 kN load
+        - value: bump
+          label: 5 cm speed bump
+      default: bump
+      group: primary
+    - id: ghost
+      label: passive ghost
+      type: toggle
+      default: true
+      group: primary
+    - id: ack
+      label: show Ackermann
+      type: toggle
+      default: false
+      group: more
+  presets:
+    - id: design
+      label: −8 ± 6j (ζ 0.8, ωₙ 10)
+      set:
+        sigma: 8
+        wd: 6
+    - id: ack
+      label: Ackermann worked
+      set:
+        sigma: 8
+        wd: 6
+        ack: true
+    - id: fast
+      label: −10 ± 10j
+      set:
+        sigma: 10
+        wd: 10
+- id: obs
+  title: Estimate what we can't measure
+  x: time (s)
+  y: z (cm) · ż (m/s)
+  legend:
+    - label: real
+      color: var(--cyan)
+    - label: estimate
+      color: var(--org)
+      dash: true
+  howToRead: The corner under its state feedback takes a 1 kN load while an observer, fed only the height, estimates height and speed. The estimate starts off by the chosen error. L is printed for the chosen observer speed.
+  lookFor: "×10 locks on faster but the velocity estimate gets noisy: L = [156, 9312] multiplies the sensor noise."
+  controls:
+    - id: speed
+      label: observer speed (× controller poles)
+      type: seg
+      options:
+        - value: "2"
+          label: ×2
+        - value: "5"
+          label: ×5
+        - value: "10"
+          label: ×10
+      default: "5"
+      group: primary
+    - id: e0
+      label: initial estimate error
+      type: range
+      min: 0
+      max: 2
+      step: 0.1
+      default: 1
+      group: primary
+      unit: cm
+    - id: noise
+      label: sensor noise (±2 mm)
+      type: toggle
+      default: false
+      group: primary
+  presets:
+    - id: x2
+      label: ×2
+      set:
+        speed: "2"
+    - id: x5
+      label: ×5 (L = [76, 2132])
+      set:
+        speed: "5"
+    - id: x10
+      label: ×10, noisy
+      set:
+        speed: "10"
+        noise: true
+- id: sep
+  title: "Use the estimate: separation"
+  x: time (s) · σ (1/s)
+  y: z (cm) · jω (rad/s)
+  legend:
+    - label: true-state feedback
+      color: var(--cyan)
+    - label: estimate feedback
+      color: var(--org)
+      dash: true
+  howToRead: "Left: a +2 cm ride-height step fed back on the true state and on the estimate (starting off by the error). Right: the four closed-loop poles: the controller pair and the observer pair."
+  lookFor: The difference is a short blip that shrinks as the observer gets faster.
+  controls:
+    - id: speed
+      label: observer speed
+      type: range
+      min: 2
+      max: 10
+      step: 1
+      default: 5
+      group: primary
+      unit: ×
+    - id: e0
+      label: initial estimate error
+      type: range
+      min: 0
+      max: 2
+      step: 0.1
+      default: 1
+      group: primary
+      unit: cm
+  presets:
+    - id: x2
+      label: observer ×2
+      set:
+        speed: 2
+        e0: 1
+    - id: x5
+      label: observer ×5
+      set:
+        speed: 5
+        e0: 1
+    - id: x10
+      label: observer ×10
+      set:
+        speed: 10
+        e0: 1
+- id: refin
+  title: "Follow a command: the reference gain N̄"
+  x: time (s)
+  y: z (cm) · force (N)
+  legend:
+    - label: body height
+      color: var(--cyan)
+    - label: command
+      color: var(--yel)
+      dash: true
+    - label: actuator force
+      color: var(--vio)
+  howToRead: A ride-height command r with u = −Kx + N̄r (or, with N̄ off, u = −k₁(z − r) − k₂ż). Change the real spring to see what model error does to the final height.
+  lookFor: "Make the real spring 10 % stiffer: the car stops 6 % short."
+  controls:
+    - id: r
+      label: ride-height step
+      type: range
+      min: 0
+      max: 3
+      step: 0.1
+      default: 2
+      group: primary
+      unit: cm
+    - id: kerr
+      label: spring error
+      type: range
+      min: -20
+      max: 20
+      step: 1
+      default: 0
+      group: primary
+      unit: "%"
+    - id: nbar
+      label: N̄ on
+      type: toggle
+      default: true
+      group: primary
+  presets:
+    - id: stiff
+      label: spring 10 % stiffer
+      set:
+        kerr: 10
+- id: antenna
+  title: The dish with P control
+  x: time (s) · σ
+  y: θ (°) · jω
+  legend:
+    - label: θ(t)
+      color: var(--cyan)
+    - label: target
+      color: var(--yel)
+      dash: true
+  howToRead: "Left: the dish seen from above turning toward the satellite (angles drawn 4× larger) and the torque Kp·e. Middle: the angle after the step. Right: the closed-loop pole pair. Press play to animate."
+  lookFor: "Past Kp = 10 the poles split and climb straight up: faster swing, same decay."
+  controls:
+    - id: Kp
+      label: Kp
+      type: range
+      min: 0
+      max: 2000
+      step: 5
+      default: 40
+      group: primary
+      unit: N·m/rad
+    - id: step
+      label: step size
+      type: range
+      min: 0.02
+      max: 0.2
+      step: 0.01
+      default: 0.1
+      group: primary
+      unit: rad
+    - id: t
+      label: time
+      type: range
+      min: 0
+      max: 6
+      step: 0.01
+      default: 2
+      group: more
+      unit: s
+  presets:
+    - id: crit
+      label: critical (Kp 10)
+      set:
+        Kp: 10
+    - id: k40
+      label: "Kp 40: 16 %"
+      set:
+        Kp: 40
+    - id: k1000
+      label: "Kp 1000: 73 %"
+      set:
+        Kp: 1000
+  animate:
+    control: t
+    speed: 1
+- id: locus
+  title: Root locus of the dish (preview)
+  x: σ (1/s)
+  y: jω (rad/s)
+  legend:
+    - label: locus branches
+      color: var(--cyan)
+    - label: poles at this Kp
+      color: var(--yel)
+  howToRead: "Preview (root locus, added; not in LN1/2/4): every pole position as Kp goes from 0 up; the marked poles are at the slider's Kp."
+  lookFor: "The branches meet at −1 and go straight up: more gain buys speed, never decay."
+  controls:
+    - id: Kp
+      label: Kp
+      type: range
+      min: 0
+      max: 3000
+      step: 10
+      default: 1000
+      group: primary
+      unit: N·m/rad
+  presets:
+    - id: crit
+      label: critical (Kp 10)
+      set:
+        Kp: 10
+    - id: k40
+      label: Kp 40 (ζ 0.5)
+      set:
+        Kp: 40
+    - id: k1000
+      label: Kp 1000 (ζ 0.1)
+      set:
+        Kp: 1000
+- id: speed
+  title: "Feedback makes it faster: the speed loop"
+  x: time (s)
+  y: speed / final
+  legend:
+    - label: with speed feedback
+      color: var(--cyan)
+    - label: none
+      color: var(--muted)
+      dash: true
+  howToRead: The dish's speed after a torque step, alone (τ = J/B = 0.5 s) and with speed feedback K_ω (τ = J/(B + K_ω)), each normalised to its own final value.
+  lookFor: K_ω = 80 makes it 5× faster; 180, 10×.
+  controls:
+    - id: Kw
+      label: K_ω
+      type: range
+      min: 0
+      max: 200
+      step: 5
+      default: 80
+      group: primary
+      unit: N·m·s/rad
+  presets:
+    - id: x5
+      label: 5× faster
+      set:
+        Kw: 80
+    - id: x10
+      label: 10× faster
+      set:
+        Kw: 180
+- id: sse
+  title: Why it stops short, and system type
+  x: time (s)
+  y: pointing error (°)
+  legend:
+    - label: error e(t)
+      color: var(--cyan)
+    - label: half the beam
+      color: var(--ok)
+  howToRead: "Left: the pointing error for a step, a steady wind (from t = 1 s) or a ramp (a satellite pass), under P or PI (Ki = 500). The green band is half the 1.46° beam. Right: the final-value theorem for this case and the pointing loss."
+  lookFor: Doubling Kp halves the wind error; switching to PI removes it.
+  controls:
+    - id: Kp
+      label: Kp
+      type: range
+      min: 100
+      max: 4000
+      step: 50
+      default: 1000
+      group: primary
+      unit: N·m/rad
+    - id: input
+      label: input
+      type: seg
+      options:
+        - value: step
+          label: step
+        - value: wind
+          label: wind
+        - value: ramp
+          label: ramp
+      default: wind
+      group: primary
+    - id: ctrl
+      label: controller
+      type: seg
+      options:
+        - value: p
+          label: P
+        - value: pi
+          label: PI
+      default: p
+      group: primary
+    - id: wind
+      label: wind torque
+      type: range
+      min: 0
+      max: 50
+      step: 1
+      default: 20
+      group: more
+      unit: N·m
+    - id: rate
+      label: ramp rate
+      type: range
+      min: 0
+      max: 2
+      step: 0.1
+      default: 1
+      group: more
+      unit: °/s
+  presets:
+    - id: wind
+      label: wind under P
+      set:
+        input: wind
+        ctrl: p
+    - id: ramp
+      label: ramp (system type)
+      set:
+        input: ramp
+        ctrl: p
+    - id: pi
+      label: wind under PI
+      set:
+        input: wind
+        ctrl: pi
+- id: integral
+  title: Integral action on the dish
+  x: time (s) · σ
+  y: θ (°) · jω
+  legend:
+    - label: θ(t)
+      color: var(--cyan)
+    - label: target
+      color: var(--yel)
+      dash: true
+  howToRead: "Left: the 0.1 rad step and, if on, a 20 N·m gust at 3 s. Right: the three closed-loop poles. A banner warns when Ki ≥ 2Kp (Routh)."
+  lookFor: The wind error decays to zero, but the step overshoot climbs with Ki.
+  controls:
+    - id: Kp
+      label: Kp
+      type: range
+      min: 200
+      max: 4000
+      step: 50
+      default: 1000
+      group: primary
+      unit: N·m/rad
+    - id: Ki
+      label: Ki
+      type: range
+      min: 0
+      max: 2500
+      step: 50
+      default: 500
+      group: primary
+      unit: N·m/(rad·s)
+    - id: wind
+      label: wind gust 20 N·m
+      type: toggle
+      default: true
+      group: primary
+  presets:
+    - id: edge
+      label: Ki = 2Kp (rings forever)
+      set:
+        Kp: 1000
+        Ki: 2000
+- id: derivative
+  title: "Derivative action: D on error vs on measurement"
+  x: time (s)
+  y: θ (°) · torque (N·m)
+  legend:
+    - label: θ(t)
+      color: var(--cyan)
+    - label: torque
+      color: var(--org)
+  howToRead: "Left: the step with PD; the readout gives %OS and ζ = (B + Kd)/(2√(Kp J)), and the zero at −Kp/Kd when D acts on the error. Right: the motor torque."
+  lookFor: "Same poles, two overshoots: 15.6 % with D on error, 4.6 % on measurement; the difference is the zero at −Kp/Kd."
+  controls:
+    - id: Kp
+      label: Kp
+      type: range
+      min: 200
+      max: 4000
+      step: 50
+      default: 1000
+      group: primary
+      unit: N·m/rad
+    - id: Kd
+      label: Kd
+      type: range
+      min: 0
+      max: 400
+      step: 5
+      default: 120
+      group: primary
+      unit: N·m·s/rad
+    - id: dmode
+      label: D acts on
+      type: seg
+      options:
+        - value: err
+          label: error
+        - value: meas
+          label: measurement
+      default: meas
+      group: primary
+    - id: noise
+      label: sensor noise 0.01°
+      type: toggle
+      default: false
+      group: primary
+  presets:
+    - id: err
+      label: D on error
+      set:
+        dmode: err
+    - id: meas
+      label: D on measurement
+      set:
+        dmode: meas
+- id: gains
+  title: "Choosing the three gains: raise one at a time"
+  x: time (s)
+  y: θ (°)
+  legend:
+    - label: raised gain
+      color: var(--cyan)
+    - label: start (2000, 1000, 200)
+      color: var(--muted)
+      dash: true
+  howToRead: "Three panels from the tuned (2000, 1000, 200); each raises one gain to its slider. Step at 0 s, 20 N·m gust at 3 s. Readouts: %OS, Tₛ, wind peak and time back inside 0.05°."
+  lookFor: Kp 4000 nearly halves the wind peak, but the slow integrator pole takes longer to clear it (7 s).
+  controls:
+    - id: Kp
+      label: Kp
+      type: range
+      min: 2000
+      max: 5000
+      step: 100
+      default: 4000
+      group: primary
+      unit: N·m/rad
+    - id: Ki
+      label: Ki
+      type: range
+      min: 1000
+      max: 4000
+      step: 100
+      default: 3000
+      group: primary
+      unit: N·m/(rad·s)
+    - id: Kd
+      label: Kd
+      type: range
+      min: 200
+      max: 500
+      step: 10
+      default: 400
+      group: primary
+      unit: N·m·s/rad
+  presets:
+    - id: reset
+      label: reset to start
+      set:
+        Kp: 2000
+        Ki: 1000
+        Kd: 200
+- id: tunetable
+  title: "Cause and effect: what each gain moves"
+  x: effect
+  y: gain raised
+  legend:
+    - label: measured on the dish
+      color: var(--yel)
+  howToRead: Each row raises one gain from the tuned (2000, 1000, 200), D on measurement; each cell gives the direction and the measured values [P10]. The noise column is qualitative.
+  lookFor: "Every gain buys one thing and costs another: no row is all improvements."
+  controls:
+    - id: row
+      label: gain raised
+      type: select
+      options:
+        - value: all
+          label: all three
+        - value: Kp
+          label: Kp
+        - value: Ki
+          label: Ki
+        - value: Kd
+          label: Kd
+      default: all
+      group: primary
+  presets:
+    - id: all
+      label: all three
+      set:
+        row: all
+    - id: kp
+      label: raise Kp
+      set:
+        row: Kp
+    - id: ki
+      label: raise Ki
+      set:
+        row: Ki
+    - id: kd
+      label: raise Kd
+      set:
+        row: Kd
+  height: 260
+- id: index
+  title: The best gain in one number
+  x: time (s) · gain
+  y: e(t) · index
+  legend:
+    - label: error e(t)
+      color: var(--cyan)
+    - label: shaded integrand / index curve
+      color: var(--org)
+  howToRead: "Left: the step error e(t) and the area the chosen index adds up (e², |e| or t·|e|). Right: the index against gain, minimum marked; the yellow dot is the slider's gain."
+  lookFor: The telescope's ISE optimum is K₃ = √10 = 3.16 (ζ 0.5); IAE prefers 4.19 (ζ 0.66).
+  controls:
+    - id: plant
+      label: plant
+      type: seg
+      options:
+        - value: telescope
+          label: telescope (LN2)
+        - value: dish
+          label: dish rate feedback
+      default: telescope
+      group: primary
+    - id: K3
+      label: K₃ (telescope)
+      type: range
+      min: 2
+      max: 6
+      step: 0.01
+      default: 4
+      group: primary
+    - id: Kr
+      label: K_r (dish)
+      type: range
+      min: 20
+      max: 200
+      step: 1
+      default: 80
+      group: primary
+      unit: N·m·s/rad
+    - id: index
+      label: index
+      type: seg
+      options:
+        - value: ISE
+          label: ISE
+        - value: IAE
+          label: IAE
+        - value: ITAE
+          label: ITAE
+      default: ISE
+      group: primary
+  presets:
+    - id: tise
+      label: telescope ISE optimum √10
+      set:
+        plant: telescope
+        K3: 3.16
+        index: ISE
+    - id: tiae
+      label: telescope IAE optimum 4.19
+      set:
+        plant: telescope
+        K3: 4.19
+        index: IAE
+    - id: dise
+      label: dish ISE optimum 80
+      set:
+        plant: dish
+        Kr: 80
+        index: ISE
+    - id: diae
+      label: dish IAE optimum 112.5
+      set:
+        plant: dish
+        Kr: 112
+        index: IAE
+- id: windup
+  title: "When the push hits its limit: windup"
+  x: time (s)
+  y: θ (°) · torque (N·m)
+  legend:
+    - label: θ(t)
+      color: var(--cyan)
+    - label: torque
+      color: var(--org)
+    - label: integral term
+      color: var(--vio)
+      dash: true
+  howToRead: "The tuned PID (2000, 1000, 200) slews to a new satellite with the motor torque limited. Left: the angle. Right: the torque, shaded where it is saturated, and the integrator's share."
+  lookFor: At 0.2 rad windup barely shows (7.9 % vs 7.4 %); at 2 rad it triples the overshoot.
+  controls:
+    - id: slew
+      label: slew
+      type: range
+      min: 0.1
+      max: 2.5
+      step: 0.1
+      default: 2
+      group: primary
+      unit: rad
+    - id: limit
+      label: torque limit
+      type: range
+      min: 50
+      max: 400
+      step: 10
+      default: 200
+      group: primary
+      unit: N·m
+    - id: aw
+      label: anti-windup
+      type: seg
+      options:
+        - value: none
+          label: none
+        - value: clamp
+          label: clamp
+        - value: backcalc
+          label: back-calc
+      default: none
+      group: primary
+  presets:
+    - id: small
+      label: 0.2 rad
+      set:
+        slew: 0.2
+    - id: none
+      label: 2 rad, none
+      set:
+        slew: 2
+        aw: none
+    - id: clamp
+      label: 2 rad, clamp
+      set:
+        slew: 2
+        aw: clamp
+- id: zn
+  title: "Recipes: Ziegler–Nichols"
+  x: time (s)
+  y: output / target
+  legend:
+    - label: response
+      color: var(--cyan)
+  howToRead: 'P only at gain K until you switch on "apply ZN": then the ZN PID from Kᵤ and Tᵤ. On the ideal dish there is no Kᵤ; with the amplifier lag Routh gives one. p3 is the old pid-tuning example.'
+  lookFor: "ZN's 64 % overshoot vs hand tuning's 7 %: ZN aims at fast disturbance rejection."
+  controls:
+    - id: plant
+      label: plant
+      type: seg
+      options:
+        - value: lag
+          label: dish + 0.05 s lag
+        - value: dish
+          label: ideal dish
+        - value: p3
+          label: p3 = 1/(s+1)³
+      default: lag
+      group: primary
+    - id: K
+      label: P gain K
+      type: range
+      min: 0
+      max: 600
+      step: 5
+      default: 300
+      group: primary
+      unit: N·m/rad
+    - id: zn
+      label: apply ZN (find Kᵤ)
+      type: toggle
+      default: false
+      group: primary
+    - id: dm
+      label: D on measurement
+      type: toggle
+      default: false
+      group: primary
+  presets:
+    - id: ku
+      label: at Kᵤ = 440
+      set:
+        plant: lag
+        K: 440
+        zn: false
+    - id: zn
+      label: ZN on dish + lag
+      set:
+        plant: lag
+        zn: true
+        dm: false
+    - id: p3
+      label: legacy p3 ZN
+      set:
+        plant: p3
+        zn: true
+        dm: false
+- id: lab
+  title: "PID Lab: drag the gains yourself"
+  x: time (s)
+  y: angle / target · torque
+  legend:
+    - label: output
+      color: var(--cyan)
+    - label: torque
+      color: var(--org)
+    - label: previous run
+      color: var(--muted)
+      dash: true
+  howToRead: "The dish (0.1/(s(s + 2)), 0.1 rad step, 200 N·m limit, D on measurement) under your PID. Wind adds 20 N·m at 3 s. Readouts check the specs: %OS < 10 %, wind peak < 0.6°, zero steady error, torque within the limit. p1, p2, p3 are the old lag plants with their old settings."
+  lookFor: Start at P 1000 (73 % ring), add Kd until it stops ringing, then just enough Ki to clear the wind.
+  controls:
+    - id: plant
+      label: plant
+      type: select
+      options:
+        - value: dish
+          label: dish
+        - value: lag
+          label: dish + lag
+        - value: p1
+          label: p1
+        - value: p2
+          label: p2
+        - value: p3
+          label: p3
+      default: dish
+      group: primary
+    - id: Kp
+      label: Kp
+      type: range
+      min: 0
+      max: 5000
+      step: 0.1
+      default: 1000
+      group: primary
+    - id: Ki
+      label: Ki
+      type: range
+      min: 0
+      max: 4000
+      step: 0.1
+      default: 0
+      group: primary
+    - id: Kd
+      label: Kd
+      type: range
+      min: 0
+      max: 500
+      step: 0.1
+      default: 0
+      group: primary
+    - id: wind
+      label: wind 20 N·m at 3 s (load on p1–p3)
+      type: toggle
+      default: false
+      group: primary
+    - id: noise
+      label: sensor noise 0.01°
+      type: toggle
+      default: false
+      group: primary
+    - id: dm
+      label: D on measurement
+      type: toggle
+      default: true
+      group: primary
+    - id: ghost
+      label: "ghost: previous run"
+      type: toggle
+      default: true
+      group: primary
+    - id: step
+      label: step size
+      type: range
+      min: 0.02
+      max: 2
+      step: 0.02
+      default: 0.1
+      group: more
+      unit: rad
+    - id: sat
+      label: torque limit
+      type: range
+      min: 50
+      max: 1000
+      step: 10
+      default: 200
+      group: more
+      unit: N·m
+    - id: aw
+      label: anti-windup
+      type: seg
+      options:
+        - value: none
+          label: none
+        - value: clamp
+          label: clamp
+        - value: backcalc
+          label: back-calc
+      default: none
+      group: more
+    - id: Nf
+      label: derivative filter N_f
+      type: range
+      min: 20
+      max: 500
+      step: 10
+      default: 200
+      group: more
+      unit: rad/s
+    - id: T
+      label: window
+      type: range
+      min: 4
+      max: 40
+      step: 1
+      default: 12
+      group: more
+      unit: s
+  presets:
+    - id: p
+      label: P 1000
+      set:
+        plant: dish
+        Kp: 1000
+        Ki: 0
+        Kd: 0
+    - id: pd
+      label: PD (1000, 0, 120)
+      set:
+        plant: dish
+        Kp: 1000
+        Ki: 0
+        Kd: 120
+    - id: tuned
+      label: tuned (2000, 1000, 200)
+      set:
+        plant: dish
+        Kp: 2000
+        Ki: 1000
+        Kd: 200
+        wind: true
+    - id: muchI
+      label: too much I (2000, 3000, 200)
+      set:
+        plant: dish
+        Kp: 2000
+        Ki: 3000
+        Kd: 200
+    - id: muchD
+      label: too much Kd (2000, 1000, 400)
+      set:
+        plant: dish
+        Kp: 2000
+        Ki: 1000
+        Kd: 400
+    - id: kick
+      label: "kick: dm off"
+      set:
+        plant: dish
+        Kp: 2000
+        Ki: 1000
+        Kd: 200
+        dm: false
+    - id: wnone
+      label: windup 2 rad, aw none
+      set:
+        plant: dish
+        Kp: 2000
+        Ki: 1000
+        Kd: 200
+        step: 2
+        aw: none
+    - id: wclamp
+      label: windup 2 rad, aw clamp
+      set:
+        plant: dish
+        Kp: 2000
+        Ki: 1000
+        Kd: 200
+        step: 2
+        aw: clamp
+    - id: znlag
+      label: ZN on dish + lag
+      set:
+        plant: lag
+        Kp: 264
+        Ki: 531.5
+        Kd: 32.8
+        dm: false
+    - id: p3zn
+      label: legacy p3 ZN
+      set:
+        plant: p3
+        Kp: 4.8
+        Ki: 2.65
+        Kd: 2.18
+        dm: false
+        T: 30
+  height: 240
 - id: cart
   title: "The cart: mass, spring and damper decide the poles"
-  x: "time (s) · σ (1/s)"
-  y: "position (m) · jω (rad/s)"
+  x: time (s) · σ (1/s)
+  y: position (m) · jω (rad/s)
   legend:
-    - { label: "position after a 1 N push", color: "var(--cyan)" }
-    - { label: "running cart (ghost)", color: "var(--muted)", dash: true }
-    - { label: "poles ×", color: "var(--org)" }
+    - label: position after a 1 N push
+      color: var(--cyan)
+    - label: running cart (ghost)
+      color: var(--muted)
+      dash: true
+    - label: poles ×
+      color: var(--org)
   howToRead: "Left: the poles of 1/(m s² + c s + k) in the s-plane (grey rings: the running cart, poles −1 and −2). Right: the position after a 1 N push, against the running cart dashed. A stiffer spring pushes the poles apart or off the real axis; less damper moves them toward the jω axis; a heavier cart slows everything."
   lookFor: "Take the damper away (c = 0): the poles land on the jω axis and the cart rings forever. Put it back: they slide left and the ringing decays."
   controls:
-    - { id: m, label: "Mass m", type: range, min: 0.3, max: 3, step: 0.05, default: 1, group: primary, unit: kg }
-    - { id: k, label: "Spring k", type: range, min: 0.5, max: 8, step: 0.05, default: 2, group: primary, unit: N/m }
-    - { id: c, label: "Damper c", type: range, min: 0, max: 8, step: 0.05, default: 3, group: primary, unit: N·s/m }
+    - id: m
+      label: Mass m
+      type: range
+      min: 0.3
+      max: 3
+      step: 0.05
+      default: 1
+      group: primary
+      unit: kg
+    - id: k
+      label: Spring k
+      type: range
+      min: 0.5
+      max: 8
+      step: 0.05
+      default: 2
+      group: primary
+      unit: N/m
+    - id: c
+      label: Damper c
+      type: range
+      min: 0
+      max: 8
+      step: 0.05
+      default: 3
+      group: primary
+      unit: N·s/m
   presets:
-    - { id: cart, label: "Running cart", set: { m: 1, k: 2, c: 3 }, about: "Poles −1 and −2: overdamped, no overshoot, settles in about 4.6 s." }
-    - { id: stiff, label: "Stiffer spring (k = 8)", set: { k: 8 }, about: "Complex poles: the cart now rings." }
-    - { id: free, label: "No damper (c = 0)", set: { c: 0 }, about: "Poles on the jω axis: sustained oscillation." }
-    - { id: heavy, label: "Heavy cart (m = 3)", set: { m: 3 }, about: "Slower: poles closer to the origin." }
-- id: second
-  title: "Feel ζ and ωn: the poles decide the step"
-  x: "time (s) · σ (1/s)"
-  y: "output (normalised) · jω (rad/s)"
-  legend:
-    - { label: "step response", color: "var(--cyan)" }
-    - { label: "poles ×", color: "var(--org)" }
-  howToRead: "Left: the s-plane. Drag the × (or use the sliders): its distance from the origin is the natural frequency ωn, its angle from the negative real axis sets the damping ratio ζ. Right: the step response of ωn²/(s² + 2ζωn s + ωn²) with rise time, overshoot, ±2 % band and settling time marked."
-  lookFor: "Drag the pole straight up: the ringing grows but the decay rate (its real part) does not. Drag it left: faster, same shape. Overshoot depends on the angle only."
-  controls:
-    - { id: wn, label: "Natural frequency ωn", type: range, min: 0.3, max: 6, step: 0.01, default: 1.41, group: primary, unit: rad/s }
-    - { id: zeta, label: "Damping ratio ζ", type: range, min: 0.05, max: 2, step: 0.01, default: 1.06, group: primary }
-    - { id: marks, label: "Show Tr, %OS, Ts, band", type: toggle, default: true, group: more }
-  presets:
-    - { id: cart, label: "Running cart", set: { wn: 1.41, zeta: 1.06 }, about: "ζ ≈ 1.06: just overdamped, poles −1 and −2." }
-    - { id: half, label: "ζ = 0.5", set: { wn: 2, zeta: 0.5 } }
-    - { id: ring, label: "Rings (ζ = 0.12)", set: { wn: 3, zeta: 0.12 } }
-    - { id: over, label: "Overdamped (ζ = 1.6)", set: { wn: 2, zeta: 1.6 } }
+    - id: cart
+      label: Running cart
+      set:
+        m: 1
+        k: 2
+        c: 3
+      about: "Poles −1 and −2: overdamped, no overshoot, settles in about 4.6 s."
+    - id: stiff
+      label: Stiffer spring (k = 8)
+      set:
+        k: 8
+      about: "Complex poles: the cart now rings."
+    - id: free
+      label: No damper (c = 0)
+      set:
+        c: 0
+      about: "Poles on the jω axis: sustained oscillation."
+    - id: heavy
+      label: Heavy cart (m = 3)
+      set:
+        m: 3
+      about: "Slower: poles closer to the origin."
 - id: height
   title: "The transfer function as a landscape: |G(s)| over the s-plane"
-  x: "σ · ω"
-  y: "jω · |G|"
+  x: σ · ω
+  y: jω · |G|
   legend:
-    - { label: "jω axis", color: "var(--yel)" }
-    - { label: "poles ×", color: "#fff" }
+    - label: jω axis
+      color: var(--yel)
+    - label: poles ×
+      color: "#fff"
   howToRead: "Left: |G(s)| as height over the s-plane (bright = tall, dark = low); poles are peaks, zeros pits. Walk up the yellow jω axis: the height you pass is the frequency response. Right: that cut, drawn flat (the Bode magnitude), with the running cart dashed."
   lookFor: "Lower the damper c: the poles slide toward the jω axis, the peak rises, and the cut gets a resonance bump. Add a zero: a pit appears and the cut dips."
   controls:
-    - { id: c, label: "Damper c", type: range, min: 0.2, max: 6, step: 0.01, default: 3, group: primary, unit: N·s/m }
-    - { id: omega, label: "Probe frequency ω", type: range, min: 0, max: 5, step: 0.01, default: 1, group: primary, unit: rad/s }
-    - { id: db, label: "Slice in dB", type: toggle, default: false, group: more }
-    - { id: zero, label: "Add a zero", type: toggle, default: false, group: more }
-    - { id: zr, label: "Zero position", type: range, min: -5, max: 5, step: 0.1, default: -2, group: more }
+    - id: c
+      label: Damper c
+      type: range
+      min: 0.2
+      max: 6
+      step: 0.01
+      default: 3
+      group: primary
+      unit: N·s/m
+    - id: omega
+      label: Probe frequency ω
+      type: range
+      min: 0
+      max: 5
+      step: 0.01
+      default: 1
+      group: primary
+      unit: rad/s
+    - id: db
+      label: Slice in dB
+      type: toggle
+      default: false
+      group: more
+    - id: zero
+      label: Add a zero
+      type: toggle
+      default: false
+      group: more
+    - id: zr
+      label: Zero position
+      type: range
+      min: -5
+      max: 5
+      step: 0.1
+      default: -2
+      group: more
   presets:
-    - { id: cart, label: "Running cart", set: { c: 3, omega: 1 } }
-    - { id: light, label: "Lightly damped", set: { c: 0.4, omega: 1.4 } }
-    - { id: zero, label: "Cart with a zero at −2", set: { c: 3, omega: 1, zero: true, zr: -2 } }
-- id: first
-  title: "First order: K/(Ts + 1)"
-  x: "time (s) · σ (1/s)"
-  y: "output · jω"
-  legend:
-    - { label: "step response", color: "var(--cyan)" }
-    - { label: "initial tangent", color: "var(--vio)", dash: true }
-    - { label: "impulse response", color: "var(--grn)", dash: true }
-  howToRead: "Left: the single pole at −1/τ. Right: the step response K(1 − e^(−t/τ)): it reaches 63 % of K at t = τ and 98 % at 4τ; the dashed tangent at t = 0 meets the final value at t = τ."
-  lookFor: "Double τ: the pole moves toward the origin, everything takes twice as long, the final value K does not change."
-  controls:
-    - { id: K, label: "DC gain K", type: range, min: 0.2, max: 3, step: 0.1, default: 1, group: primary }
-    - { id: T, label: "Time constant τ", type: range, min: 0.2, max: 4, step: 0.1, default: 1, group: primary, unit: s }
-    - { id: tan, label: "Show initial tangent", type: toggle, default: true, group: more }
-    - { id: imp, label: "Show impulse response", type: toggle, default: false, group: more }
-  presets:
-    - { id: t1, label: "τ = 1 s", set: { K: 1, T: 1 } }
-    - { id: fast, label: "Fast (τ = 0.3 s)", set: { K: 1, T: 0.3 } }
-    - { id: slow, label: "Slow (τ = 3 s)", set: { K: 2, T: 3 } }
-- id: dominant
-  title: "Dominant poles: which ones matter"
-  x: "time (s) · σ (1/s)"
-  y: "output · jω"
-  legend:
-    - { label: "full response", color: "var(--cyan)" }
-    - { label: "dominant pair alone", color: "var(--muted)", dash: true }
-    - { label: "poles ×", color: "var(--org)" }
-  howToRead: "A second-order pair plus one extra real pole at −p (unit DC gain). The dashed trace is the pair alone. If p is several times farther left than the pair, the two traces coincide: the near poles dominate."
-  lookFor: "Slide p from 20 down to 1: the extra pole stops being negligible and slows the rise. Beyond about 5× the pair, you can drop it."
-  controls:
-    - { id: p, label: "Extra real pole at −p", type: range, min: 0.5, max: 20, step: 0.1, default: 10, group: primary }
-    - { id: wn, label: "Pair ωn", type: range, min: 0.5, max: 4, step: 0.05, default: 2, group: primary, unit: rad/s }
-    - { id: zeta, label: "Pair ζ", type: range, min: 0.1, max: 1.5, step: 0.01, default: 0.5, group: primary }
-  presets:
-    - { id: far, label: "Far (p = 20)", set: { p: 20 } }
-    - { id: near, label: "Comparable (p = 2)", set: { p: 2 } }
-    - { id: close, label: "Right on top (p = 1)", set: { p: 1 } }
-- id: pidcart
-  title: "P, PI and PID on the cart"
-  x: "time (s)"
-  y: "position (m), force (N)"
-  legend:
-    - { label: "position", color: "var(--cyan)" }
-    - { label: "force u", color: "var(--org)" }
-    - { label: "poles ×", color: "var(--org)" }
-  howToRead: "The cart G = 1/(s² + 3s + 2) under u = Kp·e + Ki·∫e + Kd·de/dt, simulated with the core PID simulator. Top left: position against the command 1 (with overshoot and steady-state error marked); bottom left: the force; right: the closed-loop poles."
-  lookFor: "P alone settles short of 1 (the offset is 1/(1 + Kp·G(0)) = 0.4 at Kp = 3). Adding Ki closes the gap, at the cost of a slower settle; add a lot of Ki and it overshoots. Kd speeds the settle up again."
-  controls:
-    - { id: Kp, label: "Kp", type: range, min: 0, max: 20, step: 0.1, default: 3, group: primary }
-    - { id: Ki, label: "Ki", type: range, min: 0, max: 10, step: 0.05, default: 0, group: primary }
-    - { id: Kd, label: "Kd", type: range, min: 0, max: 4, step: 0.05, default: 0, group: primary }
-    - { id: push, label: "Push of −1 N at t = 8 s", type: toggle, default: false, group: more }
-  presets:
-    - { id: p, label: "P only (Kp = 3)", set: { Kp: 3, Ki: 0, Kd: 0 }, about: "Final value 0.6: an offset of 0.4, with about 6 % overshoot." }
-    - { id: pi, label: "PI (3, 2)", set: { Kp: 3, Ki: 2, Kd: 0 }, about: "Final value 1, no overshoot, settles in about 4.9 s." }
-    - { id: pid, label: "PID (3, 2, 0.5)", set: { Kp: 3, Ki: 2, Kd: 0.5 }, about: "Kd speeds the settle up to about 4.1 s." }
-    - { id: hot, label: "Too much Ki (3, 8)", set: { Kp: 3, Ki: 8, Kd: 0 }, about: "A strong integral overshoots." }
-    - { id: push, label: "PI with a push", set: { Kp: 3, Ki: 2, Kd: 0, push: true }, about: "I removes the effect of a constant push." }
-- id: sse
-  title: "Steady-state error: why P leaves one and I removes it"
-  x: "time (s)"
-  y: "position, error"
-  legend:
-    - { label: "position", color: "var(--cyan)" }
-    - { label: "error e", color: "var(--org)" }
-    - { label: "e_ss = 1/(1+Kp·G(0))", color: "var(--bad)", dash: true }
-  howToRead: "Top: the cart under P or PI. Bottom: the error r − y and, for P only, the predicted final error 1/(1 + Kp·G(0)) with G(0) = 0.5. With an integrator the loop cannot rest until e = 0."
-  lookFor: "Raise Kp: the predicted error shrinks as 1/(1 + 0.5·Kp) but never reaches zero. Set Ki > 0: the error is driven to zero."
-  controls:
-    - { id: Kp, label: "Kp", type: range, min: 0, max: 20, step: 0.1, default: 3, group: primary }
-    - { id: Ki, label: "Ki", type: range, min: 0, max: 10, step: 0.05, default: 0, group: primary }
-  presets:
-    - { id: p3, label: "P, Kp = 3", set: { Kp: 3, Ki: 0 } }
-    - { id: p10, label: "P, Kp = 10", set: { Kp: 10, Ki: 0 }, about: "Better, never zero." }
-    - { id: pi, label: "PI (3, 2)", set: { Kp: 3, Ki: 2 }, about: "e → 0." }
-- id: loop
-  title: "The loop: command path and disturbance path"
-  x: "time (s)"
-  y: "position (m)"
-  legend:
-    - { label: "with the chosen K", color: "var(--cyan)" }
-    - { label: "K = 1 (ghost)", color: "var(--muted)", dash: true }
-  howToRead: "Close the loop with a gain K around the cart. Left: how the output follows the command, Y/R = GcG/(1 + GcG). Right: how the same loop answers a unit push on the cart, Y/D = G/(1 + GcG). The same loop shapes both, but not in the same way."
-  lookFor: "Raise K: the command path gets faster and its error smaller, and the push is held back harder, but the command path starts to ring."
-  controls:
-    - { id: K, label: "Loop gain K", type: range, min: 0, max: 30, step: 0.1, default: 7, group: primary }
-  presets:
-    - { id: k1, label: "K = 1", set: { K: 1 } }
-    - { id: k7, label: "K = 7", set: { K: 7 }, about: "ζ = 0.5, about 16 % overshoot, final value 7/9." }
-    - { id: k30, label: "K = 30", set: { K: 30 }, about: "Strong rejection, but rings." }
-- id: states
-  title: "State space: the cart as two states"
-  x: "time (s) · σ (1/s)"
-  y: "x₁, x₂ · jω"
-  legend:
-    - { label: "x₁ position", color: "var(--cyan)" }
-    - { label: "x₂ velocity", color: "var(--org)" }
-    - { label: "eigenvalues ×", color: "var(--org)" }
-  howToRead: "The same cart written as ẋ = Ax + Bu, with x = (position, velocity) and A = [[0, 1], [−k, −c]]. Left: both states after a 1 N push. Right: the eigenvalues of A, which are exactly the poles of G(s)."
-  lookFor: "Change c and k and watch the eigenvalues move: the same pole picture as the transfer function, now with the inside of the cart in view."
-  controls:
-    - { id: k, label: "Spring k", type: range, min: 0.5, max: 8, step: 0.05, default: 2, group: primary, unit: N/m }
-    - { id: c, label: "Damper c", type: range, min: 0, max: 8, step: 0.05, default: 3, group: primary, unit: N·s/m }
-  presets:
-    - { id: cart, label: "Running cart", set: { k: 2, c: 3 } }
-    - { id: stiff, label: "Stiff spring (k = 8)", set: { k: 8, c: 3 } }
-    - { id: free, label: "No damper", set: { k: 2, c: 0 } }
-- id: rlc
-  title: "An RLC circuit is the same second-order system"
-  x: "time (s) · σ (1/s)"
-  y: "v_C (V) · jω"
-  legend:
-    - { label: "capacitor voltage", color: "var(--cyan)" }
-    - { label: "poles ×", color: "var(--org)" }
-  howToRead: "Series R, L and C driven by a voltage step, output across the capacitor: G = 1/(LC s² + RC s + 1), so ωn = 1/√(LC) and ζ = (R/2)√(C/L), exactly like the cart with m ↔ L, c ↔ R and k ↔ 1/C."
-  lookFor: "Raise R: the poles are pulled onto the real axis (overdamped). Lower R: they approach the jω axis and the capacitor voltage rings."
-  controls:
-    - { id: R, label: "Resistance R", type: range, min: 0.1, max: 6, step: 0.05, default: 1, group: primary, unit: Ω }
-    - { id: L, label: "Inductance L", type: range, min: 0.2, max: 3, step: 0.05, default: 1, group: primary, unit: H }
-    - { id: Cap, label: "Capacitance C", type: range, min: 0.1, max: 2, step: 0.05, default: 1, group: primary, unit: F }
-  presets:
-    - { id: under, label: "Underdamped (R = 1)", set: { R: 1, L: 1, Cap: 1 } }
-    - { id: crit, label: "Critical (R = 2)", set: { R: 2, L: 1, Cap: 1 } }
-    - { id: over, label: "Overdamped (R = 4)", set: { R: 4, L: 1, Cap: 1 } }
+    - id: cart
+      label: Running cart
+      set:
+        c: 3
+        omega: 1
+    - id: light
+      label: Lightly damped
+      set:
+        c: 0.4
+        omega: 1.4
+    - id: zero
+      label: Cart with a zero at −2
+      set:
+        c: 3
+        omega: 1
+        zero: true
+        zr: -2
 - id: pz
   title: "Poles and a zero: what moving them does"
-  x: "time (s) · σ (1/s)"
-  y: "output · jω"
+  x: time (s) · σ (1/s)
+  y: output · jω
   legend:
-    - { label: "step response", color: "var(--cyan)" }
-    - { label: "without the zero", color: "var(--muted)", dash: true }
-    - { label: "poles × and zero ○", color: "var(--org)" }
-  howToRead: "G(s) = ωn²(1 − s/z)/(s² + 2ζωn s + ωn²). Drag the pole or the zero in the s-plane (or use the sliders). A left-half-plane zero speeds the rise and adds overshoot; a right-half-plane zero makes the response start the wrong way."
+    - label: step response
+      color: var(--cyan)
+    - label: without the zero
+      color: var(--muted)
+      dash: true
+    - label: poles × and zero ○
+      color: var(--org)
+  howToRead: G(s) = ωn²(1 − s/z)/(s² + 2ζωn s + ωn²). Drag the pole or the zero in the s-plane (or use the sliders). A left-half-plane zero speeds the rise and adds overshoot; a right-half-plane zero makes the response start the wrong way.
   lookFor: "Turn the zero on at −2 and drag it toward the origin: more overshoot. Drag it across to the right half-plane: the output dips below zero before it rises."
   controls:
-    - { id: wn, label: "Pole ωn", type: range, min: 0.5, max: 5, step: 0.05, default: 2, group: primary, unit: rad/s }
-    - { id: zeta, label: "Pole ζ", type: range, min: 0.05, max: 1.5, step: 0.01, default: 0.5, group: primary }
-    - { id: zero, label: "Add a zero", type: toggle, default: false, group: primary }
-    - { id: z, label: "Zero at s = z", type: range, min: -6, max: 6, step: 0.1, default: -2, group: primary }
+    - id: wn
+      label: Pole ωn
+      type: range
+      min: 0.5
+      max: 5
+      step: 0.05
+      default: 2
+      group: primary
+      unit: rad/s
+    - id: zeta
+      label: Pole ζ
+      type: range
+      min: 0.05
+      max: 1.5
+      step: 0.01
+      default: 0.5
+      group: primary
+    - id: zero
+      label: Add a zero
+      type: toggle
+      default: false
+      group: primary
+    - id: z
+      label: Zero at s = z
+      type: range
+      min: -6
+      max: 6
+      step: 0.1
+      default: -2
+      group: primary
   presets:
-    - { id: none, label: "No zero", set: { wn: 2, zeta: 0.5 } }
-    - { id: lhp, label: "Zero at −2", set: { wn: 2, zeta: 0.5, zero: true, z: -2 } }
-    - { id: rhp, label: "Zero at +2 (wrong-way start)", set: { wn: 2, zeta: 0.5, zero: true, z: 2 } }
-    - { id: cancel, label: "Zero on a pole", set: { wn: 2, zeta: 1, zero: true, z: -2 }, about: "A zero close to a pole cancels it." }
+    - id: none
+      label: No zero
+      set:
+        wn: 2
+        zeta: 0.5
+    - id: lhp
+      label: Zero at −2
+      set:
+        wn: 2
+        zeta: 0.5
+        zero: true
+        z: -2
+    - id: rhp
+      label: Zero at +2 (wrong-way start)
+      set:
+        wn: 2
+        zeta: 0.5
+        zero: true
+        z: 2
+    - id: cancel
+      label: Zero on a pole
+      set:
+        wn: 2
+        zeta: 1
+        zero: true
+        z: -2
+      about: A zero close to a pole cancels it.
 - id: shift
   title: "Moving on the s-plane: multiplying by e^(−at)"
-  x: "time (s) · σ (1/s)"
-  y: "response · jω"
+  x: time (s) · σ (1/s)
+  y: response · jω
   legend:
-    - { label: "e^(−at)·h(t)", color: "var(--cyan)" }
-    - { label: "h(t)", color: "var(--muted)", dash: true }
+    - label: e^(−at)·h(t)
+      color: var(--cyan)
+    - label: h(t)
+      color: var(--muted)
+      dash: true
   howToRead: "Multiplying a time signal by e^(−at) replaces s by s + a in its transform, so every pole moves left by a (grey rings: where they were). The response keeps its shape but decays faster."
   lookFor: "Set a negative: the poles move right and the response grows. Set a large positive: the ringing dies almost at once."
   controls:
-    - { id: a, label: "Shift a", type: range, min: -1.5, max: 3, step: 0.05, default: 0.5, group: primary, unit: 1/s }
-    - { id: wn, label: "Pole ωn", type: range, min: 0.5, max: 4, step: 0.05, default: 2, group: more, unit: rad/s }
-    - { id: zeta, label: "Pole ζ", type: range, min: 0.05, max: 0.9, step: 0.01, default: 0.3, group: more }
+    - id: a
+      label: Shift a
+      type: range
+      min: -1.5
+      max: 3
+      step: 0.05
+      default: 0.5
+      group: primary
+      unit: 1/s
+    - id: wn
+      label: Pole ωn
+      type: range
+      min: 0.5
+      max: 4
+      step: 0.05
+      default: 2
+      group: more
+      unit: rad/s
+    - id: zeta
+      label: Pole ζ
+      type: range
+      min: 0.05
+      max: 0.9
+      step: 0.01
+      default: 0.3
+      group: more
   presets:
-    - { id: a0, label: "No shift", set: { a: 0 } }
-    - { id: a1, label: "a = 1", set: { a: 1 } }
-    - { id: neg, label: "a = −1 (poles move right)", set: { a: -1 } }
-- id: partial
-  title: "Partial fractions: the response is a sum of modes"
-  x: "time (s) · σ (1/s)"
-  y: "response · jω"
-  legend:
-    - { label: "h(t)", color: "var(--cyan)" }
-    - { label: "first mode", color: "var(--org)", dash: true }
-    - { label: "second mode", color: "var(--grn)", dash: true }
-  howToRead: "For two real poles p₁, p₂, G = 1/((s − p₁)(s − p₂)) splits into residues over s − p₁ and s − p₂, so h(t) = A₁e^(p₁t) + A₂e^(p₂t) with A₁ = 1/(p₁ − p₂), A₂ = −A₁. The cart (−1, −2) gives e^(−t) − e^(−2t)."
-  lookFor: "Pull the two poles apart: one mode dies quickly, the other sets the tail. Push them together: the residues grow and cancel."
-  controls:
-    - { id: p1, label: "Pole p₁", type: range, min: -5, max: -0.2, step: 0.05, default: -1, group: primary }
-    - { id: p2, label: "Pole p₂", type: range, min: -5, max: -0.2, step: 0.05, default: -2, group: primary }
-  presets:
-    - { id: cart, label: "Running cart (−1, −2)", set: { p1: -1, p2: -2 } }
-    - { id: wide, label: "Far apart (−0.5, −4)", set: { p1: -0.5, p2: -4 } }
-    - { id: close, label: "Close together (−1, −1.2)", set: { p1: -1, p2: -1.2 } }
+    - id: a0
+      label: No shift
+      set:
+        a: 0
+    - id: a1
+      label: a = 1
+      set:
+        a: 1
+    - id: neg
+      label: a = −1 (poles move right)
+      set:
+        a: -1
 - id: fvt
-  title: "Final- and initial-value theorems on the map"
-  x: "time (s) · σ (1/s)"
-  y: "output · jω"
+  title: Final- and initial-value theorems on the map
+  x: time (s) · σ (1/s)
+  y: output · jω
   legend:
-    - { label: "y(t)", color: "var(--cyan)" }
-    - { label: "final value G(0)", color: "var(--grn)", dash: true }
-    - { label: "initial slope", color: "var(--vio)", dash: true }
-  howToRead: "G(s) = (a s + b)/((s + 1)(s − q)) under a unit step. The final-value theorem says y(∞) = G(0) = b/(−q), and the initial slope is lim s·G(s) = a. Both only mean something when all poles are in the left half-plane."
+    - label: y(t)
+      color: var(--cyan)
+    - label: final value G(0)
+      color: var(--grn)
+      dash: true
+    - label: initial slope
+      color: var(--vio)
+      dash: true
+  howToRead: G(s) = (a s + b)/((s + 1)(s − q)) under a unit step. The final-value theorem says y(∞) = G(0) = b/(−q), and the initial slope is lim s·G(s) = a. Both only mean something when all poles are in the left half-plane.
   lookFor: "Move q to the right of zero: G(0) is still a perfectly good number, but the output runs away, so the theorem does not apply."
   controls:
-    - { id: a, label: "a (numerator s coefficient)", type: range, min: -2, max: 3, step: 0.1, default: 1, group: primary }
-    - { id: b, label: "b (numerator constant)", type: range, min: 0.5, max: 4, step: 0.1, default: 2, group: primary }
-    - { id: q, label: "Second pole at s = q", type: range, min: -3, max: 0.5, step: 0.1, default: -2, group: primary }
+    - id: a
+      label: a (numerator s coefficient)
+      type: range
+      min: -2
+      max: 3
+      step: 0.1
+      default: 1
+      group: primary
+    - id: b
+      label: b (numerator constant)
+      type: range
+      min: 0.5
+      max: 4
+      step: 0.1
+      default: 2
+      group: primary
+    - id: q
+      label: Second pole at s = q
+      type: range
+      min: -3
+      max: 0.5
+      step: 0.1
+      default: -2
+      group: primary
   presets:
-    - { id: stable, label: "Stable (q = −2)", set: { a: 1, b: 2, q: -2 } }
-    - { id: slow, label: "Slow pole (q = −0.5)", set: { a: 1, b: 2, q: -0.5 } }
-    - { id: trap, label: "The trap: q = +0.4", set: { a: 1, b: 2, q: 0.4 }, about: "G(0) exists but y diverges: the theorem fails." }
+    - id: stable
+      label: Stable (q = −2)
+      set:
+        a: 1
+        b: 2
+        q: -2
+    - id: slow
+      label: Slow pole (q = −0.5)
+      set:
+        a: 1
+        b: 2
+        q: -0.5
+    - id: trap
+      label: "The trap: q = +0.4"
+      set:
+        a: 1
+        b: 2
+        q: 0.4
+      about: "G(0) exists but y diverges: the theorem fails."
 - id: bode
-  title: "Gain and phase margin: how far from the edge?"
-  x: "ω (rad/s)"
-  y: "dB · degrees"
+  title: "Gain and phase margin: how far from the edge? (preview: not in LN1/2/4)"
+  x: ω (rad/s)
+  y: dB · degrees
   legend:
-    - { label: "|L(jω)| (dB)", color: "var(--cyan)" }
-    - { label: "phase", color: "var(--org)" }
-    - { label: "K = 1 (ghost)", color: "var(--muted)", dash: true }
+    - label: "|L(jω)| (dB)"
+      color: var(--cyan)
+    - label: phase
+      color: var(--org)
+    - label: K = 1 (ghost)
+      color: var(--muted)
+      dash: true
   howToRead: "The cart with integral action, L = K/(s(s+1)(s+2)). Left: loop gain in dB and phase; the green bars are the phase margin (at the 0 dB crossing) and the gain margin (at the −180° crossing). Right: what that does to the closed-loop step."
   lookFor: "Slide K up until the gain-margin bar shrinks to zero at K = 6: that is the jω-axis crossing of the root locus, seen from the other side."
   controls:
-    - { id: K, label: "Integral gain K", type: range, min: 0.2, max: 10, step: 0.01, default: 2, group: primary }
+    - id: K
+      label: Integral gain K
+      type: range
+      min: 0.2
+      max: 10
+      step: 0.01
+      default: 2
+      group: primary
   presets:
-    - { id: k1, label: "K = 1", set: { K: 1 } }
-    - { id: k2, label: "K = 2", set: { K: 2 } }
-    - { id: k6, label: "K = 6", set: { K: 6 }, about: "Gain margin 0 dB." }
-    - { id: k9, label: "K = 9", set: { K: 9 } }
-- id: cc
-  title: "Can the force reach every state, and does position reveal them?"
-  x: "position (m)"
-  y: "velocity (m/s)"
+    - id: k1
+      label: K = 1
+      set:
+        K: 1
+    - id: k2
+      label: K = 2
+      set:
+        K: 2
+    - id: k6
+      label: K = 6
+      set:
+        K: 6
+      about: Gain margin 0 dB.
+    - id: k9
+      label: K = 9
+      set:
+        K: 9
+- id: problem
+  title: "Why feedback: a plant whose gain we got wrong"
+  x: time (s)
+  y: output y (target r = 1)
   legend:
-    - { label: "state trajectory", color: "var(--cyan)" }
-    - { label: "full rank (ok)", color: "var(--ok)" }
-    - { label: "cancelled mode (bad)", color: "var(--bad)" }
-  howToRead: "Left: the cart in the (x, ẋ) plane after a 1 N push. Every point in that plane is a state the force can reach when the plant is controllable. Right: the controllability and observability matrices of this plant. Switch to the cancelled-mode preset to see a system whose G(s) looks fine while an internal eigenvalue is hidden."
-  lookFor: "On the running cart both matrices are invertible (det Pc = −1, det Po = 1). On the hidden-mode preset both determinants vanish and G(s) = 1/(s+1) no longer mentions the unstable eigenvalue +1."
+    - label: output y
+      color: var(--cyan)
+    - label: reference r = 1
+      color: var(--muted)
+      dash: true
+  howToRead: "Left: open loop, where the controller sends u = r and trusts the model that the plant has unit DC gain. Right: a PI loop that measures y and corrects from the error. Slide the true plant gain away from 1 and add a push on the plant input halfway: open loop is wrong by exactly that much; closed loop recovers."
+  lookFor: "Set the true gain to 0.6: open loop ends at 0.6, closed loop at 1. Then add a push of 0.3: open loop shifts again, closed loop returns to 1."
   controls:
-    - { id: hidden, label: "Show a cancelled (hidden) mode", type: toggle, default: false, group: primary }
+    - id: gain
+      label: True plant gain
+      type: range
+      min: 0.4
+      max: 1.6
+      step: 0.02
+      default: 0.6
+      group: primary
+    - id: push
+      label: Push on the plant input (at t = 6 s)
+      type: range
+      min: 0
+      max: 0.5
+      step: 0.01
+      default: 0
+      group: primary
   presets:
-    - { id: cart, label: "Running cart", set: { hidden: false }, about: "Pc and Po are both invertible." }
-    - { id: hide, label: "Cancelled unstable mode", set: { hidden: true }, about: "G(s) = 1/(s+1) hides an eigenvalue at +1." }
-- id: sf
-  title: "Place the cart's poles: state feedback vs the P-control locus"
-  x: "σ (1/s) · time (s)"
-  y: "jω (rad/s) · position (m)"
+    - id: known
+      label: Model is right
+      set:
+        gain: 1
+        push: 0
+    - id: low
+      label: Gain is 0.6
+      set:
+        gain: 0.6
+        push: 0
+    - id: push
+      label: Gain 0.6 and a push of 0.3
+      set:
+        gain: 0.6
+        push: 0.3
+    - id: high
+      label: Gain is 1.4
+      set:
+        gain: 1.4
+        push: 0
+- id: bodepid
+  title: "PID by its margins: crossover and phase margin (preview: not in LN1/2/4)"
+  x: ω (rad/s)
+  y: dB · degrees
   legend:
-    - { label: "state-feedback poles and step", color: "var(--grn)" }
-    - { label: "P-control locus / step at the comparison K", color: "var(--cyan)" }
-  howToRead: "Left: the s-plane. The grey curves are the P-control root locus of the cart (u = K(r − y)); the cyan rings are those closed-loop poles at the comparison gain; the green × are the eigenvalues of A − BK, which you can place anywhere. Right: a 1 m step under state feedback against that P-control response. Default K = [23, 5] puts the poles at −4 ± 3j (ζ = 0.8, 1 s settling)."
-  lookFor: "P control is stuck on the locus: at K = 7 the poles are −1.5 ± j2.6 and the cart stops short of 1 m. State feedback leaves the locus and sits on the target, and with N̄ = 25 the step settles at 1 m."
+    - label: "|L(jω)| (dB)"
+      color: var(--cyan)
+    - label: phase (°)
+      color: var(--org)
+    - label: PM / GM bars
+      color: var(--grn)
+  howToRead: "Left: the Bode plot of the loop L = Gc·G for the PID on the chosen plant; the green bars are the phase margin (at the 0 dB crossover) and the gain margin (at the −180° crossover). Right: the step response that loop gives. More crossover means faster; more phase margin means less ringing. The MATLAB PID Tuner sliders move exactly these two numbers."
+  lookFor: "Raise Kp: the crossover moves right (faster) and the phase margin shrinks (more overshoot). Add Kd: the phase margin comes back."
   controls:
-    - { id: k1, label: "k₁ (on position)", type: range, min: 0, max: 40, step: 0.5, default: 23, group: primary }
-    - { id: k2, label: "k₂ (on velocity)", type: range, min: 0, max: 12, step: 0.1, default: 5, group: primary }
-    - { id: Kcmp, label: "P-control K to compare", type: range, min: 0.25, max: 20, step: 0.25, default: 7, group: more }
+    - id: plant
+      label: Plant
+      type: select
+      options:
+        - value: p3
+          label: 1/(s+1)³
+        - value: p2
+          label: 1/((s+1)(0.5s+1))
+        - value: p1
+          label: 1/(s+1)
+      default: p3
+      group: primary
+    - id: Kp
+      label: Kp
+      type: range
+      min: 0.1
+      max: 10
+      step: 0.05
+      default: 2
+      group: primary
+    - id: Ki
+      label: Ki
+      type: range
+      min: 0
+      max: 5
+      step: 0.02
+      default: 0.4
+      group: primary
+    - id: Kd
+      label: Kd
+      type: range
+      min: 0
+      max: 4
+      step: 0.02
+      default: 0.8
+      group: primary
   presets:
-    - { id: design, label: "Design: −4 ± 3j (K = [23, 5])", set: { k1: 23, k2: 5 }, about: "ζ = 0.8, Ts ≈ 1 s." }
-    - { id: match, label: "Same damping as K = 7, but placed", set: { k1: 7, k2: 3 }, about: "A − BK has the same ζ = 0.5 as P control at K = 7, but you chose both coefficients." }
-- id: obs
-  title: "A Luenberger observer recovers the velocity from position"
-  x: "time (s)"
-  y: "velocity (m/s) · position (m)"
+    - id: mild
+      label: Gentle PID
+      set:
+        Kp: 1
+        Ki: 0.3
+        Kd: 0.5
+    - id: fast
+      label: Fast, less margin
+      set:
+        Kp: 4
+        Ki: 1
+        Kd: 0.5
+    - id: edge
+      label: Near the edge
+      set:
+        Kp: 7.5
+        Ki: 0
+        Kd: 0
+      about: Phase margin close to zero.
+    - id: damped
+      label: Kd restores margin
+      set:
+        Kp: 4
+        Ki: 1
+        Kd: 2
+- id: fail-slow
+  title: A1 · Slow response
+  x: time (s)
+  y: output y
   legend:
-    - { label: "true state", color: "var(--cyan)" }
-    - { label: "observer estimate", color: "var(--org)" }
-  howToRead: "The cart's sensor reads position only. The observer runs a copy of the cart and corrects it with L(y − C x̂). Left: true velocity and the estimate, starting from a 0.2 m error in the position estimate. Right: position. The speed slider is how many times faster the observer poles are than the controller's −4 ± 3j (5× gives L = [37, 512]). Add noise to see the estimate get jumpy as L grows."
-  lookFor: "At 5× the estimate of velocity catches the true ẋ in a fraction of a second. Turn the speed up and add noise: the estimate gets faster and noisier. That is the trade the notes describe (2–10×, not 100×)."
+    - label: problem (solid)
+      color: var(--org)
+    - label: fixed version (dashed)
+      color: var(--grn)
+      dash: true
+    - label: reference r
+      color: var(--muted)
+      dash: true
+  howToRead: The solid trace is the failure (plant 1/((s+1)(0.5s+1)) with a PI that is too timid); the dashed trace is a fixed version, for contrast. The sliders move the solid run, so you can walk it to the fix or away from it. Teaching plant, not the engine model.
+  lookFor: "Raise Kp and Ki toward the dashed fix: the rise and settling times shrink."
   controls:
-    - { id: speed, label: "Observer speed (× controller)", type: range, min: 2, max: 10, step: 0.5, default: 5, group: primary }
-    - { id: e0, label: "Initial estimate error (m)", type: range, min: 0, max: 0.5, step: 0.05, default: 0.2, group: primary, unit: m }
-    - { id: noise, label: "Sensor noise", type: range, min: 0, max: 0.05, step: 0.005, default: 0, group: more }
+    - id: Kp
+      label: Kp
+      type: range
+      min: 0
+      max: 4
+      step: 0.05
+      default: 0.3
+      group: primary
+    - id: Ki
+      label: Ki
+      type: range
+      min: 0
+      max: 4
+      step: 0.05
+      default: 0.2
+      group: primary
   presets:
-    - { id: design, label: "Design: 5×, L = [37, 512]", set: { speed: 5, e0: 0.2, noise: 0 } }
-    - { id: slow, label: "Slower observer (2×)", set: { speed: 2, e0: 0.2 } }
-    - { id: noisy, label: "Fast observer plus noise", set: { speed: 10, noise: 0.03 } }
-- id: sep
-  title: "Separation: the same K, now using the estimate"
-  x: "time (s)"
-  y: "position (m) · |Δx| (m)"
+    - id: problem
+      label: The problem
+      set:
+        Kp: 0.3
+        Ki: 0.2
+    - id: fixed
+      label: The fix
+      set:
+        Kp: 1.5
+        Ki: 1
+- id: fail-offset
+  title: A2 · Steady-state offset
+  x: time (s)
+  y: output y
   legend:
-    - { label: "full-state feedback u = −Kx", color: "var(--cyan)" }
-    - { label: "compensator u = −K x̂", color: "var(--org)" }
-  howToRead: "Left: a 1 m step under u = −Kx (true state) against u = −K x̂ (the observer in the loop). Right: the difference between those two position traces. The initial estimate is wrong by e₀ (default 0.2 m). K and L are the design values [23, 5] and [37, 512] unless you change them."
-  lookFor: "With a 0.2 m initial error the two steps differ by about 7 cm around 0.3 s, then they match. The closed-loop poles are the controller's and the observer's, designed separately."
+    - label: problem (solid)
+      color: var(--org)
+    - label: fixed version (dashed)
+      color: var(--grn)
+      dash: true
+    - label: reference r
+      color: var(--muted)
+      dash: true
+  howToRead: The solid trace is the failure (P only against PI); the dashed trace is a fixed version, for contrast. The sliders move the solid run, so you can walk it to the fix or away from it. Teaching plant, not the engine model.
+  lookFor: "Raise Kp: the offset shrinks but never vanishes. Add Ki: it is gone."
   controls:
-    - { id: e0, label: "Initial estimate error (m)", type: range, min: 0, max: 0.5, step: 0.05, default: 0.2, group: primary, unit: m }
-    - { id: speed, label: "Observer speed (× controller)", type: range, min: 2, max: 10, step: 0.5, default: 5, group: more }
+    - id: Kp
+      label: Kp
+      type: range
+      min: 0
+      max: 6
+      step: 0.05
+      default: 2
+      group: primary
+    - id: Ki
+      label: Ki
+      type: range
+      min: 0
+      max: 4
+      step: 0.05
+      default: 0
+      group: primary
   presets:
-    - { id: design, label: "Design, 0.2 m error", set: { e0: 0.2, speed: 5 } }
-    - { id: perfect, label: "Perfect estimate (e₀ = 0)", set: { e0: 0 }, about: "The two steps coincide: the observer starts on the true state." }
-- id: refin
-  title: "A reference gain turns the regulator into a tracker"
-  x: "time (s)"
-  y: "position (m) · u (N)"
+    - id: problem
+      label: The problem
+      set:
+        Kp: 2
+        Ki: 0
+    - id: fixed
+      label: The fix
+      set:
+        Kp: 2
+        Ki: 1
+- id: fail-overshoot
+  title: A3 · Overshoot
+  x: time (s)
+  y: output y
   legend:
-    - { label: "u = −Kx + N̄ r", color: "var(--cyan)" }
-    - { label: "regulator only (N̄ = 0)", color: "var(--org)" }
-  howToRead: "Left: a 1 m command. With N̄ = 25 the DC gain from r to x is 1, so the cart settles at 1 m. The ghost is the same K with N̄ = 0: a regulator, which drives every state back to 0 and ignores r. Right: the force u = −Kx + N̄ r."
-  lookFor: "N̄ = 25 is required by the DC gain of A − BK (s² + 8s + 25, so 25 at s = 0). Any other N̄ scales the final position: N̄/25 metres per metre of command."
+    - label: problem (solid)
+      color: var(--org)
+    - label: fixed version (dashed)
+      color: var(--grn)
+      dash: true
+    - label: reference r
+      color: var(--muted)
+      dash: true
+  howToRead: The solid trace is the failure (PI with an integral term too strong for the plant); the dashed trace is a fixed version, for contrast. The sliders move the solid run, so you can walk it to the fix or away from it. Teaching plant, not the engine model.
+  lookFor: Lower Ki first; or add Kd to damp it.
   controls:
-    - { id: Nbar, label: "Reference gain N̄", type: range, min: 0, max: 40, step: 1, default: 25, group: primary }
-    - { id: k1, label: "k₁", type: range, min: 0, max: 40, step: 0.5, default: 23, group: more }
-    - { id: k2, label: "k₂", type: range, min: 0, max: 12, step: 0.1, default: 5, group: more }
+    - id: Kp
+      label: Kp
+      type: range
+      min: 0
+      max: 6
+      step: 0.05
+      default: 2
+      group: primary
+    - id: Ki
+      label: Ki
+      type: range
+      min: 0
+      max: 6
+      step: 0.05
+      default: 3.5
+      group: primary
+    - id: Kd
+      label: Kd
+      type: range
+      min: 0
+      max: 2
+      step: 0.05
+      default: 0
+      group: primary
   presets:
-    - { id: track, label: "Tracker (N̄ = 25)", set: { Nbar: 25 }, about: "Final value 1 m." }
-    - { id: reg, label: "Regulator (N̄ = 0)", set: { Nbar: 0 }, about: "The command is ignored; the cart stays at 0." }
-    - { id: half, label: "N̄ = 12.5 (half gain)", set: { Nbar: 12.5 }, about: "Settles at 0.5 m." }
+    - id: problem
+      label: The problem
+      set:
+        Kp: 2
+        Ki: 3.5
+        Kd: 0
+    - id: fixed
+      label: The fix
+      set:
+        Kp: 2
+        Ki: 1
+        Kd: 0
+    - id: damp
+      label: Damp
+      set:
+        Kp: 2
+        Ki: 3.5
+        Kd: 0.6
+- id: fail-oscillation
+  title: A4 · Sustained oscillation / instability
+  x: time (s)
+  y: output y
+  legend:
+    - label: problem (solid)
+      color: var(--org)
+    - label: fixed version (dashed)
+      color: var(--grn)
+      dash: true
+    - label: reference r
+      color: var(--muted)
+      dash: true
+  howToRead: The solid trace is the failure (P only on 1/(s+1)³ at its ultimate gain); the dashed trace is a fixed version, for contrast. The sliders move the solid run, so you can walk it to the fix or away from it. Teaching plant, not the engine model.
+  lookFor: "Kp = 8 rings forever, 12 grows, 2 is calm: back the gain off."
+  controls:
+    - id: Kp
+      label: Kp
+      type: range
+      min: 0
+      max: 14
+      step: 0.1
+      default: 8
+      group: primary
+  presets:
+    - id: problem
+      label: The problem
+      set:
+        Kp: 8
+    - id: fixed
+      label: The fix
+      set:
+        Kp: 2
+    - id: grows
+      label: Grows
+      set:
+        Kp: 12
+- id: fail-disturbance
+  title: A5 · Poor disturbance rejection
+  x: time (s)
+  y: output y
+  legend:
+    - label: problem (solid)
+      color: var(--org)
+    - label: fixed version (dashed)
+      color: var(--grn)
+      dash: true
+    - label: reference r
+      color: var(--muted)
+      dash: true
+  howToRead: The solid trace is the failure (a push on the plant input with the set-point at 0); the dashed trace is a fixed version, for contrast. The sliders move the solid run, so you can walk it to the fix or away from it. Teaching plant, not the engine model.
+  lookFor: Stronger Kp and Ki shrink the excursion and speed the return.
+  controls:
+    - id: Kp
+      label: Kp
+      type: range
+      min: 0
+      max: 6
+      step: 0.05
+      default: 0.8
+      group: primary
+    - id: Ki
+      label: Ki
+      type: range
+      min: 0
+      max: 6
+      step: 0.05
+      default: 0.4
+      group: primary
+  presets:
+    - id: problem
+      label: The problem
+      set:
+        Kp: 0.8
+        Ki: 0.4
+    - id: fixed
+      label: The fix
+      set:
+        Kp: 3
+        Ki: 3
+- id: fail-noise
+  title: A6 · Noisy / jittery actuator
+  x: time (s)
+  y: output y
+  legend:
+    - label: problem (solid)
+      color: var(--org)
+    - label: fixed version (dashed)
+      color: var(--grn)
+      dash: true
+    - label: reference r
+      color: var(--muted)
+      dash: true
+  howToRead: The solid trace is the failure (D acting on a noisy measurement); the dashed trace is a fixed version, for contrast. The sliders move the solid run, so you can walk it to the fix or away from it. Teaching plant, not the engine model.
+  lookFor: The output looks fine; the control does not. Lower N.
+  controls:
+    - id: Kd
+      label: Kd
+      type: range
+      min: 0
+      max: 2
+      step: 0.05
+      default: 0.5
+      group: primary
+    - id: N
+      label: Derivative filter N
+      type: range
+      min: 1
+      max: 100
+      step: 1
+      default: 100
+      group: primary
+  presets:
+    - id: problem
+      label: The problem
+      set:
+        Kd: 0.5
+        N: 100
+    - id: fixed
+      label: The fix
+      set:
+        Kd: 0.5
+        N: 10
+- id: fail-windup
+  title: A7 · Integrator windup (actuator saturation)
+  x: time (s)
+  y: output y
+  legend:
+    - label: problem (solid)
+      color: var(--org)
+    - label: fixed version (dashed)
+      color: var(--grn)
+      dash: true
+    - label: reference r
+      color: var(--muted)
+      dash: true
+  howToRead: The solid trace is the failure (PI against |u| ≤ 1.2); the dashed trace is a fixed version, for contrast. The sliders move the solid run, so you can walk it to the fix or away from it. Teaching plant, not the engine model.
+  lookFor: "Switch on clamping: the overshoot after saturation disappears."
+  controls:
+    - id: Kp
+      label: Kp
+      type: range
+      min: 0
+      max: 6
+      step: 0.05
+      default: 2
+      group: primary
+    - id: Ki
+      label: Ki
+      type: range
+      min: 0
+      max: 8
+      step: 0.1
+      default: 4
+      group: primary
+    - id: aw
+      label: Anti-windup
+      type: select
+      options:
+        - value: none
+          label: off
+        - value: clamp
+          label: clamping
+        - value: backcalc
+          label: back-calculation
+      default: none
+      group: primary
+  presets:
+    - id: problem
+      label: The problem
+      set:
+        aw: none
+    - id: fixed
+      label: The fix
+      set:
+        aw: clamp
+- id: fail-kick
+  title: A8 · Derivative kick
+  x: time (s)
+  y: output y
+  legend:
+    - label: problem (solid)
+      color: var(--org)
+    - label: fixed version (dashed)
+      color: var(--grn)
+      dash: true
+    - label: reference r
+      color: var(--muted)
+      dash: true
+  howToRead: The solid trace is the failure (D on the error at a set-point step); the dashed trace is a fixed version, for contrast. The sliders move the solid run, so you can walk it to the fix or away from it. Teaching plant, not the engine model.
+  lookFor: "Put D on the measurement: the spike in u at t = 0 vanishes."
+  controls:
+    - id: Kd
+      label: Kd
+      type: range
+      min: 0
+      max: 2
+      step: 0.05
+      default: 0.5
+      group: primary
+    - id: N
+      label: Derivative filter N
+      type: range
+      min: 1
+      max: 100
+      step: 1
+      default: 20
+      group: primary
+    - id: dm
+      label: D on measurement
+      type: toggle
+      default: false
+      group: primary
+  presets:
+    - id: problem
+      label: The problem
+      set:
+        dm: false
+    - id: fixed
+      label: The fix
+      set:
+        dm: true
+- id: fail-limits
+  title: A9 · Actuator saturation and rate limits
+  x: time (s)
+  y: output y
+  legend:
+    - label: problem (solid)
+      color: var(--org)
+    - label: fixed version (dashed)
+      color: var(--grn)
+      dash: true
+    - label: reference r
+      color: var(--muted)
+      dash: true
+  howToRead: The solid trace is the failure (a limit on the size and on the speed of u); the dashed trace is a fixed version, for contrast. The sliders move the solid run, so you can walk it to the fix or away from it. Teaching plant, not the engine model.
+  lookFor: "Tighten the limits: the response slows and a rate limit adds lag. Dashed is the unlimited loop."
+  controls:
+    - id: umax
+      label: Amplitude limit |u| ≤
+      type: range
+      min: 1
+      max: 5
+      step: 0.1
+      default: 2.5
+      group: primary
+    - id: Ki
+      label: Ki
+      type: range
+      min: 0
+      max: 4
+      step: 0.05
+      default: 1.5
+      group: primary
+    - id: rmax
+      label: Rate limit (1/s)
+      type: range
+      min: 0.1
+      max: 3
+      step: 0.05
+      default: 0.5
+      group: primary
+  presets:
+    - id: problem
+      label: The problem
+      set:
+        umax: 2.5
+        rmax: 0.5
+    - id: ideal
+      label: Ideal
+      set:
+        umax: 5
+        rmax: 3
+- id: fail-delay
+  title: A10 · Time delay (dead time)
+  x: time (s)
+  y: output y
+  legend:
+    - label: problem (solid)
+      color: var(--org)
+    - label: fixed version (dashed)
+      color: var(--grn)
+      dash: true
+    - label: reference r
+      color: var(--muted)
+      dash: true
+  howToRead: The solid trace is the failure (a delay of 1 s inside the loop); the dashed trace is a fixed version, for contrast. The sliders move the solid run, so you can walk it to the fix or away from it. Teaching plant, not the engine model.
+  lookFor: "The gains that were fine without delay oscillate with it: lower them, or shrink the delay."
+  controls:
+    - id: Kp
+      label: Kp
+      type: range
+      min: 0
+      max: 4
+      step: 0.05
+      default: 2
+      group: primary
+    - id: Ki
+      label: Ki
+      type: range
+      min: 0
+      max: 4
+      step: 0.05
+      default: 2
+      group: primary
+    - id: delay
+      label: Delay (s)
+      type: range
+      min: 0
+      max: 2
+      step: 0.05
+      default: 1
+      group: primary
+  presets:
+    - id: problem
+      label: The problem
+      set:
+        Kp: 2
+        Ki: 2
+    - id: fixed
+      label: The fix
+      set:
+        Kp: 0.5
+        Ki: 0.4
+- id: fail-sensorlag
+  title: A11 · Measurement (sensor) lag
+  x: time (s)
+  y: output y
+  legend:
+    - label: problem (solid)
+      color: var(--org)
+    - label: fixed version (dashed)
+      color: var(--grn)
+      dash: true
+    - label: reference r
+      color: var(--muted)
+      dash: true
+  howToRead: The solid trace is the failure (a slow sensor, 1.5 s); the dashed trace is a fixed version, for contrast. The sliders move the solid run, so you can walk it to the fix or away from it. Teaching plant, not the engine model.
+  lookFor: The controller reacts to the lagged copy, so the true output rings; lower the gains or fix the sensor.
+  controls:
+    - id: Kp
+      label: Kp
+      type: range
+      min: 0
+      max: 4
+      step: 0.05
+      default: 2
+      group: primary
+    - id: Ki
+      label: Ki
+      type: range
+      min: 0
+      max: 4
+      step: 0.05
+      default: 1
+      group: primary
+    - id: sensTau
+      label: Sensor time constant (s)
+      type: range
+      min: 0
+      max: 3
+      step: 0.05
+      default: 1.5
+      group: primary
+  presets:
+    - id: problem
+      label: The problem
+      set:
+        Kp: 2
+        Ki: 1
+    - id: fixed
+      label: The fix
+      set:
+        Kp: 0.8
+        Ki: 0.4
+- id: fail-nonlinear
+  title: A12 · Nonlinearity / operating-point change
+  x: time (s)
+  y: output y
+  legend:
+    - label: problem (solid)
+      color: var(--org)
+    - label: fixed version (dashed)
+      color: var(--grn)
+      dash: true
+    - label: reference r
+      color: var(--muted)
+      dash: true
+  howToRead: The solid trace is the failure (a plant whose gain grows with the operating point); the dashed trace is a fixed version, for contrast. The sliders move the solid run, so you can walk it to the fix or away from it. Teaching plant, not the engine model.
+  lookFor: "Gains tuned at r = 1 are three times too hot at r = 9: divide them, or gain-schedule."
+  controls:
+    - id: Kp
+      label: Kp
+      type: range
+      min: 0
+      max: 3
+      step: 0.05
+      default: 2
+      group: primary
+    - id: Ki
+      label: Ki
+      type: range
+      min: 0
+      max: 3
+      step: 0.05
+      default: 1.5
+      group: primary
+    - id: r
+      label: Step size r
+      type: range
+      min: 1
+      max: 9
+      step: 0.5
+      default: 9
+      group: primary
+  presets:
+    - id: problem
+      label: The problem
+      set:
+        Kp: 2
+        Ki: 1.5
+        r: 9
+    - id: fixed
+      label: The fix
+      set:
+        Kp: 0.667
+        Ki: 0.5
+        r: 9
+- id: fail-twodof
+  title: A13 · Set-point against disturbance (2-DOF)
+  x: time (s)
+  y: output y
+  legend:
+    - label: problem (solid)
+      color: var(--org)
+    - label: fixed version (dashed)
+      color: var(--grn)
+      dash: true
+    - label: reference r
+      color: var(--muted)
+      dash: true
+  howToRead: The solid trace is the failure (a PI tuned for disturbances overshoots on set-point steps); the dashed trace is a fixed version, for contrast. The sliders move the solid run, so you can walk it to the fix or away from it. Teaching plant, not the engine model.
+  lookFor: "Add a set-point filter: the overshoot goes, the disturbance response is untouched."
+  controls:
+    - id: Kp
+      label: Kp
+      type: range
+      min: 0
+      max: 4
+      step: 0.05
+      default: 1.5
+      group: primary
+    - id: Ki
+      label: Ki
+      type: range
+      min: 0
+      max: 8
+      step: 0.1
+      default: 4
+      group: primary
+    - id: tauf
+      label: Set-point filter τ (s)
+      type: range
+      min: 0
+      max: 3
+      step: 0.05
+      default: 0
+      group: primary
+  presets:
+    - id: problem
+      label: The problem
+      set:
+        tauf: 0
+    - id: fixed
+      label: The fix
+      set:
+        tauf: 1.5
+- id: fail-limitcycle
+  title: A14 · Limit cycle from dead zone / backlash
+  x: time (s)
+  y: output y
+  legend:
+    - label: problem (solid)
+      color: var(--org)
+    - label: fixed version (dashed)
+      color: var(--grn)
+      dash: true
+    - label: reference r
+      color: var(--muted)
+      dash: true
+  howToRead: The solid trace is the failure (an integrator plant behind a dead zone); the dashed trace is a fixed version, for contrast. The sliders move the solid run, so you can walk it to the fix or away from it. Teaching plant, not the engine model.
+  lookFor: "The integral drives u across the dead zone again and again: lower Ki or shrink the dead zone."
+  controls:
+    - id: Ki
+      label: Ki
+      type: range
+      min: 0
+      max: 1
+      step: 0.02
+      default: 0.5
+      group: primary
+    - id: dz
+      label: Dead zone ±
+      type: range
+      min: 0
+      max: 0.6
+      step: 0.02
+      default: 0.3
+      group: primary
+  presets:
+    - id: problem
+      label: The problem
+      set:
+        Ki: 0.5
+    - id: fixed
+      label: The fix
+      set:
+        Ki: 0.3

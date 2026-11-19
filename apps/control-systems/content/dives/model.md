@@ -1,83 +1,55 @@
 ---
 id: model
 order: 1
-title: "Why model at all, and why Laplace"
+title: "Write the plant down: the house's heat balance"
 category: describe
-chain:
-  - title: "What do we need before we can predict anything?"
-  - title: "How do we write the plant's ODE so it's easy to combine and close loops on?"
-  - title: "Laplace, LTI, zero initial conditions"
-    detail: "G(s) = Y(s) / U(s), zero initial conditions"
-neighbors:
-  - splane
-  - tf
-  - ss
-  - circuits
-exampleScene: {  overlays: [forces, push], diagram: [ode, open], caption: "Newton's law gives the model, ẍ + 3ẋ + 2x = u (left). The Laplace transform rewrites that same equation as the block G(s) (right): the same plant, but blocks can now be wired together by multiplying."  }
+neighbors: [tf, order, circuits, overview]
+level: Conceptual
+check: [q-model, ck-model-1, ck-model-2]
+addsToExample: "Stage H0: two rooms, a heater in room 1, heat flowing through the shared wall and out to the weather; one heat balance per room."
 ---
-**How do we write the plant's ODE so it's easy to combine and close loops on?**
 
-**Picture it first.** Change the cart's mass, damper and spring and watch what the model predicts: the step response on the right is what the transfer function G(s) compresses, and the poles are its fingerprint.
+**The question:** how do we get from the physical plant to an equation we can calculate with? This is the box *Write the plant down*, the first step under the root question.
 
-```figure:cart
+### The big idea
+
+Physical laws state rates. Energy balance says net heat flow sets how fast a room warms; Newton says force sets acceleration. Write one law per energy store and you get differential equations. Every later tool (G(s), poles, state space) is the same equations rearranged so a different question is easy. **Why the ODE is the default:** it is what the physics gives, and it holds for any input and any starting temperature.
+
+### See it
+
+Arrow widths are heat flows in watts; the lower plot shows both rooms warming over a day from outdoor temperature. Try the presets for a leaky house and a thin inner wall.
+
+```figure:house
 ```
 
-Physics states laws as rates of change, so every lumped plant is an ODE. For an LTI plant at rest, the Laplace transform rewrites that same ODE as G(s) = Y(s)/U(s): nothing is lost, but series blocks multiply and a loop becomes GcG/(1 + GcG).
+### The math
 
-### Why every plant is an ODE
+```eq
+C_th ẋ₁ = u − G_in(x₁ − x₂) − G_out x₁,   C_th ẋ₂ = G_in(x₁ − x₂) − G_out x₂
+```
 
-- **Laws are rates:** F = mẍ, i = C·dv/dt, v = L·di/dt, and a tank's level rate is inflow − outflow. Nature says how things change, not where they end up.
-- **Energy stores give memory:** the present depends on the past, and each independent store adds one order. The cart's mass and spring make it second order. A resistor stores nothing, so v = iR is plain algebra.
-- **Lumping gives ODEs, not PDEs:** one mass, one temperature, so time is the only variable.
-- **Near an operating point** these are linear with constant coefficients, which is what Laplace turns into polynomials in s.
+Dividing by C_th and timing in hours:
 
-### Why model at all?
+```eq
+ẋ₁ = −1.2x₁ + x₂ + 0.0036u,   ẋ₂ = x₁ − 1.2x₂
+```
 
-A controller is a bet on how the plant will react. A model is what makes that bet informed: it predicts the output for any input, so you can design and test on paper or in Simulink before touching hardware.
+**What each symbol means.**
 
-Every design question in this course (“How much gain?”, “Will it overshoot?”, “Will it settle on target?”, “What happens when a load hits?”) is answered by running the model, not the machine. The model doesn't need to be perfect. Feedback (later on this map) exists partly <em>because</em> models are never perfect. But it has to capture the dominant behavior.
+- x₁, x₂: room temperatures above outdoor (K).
+- u: heater power in the living room (W).
+- C_th = 1 MJ/K per room: heat capacity.
+- G_in = 277.8 W/K: the inner wall's conductance; G_out = 55.6 W/K: each room's leak outdoors.
+- 0.0036 = 3600/C_th: K per hour per watt.
 
-````callout:why Why it matters
-Every later topic (poles, ζ, steady-state error, sensitivity) is a property <em>of a model</em>. If the model is wrong in the dominant dynamics, every number you compute from it is wrong too.
-````
+**Linear:** every term is a constant times a temperature or the power, so responses add. **Time-invariant:** walls don't change. **Lumped:** each room has one temperature (perfectly mixed air).
 
-### Why Laplace transforms and transfer functions?
+### Worked example: on the house
 
-For <b>linear time-invariant (LTI)</b> systems, Laplace rewrites the same ODE as algebra: d/dt becomes multiplication by <i>s</i>, and convolution becomes multiplication. Systems in series then simply multiply, and a loop becomes GcG/(1 + GcG).
+1. Steady state (ẋ = 0) at 2.5 kW: 1.2x₁ − x₂ = 9 and x₁ = 1.2x₂, so x₂ = 20.45 K and x₁ = 24.55 K.
+2. At 5 °C outside: the living room sits at 29.5 °C, the bedroom at 25.5 °C.
+3. To hold the bedroom at 20 °C (15 K above outdoor) takes 1833 W.
 
-Physical laws (KVL, Newton) give ODEs. That ODE is not discarded: the Laplace transform rewrites it so combining and closing loops is algebra instead of a new convolution or a new closed-loop ODE for every try. In the time domain chaining two systems is a convolution integral (Lecture 1: <i>y</i>(<i>t</i>) = ∫ <i>x</i>(τ)<i>h</i>(<i>t</i>−τ)dτ); in the <i>s</i>-domain the same chain is <i>Y</i> = <i>H</i>·<i>X</i>. That's why block diagrams work: each block is a multiplier.
+### What it can't do
 
-The price: <b>linear</b> (superposition holds: no saturation, no dead zones) and <b>time-invariant</b> (constant coefficients: R, L, C, m don't drift). Real plants are approximately LTI around an operating point, and that approximation is good enough for most of the design.
-
-You already think this way with impedances: <i>Z</i> = <i>j</i>ω<i>L</i> is just <i>s</i>L evaluated at <i>s</i> = <i>j</i>ω. Transfer functions are the same move, with <i>s</i> allowed off the <i>j</i>ω axis to capture transients.
-
-````callout:recognize Recognize
-
-
-- <i>s</i> ↔ d/dt, 1/<i>s</i> ↔ ∫dt (with zero initial conditions).
-- “Blocks in series multiply” only holds in the <i>s</i>-domain. In time it's convolution.
-- Saturation, dead zones, or time-varying parameters mean you've left the LTI world, and transfer function results are approximations.
-````
-
-### What does “zero initial conditions” mean, and what doesn't it mean?
-
-A transfer function is <i>defined</i> with every initial condition set to zero, so it describes how the system responds to an <em>input</em> starting from rest. It doesn't claim real systems start at rest. It just leaves the initial-condition response out.
-
-Laplace of a derivative is <i>sX</i>(<i>s</i>) − <i>x</i>(0). Setting <i>x</i>(0) = 0 for every stored quantity (capacitor voltage, inductor current, position, velocity) removes those extra terms, and the output becomes a pure ratio times the input: <i>Y</i>(<i>s</i>) = <i>G</i>(<i>s</i>)<i>U</i>(<i>s</i>).
-
-````callout:trap Trap
-
-
-- A transfer function can't show you the response to a charged capacitor with zero input. You need the ODE or state space (which carries <i>x</i>(0) naturally) for that.
-- Because the system is linear, the full response = (zero-state response from <i>G</i>) + (zero-input response from the initial conditions). The transfer function only gives the first part.
-````
-
-````callout:predict Predict
-Before you touch a slider, predict what it will do. Take the damper away (c = 0): the poles land on the jω axis and the cart rings forever. Put it back: they slide left and the ringing decays.
-````
-
-````callout:note Symbols used here
-- **G(s)**: the cart's transfer function from force u to position y: 1/((s + 1)(s + 2))
-- **poles**: the roots of the denominator: the exponentials e^(pt) the plant can make. The cart's are −1 and −2
-- **zeros**: the roots of the numerator: they set how much of each mode appears
-````
+Real rooms have stratified air, sun through windows, people and doors opening (nonlinear and time-varying, the "approximately" in the central question). The model also has no heater limit; limits come back with windup later.

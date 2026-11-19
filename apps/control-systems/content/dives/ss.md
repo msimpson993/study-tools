@@ -1,127 +1,42 @@
 ---
 id: ss
-order: 5
-title: "State space: the cart as two states"
+order: 26
+title: "Look inside: state space"
 category: state
-chain:
-  - title: "A transfer function only relates input to output, starting from rest. What if I also need the internal states, initial conditions, or several inputs and outputs?"
-  - title: "Is there a description that tracks the inside too?"
-  - title: "state space ẋ = Ax + Bu, y = Cx + Du"
-    detail: "ẋ = Ax + Bu,  y = Cx + Du"
-neighbors:
-  - model
-  - ss2tf
-exampleScene: {  overlays: [forces, sensor, phase], diagram: states, caption: "Opening the plant block: the same cart written with its inside (x, ẋ) in view. A turns the forces into where it goes next; the sensor reads only x."  }
+neighbors: [fb, ss2tf, cc, sf, order]
+level: Some algebra
+check: [q-state, ck-state-1, ck-state-2]
 ---
-**Is there a description that tracks the inside too?**
 
-**Picture it first.** The same cart written as two first-order equations: a position and a velocity. Push it and release it and watch both states.
+**The question:** back to the car: to put a computer in the suspension, what do we need to know about the corner beyond its height? This is the box *Look inside: state space*, after *Why not infinite gain?*.
+
+### The big idea
+
+To predict the corner's future you need its height *and* its velocity now; height alone doesn't tell you whether it's rising or falling. Those two numbers are the state. Writing the physics as first-order equations in the states gives state space: it keeps initial conditions and internal motion, handles many inputs and outputs, and sets up feeding back every state.
+
+### See it
+
+The two-integrator diagram (force/m → acceleration → ∫ → velocity → ∫ → height, with −64 and −4 fed back) and the phase portrait (z, ż). Every start spirals into the origin along the same shape: the eigenvalues set it.
 
 ```figure:states
 ```
 
-State space writes the plant as first-order equations in the energy-storage variables, ẋ = Ax + Bu and y = Cx + Du. It keeps initial conditions and internal states that a transfer function hides, and handles several inputs and outputs naturally.
+### The math
 
-### We already have transfer functions. Why state space?
+```eq
+x = [z, ż]ᵀ:   ẋ = [[0, 1], [−k/m, −c/m]]x + [0, 1/m]ᵀu,   y = [1, 0]x
+```
 
-Transfer functions only see input → output from rest. State space keeps the <em>internal</em> variables, handles initial conditions and multiple inputs/outputs (MIMO), is how computers simulate, and is the language of modern control (state feedback, observers, optimal control).
+Corner: A = [[0, 1], [−64, −4]], B = [0, 0.0025]ᵀ, C = [1, 0], D = 0; eig(A) = −2 ± 7.75j.
 
-````callout:why Why it matters
+**Phase-variable form** (LN1 slides 33–38): for G = b₀/(sⁿ + aₙ₋₁sⁿ⁻¹ + … + a₀), A has 1s on the superdiagonal and −a_i on the last row; the corner already is in it.
 
+**What each symbol means.** x: the state vector; A: how the states drive each other; B: how the input enters; C: what the sensor reads; D: direct feedthrough.
 
-- <b>Initial conditions</b>: <i>x</i>(0) is built in.
-- <b>MIMO</b>: two inputs and three outputs is just bigger <i>B</i> and <i>C</i>, not a 3×2 grid of transfer functions.
-- <b>Simulation</b>: ODE solvers (and Simulink) integrate first-order vector equations.
-- <b>Hidden modes</b>: internal states that a pole–zero cancellation would hide stay visible.
-````
+### Worked example: on the corner, released 5 cm high
 
-### What do ẋ = Ax + Bu and y = Cx + Du actually say?
+The body swings to −2.22 cm at 0.41 s, then spirals in. G(s) can't describe this start; state space can.
 
-<b>A</b>: how the states drive each other (the dynamics, which hold the poles). <b>B</b>: where the input pushes. <b>C</b>: what you measure, i.e. which combination of states is the output. <b>D</b>: direct feedthrough from input to output (usually 0).
+### What it can't do
 
-<div class="eqbox"><i>ẋ</i> = <i>A</i><i>x</i> + <i>B</i><i>u</i> <i>y</i> = <i>C</i><i>x</i> + <i>D</i><i>u</i></div>
-
-*From the guide's static figure: <b>Read it like a block diagram.</b> The integrators hold the states (one per energy store). <i>A</i> is internal feedback, <i>B</i> and <i>C</i> are the input and output “ports,” and <i>D</i> bypasses everything.*
-
-| Matrix | Size | SISO size | Meaning |
-|---|---|---|---|
-| <i>A</i> | <i>n</i>×<i>n</i> | <i>n</i>×<i>n</i> | State dynamics; eigenvalues = poles |
-| <i>B</i> | <i>n</i>×<i>m</i> | <i>n</i>×1 (column) | Input → state derivatives |
-| <i>C</i> | <i>p</i>×<i>n</i> | 1×<i>n</i> (row) | States → output |
-| <i>D</i> | <i>p</i>×<i>m</i> | 1×1 (scalar) | Input → output directly |
-
-
-<i>n</i> = number of states (= order), <i>m</i> = number of inputs, <i>p</i> = number of outputs.
-
-````callout:recognize Recognize
-
-
-- Dimension check catches most errors: <i>A</i> is square, <i>B</i> has as many rows as <i>A</i>, and <i>C</i> has as many columns as <i>A</i>.
-- <i>D</i> ≠ 0 means the output jumps the instant the input does, so <i>G</i>(<i>s</i>) is proper but <em>not</em> strictly proper.
-- Here <i>C</i> is the <b>output matrix</b>. In Lecture Notes 2, <i>C</i>(<i>s</i>) is the <b>complementary sensitivity</b>, and in many block diagrams <i>C</i> is the <b>output signal</b>. Three different C's!
-````
-
-### Which direction does the derivation go?
-
-Physics/ODE → <b>choose states</b> → write each state derivative → read off <b>A</b> and <b>B</b>. Then, separately, write the output you care about in terms of the states → read off <b>C</b> and <b>D</b>. You never derive C and D from the dynamics.
-
-1. <b>Write the physics</b> (KVL, Newton) as an ODE.
-2. <b>Pick states</b>: one per energy store, or phase variables <i>x</i>₁ = <i>y</i>, <i>x</i>₂ = <i>ẏ</i>, …
-3. <b>Write ẋ<sub>i</sub></b> for each state using only states and <i>u</i>. The coefficients form <b>A</b>, and the <i>u</i>-coefficients form <b>B</b>.
-4. <b>Write y</b> in terms of states and <i>u</i>. The coefficients form <b>C</b> and <b>D</b>.
-
-````callout:trap Trap
-Same circuit, different output → <b>same A and B, different C and D</b>. In a series RLC with states (<i>v</i><sub>C</sub>, <i>i</i>), the output “capacitor voltage” gives <i>C</i> = [1 0], while the output “resistor voltage” gives <i>C</i> = [0 <i>R</i>]. The dynamics didn't change, only what you're looking at.
-````
-
-### How do I get phase-variable form straight from a transfer function?
-
-For <i>G</i> = <i>b</i>₀/(<i>s</i><sup><i>n</i></sup> + <i>a</i><sub><i>n</i>−1</sub><i>s</i><sup><i>n</i>−1</sup> + … + <i>a</i>₀): write the ODE, set <i>x</i>₁ = <i>y</i>, <i>x</i>₂ = <i>ẏ</i>, …. A then has 1's on the superdiagonal and the <b>negated</b> denominator coefficients (constant term first) in the bottom row.
-
-$$A=\begin{bmatrix}0&1&0\\0&0&1\\-a_0&-a_1&-a_2\end{bmatrix},\quad B=\begin{bmatrix}0\\0\\b_0\end{bmatrix},\quad C=\begin{bmatrix}1&0&0\end{bmatrix},\quad D=0\qquad(n=3\text{ shown})$$
-
-For the running cart, G = 1/(s² + 3s + 2) gives A = [[0, 1], [−2, −3]], B = (0, 1)ᵀ, C = (1, 0): exactly the matrices above, with the denominator's coefficients 2 and 3 negated in the bottom row.
-
-#### G(s) = 3/(s² + 2s + 3) → ODE → ABCD
-
-1. <b>Cross-multiply</b>: (<i>s</i>² + 2<i>s</i> + 3)<i>Y</i> = 3<i>U</i>.
-2. <b>Back to time</b> (<i>s</i> → d/dt, zero ICs): <i>ÿ</i> + 2<i>ẏ</i> + 3<i>y</i> = 3<i>u</i>.
-3. <b>States</b>: <i>x</i>₁ = <i>y</i>, <i>x</i>₂ = <i>ẏ</i>. So <i>ẋ</i>₁ = <i>x</i>₂ (that's the definition), and <i>ẋ</i>₂ = <i>ÿ</i> = −3<i>x</i>₁ − 2<i>x</i>₂ + 3<i>u</i> (solve the ODE for <i>ÿ</i>).
-4. <b>Read off</b>: $A=\begin{bmatrix}0&1\\-3&-2\end{bmatrix},\ B=\begin{bmatrix}0\\3\end{bmatrix},\ C=\begin{bmatrix}1&0\end{bmatrix},\ D=0$.
-
-````callout:note Not unique
-B = [0; 1], C = [3 0] also works: the 3 moved from the input side to the output side. Both give the same <i>G</i>(<i>s</i>) (check by computing <i>C</i>(<i>sI</i>−<i>A</i>)<sup>−1</sup><i>B</i>). A state-space realization isn't unique, but the transfer function is.
-````
-
-````callout:predict Predict
-Second element of B = 1 instead of 3, with C = [1 0] kept? Then <i>G</i> = 1/(<i>s</i>² + 2<i>s</i> + 3). Same poles, DC gain drops from 1 to 1/3. B scales the input's push, so it scales the whole response.
-````
-
-#### LRC intuition (slide 40)
-
-Series LRC, output across C, states <i>x</i>₁ = <i>e</i><sub>o</sub>, <i>x</i>₂ = <i>ė</i><sub>o</sub>. KVL gives <i>LC</i><i>ë</i><sub>o</sub> + <i>RC</i><i>ė</i><sub>o</sub> + <i>e</i><sub>o</sub> = <i>e</i><sub>i</sub>, so:
-
-$$A=\begin{bmatrix}0&1\\-1/LC&-R/L\end{bmatrix},\quad B=\begin{bmatrix}0\\1/LC\end{bmatrix},\quad C=\begin{bmatrix}1&0\end{bmatrix},\quad D=0$$
-
-Same pattern as the mass–spring–damper (slides 26–27) with <i>m</i> ↔ <i>L</i>, <i>b</i> ↔ <i>R</i>, <i>k</i> ↔ 1/<i>C</i>.
-
-````callout:recognize Recognize the companion pattern
-A 2×2 <i>A</i> with [0 1] on top and [−<i>a</i>₀ −<i>a</i>₁] on the bottom <em>is</em> the denominator <i>s</i>² + <i>a</i>₁<i>s</i> + <i>a</i>₀, readable without any algebra. For the LRC: <i>s</i>² + (<i>R</i>/<i>L</i>)<i>s</i> + 1/(<i>LC</i>).
-````
-
-````callout:note Notation: this dive versus Lecture Notes 1
-This dive writes the denominator in companion form, <i>s</i>² + <i>a</i>₁<i>s</i> + <i>a</i>₀, so <i>a</i>₀ is the <em>constant</em> term. Lecture Notes 1 (slide 3) use <i>a</i>₀ for the <em>leading</em> coefficient of the ODE, <i>a</i>₀<i>y</i><sup>(n)</sup> + … + <i>a</i><sub>n</sub><i>y</i>. The same slide calls output over input <i>C</i>(<i>s</i>)/<i>R</i>(<i>s</i>); here that is <i>Y</i>(<i>s</i>)/<i>U</i>(<i>s</i>).
-````
-
-````callout:predict Predict
-Before you touch a slider, predict what it will do. Change c and k and watch the eigenvalues move: the same pole picture as the transfer function, now with the inside of the cart in view.
-````
-
-````callout:note Symbols used here
-- **G(s)**: the cart's transfer function from force u to position y: 1/((s + 1)(s + 2))
-- **poles**: the roots of the denominator: the exponentials e^(pt) the plant can make. The cart's are −1 and −2
-- **zeros**: the roots of the numerator: they set how much of each mode appears
-- **DC gain**: the steady output for a unit steady input, G(0), if the plant is stable. For the cart, 0.5 m per N
-- **A, B, C, D**: the state-space matrices: ẋ = Ax + Bu, y = Cx + Du
-- **S, C**: sensitivity S = 1/(1 + GcG) and complementary sensitivity C = GcG/(1 + GcG), with S + C = 1 (the notes' C(s); many books call it T(s))
-````
+It's still a linear model, and the choice of states isn't unique (any invertible change of variables works).
