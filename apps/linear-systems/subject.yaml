@@ -1,7 +1,7 @@
 id: linear-systems
 title: Linear Systems Analysis
 centralQuestion: How can we predict what a system will do with ANY input?
-blurb: "A map-first review of Linear Systems Analysis: what a linear system is, and the tools that predict what it does to any input: the eigen idea, Laplace/Z transforms, Fourier analysis, state space and modes, reachability and observability, and realization. Drawn on two running examples (a noise-cancelling earbud speaker and a two-room house), with deep dives, live figures, worked exam problems and a self-test. Optimal control appears at the end as one application."
+blurb: "A map-first review of Linear Systems Analysis: what a linear system is, and the tools that predict what it does to any input: the eigen idea, Laplace/Z transforms, Fourier analysis, state space and modes, reachability and observability, and realization. Drawn on two running examples (a noise-cancelling earbud speaker and a car on its suspension), with deep dives, live figures, worked exam problems and a self-test. Optimal control appears at the end as one application."
 archetype: guide
 categories:
   - { id: foundations, label: "Linearity & eigen idea" }
@@ -19,10 +19,10 @@ sections:
   - { id: glossary, title: Variables & terms, kind: glossary }
 runningExample:
   scene: { id: speaker, title: Earbud speaker, overlays: [forces], caption: "Coil force in, diaphragm motion out." }
-  title: A noise-cancelling earbud speaker and a two-room house
+  title: A noise-cancelling earbud speaker and a car on its suspension
   moreScenes:
-    - { id: house, overlays: [heat, flows], title: Two-room house, caption: "Heater in room 1; rooms share a wall." }
-  summary: "Two drawn systems run through the page. The signals boxes use an earbud speaker: voltage in, diaphragm motion out, resonating at about 717 Hz. The state-space boxes use a two-room house: heater power in, two room temperatures out, with one slow mode (the average, τ = 5 h) and one fast mode (the difference, τ ≈ 27 min). Use the switch on the map to see either one."
+    - { id: car, overlays: [springs], title: Car on its suspension, caption: "Seen from the side: the body on front and rear spring+shock pairs." }
+  summary: "Two drawn systems run through the page. The signals boxes use an earbud speaker: voltage in, diaphragm motion out, resonating at about 717 Hz. The state-space boxes use a car on its suspension, seen from the side: road and actuator forces in, the body's heave and pitch out, with two modes, bounce (1.15 Hz) and pitch (1.42 Hz). Use the switch on the map to see either one."
   details: |
     **Earbud speaker** (Thiele–Small values of a micro-speaker)
 
@@ -37,16 +37,18 @@ runningExample:
 
     Noise cancelling comes as feedforward (outside microphone), feedback (in-ear microphone) or hybrid, with an adaptive FxLMS filter running at low latency.
 
-    **Two-room house** (units used throughout: temperatures x in K above outdoors, time t in hours, heater power u in kW; each room's heat capacity C_th = 1 MJ/K)
+    **Car on its suspension** (a side view, "half car"; the tutor's parameter set)
 
-    | piece | value | what it means |
+    | piece | value | what it gives |
     |---|---|---|
-    | A | [[−1.2, 1], [1, −1.2]] /h | the shared wall (1/h) plus a leak outdoors (0.2/h) per room |
-    | B | (3.6, 0)ᵀ K/h per kW | a heater in room 1: 1 kW for an hour is 3.6 MJ, which warms a 1 MJ/K room by 3.6 K |
-    | C | [1, 0] | a thermostat in room 1 |
-    | modes | (1, 1): λ = −0.2/h, τ = 5 h; (1, −1): λ = −2.2/h, τ ≈ 27 min | the average and the difference of the two rooms |
+    | body | m = 1400 kg, pitch inertia J = 2000 kg·m² | heave z (m, + up) and pitch θ (rad, + nose-up); a body point x ahead of the centre of gravity moves z + x·θ |
+    | axles | front a = 1.2 m ahead, rear b = 1.5 m behind the centre of gravity | the wheelbase 2.7 m: a bump reaches the rear wheel 0.18 s after the front at 15 m/s |
+    | springs | kf = 38,000 N/m, kr = 42,000 N/m | |
+    | shocks | cf = 3040 N·s/m, cr = 3360 N·s/m | proportional damping, C = 0.08 s · K |
+    | state | x = (z, θ, ż, θ̇) | ẋ = Ax + Bu, four states |
+    | modes | bounce 1.151 Hz, ζ 0.289, s = −2.092 ± 6.92j; pitch 1.419 Hz, ζ 0.357, s = −3.178 ± 8.328j | bounce is mostly up-down (still point 1.06 m behind the rear axle, off the body); pitch turns about x = +0.56 m |
 
-    Heating both rooms equally makes the difference uncontrollable; a thermostat that reads the average makes it unobservable.
+    Model assumptions: small angles, linear springs and shocks, rigid tyres, no wheel mass (valid up to about 5 Hz). A second, **symmetric** set (kf = 44,000, kr = 35,200 N/m, cf = 3300, cr = 2640 N·s/m, so kf·a = kr·b) is used only for the push-at-the-centre story: there bounce (1.197 Hz) and pitch (1.344 Hz) are completely separate, so a push or a height sensor at the centre of gravity can neither start nor see pitch.
 
     Every box of the map says what its idea **adds to one of these examples** and what it lets us **account for**.
 hub:

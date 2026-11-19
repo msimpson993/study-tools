@@ -2,8 +2,8 @@
 id: ss
 order: 17
 title: State space
-addsToExample: "Writes the house as ẋ = Ax + Bu with x = (T₁, T₂) above outdoors: A = [[−1.2, 1], [1, −1.2]] per hour (shared wall 1/h, leak 0.2/h), B = (3600/C_th, 0)ᵀ = (3.6, 0) K/h per kW for a heater in room 1, C = [1, 0] for a thermostat in room 1."
-accountsFor: "Why room 1 warms first and room 2 follows through the wall, from three small matrices."
+addsToExample: "Writes the car as ẋ = Ax + Bu with x = (z, θ, ż, θ̇): the heave and pitch of the body and their rates. The inputs are the road heights under the front and rear wheels (and their rates); springs kf = 38,000 and kr = 42,000 N/m and shocks cf = 3,040 and cr = 3,360 N·s/m sit 1.2 m ahead of and 1.5 m behind the centre of gravity."
+accountsFor: "Why a bump under one wheel makes the body both rise and pitch, from three matrices."
 category: state
 neighbors:
   - expm
@@ -11,7 +11,7 @@ neighbors:
   - ctrl
   - diag
 matlab: sys = ss(A, B, C, D)
-exampleScene: { scene: house, overlays: [heat, flows, trace], diagram: house-open, caption: "Heat flows through the wall and out to the cold; the state is the two temperatures." }
+exampleScene: { scene: car, overlays: [springs, state], caption: "Two springs and two shocks hold the body; the state is heave, pitch and their rates." }
 level: Some algebra
 check: [c-ss-1, c-ss-2]
 ---
@@ -24,7 +24,7 @@ A common language for dynamics, modes, inputs, and outputs — the setting in wh
 
 ### See it
 
-**Picture it first.** Here is the earbud speaker's cone, moving. The two numbers we track (cone position and velocity) are exactly the *state*; drive it with a voltage and watch both. The house works the same way, with the two room temperatures as its state.
+**Picture it first.** Here is the earbud speaker's cone, moving. The two numbers we track (cone position and velocity) are exactly the *state*; drive it with a voltage and watch both. The car on its suspension works the same way, with four numbers: heave, pitch and their rates.
 
 ```figure:ss
 ```
@@ -46,23 +46,24 @@ The state is a finite list of numbers that, together with the future input, dete
 
 **What each symbol means.**
 
-- $x$: the state, the memory (house: $T_1, T_2$, room temperatures above outdoors, K).
-- $u$: the input (heater power, kW).
-- $A$: how the state drives its own change (per hour): leaks and the shared wall.
-- $B$: where the input pushes (K/h per kW).
+- $x$: the state, the memory (car: $x = (z, \theta, \dot z, \dot\theta)$, heave in m, pitch in rad, and their rates).
+- $u$: the input (car: the road heights $u_f, u_r$ under the front and rear wheels, and their rates).
+- $A$: how the state drives its own change (per second): the springs and shocks pulling the body back.
+- $B$: where the input pushes.
 - $C$: what the sensor reads; $D$: direct feed-through (0 here).
 
-### Worked example: on the house
+### Worked example: on the car
 
-1. House: $A = [[-1.2, 1], [1, -1.2]]$ per hour (shared wall 1/h, leak 0.2/h), $B = (3.6, 0)$ K/h per kW, $C = [1, 0]$.
-2. Switch on 1 kW with both rooms at outdoor temperature: $\dot x = Bu = (3.6, 0)$ K/h, so room 1 starts warming at 3.6 K/h and room 2 not at all, at first.
-3. Kept on, it settles where $\dot x = 0$: $x = -A^{-1}B \approx (9.8, 8.2)$ K above outdoors.
+1. Car: mass $m = 1400$ kg, pitch inertia $J = 2000$ kg·m², front axle $a = 1.2$ m ahead of the centre of gravity, rear axle $b = 1.5$ m behind. The front spring is stretched by $z + a\theta - u_f$; it pushes the body down and, through the lever $a$, pitches it.
+2. Newton for heave and for pitch: $m\ddot z = -k_f(z + a\theta - u_f) - k_r(z - b\theta - u_r) + (\text{the same with } c \text{ and rates})$ and $J\ddot\theta = -a\,k_f(z + a\theta - u_f) + b\,k_r(z - b\theta - u_r) + (\dots)$. Two second-order equations make four first-order ones: $\dot x = Ax + Bu$.
+3. Because $k_f a = 45{,}600$ N is not $k_r b = 63{,}000$ N, a pure heave also makes a torque: heave and pitch are coupled in $A$.
+4. Assumptions: small angles, linear springs and shocks, rigid tyres and no wheel mass, so the model is good to about 5 Hz.
 
 **Exam-style example.** The scalar ODE ÿ + 3ẏ + 2y = u, with phase variables x₁ = y and x₂ = ẏ, becomes ẋ₁ = x₂, ẋ₂ = −2 x₁ − 3 x₂ + u, and y = x₁. That is exactly A = [[0, 1], [−2, −3]], B = [0, 1]ᵀ, C = [1, 0], D = 0. A similarity x = T z produces an equivalent realization (Ā, B̄, C̄, D) = (T⁻¹ A T, T⁻¹ B, C T, D) with the same G(s).
 
 ### What it can't do
 
-In these coordinates everything affects everything: room 1 pushes room 2 and back. The equations are coupled, so we can't yet read off how fast things happen.
+In these coordinates everything affects everything: heave pushes pitch and back. The equations are coupled, so we can't yet read off how fast things happen.
 
 **Next question.** With u = 0, how does the state actually move? That is the state transition matrix. With u ≠ 0, can the input reach every mode, and can the output see every mode?
 

@@ -687,31 +687,6 @@
   - "Linear but not time-invariant, so it has no H(s)"
   answer: 0
   why: "Sums and scaling pass through, and delaying the input by τ delays the output by τ. A click at 0 comes out at t = 1, so h(t) = δ(t − 1), and its Laplace transform is e^(−s): |H(jω)| = 1 at every frequency, with phase −ω."
-- id: c-eig-1
-  tags:
-  - eig
-  kind: compute
-  q: "The house has A = [[−1.2, 1], [1, −1.2]] per hour. What are its eigenvalues and eigenvectors?"
-  choices:
-  - "−0.2 along (1, 1) and −2.2 along (1, −1)"
-  - "−1.2 along (1, 0) and −1.2 along (0, 1)"
-  - "−0.2 along (1, −1) and −2.2 along (1, 1)"
-  - "0.2 along (1, 1) and 2.2 along (1, −1)"
-  answer: 0
-  why: "A(1, 1) = (−0.2, −0.2) and A(1, −1) = (−2.2, 2.2). The average of the two rooms decays slowly (τ = 5 h); their difference decays fast (τ = 1/2.2 h ≈ 27 min)."
-- id: c-eig-2
-  tags:
-  - eig
-  - stab
-  kind: compute
-  q: "Room 1 starts 10 K warmer than room 2, with the average at the outdoor temperature and the heater off. Roughly how big is the difference after one hour?"
-  choices:
-  - About 1 K (10·e^(−2.2))
-  - About 8 K (10·e^(−0.2))
-  - About 3.7 K (10·e^(−1))
-  - "Still 10 K: nothing drives it"
-  answer: 0
-  why: "The start is pure difference mode, which decays as e^(−2.2t): after 1 h, 10·e^(−2.2) ≈ 1.1 K."
 - id: c-eigfn-1
   tags:
   - eigfn
@@ -944,18 +919,6 @@
   - It halves the bin spacing only
   answer: 0
   why: Resolution is set by the record length (main lobe width ≈ 4π/N for the rectangular window); zero-padding interpolates.
-- id: c-ss-1
-  tags:
-  - ss
-  kind: compute
-  q: "In the house, B = (3600/C_th, 0)ᵀ with C_th = 1 MJ/K, = (3.6, 0) K/h per kW. A 2.5 kW heater runs in room 1 for a long time. What are the steady room temperatures above outdoors?"
-  choices:
-  - About 24.5 K in room 1 and 20.5 K in room 2
-  - About 9 K in both rooms
-  - About 45 K in room 1 and 0 K in room 2
-  - They rise forever
-  answer: 0
-  why: "Bu = 3.6·2.5 = 9 K/h. Steady state x = −A⁻¹Bu = (1/0.44)·(1.2·9, 9) ≈ (24.55, 20.45) K."
 - id: c-ss-2
   tags:
   - ss
@@ -969,18 +932,6 @@
   - Because only two states are ever allowed
   answer: 0
   why: "Le = 0.04 mH and Re = 7.47 Ω give a time constant Le/Re ≈ 5 µs, far shorter than the 0.8 ms mechanical decay. Dropping it changes the audio-band response very little."
-- id: c-diag-1
-  tags:
-  - diag
-  kind: recognize
-  q: "In the house's modal coordinates ξ = V⁻¹x with V = [[1, 1], [1, −1]], what does ξ̇ = Λξ + V⁻¹Bu look like?"
-  choices:
-  - "Two independent first-order systems, ξ̇₁ = −0.2ξ₁ + …, ξ̇₂ = −2.2ξ₂ + …"
-  - A Jordan block
-  - The same coupled system
-  - A single first-order system
-  answer: 0
-  why: "Diagonalising decouples the modes: one slow (the average), one fast (the difference), each driven by its share of the input."
 - id: c-expm-1
   tags:
   - expm
@@ -993,18 +944,6 @@
   - It should be e^(−At)
   answer: 0
   why: "Use the modes (Ve^(Λt)V⁻¹), the inverse Laplace transform of (sI − A)⁻¹, or Cayley–Hamilton. Check Φ(0) = I."
-- id: c-ch-1
-  tags:
-  - cayley
-  kind: compute
-  q: "For the house, s² + 2.4s + 0.44 is the characteristic polynomial. What does Cayley–Hamilton give for A²?"
-  choices:
-  - A² = −2.4A − 0.44I
-  - A² = 2.4A + 0.44I
-  - A² = 0
-  - A² = −0.44A − 2.4I
-  answer: 0
-  why: "p(A) = A² + 2.4A + 0.44I = 0. So e^(At) = α₀(t)I + α₁(t)A, with α's fixed by e^(−0.2t) and e^(−2.2t)."
 - id: c-ch-2
   tags:
   - cayley
@@ -1055,62 +994,12 @@
   - "Neither: C should equal the denominator"
   answer: 0
   why: A realization is not unique. Just do not mix the two orderings in one answer.
-- id: c-ctrl-1
-  tags:
-  - ctrl
-  - pbh
-  kind: compute
-  q: "The heater power is split equally between the two rooms, B ∝ (1, 1). Is the house controllable?"
-  choices:
-  - "No: B is an eigenvector, so [B AB] has rank 1; the difference mode cannot be changed"
-  - "Yes: two rooms, two heaters"
-  - "Yes, if you heat long enough"
-  - Only if the thermostat reads room 1
-  answer: 0
-  why: "AB = −0.2B, so B and AB are parallel. PBH: the left eigenvector (1, −1) is orthogonal to (1, 1)."
-- id: c-ctrl-2
-  tags:
-  - ctrl
-  kind: recognize
-  q: "With the heater in room 1 only, B ∝ (1, 0), why is the house controllable?"
-  choices:
-  - "AB ∝ (−1.2, 1) has a room-2 part through the wall, so B and AB span the plane"
-  - Because room 1 is the bigger room
-  - Because the eigenvalues are distinct
-  - It is not controllable
-  answer: 0
-  why: "det[B AB] = det[[1, −1.2], [0, 1]] = 1 ≠ 0."
-- id: c-obs-1
-  tags:
-  - obs
-  - pbh
-  kind: compute
-  q: "A thermostat reads the average, C = [½, ½]. Which mode can it not see?"
-  choices:
-  - "The difference (1, −1): C·(1, −1) = 0"
-  - "The average (1, 1)"
-  - "Neither: it sees both"
-  - Both
-  answer: 0
-  why: "PBH for observability: Cv = 0 for v = (1, −1). Two houses with the same average but different room temperatures give identical readings."
 - id: c-pbh-1
   tags:
   - pbh
   kind: recall
   q: "State the PBH test in eigenvector form, and say which eigenvectors go with which test."
   a: "Controllable ⇔ wᵢᵀB ≠ 0 for every left eigenvector wᵢ (wᵢᵀA = λᵢwᵢᵀ); equivalently rank[A − λI, B] = n at every eigenvalue. Observable ⇔ Cvᵢ ≠ 0 for every right eigenvector vᵢ; equivalently rank[A − λI; C] = n. Left eigenvectors for controllability, right ones for observability."
-- id: c-gram-1
-  tags:
-  - gramian
-  kind: compute
-  q: "Allowing the heater input to go negative (cooling), why does reaching (5, −5) K in 3 h, a 10 K gap with the average at the outdoor temperature, cost about twice the energy of reaching (10, 10) K, even though it's half as far?"
-  choices:
-  - "W(3)'s ellipse is thin in directions that pull the rooms apart (small eigenvalue 0.78 vs 12.0, along ≈(0.51, −0.86)), and E_min = x_fᵀW⁻¹x_f is large there"
-  - Because the system is not controllable in that direction
-  - Because the outdoor temperature changes
-  - It does not; the cost is the same in every direction
-  answer: 0
-  why: "This is a reaching cost, not a holding cost. W(3) (in K²/(kW²·h)) has eigenvalues 0.78 and 12.0, about 15 times apart, so the ellipse is about 4 times longer than wide, tilted about 31° up from the room-1 axis. E_min is about 6.0e7 W²·h for (5, −5) against 3.1e7 W²·h for (10, 10)."
 - id: c-gram-2
   tags:
   - gramian
@@ -1123,18 +1012,6 @@
   - T is too long
   answer: 0
   why: "W(T) > 0 for any T > 0 exactly when (A, B) is controllable."
-- id: c-kal-1
-  tags:
-  - kalman
-  kind: recognize
-  q: "Heat both rooms equally and read the average. What does the house's transfer function look like?"
-  choices:
-  - "First order, with only the 5-hour pole: the difference mode is neither reached nor seen"
-  - Second order with both poles
-  - "Zero: nothing gets through"
-  - First order with only the 27-minute pole
-  answer: 0
-  why: "Kalman decomposition: the average is controllable and observable; the difference is neither and cancels out of G(s)."
 - id: c-opt-1
   tags:
   - optimal
@@ -1159,31 +1036,6 @@
   - They do not
   answer: 0
   why: "M = [[A, −BR⁻¹Bᵀ], [−Q, −Aᵀ]] is a Hamiltonian matrix: JM is symmetric for J = [[0, I], [−I, 0]], so −Mᵀ = JMJ⁻¹ is similar to M and λ is an eigenvalue exactly when −λ is. In A4, ±√146/2."
-- id: c-opt-3
-  tags:
-  - optimal
-  - gramian
-  kind: action
-  q: "The least-energy heater profile that warms the house from outdoor temperature to (10, 7) K in 3 hours: what does it look like?"
-  choices:
-  - "About 1.8 kW at first, rising to about 2.4 kW at 2 h, then easing to about 1 kW at the end"
-  - A constant 2.5 kW
-  - "Full power for an hour, then off"
-  - "Zero at first, then full power"
-  answer: 0
-  why: u(t) = bᵀe^(Aᵀ(3−t))W(3)⁻¹x_f mixes e^(0.2(t−3)) and e^(2.2(t−3)) shapes. It eases off at the end because late heat mostly widens the room-1/room-2 gap (the fast difference mode) instead of warming room 2. Its energy is ∫u² dt ≈ 13.4 kW²·h.
-- id: pop-sys
-  tags:
-  - linsys
-  kind: recognize
-  q: "In the house, which is the input and which is the output?"
-  choices:
-  - "Input: heater power; output: the two room temperatures"
-  - "Input: the room temperatures; output: the heater power"
-  - "Input: the shared wall; output: the outdoor temperature"
-  - "The house has no input, only a state"
-  answer: 0
-  why: "The input is what you set (heater power, kW); the output is what you get (the room temperatures above outdoors, K). The wall and the leaks are part of the system's rule T."
 - id: pop-near
   tags:
   - linsys
@@ -1220,3 +1072,151 @@
   - About 79 µm
   answer: 0
   why: "Near the peak the gain is ×1.85 on the low-pitch 42.8 µm/V, i.e. 79.3 µm/V; 0.1 V gives about 7.9 µm, a tone of the same pitch, lagging about 73°."
+- id: c-eig-1
+  tags:
+  - eig
+  kind: recognize
+  q: "The car's A has two complex pairs of eigenvalues, −2.092 ± 6.92j and −3.178 ± 8.328j per second. What do they say?"
+  choices:
+  - "Two modes: bounce at 1.151 Hz (ζ 0.289) and pitch at 1.419 Hz (ζ 0.357). The real part sets how fast each fades; the size |s| sets its natural frequency"
+  - "Four unrelated modes, one per state"
+  - "The car is unstable, because the imaginary parts are large"
+  - The real parts are the frequencies in hertz
+  answer: 0
+  why: "Natural frequency fₙ = |s|/2π: |−2.092 + 6.923j| ≈ 7.23 /s gives 1.151 Hz, and ζ = 2.092/7.23 ≈ 0.289. Each conjugate pair is one oscillating mode; both real parts are negative, so both fade."
+- id: c-eig-2
+  tags:
+  - eig
+  - stab
+  kind: compute
+  q: "The car's bounce mode has ζ ≈ 0.29 with new shocks and ζ ≈ 0.058 with shocks worn to 20%. Roughly how many bounce cycles does it take to settle to 5%?"
+  choices:
+  - "About 1.6 cycles new, about 8 worn"
+  - "About 8 cycles new, about 1.6 worn"
+  - "The same either way: damping only changes the frequency"
+  - It never settles once the shocks are worn
+  answer: 0
+  why: "Each cycle shrinks the motion by e^(−2πζ/√(1−ζ²)), so reaching 5% takes ln 20 /(2πζ/√(1−ζ²)) cycles: about 1.6 at ζ = 0.289 and about 8 at ζ = 0.058. The overshoot rises from about 39% to about 83%."
+- id: c-ss-1
+  tags:
+  - ss
+  kind: recognize
+  q: "Why does the car model need four state variables, x = (z, θ, ż, θ̇)?"
+  choices:
+  - "The body can heave and pitch, and each motion obeys a second-order (Newton) equation, so the future needs both positions and both velocities"
+  - Because there are four springs and shocks
+  - "Two would do: the velocities follow from the positions"
+  - Because the road input has four parts
+  answer: 0
+  why: "m z̈ = (forces) and J θ̈ = (torques) are two second-order equations; writing each as two first-order ones gives four states. The road input [uf, ur, u̇f, u̇r] having four entries is a coincidence."
+- id: c-diag-1
+  tags:
+  - diag
+  kind: recognize
+  q: "In mode coordinates (how much bounce, how much pitch), what does the car's free motion look like?"
+  choices:
+  - "Two separate damped oscillators, one at 1.151 Hz and one at 1.419 Hz, each fading on its own"
+  - "Still coupled: bounce keeps feeding pitch"
+  - Four separate first-order decays
+  - A single oscillator at the average frequency
+  answer: 0
+  why: "Changing to the eigenvector basis makes A block-diagonal: each mode's amount evolves on its own. With proportional damping (C = 0.08 s·K) the shapes are real, so 'how much bounce' and 'how much pitch' are ordinary body poses."
+- id: c-ch-1
+  tags:
+  - cayley
+  kind: recognize
+  q: "The car's A is 4×4. What does Cayley–Hamilton say about e^(At)?"
+  choices:
+  - "e^(At) = α₀(t)I + α₁(t)A + α₂(t)A² + α₃(t)A³: four scalar functions, fixed by matching e^(λt) at the four eigenvalues"
+  - e^(At) needs infinitely many powers of A
+  - "Only I and A are needed, as for every matrix"
+  - e^(At) = I + At exactly
+  answer: 0
+  why: "A satisfies its own degree-4 characteristic polynomial, so A⁴ and every higher power are mixes of I, A, A², A³. The αₖ(t) come from e^(λᵢt) = Σ αₖλᵢᵏ at the four eigenvalues."
+- id: c-ctrl-1
+  tags:
+  - ctrl
+  - pbh
+  kind: trap
+  q: "On the symmetric car (kf·a = kr·b, cf·a = cr·b) one actuator pushes up at the centre of gravity. Is the car controllable?"
+  choices:
+  - "No: the push makes no torque about the centre and pitch is decoupled from heave, so pitch can never be started; [B AB A²B A³B] has rank 2, not 4"
+  - "Yes: rank 4, a push anywhere moves everything"
+  - Only if the push is large enough
+  - "No, because bounce cannot be reached"
+  answer: 0
+  why: "PBH: the pitch mode's shape does not move at the centre, so the push on it, wᵀB, is zero. The general rule: a mode can't be pushed at a point where its shape doesn't move."
+- id: c-ctrl-2
+  tags:
+  - ctrl
+  kind: recognize
+  q: On the main car the same push at the centre of gravity DOES move both modes (rank 4). Why the difference?
+  choices:
+  - "Its springs are not balanced (kf·a ≠ kr·b), so each mode mixes heave and pitch: the pitch mode turns about x = +0.56 m, not about the centre, and a centre push moves that shape"
+  - The main car is heavier
+  - The main car has stiffer shocks
+  - "It doesn't: the main car is uncontrollable too"
+  answer: 0
+  why: "Controllability depends on where the mode shapes move, not on the input alone. Even the main car has a blind spot: a push at its pitch still point, x = +0.56 m, cannot start pitch."
+- id: c-obs-1
+  tags:
+  - obs
+  - pbh
+  kind: recognize
+  q: A height sensor sits at the centre of gravity of the symmetric car. Which mode can it not see?
+  choices:
+  - "Pitch: in that mode the centre does not move, so the reading stays zero"
+  - Bounce
+  - Both modes
+  - "Neither: one sensor always sees everything"
+  answer: 0
+  why: "The reading is z + 0·θ = z. In the symmetric car pitch is pure rotation about the centre (Cv = 0 for the pitch mode), so [C; CA; CA²; CA³] has rank 2. A pitch gyro there is the opposite: blind to bounce."
+- id: c-gram-1
+  tags:
+  - gramian
+  kind: trap
+  q: "Levelling the body from 2° nose-down in 0.5 s costs about 96,160 N²·s with front and rear actuators. With a front actuator alone it needs peaks of about 12.9 kN. Why so much more?"
+  choices:
+  - "With one actuator the Gramian W(0.5) is nearly singular: some direction of the state is barely reachable in that time, and E = x₀ᵀe^(AᵀT)W⁻¹e^(AT)x₀ is huge in that direction"
+  - The front actuator is weaker
+  - Because the car is uncontrollable from the front
+  - "It is not: the cost is the same"
+  answer: 0
+  why: "The car is controllable from the front (rank 4), but 'barely controllable' costs a lot: the least-energy input divides by W's small eigenvalue. Allow more time or add the rear actuator and the cost drops (front + rear in 1 s needs only about 120 N)."
+- id: c-kal-1
+  tags:
+  - kalman
+  kind: recognize
+  q: "Symmetric car, with the push and the height sensor both at the centre of gravity. What does the transfer function from push to height look like?"
+  choices:
+  - "Second order, with only the bounce poles: pitch is neither reached nor seen, so it cancels out of G(s)"
+  - "Fourth order, with both modes"
+  - "Zero: nothing gets through"
+  - "Second order, with only the pitch poles"
+  answer: 0
+  why: "Kalman decomposition: bounce is controllable and observable; pitch is neither and drops out of G(s), although the model still has four states."
+- id: c-opt-3
+  tags:
+  - optimal
+  - gramian
+  kind: action
+  q: "Front and rear actuators bring the body from 2° nose-down to level and still in 0.5 s with the least ∫|u|²dt. What do the forces look like?"
+  choices:
+  - "Small at first, growing to peaks of about 476 N front and 652 N rear, largest near the end"
+  - Constant forces for 0.5 s
+  - "A big kick at the start, then nothing"
+  - Only the front actuator works
+  answer: 0
+  why: "u(t) = −Bᵀe^(Aᵀ(T−t))W(T)⁻¹e^(AT)x₀ with the Gramian W. Its energy is about 96,160 N²·s. Allowed 1 s, the shocks do most of the work and about 120 N is enough."
+- id: pop-sys
+  tags:
+  - linsys
+  kind: recognize
+  q: "In the car model, which is the input and which is the output?"
+  choices:
+  - "Input: the road heights under the wheels (or actuator forces); output: the body's heave and pitch"
+  - "Input: the body's heave; output: the road"
+  - "Input: the springs; output: the shocks"
+  - "The car has no input, only a state"
+  answer: 0
+  why: "The input is what acts on the car from outside: the road under the wheels, or forces from active actuators. The output is what we watch: heave z and pitch θ. The springs and shocks are part of the system's rule T."

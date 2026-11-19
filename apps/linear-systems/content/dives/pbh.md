@@ -2,8 +2,8 @@
 id: pbh
 order: 26
 title: The PBH test
-addsToExample: "Tests the house mode by mode. With the heater in room 1, B ∝ (1, 0) is not orthogonal to either left eigenvector, (1, 1) or (1, −1): both modes are reached. Heating both rooms equally, B ∝ (1, 1), is orthogonal to (1, −1): the difference mode is missed. A thermostat reading the average, C = [½, ½], gives Cv = 0 for v = (1, −1): the difference is unseen."
-accountsFor: "Exactly which mode a heater or sensor placement loses, not just that one is lost."
+addsToExample: "Tests the car mode by mode. On the symmetric car the pitch mode does not move at the centre of gravity, so a push there gives wᵀB = 0 and a height sensor there gives Cv = 0: pitch is both unreachable and unseen. On the main car the same happens at the pitch still point, x = +0.56 m."
+accountsFor: "Exactly which mode an actuator or sensor placement loses, not just that one is lost."
 category: structure
 neighbors:
   - ctrl
@@ -11,7 +11,7 @@ neighbors:
   - kalman
   - eig
 matlab: "for l = eig(A).', rank([A - l*eye(n), B]), end"
-exampleScene: { scene: house, overlays: [both, modes], caption: "Heat both rooms equally and the input is perpendicular to the difference mode: that mode is out of reach." }
+exampleScene: { scene: car, overlays: [centre, pitch], caption: "A push at the pitch mode's still point cannot start it, and a sensor there cannot see it." }
 level: Some algebra
 check: [c-pbh-1, c-ctrl-1, c-obs-1]
 ---
@@ -46,11 +46,11 @@ $$\text{observable}\iff\operatorname{rank}\begin{bmatrix}A-\lambda I\\C\end{bmat
 - $v_i$: a right eigenvector (the mode's shape); $Cv_i$ is how much of mode $i$ the sensor sees.
 - $\operatorname{rank}[A - \lambda I\ \ B]$: drops below $n$ exactly at an uncontrollable eigenvalue.
 
-### Worked example: on the house
+### Worked example: on the car
 
-1. House: left eigenvectors (1, 1) (average) and (1, −1) (difference).
-2. Heater in room 1, $B \propto (1, 0)$: both products are nonzero, both modes reached.
-3. Equal heating, $B \propto (1, 1)$: orthogonal to (1, −1), the difference mode is missed. An average thermostat, $C = [\tfrac12, \tfrac12]$, gives $Cv = 0$ for $v = (1, -1)$: the difference is unseen.
+1. Car: each mode has a shape. The pitch mode's still point is at the centre of gravity on the symmetric car and at $x = +0.56$ m on the main car.
+2. A push at a point $x$ is $B = (0, 0, 1/m, x/J)$. For a mechanical model like this one, $w^\mathsf{T}B$ is proportional to how far the mode's shape moves at the push point, so it is zero at the still point: that mode is uncontrollable.
+3. Likewise a height sensor at $x$, $C = [1, x, 0, 0]$, gives $Cv$ = the shape's motion at $x$: zero at the still point, so the mode is unobservable there.
 
 **Exam-style example.** A = [[−1, 0, 0], [−2, −2, 0], [1, 1, −3]] with eigenvalues −1, −2, −3, right eigenvectors (−2, 4, 1), (0, 1, 1), (0, 0, 1). The sensor c = [0, f, g] gives Cv = 4f + g, f + g and g. So the pair is observable iff g ≠ 0, f + g ≠ 0 and 4f + g ≠ 0. (This is review problem B2.)
 

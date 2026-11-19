@@ -2,8 +2,8 @@
 id: optimal
 order: 29
 title: "Application: optimal control (Pontryagin's principle)"
-addsToExample: "Finds the heater profile with the least energy ∫u² dt that warms the house from outdoor temperature to (10, 7) K above it in 3 hours. The costate obeys λ̇ = −Aᵀλ, so u(t) = −bᵀλ(t)/2 is a mix of e^(0.2(t−3)) and e^(2.2(t−3)) shapes: about 1.8 kW at first, rising to 2.4 kW after 2 hours, then easing to about 1 kW at the end, because late heat mostly widens the room-1/room-2 gap (the fast difference mode) instead of warming room 2. Its energy is ∫u² dt ≈ 13.4 kW²·h, and the 2.4 kW peak is within the 2.5 kW heater."
-accountsFor: "Why the cheapest warm-up is not a constant power: it leans on the slow average mode early and trims the fast difference mode at the end, and how much energy any target costs (the Gramian gives the same answer)."
+addsToExample: "Finds the least-energy front and rear actuator forces (active suspension) that bring the body from 2° nose-down to level and still in 0.5 s. With ∫|u|² dt as the cost the costate obeys λ̇ = −Aᵀλ, so u(t) = −Bᵀλ(t)/2 is built from the car's modes run backwards from T: small at first, growing to peaks of 476 N front and 652 N rear near the end, with E = 96,160 N²·s. Given 1 s, about 120 N is enough."
+accountsFor: "Why the cheapest levelling force starts small and grows toward the end, and why a shorter time costs so much more."
 category: structure
 neighbors:
   - gramian
@@ -11,7 +11,7 @@ neighbors:
   - ctrl
   - cayley
 matlab: "% sol = bvp4c(@(t,y) M*y, @(ya,yb) [ya(1)-x0; yb(1)-xT], solinit)"
-exampleScene: { scene: house, overlays: [optimal, trace], caption: "The least-energy heater profile to an illustrative target, (10, 7) K above outdoors in 3 h, and the room temperatures it produces." }
+exampleScene: { scene: car, overlays: [active, trace], caption: "Least-energy active suspension: front and rear forces that level the body in 0.5 s." }
 level: Worked calculation
 check: [c-opt-1, c-opt-2, c-opt-3]
 ---
@@ -66,11 +66,11 @@ $$\dot x=\frac{\partial\mathcal H}{\partial\lambda},\quad \dot\lambda=-\frac{\pa
 For $L = x^\mathsf{T}Qx + u^\mathsf{T}Ru$ the last gives $u = -\tfrac12R^{-1}B^\mathsf{T}\lambda$; substituting gives the linear system $(\dot x, \dot\lambda) = M(x, \lambda)$. Boundary conditions: $x(0)$ given, and either $x(T)$ given (then $\lambda(0)$ is unknown) or $\lambda(T) = 0$ when $x(T)$ is free.
 ````
 
-### Worked example: on the house
+### Worked example: on the car
 
-1. House: least energy $\int u^2\,dt$ to warm from outdoor temperature to (10, 7) K in 3 hours.
-2. The costate obeys $\dot\lambda = -A^\mathsf{T}\lambda$, so $u(t) = -b^\mathsf{T}\lambda(t)/2$ is a mix of $e^{0.2(t-3)}$ and $e^{2.2(t-3)}$.
-3. Result: about 1.8 kW at first, rising to 2.4 kW after 2 hours, easing to about 1 kW at the end; energy ≈ 13.4 kW²·h, and the 2.4 kW peak is within the 2.5 kW heater.
+1. Car with front and rear actuators: minimise $\int_0^{0.5}|u|^2\,dt$ to go from 2° nose-down at rest to level and still.
+2. With $L = |u|^2$ the costate obeys $\dot\lambda = -A^\mathsf{T}\lambda$, so $u(t) = -B^\mathsf{T}\lambda(t)/2$ is built from the car's modes run backwards from $T$; the end condition fixes $\lambda(0)$.
+3. Result: small at first, growing to peaks of about 476 N front and 652 N rear near the end, with $E = 96{,}160$ N²·s; the Gramian gives the same answer. Allowed 1 s, about 120 N is enough.
 
 **Exam-style example.** ẋ = 6x + u, J = ∫₀¹(x² + 2u²)dt, x(0) = 1, x(1) = 2. H = x² + 2u² + λ(6x + u), so u° = −λ/4 and
 

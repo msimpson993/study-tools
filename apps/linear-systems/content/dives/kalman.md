@@ -2,8 +2,8 @@
 id: kalman
 order: 28
 title: Kalman decomposition & minimal realization
-addsToExample: "Splits the house with both rooms heated equally and an average thermostat: the average is reached and seen, the difference neither. The transfer function keeps only the 5-hour pole."
-accountsFor: "Why that house looks like a first-order system from outside, even though it has two states."
+addsToExample: "Splits the symmetric car with the push and the height sensor both at the centre of gravity: bounce is reached and seen, pitch neither. G(s) from push to height keeps only the bounce poles, although the model has four states."
+accountsFor: "Why that car looks like a single bouncing mass from outside."
 category: structure
 neighbors:
   - ctrl
@@ -11,7 +11,7 @@ neighbors:
   - tf
   - stab
 matlab: sys_min = minreal(ss(A, B, C, D))    % or ctrbf / obsvf for the split
-exampleScene: { scene: house, overlays: [both, avg, modes], diagram: house-kalman, caption: "Reached and seen: the average. Neither: the difference, which just decays on its own." }
+exampleScene: { scene: car, overlays: [centre, bounce], caption: "Reached and seen: bounce. Neither: pitch, which just fades on its own." }
 level: Conceptual
 check: [c-kal-1, c-stab-1, q3]
 ---
@@ -50,11 +50,11 @@ A change of basis (the Kalman decomposition) splits the state into four invarian
 - $G(s) = C(sI - A)^{-1}B$: the transfer function, built only from the reached-and-seen part.
 - Minimal realization: only the reached-and-seen part kept.
 
-### Worked example: on the house
+### Worked example: on the car
 
-1. Heat both rooms equally and read the average.
-2. The average mode is reached and seen; the difference mode is neither.
-3. So $G(s)$ is first order, with only the −0.2 /h (5-hour) pole: the 27-minute difference mode cancels out of it, yet it is still inside the house.
+1. Symmetric car: push at the centre, $B = (0, 0, 1/m, 0)$; height sensor at the centre, $C = [1, 0, 0, 0]$.
+2. Bounce is reached and seen; pitch is neither reached nor seen.
+3. So $G(s)$ is second order, with only the bounce poles: the pitch mode cancels out of it, yet it is still inside the car. Pitch returns to $G(s)$ only when both the push and the sensor move off the centre.
 
 **Exam-style example.** For A = [[0, 1], [−2, −3]] (ÿ + 3ẏ + 2y = u), take C = [1, 0]. The full controllable choice B = [0, 1]ᵀ gives G(s) = 1/((s+1)(s+2)). The uncontrollable choice B = [1, −2]ᵀ — which cannot touch the −1 mode — gives C(sI − A)⁻¹ B = (s+1)/((s+1)(s+2)) = 1/(s+2). The same cancellation appears if B is the good one but C = [1, 1] (the −1 mode unobservable): again G(s) = 1/(s+2). In both cases the realization is still 2-dimensional and still has an eigenvalue at −1; it just no longer shows up as a pole of G.
 

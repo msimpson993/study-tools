@@ -3,7 +3,7 @@
 maps:
 - id: big
   title: Big picture
-  caption: "The whole course as fourteen questions. Tap any box: a one-line answer, the formula in rough words, a picture where words aren't enough, what it means for the earbud or the house, and the next question (the line out of the box). The dashed line joins two boxes that use the same trick."
+  caption: "The whole course as fourteen questions. Tap any box: a one-line answer, the formula in rough words, a picture where words aren't enough, what it means for the earbud or the car, and the next question (the line out of the box). The dashed line joins two boxes that use the same trick."
   seriesNames: &id001
   - "Linearity: the idea"
   - "Signals: tones and transforms"
@@ -18,9 +18,9 @@ maps:
     short: "Find a shortcut: learn what the system does to a few simple pieces, then build the answer for any input out of those pieces. The fourteen boxes below are that shortcut, step by step."
     pop: &id002
       rough: any output = sum of the outputs of simple pieces
-      example: "Two running examples, drawn on the map: an earbud speaker (voltage in, cone motion out) and a two-room house (heater power in, room temperatures out)."
+      example: "Two running examples, drawn on the map: an earbud speaker (voltage in, cone motion out) and a car on its suspension (road bumps in, body heave and pitch out) for the state boxes."
       next: "What's a system?"
-    accountsFor: Why the same handful of ideas predicts a 717 Hz speaker resonance and a 5-hour house warm-up.
+    accountsFor: "Why the same handful of ideas predicts a 717 Hz speaker resonance and a car's 1.15 Hz bounce."
     link: &id003
       href: "#/s/central"
       label: Where this shows up
@@ -32,9 +32,9 @@ maps:
     short: Anything that turns an input signal into an output signal.
     pop: &id004
       rough: "output = the system's rule applied to the input, y = T{u}"
-      example: "Earbud: drive voltage in, cone motion out. House: heater power in, the two room temperatures out."
+      example: "Earbud: drive voltage in, cone motion out. Car: road heights under the wheels in, body heave and pitch out."
       ask: pop-sys
-    addsToExample: "Names the two running examples as systems: voltage ↦ cone motion for the earbud, heater power ↦ room temperatures for the house."
+    addsToExample: "Names the two running examples as systems: voltage ↦ cone motion for the earbud, road heights ↦ heave and pitch for the car."
     dive: linsys
     quizTag: linsys
   - id: SUP
@@ -69,9 +69,11 @@ maps:
         params:
           a: 2
         alt: "Earbud at 2 V: doubling the drive gives far less than twice the motion because the cone clips."
+      - id: pop-bump
+        alt: "Car: a 5 cm bump at 15 m/s reaches the rear wheel 0.18 s after the front. The heave is the front wheel's response plus the rear wheel's, started 0.18 s later."
       example: "Non-example, the earbud driven loud: at 0.2 V twice the drive gives twice the motion (0.7% off); at 2 V the cone hits its illustrative ±100 µm limit and falls 29% (rms) short."
       ask: c-linsys-1
-    addsToExample: "Tests the earbud: at a quiet 0.2 V drive the response to two tones is the sum of the two responses, and doubling the drive doubles the motion; at a loud 2 V the cone runs into its (illustrative ±100 µm) excursion limit and both tests fail."
+    addsToExample: "Names the two running examples as systems: voltage ↦ cone motion for the earbud, road heights ↦ heave and pitch for the car."
     dive: linsys
     live: "figure:lintest"
     quizTag: linsys
@@ -86,9 +88,9 @@ maps:
       figures:
       - id: pop-linearize
         alt: "The earbud's illustrative excursion curve: straight near rest, bending only when driven loud."
-      example: "At normal volume the earbud moves a few micrometres, deep in the straight part of its curve; the house's heat flows are proportional to temperature differences, so it is linear at any size."
+      example: "At normal volume the earbud moves a few micrometres, deep in the straight part of its curve; the car model is linear for small motions (small angles, linear springs and shocks)."
       ask: pop-near
-    addsToExample: "The earbud at normal listening levels moves only a few micrometres, well inside its range, so its small-signal model is linear; the house's heat flows are proportional to temperature differences, so it is linear at any size."
+    addsToExample: "The earbud at normal listening levels moves only a few micrometres, well inside its range, so its small-signal model is linear; the car model is linear for small motions: small angles, linear springs and shocks, rigid tyres."
     dive: linsys
     quizTag: linsys
   - id: KICK
@@ -209,11 +211,14 @@ maps:
     eq: "ẋ = Ax + Bu,  y = Cx + Du"
     pop: &id015
       rough: rate of change of the memory = (how the memory drives itself) + (how the input pushes); output = a reading of the memory
-      eqKey: "x = state (house: room temperatures above outdoors, K); u = heater power (kW); A = how the rooms leak and share heat (per hour); B = where the heater pushes; C = what the thermostat reads; D = direct feed-through (0 here)."
-      example: "House: A = [[−1.2, 1], [1, −1.2]] per hour (shared wall 1/h, leak 0.2/h), B = (3.6, 0) K/h per kW for the heater in room 1."
+      eqKey: "x = state (car: heave, pitch, their rates); u = road under the wheels; A = how springs and shocks pull back; B = where the road pushes; C = what a sensor reads."
+      figures:
+      - id: pop-carstate
+        alt: "The car side-on: heave z lifts the whole body, pitch θ tilts it nose-up. With their rates ż and θ̇ that is the whole state."
+      example: "Car: x = (z, θ, ż, θ̇); m = 1400 kg, J = 2000 kg·m², axles 1.2 m ahead, 1.5 m behind the centre. Small angles, rigid tyres, no wheel mass: fine to about 5 Hz."
       ask: c-ss-1
-    addsToExample: "Writes the house as ẋ = Ax + Bu with x = (T₁, T₂): the shared wall couples the rooms and both leak heat outdoors."
-    accountsFor: "Why room 1 warms first and room 2 catches up: the fast difference mode dies out, the slow average mode remains."
+    addsToExample: "Writes the car as ẋ = Ax + Bu with x = (z, θ, ż, θ̇): the springs and shocks at the two axles couple heave and pitch."
+    accountsFor: "Why a bump under the front wheel makes the body both rise and pitch: the axles sit at different distances from the centre of gravity."
     dive: ss
   - id: MODES
     label: "Modes: untangle A"
@@ -224,14 +229,20 @@ maps:
     eq: Av = λv
     pop: &id016
       rough: state = Σ (amount of each mode) × (its shape) × e^(its rate × t)
-      eqKey: "v = a mode's shape (a direction in the state); λ = its rate, per hour for the house. Used to split the state into independent pieces."
+      eqKey: "v = a mode's shape (a pose of the body); λ = its rate, per second for the car. Used to split the motion into independent pieces."
       figures:
-      - id: pop-modes
-        alt: "The house from room 1 at 10 K: the average fades over hours, the gap between the rooms within the hour."
-      example: "House: the average of the rooms fades slowly (λ = −0.2 /h, τ = 5 h); their difference fades fast (λ = −2.2 /h, τ ≈ 27 min)."
-      ask: c-eig-2
-    addsToExample: "Finds the pieces both examples only scale: tones for the speaker, and the average and difference of the two room temperatures for the house."
-    accountsFor: "Why a pure tone comes out of the speaker as the same tone, and why the house has one slow and one fast way of cooling."
+      - id: pop-carmode
+        params:
+          mode: 0
+        alt: "Bounce: the body moves mostly up and down."
+      - id: pop-carmode
+        params:
+          mode: 1
+        alt: "Pitch: nose and tail swing opposite ways about a still point 0.56 m ahead of the centre of gravity."
+      example: "Car: bounce at 1.151 Hz (ζ 0.289) and pitch at 1.419 Hz (ζ 0.357), from the eigenvalues −2.092 ± 6.92j and −3.178 ± 8.328j per second."
+      ask: c-eig-1
+    addsToExample: "Finds the pieces both examples only scale: tones for the speaker, and the bounce and pitch modes for the car."
+    accountsFor: "Why a pure tone comes out of the speaker as the same tone, and why the car has two ways of swaying, at 1.151 Hz and 1.419 Hz."
     dive: eig
   - id: STAB
     label: Will it settle?
@@ -242,22 +253,18 @@ maps:
     pop: &id017
       rough: settles ⇔ every natural rhythm dies away
       figures:
-      - id: pop-settle
+      - id: pop-carsettle
         params:
-          s: -1
-        alt: "A pole in the left half-plane: the response settles."
-      - id: pop-settle
+          worn: 0
+        alt: "New shocks: after a 5 cm bump the heave settles in about 1.6 cycles."
+      - id: pop-carsettle
         params:
-          s: 0
-        alt: "A pole on the axis: it rings for ever."
-      - id: pop-settle
-        params:
-          s: 1
-        alt: "A pole in the right half-plane: it grows."
-      example: "Both settle: the earbud's poles have real part −1,267 /s; the house's are −0.2 and −2.2 per hour."
-      ask: m7
-    addsToExample: "Checks the house: −0.2 and −2.2 per hour, both negative, so without heating it always returns to the outdoor temperature."
-    accountsFor: "Why a house with the heater off always cools down, and which mode sets how long."
+          worn: 1
+        alt: "Shocks worn to 20%: it rings for about 8 cycles."
+      example: "Car: every pole has negative real part, so it settles. Worn shocks move the poles toward the axis (ζ 0.058 / 0.071): after the bump it stays above 1 mm until 3.9 s instead of 1.2 s. The earbud settles too (real part −1,267 /s)."
+      ask: c-eig-2
+    addsToExample: "Checks the car: all four eigenvalues have negative real part, so after a bump it always comes back to rest; worn shocks move them toward the axis."
+    accountsFor: "Why worn shocks make a car float: the poles creep toward the axis, so the ringing lasts about 8 cycles instead of 1.6."
     dive: stab
   - id: INOUT
     label: Do inside and outside match?
@@ -268,12 +275,12 @@ maps:
     pop: &id018
       rough: H(s) shows only the modes the input can affect and the output can reveal
       figures:
-      - id: pop-hidden
-        alt: "Heating both rooms equally: the average rises, the gap between the rooms fades exactly as with the heater off."
-      example: "House, heating both rooms equally and reading the average: the difference mode is untouched and unseen, so H(s) is first order, with only the 5-hour pole."
+      - id: pop-carhidden
+        alt: "Symmetric car, a push at the centre of gravity: the body heaves, but pitch never starts."
+      example: "Car: on a symmetric car a push at the centre of gravity can't start pitch, and a height sensor there can't see it (rank 2 of 4), so H(s) keeps only bounce. On the main car the blind spot moves to the pitch still point, 0.56 m ahead of the centre."
       ask: c-kal-1
-    addsToExample: "Asks the house: the heater in room 1 reaches both modes, but heating both rooms equally cannot change the difference, and a thermostat reading the average cannot see it."
-    accountsFor: "Which heater and sensor placements can actually control the house, and which leave a mode hidden."
+    addsToExample: "Asks the car: on the symmetric car a push at the centre of gravity cannot start pitch and a height sensor there cannot see it; on the main car a push at the centre moves both modes."
+    accountsFor: "Which actuator and sensor placements can actually control the car, and which leave a mode hidden."
     dive: ctrl
   - id: WORK
     label: Put it to work
@@ -283,11 +290,14 @@ maps:
     short: "Design with the same tools: filters shape H(jω), feedback moves the poles, and optimal control picks the cheapest input that reaches a target."
     pop: &id019
       rough: choose the system (or the input) so the output does what you want
-      example: "House: the least-energy heater profile that warms it to (10, 7) K in 3 hours runs about 1.8 kW, rising to 2.4 kW, easing to 1.0 kW."
+      figures:
+      - id: pop-caropt
+        alt: "Active suspension: least-energy front and rear forces that level the body from 2° nose-down in 0.5 s."
+      example: "Active suspension: levelling the body from 2° nose-down in 0.5 s takes front and rear peaks of 476 N and 652 N (E = 96,160 N²·s). Given 1 s, about 120 N is enough; the front actuator alone would need 12.9 kN."
       next: "Which application? Full detail opens filters, feedback and optimal control."
       ask: c-opt-3
-    addsToExample: "Finds the least-energy heater profile that warms the house to an illustrative target, (10, 7) K, in 3 hours: about 1.8 kW, rising to 2.4 kW, easing to 1.0 kW, within the 2.5 kW heater."
-    accountsFor: "Why the cheapest warm-up rises for two hours and then eases off (late heat would mostly widen the gap between the rooms), and how much energy any target costs."
+    addsToExample: "Finds the least-energy front and rear actuator forces that level the body from 2° nose-down in 0.5 s: peaks of 476 N and 652 N."
+    accountsFor: "Why the cheapest forces start small and grow toward the end, and why a shorter time or a single actuator costs so much more."
     dive: optimal
   edges:
   - &id020
@@ -399,7 +409,7 @@ maps:
     kind: terminal
     short: "Find a shortcut: learn what the system does to a few simple pieces, then build the answer for any input out of those pieces. The fourteen boxes below are that shortcut, step by step."
     pop: *id002
-    accountsFor: Why the same handful of ideas predicts a 717 Hz speaker resonance and a 5-hour house warm-up.
+    accountsFor: "Why the same handful of ideas predicts a 717 Hz speaker resonance and a car's 1.15 Hz bounce."
     link: *id003
   - id: SYS
     label: "What's a system?"
@@ -408,7 +418,7 @@ maps:
     series: 0
     short: Anything that turns an input signal into an output signal.
     pop: *id004
-    addsToExample: "Names the two running examples as systems: voltage ↦ cone motion for the earbud, heater power ↦ room temperatures for the house."
+    addsToExample: "Names the two running examples as systems: voltage ↦ cone motion for the earbud, road heights ↦ heave and pitch for the car."
     dive: linsys
     quizTag: linsys
   - id: SUP
@@ -429,7 +439,7 @@ maps:
     short: Linear means it plays fair with sums and scaling; time-invariant means it behaves the same today as tomorrow.
     eq: "T{a u₁ + b u₂} = a T{u₁} + b T{u₂}"
     pop: *id006
-    addsToExample: "Tests the earbud: at a quiet 0.2 V drive the response to two tones is the sum of the two responses, and doubling the drive doubles the motion; at a loud 2 V the cone runs into its (illustrative ±100 µm) excursion limit and both tests fail."
+    addsToExample: "Names the two running examples as systems: voltage ↦ cone motion for the earbud, road heights ↦ heave and pitch for the car."
     dive: linsys
     live: "figure:lintest"
     quizTag: linsys
@@ -440,7 +450,7 @@ maps:
     series: 0
     short: "Nearly every smooth system is linear for small signals around its operating point (linearization), and linear systems come with exact tools: convolution, transforms, e^(At), eigenvalues."
     pop: *id007
-    addsToExample: "The earbud at normal listening levels moves only a few micrometres, well inside its range, so its small-signal model is linear; the house's heat flows are proportional to temperature differences, so it is linear at any size."
+    addsToExample: "The earbud at normal listening levels moves only a few micrometres, well inside its range, so its small-signal model is linear; the car model is linear for small motions: small angles, linear springs and shocks, rigid tyres."
     dive: linsys
     quizTag: linsys
   - id: KICK
@@ -505,8 +515,8 @@ maps:
     short: "The state is the handful of memory quantities that, with the future input, fixes everything that happens next. In a linear system their rate of change is a matrix times the state plus a matrix times the input."
     eq: "ẋ = Ax + Bu,  y = Cx + Du"
     pop: *id015
-    addsToExample: "Writes the house as ẋ = Ax + Bu with x = (T₁, T₂): the shared wall couples the rooms and both leak heat outdoors."
-    accountsFor: "Why room 1 warms first and room 2 catches up: the fast difference mode dies out, the slow average mode remains."
+    addsToExample: "Writes the car as ẋ = Ax + Bu with x = (z, θ, ż, θ̇): the springs and shocks at the two axles couple heave and pitch."
+    accountsFor: "Why a bump under the front wheel makes the body both rise and pitch: the axles sit at different distances from the centre of gravity."
     dive: ss
   - id: MODES
     label: "Modes: untangle A"
@@ -516,8 +526,8 @@ maps:
     short: "Find the directions A only stretches, its eigenvectors. Along each one the state changes on its own, as e^(λt), and any state is a mix of these modes. The rates λ are exactly the poles."
     eq: Av = λv
     pop: *id016
-    addsToExample: "Finds the pieces both examples only scale: tones for the speaker, and the average and difference of the two room temperatures for the house."
-    accountsFor: "Why a pure tone comes out of the speaker as the same tone, and why the house has one slow and one fast way of cooling."
+    addsToExample: "Finds the pieces both examples only scale: tones for the speaker, and the bounce and pitch modes for the car."
+    accountsFor: "Why a pure tone comes out of the speaker as the same tone, and why the car has two ways of swaying, at 1.151 Hz and 1.419 Hz."
     dive: eig
   - id: STAB
     label: Will it settle?
@@ -526,8 +536,8 @@ maps:
     series: 2
     short: "It settles exactly when every mode fades: every pole (eigenvalue) has negative real part, or lies inside the unit circle for a sampled system. One growing mode is enough to blow up."
     pop: *id017
-    addsToExample: "Checks the house: −0.2 and −2.2 per hour, both negative, so without heating it always returns to the outdoor temperature."
-    accountsFor: "Why a house with the heater off always cools down, and which mode sets how long."
+    addsToExample: "Checks the car: all four eigenvalues have negative real part, so after a bump it always comes back to rest; worn shocks move them toward the axis."
+    accountsFor: "Why worn shocks make a car float: the poles creep toward the axis, so the ringing lasts about 8 cycles instead of 1.6."
     dive: stab
   - id: INOUT
     label: Do inside and outside match?
@@ -536,8 +546,8 @@ maps:
     series: 3
     short: "Not always. A mode the input cannot affect (uncontrollable) or the output cannot reveal (unobservable) is hidden from H(s): it cancels as a pole–zero pair, yet it is still inside, and can still be unstable."
     pop: *id018
-    addsToExample: "Asks the house: the heater in room 1 reaches both modes, but heating both rooms equally cannot change the difference, and a thermostat reading the average cannot see it."
-    accountsFor: "Which heater and sensor placements can actually control the house, and which leave a mode hidden."
+    addsToExample: "Asks the car: on the symmetric car a push at the centre of gravity cannot start pitch and a height sensor there cannot see it; on the main car a push at the centre moves both modes."
+    accountsFor: "Which actuator and sensor placements can actually control the car, and which leave a mode hidden."
     dive: ctrl
   - id: WORK
     label: Put it to work
@@ -546,8 +556,8 @@ maps:
     series: 4
     short: "Design with the same tools: filters shape H(jω), feedback moves the poles, and optimal control picks the cheapest input that reaches a target."
     pop: *id019
-    addsToExample: "Finds the least-energy heater profile that warms the house to an illustrative target, (10, 7) K, in 3 hours: about 1.8 kW, rising to 2.4 kW, easing to 1.0 kW, within the 2.5 kW heater."
-    accountsFor: "Why the cheapest warm-up rises for two hours and then eases off (late heat would mostly widen the gap between the rooms), and how much energy any target costs."
+    addsToExample: "Finds the least-energy front and rear actuator forces that level the body from 2° nose-down in 0.5 s: peaks of 476 N and 652 N."
+    accountsFor: "Why the cheapest forces start small and grow toward the end, and why a shorter time or a single actuator costs so much more."
     dive: optimal
   - id: ROC
     label: Region of convergence
@@ -698,8 +708,8 @@ maps:
     eq: "A = VΛV⁻¹,   ξ = V⁻¹x"
     pop:
       rough: in eigen-coordinates A becomes a diagonal list of rates
-    addsToExample: "Rewrites the house in average and difference coordinates: two separate one-room problems with rates 0.2/h and 2.2/h."
-    accountsFor: Why the warm-up curve is exactly one slow exponential plus one fast one.
+    addsToExample: "Rewrites the car in mode coordinates: two separate damped oscillators, bounce at 1.151 Hz and pitch at 1.419 Hz."
+    accountsFor: Why the motion after a bump is exactly one bounce ring plus one pitch ring.
     dive: diag
     quizTag: diag
   - id: JOR
@@ -721,8 +731,8 @@ maps:
     short: "Every square matrix satisfies its own characteristic equation, so Aⁿ and every higher power is a combination of I, A, …, A^(n−1). That makes e^(At) = α₀(t)I + α₁(t)A + ⋯, with the α's fixed by the eigenvalues."
     eq: "p(A) = 0,   e^(At) = Σₖ₌₀ⁿ⁻¹ αₖ(t) Aᵏ"
     pop:
-      rough: "every power of A is a mix of I and A, so e^(At) = α₀(t)I + α₁(t)A"
-    addsToExample: "Writes the house's A² = −2.4A − 0.44I, so e^(At) = α₀I + α₁A with α's from e^(−0.2t) and e^(−2.2t)."
+      rough: "every power of A is a mix of I, A, …, Aⁿ⁻¹, so e^(At) = α₀(t)I + α₁(t)A + … + αₙ₋₁(t)Aⁿ⁻¹"
+    addsToExample: "For the car's 4×4 A, e^(At) = α₀I + α₁A + α₂A² + α₃A³, with the α's fixed by the four eigenvalues."
     accountsFor: Why a 2×2 matrix exponential needs only two scalar functions.
     dive: cayley
     quizTag: cayley
@@ -734,8 +744,8 @@ maps:
     eq: "x(t) = e^(At)x(0) + ∫₀ᵗ e^(A(t−τ))Bu(τ)dτ,   h(t) = Ce^(At)B"
     pop:
       rough: "state later = e^(At) × state now (+ the input's contribution)"
-    addsToExample: "Gives the house's e^(At) = ½[[e₁ + e₂, e₁ − e₂], [e₁ − e₂, e₁ + e₂]] with e₁ = e^(−0.2t), e₂ = e^(−2.2t)."
-    accountsFor: "The two time scales: the gap between the rooms shrinks with a 27-minute time constant (about 90% gone in 1 h), and the whole house cools over about 5 hours."
+    addsToExample: "Evolves the car with e^(At): released nose-down, it sways in a mix of bounce and pitch, both fading."
+    accountsFor: "The two rhythms in the car's motion: bounce at 1.151 Hz and pitch at 1.419 Hz, each fading at its own rate."
     dive: expm
     live: "figure:expm"
     quizTag: expm
@@ -747,8 +757,8 @@ maps:
     eq: "rank [C; CA; ⋯; CA^(n−1)] = n"
     pop:
       rough: can the readings over time pin down every part of the state?
-    addsToExample: "Tries two thermostats: one in room 1 sees both modes; one reading the average cannot see the difference mode."
-    accountsFor: "Why the thermostat's position decides whether you can tell how warm room 2 is."
+    addsToExample: "Tries sensors on the symmetric car: a height sensor at the centre cannot see pitch; a pitch gyro there cannot see bounce."
+    accountsFor: "Why the sensor's position decides whether you can tell what the body is doing."
     dive: obs
     quizTag: obs
   - id: PBH
@@ -759,8 +769,8 @@ maps:
     eq: wᵢᵀB ≠ 0  and  Cvᵢ ≠ 0  for every i
     pop:
       rough: "a mode is lost if the input's push on it, or the sensor's view of it, is zero"
-    addsToExample: "Tests the house mode by mode: (1, −1)·(1, 1) = 0, so heating both rooms equally misses the difference mode."
-    accountsFor: "Exactly which mode a bad heater or sensor placement loses, not just that one is lost."
+    addsToExample: "Tests the car mode by mode: the symmetric car's pitch mode does not move at the centre, so a push or sensor there misses it; on the main car the same happens at the pitch still point, 0.56 m ahead."
+    accountsFor: "Exactly which mode a bad actuator or sensor placement loses, not just that one is lost."
     dive: pbh
     quizTag: pbh
   - id: GRAM
@@ -771,8 +781,8 @@ maps:
     eq: "W(T) = ∫₀ᵀ e^(Aτ)BBᵀe^(Aᵀτ)dτ,   E_min = x_fᵀ W(T)⁻¹ x_f"
     pop:
       rough: cost to reach a target = how hard the input has to push in that direction
-    addsToExample: "Draws the house's reachable ellipse for 3 hours of heating: long in the direction of heating room 1 and letting the wall share it, thin across it."
-    accountsFor: "Why reaching (5, −5) K, a 10 K gap with the average at outdoor temperature, costs about twice the energy of reaching (10, 10) K: a reaching cost along the ellipse's thin axis ≈ (0.51, −0.86)."
+    addsToExample: "Measures how hard levelling the car is: front and rear actuators in 0.5 s cost 96,160 N²·s; the front alone needs 12.9 kN peaks."
+    accountsFor: "Why the same car is cheap to level with two actuators and very expensive with one: a nearly singular Gramian."
     dive: gramian
     quizTag: gramian
   - id: KAL
@@ -783,8 +793,8 @@ maps:
     eq: G(s) = C_co(sI − A_co)⁻¹B_co + D
     pop:
       rough: split the state into reached/seen parts; H(s) keeps only reached-and-seen
-    addsToExample: "Splits the house with both rooms heated equally and an average thermostat: the average is reached and seen, the difference neither."
-    accountsFor: "Why that house's transfer function is first order, with only the 5-hour pole."
+    addsToExample: "Splits the symmetric car with the push and the height sensor at the centre: bounce is reached and seen, pitch neither."
+    accountsFor: "Why that car's transfer function from push to height has only the bounce poles."
     dive: kalman
     quizTag: kalman
   - id: OPT
@@ -795,18 +805,18 @@ maps:
     eq: "∂H/∂u = 0,   λ̇ = −∂H/∂x,   (x, λ)(t) = e^(Mt)(x, λ)(0)"
     pop:
       rough: best input = the one that keeps a running balance (costate) of what each push will cost
-    addsToExample: "Finds the least-energy heater profile that warms the house to an illustrative target, (10, 7) K, in 3 hours: about 1.8 kW, rising to 2.4 kW, easing to 1.0 kW, within the 2.5 kW heater."
-    accountsFor: "Why the cheapest warm-up rises for two hours and then eases off (late heat would mostly widen the gap between the rooms), and how much energy any target costs."
+    addsToExample: "Finds the least-energy front and rear actuator forces that level the body from 2° nose-down in 0.5 s: peaks of 476 N and 652 N."
+    accountsFor: "Why the cheapest forces start small and grow toward the end, and why a shorter time or a single actuator costs so much more."
     dive: optimal
     quizTag: optimal
   - id: FB
-    label: "Feedback: the thermostat"
-    detail: u = −kp·T₁ moves the poles
+    label: "Feedback: active damping"
+    detail: u = −Kx moves the poles
     series: 4
-    short: "Feed the output back to the input: a thermostat sets the heater from room 1's temperature, u = −kp·T₁. That changes A to A − B·kp·C and so moves the eigenvalues; the stability test is the same eigenvalue test."
+    short: "Feed the measured state back to the input, u = −Kx. That changes A to A − BK and so moves the eigenvalues; the stability test is the same eigenvalue test. Wired the right way it steadies a system; wired backwards it can destabilise one."
     pop:
       rough: "closed loop: new A = old A − (where the input pushes) × gain × (what is measured)"
-    addsToExample: "Closes the house's loop with a room-1 thermostat driving the room-1 heater and watches the eigenvalues move as kp changes."
+    addsToExample: "On the car (idea only): actuators that push against the body's vertical speed act like stronger shocks and pull the poles further left; worn shocks are the opposite move."
     dive: stab
     live: "figure:stab"
   - id: FILT

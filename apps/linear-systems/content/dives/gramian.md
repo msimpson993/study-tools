@@ -2,8 +2,8 @@
 id: gramian
 order: 27
 title: Gramians
-addsToExample: "Computes the house's 3-hour controllability Gramian W(3) for the room-1 heater. Its ellipse is about 4 times longer than it is wide, tilted about 31° up from the room-1 axis. Its eigenvalues are 0.78 and 12.0 K²/(kW²·h), and the thin axis points along ≈(0.51, −0.86). Reaching (10, 10) K costs ∫u² ≈ 3.1 × 10⁷ W²·h; reaching (5, −5) K (a 10 K gap with the average at the outdoor temperature, heater allowed to cool) costs about 6.0 × 10⁷ W²·h, nearly twice as much although it is half as far. These are reaching costs, not holding costs."
-accountsFor: "Why some targets are cheap and others expensive even though the house is controllable, and where the least-energy warm-up comes from."
+addsToExample: "Computes what it costs to bring the car's body from 2° nose-down to level and still in 0.5 s. With front and rear actuators the least energy is E = 96,160 N²·s (peaks 476 N front, 652 N rear). With the front actuator alone the Gramian is nearly singular and the peak force jumps to about 12.9 kN. Allowed 1 s, about 120 N is enough. On the symmetric car a single push at the centre cannot do it at all: its Gramian is singular."
+accountsFor: "Why some manoeuvres are cheap and others expensive even though the car is controllable."
 category: structure
 neighbors:
   - ctrl
@@ -11,7 +11,7 @@ neighbors:
   - obs
   - kalman
 matlab: "W = gram(ss(A, B, C, 0), 'c')    % infinite-horizon; or integral(...) for finite T"
-exampleScene: { scene: house, overlays: [gramian, heat], caption: "States reachable with the same heating energy in 3 hours: a long, thin, tilted ellipse." }
+exampleScene: { scene: car, overlays: [active], caption: "Front and rear actuators level the body; the Gramian says what it costs." }
 level: Worked calculation
 check: [c-gram-1, c-gram-2]
 ---
@@ -42,7 +42,7 @@ $$u(t)=B^{\mathsf T}e^{A^{\mathsf T}(T-t)}W_c(T)^{-1}\big(x_f-e^{AT}x_0\big).$$
 
 **What each symbol means.**
 
-- $W_c(T)$: the controllability Gramian over a time window $T$ (K²/(kW²·h) for the house); its ellipse shows which states are cheap to reach.
+- $W_c(T)$: the controllability Gramian over a time window $T$; its ellipse shows which states are cheap to reach.
 - $W_o(T)$: the observability Gramian, how strongly each state shows in the output.
 - $x_f$: the target state; $E_{\min} = x_f^\mathsf{T}W_c^{-1}x_f$ the least energy $\int u^2\,dt$ to reach it from rest.
 
@@ -56,11 +56,11 @@ so $\eta = W_c^{-1}x_f$, and the energy is
 $$\int_0^T u^2dt=\eta^\mathsf{T}W_c\,\eta=x_f^\mathsf{T}W_c^{-1}x_f.$$
 ````
 
-### Worked example: on the house
+### Worked example: on the car
 
-1. House, heater in room 1, 3 hours: $W(3)$ has eigenvalues 0.78 and 12.0 K²/(kW²·h); its ellipse is about 4 times longer than wide, tilted about 31° up from the room-1 axis.
-2. Reaching (10, 10) K costs $\int u^2 \approx 3.1\times10^7$ W²·h.
-3. Reaching (5, −5) K, a 10 K gap with the average at outdoor temperature (heater allowed to cool), costs about $6.0\times10^7$ W²·h, nearly twice as much although half as far: the thin axis points along ≈(0.51, −0.86).
+1. Car, actuators at the front and rear axles, starting 2° nose-down at rest, target level and still at $T = 0.5$ s: the cost is $d^\mathsf{T}W_c(T)^{-1}d$ with $d = x_f - e^{AT}x_0$.
+2. Front and rear: $E = 96{,}160$ N²·s, with peak forces of 476 N front and 652 N rear. Front alone: $W_c(0.5)$ is nearly singular in one direction and the peak force jumps to about 12.9 kN.
+3. More time makes it cheap: with $T = 1$ s about 120 N is enough. On the symmetric car a single push at the centre cannot do it at all: pitch is unreachable and $W_c$ is singular.
 
 **Exam-style example.** For ẋ = u (one integrator), W(T) = T and the cheapest way from 0 to 1 in time T is u = 1/T, with energy 1/T. Halving the time doubles the energy. That is review variant P2.
 

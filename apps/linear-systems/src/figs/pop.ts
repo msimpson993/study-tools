@@ -1,6 +1,7 @@
-/** Small fixed pictures for the map pop-ups (quiz-figure renderers, no controls). Every number comes from ex.ts. */
+/** Small fixed pictures for the map pop-ups (quiz-figure renderers, no controls). Every number comes from ex.ts (earbud) or carModel.ts (car). */
 import { rangeFrame, graphAxes, curve, tline, text, dot, cross, col, linspace, type QuizFigureDef } from '@study/core';
-import { hImp, Hf, cabs, TAU, ltCompare, XMAX_UM, spk, houseA, heaterB, simHouse } from './ex';
+import { hImp, Hf, cabs, TAU, ltCompare, XMAX_UM, spk } from './ex';
+import { CAR, CAR_SYM, worn, carA, roadB, forceB, carModes, sim, bumpInput, minEnergy, DEG } from './car';
 
 const P = (p: Record<string, number | string | boolean>, k: string, d: number) => (p[k] === undefined ? d : Number(p[k]));
 const fr = (g: CanvasRenderingContext2D, w: number, h: number, xr: [number, number], yr: [number, number], xl: string, yl: string, L = 30) => {
@@ -96,14 +97,58 @@ const pz: QuizFigureDef = { aspect: 1.9, maxWidth: 400, draw(g, w, h) {
   text(g, 'jω at 658 Hz: closest', f.X(0.08), f.Y(wz) + 12, col.e(), 'left', 10);
 } };
 
-/** Box 11: the house from (10, 0) K: average fades slowly, difference fast. */
-const modes: QuizFigureDef = { aspect: 2.4, maxWidth: 440, draw(g, w, h) {
-  const ts = linspace(0, 6, 241), e1 = ts.map((t) => 5 * Math.exp(-0.2 * t)), e2 = ts.map((t) => 5 * Math.exp(-2.2 * t));
-  const f = fr(g, w, h, [0, 6], [-5.5, 10.5], 't (h)', 'K', 24);
-  curve(g, f, ts, ts.map((_, i) => e1[i] + e2[i]), col.a(), 2); curve(g, f, ts, ts.map((_, i) => e1[i] - e2[i]), col.b(), 2);
-  curve(g, f, ts, e1, col.c(), 1.4, [5, 3]); curve(g, f, ts, e2, col.d(), 1.4, [2, 3]);
-  text(g, 'T₁', f.X(0.15), f.Y(9.6), col.a(), 'left', 10); text(g, 'T₂', f.X(0.3), f.Y(-0.9), col.b(), 'left', 10);
-  text(g, 'average: τ = 5 h', f.X(3.2), f.Y(3.6), col.c(), 'left', 10); text(g, 'half-gap: τ ≈ 27 min', f.X(1.2), f.Y(-3.6), col.d(), 'left', 10);
+/** a small side-view car (body outline + wheels) at heave z, pitch th, in a w×h box */
+function miniCar(g: CanvasRenderingContext2D, w: number, h: number, z: number, th: number, gain: number, color: string, ghost = false) {
+  const p = CAR, sx = (w - 16) / (p.a + p.b + 1.6), X = (x: number) => 8 + (x + p.b + 0.8) * sx, ground = h - 6, wr = Math.max(5, sx * 0.25), yb = ground - 2 * wr - 8;
+  const y = (x: number) => yb - gain * (z + x * th) * sx;
+  if (!ghost) { g.strokeStyle = col.strong(); g.lineWidth = 1.2; g.beginPath(); g.moveTo(0, ground); g.lineTo(w, ground); g.stroke();
+    for (const x of [p.a, -p.b]) { g.beginPath(); g.arc(X(x), ground - wr, wr, 0, 7); g.stroke(); g.beginPath(); g.moveTo(X(x), ground - wr); g.lineTo(X(x), y(x)); g.strokeStyle = col.a(); g.stroke(); g.strokeStyle = col.strong(); } }
+  const pts: [number, number][] = [[-p.b - 0.7, 0], [p.a + 0.7, 0], [p.a + 0.7, 0.32], [p.a - 0.45, 0.36], [p.a - 0.85, 0.7], [-p.b + 0.5, 0.7], [-p.b, 0.4], [-p.b - 0.7, 0.36], [-p.b - 0.7, 0]];
+  g.save(); g.strokeStyle = color; g.lineWidth = ghost ? 1 : 1.8; g.setLineDash(ghost ? [3, 3] : []); g.beginPath();
+  pts.forEach(([x, d], i) => { const yy = y(x) - d * sx; if (i) g.lineTo(X(x), yy); else g.moveTo(X(x), yy); }); g.stroke(); g.restore();
+  return { X, y, yb, sx };
+}
+/** Box 10: the car's state: heave z and pitch θ (and their rates). */
+const carstate: QuizFigureDef = { aspect: 2.4, maxWidth: 420, draw(g, w, h) {
+  g.clearRect(0, 0, w, h); miniCar(g, w, h, 0, 0, 1, col.muted(), true); const r = miniCar(g, w, h, 0.02, -0.03, 6, col.text());
+  text(g, 'z: heave (up)', 6, 10, col.a(), 'left', 10); text(g, 'θ: pitch (nose-up +)', w - 6, 10, col.b(), 'right', 10);
+  text(g, 'front', r.X(CAR.a), h - 2, col.muted(), 'center', 9);
+} };
+/** Box 11: bounce (mode 0) or pitch (mode 1) drawn on the car, with its still point. */
+const carmode: QuizFigureDef = { aspect: 1.5, maxWidth: 220, draw(g, w, h, p) {
+  const k = P(p, 'mode', 0), md = carModes(CAR), m = md[k], z = k ? -m.node * 0.04 : 0.05, th = k ? 0.04 : md[0].thPerZ[0] * 0.05;
+  g.clearRect(0, 0, w, h); miniCar(g, w, h, 0, 0, 1, col.muted(), true); const r = miniCar(g, w, h, z, th, 2.2, k ? col.b() : col.a());
+  if (k) dot(g, rangeFrame(w, h, [0, w], [h, 0], 0, 0, 0, 0), [r.X(m.node), r.yb], col.e(), 3);
+  title(g, k ? `pitch ${m.fn.toFixed(2)} Hz` : `bounce ${m.fn.toFixed(2)} Hz`, w, k ? col.b() : col.a());
+} };
+/** Box 3: the bump reaches the rear wheel 0.18 s after the front; the response is the front response plus a delayed copy. */
+const bump: QuizFigureDef = { aspect: 2.4, maxWidth: 440, draw(g, w, h) {
+  const A = carA(CAR), B = roadB(CAR), b = bumpInput(CAR), T = 2;
+  const fr_ = sim(A, B, (t) => { const u = b.u(t); return [u[0], 0, u[2], 0]; }, [0, 0, 0, 0], T, 4e-3), rr = sim(A, B, (t) => { const u = b.u(t); return [0, u[1], 0, u[3]]; }, [0, 0, 0, 0], T, 4e-3);
+  const zf = fr_.xs.map((x) => x[0] * 1000), zr = rr.xs.map((x) => x[0] * 1000), zs = zf.map((v, i) => v + zr[i]);
+  const f = fr(g, w, h, [0, T], [-6, 10], 't (s)', 'heave (mm)', 26);
+  curve(g, f, fr_.ts, zf, col.a(), 1.4, [4, 3]); curve(g, f, rr.ts, zr, col.b(), 1.4, [2, 3]); curve(g, f, fr_.ts, zs, col.text(), 2);
+  text(g, 'front', f.X(0.05), f.Y(-3.5), col.a(), 'left', 10); text(g, 'rear: same, 0.18 s later', f.X(0.45), f.Y(-4.8), col.b(), 'left', 10); text(g, 'sum', f.X(0.3), f.Y(9), col.text(), 'left', 10);
+} };
+/** Box 12: heave after the 5 cm bump, new (worn = 0) or worn (worn = 1) shocks. */
+const carsettle: QuizFigureDef = { aspect: 1.5, maxWidth: 220, draw(g, w, h, p) {
+  const wn = P(p, 'worn', 0), car = wn ? worn(CAR) : CAR, b = bumpInput(car), r = sim(carA(car), roadB(car), b.u, [0, 0, 0, 0], 4, 4e-3);
+  const f = fr(g, w, h, [0, 4], [-10, 10], 't (s)', 'mm', 18); curve(g, f, r.ts, r.xs.map((x) => x[0] * 1000), wn ? col.bad() : col.c(), 1.8);
+  title(g, wn ? 'worn shocks: rings on' : 'new shocks: settles', w, wn ? col.bad() : col.ok());
+} };
+/** Box 13: symmetric car, a push at the centre: bounce moves, pitch never starts. */
+const carhidden: QuizFigureDef = { aspect: 2.4, maxWidth: 440, draw(g, w, h) {
+  const u = (t: number) => [t > 0.1 && t < 0.3 ? 1500 * Math.sin((Math.PI * (t - 0.1)) / 0.2) : 0], r = sim(carA(CAR_SYM), forceB(CAR_SYM, [0]), u, [0, 0, 0, 0], 3, 4e-3);
+  const zs = r.xs.map((x) => x[0] * 1000), m = Math.max(...zs.map(Math.abs)) * 1.2, f = fr(g, w, h, [0, 3], [-m, m], 't (s)', 'heave (mm) / pitch', 26);
+  curve(g, f, r.ts, zs, col.a(), 2); curve(g, f, r.ts, r.xs.map((x) => x[1] * DEG * 100), col.b(), 3);
+  text(g, 'heave: the push moves it', f.X(0.9), f.Y(m * 0.7), col.a(), 'left', 10); text(g, 'pitch: stays exactly 0', f.X(1.4), f.Y(-m * 0.25), col.b(), 'left', 10);
+} };
+/** Box 14: least-energy front and rear actuator forces that level the body from 2° nose-down in 0.5 s. */
+const caropt: QuizFigureDef = { aspect: 2.4, maxWidth: 440, draw(g, w, h) {
+  const r = minEnergy(CAR, [CAR.a, -CAR.b], [0, -2 / DEG, 0, 0], 0.5), ts = linspace(0, 0.5, 101), U = ts.map((t) => r.u(t));
+  const f = fr(g, w, h, [0, 0.5], [-750, 750], 't (s)', 'force (N)', 34);
+  tline(g, f, [0, 0], [0.5, 0], col.muted(), 1); curve(g, f, ts, U.map((u) => u[0]), col.a(), 2); curve(g, f, ts, U.map((u) => u[1]), col.b(), 2);
+  text(g, 'front (peak 476 N)', f.X(0.02), f.Y(-560), col.a(), 'left', 10); text(g, 'rear (peak 652 N)', f.X(0.02), f.Y(600), col.b(), 'left', 10);
 } };
 
 /** Box 12: where the pole sits decides: left → settles, on the axis → rings for ever, right → grows. */
@@ -113,15 +158,5 @@ const settle: QuizFigureDef = { aspect: 1.1, maxWidth: 150, draw(g, w, h, p) {
   title(g, sg < 0 ? 'Re p < 0: settles' : sg > 0 ? 'Re p > 0: grows' : 'Re p = 0: rings on', w, sg < 0 ? col.ok() : sg > 0 ? col.bad() : col.text());
 } };
 
-/** Box 13: heat both rooms equally (2.5 kW split) from a 4 K gap: the gap fades exactly as with the heater off. */
-const hidden: QuizFigureDef = { aspect: 2.4, maxWidth: 440, draw(g, w, h) {
-  const on = simHouse(houseA(), heaterB(0.5), () => 2.5, [4, 0], 6), off = simHouse(houseA(), heaterB(0.5), () => 0, [4, 0], 6);
-  const f = fr(g, w, h, [0, 6], [-0.5, 25], 't (h)', 'K', 24);
-  curve(g, f, on.t, on.x.map((x) => (x[0] + x[1]) / 2), col.c(), 2);
-  curve(g, f, off.t, off.x.map((x) => x[0] - x[1]), col.muted(), 4); curve(g, f, on.t, on.x.map((x) => x[0] - x[1]), col.b(), 1.8, [5, 3]);
-  text(g, 'average: the heater moves it', f.X(1.2), f.Y(15), col.c(), 'left', 10);
-  text(g, 'gap T₁ − T₂: heater on = heater off', f.X(0.9), f.Y(3.2), col.b(), 'left', 10);
-} };
-
-export const popFigures: Record<string, QuizFigureDef> = { 'pop-lintest': lintest, 'pop-linearize': linearize, 'pop-kick': kick, 'pop-gain': gain, 'pop-cone': cone, 'pop-fourier': fourier, 'pop-est': est, 'pop-pz': pz, 'pop-modes': modes, 'pop-settle': settle, 'pop-hidden': hidden };
+export const popFigures: Record<string, QuizFigureDef> = { 'pop-lintest': lintest, 'pop-linearize': linearize, 'pop-kick': kick, 'pop-gain': gain, 'pop-cone': cone, 'pop-fourier': fourier, 'pop-est': est, 'pop-pz': pz, 'pop-settle': settle, 'pop-carstate': carstate, 'pop-carmode': carmode, 'pop-bump': bump, 'pop-carsettle': carsettle, 'pop-carhidden': carhidden, 'pop-caropt': caropt };
 

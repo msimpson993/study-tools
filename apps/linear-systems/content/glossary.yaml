@@ -6,7 +6,7 @@
   meaning: Delaying the input only delays the output; the system does not change with time.
   section: Systems and the eigen idea
 - term: "System, operator"
-  meaning: "A rule $T$ that maps a whole input signal to a whole output signal, $y = T\\{u\\}$: the earbud maps voltage to diaphragm motion, the house maps heater power to room temperatures."
+  meaning: "A rule $T$ that maps a whole input signal to a whole output signal, $y = T\\{u\\}$: the earbud maps voltage to diaphragm motion, the car maps road heights under its wheels to the body's heave and pitch."
   section: Systems and the eigen idea
 - term: Additivity
   meaning: "The response to a sum is the sum of the responses: $T\\{u_1 + u_2\\} = T\\{u_1\\} + T\\{u_2\\}$. Fails for $y = u^2$ and for clipping at large signals."
@@ -280,21 +280,21 @@
 - term: FxLMS
   meaning: "Filtered-x least mean squares: adaptive ANC filter update that filters the reference through a model of the speaker path first."
   section: Earbud speaker
-- term: "T₁, T₂"
-  meaning: Temperatures of room 1 and room 2 above outdoors; the house state.
-  units: K
-  section: Two-room house
-- term: C_th
-  meaning: Heat capacity of one room (assumed 1 MJ/K in the drawn numbers). Written C_th so it is not confused with the output matrix C.
-  units: J/K
-  section: Two-room house
-- term: Average and difference modes
-  meaning: (T₁+T₂)/2 decays at λ = −0.2 /h (τ = 5 h); T₁−T₂ at λ = −2.2 /h (τ ≈ 27 min).
-  units: 1/h
-  section: Two-room house
-- term: Heating both rooms equally
-  meaning: "B = (b, b)ᵀ never moves the difference mode: the house becomes uncontrollable."
-  section: Two-room house
-- term: Average thermostat
-  meaning: "C = [½ ½] cannot see the difference mode: the house becomes unobservable."
-  section: Two-room house
+- term: "z, θ"
+  meaning: "Heave (up, m) and pitch (nose-up +, rad) of the car body; with their rates ż, θ̇ they form the four-number state $x = (z, \\theta, \\dot z, \\dot\\theta)$. A body point $x$ metres ahead of the centre of gravity moves $z + x\\theta$."
+  units: "m, rad"
+  section: Car on its suspension
+- term: "m, J, a, b"
+  meaning: "Body mass (1400 kg), pitch inertia (2000 kg·m²), and the distances from the centre of gravity to the front axle (1.2 m) and the rear axle (1.5 m)."
+  units: "kg, kg·m², m"
+  section: Car on its suspension
+- term: Bounce and pitch modes
+  meaning: "Bounce: 1.151 Hz, ζ 0.289, mostly up and down. Pitch: 1.419 Hz, ζ 0.357, the nose dips as the tail rises, turning about x = +0.56 m."
+  units: Hz
+  section: Car on its suspension
+- term: Symmetric car
+  meaning: "Springs and shocks with $k_f a = k_r b$ and $c_f a = c_r b$: bounce and pitch separate exactly, so a push at the centre of gravity cannot start pitch (uncontrollable)."
+  section: Car on its suspension
+- term: Sensor at the balance point
+  meaning: "A height sensor at the centre of gravity of the symmetric car reads only heave: pitch moves the nose and tail but not the centre, so pitch is unobservable."
+  section: Car on its suspension

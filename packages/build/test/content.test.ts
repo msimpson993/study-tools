@@ -143,7 +143,7 @@ describe('running example (visual-first / central-example schema)', () => {
   it('linear-systems declares a running example and every node says what it adds and what it accounts for', () => {
     const { content, warnings } = loadApp(path.join(repoRoot, 'apps', 'linear-systems'));
     expect(content.subject.runningExample?.title).toMatch(/speaker/i);
-    expect(content.subject.runningExample?.moreScenes?.map((m) => m.id)).toEqual(['house']);
+    expect(content.subject.runningExample?.moreScenes?.map((m) => m.id)).toEqual(['car']);
     for (const m of content.maps) for (const n of m.nodes) if (n.id !== 'root') expect(n.addsToExample?.length ?? 0, `${m.id}/${n.id}`).toBeGreaterThan(14);
     expect(warnings.filter((w) => /addsToExample/.test(w))).toEqual([]);
   });

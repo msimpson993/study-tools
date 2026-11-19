@@ -26,7 +26,7 @@ What the word "linear" promises (sums and scaling pass through), what "time-inva
 
 ### A system is a rule: y = T{u}
 
-A system is an operator T: it takes a whole input signal u(t) and returns a whole output signal y(t) = T{u}(t). The earbud takes the drive voltage V(t) and returns the diaphragm motion x(t). The house takes the heater power and returns the two room temperatures. "The system" always means the rule, not any one input or output.
+A system is an operator T: it takes a whole input signal u(t) and returns a whole output signal y(t) = T{u}(t). The earbud takes the drive voltage V(t) and returns the diaphragm motion x(t). The car takes the road heights under its wheels and returns the body's heave and pitch. "The system" always means the rule, not any one input or output.
 
 ```eq
 y = T{u}

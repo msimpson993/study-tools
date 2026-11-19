@@ -2,8 +2,8 @@
 id: diag
 order: 18
 title: Diagonalization & change of basis
-addsToExample: "Rewrites the house in average and difference coordinates, ξ = V⁻¹x with V = [[1, 1], [1, −1]]: two separate one-room problems with rates 0.2/h and 2.2/h."
-accountsFor: "Why the warm-up curve is exactly one slow exponential plus one fast one."
+addsToExample: "Rewrites the car in mode coordinates (how much bounce, how much pitch): two separate damped oscillators, at 1.151 Hz and 1.419 Hz. Because the damping is proportional (C = 0.08 s·K), the mode shapes are real poses of the body."
+accountsFor: "Why the motion after a bump is exactly one bounce ring plus one pitch ring."
 category: state
 neighbors:
   - eig
@@ -11,7 +11,7 @@ neighbors:
   - ortho
   - expm
 matlab: "D = inv(V) * A * V    % equivalent: A = V * D * inv(V)"
-exampleScene: { scene: house, overlays: [modes, poles], diagram: house-modal, caption: "In modal coordinates the house is two independent first-order systems." }
+exampleScene: { scene: car, overlays: [bounce, pitch, trace], caption: "In mode coordinates the car is two independent oscillators." }
 level: Some algebra
 check: [c-diag-1, m3]
 ---
@@ -50,11 +50,11 @@ If the eigenvectors form a basis, stack them as the columns of V and write x = V
 - $\xi = V^{-1}x$: mode coordinates, how much of each mode the state contains.
 - $\Lambda$: the diagonal matrix of eigenvalues.
 
-### Worked example: on the house
+### Worked example: on the car
 
-1. House: $V = [[1, 1], [1, -1]]$, so $\xi_1 = (T_1 + T_2)/2$ is the average and $\xi_2 = (T_1 - T_2)/2$ half the difference.
-2. In these coordinates $\dot\xi_1 = -0.2\,\xi_1$ and $\dot\xi_2 = -2.2\,\xi_2$: two separate one-room problems.
-3. From (10, 0) K: $\xi = (5, 5)$, then $\xi(t) = (5e^{-0.2t}, 5e^{-2.2t})$.
+1. Car: with proportional damping ($C = 0.08\ \text{s}\cdot K$) the mode shapes are real poses, bounce and pitch. Stack them as the columns of $V$ (positions; the rates use the same shapes).
+2. In mode coordinates each amount $q_i$ obeys its own equation, $\ddot q_i + 2\zeta_i\omega_i\dot q_i + \omega_i^2 q_i = 0$: bounce at 1.151 Hz with $\zeta = 0.289$, pitch at 1.419 Hz with $\zeta = 0.357$.
+3. A pose 2° nose-down with no heave splits into some pitch and some bounce, because the pitch still point is not at the centre of gravity (the first figure shows the split).
 
 **Exam-style example.** For A = [[0, 1], [−2, −3]] (ÿ + 3ẏ + 2y = u), with eigenvalues −1, −2 and eigenvectors v₁ = [1, −1]ᵀ, v₂ = [1, −2]ᵀ: V = [[1, 1], [−1, −2]] and V⁻¹ = [[2, 1], [−1, −1]]. A vector x = [3, −4]ᵀ has eigen-coordinates ξ = V⁻¹ x = [2, 1]ᵀ, because 2 v₁ + 1 v₂ = [3, −4]ᵀ. In these coordinates A just multiplies by −1 and −2: Λ ξ = [−2, −2]ᵀ, and V(Λ ξ) = A x.
 

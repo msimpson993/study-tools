@@ -2,8 +2,8 @@
 id: obs
 order: 25
 title: Observability
-addsToExample: "Tries two thermostats: one in room 1 (C = [1, 0]) sees both modes; one reading the average (C = [½, ½]) is blind to the difference mode."
-accountsFor: "Why the thermostat's placement decides whether you can work out room 2's temperature."
+addsToExample: "Tries sensors on the car. On the symmetric car a height sensor at the centre of gravity reads only heave and cannot see pitch (observability rank 2); a pitch gyro there cannot see bounce. On the main car a height sensor at the pitch still point, x = +0.56 m, is blind to pitch."
+accountsFor: "Why the sensor's position decides whether you can tell what the body is doing."
 category: structure
 neighbors:
   - ctrl
@@ -11,7 +11,7 @@ neighbors:
   - tf
   - eig
 matlab: "rank(obsv(A, C)) == size(A, 1)    % PBH: rank([lam*eye(n)-A; C]) == n"
-exampleScene: { scene: house, overlays: [avg, modes], caption: "A thermostat reading the average cannot tell the two rooms apart." }
+exampleScene: { scene: car, overlays: [centre, pitch], caption: "A height sensor at the balance point: pitch moves the nose and tail, not the centre." }
 level: Some algebra
 check: [c-obs-1, m9]
 ---
@@ -54,11 +54,11 @@ The system (A, C) is observable when the initial state can be recovered from a f
 - $[C;\ CA;\ \cdots]$: the observability matrix; rank $n$ means the readings pin down the whole state.
 - Unobservable mode: a mode with $Cv = 0$, invisible in the output.
 
-### Worked example: on the house
+### Worked example: on the car
 
-1. Thermostat in room 1, $C = [1, 0]$: $CA = [-1.2, 1]$, rank 2, both modes show in the reading.
-2. Thermostat reading the average, $C = [\tfrac12, \tfrac12]$: $CA = [-0.1, -0.1]$, parallel to $C$, rank 1.
-3. The average sensor gives $Cv = 0$ for $v = (1, -1)$: it can't tell whether room 1 is warmer than room 2.
+1. A height sensor $x$ metres ahead of the centre of gravity reads $y = z + x\theta$, so $C = [1, x, 0, 0]$.
+2. Symmetric car, sensor at the centre: $C = [1, 0, 0, 0]$. In the pitch mode the centre does not move, $Cv = 0$, so $[C;\ CA;\ CA^2;\ CA^3]$ has rank 2: pitch is unobservable.
+3. A pitch gyro, $C = [0, 1, 0, 0]$, is the opposite: blind to the symmetric car's bounce, which has no pitch in it. On the main car a height sensor is blind to pitch at the still point, $x = +0.56$ m.
 
 **Exam-style example.** For A = [[0, 1], [−2, −3]] (ÿ + 3ẏ + 2y = u), eigenvectors v₁ = [1, −1]ᵀ and v₂ = [1, −2]ᵀ: with C = [1, 0] (output y), C v₁ = 1 and C v₂ = 1, both nonzero. The observability matrix is O = [C; CA] = I, rank 2 — observable. Now take C = [1, 1]. Then C v₁ = [1, 1] · [1, −1]ᵀ = 0, so the −1 mode is invisible in y. Indeed CA = [−2, −2] and O = [[1, 1], [−2, −2]] has rank 1. PBH at λ = −1: the stacked matrix has rows [−1, −1], [2, 2], [1, 1], which are all multiples of one row, so rank 1.
 

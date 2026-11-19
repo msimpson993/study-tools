@@ -2,8 +2,8 @@
 id: eig
 order: 2
 title: Eigenvectors & eigenvalues
-addsToExample: "Solves Av = λv for the house: v = (1, 1) with λ = −0.2 per hour (the average temperature) and v = (1, −1) with λ = −2.2 per hour (the difference between the rooms)."
-accountsFor: "Why the house has one slow way of cooling (τ = 5 h) and one fast way (τ ≈ 27 min), and what each looks like."
+addsToExample: "Solves Av = λv for the car: two complex pairs, s = −2.092 ± 6.92j per second (bounce, 1.151 Hz, ζ 0.289) and s = −3.178 ± 8.328j (pitch, 1.419 Hz, ζ 0.357). Bounce is mostly up and down, its still point 1.06 m behind the rear axle; pitch turns about a still point 0.56 m ahead of the centre of gravity."
+accountsFor: "Why the car sways in two distinct rhythms after a bump, and what each looks like on the body."
 category: foundations
 neighbors:
   - diag
@@ -11,7 +11,7 @@ neighbors:
   - ctrl
   - obs
 matlab: "[V, D] = eig(A)"
-exampleScene: { scene: house, overlays: [modes, trace], caption: "The state splits into the average (slow) and the difference (fast); each fades on its own." }
+exampleScene: { scene: car, overlays: [bounce, pitch], caption: "Bounce (mostly up and down) and pitch (about a point 0.56 m ahead of the centre): each fades on its own." }
 level: Some algebra
 check: [c-eig-1, c-eig-2, m1]
 ---
@@ -20,11 +20,11 @@ check: [c-eig-1, c-eig-2, m1]
 
 ### The big idea
 
-Which directions are already simple for A, and what gain each one sees. For the house, λ = −0.2/h along (1, 1) and λ = −2.2/h along (1, −1); for ÿ + 3ẏ + 2y = u, λ = −1 and λ = −2.
+Which directions are already simple for A, and what gain each one sees. For the car, two complex pairs: bounce at 1.151 Hz and pitch at 1.419 Hz; for ÿ + 3ẏ + 2y = u, λ = −1 and λ = −2.
 
 ### See it
 
-**Picture it first.** Think of A as an instruction to move the whole plane. Most vectors get turned as well as stretched, but a few special directions only stretch. Try it on the house matrix A = [[−1.2, 1], [1, −1.2]] below: its eigen-directions are the average (1, 1), shrunk by 0.2 per hour, and the difference (1, −1), shrunk by 2.2 per hour.
+**Picture it first.** Think of A as an instruction to move the whole plane. Most vectors get turned as well as stretched, but a few special directions only stretch. On the car each eigenvector is a pose of the body that keeps its shape as it swings: bounce and pitch, below. The second figure shows a bump exciting both.
 
 ```figure:eig
 ```
@@ -47,15 +47,15 @@ An eigenvector is a line that A leaves invariant: the output is a scalar multipl
 **What each symbol means.**
 
 - $v$: an eigenvector, a direction of the state that $A$ only stretches (a mode's shape).
-- $\lambda$: its eigenvalue, the rate (per hour) at which that mode grows or fades.
+- $\lambda$: its eigenvalue, the rate (per second for the car) at which that mode grows or fades; a complex pair is one oscillating mode.
 - $\det(sI - A)$: the characteristic polynomial; its roots are the eigenvalues, which are also the poles.
 
-### Worked example: on the house
+### Worked example: on the car
 
-1. House: $\det(sI - A) = s^2 + 2.4s + 0.44 = (s + 0.2)(s + 2.2)$.
-2. $v = (1, 1)$, both rooms together, has $\lambda = -0.2$ /h: the average fades with $\tau = 5$ h.
-3. $v = (1, -1)$, one room warm and one cool, has $\lambda = -2.2$ /h: the difference fades with $\tau \approx 27$ min.
-4. Start with room 1 at 10 K, room 2 at 0: that is 5(1, 1) + 5(1, −1), and the gap closes within the hour while the average takes hours.
+1. Car: $\det(sI - A)$ is a quartic with roots $s = -2.092 \pm 6.92j$ and $s = -3.178 \pm 8.328j$ per second.
+2. A complex pair is one oscillating mode, with $f_n = |s|/2\pi$ and $\zeta = -\operatorname{Re}s/|s|$. Bounce: $|s| \approx 7.23$ /s, so 1.151 Hz and $\zeta = 0.289$. Pitch: 1.419 Hz, $\zeta = 0.357$.
+3. Each eigenvector is a pose: bounce is mostly heave, with its still point 1.06 m behind the rear axle; pitch turns about $x = +0.56$ m.
+4. On the symmetric car ($k_f a = k_r b$) the two separate exactly: pure bounce and pure pitch about the centre of gravity, at 1.197 and 1.344 Hz undamped.
 
 **Exam-style example.** Take the companion matrix of s² + 3s + 2,
 

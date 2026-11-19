@@ -2,8 +2,8 @@
 id: expm
 order: 21
 title: State transition matrix
-addsToExample: "Gives the house's e^(At) = ½[[e₁ + e₂, e₁ − e₂], [e₁ − e₂, e₁ + e₂]] with e₁ = e^(−0.2t), e₂ = e^(−2.2t)."
-accountsFor: "The two time scales: the gap between the rooms shrinks with a 27-minute time constant (about 90% gone in 1 h), and the whole house cools over about 5 hours."
+addsToExample: "Gives the car's free motion x(t) = e^(At)x(0): released 2° nose-down from rest, the body swings back to level in a mix of bounce and pitch. With new shocks the bounce ring is down to 5% in about 1.6 cycles; with shocks worn to 20%, about 8."
+accountsFor: "The two rhythms in the car's motion, bounce at 1.151 Hz and pitch at 1.419 Hz, and why worn shocks make it ring on."
 category: state
 neighbors:
   - diag
@@ -11,7 +11,7 @@ neighbors:
   - stab
   - tf
 matlab: Phi = expm(A * t)
-exampleScene: { scene: house, overlays: [flow, trace], caption: "e^(At) carries the temperatures along the arrows: first onto the average line, then home." }
+exampleScene: { scene: car, overlays: [pitch, trace], caption: "Released nose-down, e^(At) carries the body back to level: a bounce ring plus a pitch ring." }
 level: Worked calculation
 check: [c-expm-1, m5, m6]
 ---
@@ -24,12 +24,12 @@ How the unforced state moves, and why diagonalization turns a matrix ODE into n 
 
 ### See it
 
-**Picture it first.** e^(At) is a movie of the whole plane: every possible state flows along by the same rule, and the movie is the matrix exponential.
+**Picture it first.** e^(At) is a movie: start the car in any state and it plays the motion that follows with no input. First a bump: the response is the front wheel's plus the rear wheel's, 0.18 s later.
 
 ```figure:flow
 ```
 
-The same picture in modal coordinates: in the eigenbasis the two motions separate into pure exponentials.
+Then release the body from a pose and watch e^(At)x(0) play out; wear the shocks and it rings on.
 
 ```figure:expm
 ```
@@ -67,11 +67,11 @@ with $e^{\Lambda t}$ diagonal, entries $e^{\lambda_i t}$. With an input, variati
 $$x(t)=e^{At}x(0)+\int_0^t e^{A(t-\tau)}Bu(\tau)\,d\tau.$$
 ````
 
-### Worked example: on the house
+### Worked example: on the car
 
-1. House: $e^{At} = \tfrac12[[e_1 + e_2, e_1 - e_2], [e_1 - e_2, e_1 + e_2]]$ with $e_1 = e^{-0.2t}$, $e_2 = e^{-2.2t}$.
-2. At $t = 1$ h: $e_1 \approx 0.819$, $e_2 \approx 0.111$, so $e^{A} \approx [[0.465, 0.354], [0.354, 0.465]]$.
-3. From (10, 0) K the rooms after one hour are about (4.6, 3.5) K: the gap has nearly closed while the average is still falling.
+1. Car: $A$ is 4×4, so $e^{At} = Ve^{\Lambda t}V^{-1}$ with the four eigenvalues $-2.092 \pm 6.92j$ and $-3.178 \pm 8.328j$ per second; each conjugate pair gives one real damped cosine.
+2. Release from rest 2° nose-down: $x(0) = (0, -0.0349, 0, 0)$, since 2° = 0.0349 rad. Then $x(t) = e^{At}x(0)$ is some bounce ring plus some pitch ring, both fading.
+3. With new shocks the bounce ring is down to 5% in about 1.6 cycles; with shocks worn to 20% it takes about 8, which is what the figure's shock slider shows.
 
 **Exam-style example.** For A = [[0, 1], [−2, −3]] (ÿ + 3ẏ + 2y = u), eigenvalues −1 and −2, V Λ V⁻¹ gives the closed form
 

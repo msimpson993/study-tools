@@ -1,532 +1,1541 @@
-# Live figures, all drawn on the two running examples (models in src/figs/ex.ts, unit-tested in test/numbers.test.ts).
-# House: x = (T₁, T₂) in K above outdoors, t in hours, heater power in kW, B = (3.6, 0) K/h per kW.
-# Speaker: t in ms, s in 1/ms (= krad/s), f in Hz, H(s) = X/V normalised to 1 at DC (a₀ = 20.28, a₁ = 2.533).
+# Live figures, all drawn on the two running examples.
+# Speaker (models in src/figs/ex.ts, tested in test/numbers.test.ts): t in ms, s in 1/ms (= krad/s), f in Hz, H(s) = X/V normalised to 1 at DC (a₀ = 20.28, a₁ = 2.533).
+# Car (half-car suspension, core carModel.ts, tested in test/car.test.ts): z heave (m, + up), θ pitch (rad, + nose-up), forces in N, t in s.
+#   m = 1400 kg, J = 2000 kg·m², a = 1.2 m, b = 1.5 m, kf = 38,000, kr = 42,000 N/m, cf = 3040, cr = 3360 N·s/m. Small angles, linear parts, rigid tyres, no wheel mass.
 
 - id: expm
-  title: "The house’s state transition e^(At): room temperatures x(t) and their modes ξ(t)"
-  x: time t (h)
-  y: K above outdoors
+  title: "The car's free motion x(t) = e^(At)x(0)"
+  x: time t (s)
+  y: heave (mm) or pitch (°)
   legend:
-    - { label: "T₁(t), room 1", color: "var(--cyan)" }
-    - { label: "T₂(t), room 2", color: "var(--org)" }
-    - { label: "ξ₁(t) = average, ∝ e^(−0.2t)", color: "var(--grn)", dash: true }
-    - { label: "ξ₂(t) = half-difference, ∝ e^(−2.2t)", color: "var(--vio)", dash: true }
-  howToRead: "Left: the two room temperatures released from x(0) with the heater off, computed as e^(At)x(0) with A = [[−kw − leak, kw], [kw, −kw − leak]] per hour. Right: the same motion in mode coordinates ξ = (average, half-difference), where each coordinate is a single decaying exponential. Pair view shows both directions of the change of basis. The dashed line on the left marks when 90% of the room-to-room gap has gone."
-  lookFor: "With the real house (wall 1 /h, leak 0.2 /h), room 1 starting 10 K warmer: the gap shrinks with a 27-minute time constant (about 90% gone in 1 h, marked) while the average takes about 5 hours. Start on (5, −5) and only the fast mode moves."
+  - label: heave z(t)
+    color: var(--cyan)
+  - label: pitch θ(t)
+    color: var(--org)
+  howToRead: "The body released from heave z(0) and pitch θ(0) at rest, with no road input: x(t) = e^(At)x(0) for the four-state model x = (z, θ, ż, θ̇). Left: heave; right: pitch. Each is a mix of the bounce mode (1.151 Hz) and the pitch mode (1.419 Hz), both fading."
+  lookFor: Released 2° nose-down the body swings back to level and settles quickly. Wear the shocks (More) and it rings on for several seconds.
   controls:
-    - { id: kw, label: "wall coupling kw", type: range, min: 0, max: 2, step: 0.05, default: 1, group: primary, unit: "/h" }
-    - { id: leak, label: "leak to outdoors", type: range, min: 0.05, max: 1, step: 0.05, default: 0.2, group: primary, unit: "/h" }
-    - { id: x1, label: "T₁(0)", type: range, min: -10, max: 15, step: 0.5, default: 10, group: primary, unit: K }
-    - { id: x2, label: "T₂(0)", type: range, min: -10, max: 15, step: 0.5, default: 0, group: primary, unit: K }
-    - { id: tmax, label: "time span", type: range, min: 1, max: 12, step: 0.5, default: 6, group: more, unit: h }
+  - id: z0
+    label: heave z(0)
+    type: range
+    min: -3
+    max: 3
+    step: 0.1
+    default: 0
+    group: primary
+    unit: cm
+  - id: th0
+    label: pitch θ(0)
+    type: range
+    min: -3
+    max: 3
+    step: 0.1
+    default: -2
+    group: primary
+    unit: °
+  - id: wear
+    label: shock condition (share of new damping)
+    type: range
+    min: 0.1
+    max: 1.5
+    step: 0.05
+    default: 1
+    group: more
+  - id: tmax
+    label: time span
+    type: range
+    min: 1
+    max: 6
+    step: 0.5
+    default: 3
+    group: more
+    unit: s
   presets:
-    - { id: house, label: "House: room 1 10 K warmer", set: { kw: 1, leak: 0.2, x1: 10, x2: 0 }, about: "ξ(0) = (5, 5): half of each mode. The difference dies at −2.2 /h, the average at −0.2 /h." }
-    - { id: avg, label: "Average mode only (10, 10)", set: { kw: 1, leak: 0.2, x1: 10, x2: 10 }, about: "Starting on the eigenvector (1, 1): both rooms cool together at e^(−0.2t)." }
-    - { id: diff, label: "Difference mode only (5, −5)", set: { kw: 1, leak: 0.2, x1: 5, x2: -5 }, about: "Starting on (1, −1): the gap is about 90% gone within the hour, at e^(−2.2t)." }
-    - { id: wall, label: "No shared wall", set: { kw: 0, leak: 0.2, x1: 10, x2: 0 }, about: "kw = 0: A = −0.2·I, both eigenvalues equal and every direction is an eigenvector; the rooms cool independently." }
-  pair:
-    forward: x
-    inverse: xi
-    forwardName: "Analysis: ξ = V⁻¹ x"
-    inverseName: "Synthesis: x = V ξ"
-    strip: "V = [(1, 1) (1, −1)]: x = ξ₁·(1, 1) + ξ₂·(1, −1)."
-
+  - id: nose
+    label: 2° nose-down
+    set:
+      z0: 0
+      th0: -2
+      wear: 1
+    about: "Both modes, both fading."
+  - id: up
+    label: Dropped from 2 cm up
+    set:
+      z0: 2
+      th0: 0
+      wear: 1
+    about: Mostly bounce.
+  - id: worn
+    label: "Worn shocks (20%)"
+    set:
+      z0: 0
+      th0: -2
+      wear: 0.2
+    about: "ζ falls to about 0.06 and 0.07: many cycles before it settles."
 - id: eig
-  title: "The house matrix moves the plane of room temperatures: which directions only stretch?"
-  x: T₁ (K above outdoors)
-  y: T₂ (K)
+  title: "The car's two modes: bounce and pitch"
+  x: position along the car (m)
+  y: height (exaggerated)
   legend:
-    - { label: "v: a probe vector", color: "var(--cyan)" }
-    - { label: "Av: where A sends it", color: "var(--yel)" }
-    - { label: "average mode (1, 1)", color: "var(--grn)", dash: true }
-    - { label: "difference mode (1, −1)", color: "var(--org)", dash: true }
-    - { label: "image of the unit grid", color: "var(--accent)" }
-  howToRead: "Left: the faint grid is the (T₁, T₂) plane, the blue grid is where the house matrix A sends it (the morph slider goes from I to A; Play animates it). The cyan arrow is a probe v, the yellow arrow is Av, the rate of change of the temperatures at state v. Right: for every direction of v, how far Av is pushed sideways off v’s line; it is zero only along the dashed eigen-directions."
-  lookFor: "Turn the probe to 45°: Av points straight back along v, shrunk to 0.2 (the average mode). At 135° Av is 2.2 times v, reversed (the difference mode)."
-  animate: { control: t, speed: 0.25, loop: true }
+  - label: bounce mode
+    color: var(--cyan)
+  - label: pitch mode
+    color: var(--org)
+  - label: still point (node)
+    color: var(--yel)
+  - label: body at rest
+    color: var(--muted)
+    dash: true
+  howToRead: "Each panel animates one eigenvector of A drawn on the car: the body shape that, released on its own, keeps its shape and only grows or fades as e^(λt). Left: bounce; right: pitch. The yellow dot is the body point that does not move in that mode. The sliders change the front and rear spring rates (the shocks stay at 0.08 s times the springs)."
+  lookFor: "The main car: bounce at 1.151 Hz (ζ 0.289), mostly up and down, its still point 1.06 m behind the rear axle (off the drawing); pitch at 1.419 Hz (ζ 0.357) about x = +0.56 m. Pick the symmetric springs and the two modes separate exactly: pure bounce and pure pitch about the centre of gravity."
+  animate:
+    control: t
+    speed: 0.6
+    loop: true
   controls:
-    - { id: th, label: "probe direction of v", type: range, min: 0, max: 360, step: 1, default: 20, group: primary, unit: "°" }
-    - { id: t, label: "morph: identity → A", type: range, min: 0, max: 1, step: 0.01, default: 1, group: primary }
-    - { id: kw, label: "wall coupling kw", type: range, min: 0, max: 2, step: 0.05, default: 1, group: primary, unit: "/h" }
-    - { id: leak, label: "leak to outdoors", type: range, min: 0.05, max: 1, step: 0.05, default: 0.2, group: more, unit: "/h" }
+  - id: kf
+    label: front spring kf
+    type: range
+    min: 20000
+    max: 60000
+    step: 500
+    default: 38000
+    group: primary
+    unit: N/m
+  - id: kr
+    label: rear spring kr
+    type: range
+    min: 20000
+    max: 60000
+    step: 500
+    default: 42000
+    group: primary
+    unit: N/m
+  - id: t
+    label: phase
+    type: range
+    min: 0
+    max: 1
+    step: 0.01
+    default: 0.25
+    group: primary
   presets:
-    - { id: house, label: "House", set: { th: 20, t: 1, kw: 1, leak: 0.2 }, about: "A = [[−1.2, 1], [1, −1.2]] /h: eigenvalues −0.2 and −2.2, eigen-directions (1, 1) and (1, −1)." }
-    - { id: avg, label: "Probe on (1, 1)", set: { th: 45, t: 1, kw: 1, leak: 0.2 }, about: "Av = −0.2·v: equal rooms cool together slowly." }
-    - { id: diff, label: "Probe on (1, −1)", set: { th: 135, t: 1, kw: 1, leak: 0.2 }, about: "Av = −2.2·v: a temperature difference closes fast." }
-    - { id: nowall, label: "No shared wall", set: { th: 20, t: 1, kw: 0, leak: 0.2 }, about: "A = −0.2·I: every direction is an eigen-direction and the right plot is flat at zero." }
-
+  - id: main
+    label: Main car
+    set:
+      kf: 38000
+      kr: 42000
+    about: Bounce 1.151 Hz with a slight nose-up; pitch 1.419 Hz about x = +0.56 m.
+  - id: sym
+    label: Symmetric springs (kf·a = kr·b)
+    set:
+      kf: 44000
+      kr: 35200
+    about: Pure bounce (1.197 Hz) and pure pitch (1.344 Hz) about the centre of gravity.
+  - id: stiff
+    label: Stiffer front
+    set:
+      kf: 55000
+      kr: 42000
+    about: "The modes mix the other way: watch the still points move."
 - id: diag
-  title: "Diagonalising the house: in mode coordinates A just scales each axis"
-  x: T₁ or ξ₁ (K)
-  y: T₂ or ξ₂ (K)
+  title: "Mode coordinates: any pose of the body is some bounce plus some pitch"
+  x: position (m) or bounce amount q₁
+  y: height or pitch amount q₂
   legend:
-    - { label: "x, ξ: the probe state", color: "var(--cyan)" }
-    - { label: "Ax, Λξ: its rate of change", color: "var(--yel)" }
-    - { label: "average leg ξ₁·(1, 1)", color: "var(--grn)", dash: true }
-    - { label: "difference leg ξ₂·(1, −1)", color: "var(--org)", dash: true }
-  howToRead: "Left: a state x = (T₁, T₂) drawn on a grid tilted along the eigenvectors (1, 1) and (1, −1), with its two legs along them and Ax. Right: the same state in mode coordinates ξ = (average, half-difference); the grid is square and Λξ simply scales the two legs by λ₁ = −0.2 and λ₂ = −2.2. Play rotates the probe."
-  lookFor: "On the right the yellow arrow never turns: its horizontal leg is 0.2 × ξ₁, its vertical leg 2.2 × ξ₂, each reversed. On the left the same arrow turns because the legs scale differently."
-  animate: { control: phi, speed: 45, loop: true }
+  - label: the pose
+    color: var(--text)
+  - label: its bounce part
+    color: var(--cyan)
+    dash: true
+  - label: its pitch part
+    color: var(--org)
+    dash: true
+  howToRead: "Left: the body at heave z and pitch θ (solid), and the two mode shapes it splits into (dashed): ξ = V⁻¹x, with V's columns the bounce shape (1, θ/z) and the pitch shape (z/θ, 1). Right: the same pose as a point in mode coordinates. In these coordinates A is diagonal: each part moves on its own."
+  lookFor: "Set z = 0 and θ = −2° (nose-down): the pose splits into a pitch part and a bounce part, and neither is zero, because the main car's pitch still point is not at the centre of gravity."
   controls:
-    - { id: phi, label: "probe direction", type: range, min: 0, max: 360, step: 1, default: 20, group: primary, unit: "°" }
-    - { id: kw, label: "wall coupling kw", type: range, min: 0, max: 2, step: 0.05, default: 1, group: primary, unit: "/h" }
-    - { id: leak, label: "leak to outdoors", type: range, min: 0.05, max: 1, step: 0.05, default: 0.2, group: more, unit: "/h" }
+  - id: z0
+    label: heave z
+    type: range
+    min: -3
+    max: 3
+    step: 0.1
+    default: 1
+    group: primary
+    unit: cm
+  - id: th0
+    label: pitch θ
+    type: range
+    min: -2
+    max: 2
+    step: 0.05
+    default: -1
+    group: primary
+    unit: °
   presets:
-    - { id: house, label: "House", set: { phi: 20, kw: 1, leak: 0.2 }, about: "Λ = diag(−0.2, −2.2)." }
-    - { id: onavg, label: "Equal rooms", set: { phi: 45, kw: 1, leak: 0.2 }, about: "Only the average leg: ξ₂ = 0." }
-    - { id: thin, label: "Thin wall (kw = 2)", set: { phi: 20, kw: 2, leak: 0.2 }, about: "The difference mode gets faster (λ₂ = −4.2); the average mode does not change." }
-
+  - id: nose
+    label: 2° nose-down
+    set:
+      z0: 0
+      th0: -2
+    about: A pitch part and a bounce part.
+  - id: heave
+    label: "2 cm up, level"
+    set:
+      z0: 2
+      th0: 0
+    about: "Mostly bounce, a little pitch."
+  - id: mix
+    label: A mix
+    set:
+      z0: 1
+      th0: -1
+    about: Both parts.
 - id: flow
-  title: "The house’s phase plane: fast onto the diagonal, then slowly home"
-  x: T₁ (K)
-  y: T₂ (K)
+  title: "A bump: the front response plus a delayed copy for the rear wheel"
+  x: time t (s)
+  y: road (mm) or heave (mm)
   legend:
-    - { label: "trajectory so far", color: "var(--cyan)" }
-    - { label: "state at time t", color: "var(--yel)" }
-    - { label: "average mode line (1, 1)", color: "var(--grn)", dash: true }
-    - { label: "difference mode line (1, −1)", color: "var(--org)", dash: true }
-  howToRead: "Left: the small arrows are the direction of ẋ = Ax at each state (heater off). The blue path starts at x(0) and is drawn up to time t. Right: the same two temperatures against time with a marker at t. Press Play to run the clock over six hours."
-  lookFor: "From (10, 0) the path heads almost straight for the diagonal (the difference mode dies in about an hour), then creeps down the diagonal toward 0 over hours."
-  animate: { control: t, speed: 1, loop: true }
+  - label: front wheel / front response
+    color: var(--cyan)
+  - label: rear wheel / rear response
+    color: var(--org)
+    dash: true
+  - label: total heave
+    color: var(--text)
+  howToRead: "A 5 cm, 1 m long bump. Left: the road height under each wheel: the rear wheel meets the same bump (a + b)/v later. Right: because the car is linear and time-invariant, the heave is the response to the front wheel's bump plus the response to the rear wheel's bump; the rear one is the same kind of response, shifted in time."
+  lookFor: At 15 m/s the rear wheel hits 0.18 s after the front (2.7 m / 15 m/s) and the heave peaks at 8.8 mm at 0.24 s.
   controls:
-    - { id: t, label: "time t", type: range, min: 0, max: 6, step: 0.05, default: 1, group: primary, unit: h }
-    - { id: x1, label: "T₁(0)", type: range, min: -2, max: 11, step: 0.5, default: 10, group: primary, unit: K }
-    - { id: x2, label: "T₂(0)", type: range, min: -2, max: 11, step: 0.5, default: 0, group: primary, unit: K }
+  - id: v
+    label: speed v
+    type: range
+    min: 5
+    max: 30
+    step: 0.5
+    default: 15
+    group: primary
+    unit: m/s
+  - id: wear
+    label: shock condition (share of new damping)
+    type: range
+    min: 0.1
+    max: 1.5
+    step: 0.05
+    default: 1
+    group: more
   presets:
-    - { id: house, label: "Room 1 10 K warmer", set: { t: 1, x1: 10, x2: 0 }, about: "The gap closes first, then both rooms cool together." }
-    - { id: both, label: "Both rooms 10 K", set: { t: 1, x1: 10, x2: 10 }, about: "Already on the slow line: it just slides toward 0." }
-    - { id: swap, label: "Room 2 warmer", set: { t: 1, x1: 2, x2: 10 }, about: "Mirror image: the same fast mode, the other way." }
-
+  - id: v15
+    label: 15 m/s (54 km/h)
+    set:
+      v: 15
+      wear: 1
+    about: Rear 0.18 s after the front; peak heave 8.8 mm at 0.24 s.
+  - id: worn
+    label: "15 m/s, worn shocks"
+    set:
+      v: 15
+      wear: 0.2
+    about: "The same input, far longer ringing."
+  - id: slow
+    label: 7.5 m/s
+    set:
+      v: 7.5
+      wear: 1
+    about: Twice the delay between the two kicks.
 - id: cayley
-  title: "Cayley–Hamilton on the house: e^(At) = α₀(t) I + α₁(t) A"
-  x: time t (h)
-  y: α₀, α₁ (dimensionless, α₁ in h)
+  title: "Cayley–Hamilton on the car: e^(At) = α₀(t)I + α₁(t)A + α₂(t)A² + α₃(t)A³"
+  x: time t (s)
+  y: αₖ(t) or pitch (°)
   legend:
-    - { label: "α₀(t)", color: "var(--cyan)" }
-    - { label: "α₁(t)", color: "var(--org)" }
-  howToRead: "Because A² can be written with A and I, every power series in A collapses to α₀I + α₁A. Left: the two coefficients against time, from α₀ + α₁λ = e^(λt) at λ = −0.2 and −2.2. Right: the four entries of α₀I + α₁A next to the entries from the modal formula ½[[e₁ + e₂, e₁ − e₂], [e₁ − e₂, e₁ + e₂]]."
-  lookFor: "At t = 1 h: α₁ = (e^(−0.2) − e^(−2.2))/2 ≈ 0.354 and the two matrices agree to every digit. Set the wall to 0: α₁ becomes t·e^(−0.2t) (repeated eigenvalue)."
+  - label: α₀
+    color: var(--cyan)
+  - label: 10·α₁
+    color: var(--org)
+  - label: 100·α₂
+    color: var(--grn)
+  - label: 1000·α₃
+    color: var(--vio)
+  howToRead: "A is 4×4, so every power Aᵏ is a mix of I, A, A² and A³ (its characteristic polynomial has degree 4). Left: the four scalar coefficients αₖ(t), scaled to share one axis. Right: the pitch released from 2° nose-down computed two ways, e^(At)x(0) (line) and Σ αₖ(t)Aᵏx(0) (dots); they agree."
+  lookFor: "At t = 0, α₀ = 1 and the others are 0 (e^(A·0) = I). The dots sit on the line at every time."
   controls:
-    - { id: t, label: "time t", type: range, min: 0, max: 6, step: 0.05, default: 1, group: primary, unit: h }
-    - { id: kw, label: "wall coupling kw", type: range, min: 0, max: 2, step: 0.05, default: 1, group: primary, unit: "/h" }
-    - { id: leak, label: "leak to outdoors", type: range, min: 0.05, max: 1, step: 0.05, default: 0.2, group: more, unit: "/h" }
+  - id: t
+    label: time t
+    type: range
+    min: 0
+    max: 3
+    step: 0.05
+    default: 0.5
+    group: primary
+    unit: s
+  - id: wear
+    label: shock condition (share of new damping)
+    type: range
+    min: 0.1
+    max: 1.5
+    step: 0.05
+    default: 1
+    group: more
   presets:
-    - { id: house, label: "House at 1 h", set: { t: 1, kw: 1, leak: 0.2 }, about: "α₀ ≈ 0.890, α₁ ≈ 0.354." }
-    - { id: late, label: "House at 4 h", set: { t: 4, kw: 1, leak: 0.2 }, about: "The fast mode has gone: e^(At) ≈ ½e^(−0.2t)[[1, 1], [1, 1]]." }
-    - { id: rep, label: "No wall (repeated −0.2)", set: { t: 1, kw: 0, leak: 0.2 }, about: "A = −0.2·I; with a repeated eigenvalue the second condition is the derivative: α₁ = t e^(−0.2t)." }
-
+  - id: early
+    label: t = 0.5 s
+    set:
+      t: 0.5
+      wear: 1
+    about: Four numbers give the whole 4×4 matrix e^(At).
+  - id: zero
+    label: t = 0
+    set:
+      t: 0
+      wear: 1
+    about: "α = (1, 0, 0, 0): e^(A·0) = I."
+  - id: worn
+    label: Worn shocks
+    set:
+      t: 0.5
+      wear: 0.2
+    about: "Different A, different αₖ(t); the identity still holds."
 - id: stab
-  title: "Application: feedback. Stability of the thermostat loop u = −kp·T₁"
-  x: Re λ (1/h)
-  y: Im λ (1/h) or deviation (K)
+  title: Will it settle? The poles as the shocks wear
+  x: Re s (1/s) or time t (s)
+  y: Im s (1/s) or heave (mm)
   legend:
-    - { label: "loop eigenvalues (stable)", color: "var(--cyan)" }
-    - { label: "an eigenvalue in the right half-plane", color: "var(--bad)" }
-    - { label: "T₁ deviation", color: "var(--cyan)" }
-    - { label: "T₂ deviation", color: "var(--org)" }
-  howToRead: "A thermostat in room 1 sets the room-1 heater to −kp kW per K of deviation, so the deviations obey ẋ = (A − B·kp·C)x with B = (3.6, 0) and C = [1, 0]. Left: the two loop eigenvalues (crosses) and the path they take as kp runs from −0.5 to 1 (grey dots). Right: the room deviations after room 1 is knocked 2 K above its setpoint. The note gives |e^(λT)| for a controller that samples every 15 minutes: inside the unit circle exactly when Re λ < 0."
-  lookFor: "Drag kp below −0.102 kW/K (a heater wired backwards, turning up when the room is already warm): one eigenvalue crosses into the shaded half-plane and the deviation grows instead of dying."
+  - label: bounce poles
+    color: var(--cyan)
+  - label: pitch poles
+    color: var(--org)
+  - label: a pole in the right half-plane
+    color: var(--bad)
+  - label: path as the damping changes
+    color: var(--muted)
+  howToRead: "Left: the four eigenvalues of A (two complex pairs) for the chosen shock condition; grey dots trace them as the damping runs from −0.3 to 1.5 times new. Right: heave after the 5 cm bump at 15 m/s, with the ±1 mm band dotted. Negative damping stands for an active damper wired the wrong way round."
+  lookFor: "New shocks: ζ 0.289 / 0.357, the body is back inside ±1 mm by 1.2 s. Worn to 20%: ζ 0.058 / 0.071, still moving more than 1 mm until 3.9 s. Below zero the poles cross the axis and the motion grows."
   controls:
-    - { id: kp, label: "thermostat gain kp", type: range, min: -0.5, max: 1, step: 0.01, default: 0.5, group: primary, unit: "kW/K" }
+  - id: wear
+    label: shock condition (share of new damping)
+    type: range
+    min: -0.3
+    max: 1.5
+    step: 0.05
+    default: 1
+    group: primary
   presets:
-    - { id: open, label: "No thermostat (kp = 0)", set: { kp: 0 }, about: "The open house: eigenvalues −0.2 and −2.2." }
-    - { id: good, label: "kp = 0.5 kW/K", set: { kp: 0.5 }, about: "Eigenvalues −0.755 and −3.445: faster recovery." }
-    - { id: edge, label: "Edge, kp = −0.10", set: { kp: -0.1 }, about: "One eigenvalue just left of 0: very slow recovery." }
-    - { id: bad, label: "Wired backwards, kp = −0.3", set: { kp: -0.3 }, about: "det(A − BkpC) < 0: a positive eigenvalue, the room runs away." }
-
+  - id: new
+    label: New shocks
+    set:
+      wear: 1
+    about: "ζ 0.289 and 0.357: settles in about 1.6 bounce cycles."
+  - id: worn
+    label: "Worn to 20%"
+    set:
+      wear: 0.2
+    about: "ζ 0.058 and 0.071: about 8 bounce cycles to settle, overshoot about 83%."
+  - id: none
+    label: No shocks
+    set:
+      wear: 0
+    about: "Poles on the axis: rings for ever."
+  - id: bad
+    label: Wired backwards (−0.2)
+    set:
+      wear: -0.2
+    about: "Poles in the right half-plane: unstable."
 - id: ctrl
-  title: "Controllability of the house: which way can the heater push the rooms?"
-  x: T₁ (K) or heater share s
-  y: T₂ (K) or push (K/h per kW)
+  title: "Controllability of the car: can a push at one point move both modes?"
+  x: position (m) or mode
+  y: push on each mode
   legend:
-    - { label: "B: the heater’s direct push", color: "var(--cyan)" }
-    - { label: "AB: where the walls carry it next", color: "var(--yel)" }
-    - { label: "1 kW for 3 h from rest", color: "var(--vio)" }
-    - { label: "push on the average mode", color: "var(--grn)" }
-    - { label: "push on the difference mode", color: "var(--org)" }
-  howToRead: "The heater power is split: a share s goes to room 1 and 1 − s to room 2, so B = 3.6·(s, 1 − s) K/h per kW. Left: B and AB. If they point in different directions, [B, AB] has rank 2 and any pair of room temperatures can be reached; the violet path is what 1 kW for 3 hours does. Right (the PBH test): the push on each mode, wᵀB with w = (1, 1)/2 and (1, −1)/2. A mode with zero push can never be moved by the input."
-  lookFor: "At s = ½ (equal heat in both rooms) B and AB both lie on the diagonal, det [B, AB] = 0, the violet path stays on the diagonal, and the push on the difference mode is 0."
+  - label: push point
+    color: var(--bad)
+  - label: bounce shape
+    color: var(--cyan)
+    dash: true
+  - label: pitch shape
+    color: var(--org)
+    dash: true
+  howToRead: "A vertical force u at x metres from the centre of gravity: B = (0, 0, 1/m, x/J). Left: the two mode shapes and the push point. Right (the PBH view): how hard the push drives each mode, which is how far that mode's shape moves at the push point. A mode with zero push can never be started; the controllability matrix [B AB A²B A³B] then has rank 2, not 4."
+  lookFor: "Main car, push at the centre: both bars are nonzero, rank 4. Switch to the symmetric car (More): a push at the centre cannot start pitch. On the main car, push at x = +0.56 m, the pitch still point: pitch is out of reach."
   controls:
-    - { id: split, label: "heater share in room 1, s", type: range, min: 0, max: 1, step: 0.01, default: 1, group: primary }
+  - id: xp
+    label: push point x
+    type: range
+    min: -2.2
+    max: 1.9
+    step: 0.01
+    default: 0
+    group: primary
+    unit: m
+  - id: set
+    label: parameter set
+    type: select
+    default: main
+    group: more
+    options: &id001
+    - value: main
+      label: main car
+    - value: sym
+      label: symmetric car (kf·a = kr·b)
   presets:
-    - { id: house, label: "Heater in room 1 (s = 1)", set: { split: 1 }, about: "B = (3.6, 0), AB = (−4.32, 3.6): det = 12.96, controllable." }
-    - { id: half, label: "Equal split (s = ½)", set: { split: 0.5 }, about: "B = (1.8, 1.8) is an eigenvector: only the average mode can be moved." }
-    - { id: room2, label: "Heater in room 2 (s = 0)", set: { split: 0 }, about: "Mirror image of the real house: controllable." }
-
+  - id: cgmain
+    label: "Centre, main car"
+    set:
+      xp: 0
+      set: main
+    about: "Rank 4: a centre push moves both modes."
+  - id: cgsym
+    label: "Centre, symmetric car"
+    set:
+      xp: 0
+      set: sym
+    about: "Rank 2: the pitch mode cannot be started."
+  - id: node
+    label: "Pitch still point, main car"
+    set:
+      xp: 0.56
+      set: main
+    about: A push where the pitch shape does not move cannot start pitch.
+  - id: front
+    label: Front axle
+    set:
+      xp: 1.2
+      set: main
+    about: Both modes.
 - id: obs
-  title: "Observability of the house: can one sensor tell two starting states apart?"
-  x: time t (h) or T₁ (K)
-  y: sensor reading (K) or T₂ (K)
+  title: "Observability of the car: can one sensor see both modes?"
+  x: position (m) or time t (s)
+  y: sensor reading
   legend:
-    - { label: "reading from x_a = (8, 2)", color: "var(--cyan)" }
-    - { label: "reading from x_b = (2, 8)", color: "var(--org)", dash: true }
-    - { label: "sensor weights C", color: "var(--yel)" }
-  howToRead: "The sensor reads y = c·T₁ + (1 − c)·T₂. Left: the readings over 4 hours (heater off) from two starting states with the same average but opposite differences. Right: the two states, the sensor direction C and the difference-mode line through them. If the readings differ, [C; CA] has rank 2 and x(0) can be worked out from y."
-  lookFor: "At c = ½ (a sensor on the shared wall reads the average) the two readings lie exactly on top of each other: the difference mode is invisible, det [C; CA] = 0."
+  - label: sensor point
+    color: var(--grn)
+  - label: reading after a bounce start
+    color: var(--cyan)
+  - label: reading after a pitch start
+    color: var(--org)
+    dash: true
+  howToRead: "A height sensor at x reads z + x·θ (C = [1, x, 0, 0]); a pitch gyro reads θ̇ (C = [0, 0, 0, 1]). Right: what the sensor reads after the body is released in pure bounce (solid) and in pure pitch (dashed). A mode whose reading is flat zero is invisible, and [C; CA; CA²; CA³] has rank 2."
+  lookFor: "Symmetric car, height sensor at the centre: the pitch reading is flat (rank 2). A pitch gyro on the symmetric car cannot see bounce. On the main car a height sensor at the pitch still point (x = +0.56 m) is blind to pitch."
   controls:
-    - { id: c, label: "sensor weight on room 1, c", type: range, min: 0, max: 1, step: 0.01, default: 1, group: primary }
+  - id: xs
+    label: sensor point x
+    type: range
+    min: -2.2
+    max: 1.9
+    step: 0.01
+    default: 0
+    group: primary
+    unit: m
+  - id: sensor
+    label: sensor
+    type: select
+    default: height
+    group: primary
+    options:
+    - value: height
+      label: height sensor
+    - value: gyro
+      label: pitch gyro
+  - id: set
+    label: parameter set
+    type: select
+    default: main
+    group: more
+    options: *id001
   presets:
-    - { id: house, label: "Sensor in room 1 (c = 1)", set: { c: 1 }, about: "C = [1, 0]: observable, det [C; CA] = 1." }
-    - { id: half, label: "Average sensor (c = ½)", set: { c: 0.5 }, about: "C = [½, ½] is orthogonal to (1, −1): unobservable." }
-    - { id: near, label: "Nearly average (c = 0.55)", set: { c: 0.55 }, about: "Observable in theory, but the two readings differ only slightly: hard in practice." }
-
+  - id: cgsym
+    label: "Centre, symmetric car"
+    set:
+      xs: 0
+      sensor: height
+      set: sym
+    about: "Rank 2: pitch is invisible."
+  - id: cgmain
+    label: "Centre, main car"
+    set:
+      xs: 0
+      sensor: height
+      set: main
+    about: "Rank 4: both modes show."
+  - id: node
+    label: "Pitch still point, main car"
+    set:
+      xs: 0.56
+      sensor: height
+      set: main
+    about: Blind to pitch.
+  - id: gyro
+    label: "Pitch gyro, symmetric car"
+    set:
+      sensor: gyro
+      set: sym
+    about: Blind to bounce.
 - id: kalman
-  title: "Kalman decomposition of the house: which modes are reached and which are seen"
-  x: signal flow or time t (h)
-  y: modes or y(t) (K per kWh)
+  title: "Kalman decomposition of the car: which modes reach the transfer function"
+  x: frequency f (Hz)
+  y: "|G| (mm per kN)"
   legend:
-    - { label: "live wire (non-zero weight)", color: "var(--yel)" }
-    - { label: "average-mode term", color: "var(--grn)", dash: true }
-    - { label: "difference-mode term", color: "var(--org)", dash: true }
-    - { label: "total output y(t)", color: "var(--text)" }
-  howToRead: "Left: the heater reaches each mode with weight wᵀB (heater share s) and the sensor sees it with weight Cv (sensor weight c); a dashed grey wire has weight zero. Each mode is labelled with its Kalman class. Right: the sensor reading after a 1 kWh heater pulse, as the sum of one exponential per mode. Only reached-and-seen modes appear in y and in G(s)."
-  lookFor: "Set either s or c to ½: the difference mode drops out of G(s), which becomes a single first-order term 1.8/(s + 0.2) even though the house still has two states."
+  - label: "|G(j2πf)| from push to sensor"
+    color: var(--yel)
+  - label: bounce frequency
+    color: var(--cyan)
+    dash: true
+  - label: pitch frequency
+    color: var(--org)
+    dash: true
+  howToRead: "Left: the frequency response from a force at the push point to the height at the sensor point. Right: whether each mode is reached by the push and seen by the sensor. Only modes that are both reached and seen appear in G(s); the others cancel out of it, although they are still inside the car."
+  lookFor: "Symmetric car with push and sensor at the centre: only the bounce hump appears, and G(s) has two poles although the model has four states. Move both points off the centre and the pitch hump comes back; move only one and pitch stays out of G(s)."
   controls:
-    - { id: split, label: "heater share in room 1, s", type: range, min: 0, max: 1, step: 0.05, default: 1, group: primary }
-    - { id: c, label: "sensor weight on room 1, c", type: range, min: 0, max: 1, step: 0.05, default: 1, group: primary }
+  - id: xp
+    label: push point x
+    type: range
+    min: -2.2
+    max: 1.9
+    step: 0.01
+    default: 0
+    group: primary
+    unit: m
+  - id: xs
+    label: sensor point x
+    type: range
+    min: -2.2
+    max: 1.9
+    step: 0.01
+    default: 0
+    group: primary
+    unit: m
+  - id: set
+    label: parameter set
+    type: select
+    default: sym
+    group: more
+    options: *id001
   presets:
-    - { id: house, label: "Heater and sensor in room 1", set: { split: 1, c: 1 }, about: "Both modes reached and seen: G(s) = 1.8/(s + 0.2) + 1.8/(s + 2.2)." }
-    - { id: heat, label: "Equal heating", set: { split: 0.5, c: 1 }, about: "The difference mode is seen but not reached." }
-    - { id: sense, label: "Average sensor", set: { split: 1, c: 0.5 }, about: "The difference mode is reached but not seen." }
-    - { id: both, label: "Both averaged", set: { split: 0.5, c: 0.5 }, about: "Only the average mode is left in G(s)." }
-
+  - id: cgsym
+    label: "Centre / centre, symmetric"
+    set:
+      xp: 0
+      xs: 0
+      set: sym
+    about: "Pitch neither reached nor seen: G(s) is second order."
+  - id: cgmain
+    label: "Centre / centre, main car"
+    set:
+      xp: 0
+      xs: 0
+      set: main
+    about: Both modes reached and seen.
+  - id: front
+    label: "Front / front, symmetric"
+    set:
+      xp: 1.2
+      xs: 1.2
+      set: sym
+    about: Both modes.
 - id: gramian
-  title: "The house’s controllability Gramian: what reaching a state costs"
-  x: T₁ (K) or time allowed (h)
-  y: T₂ (K) or energy (kW²·h)
+  title: "Active suspension: what levelling the body costs (the Gramian)"
+  x: time allowed T (s) or eigen-direction
+  y: energy or Gramian eigenvalue (log)
   legend:
-    - { label: "reachable with 5 kW²·h", color: "var(--grn)" }
-    - { label: "reachable with 13.43 kW²·h", color: "var(--cyan)" }
-    - { label: "reachable with 45 kW²·h", color: "var(--vio)" }
-    - { label: "the (10, 7) K target", color: "var(--yel)" }
-  howToRead: "Left: the states the heater can reach from rest in T hours using at most a given energy ∫u²dt form ellipses xᵀW(T)⁻¹x ≤ E, where W(T) is the Gramian in K²/(kW²·h). The thin axis of the ellipse is the expensive direction. Right: the least energy to reach (10, 7) K, against the time allowed. This is a reaching cost; keeping the rooms there afterwards costs heat at a steady rate on top."
-  lookFor: "At T = 3 h the target (10, 7) sits on the 13.43 kW²·h ellipse. The thin axis points along ≈ (0.51, −0.86): pulling room 2 below room 1 is the expensive direction to reach. Make T shorter and the cost climbs steeply."
+  - label: least energy against T
+    color: var(--yel)
+  - label: Gramian eigenvalues
+    color: var(--cyan)
+  - label: the thinnest direction
+    color: var(--bad)
+  howToRead: "Actuators at the front and/or rear axle bring the body from 2° nose-down (at rest) to level and still in time T. Left: the least energy ∫|u|²dt = x₀ᵀe^(AᵀT)W(T)⁻¹e^(AT)x₀ against T (log scale). Right: the four eigenvalues of the controllability Gramian W(T); a tiny one is a direction that is barely reachable and costs a lot."
+  lookFor: "Front + rear in 0.5 s: E = 96,160 N²·s. Front only: the Gramian is nearly singular and the peak force jumps to about 12.9 kN. Allow 1 s and the shocks do most of the work."
   controls:
-    - { id: T, label: "time allowed T", type: range, min: 0.5, max: 8, step: 0.1, default: 3, group: primary, unit: h }
-    - { id: split, label: "heater share in room 1, s", type: range, min: 0, max: 1, step: 0.05, default: 1, group: more }
+  - id: T
+    label: time allowed T
+    type: range
+    min: 0.25
+    max: 1.5
+    step: 0.05
+    default: 0.5
+    group: primary
+    unit: s
+  - id: act
+    label: actuators
+    type: select
+    default: both
+    group: primary
+    options: &id002
+    - value: both
+      label: front + rear
+    - value: front
+      label: front only
+    - value: rear
+      label: rear only
   presets:
-    - { id: house, label: "3 hours", set: { T: 3, split: 1 }, about: "W eigenvalues 0.78 and 12.0 K²/(kW²·h): a 15:1 ratio." }
-    - { id: rush, label: "1 hour", set: { T: 1, split: 1 }, about: "Much thinner ellipse: the same target costs far more." }
-    - { id: slow, label: "6 hours", set: { T: 6, split: 1 }, about: "More time, less energy, but the cost levels off because heat leaks away." }
-
+  - id: both05
+    label: "Front + rear, 0.5 s"
+    set:
+      T: 0.5
+      act: both
+    about: "E = 96,160 N²·s."
+  - id: both1
+    label: "Front + rear, 1 s"
+    set:
+      T: 1
+      act: both
+    about: Peak forces only about 120 N.
+  - id: front
+    label: "Front only, 0.5 s"
+    set:
+      T: 0.5
+      act: front
+    about: "Nearly singular Gramian: about 12.9 kN peak."
 - id: optimal
-  title: "Least-energy warm-up of the house to an illustrative target"
-  x: time t (h)
-  y: heater power (kW) or K above outdoors
+  title: "Active suspension: the least-effort way to level the body"
+  x: time t (s)
+  y: force (N) or pitch (°)
   legend:
-    - { label: "heater power u(t)", color: "var(--yel)" }
-    - { label: "2.5 kW heater limit", color: "var(--bad)", dash: true }
-    - { label: "T₁(t)", color: "var(--cyan)" }
-    - { label: "T₂(t)", color: "var(--org)" }
-  howToRead: "The illustrative target is (T₁, T₂) at time T, starting from outdoor temperature. Pontryagin’s minimum principle (or the Gramian) gives the profile that gets there with the least ∫u²dt: u(t) = Bᵀe^(Aᵀ(T−t))W(T)⁻¹x_T. Left: that heater power and the 2.5 kW limit. Right: the two room temperatures it produces, landing on the circles at t = T."
-  lookFor: "For (10, 7) K in 3 h: u starts at 1.78 kW, peaks near 2.41 kW around 2 h and eases to 0.97 kW at the end, because late heat mostly widens the room-1/room-2 gap (the fast difference mode) instead of warming room 2. Energy 13.43 kW²·h."
+  - label: front force
+    color: var(--cyan)
+  - label: rear force
+    color: var(--org)
+  - label: "pitch, controlled"
+    color: var(--org)
+  - label: "pitch, left alone"
+    color: var(--muted)
+    dash: true
+  howToRead: "Pontryagin's principle (or the Gramian formula) gives the force profile with the least ∫|u|²dt that takes the body from 2° nose-down, at rest, to level and still at time T: u(t) = −Bᵀe^(Aᵀ(T−t))W(T)⁻¹e^(AT)x₀. Left: the forces. Right: the pitch with that input (solid) and with no input (dashed)."
+  lookFor: "T = 0.5 s with front and rear actuators: peaks of 476 N front and 652 N rear, E = 96,160 N²·s. The forces are small at the start and largest at the end. With T = 1 s about 120 N is enough."
   controls:
-    - { id: Tf, label: "time allowed T", type: range, min: 1, max: 6, step: 0.1, default: 3, group: primary, unit: h }
-    - { id: x1T, label: "target T₁", type: range, min: 0, max: 15, step: 0.5, default: 10, group: primary, unit: K }
-    - { id: x2T, label: "target T₂", type: range, min: 0, max: 15, step: 0.5, default: 7, group: primary, unit: K }
+  - id: T
+    label: time allowed T
+    type: range
+    min: 0.3
+    max: 1.5
+    step: 0.05
+    default: 0.5
+    group: primary
+    unit: s
+  - id: act
+    label: actuators
+    type: select
+    default: both
+    group: primary
+    options: *id002
+  - id: wear
+    label: shock condition (share of new damping)
+    type: range
+    min: 0.1
+    max: 1.5
+    step: 0.05
+    default: 1
+    group: more
   presets:
-    - { id: house, label: "(10, 7) K in 3 h", set: { Tf: 3, x1T: 10, x2T: 7 }, about: "Fits within the 2.5 kW heater." }
-    - { id: equal, label: "(10, 10) K in 3 h", set: { Tf: 3, x1T: 10, x2T: 10 }, about: "Room 2 is heated only through the wall: 31.4 kW²·h and a 3.8 kW peak, past the 2.5 kW limit, and it dips to −4.7 kW (cooling) near the end." }
-    - { id: rush, label: "(10, 7) K in 1.5 h", set: { Tf: 1.5, x1T: 10, x2T: 7 }, about: "Half the time: 28.9 kW²·h and a 5.6 kW peak, more than the heater has, and it needs −2.6 kW (cooling) at the end." }
-
+  - id: t05
+    label: "0.5 s, front + rear"
+    set:
+      T: 0.5
+      act: both
+      wear: 1
+    about: "Peaks 476 N front, 652 N rear."
+  - id: t1
+    label: "1 s, front + rear"
+    set:
+      T: 1
+      act: both
+      wear: 1
+    about: "About 120 N: the shocks do most of the work."
+  - id: front
+    label: "0.5 s, front only"
+    set:
+      T: 0.5
+      act: front
+      wear: 1
+    about: "About 12.9 kN: barely controllable costs a lot."
 - id: ss
   title: "The speaker as a state-space model: the state (x, ẋ) of the cone"
   x: cone position x (µm) or time t (ms)
   y: velocity ẋ (mm/s) or x (µm)
   legend:
-    - { label: "state path so far", color: "var(--cyan)" }
-    - { label: "state at time t", color: "var(--yel)" }
-    - { label: "drive voltage (scaled)", color: "var(--vio)", dash: true }
+  - label: state path so far
+    color: var(--cyan)
+  - label: state at time t
+    color: var(--yel)
+  - label: drive voltage (scaled)
+    color: var(--vio)
+    dash: true
   howToRead: "The two states are cone position x and velocity ẋ; the coil current follows the voltage almost instantly and is left out. ẍ = −a₀x − a₁ẋ + a₀·(DC gain)·V with a₀ = 20.28 ms⁻², a₁ = 2.533 ms⁻¹ and a DC gain of 42.8 µm per volt. Left: the state moving through the (x, ẋ) plane (axes scaled to fit). Right: the cone position against time with the drive. Play runs the clock."
-  lookFor: "A click (a short pulse) starts the state on the velocity axis; it spirals in two or three turns (688 turns a second) before it is gone. A step spirals in to the new rest position 42.8 µm per volt out."
-  animate: { control: t, speed: 1, loop: true }
+  lookFor: A click (a short pulse) starts the state on the velocity axis; it spirals in two or three turns (688 turns a second) before it is gone. A step spirals in to the new rest position 42.8 µm per volt out.
+  animate:
+    control: t
+    speed: 1
+    loop: true
   controls:
-    - { id: t, label: "time t", type: range, min: 0, max: 6, step: 0.01, default: 2, group: primary, unit: ms }
-    - { id: input, label: "drive", type: seg, default: click, group: primary, options: [{ value: click, label: "click" }, { value: step, label: "step" }, { value: tone, label: "690 Hz tone" }] }
-    - { id: amp, label: "drive level", type: range, min: 0, max: 1, step: 0.01, default: 0.5, group: primary, unit: V }
+  - id: t
+    label: time t
+    type: range
+    min: 0
+    max: 6
+    step: 0.01
+    default: 2
+    group: primary
+    unit: ms
+  - id: input
+    label: drive
+    type: seg
+    default: click
+    group: primary
+    options:
+    - value: click
+      label: click
+    - value: step
+      label: step
+    - value: tone
+      label: 690 Hz tone
+  - id: amp
+    label: drive level
+    type: range
+    min: 0
+    max: 1
+    step: 0.01
+    default: 0.5
+    group: primary
+    unit: V
   presets:
-    - { id: click, label: "Click", set: { input: click, amp: 0.5, t: 2 }, about: "A 0.05 ms pulse: the free ring of the two poles −1.27 ± 4.32j /ms." }
-    - { id: step, label: "Step of 0.5 V", set: { input: step, amp: 0.5, t: 3 }, about: "Settles at 21.4 µm after a few overshoots (ζ ≈ 0.28)." }
-    - { id: tone, label: "690 Hz tone", set: { input: tone, amp: 0.5, t: 6 }, about: "After the start-up transient the state circles an ellipse at the drive frequency." }
-
+  - id: click
+    label: Click
+    set:
+      input: click
+      amp: 0.5
+      t: 2
+    about: "A 0.05 ms pulse: the free ring of the two poles −1.27 ± 4.32j /ms."
+  - id: step
+    label: Step of 0.5 V
+    set:
+      input: step
+      amp: 0.5
+      t: 3
+    about: Settles at 21.4 µm after a few overshoots (ζ ≈ 0.28).
+  - id: tone
+    label: 690 Hz tone
+    set:
+      input: tone
+      amp: 0.5
+      t: 6
+    about: After the start-up transient the state circles an ellipse at the drive frequency.
 - id: lti
   title: "Convolution on the speaker: drive voltage ∗ impulse response = cone motion"
   x: τ or t (ms)
   y: amplitude
   legend:
-    - { label: "drive V(τ) (V)", color: "var(--cyan)" }
-    - { label: "h(t − τ), flipped and slid to t (scaled)", color: "var(--org)" }
-    - { label: "product (area = output)", color: "var(--grn)" }
+  - label: drive V(τ) (V)
+    color: var(--cyan)
+  - label: "h(t − τ), flipped and slid to t (scaled)"
+    color: var(--org)
+  - label: product (area = output)
+    color: var(--grn)
   howToRead: "Left: the drive V(τ), the speaker’s impulse response flipped and slid to the current time t, and their product. The area under the product, times the DC gain 42.8 µm/V, is the cone displacement x(t). Right: x(t) built up as t moves (the solid part is what has been computed so far). Play slides t."
   lookFor: "With a 1 ms pulse the output rises, overshoots and rings at 688 Hz after the pulse ends: each later moment is the overlap of the pulse with a later part of the flipped ring."
-  animate: { control: t, speed: 1, loop: true }
+  animate:
+    control: t
+    speed: 1
+    loop: true
   controls:
-    - { id: t, label: "time t", type: range, min: 0, max: 6, step: 0.02, default: 1.5, group: primary, unit: ms }
-    - { id: input, label: "drive", type: seg, default: pulse, group: primary, options: [{ value: pulse, label: "1 ms pulse" }, { value: click, label: "click" }, { value: burst, label: "690 Hz burst" }, { value: step, label: "step" }] }
+  - id: t
+    label: time t
+    type: range
+    min: 0
+    max: 6
+    step: 0.02
+    default: 1.5
+    group: primary
+    unit: ms
+  - id: input
+    label: drive
+    type: seg
+    default: pulse
+    group: primary
+    options:
+    - value: pulse
+      label: 1 ms pulse
+    - value: click
+      label: click
+    - value: burst
+      label: 690 Hz burst
+    - value: step
+      label: step
   presets:
-    - { id: pulse, label: "1 V pulse, 1 ms", set: { input: pulse, t: 1.5 }, about: "Rise, overshoot, then the free ring." }
-    - { id: click, label: "Click (0.1 ms)", set: { input: click, t: 1 }, about: "Short enough that the output is just a scaled copy of h(t)." }
-    - { id: burst, label: "Three cycles at 690 Hz", set: { input: burst, t: 4 }, about: "Near resonance: the ring builds up with each cycle." }
-
+  - id: pulse
+    label: "1 V pulse, 1 ms"
+    set:
+      input: pulse
+      t: 1.5
+    about: "Rise, overshoot, then the free ring."
+  - id: click
+    label: Click (0.1 ms)
+    set:
+      input: click
+      t: 1
+    about: Short enough that the output is just a scaled copy of h(t).
+  - id: burst
+    label: Three cycles at 690 Hz
+    set:
+      input: burst
+      t: 4
+    about: "Near resonance: the ring builds up with each cycle."
 - id: eigfn
   title: "Tones are eigenfunctions of the speaker: the same frequency comes out"
   x: time t (ms) or real part
   y: amplitude or imaginary part
   legend:
-    - { label: "drive cos(ωt)", color: "var(--cyan)" }
-    - { label: "cone |H|cos(ωt + ∠H)", color: "var(--org)" }
+  - label: drive cos(ωt)
+    color: var(--cyan)
+  - label: "cone |H|cos(ωt + ∠H)"
+    color: var(--org)
   howToRead: "Left: a steady drive tone and the steady cone motion (normalised so DC gives 1). Right: the same two signals as rotating phasors e^(jωt) and H(jω)e^(jωt): both turn at the same rate; H only stretches and rotates. Play runs time."
   lookFor: "At 690 Hz the cone moves 1.83 times as far as at DC and lags by 82°. Move f above 1 kHz: the output shrinks and the lag approaches 180°, but the frequency never changes."
-  animate: { control: t, speed: 0.5, loop: true }
+  animate:
+    control: t
+    speed: 0.5
+    loop: true
   controls:
-    - { id: f, label: "tone frequency f", type: range, min: 50, max: 3000, step: 10, default: 690, group: primary, unit: Hz }
-    - { id: t, label: "time t", type: range, min: 0, max: 5, step: 0.01, default: 0, group: primary, unit: ms }
+  - id: f
+    label: tone frequency f
+    type: range
+    min: 50
+    max: 3000
+    step: 10
+    default: 690
+    group: primary
+    unit: Hz
+  - id: t
+    label: time t
+    type: range
+    min: 0
+    max: 5
+    step: 0.01
+    default: 0
+    group: primary
+    unit: ms
   presets:
-    - { id: ring, label: "690 Hz", set: { f: 690 }, about: "Near resonance: ×1.83, lag 82°." }
-    - { id: low, label: "200 Hz", set: { f: 200 }, about: "Below resonance: ×1.07, lag 10°." }
-    - { id: high, label: "2 kHz", set: { f: 2000 }, about: "Above resonance: ×0.14, lag 167°." }
-
+  - id: ring
+    label: 690 Hz
+    set:
+      f: 690
+    about: "Near resonance: ×1.83, lag 82°."
+  - id: low
+    label: 200 Hz
+    set:
+      f: 200
+    about: "Below resonance: ×1.07, lag 10°."
+  - id: high
+    label: 2 kHz
+    set:
+      f: 2000
+    about: "Above resonance: ×0.14, lag 167°."
 - id: ft
   title: "The Fourier transform of the speaker’s click response, by winding"
   x: real part or frequency f (Hz)
-  y: imaginary part or |X(f)|
+  y: "imaginary part or |X(f)|"
   legend:
-    - { label: "h(t)e^(−j2πft), wound", color: "var(--cyan)" }
-    - { label: "X(f) = the total (its centre of mass × duration)", color: "var(--yel)" }
-    - { label: "|X(f)|", color: "var(--cyan)" }
+  - label: "h(t)e^(−j2πft), wound"
+    color: var(--cyan)
+  - label: X(f) = the total (its centre of mass × duration)
+    color: var(--yel)
+  - label: "|X(f)|"
+    color: var(--cyan)
   howToRead: "Left: the click response h(t) wound around the origin at f turns per second; adding up the whole curve gives the complex number X(f). Right: |X(f)| for every f, which for an impulse response is |H(j2πf)|. The green band is the −3 dB band. Play sweeps f."
-  lookFor: "Near 660 Hz the winding lines up with the ring and the yellow arrow is longest. The band is about 400–850 Hz wide because the ring decays in under 1 ms."
-  animate: { control: f, speed: 150, loop: true }
+  lookFor: Near 660 Hz the winding lines up with the ring and the yellow arrow is longest. The band is about 400–850 Hz wide because the ring decays in under 1 ms.
+  animate:
+    control: f
+    speed: 150
+    loop: true
   controls:
-    - { id: f, label: "winding frequency f", type: range, min: 0, max: 2000, step: 5, default: 300, group: primary, unit: Hz }
+  - id: f
+    label: winding frequency f
+    type: range
+    min: 0
+    max: 2000
+    step: 5
+    default: 300
+    group: primary
+    unit: Hz
   presets:
-    - { id: dc, label: "f = 0", set: { f: 0 }, about: "No winding: X(0) = ∫h dt = 1, the DC gain (normalised: 1 ≡ 42.8 µm/V)." }
-    - { id: peak, label: "Peak, 658 Hz", set: { f: 658 }, about: "|X| ≈ 1.85 (+5.4 dB)." }
-    - { id: high, label: "1.5 kHz", set: { f: 1500 }, about: "The winding averages out: |X| is small." }
-
+  - id: dc
+    label: f = 0
+    set:
+      f: 0
+    about: "No winding: X(0) = ∫h dt = 1, the DC gain (normalised: 1 ≡ 42.8 µm/V)."
+  - id: peak
+    label: "Peak, 658 Hz"
+    set:
+      f: 658
+    about: "|X| ≈ 1.85 (+5.4 dB)."
+  - id: high
+    label: 1.5 kHz
+    set:
+      f: 1500
+    about: "The winding averages out: |X| is small."
 - id: fs
   title: "Fourier series of a square-wave drive, and Parseval"
   x: time t (ms) or frequency (Hz)
   y: drive (V) or amplitude
   legend:
-    - { label: "partial sum of N harmonics", color: "var(--cyan)" }
-    - { label: "the ±1 V square wave", color: "var(--muted)", dash: true }
-    - { label: "drive harmonic 4/(πk)", color: "var(--cyan)" }
-    - { label: "same harmonic at the cone, ×|H(kf₀)|", color: "var(--org)" }
+  - label: partial sum of N harmonics
+    color: var(--cyan)
+  - label: the ±1 V square wave
+    color: var(--muted)
+    dash: true
+  - label: drive harmonic 4/(πk)
+    color: var(--cyan)
+  - label: "same harmonic at the cone, ×|H(kf₀)|"
+    color: var(--org)
   howToRead: "A zero-mean ±1 V square wave at f₀ is a sum of odd sine harmonics with amplitudes 4/(πk). Left: the sum of the first N harmonics over two periods; the note gives the share of the power (mean square 1) they carry, which by Parseval is Σ(4/(πk))²/2. Right: the harmonic amplitudes in the drive (blue) and after the speaker’s |H| (orange); grey bars are harmonics left out."
   lookFor: "The first harmonic alone already carries 81% of the power; harmonics 1–3 (only 1 and 3 are nonzero) carry 90%; adding the 5th gives 93%. At f₀ = 230 Hz the third harmonic (690 Hz) lands near the resonance peak and is boosted at the cone."
   controls:
-    - { id: N, label: "harmonics up to k = N", type: range, min: 1, max: 25, step: 1, default: 5, group: primary }
-    - { id: f0, label: "fundamental f₀", type: range, min: 100, max: 800, step: 10, default: 200, group: primary, unit: Hz }
+  - id: N
+    label: harmonics up to k = N
+    type: range
+    min: 1
+    max: 25
+    step: 1
+    default: 5
+    group: primary
+  - id: f0
+    label: fundamental f₀
+    type: range
+    min: 100
+    max: 800
+    step: 10
+    default: 200
+    group: primary
+    unit: Hz
   presets:
-    - { id: buzz, label: "200 Hz buzz", set: { N: 5, f0: 200 }, about: "Odd harmonics at 200, 600, 1000 Hz…" }
-    - { id: one, label: "First harmonic only", set: { N: 1, f0: 200 }, about: "8/π² ≈ 81% of the power." }
-    - { id: third, label: "230 Hz: 3rd on resonance", set: { N: 7, f0: 230 }, about: "The third harmonic, 690 Hz, sits near the resonance peak." }
-
+  - id: buzz
+    label: 200 Hz buzz
+    set:
+      N: 5
+      f0: 200
+    about: "Odd harmonics at 200, 600, 1000 Hz…"
+  - id: one
+    label: First harmonic only
+    set:
+      N: 1
+      f0: 200
+    about: "8/π² ≈ 81% of the power."
+  - id: third
+    label: "230 Hz: 3rd on resonance"
+    set:
+      N: 7
+      f0: 230
+    about: "The third harmonic, 690 Hz, sits near the resonance peak."
 - id: ortho
   title: "Orthogonality: measuring one harmonic of the buzz at a time"
   x: time t (ms) or harmonic m
   y: amplitude
   legend:
-    - { label: "the buzz at the cone, y(t)", color: "var(--cyan)" }
-    - { label: "probe cos(2π·m·200t)", color: "var(--org)", dash: true }
-    - { label: "product (area ∝ inner product)", color: "var(--grn)" }
+  - label: "the buzz at the cone, y(t)"
+    color: var(--cyan)
+  - label: probe cos(2π·m·200t)
+    color: var(--org)
+    dash: true
+  - label: product (area ∝ inner product)
+    color: var(--grn)
   howToRead: "The buzz is the cone’s response to a 200 Hz ±1 V square wave: odd harmonics shaped by the speaker. Left: one period of it, a probe harmonic m, and their product; the inner product ⟨e_m, y⟩/⟨e_m, e_m⟩ (with the matching sine) is harmonic m’s amplitude. Right: those amplitudes for m = 1…9, each measured on its own."
   lookFor: "Pick an even m: the green area cancels exactly, because the drive has no even harmonics and different harmonics are orthogonal over a period."
   controls:
-    - { id: m, label: "probe harmonic m", type: range, min: 1, max: 9, step: 1, default: 3, group: primary }
+  - id: m
+    label: probe harmonic m
+    type: range
+    min: 1
+    max: 9
+    step: 1
+    default: 3
+    group: primary
   presets:
-    - { id: one, label: "m = 1 (200 Hz)", set: { m: 1 }, about: "The fundamental." }
-    - { id: three, label: "m = 3 (600 Hz)", set: { m: 3 }, about: "Near the resonance: boosted." }
-    - { id: two, label: "m = 2 (400 Hz)", set: { m: 2 }, about: "Even: zero." }
-
+  - id: one
+    label: m = 1 (200 Hz)
+    set:
+      m: 1
+    about: The fundamental.
+  - id: three
+    label: m = 3 (600 Hz)
+    set:
+      m: 3
+    about: "Near the resonance: boosted."
+  - id: two
+    label: m = 2 (400 Hz)
+    set:
+      m: 2
+    about: "Even: zero."
 - id: sampling
   title: "Sampling the speaker’s sound: aliasing"
   x: time t (ms) or frequency (kHz)
   y: amplitude
   legend:
-    - { label: "the true tone", color: "var(--cyan)" }
-    - { label: "its alias, through the same samples", color: "var(--org)", dash: true }
-    - { label: "samples", color: "var(--yel)" }
+  - label: the true tone
+    color: var(--cyan)
+  - label: "its alias, through the same samples"
+    color: var(--org)
+    dash: true
+  - label: samples
+    color: var(--yel)
   howToRead: "Top: a tone sampled at fs (yellow dots), with the lowest-frequency tone that passes through the same dots (orange). Bottom: sampling copies the spectrum at every multiple of fs; the green band ±fs/2 is all the samples can represent, and the copy inside it is what you hear back."
   lookFor: "At 8 kHz the 690 Hz ring is safe. Sweep f past 4 kHz: an orange copy walks down inside the band; 7.31 kHz samples exactly like 690 Hz."
-  animate: { control: f, speed: 1500, loop: true }
+  animate:
+    control: f
+    speed: 1500
+    loop: true
   controls:
-    - { id: f, label: "tone frequency f", type: range, min: 100, max: 15000, step: 10, default: 690, group: primary, unit: Hz }
-    - { id: fs, label: "sampling rate fs", type: range, min: 1, max: 16, step: 0.1, default: 8, group: primary, unit: kHz }
+  - id: f
+    label: tone frequency f
+    type: range
+    min: 100
+    max: 15000
+    step: 10
+    default: 690
+    group: primary
+    unit: Hz
+  - id: fs
+    label: sampling rate fs
+    type: range
+    min: 1
+    max: 16
+    step: 0.1
+    default: 8
+    group: primary
+    unit: kHz
   presets:
-    - { id: ring, label: "690 Hz at 8 kHz", set: { f: 690, fs: 8 }, about: "Well below fs/2 = 4 kHz." }
-    - { id: alias, label: "7.31 kHz at 8 kHz", set: { f: 7310, fs: 8 }, about: "Aliases onto 690 Hz." }
-    - { id: slow, label: "690 Hz at 1.2 kHz", set: { f: 690, fs: 1.2 }, about: "fs/2 = 600 Hz is below 690 Hz: the ring aliases to 510 Hz." }
-
+  - id: ring
+    label: 690 Hz at 8 kHz
+    set:
+      f: 690
+      fs: 8
+    about: Well below fs/2 = 4 kHz.
+  - id: alias
+    label: 7.31 kHz at 8 kHz
+    set:
+      f: 7310
+      fs: 8
+    about: Aliases onto 690 Hz.
+  - id: slow
+    label: 690 Hz at 1.2 kHz
+    set:
+      f: 690
+      fs: 1.2
+    about: "fs/2 = 600 Hz is below 690 Hz: the ring aliases to 510 Hz."
 - id: dtft
-  title: "DTFT of the sampled click ring"
+  title: DTFT of the sampled click ring
   x: sample n or Ω (rad/sample)
-  y: x[n] or |X(e^(jΩ))|
+  y: "x[n] or |X(e^(jΩ))|"
   legend:
-    - { label: "samples x[n] = T·h(nT)", color: "var(--cyan)" }
-    - { label: "|X(e^(jΩ))|", color: "var(--cyan)" }
-    - { label: "the chosen Ω", color: "var(--yel)" }
+  - label: "samples x[n] = T·h(nT)"
+    color: var(--cyan)
+  - label: "|X(e^(jΩ))|"
+    color: var(--cyan)
+  - label: the chosen Ω
+    color: var(--yel)
   howToRead: "Left: three milliseconds of the click ring sampled at fs (dashed: the continuous ring). Right: its DTFT magnitude from −2π to 2π, in closed form b₁e^(−jΩ)/(1 − 2r cos θ e^(−jΩ) + r²e^(−2jΩ)) with r = e^(−σT) and θ = ω_d T. The green band is one period, −π to π; Ω converts to hertz as Ω·fs/2π. Play sweeps Ω."
   lookFor: "At 8 kHz the pole angle is θ = ω_dT ≈ 0.540 rad (688 Hz); the DTFT peak sits a little lower, at Ω ≈ 0.52 rad (≈660 Hz), like the analogue peak, and repeats every 2π. Lower fs and the same ring moves to larger Ω, closer to π."
-  animate: { control: Om, speed: 0.5, loop: true }
+  animate:
+    control: Om
+    speed: 0.5
+    loop: true
   controls:
-    - { id: Om, label: "Ω", type: range, min: 0, max: 3.14, step: 0.01, default: 0.54, group: primary, unit: rad }
-    - { id: fs, label: "sampling rate fs", type: range, min: 2, max: 16, step: 0.5, default: 8, group: primary, unit: kHz }
+  - id: Om
+    label: Ω
+    type: range
+    min: 0
+    max: 3.14
+    step: 0.01
+    default: 0.54
+    group: primary
+    unit: rad
+  - id: fs
+    label: sampling rate fs
+    type: range
+    min: 2
+    max: 16
+    step: 0.5
+    default: 8
+    group: primary
+    unit: kHz
   presets:
-    - { id: base, label: "8 kHz", set: { fs: 8, Om: 0.54 }, about: "r = 0.854; the pole angle is θ = ω_dT ≈ 0.540 rad (688 Hz); the DTFT peak sits a little lower, at Ω ≈ 0.52 rad (≈660 Hz), like the analogue peak." }
-    - { id: slow, label: "3 kHz", set: { fs: 3, Om: 1.44 }, about: "Pole angle θ ≈ 1.44 rad." }
-    - { id: fast, label: "16 kHz", set: { fs: 16, Om: 0.27 }, about: "More samples per ring: pole angle θ ≈ 0.27 rad." }
-
+  - id: base
+    label: 8 kHz
+    set:
+      fs: 8
+      Om: 0.54
+    about: "r = 0.854; the pole angle is θ = ω_dT ≈ 0.540 rad (688 Hz); the DTFT peak sits a little lower, at Ω ≈ 0.52 rad (≈660 Hz), like the analogue peak."
+  - id: slow
+    label: 3 kHz
+    set:
+      fs: 3
+      Om: 1.44
+    about: Pole angle θ ≈ 1.44 rad.
+  - id: fast
+    label: 16 kHz
+    set:
+      fs: 16
+      Om: 0.27
+    about: "More samples per ring: pole angle θ ≈ 0.27 rad."
 - id: dft
   title: "DFT of a block of the click ring: N bins on the DTFT"
   x: sample n or frequency (Hz)
-  y: x[n] or |X|
+  y: "x[n] or |X|"
   legend:
-    - { label: "samples / DFT bins", color: "var(--cyan)" }
-    - { label: "the DTFT it samples", color: "var(--muted)", dash: true }
+  - label: samples / DFT bins
+    color: var(--cyan)
+  - label: the DTFT it samples
+    color: var(--muted)
+    dash: true
   howToRead: "Left: N samples of the click ring at 8 kHz. Right: the DFT magnitudes |X[k]| at frequencies k·fs/N (bins), sitting exactly on the DTFT of the same samples (dashed). More samples means closer bins on the same curve."
   lookFor: "The ring decays with a time constant of about 6 samples and is under 1% after about 30 samples (under 4 ms), so most of the 64 samples are near zero; its spectrum is about 400 Hz wide because of damping, so it covers several bins whatever N is."
   controls:
-    - { id: N, label: "block length N", type: range, min: 16, max: 128, step: 16, default: 64, group: primary }
+  - id: N
+    label: block length N
+    type: range
+    min: 16
+    max: 128
+    step: 16
+    default: 64
+    group: primary
   presets:
-    - { id: base, label: "N = 64", set: { N: 64 }, about: "Bins 125 Hz apart." }
-    - { id: short, label: "N = 16", set: { N: 16 }, about: "Bins 500 Hz apart: the peak is barely resolved." }
-    - { id: long, label: "N = 128", set: { N: 128 }, about: "Bins 62.5 Hz apart: same curve, more samples of it." }
-
+  - id: base
+    label: N = 64
+    set:
+      N: 64
+    about: Bins 125 Hz apart.
+  - id: short
+    label: N = 16
+    set:
+      N: 16
+    about: "Bins 500 Hz apart: the peak is barely resolved."
+  - id: long
+    label: N = 128
+    set:
+      N: 128
+    about: "Bins 62.5 Hz apart: same curve, more samples of it."
 - id: window
   title: "Windowing and leakage: a steady hum near the resonance"
   x: sample n or bin k
   y: amplitude or level (dB)
   legend:
-    - { label: "windowed samples / DFT bins", color: "var(--cyan)" }
-    - { label: "window shape", color: "var(--vio)", dash: true }
-    - { label: "true frequency of the hum", color: "var(--yel)", dash: true }
+  - label: windowed samples / DFT bins
+    color: var(--cyan)
+  - label: window shape
+    color: var(--vio)
+    dash: true
+  - label: true frequency of the hum
+    color: var(--yel)
+    dash: true
   howToRead: "Left: 64 samples (8 ms at 8 kHz) of a steady hum, multiplied by a rectangular or Hann window. Right: the DFT in dB, scaled so a hum exactly on a bin reads 0 dB, with the hum’s true frequency marked. Bins are 125 Hz apart. Play sweeps the hum frequency."
   lookFor: "At 750 Hz (bin 6) there is a single spike. At 690 Hz the hum falls between bins 5 and 6: both read about 4 dB low (−4.7 and −3.2 dB) and the energy leaks into every bin. Hann lowers the far bins by tens of dB but widens the peak."
-  animate: { control: f, speed: 20, loop: true }
+  animate:
+    control: f
+    speed: 20
+    loop: true
   controls:
-    - { id: f, label: "hum frequency", type: range, min: 500, max: 900, step: 1, default: 690, group: primary, unit: Hz }
-    - { id: win, label: "window", type: seg, default: rect, group: primary, options: [{ value: rect, label: "rectangular" }, { value: hann, label: "Hann" }] }
+  - id: f
+    label: hum frequency
+    type: range
+    min: 500
+    max: 900
+    step: 1
+    default: 690
+    group: primary
+    unit: Hz
+  - id: win
+    label: window
+    type: seg
+    default: rect
+    group: primary
+    options:
+    - value: rect
+      label: rectangular
+    - value: hann
+      label: Hann
   presets:
-    - { id: hum, label: "690 Hz, rectangular", set: { f: 690, win: rect }, about: "Bin 5.52: leakage." }
-    - { id: onbin, label: "750 Hz (on bin 6)", set: { f: 750, win: rect }, about: "A whole number of cycles: one spike." }
-    - { id: hann, label: "690 Hz, Hann", set: { f: 690, win: hann }, about: "Lower skirts, wider peak." }
-
+  - id: hum
+    label: "690 Hz, rectangular"
+    set:
+      f: 690
+      win: rect
+    about: "Bin 5.52: leakage."
+  - id: onbin
+    label: 750 Hz (on bin 6)
+    set:
+      f: 750
+      win: rect
+    about: "A whole number of cycles: one spike."
+  - id: hann
+    label: "690 Hz, Hann"
+    set:
+      f: 690
+      win: hann
+    about: "Lower skirts, wider peak."
 - id: laplace
   title: "The Laplace transform of the speaker’s impulse response, and its region of convergence"
   x: time t (ms) or σ (1/ms)
   y: integrand or ω (1/ms)
   legend:
-    - { label: "h(t)·e^(−σt)·cos ωt", color: "var(--grn)" }
-    - { label: "poles of H(s)", color: "#fff" }
-    - { label: "region-of-convergence boundary", color: "var(--yel)", dash: true }
+  - label: h(t)·e^(−σt)·cos ωt
+    color: var(--grn)
+  - label: poles of H(s)
+    color: "#fff"
+  - label: region-of-convergence boundary
+    color: var(--yel)
+    dash: true
   howToRead: "Pick s = σ + jω (in 1/ms, so ω = 4.32 is 688 Hz). Left: the speaker’s h(t) weighted by e^(−σt) and cos ωt; its area is Re H(s). Right: |H(s)| over the s-plane as a heat map with the two poles. The integral settles only to the right of the dashed line through the poles (σ > −1.27): the ROC. The second signal is an unstable speaker with negative damping."
   lookFor: "Slide σ left past −1.27: the weighted ring stops decaying and the area never settles, exactly where the poles are. With the unstable speaker the ROC moves right of 0, so it has no Fourier transform."
-  animate: { control: omega, speed: 1, loop: true }
+  animate:
+    control: omega
+    speed: 1
+    loop: true
   controls:
-    - { id: sigma, label: "σ = Re s", type: range, min: -3, max: 1.5, step: 0.05, default: 0, group: primary, unit: "1/ms" }
-    - { id: omega, label: "ω = Im s", type: range, min: 0, max: 8, step: 0.05, default: 4.3, group: primary, unit: "1/ms" }
-    - { id: sig, label: "signal", type: seg, default: spk, group: primary, options: [{ value: spk, label: "speaker h(t)" }, { value: grow, label: "unstable speaker" }] }
+  - id: sigma
+    label: σ = Re s
+    type: range
+    min: -3
+    max: 1.5
+    step: 0.05
+    default: 0
+    group: primary
+    unit: 1/ms
+  - id: omega
+    label: ω = Im s
+    type: range
+    min: 0
+    max: 8
+    step: 0.05
+    default: 4.3
+    group: primary
+    unit: 1/ms
+  - id: sig
+    label: signal
+    type: seg
+    default: spk
+    group: primary
+    options:
+    - value: spk
+      label: speaker h(t)
+    - value: grow
+      label: unstable speaker
   presets:
-    - { id: spk, label: "Inside the ROC", set: { sig: spk, sigma: 0, omega: 4.3 }, about: "σ = 0 > −1.27: this is H(jω), the frequency response." }
-    - { id: edge, label: "Outside the ROC", set: { sig: spk, sigma: -1.8, omega: 4.3 }, about: "e^(−σt) grows faster than the ring decays." }
-    - { id: grow, label: "Unstable speaker", set: { sig: grow, sigma: 1, omega: 4.3 }, about: "Poles at +0.38 ± 4.49j: ROC σ > 0.38." }
-
+  - id: spk
+    label: Inside the ROC
+    set:
+      sig: spk
+      sigma: 0
+      omega: 4.3
+    about: "σ = 0 > −1.27: this is H(jω), the frequency response."
+  - id: edge
+    label: Outside the ROC
+    set:
+      sig: spk
+      sigma: -1.8
+      omega: 4.3
+    about: e^(−σt) grows faster than the ring decays.
+  - id: grow
+    label: Unstable speaker
+    set:
+      sig: grow
+      sigma: 1
+      omega: 4.3
+    about: "Poles at +0.38 ± 4.49j: ROC σ > 0.38."
 - id: inverse
   title: "Inverting H(s) on the speaker: one term per pole, weighted by its residue"
   x: Re s (1/ms) or time t (ms)
   y: Im s (1/ms) or h(t) (1/ms)
   legend:
-    - { label: "poles", color: "var(--bad)" }
-    - { label: "h(t)", color: "var(--cyan)" }
-    - { label: "pole terms or envelope", color: "var(--org)", dash: true }
+  - label: poles
+    color: var(--bad)
+  - label: h(t)
+    color: var(--cyan)
+  - label: pole terms or envelope
+    color: var(--org)
+    dash: true
   howToRead: "H(s) = a₀/(s² + a₁s + a₀) with a₀ = 20.28 and a₁ = 2.533 × the damping factor. Left: the two poles and the residue c = a₀/(p₁ − p₂). Right: h(t) and its terms: for a complex pair the two terms combine into 2|c|e^(−σt)sin ω_d t (envelope dashed); for two real poles they are two exponentials; for a repeated pole the single term is a₀t e^(−σt)."
   lookFor: "Raise the damping factor: the poles slide together, meet at −4.50 when the factor is 3.56 (critical), then split along the real axis. At the meeting point the residues blow up and cancel into t·e^(−σt)."
   controls:
-    - { id: damp, label: "damping factor (1 = real speaker)", type: range, min: 0.3, max: 6, step: 0.01, default: 1, group: primary }
+  - id: damp
+    label: damping factor (1 = real speaker)
+    type: range
+    min: 0.3
+    max: 6
+    step: 0.01
+    default: 1
+    group: primary
   presets:
-    - { id: real, label: "Real speaker (ζ = 0.28)", set: { damp: 1 }, about: "Poles −1.27 ± 4.32j; residue −2.35j." }
-    - { id: crit, label: "Critical (×3.56)", set: { damp: 3.56 }, about: "Repeated pole: a Jordan block." }
-    - { id: over, label: "Overdamped (×5)", set: { damp: 5 }, about: "Two real poles, two exponentials." }
-
+  - id: real
+    label: Real speaker (ζ = 0.28)
+    set:
+      damp: 1
+    about: Poles −1.27 ± 4.32j; residue −2.35j.
+  - id: crit
+    label: Critical (×3.56)
+    set:
+      damp: 3.56
+    about: "Repeated pole: a Jordan block."
+  - id: over
+    label: Overdamped (×5)
+    set:
+      damp: 5
+    about: "Two real poles, two exponentials."
 - id: jordan
   title: "A repeated pole on the speaker: the Jordan case at critical damping"
   x: Re s (1/ms) or time t (ms)
   y: Im s (1/ms) or h(t) (1/ms)
   legend:
-    - { label: "poles", color: "var(--bad)" }
-    - { label: "h(t)", color: "var(--cyan)" }
-    - { label: "pole terms", color: "var(--org)", dash: true }
+  - label: poles
+    color: var(--bad)
+  - label: h(t)
+    color: var(--cyan)
+  - label: pole terms
+    color: var(--org)
+    dash: true
   howToRead: "Same speaker model with its damping scaled. At a factor of 3.56 (ζ = 1) the two poles coincide at −4.50 /ms and A = [[0, 1], [−a₀, −a₁]] has a single eigenvector: one Jordan block, and h(t) = a₀ t e^(−4.50t). Nudge the factor either side to see the two-term forms it is the limit of."
   lookFor: "Just above critical the two dashed exponentials are huge and opposite; their difference is the smooth t·e^(−σt) curve. Just below, the oscillation is so slow it never completes a cycle."
   controls:
-    - { id: damp, label: "damping factor (1 = real speaker)", type: range, min: 2.5, max: 5, step: 0.01, default: 3.56, group: primary }
+  - id: damp
+    label: damping factor (1 = real speaker)
+    type: range
+    min: 2.5
+    max: 5
+    step: 0.01
+    default: 3.56
+    group: primary
   presets:
-    - { id: crit, label: "Critical (×3.56)", set: { damp: 3.56 }, about: "Repeated pole −4.50: a₀ t e^(−4.50t)." }
-    - { id: above, label: "Just over (×3.8)", set: { damp: 3.8 }, about: "Two close real poles." }
-    - { id: below, label: "Just under (×3.3)", set: { damp: 3.3 }, about: "A slow complex pair." }
-
+  - id: crit
+    label: Critical (×3.56)
+    set:
+      damp: 3.56
+    about: "Repeated pole −4.50: a₀ t e^(−4.50t)."
+  - id: above
+    label: Just over (×3.8)
+    set:
+      damp: 3.8
+    about: Two close real poles.
+  - id: below
+    label: Just under (×3.3)
+    set:
+      damp: 3.3
+    about: A slow complex pair.
 - id: tf
-  title: "The speaker’s transfer function as distances to its poles"
+  title: The speaker’s transfer function as distances to its poles
   x: Re s (1/ms) or frequency (Hz)
-  y: Im s (1/ms) or |H| (dB)
+  y: "Im s (1/ms) or |H| (dB)"
   legend:
-    - { label: "pole-to-jω distances", color: "var(--org)", dash: true }
-    - { label: "the point jω = j2πf", color: "var(--yel)" }
-    - { label: "|H(j2πf)|", color: "var(--cyan)" }
+  - label: pole-to-jω distances
+    color: var(--org)
+    dash: true
+  - label: the point jω = j2πf
+    color: var(--yel)
+  - label: "|H(j2πf)|"
+    color: var(--cyan)
   howToRead: "|H(jω)| = a₀ divided by the product of the distances from the two poles to the point jω on the imaginary axis (ω in 1/ms: 2πf/1000). Left: the poles and those distances. Right: |H| in dB against frequency. Play sweeps f."
   lookFor: "Near 4.32j (688 Hz) jω is closest to the upper pole, but |H| = a₀/(d₁d₂) peaks a little lower, at 658 Hz (+5.4 dB, ×1.85), because d₂ keeps growing (at 690 Hz it is ×1.83). Increase the damping and the poles move left: the peak flattens."
-  animate: { control: f, speed: 250, loop: true }
+  animate:
+    control: f
+    speed: 250
+    loop: true
   controls:
-    - { id: f, label: "frequency f", type: range, min: 0, max: 2500, step: 5, default: 300, group: primary, unit: Hz }
-    - { id: damp, label: "damping factor", type: range, min: 0.3, max: 4, step: 0.05, default: 1, group: primary }
+  - id: f
+    label: frequency f
+    type: range
+    min: 0
+    max: 2500
+    step: 5
+    default: 300
+    group: primary
+    unit: Hz
+  - id: damp
+    label: damping factor
+    type: range
+    min: 0.3
+    max: 4
+    step: 0.05
+    default: 1
+    group: primary
   presets:
-    - { id: real, label: "Real speaker at 690 Hz", set: { f: 690, damp: 1 }, about: "Close to the pole: the peak." }
-    - { id: light, label: "Light damping", set: { f: 690, damp: 0.4 }, about: "A sharp resonance." }
-    - { id: crit, label: "Critical damping", set: { f: 690, damp: 3.56 }, about: "No peak at all." }
-
+  - id: real
+    label: Real speaker at 690 Hz
+    set:
+      f: 690
+      damp: 1
+    about: "Close to the pole: the peak."
+  - id: light
+    label: Light damping
+    set:
+      f: 690
+      damp: 0.4
+    about: A sharp resonance.
+  - id: crit
+    label: Critical damping
+    set:
+      f: 690
+      damp: 3.56
+    about: No peak at all.
 - id: zfilter
   title: "The speaker as a digital filter: a difference equation and its z-plane"
   x: Re z or frequency (Hz)
-  y: Im z or |H| (dB)
+  y: "Im z or |H| (dB)"
   legend:
-    - { label: "pole-to-e^(jΩ) distances", color: "var(--org)", dash: true }
-    - { label: "the point e^(jΩ)", color: "var(--yel)" }
-    - { label: "digital |H(e^(jΩ))|", color: "var(--cyan)" }
-    - { label: "analogue |H(j2πf)|", color: "var(--muted)", dash: true }
+  - label: pole-to-e^(jΩ) distances
+    color: var(--org)
+    dash: true
+  - label: the point e^(jΩ)
+    color: var(--yel)
+  - label: "digital |H(e^(jΩ))|"
+    color: var(--cyan)
+  - label: "analogue |H(j2πf)|"
+    color: var(--muted)
+    dash: true
   howToRead: "Sampling the speaker’s impulse response gives the recursion y[n] = 2r cos θ·y[n−1] − r²y[n−2] + b₁x[n−1] with poles r e^(±jθ) (r = e^(−σT), θ = ω_d T) and a zero at the origin. Left: the z-plane, unit circle, poles, and the point e^(jΩ) for the chosen frequency; the distances from the poles and zero to that point shape the response. Right: the digital response against the analogue one."
   lookFor: "At 8 kHz the poles sit at 0.854·e^(±0.540j), inside the unit circle (stable). Lower the sampling rate: the digital curve departs from the analogue one near fs/2."
-  animate: { control: f, speed: 300, loop: true }
+  animate:
+    control: f
+    speed: 300
+    loop: true
   controls:
-    - { id: f, label: "frequency f", type: range, min: 0, max: 4000, step: 10, default: 690, group: primary, unit: Hz }
-    - { id: fs, label: "sampling rate fs", type: range, min: 3, max: 16, step: 0.5, default: 8, group: primary, unit: kHz }
+  - id: f
+    label: frequency f
+    type: range
+    min: 0
+    max: 4000
+    step: 10
+    default: 690
+    group: primary
+    unit: Hz
+  - id: fs
+    label: sampling rate fs
+    type: range
+    min: 3
+    max: 16
+    step: 0.5
+    default: 8
+    group: primary
+    unit: kHz
   presets:
-    - { id: base, label: "8 kHz, 690 Hz", set: { fs: 8, f: 690 }, about: "Near the poles: the peak." }
-    - { id: slow, label: "3 kHz", set: { fs: 3, f: 690 }, about: "Poles at a larger angle; the digital curve bends near 1.5 kHz." }
-    - { id: fast, label: "16 kHz", set: { fs: 16, f: 690 }, about: "Close to the analogue response." }
-
+  - id: base
+    label: "8 kHz, 690 Hz"
+    set:
+      fs: 8
+      f: 690
+    about: "Near the poles: the peak."
+  - id: slow
+    label: 3 kHz
+    set:
+      fs: 3
+      f: 690
+    about: Poles at a larger angle; the digital curve bends near 1.5 kHz.
+  - id: fast
+    label: 16 kHz
+    set:
+      fs: 16
+      f: 690
+    about: Close to the analogue response.
 - id: lintest
-  title: "Is it linear? Is it time-invariant? Test the earbud and five other systems"
+  title: Is it linear? Is it time-invariant? Test the earbud and five other systems
   x: time t (ms) or drive a (V)
-  y: output (µm for the earbud, V otherwise)
+  y: "output (µm for the earbud, V otherwise)"
   legend:
-    - { label: "system of the combined input, e.g. T{u₁ + u₂}", color: "var(--grn)" }
-    - { label: "same combination of the responses, e.g. T{u₁} + T{u₂}", color: "var(--yel)", dash: true }
-    - { label: "output peak against drive", color: "var(--cyan)" }
-    - { label: "straight line a linear system would follow", color: "var(--muted)", dash: true }
+  - label: "system of the combined input, e.g. T{u₁ + u₂}"
+    color: var(--grn)
+  - label: "same combination of the responses, e.g. T{u₁} + T{u₂}"
+    color: var(--yel)
+    dash: true
+  - label: output peak against drive
+    color: var(--cyan)
+  - label: straight line a linear system would follow
+    color: var(--muted)
+    dash: true
   howToRead: "The inputs are u₁ = a·cos(2π·200 Hz·t) and u₂ = 0.6a·cos(2π·690 Hz·t). The systems: the earbud, y = u², y = 2u + 1, the AM mixer y = u·cos(2π·1 kHz·t), y(t) = u(2t) and the delay y(t) = u(t − 0.5 ms). Pick a test. Additivity compares T{u₁ + u₂} with T{u₁} + T{u₂}; homogeneity compares T{2u₁} with 2·T{u₁}; time invariance compares the response to u₁ delayed by 0.3 ms with the response y₁ delayed by 0.3 ms. Left: the two sides on top of each other, with the rms mismatch (PASS under 1%). Right: the output peak as the drive a grows; homogeneity needs a straight line through 0. The earbud is the speaker’s steady-state response (42.8 µm/V × |H(f)|) followed by an illustrative soft excursion limit of ±100 µm (x = 100·tanh(x_lin/100) µm; not a datasheet value)."
   lookFor: "At a = 0.2 V the earbud passes additivity (0.5% mismatch) and homogeneity (0.7%); at 1 V the cone runs into its limit and the mismatch is 10% and 13%. The offset system y = 2u + 1 fails both tests at every drive (zero in gives 1 out), and the mixer passes both but fails the delay test: it is linear and time-varying."
-  animate: { control: a, speed: 1, loop: true }
+  animate:
+    control: a
+    speed: 1
+    loop: true
   controls:
-    - { id: a, label: "drive a", type: range, min: 0.05, max: 5, step: 0.05, default: 0.2, group: primary, unit: V }
-    - { id: sys, label: "system", type: seg, default: spk, group: primary, options: [{ value: spk, label: "earbud" }, { value: square, label: "u²" }, { value: offset, label: "2u+1" }, { value: mixer, label: "mixer" }, { value: scale, label: "u(2t)" }, { value: delay, label: "delay" }] }
-    - { id: test, label: "test", type: seg, default: add, group: primary, options: [{ value: add, label: "additivity" }, { value: hom, label: "homogeneity" }, { value: shift, label: "time invariance" }] }
+  - id: a
+    label: drive a
+    type: range
+    min: 0.05
+    max: 5
+    step: 0.05
+    default: 0.2
+    group: primary
+    unit: V
+  - id: sys
+    label: system
+    type: seg
+    default: spk
+    group: primary
+    options:
+    - value: spk
+      label: earbud
+    - value: square
+      label: u²
+    - value: offset
+      label: 2u+1
+    - value: mixer
+      label: mixer
+    - value: scale
+      label: u(2t)
+    - value: delay
+      label: delay
+  - id: test
+    label: test
+    type: seg
+    default: add
+    group: primary
+    options:
+    - value: add
+      label: additivity
+    - value: hom
+      label: homogeneity
+    - value: shift
+      label: time invariance
   presets:
-    - { id: quiet, label: "Earbud, quiet (0.2 V)", set: { a: 0.2, sys: spk, test: add }, about: "Peak about 9 µm: the two curves lie on top of each other. Linear for small signals." }
-    - { id: loud, label: "Earbud, loud (2 V): clipping", set: { a: 2, sys: spk, test: hom }, about: "The cone hits the ±100 µm limit: T{2u₁} is far less than 2·T{u₁}. Homogeneity fails (29%)." }
-    - { id: offset, label: "y = 2u + 1 (affine)", set: { a: 1, sys: offset, test: add }, about: "T{u₁ + u₂} has one +1, T{u₁} + T{u₂} has two. Zero in does not give zero out." }
-    - { id: square, label: "y = u²", set: { a: 1, sys: square, test: hom }, about: "Doubling the input quadruples the output." }
-    - { id: mixer, label: "AM mixer, delay test", set: { a: 1, sys: mixer, test: shift }, about: "Linear, but the 1 kHz carrier does not move when the input is delayed: time-varying." }
-    - { id: scale, label: "y(t) = u(2t), delay test", set: { a: 1, sys: scale, test: shift }, about: "Delaying the input by 0.3 ms delays the output by only 0.15 ms: linear but not time-invariant." }
-    - { id: delay, label: "y(t) = u(t − 0.5 ms)", set: { a: 1, sys: delay, test: shift }, about: "Passes all three tests: a pure delay is LTI." }
+  - id: quiet
+    label: "Earbud, quiet (0.2 V)"
+    set:
+      a: 0.2
+      sys: spk
+      test: add
+    about: "Peak about 9 µm: the two curves lie on top of each other. Linear for small signals."
+  - id: loud
+    label: "Earbud, loud (2 V): clipping"
+    set:
+      a: 2
+      sys: spk
+      test: hom
+    about: "The cone hits the ±100 µm limit: T{2u₁} is far less than 2·T{u₁}. Homogeneity fails (29%)."
+  - id: offset
+    label: y = 2u + 1 (affine)
+    set:
+      a: 1
+      sys: offset
+      test: add
+    about: "T{u₁ + u₂} has one +1, T{u₁} + T{u₂} has two. Zero in does not give zero out."
+  - id: square
+    label: y = u²
+    set:
+      a: 1
+      sys: square
+      test: hom
+    about: Doubling the input quadruples the output.
+  - id: mixer
+    label: "AM mixer, delay test"
+    set:
+      a: 1
+      sys: mixer
+      test: shift
+    about: "Linear, but the 1 kHz carrier does not move when the input is delayed: time-varying."
+  - id: scale
+    label: "y(t) = u(2t), delay test"
+    set:
+      a: 1
+      sys: scale
+      test: shift
+    about: "Delaying the input by 0.3 ms delays the output by only 0.15 ms: linear but not time-invariant."
+  - id: delay
+    label: y(t) = u(t − 0.5 ms)
+    set:
+      a: 1
+      sys: delay
+      test: shift
+    about: "Passes all three tests: a pure delay is LTI."

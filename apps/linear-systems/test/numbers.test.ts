@@ -1,6 +1,6 @@
 /**
  * Numbers the linear-systems page states, re-derived from scratch.
- * - Running examples: earbud speaker (Thiele–Small set) and two-room house.
+ * - Running examples: earbud speaker (Thiele–Small set) and the car on its suspension (test/car.test.ts).
  * - Practice exam A1–A4, B1–B3 and the 21 variants: the answers in the Review pages
  *   (checked in Python by /workspace/ls-review/verify.py) recomputed here in TypeScript.
  */
@@ -111,27 +111,6 @@ describe('earbud speaker (Mms 0.084 g, Rms 0.173 kg/s, Cms 0.587 mm/N, Bl 0.545 
   });
 });
 
-describe('two-room house: A = [[−1.2, 1], [1, −1.2]] /h, B = (3600/C_th, 0)ᵀ, C = [1 0]', () => {
-  const A: M = [[-1.2, 1], [1, -1.2]];
-  it('modes: average λ = −0.2 /h (τ = 5 h), difference λ = −2.2 /h (τ ≈ 27 min)', () => {
-    const [l1, l2] = eig2(A); expect(l1).toBeCloseTo(-0.2, 12); expect(l2).toBeCloseTo(-2.2, 12);
-    expect(-1 / l1).toBeCloseTo(5, 12); expect((-1 / l2) * 60).toBeCloseTo(27.27, 2);
-    close(mul(A, col([1, 1])), col([-0.2, -0.2]), 12); close(mul(A, col([1, -1])), col([-2.2, 2.2]), 12);
-  });
-  it('2.5 kW heater with C_th = 1 MJ/K (B = (3.6, 0) K/h per kW) settles at (24.55, 20.45) K above outdoors', () => {
-    const b = 3.6 * 2.5; // K/h from the room-1 heater
-    const dt = det(A); const x = [(-(A[1][1]) * b) / dt, (A[1][0] * b) / dt]; // −A⁻¹ B u
-    expect(x[0]).toBeCloseTo(24.55, 2); expect(x[1]).toBeCloseTo(20.45, 2);
-  });
-  it('heater in room 1 + sensor in room 1: controllable and observable', () => {
-    expect(rank(ctrb(A, col([3.6, 0])))).toBe(2); expect(rank(obsv(A, [[1, 0]]))).toBe(2);
-  });
-  it('heating both rooms equally loses the difference mode; an average thermostat cannot see it', () => {
-    expect(rank(ctrb(A, col([1, 1])))).toBe(1); expect(rank(obsv(A, [[0.5, 0.5]]))).toBe(1);
-    // PBH: left eigenvector of λ = −2.2 is (1, −1); it is orthogonal to B = (1, 1)
-    expect(mul([[1, -1]], col([1, 1]))[0][0]).toBe(0);
-  });
-});
 
 // -------------------------------------------------------------------------------------------
 describe('practice exam part A', () => {
@@ -271,38 +250,11 @@ describe('the page states the numbers tested above', () => {
   const read = (p: string) => fs.readFileSync(path.join(app, p), 'utf8');
   it('subject details and review pages carry the tested values', () => {
     const subj = read('subject.yaml'); const a = read('content/review/part-a.md');
-    for (const v of ['717', '186', '0.28', '−0.2', '−2.2', '27 min', '5 h']) expect(subj).toContain(v);
+    for (const v of ['717', '186', '0.28', '1.151', '0.289', '1.419', '0.357', '0.56']) expect(subj).toContain(v);
     for (const v of ['{4}{35}', '47.9', '0.3125', '−0.003527']) expect(a).toContain(v);
   });
 });
 
-import { houseOptimalU, houseGramian, simulateHouse, HOUSE } from '../../../packages/core/src/sceneLsModels';
-describe('house: least-energy warm-up to the illustrative (10, 7) K target in 3 h, and the 3-hour Gramian', () => {
-  const u = houseOptimalU([0, 0], [10, 7], 3); // W
-  it('heater profile: 1.78 kW at 0 h, peak ≈ 2.41 kW near 2 h, 0.97 kW at 3 h; energy ∫u² ≈ 13.43 kW²·h', () => {
-    expect(u(0) / 1000).toBeCloseTo(1.7787, 3); expect(u(2) / 1000).toBeCloseTo(2.4054, 3); expect(u(3) / 1000).toBeCloseTo(0.9655, 3);
-    let peak = 0, tp = 0, E = 0; const N = 3000;
-    for (let i = 0; i <= N; i++) { const t = (3 * i) / N, v = u(t) / 1000; if (v > peak) { peak = v; tp = t; } if (i < N) E += (u((3 * (i + 0.5)) / N) / 1000) ** 2 * (3 / N); }
-    expect(peak).toBeCloseTo(2.4057, 3); expect(tp).toBeCloseTo(1.98, 1); expect(E).toBeCloseTo(13.43, 2);
-    expect(peak).toBeLessThan(HOUSE.P / 1000); // the 2.5 kW heater can deliver it
-  });
-  it('it lands on (10, 7) K; room 1 peaks just above the target, ≈ 10.10 K at ≈ 2.85 h (10.06 K on a 0.25 h grid at 2.75 h)', () => {
-    const S = simulateHouse([0, 0], (t) => [u(t), 0], 3, 0.001);
-    expect(S.x1[S.n - 1]).toBeCloseTo(10, 2); expect(S.x2[S.n - 1]).toBeCloseTo(7, 2);
-    let m = 0, im = 0; for (let i = 0; i < S.n; i++) if (S.x1[i] > m) { m = S.x1[i]; im = i; }
-    expect(m).toBeCloseTo(10.105, 2); expect(im * S.dt).toBeCloseTo(2.85, 1);
-    expect(S.x1[2750]).toBeCloseTo(10.06, 2);
-  });
-  it('W(3) in K²/(kW²·h): eigenvalues 0.78 and 12.0, thin axis ≈ (0.51, −0.86), major axis ≈ 31° up; reaching costs 31.4 and 60.3 kW²·h', () => {
-    const Ww = houseGramian(3), W = Ww.map((r) => r.map((v) => v * 1e6)); // per W² → per kW²
-    const tr = (W[0][0] + W[1][1]) / 2, df = Math.sqrt(((W[0][0] - W[1][1]) / 2) ** 2 + W[0][1] ** 2);
-    expect(tr - df).toBeCloseTo(0.782, 3); expect(tr + df).toBeCloseTo(12.011, 3);
-    const v = [W[0][1], (tr - df) - W[0][0]], n = Math.hypot(v[0], v[1]); expect(Math.abs(v[0] / n)).toBeCloseTo(0.51, 2); expect(Math.abs(v[1] / n)).toBeCloseTo(0.86, 2);
-    expect((Math.atan2((tr + df) - W[0][0], W[0][1]) * 180) / Math.PI).toBeCloseTo(30.6, 0);
-    const E = (x: number[]) => { const d = W[0][0] * W[1][1] - W[0][1] ** 2; return (W[1][1] * x[0] * x[0] - 2 * W[0][1] * x[0] * x[1] + W[0][0] * x[1] * x[1]) / d; };
-    expect(E([10, 10])).toBeCloseTo(31.36, 1); expect(E([5, -5])).toBeCloseTo(60.26, 1); expect(E([10, 7])).toBeCloseTo(13.43, 2);
-  });
-});
 
 describe('leakage vs damping (window and DFT dives)', () => {
   const k = 1 / 0.587e-3, m = 0.084e-3, R = 0.173 + 0.545 ** 2 / 7.47;
@@ -322,12 +274,6 @@ describe('leakage vs damping (window and DFT dives)', () => {
   });
 });
 
-describe('house difference mode (Φ wording)', () => {
-  it('τ = 1/2.2 h ≈ 27 min, and e^(−2.2·1) ≈ 0.11, so about 90% of the gap is gone in 1 h', () => {
-    expect(60 / 2.2).toBeCloseTo(27.3, 1);
-    expect(1 - Math.exp(-2.2)).toBeCloseTo(0.889, 3);
-  });
-});
 
 import * as ex from '../src/figs/ex';
 describe('figure models (src/figs/ex.ts): numbers the live figures draw', () => {
@@ -361,30 +307,6 @@ describe('figure models (src/figs/ex.ts): numbers the live figures draw', () => 
     expect(ex.aliasOf(6500, 8000)).toBe(1500); expect(ex.aliasOf(690, 8000)).toBe(690); expect(ex.aliasOf(7310, 8000)).toBe(690);
     expect(ex.squarePowerShare(1)).toBeCloseTo(0.8106, 4); expect(ex.squarePowerShare(3)).toBeCloseTo(0.9006, 4); expect(ex.squarePowerShare(2001)).toBeCloseTo(1, 3);
   });
-  it('house: B = (3.6, 0) K/h per kW, modes −0.2 and −2.2 /h, Cayley–Hamilton e^{At} = α₀I + α₁A equals the modal form', () => {
-    expect(ex.heaterB(1)).toEqual([3.6, 0]); expect(ex.houseEig()).toEqual({ avg: -0.2, diff: -2.2 });
-    for (const t of [0, 0.5, 1, 3]) { const P = ex.expm2(ex.houseA(), t), Q = ex.houseExpm(t); for (const i of [0, 1]) for (const j of [0, 1]) expect(P[i][j]).toBeCloseTo(Q[i][j], 10); }
-    const c = ex.cayley(ex.houseA(), 1); expect(c.a1).toBeCloseTo((Math.exp(-0.2) - Math.exp(-2.2)) / 2, 10); expect(c.a0).toBeCloseTo((-0.2 * Math.exp(-2.2) + 2.2 * Math.exp(-0.2)) / 2, 10);
-    const cx = ex.expm2([[0, 1], [-4, 0]], Math.PI / 4); expect(cx[0][1]).toBeCloseTo(0.5, 10); // complex branch: sin(2t)/2
-  });
-  it('house controllability/observability: heater split ½ or sensor ½ loses the difference mode; det [B, AB] = 12.96(1 − 2s)·… ', () => {
-    expect(ex.ctrb(1).det).toBeCloseTo(12.96, 6); expect(ex.ctrb(0.5).det).toBeCloseTo(0, 10);
-    expect(ex.obsv(1).det).toBeCloseTo(1, 10); expect(ex.obsv(0.5).det).toBeCloseTo(0, 10);
-    const m = ex.modeWeights(0.5, 0.5); expect(m.bDiff).toBe(0); expect(m.cDiff).toBe(0); expect(ex.modeWeights(1, 1).bDiff).toBeCloseTo(1.8, 10);
-  });
-  it('house Gramian and least energy (in kW): W(3 h) eigenvalues 0.782 / 12.01, thin axis (0.51, −0.86); (10, 7) K costs 13.43 kW²·h', () => {
-    const W = ex.gramian(3); expect(W[0][0]).toBeCloseTo(9.0947, 3); expect(W[0][1]).toBeCloseTo(4.924, 3); expect(W[1][1]).toBeCloseTo(3.6987, 3);
-    const e = ex.symEig(W); expect(e.l[0]).toBeCloseTo(0.782, 3); expect(e.l[1]).toBeCloseTo(12.011, 2);
-    expect(Math.abs(e.v[0][0])).toBeCloseTo(0.51, 2); expect(Math.abs(e.v[0][1])).toBeCloseTo(0.86, 2); expect(e.v[0][0] * e.v[0][1]).toBeLessThan(0);
-    expect(ex.reachCost([10, 7], 3)).toBeCloseTo(13.43, 2); expect(ex.reachCost([10, 10], 3)).toBeCloseTo(31.36, 1); expect(ex.reachCost([5, -5], 3)).toBeCloseTo(60.26, 1);
-    const u = ex.leastEnergyU([10, 7], 3); expect(u(0)).toBeCloseTo(1.7787, 3); expect(u(3)).toBeCloseTo(0.9655, 3);
-    const s = ex.simHouse(ex.houseA(), ex.heaterB(1), u, [0, 0], 3, 600), xT = s.x[s.x.length - 1]; expect(xT[0]).toBeCloseTo(10, 3); expect(xT[1]).toBeCloseTo(7, 3);
-  });
-  it('thermostat loop u = −kp·T₁ is unstable for kp < −0.102 kW/K (a heater wired backwards)', () => {
-    expect(ex.KP_UNSTABLE).toBeCloseTo(-0.1019, 4);
-    expect(ex.eigs(ex.thermostatA(-0.09))[0][0]).toBeLessThan(0); expect(ex.eigs(ex.thermostatA(-0.11))[0][0]).toBeGreaterThan(0);
-    expect(ex.eigs(ex.thermostatA(0.5)).map((l) => +l[0].toFixed(3))).toEqual([-0.755, -3.445]);
-  });
 });
 
 describe('figure captions (figures.yaml) state these', () => {
@@ -394,10 +316,7 @@ describe('figure captions (figures.yaml) state these', () => {
     expect(ex.cabs(ex.Hf(690))).toBeCloseTo(1.83, 2); expect(ex.cabs(ex.Hf(2000))).toBeCloseTo(0.144, 2); expect(ph(ex.Hf(2000))).toBeCloseTo(-167, 0);
     expect(ex.dB(ex.peakBand().peak)).toBeCloseTo(5.36, 1);
   });
-  it('house: α₀(1 h) = 0.890, α₁(1 h) = 0.354; (10, 10) K in 3 h needs a 3.8 kW peak, (10, 7) K in 1.5 h 5.6 kW and 28.9 kW²·h', () => {
-    const a = ex.cayley(ex.houseA(), 1); expect(a.a0).toBeCloseTo(0.8895, 4); expect(a.a1).toBeCloseTo(0.354, 3);
-    const peak = (d: [number, number], T: number) => { const u = ex.leastEnergyU(d, T); let m = 0; for (let t = 0; t <= T + 1e-9; t += 0.005) m = Math.max(m, u(t)); return m; };
-    expect(peak([10, 10], 3)).toBeCloseTo(3.80, 1); expect(peak([10, 7], 1.5)).toBeCloseTo(5.56, 1); expect(ex.reachCost([10, 7], 1.5)).toBeCloseTo(28.93, 1);
+  it('alias of 690 Hz at 1.2 kHz is 510 Hz; residue imaginary part −2.346; damping −0.3 puts the poles at +0.38', () => {
     expect(ex.aliasOf(690, 1200)).toBe(510); expect(ex.residue()[1]).toBeCloseTo(-2.346, 3); expect(ex.spk(-0.3).poles[0][0]).toBeCloseTo(0.38, 2);
   });
 });
@@ -415,14 +334,6 @@ describe('tutor round 2 (window phase, square-wave shares)', () => {
   });
 });
 
-describe('least-energy profiles that need cooling', () => {
-  const ends = (d: [number, number], T: number) => { const u = ex.leastEnergyU(d, T); let m = Infinity, tm = 0; for (let t = 0; t <= T + 1e-9; t += 0.005) if (u(t) < m) { m = u(t); tm = t; } return { u0: u(0), min: m, tm }; };
-  it('(10, 10) K in 3 h dips to −4.7 kW at the end; (10, 7) K in 1.5 h starts at +5.5 kW and needs −2.6 kW at the end; (10, 7) in 3 h never goes negative', () => {
-    const a = ends([10, 10], 3); expect(a.min).toBeCloseTo(-4.70, 1); expect(a.tm).toBeCloseTo(3, 1);
-    const b = ends([10, 7], 1.5); expect(b.min).toBeCloseTo(-2.61, 1); expect(b.tm).toBeCloseTo(1.5, 1); expect(b.u0).toBeCloseTo(5.54, 1);
-    expect(ends([10, 7], 3).min).toBeGreaterThan(0);
-  });
-});
 
 describe('tutor round 2 (TF/DTFT/DFT peaks and decay)', () => {
   it('|H| peaks at 658 Hz (×1.85, +5.4 dB) below the 688 Hz pole frequency; ×1.83 at 690 Hz', () => {
