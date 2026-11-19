@@ -25,7 +25,7 @@ export const WHEEL = { mu: 40, kt: 200000 } as const;
 export const CORNER_DESIGN = { zeta: 0.8, wn: 10, observerSpeed: 5, rideStep: 0.02, bump: { h: 0.05, dur: 0.2 } } as const;
 
 /** Antenna positioner: inertia (kg·m²), viscous friction (N·m·s/rad), torque limit (N·m), wind gust (N·m), amplifier lag (s, METHODS only). */
-export const DISH = { J: 10, B: 20, Tmax: 200, wind: 20, lag: 0.05, step: 0.1, windAt: 3, noiseDeg: 0.01, Nf: 200 } as const;
+export const DISH = { J: 10, B: 20, Tmax: 200, wind: 20, lag: 0.05, step: 0.1, windAt: 10, noiseDeg: 0.01, Nf: 200 } as const;
 /** The tuned dish PID (D on measurement), chosen by the tutor's grid search. */
 export const DISH_TUNED = { Kp: 2000, Ki: 1000, Kd: 200 } as const;
 /** A11 with a 50 ms sensor lag that can't be changed (numbers.py build 2): retunes that cut Kp and Ki much more than Kd, and the plain halving that makes it worse. */

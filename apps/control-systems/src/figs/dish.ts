@@ -46,10 +46,10 @@ export const antennaPanels = (): FigurePanel[] => [
 ];
 export const antennaFigure = figureOf(antennaPanels);
 
-/* ── PGAIN · figure:locus (preview) ── */
+/* ── PGAIN · figure:locus (not in lecture notes) ── */
 export const locusFigure = figureOf(() => {
   const L = dishG(), rl = rlocus(L, { kmax: 3000 });
-  return [{ id: 'locus', title: 'Root locus of Kp·0.1/(s(s + 2)) (preview: not in LN1/2/4)', x: 'σ (1/s)', y: 'jω (rad/s)', draw(g, w, h, v) { drawRootLocus(g, w, h, { rl, L, K: num(v, 'Kp', 1000), range: 20, reCenter: -4, showAsymptotes: true, showReadout: true }); } },
+  return [{ id: 'locus', title: 'Root locus of Kp·0.1/(s(s + 2)) (not in lecture notes)', x: 'σ (1/s)', y: 'jω (rad/s)', draw(g, w, h, v) { drawRootLocus(g, w, h, { rl, L, K: num(v, 'Kp', 1000), range: 20, reCenter: -4, showAsymptotes: true, showReadout: true }); } },
     { id: 'step', title: 'The 0.1 rad step at this Kp (no torque limit)', x: 'time (s)', y: 'θ (°)', draw(g, w, h, v) {
       const Kp = num(v, 'Kp', 1000), s = dishSim({ Kp, Ki: 0, Kd: 0, T: 6, dt: 5e-4, umax: 1e9 }), m = dishMetrics(s.t, s.y, DISH.step);
       const fr = plotFrame(g, w, h, [0, 6], [0, Math.max(10, ...s.y.map(deg)) * 1.05], 'time (s)', 'θ (°)'); hline(g, fr, deg(DISH.step), [0, 6], '', col.e());
@@ -108,17 +108,19 @@ export const sseFigure = figureOf(() => [
 ] as FigurePanel[]);
 
 /* ── INT · figure:integral ── */
+/** the integral figure keeps its own gust at 3 s in a 12 s window (tutor build 4c, E); the Lab and gains figure use DISH.windAt = 10 s */
+const WI = 3;
 export const integralFigure = figureOf(() => [
   {
     id: 'theta', title: 'Step at 0 s, wind gust at 3 s (if on)', x: 'time (s)', y: 'θ (°)',
     draw(g, w, h, v) {
-      const Kp = num(v, 'Kp', 1000), Ki = num(v, 'Ki', 500), wind = on(v, 'wind'), T = 12, s = dishSim({ Kp, Ki, T, dt: 5e-4, d: wind ? (t) => (t >= W ? DISH.wind : 0) : undefined }), y = degs(s.y);
+      const Kp = num(v, 'Kp', 1000), Ki = num(v, 'Ki', 500), wind = on(v, 'wind'), T = 12, s = dishSim({ Kp, Ki, T, dt: 5e-4, d: wind ? (t) => (t >= WI ? DISH.wind : 0) : undefined }), y = degs(s.y);
       const fr = angleFrame(g, w, h, T, [y], deg(DISH.step)); hline(g, fr, deg(DISH.step), [0, T], 'target 5.73°', col.e());
       if (s.unstable || Ki >= 2 * Kp) { para(g, `Ki ≥ 2Kp: unstable (Routh on s³ + 2s² + 0.1Kp s + 0.1Ki)`, fr.box.l + 6, fr.box.t + 10, fr.box.r - fr.box.l - 12, col.bad(), 11); }
       curve(g, fr, s.t, y, col.a(), 2.2);
       if (wind && !s.unstable) { // the wind's own effect: the with-wind run minus the no-wind run (numbers.py [R3]), not |θ − target|, which still holds the step's ringing
-        const s0 = dishSim({ Kp, Ki, T, dt: 5e-4 }); let pk = 0; for (let i = 0; i < s.t.length; i++) if (s.t[i] >= W) pk = Math.max(pk, Math.abs(deg(s.y[i] - s0.y[i])));
-        tline(g, fr, [W, fr.iy(fr.box.t)], [W, fr.iy(fr.box.b)], col.d(), 1, [3, 3]); text(g, `wind alone: peak ${f(pk, 2)}°`, fr.X(W) + 4, fr.box.b - 10, col.d(), 'left', 10); }
+        const s0 = dishSim({ Kp, Ki, T, dt: 5e-4 }); let pk = 0; for (let i = 0; i < s.t.length; i++) if (s.t[i] >= WI) pk = Math.max(pk, Math.abs(deg(s.y[i] - s0.y[i])));
+        tline(g, fr, [WI, fr.iy(fr.box.t)], [WI, fr.iy(fr.box.b)], col.d(), 1, [3, 3]); text(g, `wind alone: peak ${f(pk, 2)}°`, fr.X(WI) + 4, fr.box.b - 10, col.d(), 'left', 10); }
     },
   },
   {
@@ -152,11 +154,11 @@ export const derivativeFigure = figureOf(() => {
 
 /* ── TUNE · figure:gains (raise one gain at a time from the tuned set) ── */
 const base = DISH_TUNED;
-function gainRun(Kp: number, Ki: number, Kd: number) { const s = dishSim({ Kp, Ki, Kd, T: 12, dt: 2e-4, d: (t) => (t >= W ? DISH.wind : 0) }), m = dishMetrics(s.t.filter((t) => t < W), s.y.slice(0, s.t.filter((t) => t < W).length), DISH.step); return { s, m, w: windStats(s.t, s.y, DISH.step) }; }
+function gainRun(Kp: number, Ki: number, Kd: number) { const s = dishSim({ Kp, Ki, Kd, T: 20, dt: 2e-4, d: (t) => (t >= W ? DISH.wind : 0) }), m = dishMetrics(s.t.filter((t) => t < W), s.y.slice(0, s.t.filter((t) => t < W).length), DISH.step); return { s, m, w: windStats(s.t, s.y, DISH.step) }; }
 const gainPanel = (id: 'Kp' | 'Ki' | 'Kd', title: string): FigurePanel => ({
   id, title, x: 'time (s)', y: 'θ (°)',
   draw(g, w, h, v) {
-    const val = num(v, id, base[id]), gs = { ...base, [id]: val }, a = gainRun(gs.Kp, gs.Ki, gs.Kd), b0 = gainRun(base.Kp, base.Ki, base.Kd), T = 12;
+    const val = num(v, id, base[id]), gs = { ...base, [id]: val }, a = gainRun(gs.Kp, gs.Ki, gs.Kd), b0 = gainRun(base.Kp, base.Ki, base.Kd), T = 20;
     const fr = plotFrame(g, w, h, [0, T], [0, 7], 'time (s)', 'θ (°)'); hline(g, fr, deg(DISH.step), [0, T], '', col.e());
     curve(g, fr, b0.s.t, degs(b0.s.y), col.muted(), 1.6, [6, 4]); curve(g, fr, a.s.t, degs(a.s.y), col.a(), 2.2);
     legend(g, fr, [{ label: `(${gs.Kp}, ${gs.Ki}, ${gs.Kd}): %OS ${f(a.m.OS, 1)} %, Ts ${f(a.m.Ts, 2)} s`, color: col.a() }, { label: `wind peak ${f(a.w.peak, 3)}°, back in 0.05° after ${f(a.w.recover, 1)} s`, color: col.d() }, { label: 'start (2000, 1000, 200)', color: col.muted(), dash: true }], 'br');

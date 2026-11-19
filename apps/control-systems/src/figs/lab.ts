@@ -1,6 +1,6 @@
 /**
  * The PID Lab, dish-native (batch 3 §E): default plant = the positioner 0.1/(s(s + 2)), Kp 1000, Ki 0, Kd 0, 0.1 rad step, 200 N·m limit,
- * D on measurement on, wind 20 N·m at 3 s (off), N_f 200 rad/s, noise 0.01° rms (off). The old lag plants p1, p2, p3 stay as alternates
+ * D on measurement on, wind 20 N·m at 10 s (off), N_f 200 rad/s, noise 0.01° rms (off). The old lag plants p1, p2, p3 stay as alternates
  * with their old presets, run on the core simulator exactly as before (r = 1, load −0.5 at T/2, limit 1.2).
  */
 import { figureOf, drawSPlane, curve, tline, dot, text, col, type FigurePanel } from '@study/core';
@@ -17,7 +17,7 @@ interface Run { plant: LabPlant; t: number[]; y: number[]; u: number[]; r: numbe
 export function labRun(v: V): Run {
   const plant = str(v, 'plant', 'dish') as LabPlant, Kp = num(v, 'Kp', 1000), Ki = num(v, 'Ki', 0), Kd = num(v, 'Kd', 0), dm = v.dm === undefined ? true : on(v, 'dm'), aw = str(v, 'aw', 'none') as AntiWindup, wind = on(v, 'wind'), noise = on(v, 'noise');
   if (plant === 'dish' || plant === 'lag') {
-    const r = num(v, 'step', DISH.step), umax = num(v, 'sat', DISH.Tmax), T = num(v, 'T', 12), Nf = num(v, 'Nf', DISH.Nf), lag = plant === 'lag' ? DISH.lag : 0;
+    const r = num(v, 'step', DISH.step), umax = num(v, 'sat', DISH.Tmax), T = num(v, 'T', 16), Nf = num(v, 'Nf', DISH.Nf), lag = plant === 'lag' ? DISH.lag : 0;
     const s = dishSim({ Kp, Ki, Kd, Nf, dm, aw, umax, lag, r: () => r, d: wind ? (t) => (t >= DISH.windAt ? DISH.wind : 0) : undefined, noise: noise ? DISH.noiseDeg / deg(1) : 0, T, dt: lag ? 1e-4 : 2e-4 });
     const pre = s.t.filter((t) => !wind || t < DISH.windAt).length, m = dishMetrics(s.t.slice(0, pre), s.y.slice(0, pre), r);
     let wp = 0; if (wind) s.t.forEach((t, i) => { if (t >= DISH.windAt) wp = Math.max(wp, Math.abs(deg(s.y[i] - r))); });
@@ -38,7 +38,7 @@ export const labFigure = figureOf((c) => {
   c.onChange((k) => {
     if (k !== 'plant' || busy) return; busy = true; const p = String(c.values.plant) as LabPlant;
     const g = p === 'dish' ? [1000, 0, 0] : p === 'lag' ? [dishZN().Kp, dishZN().Ki, dishZN().Kd].map((x) => Math.round(x * 10) / 10) : LEGACY_PI[p];
-    c.set('Kp', g[0]); c.set('Ki', g[1]); c.set('Kd', g[2]); c.set('T', p === 'p3' ? 30 : isDish(p) ? 12 : 10); busy = false;
+    c.set('Kp', g[0]); c.set('Ki', g[1]); c.set('Kd', g[2]); c.set('T', p === 'p3' ? 30 : isDish(p) ? 16 : 10); busy = false;
   });
   const gh = (v: V) => (on(v, 'ghost') && ghost && ghost.plant === run(v).plant ? ghost : null);
   return [
