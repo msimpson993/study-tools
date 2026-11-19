@@ -102,10 +102,10 @@ export const fsFigure = figureOf((c) => {
       id: 'sum', title: 'A ±1 V square-wave drive and its harmonics up to k = N', x: 'time t (ms)', y: 'drive (V)',
       draw(g, w, h) {
         wipe(g, w, h);
-        const f0 = num(c.values, 'f0'), N = num(c.values, 'N'), P = 1000 / f0, ts = linspace(0, 2 * P, 601), f = graph(g, w, h, [0, 2 * P], [-1.5, 1.5], 'time t (ms)', 'drive (V)', 0, 0.5);
+        const f0 = num(c.values, 'f0'), N = num(c.values, 'N'), P = 1000 / f0, ts = linspace(0, 2 * P, 601), f = graph(g, w, h, [0, 2 * P], [-1.5, 1.5], 'time t (ms)', 'drive (V)', 0, 0.5, 44, undefined, w < 420 ? 34 : 22);
         curve(g, f, ts, ts.map((t) => (Math.sin((TAU * t) / P) >= 0 ? 1 : -1)), col.muted(), 1.5, [4, 3]);
         curve(g, f, ts, ts.map((t) => { let s = 0; for (let k = 1; k <= N; k++) s += squareCoef(k) * Math.sin((TAU * k * t) / P); return s; }), col.a(), 2.5);
-        note(g, `harmonics up to k = ${N} carry ${fmt(100 * squarePowerShare(N), 1)}% of the power (Parseval)`, f.box.r - 4, f.box.t + 10, col.text(), 'right', 11);
+        note(g, `harmonics up to k = ${N} carry ${fmt(100 * squarePowerShare(N), 1)}% of the power (Parseval)`, f.box.r, f.box.t - 4, col.text(), 'right', 11, 'bottom'); // R2: above the plot area, clear of the curves
       },
     },
     {
@@ -162,12 +162,12 @@ export const samplingFigure = figureOf((c) => {
       id: 'time', title: 'A tone and its alias through the same samples', x: 'time t (ms)', y: 'amplitude',
       draw(g, w, h) {
         wipe(g, w, h);
-        const fq = num(c.values, 'f'), fs = num(c.values, 'fs') * 1000, fa = aliasOf(fq, fs), tm = 2, ts = linspace(0, tm, 1200), f = graph(g, w, h, [0, tm], [-1.3, 1.3], 'time t (ms)', 'amplitude', 0.5, 0.5);
+        const fq = num(c.values, 'f'), fs = num(c.values, 'fs') * 1000, fa = aliasOf(fq, fs), tm = 2, ts = linspace(0, tm, 1200), f = graph(g, w, h, [0, tm], [-1.3, 1.3], 'time t (ms)', 'amplitude', 0.5, 0.5, 44, undefined, w < 420 ? 34 : 22);
         curve(g, f, ts, ts.map((t) => Math.cos((TAU * fq * t) / 1000)), col.a(), 1.8);
         curve(g, f, ts, ts.map((t) => Math.cos((TAU * fa * t) / 1000)), col.b(), 2, [7, 4]);
         for (let k = 0; k / (fs / 1000) <= tm; k++) { const t = k / (fs / 1000), v = Math.cos((TAU * fq * t) / 1000); tline(g, f, [t, 0], [t, v], col.e(), 1); dot(g, f, [t, v], col.e(), 3.5); }
         const bad = Math.abs(fa - fq) > 1e-6;
-        note(g, bad ? `the samples cannot tell ${fmt(fq, 0)} Hz from ${fmt(fa, 0)} Hz` : 'below fs/2: the samples pin down the tone', f.box.r - 4, f.box.t + 10, bad ? col.bad() : col.ok(), 'right', 11);
+        note(g, bad ? `the samples cannot tell ${fmt(fq, 0)} Hz from ${fmt(fa, 0)} Hz` : 'below fs/2: the samples pin down the tone', f.box.r, f.box.t - 4, bad ? col.bad() : col.ok(), 'right', 11, 'bottom'); // R2: above the plot area
       },
     },
     {
