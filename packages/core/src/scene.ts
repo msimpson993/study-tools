@@ -19,6 +19,7 @@ import { palette, font, fmt, beginPanel, text, pick, arrow, line, dot, clip, axe
 import { SCENES, insetsOf, expandOverlays, isLoopScene, type InsetKind } from './scenedefs';
 import { CHAIN_STAGES, isChainScene, chainStripHeight, layoutChain, drawChainStage } from './chaindiagram';
 import * as LS from './sceneLs';
+import * as CARS from './sceneCar';
 import { diagramStages, diagramStripHeight, layoutDiagrams, drawBlockDiagram, type DiagramSpec, type DiagramSignals } from './blockdiagram';
 
 /* ───────────────────────────── models (pure, unit-tested) ───────────────────────────── */
@@ -127,12 +128,13 @@ export function tineSpectrum(f: number): number {
 }
 
 /** Total length of one loop (animation time) for a scene + overlays. */
-export function sceneDuration(scene: string, overlays: string[]): number { if (scene === 'speaker') return LS.SPK_ANIM_T(overlays); if (scene === 'house') return LS.houseAnimT(); return scene === 'tine' ? TINE.T : isLoopScene(scene, overlays) ? 10 : simulateCart(overlays).T; }
+export function sceneDuration(scene: string, overlays: string[]): number { if (scene === 'speaker') return LS.SPK_ANIM_T(overlays); if (scene === 'house') return LS.houseAnimT(); if (scene === 'car') return CARS.carAnimT(overlays); return scene === 'tine' ? TINE.T : isLoopScene(scene, overlays) ? 10 : simulateCart(overlays).T; }
 /** Frame to hold under reduced motion / as the poster: an instant where the overlays have something to show. */
 export function sceneRestTime(scene: string, overlays: string[], params: Record<string, number> = {}): number {
   if (scene === 'tine') return 1.6;
   if (scene === 'speaker') return LS.speakerRest(overlays);
   if (scene === 'house') return LS.houseRest(overlays);
+  if (scene === 'car') return CARS.carRest(overlays);
   if (isLoopScene(scene, overlays)) { const ov = expandOverlays(scene, overlays); return ov.includes('disturb') ? (Number.isFinite(params.td) ? params.td : 4) + 2.2 : ov.includes('limit') ? 0.6 : ov.includes('delay') || ov.includes('lag') || ov.includes('noise') ? 3.2 : 2.4; }
   if (overlays.includes('hammer')) return 0.75;
   if (overlays.includes('shaker')) return 9;
@@ -156,7 +158,7 @@ function chainLayout(scene: string, overlays: string[], w: number, compact: bool
   return { w, h, compact, main: { x: 0, y: 0, w, h: mainH }, insets, diagrams: [], chains };
 }
 export function sceneLayout(scene: string, overlays: string[], w: number, compact: boolean, diagram?: DiagramSpec | string | string[] | null): SceneLayout {
-  if (isChainScene(scene)) return chainLayout(scene, overlays, w, compact, diagram);
+  if (isChainScene(scene) || scene === 'car') return chainLayout(scene, overlays, w, compact, diagram);
   const stages = diagramStages(diagram as DiagramSpec);
   const hasDiagram = stages.length > 0;
   // When a staged block diagram sits under the cart, don't reserve under-cart space for drawLoopDiagram.
@@ -608,6 +610,9 @@ export function drawSceneFrame(g: G, L: SceneLayout, scene: string, overlays: st
     for (const { kind, rect } of L.insets) region(rect, () => {
       if (kind === 'trace') drawCartTrace(g, rect, P, S, ov, t); else if (kind === 'phase') drawCartPhase(g, rect, P, S, ov, t); else if (kind === 'poles') drawCartPoles(g, rect, P, S, ov, t); else if (kind === 'ctrl' && S.loop) drawLoopCtrl(g, rect, P, S, ov, t);
     });
+  } else if (scene === 'car') {
+    region(L.main, () => CARS.drawCarMain(g, L.main, P, ov, t, small));
+    for (const { kind, rect } of L.insets) region(rect, () => { if (kind === 'trace') CARS.drawCarTrace(g, rect, P, ov, t); else if (kind === 'poles') CARS.drawCarPoles(g, rect, P, ov); else if (kind === 'ctrl') CARS.drawCarCtrl(g, rect, P, ov, t); });
   } else if (scene === 'speaker' || scene === 'house') {
     const sp = scene === 'speaker';
     region(L.main, () => (sp ? LS.drawSpeakerMain : LS.drawHouseMain)(g, L.main, P, ov, t, small));

@@ -10,6 +10,7 @@
     "./dsp": "./src/dsp/index.ts",
     "./theme.css": "./src/styles/theme.css",
     "./styles.css": "./src/styles/core.css",
-    "./models": "./src/sceneLsModels.ts"
+    "./models": "./src/sceneLsModels.ts",
+    "./car": "./src/carModel.ts"
   }
 }
