@@ -20,10 +20,12 @@ export function labRun(v: V): Run {
     const r = num(v, 'step', DISH.step), umax = num(v, 'sat', DISH.Tmax), T = num(v, 'T', 16), Nf = num(v, 'Nf', DISH.Nf), lag = plant === 'lag' ? DISH.lag : 0;
     const s = dishSim({ Kp, Ki, Kd, Nf, dm, aw, umax, lag, r: () => r, d: wind ? (t) => (t >= DISH.windAt ? DISH.wind : 0) : undefined, noise: noise ? DISH.noiseDeg / deg(1) : 0, T, dt: lag ? 1e-4 : 2e-4 });
     const pre = s.t.filter((t) => !wind || t < DISH.windAt).length, m = dishMetrics(s.t.slice(0, pre), s.y.slice(0, pre), r);
+    // steady error: with wind on, read just before the gust (t = windAt − 0.1 s); with wind off, at the window end (tutor build 4c follow-up)
+    let essIdx = s.y.length - 1; if (wind) { const tq = DISH.windAt - 0.1; for (let i = 0; i < s.t.length && s.t[i] <= tq + 1e-9; i++) essIdx = i; }
     let wp = 0; if (wind) s.t.forEach((t, i) => { if (t >= DISH.windAt) wp = Math.max(wp, Math.abs(deg(s.y[i] - r))); });
     const den = lag ? [DISH.J * lag, DISH.J + DISH.B * lag, DISH.B + Kd, Kp, Ki] : [DISH.J, DISH.B + Kd, Kp, Ki];
     const poles = roots(Ki ? den : den.slice(0, -1)).filter((p) => Number.isFinite(p.re));
-    return { plant, t: s.t, y: s.y, u: s.u, r, T, windAt: wind ? DISH.windAt : null, umax, OS: m.OS, Ts: m.Ts, ess: r - s.y[s.y.length - 1], peakU: Math.max(...s.u.map(Math.abs)), poles, windPeak: wp, unstable: s.unstable };
+    return { plant, t: s.t, y: s.y, u: s.u, r, T, windAt: wind ? DISH.windAt : null, umax, OS: m.OS, Ts: m.Ts, ess: r - s.y[essIdx], peakU: Math.max(...s.u.map(Math.abs)), poles, windPeak: wp, unstable: s.unstable };
   }
   const T = num(v, 'T', plant === 'p3' ? 30 : 10), sat = num(v, 'sat', DISH.Tmax) < 1000;
   const sim = simulatePid({ plant, Kp, Ki, Kd, N: 20, T, dt: 0.01, dist: wind ? { t: T / 2, amp: LEG.dist } : null, noise: noise ? LEG.noise : 0, umax: sat ? LEG.umax : null, aw, dOnMeasurement: dm, seed: LEG.seed });
@@ -74,7 +76,7 @@ export const labFigure = figureOf((c) => {
         g.clearRect(0, 0, w, h); const r = run(v), maxRe = r.poles.length ? Math.max(...r.poles.map((p) => p.re)) : -1, rows: [string, string, boolean | null][] = [
           ['Overshoot (spec < 10 %)', r.unstable ? '—' : `${f(r.OS, 1)} %`, isDish(r.plant) ? r.OS < 10 : null],
           ['Settling 2 %', r.unstable || !Number.isFinite(r.Ts) ? 'not settled' : `${f(r.Ts, 2)} s`, null],
-          ['Steady error', isDish(r.plant) ? `${f(deg(r.ess), 3)}°` : f(r.ess, 3), Math.abs(r.ess) < 1e-3 * r.r],
+          [r.windAt !== null && isDish(r.plant) ? 'Steady error (measured just before the gust)' : 'Steady error', isDish(r.plant) ? `${f(deg(r.ess), 3)}°` : f(r.ess, 3), Math.abs(r.ess) < 1e-3 * r.r],
           ['Wind peak (spec < 0.6°)', r.windAt !== null && isDish(r.plant) ? `${f(r.windPeak, 3)}°` : 'wind off', r.windAt !== null && isDish(r.plant) ? r.windPeak < 0.6 : null],
           ['Peak torque (limit 200 N·m)', isDish(r.plant) ? `${k3(r.peakU)} N·m` : f(r.peakU), isDish(r.plant) ? r.peakU <= DISH.Tmax + 1e-6 : null],
           ['Stability', maxRe < -1e-3 ? 'all poles left' : maxRe < 1e-3 ? 'on the jω axis' : 'unstable pole', maxRe < -1e-3],
