@@ -406,7 +406,7 @@
   - part-a
   - v-pmp
   kind: compute
-  q: "P1. $\\dot x = -x + u$, $J = \\int_0^1(x^2+u^2)dt$, $x(0) = 1$, $x(1) = 0$, $H = L + \\lambda f$. Which set is right?"
+  q: "P1. $\\dot x = -x + u$, $J = \\int_0^1(x^2+u^2)dt$, $x(0) = 1$, $x(1) = 0$, $H = L + \\lambda f$ (the map and the optimal-control dive write the Hamiltonian as 𝓗 and the costate as p; same objects, many textbooks use H and λ). Which set is right?"
   choices:
   - "$u^\\circ = -\\lambda/2$, $M = \\begin{bmatrix}-1&-\\frac12\\\\-2&1\\end{bmatrix}$, $\\omega = \\sqrt2$, $u^\\circ(0) \\approx -0.592$"
   - "$u^\\circ = -\\lambda$, $M = \\begin{bmatrix}-1&-1\\\\-2&1\\end{bmatrix}$, $\\omega = \\sqrt3$, $u^\\circ(0) \\approx -0.59$"
@@ -705,20 +705,20 @@
   - Nothing until the tone has run for one period
   - It moves at 717 Hz forever
   answer: 0
-  why: "e^(jωt) is an eigenfunction only as an eternal signal. A tone that starts at t = 0 also excites the natural modes; they die out in a few milliseconds (decay rate σ ≈ 1,267 /s)."
+  why: "e^(jωt) is an eigenfunction only as an eternal signal. A tone that starts at t = 0 also excites the natural modes; they die out in a few milliseconds (decay rate σ ≈ 1,266 /s)."
 - id: c-laplace-1
   tags:
   - laplace
   - tf
   kind: compute
-  q: "The speaker's H(s) = (Bl/Re)/(Mms s² + R s + 1/Cms) has poles at −1,267 ± j4,322 rad/s. What ring frequency and decay time does a click show?"
+  q: "The speaker's H(s) = (Bl/Re)/(Mms s² + R s + 1/Cms) has poles at −1,266 ± j4,322 rad/s. What ring frequency and decay time does a click show?"
   choices:
   - "About 688 Hz, decaying with time constant ≈ 0.8 ms"
   - "About 717 Hz, decaying with time constant ≈ 4.3 ms"
-  - "About 1,267 Hz, decaying with time constant ≈ 0.23 ms"
+  - "About 1,266 Hz, decaying with time constant ≈ 0.23 ms"
   - "About 4,322 Hz, with no decay"
   answer: 0
-  why: "Ring at ω_d/2π = 4,322/2π ≈ 688 Hz; envelope e^(−σt) with 1/σ = 1/1,267 s ≈ 0.79 ms. fₙ = 717 Hz is the undamped natural frequency."
+  why: "Ring at ω_d/2π = 4,322/2π ≈ 688 Hz; envelope e^(−σt) with 1/σ = 1/1,266 s ≈ 0.79 ms. fₙ = 717 Hz is the undamped natural frequency."
 - id: c-roc-1
   tags:
   - roc
@@ -861,14 +861,14 @@
   - sampling
   - dtft
   kind: compute
-  q: "The speaker's poles −1,267 ± j4,322 rad/s are sampled at 8 kHz. Where do they land in the z-plane?"
+  q: "The speaker's poles −1,266 ± j4,322 rad/s are sampled at 8 kHz. Where do they land in the z-plane?"
   choices:
-  - "Radius e^(−1267/8000) ≈ 0.85, angle ±4322/8000 rad ≈ ±31°"
+  - "Radius e^(−1266/8000) ≈ 0.85, angle ±4322/8000 rad ≈ ±31°"
   - "Radius 1, angle ±31°"
   - "Radius 0.85, angle ±4322°"
   - Outside the unit circle
   answer: 0
-  why: "z = e^(pT): |z| = e^(Re(p)·T) = e^(−1267/8000) ≈ 0.85 and ∠z = ω_d T = 4322/8000 rad ≈ 31°. Stable continuous poles map inside the unit circle."
+  why: "z = e^(pT): |z| = e^(Re(p)·T) = e^(−1266/8000) ≈ 0.85 and ∠z = ω_d T = 4322/8000 rad ≈ 31°. Stable continuous poles map inside the unit circle."
 - id: c-dtft-1
   tags:
   - dtft
@@ -1293,4 +1293,4 @@
   - "Nothing changes, because the sign of a damper does not matter"
   - "The natural frequencies double"
   answer: 0
-  why: "Positive feedback subtracts damping: A − BK with the wrong sign moves the poles right. At a net damping of −0.2 × the shocks' the ζ are −0.058 and −0.071 and the motion grows about 2× every 1.66 s."
+  why: "Positive feedback subtracts damping: A − BK with the wrong sign moves the poles right. At a net damping of −0.2 × the shocks' the ζ are −0.058 and −0.071; the bounce doubles about every 1.66 s, the pitch every 1.09 s."

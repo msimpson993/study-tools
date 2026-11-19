@@ -10,10 +10,9 @@ import { biquadMag } from '../../../packages/core/src/audioDsp';
 const read = (p: string) => fs.readFileSync(path.resolve(__dirname, '../content', p), 'utf8');
 
 describe('Box 8: the poles set the 688 Hz ring and its 0.79 ms decay', () => {
-  it('poles −1,267 ± j4,322 rad/s; time constant 1/σ = 0.79 ms; ring ω_d/2π = 688 Hz', () => {
+  it('poles −1,266 ± j4,322 rad/s; time constant 1/σ = 0.79 ms; ring ω_d/2π = 688 Hz', () => {
     const s = spk();
-    // the model gives σ = 1,266.4 /s; the site's long-standing "1,267" is within 1 /s (flagged for the tutor)
-    expect(Math.abs(s.sigma * 1000 - 1267)).toBeLessThan(1); expect(Math.round(s.wd * 1000)).toBe(4322);
+    expect(Math.round(s.sigma * 1000)).toBe(1266); expect(Math.round(s.wd * 1000)).toBe(4322);
     expect((1 / s.sigma).toFixed(2)).toBe('0.79');
     expect(Math.round((s.wd * 1000) / (2 * Math.PI))).toBe(688);
   });

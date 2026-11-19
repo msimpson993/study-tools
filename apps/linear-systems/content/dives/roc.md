@@ -2,7 +2,7 @@
 id: roc
 order: 5
 title: Region of convergence
-addsToExample: "Puts the speaker's ROC to the right of both poles, Re s > −1,267 rad/s: the click response is causal, and the ROC contains the jω axis, so the speaker is stable and has a frequency response."
+addsToExample: "Puts the speaker's ROC to the right of both poles, Re s > −1,266 rad/s: the click response is causal, and the ROC contains the jω axis, so the speaker is stable and has a frequency response."
 accountsFor: "Why the speaker's frequency response exists at all, and why its ring dies away instead of growing."
 category: signals
 neighbors:
@@ -57,7 +57,7 @@ The Laplace integral ∫x(t)e^(−st)dt converges only for some s, because e^(�
 
 ### Worked example: on the earbud
 
-1. The earbud's click response starts at t = 0 (causal), so its ROC lies to the right of both poles: Re s > −1,267 /s.
+1. The earbud's click response starts at t = 0 (causal), so its ROC lies to the right of both poles: Re s > −1,266 /s.
 2. That region contains the jω axis, so the earbud is BIBO stable and $H(j\omega)$ exists.
 3. The same formula with a left-sided ROC would describe a ring running backwards in time, which no speaker does.
 

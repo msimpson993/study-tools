@@ -2,7 +2,7 @@
 id: laplace
 order: 4
 title: Laplace & Z transforms
-addsToExample: "Gives the speaker's transfer function from voltage to motion, H(s) = (Bl/Re)/(Mms s² + R s + 1/Cms) with R = Rms + Bl²/Re, read block by block off the signal chain. Its poles are −1,267 ± j4,322 rad/s."
+addsToExample: "Gives the speaker's transfer function from voltage to motion, H(s) = (Bl/Re)/(Mms s² + R s + 1/Cms) with R = Rms + Bl²/Re, read block by block off the signal chain. Its poles are −1,266 ± j4,322 rad/s."
 accountsFor: "The ring frequency (688 Hz) and decay time (≈ 0.8 ms) of the click response, from two numbers."
 category: signals
 neighbors:

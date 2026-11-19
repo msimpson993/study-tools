@@ -2,7 +2,7 @@
 id: inverse
 order: 6
 title: "Going back: partial fractions, residues and the ROC"
-addsToExample: "Recovers the speaker's click response from its two poles: h(t) = (Bl/Re)/(Mms ω_d) · e^(−σt) sin(ω_d t) u(t), with σ ≈ 1,267 /s and ω_d ≈ 4,322 rad/s."
+addsToExample: "Recovers the speaker's click response from its two poles: h(t) = (Bl/Re)/(Mms ω_d) · e^(−σt) sin(ω_d t) u(t), with σ ≈ 1,266 /s and ω_d ≈ 4,322 rad/s."
 accountsFor: "Why the click response is a decaying sine at 688 Hz that has died away within a few milliseconds."
 category: signals
 neighbors:
