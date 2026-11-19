@@ -2,6 +2,7 @@ import { C, cabs, type Cx } from './dsp/complex';
 import { type TF, type StepMetrics, type Margins, type Bode, bode, margins, stepMetrics, tfEval, logspace, tfPoles, tfZeros, freqresp } from './dsp/tf';
 import { type RLocus, rlocusPolesAt, rlocusNearest } from './dsp/rlocus';
 import { col, planeFrame, rangeFrame, wipe, text, tline, polyline, dot, cross, graphAxes, curve, clipBox, heat, axes2, type Frame, type V2 } from './viz';
+import { withLabelRole } from './labels';
 import type { PanelPointer } from './figure';
 
 /**
@@ -92,12 +93,18 @@ export function drawSPlane(g: CanvasRenderingContext2D, w: number, h: number, s:
   wipe(g, w, h);
   const f = splaneFrame(w, h, s.range, s.reCenter), R = Math.hypot(w, h) / Math.min(f.sx, f.sy);
   const x0 = f.X(0), y0 = f.Y(0);
-  if (s.shadeUnstable !== false) { g.save(); clipBox(g, f); g.fillStyle = col.bad(); g.globalAlpha = 0.07; g.fillRect(Math.max(x0, f.box.l), f.box.t, f.box.r - Math.max(x0, f.box.l), f.box.b - f.box.t); g.restore(); if (x0 < f.box.r - 70) text(g, 'unstable', f.box.r - 5, f.box.t + 10, col.bad(), 'right', 10); }
-  // grid
-  const st = niceStep(2 * s.range, 6); g.save(); clipBox(g, f); g.strokeStyle = col.grid(); g.lineWidth = 1;
-  for (let x = Math.ceil(f.ix(f.box.l) / st) * st; x <= f.ix(f.box.r); x += st) { g.beginPath(); g.moveTo(f.X(x), f.box.t); g.lineTo(f.X(x), f.box.b); g.stroke(); text(g, String(+x.toFixed(3)), f.X(x) + 2, f.box.b - 6, col.muted(), 'left', 9); }
-  for (let y = Math.ceil(f.iy(f.box.b) / st) * st; y <= f.iy(f.box.t); y += st) { g.beginPath(); g.moveTo(f.box.l, f.Y(y)); g.lineTo(f.box.r, f.Y(y)); g.stroke(); if (Math.abs(y) > 1e-9) text(g, String(+y.toFixed(3)), f.box.l + 3, f.Y(y) - 6, col.muted(), 'left', 9); }
+  if (s.shadeUnstable !== false) { g.save(); clipBox(g, f); g.fillStyle = col.bad(); g.globalAlpha = 0.07; g.fillRect(Math.max(x0, f.box.l), f.box.t, f.box.r - Math.max(x0, f.box.l), f.box.b - f.box.t); g.restore(); }
+  // the axis names first, so the grid numbers and notes keep clear of them
+  axes2(g, f, s.xLabel ?? 'σ (1/s)', s.yLabel ?? 'jω (rad/s)');
+  // grid: at least ~26 px between numbers, so a narrow panel shows fewer of them instead of a smear
+  let st = niceStep(2 * s.range, 6); while (st * f.sx < 26) st = niceStep(st * 2.01, 1);
+  g.save(); clipBox(g, f); g.strokeStyle = col.grid(); g.lineWidth = 1;
+  withLabelRole('tick', () => {
+    for (let x = Math.ceil(f.ix(f.box.l) / st) * st; x <= f.ix(f.box.r); x += st) { g.beginPath(); g.moveTo(f.X(x), f.box.t); g.lineTo(f.X(x), f.box.b); g.stroke(); text(g, String(+x.toFixed(3)), f.X(x) + 2, f.box.b - 6, col.muted(), 'left', 9); }
+    for (let y = Math.ceil(f.iy(f.box.b) / st) * st; y <= f.iy(f.box.t); y += st) { g.beginPath(); g.moveTo(f.box.l, f.Y(y)); g.lineTo(f.box.r, f.Y(y)); g.stroke(); if (Math.abs(y) > 1e-9) text(g, String(+y.toFixed(3)), f.box.l + 3, f.Y(y) - 6, col.muted(), 'left', 9); }
+  });
   g.restore();
+  if (s.shadeUnstable !== false && x0 < f.box.r - 70) text(g, 'unstable', f.box.r - 5, f.box.t + 10, col.bad(), 'right', 10);
   // allowed region
   if (s.region) {
     const r = s.region; g.save(); clipBox(g, f);
@@ -106,7 +113,6 @@ export function drawSPlane(g: CanvasRenderingContext2D, w: number, h: number, s:
     if (r.wn !== undefined) { g.beginPath(); g.arc(x0, y0, r.wn * f.sx, 0, 2 * Math.PI); g.clip(); }
     g.fillStyle = col.ok(); g.globalAlpha = 0.13; g.fillRect(f.box.l, f.box.t, f.box.r - f.box.l, f.box.b - f.box.t); g.restore();
   }
-  axes2(g, f, s.xLabel ?? 'σ (1/s)', s.yLabel ?? 'jω (rad/s)');
   g.save(); clipBox(g, f);
   g.strokeStyle = col.strong(); g.lineWidth = 1.5; g.beginPath(); g.moveTo(x0, f.box.t); g.lineTo(x0, f.box.b); g.stroke(); // the jω axis: the edge of stability
   for (const wn of s.wnCircles ?? []) { g.strokeStyle = col.d(); g.globalAlpha = 0.7; g.lineWidth = 1; g.setLineDash([3, 4]); g.beginPath(); g.arc(x0, y0, wn * f.sx, Math.PI / 2, (3 * Math.PI) / 2); g.stroke(); g.setLineDash([]); g.globalAlpha = 1; text(g, `ωn ${fmtN(wn)}`, x0 - wn * f.sx + 3, y0 + 10, col.d(), 'left', 10); }
@@ -212,6 +218,7 @@ export function locusDrag(d: LocusDragSpec): PanelPointer {
 export interface BodeViewSpec {
   L: TF; wmin?: number; wmax?: number; /** draw gain / phase margin bars (default true) */ margins?: boolean; ghost?: TF; n?: number;
   /** vertical cursor at this ω */ cursor?: number; magRange?: V2; phaseRange?: V2;
+  /** frequency axis name (default 'ω (rad/s)'); pass e.g. 'ω (rad/h)' for a plant that runs in hours */ xLabel?: string;
 }
 /** Magnitude (dB) over phase (°) on a shared log-ω axis. Returns the margins it drew. */
 export function drawBode(g: CanvasRenderingContext2D, w: number, h: number, s: BodeViewSpec): Margins {
@@ -225,8 +232,8 @@ export function drawBode(g: CanvasRenderingContext2D, w: number, h: number, s: B
   const fm = rangeFrame(w, hTop, [lo, hi], mr, 46, 12, 8, 6), fp = rangeFrame(w, hBot, [lo, hi], pr, 46, 12, 6, 38);
   const decade = (f: Frame, yr: V2, ystep: number, ylab: string, bottom: boolean) => {
     g.lineWidth = 1; g.setLineDash([]);
-    for (let d = Math.ceil(lo); d <= hi; d++) { g.strokeStyle = col.grid(); g.beginPath(); g.moveTo(f.X(d), f.box.t); g.lineTo(f.X(d), f.box.b); g.stroke(); if (bottom) text(g, d === 0 ? '1' : d === 1 ? '10' : d === -1 ? '0.1' : `10^${d}`, f.X(d), f.box.b + 10, col.muted(), 'center', 10); }
-    for (let y = Math.ceil(yr[0] / ystep) * ystep; y <= yr[1]; y += ystep) { g.strokeStyle = col.grid(); g.beginPath(); g.moveTo(f.box.l, f.Y(y)); g.lineTo(f.box.r, f.Y(y)); g.stroke(); text(g, String(y), f.box.l - 4, f.Y(y), col.muted(), 'right', 10); }
+    for (let d = Math.ceil(lo); d <= hi; d++) { g.strokeStyle = col.grid(); g.beginPath(); g.moveTo(f.X(d), f.box.t); g.lineTo(f.X(d), f.box.b); g.stroke(); if (bottom) withLabelRole('tick', () => text(g, d === 0 ? '1' : d === 1 ? '10' : d === -1 ? '0.1' : `10^${d}`, f.X(d), f.box.b + 10, col.muted(), 'center', 10)); }
+    for (let y = Math.ceil(yr[0] / ystep) * ystep; y <= yr[1]; y += ystep) { g.strokeStyle = col.grid(); g.beginPath(); g.moveTo(f.box.l, f.Y(y)); g.lineTo(f.box.r, f.Y(y)); g.stroke(); withLabelRole('tick', () => text(g, String(y), f.box.l - 4, f.Y(y), col.muted(), 'right', 10)); }
     g.save(); g.translate(10, (f.box.t + f.box.b) / 2); g.rotate(-Math.PI / 2); text(g, ylab, 0, 0, col.text(), 'center', 11); g.restore();
   };
   const top = (fn: () => void) => { g.save(); fn(); g.restore(); };
@@ -240,7 +247,7 @@ export function drawBode(g: CanvasRenderingContext2D, w: number, h: number, s: B
   });
   bottom(() => {
     decade(fp, pr, pr[1] - pr[0] > 360 ? 90 : 45, 'phase (°)', true);
-    text(g, 'ω (rad/s)', (fp.box.l + fp.box.r) / 2, fp.h - 6, col.text(), 'center', 11);
+    withLabelRole('axis', () => text(g, s.xLabel ?? 'ω (rad/s)', (fp.box.l + fp.box.r) / 2, fp.h - 6, col.text(), 'center', 11));
     tline(g, fp, [lo, -180], [hi, -180], col.bad(), 1.2, [5, 4]);
     if (ghost) curve(g, fp, x, ghost.phaseDeg, col.muted(), 2, [6, 4]);
     curve(g, fp, x, b.phaseDeg, col.b(), 2.4);
@@ -265,6 +272,8 @@ export function drawBode(g: CanvasRenderingContext2D, w: number, h: number, s: B
 export interface HeightMapSpec {
   G: TF; range: number; reCenter?: number; /** colour range in dB (default [−30, 30]) */ dbRange?: V2;
   /** probe point on the jω axis: draws s = jω and reads |G(jω)| */ omega?: number; cell?: number;
+  /** axis names (default 'σ', 'jω'); pass units for a plant that is not in seconds */ xLabel?: string; yLabel?: string;
+  /** draw the dB colour scale along the right edge */ scale?: boolean;
 }
 /** dB → [r, g, b] on a navy → blue → teal → yellow → white ramp (deep valleys are zeros, tall peaks are poles). */
 export function heightColor(t: number): [number, number, number] {
@@ -287,11 +296,20 @@ export function drawHeightMap(g: CanvasRenderingContext2D, w: number, h: number,
     text(g, `|G(j${fmtN(s.omega)})| = ${fmtN(mag, 3)}  = ${fmtN(20 * Math.log10(mag), 1)} dB`, f.box.l + 6, f.box.t + 10, '#ffffff', 'left', 11);
   }
   g.restore();
-  for (let k = Math.ceil(f.ix(f.box.l)); k <= f.ix(f.box.r); k++) if (k !== 0) text(g, String(k), f.X(k), f.Y(0) + 9, '#ffffff', 'center', 9);
-  text(g, 'σ', f.box.r - 8, f.Y(0) - 8, '#ffffff', 'right', 11); text(g, 'jω', f.X(0) + 6, f.box.t + 24, col.e(), 'left', 11);
+  const keyL = s.scale ? f.box.r - 20 : f.box.r; // the colour key takes the right edge: names and numbers stop short of it
+  withLabelRole('axis', () => { text(g, s.xLabel ?? 'σ', keyL - 8, f.Y(0) - 8, '#ffffff', 'right', 11); text(g, s.yLabel ?? 'jω', f.X(0) + 6, f.box.t + 24, col.e(), 'left', 11); });
+  if (s.scale) { // the colour key: a vertical ramp from lo (bottom) to hi (top) dB
+    const bw = 8, bx = f.box.r - bw - 4, by0 = f.box.t + 36, by1 = f.box.b - 22;
+    if (by1 - by0 > 30) {
+      for (let y = by0; y < by1; y++) { const [r, gg, b] = heightColor(1 - (y - by0) / (by1 - by0)); g.fillStyle = `rgb(${r},${gg},${b})`; g.fillRect(bx, y, bw, 1.2); }
+      g.strokeStyle = '#ffffff'; g.lineWidth = 1; g.strokeRect(bx, by0, bw, by1 - by0);
+      withLabelRole('axis', () => { text(g, `${fmtN(hi, 0)} dB`, bx - 3, by0 + 4, '#ffffff', 'right', 9); text(g, `${fmtN(lo, 0)} dB`, bx - 3, by1 - 4, '#ffffff', 'right', 9); });
+    }
+  }
+  withLabelRole('tick', () => { for (let k = Math.ceil(f.ix(f.box.l)); k <= f.ix(f.box.r); k++) if (k !== 0 && f.X(k) < keyL - 8) text(g, String(k), f.X(k), f.Y(0) + 9, '#ffffff', 'center', 9); });
   return f;
 }
-export interface JwSliceSpec { G: TF; wmax: number; /** probe */ omega?: number; /** plot dB instead of linear magnitude (default false) */ db?: boolean; ghost?: TF }
+export interface JwSliceSpec { G: TF; wmax: number; /** probe */ omega?: number; /** plot dB instead of linear magnitude (default false) */ db?: boolean; ghost?: TF; /** x-axis name (default 'ω (rad/s) along the jω axis') */ xLabel?: string }
 /** |G(jω)| along the imaginary axis: exactly the cut through the height map along its yellow line. */
 export function drawJwSlice(g: CanvasRenderingContext2D, w: number, h: number, s: JwSliceSpec) {
   wipe(g, w, h);
@@ -299,7 +317,7 @@ export function drawJwSlice(g: CanvasRenderingContext2D, w: number, h: number, s
   const ys = val(s.G), fin = ys.filter(Number.isFinite), top = Math.max(...fin), bot = Math.min(...fin);
   const yr: V2 = s.db ? [Math.floor((bot - 3) / 10) * 10, Math.ceil((top + 3) / 10) * 10] : [0, Math.max(1e-6, top * 1.12)];
   const f = rangeFrame(w, h, [0, s.wmax], yr, 46, 12, 10, 32);
-  graphAxes(g, f, [0, s.wmax], yr, 'ω (rad/s) along the jω axis', s.db ? '|G(jω)| (dB)' : '|G(jω)|');
+  graphAxes(g, f, [0, s.wmax], yr, s.xLabel ?? 'ω (rad/s) along the jω axis', s.db ? '|G(jω)| (dB)' : '|G(jω)|');
   if (s.ghost) curve(g, f, ws, val(s.ghost), col.muted(), 2, [6, 4]);
   curve(g, f, ws, ys, col.e(), 2.4);
   if (s.omega !== undefined) { const m = s.db ? 20 * Math.log10(cabs(freqresp(s.G, s.omega))) : cabs(freqresp(s.G, s.omega)); tline(g, f, [s.omega, yr[0]], [s.omega, m], col.e(), 1, [3, 3]); dot(g, f, [s.omega, m], col.e(), 5); }

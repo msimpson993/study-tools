@@ -1,4 +1,5 @@
 import { cssVar } from './plot';
+import { labelRole, labelsOn, labelOverlaps, freeSpot, resetLabels, withLabelRole, labelGen, type LabelRect } from './labels';
 import { mountFigure, type FigurePanel } from './figure';
 import type { ControlSet } from './controls';
 import type { FigureDef } from './types';
@@ -38,7 +39,7 @@ export function rangeFrame(w: number, h: number, xr: V2, yr: V2, L = 40, R = 10,
   return { w, h, sx, sy, box: { l: L, t: T, r: w - R, b: h - B }, X: (x) => L + (x - xr[0]) * sx, Y: (y) => h - B - (y - yr[0]) * sy, ix: (px) => xr[0] + (px - L) / sx, iy: (py) => yr[0] + (h - B - py) / sy };
 }
 
-export function wipe(g: CanvasRenderingContext2D, w: number, h: number) { g.setLineDash([]); g.clearRect(0, 0, w, h); }
+export function wipe(g: CanvasRenderingContext2D, w: number, h: number) { g.setLineDash([]); g.clearRect(0, 0, w, h); resetLabels(g.canvas); }
 export function clipBox(g: CanvasRenderingContext2D, f: Frame) { g.beginPath(); g.rect(f.box.l, f.box.t, f.box.r - f.box.l, f.box.b - f.box.t); g.clip(); }
 
 /** Where a label of this size fits inside the canvas: shrinks it (to 72% at most), then slides it in from the edge, then splits it
@@ -68,17 +69,37 @@ export function fitText(g: CanvasRenderingContext2D, s: string, x: number, align
 }
 export function text(g: CanvasRenderingContext2D, s: string, x: number, y: number, color = col.text(), align: CanvasTextAlign = 'left', size = 11, base: CanvasTextBaseline = 'middle') {
   const f = fitText(g, s, x, align, size);
+  // keep clear of the labels already drawn on this canvas (see labels.ts): ticks give way, notes slide by whole lines, axis names stay
+  const m = typeof g.getTransform === 'function' ? g.getTransform() : null, cv = g.canvas as HTMLCanvasElement | undefined, role = labelRole();
+  let rect: LabelRect | null = null, dy = 0, dx = 0;
+  if (m && cv && Math.abs(m.b) < 1e-9 && Math.abs(m.c) < 1e-9 && m.d > 0) {
+    const n = f.lines.length, z = f.size, ext = base === 'top' || base === 'hanging' ? [0, 1.1] : base === 'middle' ? [-0.55, 0.55] : [-0.9, 0.25];
+    const u0 = y - ((n - 1) / 2) * z * 1.15 + ext[0] * z, u1 = y + ((n - 1) / 2) * z * 1.15 + ext[1] * z;
+    rect = { x0: m.a * f.x0 + m.e, x1: m.a * f.x1 + m.e, y0: m.d * u0 + m.f, y1: m.d * u1 + m.f, role };
+    const list = labelsOn(cv);
+    if (role === 'tick') { if (labelOverlaps(list, rect, -3)) { /* a number touching another label (within 3 px) reads as one: leave it out */ logText(g, s, f, size, x, rect, 0, true); return; } }
+    else if (role === 'note') {
+      // whole lines down or up, nearest first, as far as the canvas goes; a note that only hits the numbers at its left end may step right
+      const L = z * 1.15 * m.d, H = cv.height || 2000, dys = [0]; for (let k = 1; k * L < H; k++) dys.push(k * L, -k * L);
+      const spot = freeSpot(list, rect, dys, H, cv.width || Infinity) ?? [0, 0]; dx = spot[0]; dy = spot[1];
+      rect = { ...rect, x0: rect.x0 + dx, x1: rect.x1 + dx, y0: rect.y0 + dy, y1: rect.y1 + dy };
+    }
+    list.push(rect);
+  }
+  const yy = y + (m && dy ? dy / m.d : 0), xx = f.x + (m && dx ? dx / m.a : 0);
   g.fillStyle = color; g.font = `${f.size}px system-ui,sans-serif`; g.textAlign = align; g.textBaseline = base;
-  if (f.lines.length === 1) g.fillText(s, f.x, y);
-  else f.lines.forEach((l, i) => g.fillText(l, f.x, y + (i - (f.lines.length - 1) / 2) * f.size * 1.15));
-  logText(g, s, f, size, x);
+  if (f.lines.length === 1) g.fillText(s, xx, yy);
+  else f.lines.forEach((l, i) => g.fillText(l, xx, yy + (i - (f.lines.length - 1) / 2) * f.size * 1.15));
+  logText(g, s, f, size, x, rect, dy || dx, false);
 }
 /** Test hook: when window.__textLog is an array, every label drawn records its extent against the canvas (device px). */
-function logText(g: CanvasRenderingContext2D, s: string, f: TextFit, size: number, x: number) {
+function logText(g: CanvasRenderingContext2D, s: string, f: TextFit, size: number, x: number, rect: LabelRect | null = null, dy = 0, skipped = false) {
   const log = (globalThis as unknown as { __textLog?: unknown[] }).__textLog; if (!Array.isArray(log)) return;
   const m = g.getTransform(); const cv = g.canvas as HTMLCanvasElement;
   if (Math.abs(m.b) > 1e-9 || Math.abs(m.c) > 1e-9) return;
-  log.push({ s, x0: m.a * f.x0 + m.e, x1: m.a * f.x1 + m.e, W: cv.width, id: cv.closest?.('[data-fig]')?.getAttribute('data-fig') || cv.id || '', fitted: f.lines.length > 1 || f.size < size - 0.01 || Math.abs(f.x - x) > 0.5 });
+  const cvs = (globalThis as unknown as { __textCanvases?: HTMLCanvasElement[] }).__textCanvases; let ci = -1;
+  if (Array.isArray(cvs)) { ci = cvs.indexOf(cv); if (ci < 0) { cvs.push(cv); ci = cvs.length - 1; } }
+  log.push({ s, x0: rect ? rect.x0 : m.a * f.x0 + m.e, x1: rect ? rect.x1 : m.a * f.x1 + m.e, W: cv.width, H: cv.height, cv: ci, id: cv.closest?.('[data-fig]')?.getAttribute('data-fig') || cv.getAttribute?.('data-figure') || cv.getAttribute?.('data-big') || cv.id || '', fitted: f.lines.length > 1 || f.size < size - 0.01 || Math.abs(f.x - x) > 0.5, y0: rect?.y0, y1: rect?.y1, role: rect?.role, moved: Math.abs(dy) > 0.01, skipped, gen: labelGen(cv) });
 }
 export function tline(g: CanvasRenderingContext2D, f: Frame, a: V2, b: V2, color: string, width = 1.5, dash: number[] = []) {
   g.strokeStyle = color; g.lineWidth = width; g.setLineDash(dash); g.beginPath(); g.moveTo(f.X(a[0]), f.Y(a[1])); g.lineTo(f.X(b[0]), f.Y(b[1])); g.stroke(); g.setLineDash([]);
@@ -121,8 +142,10 @@ export function axes2(g: CanvasRenderingContext2D, f: Frame, xl = '', yl = '', s
   g.save(); clipBox(g, f);
   tline(g, f, [f.ix(f.box.l), 0], [f.ix(f.box.r), 0], c, 1); tline(g, f, [0, f.iy(f.box.t)], [0, f.iy(f.box.b)], c, 1);
   g.restore();
-  if (xl) text(g, xl, f.box.r - 2, f.Y(0) - 8, col.muted(), 'right', 11);
-  if (yl) text(g, yl, f.X(0) + 6, f.box.t + 6, col.muted(), 'left', 11);
+  withLabelRole('axis', () => {
+    if (xl) text(g, xl, f.box.r - 2, f.Y(0) - 8, col.muted(), 'right', 11);
+    if (yl) text(g, yl, f.X(0) + 6, f.box.t + 6, col.muted(), 'left', 11);
+  });
   void step;
 }
 /** Tick numbers on a complex-plane frame (s-plane, z-plane): small ticks on the axes every `step` (x) and `ystep` (y), numbers inside the
@@ -133,11 +156,11 @@ export function planeTicks(g: CanvasRenderingContext2D, f: Frame, step: number, 
   g.save(); g.strokeStyle = col.strong(); g.lineWidth = 1; g.setLineDash([]);
   for (let x = Math.ceil(x0 / step) * step; x <= x1 + 1e-9; x += step) {
     const px = f.X(x); g.beginPath(); g.moveTo(px, ax - 3); g.lineTo(px, ax + 3); g.stroke();
-    if (Math.abs(x) > 1e-9) text(g, lab(x), px, f.box.b - 7, col.muted(), 'center', 10);
+    if (Math.abs(x) > 1e-9) withLabelRole('tick', () => text(g, lab(x), px, f.box.b - 7, col.muted(), 'center', 10));
   }
   for (let y = Math.ceil(y0 / ystep) * ystep; y <= y1 + 1e-9; y += ystep) {
     const py = f.Y(y); g.beginPath(); g.moveTo(ay - 3, py); g.lineTo(ay + 3, py); g.stroke();
-    if (Math.abs(y) > 1e-9) text(g, lab(y), f.box.l + 3, py, col.muted(), 'left', 10);
+    if (Math.abs(y) > 1e-9) withLabelRole('tick', () => text(g, lab(y), f.box.l + 3, py, col.muted(), 'left', 10));
   }
   g.restore();
 }
@@ -169,13 +192,15 @@ export function graphAxes(g: CanvasRenderingContext2D, f: Frame, xr: V2, yr: V2,
   const nice = (span: number, n: number) => { const raw = span / n, p = Math.pow(10, Math.floor(Math.log10(raw))), m = raw / p; return (m < 1.5 ? 1 : m < 3.5 ? 2 : m < 7.5 ? 5 : 10) * p; };
   const sx = xs || nice(xr[1] - xr[0], 6), sy = ys || nice(yr[1] - yr[0], 4);
   g.lineWidth = 1; g.setLineDash([]);
-  for (let x = Math.ceil(xr[0] / sx) * sx; x <= xr[1] + 1e-9; x += sx) { g.strokeStyle = col.grid(); g.beginPath(); g.moveTo(f.X(x), f.box.t); g.lineTo(f.X(x), f.box.b); g.stroke(); text(g, xfmt ? xfmt(x) : String(+x.toFixed(3)), f.X(x), f.box.b + 9, col.muted(), 'center', 10); }
-  for (let y = Math.ceil(yr[0] / sy) * sy; y <= yr[1] + 1e-9; y += sy) { g.strokeStyle = col.grid(); g.beginPath(); g.moveTo(f.box.l, f.Y(y)); g.lineTo(f.box.r, f.Y(y)); g.stroke(); text(g, String(+y.toFixed(3)), f.box.l - 4, f.Y(y), col.muted(), 'right', 10); }
+  // the axis names first, so tick numbers that would sit on them give way
+  withLabelRole('axis', () => { text(g, xLabel, (f.box.l + f.box.r) / 2, f.h - 5, col.text(), 'center', 11); g.save(); g.translate(10, (f.box.t + f.box.b) / 2); g.rotate(-Math.PI / 2); text(g, yLabel, 0, 0, col.text(), 'center', 11); g.restore(); });
+  withLabelRole('tick', () => {
+    for (let x = Math.ceil(xr[0] / sx) * sx; x <= xr[1] + 1e-9; x += sx) { g.strokeStyle = col.grid(); g.beginPath(); g.moveTo(f.X(x), f.box.t); g.lineTo(f.X(x), f.box.b); g.stroke(); text(g, xfmt ? xfmt(x) : String(+x.toFixed(3)), f.X(x), f.box.b + 9, col.muted(), 'center', 10); }
+    for (let y = Math.ceil(yr[0] / sy) * sy; y <= yr[1] + 1e-9; y += sy) { g.strokeStyle = col.grid(); g.beginPath(); g.moveTo(f.box.l, f.Y(y)); g.lineTo(f.box.r, f.Y(y)); g.stroke(); text(g, String(+y.toFixed(3)), f.box.l - 4, f.Y(y), col.muted(), 'right', 10); }
+  });
   g.strokeStyle = col.strong();
   if (yr[0] < 0 && yr[1] > 0) { g.beginPath(); g.moveTo(f.box.l, f.Y(0)); g.lineTo(f.box.r, f.Y(0)); g.stroke(); }
   if (xr[0] < 0 && xr[1] > 0) { g.beginPath(); g.moveTo(f.X(0), f.box.t); g.lineTo(f.X(0), f.box.b); g.stroke(); }
-  text(g, xLabel, (f.box.l + f.box.r) / 2, f.h - 5, col.text(), 'center', 11);
-  g.save(); g.translate(10, (f.box.t + f.box.b) / 2); g.rotate(-Math.PI / 2); text(g, yLabel, 0, 0, col.text(), 'center', 11); g.restore();
 }
 export function curve(g: CanvasRenderingContext2D, f: Frame, xs: ArrayLike<number>, ys: ArrayLike<number>, color: string, width = 2, dash: number[] = []) {
   g.save(); clipBox(g, f); g.strokeStyle = color; g.lineWidth = width; g.setLineDash(dash); g.beginPath();

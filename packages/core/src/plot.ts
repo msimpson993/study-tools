@@ -1,3 +1,4 @@
+import { resetLabels } from './labels';
 export interface Series { xs: ArrayLike<number>; ys: ArrayLike<number>; color: string; dash?: number[]; width?: number; kind?: 'line' | 'stem' }
 export interface PlotSpec {
   xr: [number, number]; yr: [number, number];
@@ -15,6 +16,7 @@ export function fitCanvas(cv: HTMLCanvasElement): { w: number; h: number; g: Can
   if (cv.width !== w * dpr || cv.height !== hgt * dpr) { cv.width = w * dpr; cv.height = hgt * dpr; }
   const g = cv.getContext('2d')!;
   g.setTransform(dpr, 0, 0, dpr, 0, 0);
+  resetLabels(cv); // a new draw: forget the labels placed last time (labels.ts)
   return { w, h: hgt, g };
 }
 
