@@ -156,3 +156,73 @@ describe('exam examples and legacy claims', () => {
     nearAbs(M.stepMetrics(tf([0.5 * 2, 3 * 2, 2 * 2], polyMul([1, 0], [1, 3, 2]).map((v, i) => v + [0, 1, 6, 4][i])), 20, 40001).OS, 1.937, 0.01);
   });
 });
+
+describe('[F] failure cards on the dish (build 1 answers)', () => {
+  const line = (re: RegExp) => { const l = OUT.split('\n').find((x) => re.test(x)); if (!l) throw new Error(`no line ${re}`); return l; };
+  const metOf = (l: string) => { const m = l.match(/OS (-?[\d.]+) %, Ts ([\d.]+) s, Tr ([\d.]+) s/)!; return { OS: +m[1], Ts: +m[2], Tr: +m[3] }; };
+  const windOf = (l: string) => { const m = l.match(/wind peak ([\d.]+) deg, final (-?[\d.]+) deg, inside 0\.05 deg after ([\d.]+) s/)!; return { peak: +m[1], final: +m[2], recover: +m[3] }; };
+  const checkMet = (a: ReturnType<typeof M.cardMet>, l: string) => { const b = metOf(l); nearAbs(a.OS, b.OS, 0.051); nearAbs(a.Ts, b.Ts, 0.0051); nearAbs(a.Tr, b.Tr, 0.00051); };
+  const checkWind = (a: ReturnType<typeof M.cardWind>, l: string) => { const b = windOf(l); nearAbs(a.peak, b.peak, 0.00051); nearAbs(a.final, b.final, 0.00051); nearAbs(a.recover, b.recover, 0.0051); };
+  const run = (o: M.CardOpts) => M.dishCard(o);
+  const met = (o: M.CardOpts, r = 0.1, upto?: number) => { const s = run(o); return M.cardMet(s.t, s.y, r, upto); };
+  it('slow, overshoot, oscillation (0.1 rad step, 20 s)', () => {
+    checkMet(met({ Kp: 2000, Ki: 1000, Kd: 200 }), line(/^check tuned:/));
+    checkMet(met({ Kp: 400, Ki: 100, Kd: 80, T: 20 }), line(/^slow \(400,100,80\)/));
+    checkMet(met({ Kp: 1000, Ki: 500, Kd: 0, T: 20 }), line(/^overshoot \(1000,500,0\)/));
+    checkMet(met({ Kp: 1000, Ki: 1900, Kd: 0, T: 20 }), line(/^oscillation \(1000,1900,0\)/));
+    checkMet(met({ Kp: 1000, Ki: 500, Kd: 120, T: 20 }), line(/^oscillation fix/));
+    const s = run({ Kp: 400, Ki: 100, Kd: 80, T: 20 }); nearAbs(Array.from(s.u).reduce((a, x) => Math.max(a, Math.abs(x)), 0), +line(/^slow \(400/).match(/peak\|u\| (\d+)/)![1], 0.5);
+  });
+  it('offset and disturbance (20 N·m wind at 10 s)', () => {
+    const w = (Kp: number, Ki: number, Kd: number) => { const s = run({ Kp, Ki, Kd, T: 40, wind: 20, twind: 10 }); return M.cardWind(s.t, s.y, 10); };
+    checkWind(w(1000, 0, 120), line(/^offset PD/)); checkWind(w(1000, 500, 120), line(/^offset fix/));
+    checkWind(w(500, 250, 100), line(/^dist \(500,250,100\)/)); checkWind(w(2000, 1000, 200), line(/^dist fix tuned/));
+  });
+  it('derivative kick (N_f = 200) with and without the 200 N·m limit', () => {
+    for (const dm of [false, true]) {
+      const ls = OUT.split('\n'), i = ls.findIndex((l) => l.startsWith(`kick dm ${dm ? 'True' : 'False'}`));
+      const s = run({ Kp: 2000, Ki: 1000, Kd: 200, dm, Nf: 200, T: 5 });
+      nearAbs(Array.from(s.u).reduce((a, x) => Math.max(a, Math.abs(x)), 0), +ls[i].match(/unlimited (\d+)/)![1], 0.5);
+      checkMet(M.cardMet(s.t, s.y, 0.1), ls[i]); checkMet(met({ Kp: 2000, Ki: 1000, Kd: 200, dm, Nf: 200, T: 5, umax: 200 }), ls[i + 1]);
+    }
+  });
+  it('torque limits: 2 rad slew with clamping at 200, 400, 1000 N·m', () => {
+    for (const um of [200, 400, 1000]) checkMet(met({ Kp: 2000, Ki: 1000, Kd: 200, r: 2, T: 12, umax: um, aw: true }, 2), line(new RegExp(`^limits 2 rad clamp umax ${um} `)));
+  });
+  it('delay (20, 50 ms; 80 ms unstable) and its fixes; sensor lag', () => {
+    checkMet(met({ Kp: 2000, Ki: 1000, Kd: 200, T: 15, delay: 0.02 }), line(/^delay 0\.02 /));
+    checkMet(met({ Kp: 2000, Ki: 1000, Kd: 200, T: 15, delay: 0.05 }), line(/^delay 0\.05 /));
+    expect(met({ Kp: 2000, Ki: 1000, Kd: 200, T: 15, delay: 0.08 }).unstable).toBe(true);
+    checkMet(met({ Kp: 1000, Ki: 250, Kd: 120, T: 15, delay: 0.05 }), line(/^ {2}delay fix \(1000, 250, 120\)/));
+    checkMet(met({ Kp: 800, Ki: 200, Kd: 110, T: 15, delay: 0.05 }), line(/^ {2}delay fix \(800, 200, 110\)/));
+    checkMet(met({ Kp: 2000, Ki: 1000, Kd: 200, T: 15, lag: 0.02 }), line(/^sensorlag 0\.02 /));
+    checkMet(met({ Kp: 2000, Ki: 1000, Kd: 200, T: 15, lag: 0.05 }), line(/^sensorlag 0\.05 /));
+    checkMet(met({ Kp: 1000, Ki: 500, Kd: 120, T: 15, lag: 0.05 }), line(/^ {2}lag fix \(1000,500,120\)/));
+  });
+  it('set-point weight b: 1 and 0.5 (with the wind at 20 s), 0.9 (the fix)', () => {
+    for (const bw of [1, 0.5]) {
+      const s = run({ Kp: 2000, Ki: 1000, Kd: 200, T: 40, b: bw, wind: 20, twind: 20 }), l = line(new RegExp(`^twodof b ${bw === 1 ? '1\\.0' : '0\\.5'} OS`));
+      checkMet(M.cardMet(s.t, s.y, 0.1, 20), l); checkWind(M.cardWind(s.t, s.y, 20), l);
+    }
+    checkMet(met({ Kp: 2000, Ki: 1000, Kd: 200, T: 20, b: 0.9 }), line(/^twodof b 0\.9 /));
+  });
+  it('REF with N̄ off stops at k₁/(k + k₁) = 0.36 of the command', () => {
+    nearAbs(M.cornerNbarOffRatio(), grab(/Nbar off: z\/r = ([\d.]+)/), 0.005);
+  });
+});
+
+describe('build 1 figure checks (B8/B27)', () => {
+  it('first: the stand-in gap peaks at 1.46 K about 1.2 h after switch-on', () => {
+    const r = M.houseStepResidues(); let gap = 0, at = 0;
+    for (let t = 0; t <= 40; t += 0.001) { const g = Math.abs(r.x2(t) - r.r0 * (1 - Math.exp(-t / 5))); if (g > gap) { gap = g; at = t; } }
+    nearAbs(gap, 1.463, 6e-4); nearAbs(at, 1.2, 0.05);
+  });
+  it('partial: residues 20.45, −22.5, 2.05 sum to 0; about 0.2 K of the fast term is left after 1 h', () => {
+    const r = M.houseStepResidues(); nearAbs(r.r0, 20.45, 0.005); nearAbs(r.r1, -22.5, 0.005); nearAbs(r.r2, 2.045, 0.001); nearAbs(r.r0 + r.r1 + r.r2, 0, 1e-9);
+    nearAbs(r.r2 * Math.exp(-2.2), 0.227, 0.001);
+  });
+  it('specs: Tₛ ≤ 1 s needs c = 2mσ = 3200; %OS ≤ 10 % needs ζ = 0.591, c = 3783', () => {
+    nearAbs(2 * CORNER.m * 4, 3200, 1e-9);
+    const z = -Math.log(0.1) / Math.sqrt(Math.PI ** 2 + Math.log(0.1) ** 2); nearAbs(z, 0.591, 0.0005); nearAbs(2 * z * Math.sqrt(CORNER.k * CORNER.m), 3783, 1);
+  });
+});

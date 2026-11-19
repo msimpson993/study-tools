@@ -239,4 +239,43 @@ SF -10+/-10j: k1 = 54400  k2 = 6400  Nbar = 80000
 observer -16+/-12j: l1 = 28  l2 = 224
 body-pair zeta with wheel: 0.210
 
+======== [F] Build-1 answers: failure cards on the dish (D on measurement unless stated; 0.1 rad step; wind 20 N m) and REF N-bar off
+check tuned: OS 7.4 %, Ts 2.20 s, Tr 0.156 s
+slow (400,100,80) OS 7.7 %, Ts 4.92 s, Tr 0.352 s peak|u| 40
+slow fix tuned OS 7.4 %, Ts 2.20 s, Tr 0.156 s peak|u| 200
+overshoot (1000,500,0) OS 80.2 %, Ts 5.11 s, Tr 0.108 s peak|u| 100
+oscillation (1000,1900,0) OS 98.8 %, Ts 20.00 s, Tr 0.102 s peak|u| 102
+oscillation fix (1000,500,120) OS 11.7 %, Ts 2.68 s, Tr 0.196 s peak|u| 100
+offset PD (1000,0,120) wind peak 1.199 deg, final -1.146 deg, inside 0.05 deg after 30.00 s
+offset fix (1000,500,120) wind peak 1.130 deg, final -0.000 deg, inside 0.05 deg after 6.09 s
+dist (500,250,100) wind peak 2.076 deg, final -0.000 deg, inside 0.05 deg after 7.16 s
+dist fix tuned wind peak 0.554 deg, final -0.000 deg, inside 0.05 deg after 4.82 s
+kick dm False peak|u| unlimited 4200 OS 17.0 %, Ts 0.36 s, Tr 0.058 s
+   with 200 limit OS 6.4 %, Ts 2.08 s, Tr 0.151 s
+kick dm True peak|u| unlimited 200 OS 6.6 %, Ts 2.16 s, Tr 0.153 s
+   with 200 limit OS 6.6 %, Ts 2.16 s, Tr 0.153 s
+limits 2 rad clamp umax 200 OS 3.8 %, Ts 0.81 s, Tr 0.362 s
+limits 2 rad clamp umax 400 OS 3.0 %, Ts 0.69 s, Tr 0.260 s
+limits 2 rad clamp umax 1000 OS 4.5 %, Ts 1.02 s, Tr 0.188 s
+delay 0.02 OS 6.5 %, Ts 2.18 s, Tr 0.120 s
+delay 0.05 OS 40.3 %, Ts 2.40 s, Tr 0.071 s
+delay 0.08 OS 5565387920074729450373120.0 %, Ts 15.00 s, Tr 0.065 s
+  delay fix (1000, 250, 120) OS 19.8 %, Ts 2.45 s, Tr 0.118 s
+  delay fix (800, 200, 110) OS 13.0 %, Ts 3.07 s, Tr 0.143 s
+sensorlag 0.02 OS 7.6 %, Ts 2.18 s, Tr 0.119 s
+sensorlag 0.05 OS 32.1 %, Ts 2.14 s, Tr 0.086 s
+  lag fix (1000,500,120) OS 27.4 %, Ts 2.62 s, Tr 0.129 s
+twodof b 1.0 OS 7.4 %, Ts 2.20 s, Tr 0.156 s wind peak 0.556 deg, final -0.000 deg, inside 0.05 deg after 4.82 s
+twodof b 0.5 OS -0.0 %, Ts 6.07 s, Tr 2.978 s wind peak 0.556 deg, final -0.000 deg, inside 0.05 deg after 4.82 s
+Nbar off: z/r = 0.36
+---- extras
+slow (200, 50, 40) OS 13.6 %, Ts 5.61 s, Tr 0.419 s
+slow (100, 25, 20) OS 18.3 %, Ts 6.70 s, Tr 0.553 s
+twodof b 0.7 OS -0.0 %, Ts 4.94 s, Tr 1.856 s
+twodof b 0.8 OS -0.0 %, Ts 3.94 s, Tr 0.861 s
+twodof b 0.9 OS -0.0 %, Ts 1.67 s, Tr 0.195 s
+lag fix (1000, 250, 100) OS 35.9 %, Ts 1.65 s, Tr 0.123 s
+lag fix (600, 150, 90) OS 16.8 %, Ts 3.56 s, Tr 0.185 s
+
 All numbers recomputed.
+EXIT 0

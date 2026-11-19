@@ -237,3 +237,51 @@ export function deltaQ(asc: number[], q: number) {
   const fact = (n: number): number => (n <= 1 ? 1 : n * fact(n - 1)); const D = (k: number) => (k < asc.length ? fact(k) * asc[k] : 0);
   let s = 0; for (let k = 0; k <= 2 * q; k++) s += ((-1) ** (k + q) * D(k) * D(2 * q - k)) / (fact(k) * fact(2 * q - k)); return s;
 }
+
+/* ───────────── failure cards on the dish (numbers.py [F]) ───────────── */
+/** One card run, exactly as numbers.py [F] `sim`: Euler at dt, PID with set-point weight b, D on measurement (or error) with an
+ *  optional first-order D filter N_f, torque limit with clamping anti-windup, a pure measurement delay and a first-order sensor lag,
+ *  and a wind torque that switches on at `twind`. Returns time, angle and the applied torque. */
+export interface CardOpts { Kp: number; Ki: number; Kd: number; r?: number; T?: number; dt?: number; wind?: number; twind?: number | null; umax?: number | null; aw?: boolean; dm?: boolean; Nf?: number | null; delay?: number; lag?: number; b?: number }
+export function dishCard(o: CardOpts) {
+  const { Kp, Ki, Kd } = o, r = o.r ?? 0.1, T = o.T ?? 10, dt = o.dt ?? 1e-4, wind = o.wind ?? 0, twind = o.twind ?? null, umax = o.umax ?? null, aw = !!o.aw, dm = o.dm ?? true, Nf = o.Nf ?? null, delay = o.delay ?? 0, lag = o.lag ?? 0, bw = o.b ?? 1;
+  const n = Math.trunc(T / dt), J = DISH.J, B = DISH.B; // int(T/dt) as numbers.py
+  let th = 0, om = 0, I = 0, yf = 0, dstate = 0, yprev = 0;
+  const L = delay > 0 ? Math.max(1, Math.round(delay / dt)) + 1 : 0, buf = new Float64Array(L); let bi = 0;
+  const t = new Float64Array(n), y = new Float64Array(n), u = new Float64Array(n);
+  for (let i = 0; i < n; i++) {
+    let ym = th;
+    if (L) { ym = buf[bi]; buf[bi] = th; bi = (bi + 1) % L; }
+    if (lag > 0) { yf += (dt * (ym - yf)) / lag; ym = yf; }
+    const e = r - ym, sig = dm ? -ym : e;
+    let dsig: number;
+    if (Nf === null) dsig = i === 0 ? (dm ? 0 : Kd ? e / dt : 0) : (sig - yprev) / dt;
+    else { dstate += dt * Nf * (sig - dstate); dsig = i > 0 ? Nf * (sig - dstate) : Nf * sig; }
+    yprev = sig;
+    const uc = Kp * (bw * r - ym) + Ki * I + Kd * dsig;
+    const us = umax !== null ? Math.max(-umax, Math.min(umax, uc)) : uc;
+    if (!(aw && umax !== null && us !== uc && Math.sign(e) === Math.sign(uc))) I += e * dt;
+    const d = twind !== null && i * dt >= twind ? wind : 0;
+    om += ((us - B * om - d) / J) * dt; th += om * dt;
+    t[i] = i * dt; y[i] = th; u[i] = us;
+  }
+  return { t, y, u };
+}
+/** numbers.py [F] `met`: %OS, Ts = time of the last sample outside ±2 %, Tr = 90 % crossing − 10 % crossing. `upto` cuts the run (twodof). */
+export function cardMet(t: ArrayLike<number>, y: ArrayLike<number>, r: number, upto = Infinity) {
+  let pk = -Infinity, last = -1, i10 = -1, i90 = -1;
+  for (let i = 0; i < y.length && t[i] < upto; i++) {
+    if (y[i] > pk) pk = y[i];
+    if (Math.abs(y[i] - r) > 0.02 * Math.abs(r)) last = i;
+    if (i10 < 0 && y[i] >= 0.1 * r) i10 = i; if (i90 < 0 && y[i] >= 0.9 * r) i90 = i;
+  }
+  return { OS: (100 * (pk - r)) / r, Ts: last >= 0 ? t[last] : 0, Tr: t[Math.max(i90, 0)] - t[Math.max(i10, 0)], unstable: !Number.isFinite(pk) || Math.abs(pk) > 100 * Math.abs(r) };
+}
+/** numbers.py [F] `windm`: pointing error after the wind arrives at tw (degrees, about the 0.1 rad target). */
+export function cardWind(t: ArrayLike<number>, y: ArrayLike<number>, tw: number, r = 0.1) {
+  let pk = 0, lastOut = -1, fin = 0;
+  for (let i = 0; i < y.length; i++) { if (t[i] < tw) continue; const e = deg(y[i] - r); fin = e; if (Math.abs(e) > pk) pk = Math.abs(e); if (Math.abs(e) > 0.05) lastOut = i; }
+  return { peak: pk, final: fin, recover: lastOut >= 0 ? t[lastOut] - tw : 0 };
+}
+/** REF with N̄ off (u = −k₁(z − r) − k₂ż): the body stops at k₁/(k + k₁) of the command. */
+export const cornerNbarOffRatio = (K: number[] = cornerK(), p: Corner = cornerOf()) => K[0] / (p.k + K[0]);
