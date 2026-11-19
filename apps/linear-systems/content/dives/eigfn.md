@@ -29,8 +29,12 @@ Some inputs come out of an LTI system with their shape unchanged, only scaled: t
 ```figure:eigfn
 ```
 
+**Second figure: the scale factor H(jω) at every frequency.** The first figure scales one tone; this one reads |H| for every tone off the pole picture.
+
 ```figure:tf
 ```
+
+*Look for here:* at 690 Hz the dB curve reads the same ×1.83 gain the phasor above shows.
 
 ### The math
 

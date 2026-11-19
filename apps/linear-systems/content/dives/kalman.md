@@ -24,13 +24,19 @@ A model can have more states than its transfer function shows. Some modes cannot
 
 ### See it
 
-**Picture it first.** Wire every mode between the input and the output. A mode that is not wired at both ends is invisible to the transfer function.
+**Imagine it.** Wire every mode between the input and the output. A mode that is not wired at both ends is invisible to the transfer function.
+
+The first figure opens on the symmetric car: it is the blind-spot case from Box 13, where a push and a sensor at the centre miss pitch entirely. Switch to the main car to see the general case.
 
 ```figure:kalman
 ```
 
+**Second figure: the sensor's half of the story.** Kalman's sorting needs both halves: reached by the input (the push) and seen by the output (this sensor). This opens on the main car.
+
 ```figure:obs
 ```
+
+*Look for here:* put the height sensor at the pitch still point, x = +0.56 m, and the pitch reading goes flat: that mode drops out of G(s) as in the table above.
 
 ```eq
 G(s) depends only on the CO subsystem

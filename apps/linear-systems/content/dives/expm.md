@@ -34,6 +34,8 @@ Then release the body from a pose and watch e^(At)x(0) play out; wear the shocks
 ```figure:expm
 ```
 
+*Look for here:* released 2° nose-down the body levels and settles; this is e^(At)x(0) with no road input at all, unlike the bump above.
+
 ```eq
 x(t) = e^(At) x(0),    e^(At) = Σ (At)^k / k!
 ```

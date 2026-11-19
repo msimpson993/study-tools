@@ -24,13 +24,17 @@ Before designing an actuator, check that it can do the job at all. A system is c
 
 ### See it
 
-**Picture it first.** Push the car's body up at one point. Does the push move both modes, or is one out of reach? Move the push point and switch cars below.
+**Picture it first.** Push the car's body up at one point. Does the push move both modes, or is one out of reach? Move the push point and switch cars below. The main car is the default; the symmetric car is the blind-spot case from Box 13.
 
 ```figure:ctrl
 ```
 
+**Second figure: what reachability does to the transfer function.** It opens on the symmetric car, the blind-spot case from Box 13, with the push at the centre.
+
 ```figure:kalman
 ```
+
+*Look for here:* push at the centre and only the bounce hump survives in |G|; move the push point off the centre and the pitch hump comes back, as the bars above predict.
 
 ```eq
 Ctrb = [B,  AB,  A²B,  …,  A^(n−1)B],    rank(Ctrb) = n

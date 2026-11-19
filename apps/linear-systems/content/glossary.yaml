@@ -139,7 +139,7 @@
   meaning: Frequencies above fs/2 fold back and look like lower ones after sampling.
   section: Fourier and sampling
 - term: Nyquist rate
-  meaning: "Twice the highest frequency present, $2f_{max}$; sample faster than this to avoid aliasing."
+  meaning: "Twice the highest frequency present, $2f_{max}$; sample faster than this to avoid aliasing. The same rule seen from the sampler: with rate fs, everything below the Nyquist frequency fs/2 is safe, so fs > 2f_max is the same statement as f_max < fs/2."
   section: Fourier and sampling
 - term: z = e^(sT)
   meaning: Map from the s-plane to the z-plane. Left half-plane → inside the unit circle; many-to-one (aliasing).
@@ -302,7 +302,7 @@
   meaning: "Active noise cancelling: play anti-noise so the sum at the ear is small. Feedforward (outer mic), feedback (inner mic) or hybrid."
   section: Earbud speaker
 - term: FxLMS
-  meaning: "Filtered-x least mean squares: adaptive ANC filter update that filters the reference through a model of the speaker path first."
+  meaning: "Beyond this course. Filtered-x least mean squares: adaptive ANC filter update that filters the reference through a model of the speaker path first."
   section: Earbud speaker
 - term: "z, θ"
   meaning: "Heave (up, m) and pitch (nose-up +, rad) of the car body; with their rates ż, θ̇ they form the four-number state $x = (z, \\theta, \\dot z, \\dot\\theta)$. A body point $x$ metres ahead of the centre of gravity moves $z + x\\theta$."

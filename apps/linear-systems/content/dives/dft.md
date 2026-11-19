@@ -29,8 +29,12 @@ A computer holds a finite block of samples, not a whole signal, so it needs a fi
 ```figure:dft
 ```
 
+**Second figure: what happens between the bins.** The ring above decays inside the block, so its bins are clean. A steady hum does not decay; this figure shows what the same 64-point DFT does with it.
+
 ```figure:window
 ```
+
+*Look for here:* at 750 Hz, exactly bin 6, one spike; at 690 Hz, between bins, the energy leaks into every bin.
 
 $$X[k]=\sum_{n=0}^{N-1} x[n]\,e^{-j2\pi kn/N}$$
 

@@ -27,14 +27,14 @@ describe('shipped content', () => {
     const { content } = loadApp(srcOf(app));
     expect(content.maps.length).toBeGreaterThan(0);
   });
-  it('linear-systems keeps its 2 maps / 52 nodes / 55 edges / 30 dives (Big picture + Full detail rebuild)', () => {
+  it('linear-systems keeps its 2 maps / 52 nodes / 55 edges / 31 dives (Big picture + Full detail rebuild)', () => {
     const { content } = loadApp(path.join(repoRoot, 'apps', 'linear-systems'));
     expect(content.maps.map((m) => m.id)).toEqual(['big', 'full']);
     expect(content.maps.reduce((n, m) => n + m.nodes.length, 0)).toBe(52);
     expect(content.maps.reduce((n, m) => n + m.edges.length, 0)).toBe(55);
-    expect(content.dives.length).toBe(30);
+    expect(content.dives.length).toBe(31);
     expect((content.review ?? []).map((r) => r.id)).toEqual(['part-a', 'part-b', 'formula-sheet', 'self-test']);
-    expect(content.quiz.length).toBe(101); // 97 + 4 kept from the retired transforms page
+    expect(content.quiz.length).toBe(103); // 97 + 4 kept from the retired transforms page + 2 skyhook (Nov 19)
     expect(content.quiz.filter((q) => q.tags?.includes('variants')).length).toBe(21);
   });
   it('linear-systems Big-picture boxes follow the fixed pop-up template (answer, rough words, running example, next question; every figure captioned; ≤ ~180 words incl. captions)', () => {

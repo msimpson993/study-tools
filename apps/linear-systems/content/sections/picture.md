@@ -27,14 +27,14 @@ The same dictionary relates matrix diagonalization to Fourier analysis of LTI sy
 | Composition | Polynomials and powers of A | Convolution ↔ product of transforms |
 | Evolution in time | e^(At) = V e^(Λt) V⁻¹ | Each mode × e^(λt);  Y(s) = H(s) X(s) |
 | Incomplete basis | Jordan blocks, t^k e^(λt) | Repeated poles, t^k e^(λt) u(t) |
-| Reach / see every mode | Range of Ctrb,  null space of O | No cancelled poles in a minimal G(s) |
+| Reach / see every mode | Range of Ctrb,  null space of O | No cancelled poles in a minimal H(s) |
 
 | State space | Transfer function |
 |---|---|
-| (A, B, C, D) | G(s) = C(sI − A)⁻¹ B + D |
-| Eigenvalues of A | Poles of G, after cancelling hidden modes |
-| Impulse response C e^(At) B + D δ(t) | G(s) = Laplace transform of that h(t) |
-| Controllable and observable | Minimal: deg G = n, poles = eig(A) |
+| (A, B, C, D) | H(s) = C(sI − A)⁻¹ B + D |
+| Eigenvalues of A | Poles of H, after cancelling hidden modes |
+| Impulse response C e^(At) B + D δ(t) | H(s) = Laplace transform of that h(t) |
+| Controllable and observable | Minimal: deg H = n, poles = eig(A) |
 | Uncontrollable or unobservable mode | Pole-zero cancellation; mode still lives in A |
-| Internal stability: all Re(λ) < 0 | BIBO: poles of G in the open left half-plane |
-| Similarity: T⁻¹ A T, T⁻¹ B, C T | G(s) unchanged |
+| Internal stability: all Re(λ) < 0 | BIBO: poles of H in the open left half-plane |
+| Similarity: T⁻¹ A T, T⁻¹ B, C T | H(s) unchanged |

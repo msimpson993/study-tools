@@ -1269,3 +1269,28 @@
   - All bins
   answer: 1
   why: "Bins are fs/N = 0.25 Hz apart, so 1 Hz is bin k = 4, and a real signal has its mirror at N − 4 = 28."
+- id: c-sky-1
+  tags:
+  - skyhook
+  - stab
+  kind: recognize
+  q: "Skyhook feedback u = −Kx is added to the car. What happens to the poles?"
+  choices:
+  - "They become the eigenvalues of A − BK: here they move left, so the motion dies out faster"
+  - "Nothing: feedback changes the input, not the poles"
+  - "They move to the zeros of the transfer function"
+  - "They all become real"
+  answer: 0
+  why: "Substituting u = −Kx gives ẋ = (A − BK)x, a new matrix with new eigenvalues. With the gains proportional to the springs the bounce ζ rises from 0.289 to 0.700 at the same 1.151 Hz."
+- id: c-sky-2
+  tags:
+  - skyhook
+  kind: trap
+  q: "The skyhook actuators are wired the wrong way round, pushing with the body's vertical speed. What happens?"
+  choices:
+  - "The poles move right; with enough gain they cross the axis and the motion grows"
+  - "The car is just less comfortable, but still settles"
+  - "Nothing changes, because the sign of a damper does not matter"
+  - "The natural frequencies double"
+  answer: 0
+  why: "Positive feedback subtracts damping: A − BK with the wrong sign moves the poles right. At a net damping of −0.2 × the shocks' the ζ are −0.058 and −0.071 and the motion grows about 2× every 1.66 s."

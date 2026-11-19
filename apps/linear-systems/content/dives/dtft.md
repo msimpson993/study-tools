@@ -29,8 +29,12 @@ A sampled signal has a spectrum too, and it has a twist: samples cannot tell a p
 ```figure:dtft
 ```
 
+**Second figure: where the periodic copies come from.** The DTFT repeats every 2π because sampling copies the spectrum every fs.
+
 ```figure:sampling
 ```
+
+*Look for here:* sweep the tone past fs/2 and an orange copy enters the band: the same overlap that would make the DTFT copies run into each other.
 
 $$X(e^{j\Omega})=\sum_{n=-\infty}^{\infty} x[n]\,e^{-j\Omega n}$$
 

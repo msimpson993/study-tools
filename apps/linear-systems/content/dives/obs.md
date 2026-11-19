@@ -24,13 +24,21 @@ A sensor might not see everything going on inside. A system is observable if wat
 
 ### See it
 
-**Picture it first.** A sensor sees only one *shadow* of the state. Observability asks whether two different states can ever cast the same shadow for all time.
+**Picture it first.** A sensor sees only one *shadow* of the state. Observability asks whether two different states can ever cast the same shadow for all time. The picture shows the simplest case.
+
+```picture:pic-obs-shadow A height sensor at the centre of the symmetric car reads only heave: two example states with different pitch cast the same shadow, so pitch is unobservable there.
+Two states at the same heave but different pitch project onto the same reading.
+```
 
 ```figure:obs
 ```
 
+**Second figure: what an unseen mode does to the transfer function.** This opens on the symmetric car, the blind-spot case from Box 13, with the sensor at the centre.
+
 ```figure:kalman
 ```
+
+*Look for here:* with the sensor at the centre only the bounce hump shows in |G|: the pitch mode the sensor cannot see is missing from G(s).
 
 ```eq
 O = [C;  CA;  CA²;  …;  CA^(n−1)],    rank(O) = n

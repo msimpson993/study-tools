@@ -29,8 +29,12 @@ A signal's energy can be added up in time or across frequencies, and the two tot
 ```figure:fs
 ```
 
+**Second figure: one harmonic's share, measured on its own.** Parseval adds the squared amplitudes; this figure measures each amplitude by an inner product.
+
 ```figure:ortho
 ```
+
+*Look for here:* the even bars are zero: those harmonics carry no power, which is why the power share in the first figure grows only at odd k.
 
 ### The math
 

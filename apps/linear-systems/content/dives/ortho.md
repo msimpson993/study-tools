@@ -24,7 +24,7 @@ To find how much of one harmonic a signal holds, we line the signal up against t
 
 ### See it
 
-**Picture it first.** A dot product is a shadow. And two different sinusoids are as perpendicular as two functions can be.
+**Imagine it.** A dot product is a shadow. And two different sinusoids are as perpendicular as two functions can be.
 
 ```figure:ortho
 ```

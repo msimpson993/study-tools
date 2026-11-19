@@ -26,10 +26,11 @@ Diagonalizing needs a full set of eigenvectors, and a repeated eigenvalue someti
 
 **Picture it first.** When the grid of eigenvectors collapses to a single line, A cannot be a pure stretch. What it does instead is a shear. On the speaker, raise the damping until its two poles meet (critical damping, ζ = 1): that is the moment the eigenvector grid collapses.
 
-```figure:jordan
+```picture:pic-jordan-shear Left: a matrix with two eigenvectors stretches the grid along them. Right: [[1, 0.9], [0, 1]] has a repeated eigenvalue 1 and one eigenvector (yellow), so it shears the grid instead.
+Two grids: one stretched along two axes, one sheared along its single eigenvector.
 ```
 
-```figure:tf
+```figure:jordan
 ```
 
 ```eq

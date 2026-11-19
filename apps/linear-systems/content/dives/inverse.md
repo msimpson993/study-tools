@@ -29,8 +29,12 @@ A transform is only useful if we can get the signal back. Split the transform in
 ```figure:inverse
 ```
 
+**Second figure: why the ROC decides which signal you get.** The inverse above uses the right-sided terms because the speaker's ROC is σ > −1.27.
+
 ```figure:laplace
 ```
+
+*Look for here:* slide σ left of −1.27 and the weighted ring stops settling: that edge is the ROC, and it runs through the poles of the first figure.
 
 ### The math
 

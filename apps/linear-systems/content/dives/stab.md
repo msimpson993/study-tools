@@ -31,8 +31,12 @@ The figure below wears the car's shocks: as the damping falls the poles slide to
 ```figure:stab
 ```
 
+**Second figure: the same car on a real road bump.** The poles above set how fast the bump response dies away.
+
 ```figure:flow
 ```
+
+*Look for here:* with the default shocks the heave dies out quickly; wear them (More) and it rings on, as the poles above drift toward the axis.
 
 ```eq
 continuous:  Re(λ) < 0 for every eigenvalue of A
@@ -60,19 +64,7 @@ Asymptotic (internal) stability of x′ = Ax is equivalent to every eigenvalue o
 
 **Exam-style example.** For A = [[0, 1], [−2, −3]] (ÿ + 3ẏ + 2y = u), λ = −1, −2, both with negative real part, so ẋ = Ax is asymptotically stable. Sampled with period T = 0.1, the discrete matrix e^(AT) has eigenvalues e^(−0.1) ≈ 0.9048 and e^(−0.2) ≈ 0.8187, both inside the unit circle, so the sampled system is stable too. If one eigenvalue were +1, the continuous system would be unstable; if a discrete eigenvalue were −1, that mode would alternate and not decay (marginally stable only if the Jordan block is 1×1).
 
-### Feedback: skyhook active damping on the car
-
-Stability is not only something to check; feedback can change it. Give each axle an actuator that pushes against the body's vertical speed at that axle, $F = -c\cdot(\text{body speed})$: a damper hooked to the sky. In state form that is $u = -Kx$, so the closed loop is $\dot x = (A - BK)x$ and the poles are the eigenvalues of $A - BK$. Here it is the same as fitting stronger shocks that the road cannot push through.
-
-1. Choose the gains proportional to the springs, $c_f = 4{,}317$ and $c_r = 4{,}771$ N·s/m, so the damping stays proportional and the modes keep their shapes.
-2. The poles move left along circles: bounce $-5.062 \pm 5.164j$ (ζ 0.700), pitch $-7.691 \pm 4.506j$ (ζ 0.863). The natural frequencies stay at 1.151 and 1.419 Hz; only the damping changes.
-3. Over the 5 cm bump at 15 m/s the heave peak falls from 8.77 to 6.25 mm, pitch from 0.222° to 0.170°, and the body is within 1 mm after 0.50 s instead of 1.17 s. The actuators peak at 958 N front and 1,412 N rear.
-4. The front-road heave resonance disappears: its peak drops from ×1.18 to ×0.57, about the low-frequency level b/(a + b) = 0.56.
-
-One equal gain at both axles, 4,355 N·s/m, also gives bounce ζ 0.700, with pitch ζ 0.823. Wire the actuator the wrong way round (push with the body speed) and the same algebra moves the poles right: with a NET damping of −0.2 × the shocks', ζ −0.058 and −0.071, and the motion grows about 2× every 1.66 s.
-
-```figure:skyhook
-```
+**Feedback can move these poles.** Skyhook active damping, which pushes the car's poles left on purpose, has its own dive: *Feedback: skyhook active damping*.
 
 ### What it can't do
 

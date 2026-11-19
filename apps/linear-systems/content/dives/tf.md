@@ -29,8 +29,12 @@ The transfer function H(s) is the system's whole input–output behaviour as one
 ```figure:tf
 ```
 
+**Second figure: the same gain, seen on one tone.** The distance picture above gives |H| and ∠H at one frequency; here they scale and delay an actual 690 Hz tone.
+
 ```figure:eigfn
 ```
+
+*Look for here:* at 690 Hz the cone moves ×1.83 and lags 82°, the gain the dB curve above reads at that frequency.
 
 ```eq
 H(s) = C (sI − A)⁻¹ B + D

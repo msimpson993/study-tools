@@ -81,7 +81,7 @@ test('every linear-systems dive opens without errors', async ({ page }) => {
   const errs = trackErrors(page);
   await open(page, 'linear-systems');
   const ids: string[] = await page.evaluate(() => (window as any).__study.content.dives.map((d: any) => d.id));
-  expect(ids.length).toBe(30);
+  expect(ids.length).toBe(31);
   for (const id of ids) {
     await page.goto(url('linear-systems', `#/dive/${id}`)); await page.waitForFunction(() => !!(window as any).__study);
     await expect(page.getByTestId('dive')).toBeVisible();

@@ -24,10 +24,7 @@ The rank tests say whether some mode is unreachable or unseen, but not which one
 
 ### See it
 
-**Picture it first.** A sensor y = cᵀx is a projection. It is blind to a mode exactly when that mode's direction is perpendicular to c. An input column b pushes a mode exactly when b is not perpendicular to that mode's *left* eigenvector.
-
-```figure:kalman
-```
+**Imagine it.** A sensor y = cᵀx is a projection. It is blind to a mode exactly when that mode's direction is perpendicular to c. An input column b pushes a mode exactly when b is not perpendicular to that mode's *left* eigenvector.
 
 ```figure:ctrl
 ```

@@ -24,12 +24,9 @@ Often we know a system only from its transfer function, but the state tools need
 
 ### See it
 
-**Picture it first.** Three integrators in a chain. The input enters at the top; every integrator's output feeds back with weight −aₖ (the poles); the output taps the chain with weights bₖ (the zeros). Zeros live in C, poles live in the last row of A.
+**Imagine it.** Three integrators in a chain. The input enters at the top; every integrator's output feeds back with weight −aₖ (the poles); the output taps the chain with weights bₖ (the zeros). Zeros live in C, poles live in the last row of A.
 
 ```figure:ss
-```
-
-```figure:tf
 ```
 
 ### The math

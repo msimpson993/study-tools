@@ -29,8 +29,12 @@ Fourier uses steady sines, which last forever, so it cannot describe a switch-on
 ```figure:laplace
 ```
 
+**Second figure: from X(s) back to the signal.** Each pole of the map above contributes one term to h(t).
+
 ```figure:inverse
 ```
+
+*Look for here:* raise the damping and the two poles meet at −4.50 (critical); the terms then become t·e^(−σt), the same poles you see as bright spots in the map.
 
 $$X(s)=\int_{-\infty}^{\infty} x(t)\,e^{-st}\,dt,\qquad X(z)=\sum_{n=-\infty}^{\infty} x[n]\,z^{-n},\qquad z=e^{sT}$$
 

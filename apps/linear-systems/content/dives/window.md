@@ -27,8 +27,12 @@ Cutting a block out of a long signal is like looking through a window. A tone th
 ```figure:window
 ```
 
+**Second figure: the DFT of a signal that fades.** The hum above never ends, so it leaks; the click ring dies inside the block, so its bins sit cleanly on the DTFT.
+
 ```figure:dft
 ```
+
+*Look for here:* the stems sit on the dashed DTFT at every bin: the ring has died out inside the block, so there is nothing to leak.
 
 ### The math
 

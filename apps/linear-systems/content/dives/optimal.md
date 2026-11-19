@@ -24,13 +24,21 @@ Many ways of pushing reach the same target, and some cost far less than others. 
 
 ### See it
 
-**Picture it first.** The two-point problem is solved with a state transition matrix, the same object as e^(At), applied to the Hamiltonian matrix M.
+**Picture it first.** The body starts 2° nose-down and at rest, and must be level and at rest exactly at T. Of all the force histories that do it, the least-energy one takes the path below. Finding it is a two-point problem: the state runs forward from the start while its costate p, the price of each push, runs back from the target.
+
+```picture:pic-opt-path The least-energy path (yellow) takes the body from 2° nose-down at rest to level at rest in exactly 0.5 s, in the pitch–pitch-rate plane; left alone (dashed) it swings past and settles more slowly.
+A path from a red start point to a green target point in the pitch-angle, pitch-rate plane, with the free motion dashed.
+```
 
 ```figure:optimal
 ```
 
+**Second figure: the price of the same move.** The forces above come from the Gramian W(T); this figure plots the least energy against the time allowed.
+
 ```figure:gramian
 ```
+
+*Look for here:* at T = 0.5 s the energy is the 96,160 N²·s of the forces above; allow 1 s and it falls steeply.
 
 ### The math
 
@@ -72,7 +80,7 @@ For $L = x^\mathsf{T}Qx + u^\mathsf{T}Ru$ the last gives $u = -\tfrac12R^{-1}B^\
 
 1. Car with front and rear actuators: minimise $\int_0^{0.5}|u|^2\,dt$ to go from 2° nose-down at rest to level and still.
 2. With $L = |u|^2$ the costate obeys $\dot p = -A^\mathsf{T}p$, so $u(t) = -B^\mathsf{T}p(t)/2$ is built from the car's modes run backwards from $T$; the end condition fixes $p(0)$.
-3. Result: small at first; the front force peaks at about 476 N part-way through, the rear at about 652 N right at the end, with $E = 96{,}160$ N²·s; the Gramian gives the same answer. Allowed 1 s, about 120 N is enough.
+3. Result: small at first; the front force dips to −476 N at 0.28 s, the rear to −652 N right at the end, with $E = 96{,}160$ N²·s; the Gramian gives the same answer. Allowed 1 s, about 120 N is enough.
 
 **Exam-style example.** ẋ = 6x + u, J = ∫₀¹(x² + 2u²)dt, x(0) = 1, x(1) = 2. 𝓗 = x² + 2u² + p(6x + u), so u° = −p/4 and
 
@@ -82,9 +90,9 @@ x(1) = φ₁₁(1)·1 + φ₁₂(1)p(0) = 2 gives p(0) ≈ 47.94, and u°(0) ≈
 
 ### What it can't do
 
-This plans one input for one start and one target, open loop. A real system meets disturbances, so in practice the optimal input is turned into feedback (LQR) — beyond this course's map.
+This plans one input for one start and one target, open loop. A real system meets disturbances, so in practice the optimal input is turned into feedback (LQR, the linear–quadratic regulator): beyond this course.
 
-**Next question.** With cost ∫uᵀu only, ṗ = −Aᵀp on its own, and the answer is the Gramian formula u = Bᵀe^(Aᵀ(T−t))W(T)⁻¹(x_f − e^(AT)x₀). Adding a state cost xᵀQx couples x and p, and an infinite horizon leads to LQR.
+**Next question.** With cost ∫uᵀu only, ṗ = −Aᵀp on its own, and the answer is the Gramian formula u = Bᵀe^(Aᵀ(T−t))W(T)⁻¹(x_f − e^(AT)x₀). Adding a state cost xᵀQx couples x and p, and an infinite horizon leads to LQR (the linear–quadratic regulator), beyond this course.
 
 ### Common pitfalls
 

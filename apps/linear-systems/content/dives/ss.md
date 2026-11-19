@@ -29,9 +29,6 @@ A transfer function only links input to output. A state-space model keeps the in
 ```figure:ss
 ```
 
-```figure:eig
-```
-
 ```eq
 ẋ = Ax + Bu,    y = Cx + Du
 ```

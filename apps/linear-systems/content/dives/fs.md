@@ -26,11 +26,19 @@ A signal that repeats every T seconds is built from sines at whole multiples of 
 
 **Picture it first.** Any periodic signal is a chain of rotating arrows. Add arrows of the right lengths, spinning at multiples of the base frequency, and the tip draws the waveform.
 
+```picture:pic-fourier-arrows The 200 Hz square-wave drive as three rotating arrows (200, 600, 1000 Hz, lengths 4/(πk) V). The tip's height, followed in time, draws the partial sum (yellow) of the square wave (dashed).
+Three chained rotating arrows on the left; on the right the tip height traced over time approaches a square wave.
+```
+
 ```figure:fs
 ```
 
+**Second figure: how each coefficient is measured.** The series above adds harmonics up; this figure takes one back out, by an inner product over one period.
+
 ```figure:ortho
 ```
+
+*Look for here:* probe harmonic 3: the area gives the third harmonic's amplitude at the cone, the orange bar at 600 Hz in the figure above.
 
 $$c_k=\frac{1}{T}\int_{\text{one period }T} x(t)\,e^{-jk\omega_0 t}\,dt,\qquad \omega_0=\frac{2\pi}{T}$$
 

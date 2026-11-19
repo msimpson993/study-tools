@@ -24,12 +24,9 @@ Most directions get twisted when A acts on them, but a few special ones are only
 
 ### See it
 
-**Picture it first.** Think of A as an instruction to move the whole plane. Most vectors get turned as well as stretched, but a few special directions only stretch. On the car each eigenvector is a pose of the body that keeps its shape as it swings: bounce and pitch, below. The second figure shows a bump exciting both.
+**Picture it first.** Think of A as an instruction to move the whole plane. Most vectors get turned as well as stretched, but a few special directions only stretch. On the car each eigenvector is a pose of the body that keeps its shape as it swings: bounce and pitch, below.
 
 ```figure:eig
-```
-
-```figure:flow
 ```
 
 ```eq

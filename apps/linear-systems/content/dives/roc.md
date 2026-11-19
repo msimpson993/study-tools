@@ -29,8 +29,12 @@ The same transform formula can belong to several different signals. What tells t
 ```figure:laplace
 ```
 
+**Second figure: one signal, from one choice of ROC.** The figure inverts the speaker's H(s) with the right-sided ROC σ > −1.27, the only one that gives a causal ring.
+
 ```figure:inverse
 ```
+
+*Look for here:* each pole gives one term; with the right-sided ROC both run forward in time and fade.
 
 | Signal | ROC in s | ROC in z |
 |---|---|---|

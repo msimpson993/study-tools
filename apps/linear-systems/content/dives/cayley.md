@@ -29,8 +29,12 @@ Computing e^(At) usually means finding A's eigenvectors first, which is slow and
 ```figure:cayley
 ```
 
+**Second figure: the motion those weights build.** The αₖ(t) above are only the weights. Here is the motion they add up to, heave and pitch after the body is released 2° nose-down.
+
 ```figure:expm
 ```
+
+*Look for here:* the pitch curve is the same θ(t) the dots trace in the check panel above; both are e^(At)x(0).
 
 ### The math
 

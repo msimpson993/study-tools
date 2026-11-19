@@ -29,9 +29,6 @@ Differential and difference equations become algebra once transformed. Solving t
 ```figure:zfilter
 ```
 
-```figure:sampling
-```
-
 ### The math
 
 The shift rule makes a difference equation into algebra: y(n − k) ↔ z⁻ᵏY(z) when the initial conditions are zero, and y(n − 1) ↔ z⁻¹Y(z) + y(−1) in the one-sided transform when they are not. For ODEs, ẏ ↔ sY − y(0⁻).
@@ -68,7 +65,7 @@ so y(n) = [⅓(½)ⁿ − ⅓(−¼)ⁿ + (−½)ⁿ]u(n). Check: y(0) = 1 and y
 
 A difference equation runs one sample at a time; on its own it doesn't tell you whether the filter rings, settles or blows up. Reading the poles of H(z) does.
 
-**Next question.** In the earbud the filter coefficients are not fixed: FxLMS adapts them while the music plays so the residual noise at the error microphone keeps shrinking. That is still a difference equation, just with slowly changing coefficients.
+**Next question (beyond this course).** In the earbud the filter coefficients are not fixed: FxLMS (filtered-x least mean squares) adapts them while the music plays so the residual noise at the error microphone keeps shrinking. That is still a difference equation, just with slowly changing coefficients.
 
 ### Common pitfalls
 

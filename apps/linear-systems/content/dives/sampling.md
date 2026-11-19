@@ -29,8 +29,12 @@ Sampling a signal every T seconds keeps only snapshots, and a fast pitch can loo
 ```figure:sampling
 ```
 
+**Second figure: the sampled ring's spectrum, periodic in Ω.** The copies above, seen in digital frequency Ω = 2πf/fs: one period from −π to π holds everything.
+
 ```figure:dtft
 ```
+
+*Look for here:* lower fs and the same 688 Hz ring moves to a larger Ω, closer to π, where the next copy starts.
 
 ```eq
 x[n] = x(n T),    z = e^(s T),    |z| = e^(σ T)
@@ -80,4 +84,4 @@ Sampling decides which pitches survive, but it does not yet give a spectrum we c
 - Nyquist is f\_s / 2, or Ω = π rad/sample. A real signal whose spectrum is not strictly bandlimited to that will alias, even if a single tone looks like a valid lower frequency.
 - Exactly at f\_s/2 the samples can lose the tone altogether: a cosine at f\_s/2 sampled at its zero crossings gives all zeros. So the sample rate must be strictly above twice the highest frequency ([see it at z = −1](#/board?pair=map&preset=atnyq)).
 - c2d(sys, T, 'zoh') is not the substitution s = (ln z)/T into G(s). Poles do map as z = e^(s T); zeros generally do not.
-- Impulse-invariant and bilinear (Tustin) mappings are different choices, with different frequency warping. Name the method when you discretize.
+- Impulse-invariant and bilinear (Tustin) mappings are different choices, with different frequency warping. Name the method when you discretize. The page's earbud sounds use the bilinear map: the speaker's H(s) becomes a *biquad* (a second-order difference equation, two poles and two zeros) at 48 kHz, prewarped so its natural frequency stays at 717 Hz.
