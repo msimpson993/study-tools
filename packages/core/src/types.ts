@@ -51,6 +51,8 @@ export interface MapEdge {
   question: string;
   /** the idea behind the link (rendered HTML) */
   idea: string;
+  /** why you would ask this question at this point: the gap in the previous box that motivates it (rendered HTML) */
+  why?: string;
   eq?: string;
 }
 

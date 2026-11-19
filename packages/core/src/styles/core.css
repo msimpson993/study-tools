@@ -306,3 +306,7 @@ details.derivation{margin:.7rem 0}details.derivation>summary{font-weight:650}
 .aud-vol,.aud-ctl{display:flex;align-items:center;gap:.4rem;font-size:.8rem;color:var(--muted)}.aud-vol input{width:5.5rem}
 .aud-ctl{margin-top:.3rem}.aud-ctl input{flex:1;min-width:0}.aud-ctl output{min-width:4.5em;text-align:right;color:var(--text)}
 .aud canvas{background:var(--panel);border:1px solid var(--border);border-radius:8px}.aud-note{font-size:.82rem;color:var(--text);margin:.25rem 0 0;line-height:1.3}
+
+.pop-next-list{margin:.15rem 0 0 1.1rem;padding:0}.pop-next-list li{margin:.2rem 0}.pop-next-link{font-weight:600}
+.chain-nav{display:flex;flex-wrap:wrap;gap:.45rem;margin:.6rem 0 .2rem;padding-top:.55rem;border-top:1px solid var(--border)}.chain-nav .tbtn{flex:1 1 9.5rem;min-height:44px;display:flex;flex-direction:column;align-items:flex-start;justify-content:center;text-align:left;padding:.35rem .65rem;line-height:1.2}.chain-nav .chain-next{align-items:flex-end;text-align:right}.chain-nav .ch-dir{font-size:.72rem;opacity:.8;font-weight:600}.chain-nav .ch-name{font-size:.88rem;font-weight:600}
+.callout.c-why{border-color:var(--border-strong)}

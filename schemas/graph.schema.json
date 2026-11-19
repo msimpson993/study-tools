@@ -335,6 +335,11 @@
                   "type": "string",
                   "minLength": 20
                 },
+                "why": {
+                  "type": "string",
+                  "minLength": 20,
+                  "description": "why you would ask this question at this point: the gap in the previous box that motivates it"
+                },
                 "eq": {
                   "type": "string"
                 },
