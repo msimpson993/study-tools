@@ -155,21 +155,22 @@ const picB2: QuizFigureDef = { aspect: 2.1, maxWidth: 520, draw(g, w, h) {
  */
 function chain(g: CanvasRenderingContext2D, w: number, h: number, o: { n: number; names: string[]; fb: string[]; taps?: string[]; inGain?: string; yLabel: string }) {
   g.clearRect(0, 0, w, h); const c = col.text(), m = col.muted();
-  const yM = h * (o.taps ? 0.42 : 0.3), xIn = 16, xG = o.inGain ? w * 0.13 : xIn, xS = o.inGain ? w * 0.25 : w * 0.14, xEnd = w * (o.taps ? 0.8 : 0.86), step = (xEnd - xS) / o.n;
+  const GW = 62, yM = h * (o.taps ? 0.42 : 0.3), xIn = 16, xG = o.inGain ? xIn + 12 + GW / 2 : xIn, xS = o.inGain ? Math.max(w * 0.25, xG + GW / 2 + 24) : w * 0.14;
+  const xEnd = Math.min(w * (o.taps ? 0.8 : 0.86), w - 44 - o.yLabel.length * 7), step = (xEnd - xS) / o.n;
   const box = (x: number, y: number, s: string, bw = 26, color = c) => { g.save(); g.fillStyle = cssVar('--plot-bg') || cssVar('--panel'); g.fillRect(x - bw / 2, y - 11, bw, 22); g.strokeStyle = color; g.lineWidth = 1.4; g.strokeRect(x - bw / 2, y - 11, bw, 22); g.restore(); text(g, s, x, y + 1, color, 'center', 11); };
   text(g, 'u', xIn - 8, yM, c, 'center', 12);
-  if (o.inGain) { arrow(g, xIn, yM, xG - 30, yM, c); box(xG, yM, o.inGain, 58); arrow(g, xG + 29, yM, xS - 10, yM, c); } else arrow(g, xIn, yM, xS - 10, yM, c);
+  if (o.inGain) { arrow(g, xIn, yM, xG - GW / 2, yM, c); box(xG, yM, o.inGain, GW); arrow(g, xG + GW / 2, yM, xS - 10, yM, c); } else arrow(g, xIn, yM, xS - 10, yM, c);
   ring(g, xS, yM, 10, c, 1.4); text(g, 'Σ', xS, yM + 1, c, 'center', 11);
   const nodes: number[] = [];
   for (let i = 0; i < o.n; i++) {
     const xi = xS + step * (i + 0.45), xn = xS + step * (i + 1);
     arrow(g, i ? nodes[i - 1] : xS + 10, yM, xi - 14, yM, c); box(xi, yM, '∫'); seg(g, xi + 13, yM, xn, yM, c, 1.4); dot(g, rangeFrame(w, h, [0, w], [h, 0], 0, 0, 0, 0), [xn, yM], c, 2.6);
-    text(g, o.names[i], xn - 4, yM - 12, col.e(), 'right', 11); nodes.push(xn);
+    text(g, o.names[i], xn - 4, o.taps ? yM + 12 : yM - 12, col.e(), 'right', 11); nodes.push(xn);
   }
   const rows = nodes.map((_, i) => yM + 30 + i * ((h - 26 - (yM + 30)) / Math.max(1, o.n - 1 || 1)) * (o.n > 1 ? 1 : 0));
   nodes.forEach((xn, i) => {
     const yr = rows[i]; seg(g, xn, yM, xn, yr, m, 1.2); seg(g, xn, yr, xS, yr, m, 1.2); const xb = xS + (xn - xS) * (0.55 + 0.12 * (o.n - 1 - i) / Math.max(1, o.n - 1));
-    box(xb, yr, o.fb[i], Math.max(30, o.fb[i].length * 6.4 + 10), col.b());
+    const bw = Math.max(30, o.fb[i].length * 6.4 + 10); box(Math.max(xb, xS + 10 + bw / 2), yr, o.fb[i], bw, col.b()); // clear of the line up into Σ
   });
   arrow(g, xS, rows[rows.length - 1], xS, yM + 10, m, 1.2);
   if (o.taps) {
@@ -177,12 +178,12 @@ function chain(g: CanvasRenderingContext2D, w: number, h: number, o: { n: number
     seg(g, nodes[0], yT, nodes[nodes.length - 1], yT, col.a(), 1.2); arrow(g, nodes[nodes.length - 1], yT, w - 30, yT, col.a()); text(g, o.yLabel, w - 4, yT, col.a(), 'right', 12);
   } else { arrow(g, nodes[nodes.length - 1], yM, w - 14 - o.yLabel.length * 7, yM, c); text(g, o.yLabel, w - 4, yM, c, 'right', 12); }
 }
-const picB3: QuizFigureDef = { aspect: 2.3, maxWidth: 520, draw(g, w, h) {
+const picB3: QuizFigureDef = { aspect: 1.75, maxWidth: 520, draw(g, w, h) {
   chain(g, w, h, { n: 3, names: ['x₃', 'x₂', 'x₁'], fb: ['−8', '−19', '−2'], taps: ['24', '22', '3'], yLabel: 'y' });
   text(g, 'orange: feedback −aₖ (A’s last row) · blue: output taps (C)', 4, h - 4, col.muted(), 'left', 9);
 } };
 /** the speaker's own realization: ẍ = −a₀x − a₁ẋ + a₀·(DC gain)·V, two integrators */
-const picSpkChain: QuizFigureDef = { aspect: 2.3, maxWidth: 520, draw(g, w, h) {
+const picSpkChain: QuizFigureDef = { aspect: 2.0, maxWidth: 520, draw(g, w, h) {
   const p = spk();
   chain(g, w, h, { n: 2, names: ['ẋ', 'x'], fb: [`−a₁ = −${p.a1.toFixed(3)}`, `−a₀ = −${p.a0.toFixed(2)}`], inGain: `a₀ × ${UM_PER_V.toFixed(1)}`, yLabel: 'x (µm)' });
   text(g, 'u = V (volts) · per ms units · orange: A’s last row', 4, h - 4, col.muted(), 'left', 9);
