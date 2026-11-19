@@ -17,14 +17,14 @@ export const boxWords = (m: Map, n: Node) => {
 };
 
 describe('control-systems (question-chain rebuild)', () => {
-  it('keeps its 2 maps / 61 nodes / 65 edges / 33 dives / 2 review pages / 259 questions', () => {
+  it('keeps its 2 maps / 61 nodes / 65 edges / 33 dives / 2 review pages / 261 questions', () => {
     const c = load();
     expect(c.maps.map((m) => m.id)).toEqual(['big', 'detail']);
     expect(c.maps.map((m) => m.nodes.length)).toEqual([22, 39]);
     expect(c.maps.map((m) => m.edges.length)).toEqual([24, 41]);
     expect(c.dives.length).toBe(33);
     expect((c.review ?? []).map((r) => r.id).sort()).toEqual(['mini-exam-1', 'mini-exam-2']);
-    expect(c.quiz.length).toBe(259);
+    expect(c.quiz.length).toBe(261);
   });
   it('every box pop-up follows the template (answer, rough words, running example, next question, captioned figures, ≤ 4 figures, word budget)', () => {
     const c = load();
@@ -39,8 +39,8 @@ describe('control-systems (question-chain rebuild)', () => {
       if (figs.length) expect(n.pop.figCaption, `${id} figure caption`).toBeTruthy();
       if (figs.length > 1) figs.forEach((f, i) => { const L = String.fromCharCode(97 + i); expect(f.caption ?? '', `${id} panel ${L}`).toMatch(new RegExp(`^\\(${L}\\)`)); expect(n.pop!.figCaption ?? '', `${id} caption walks (${L})`).toContain(`(${L})`); });
       expect(figs.length, id).toBeLessThanOrEqual(4);
-      // the template's soft budget is ~150 words; the shared guard is 180. Eight tutor boxes run to 181–193 with their captions and key (listed for the tutor), so the hard ceiling here is 195 until they are trimmed.
-      expect(boxWords(m, n), `${id} pop-up words`).toBeLessThanOrEqual(195);
+      // the template: about 120 words, up to about 150 (tutor build 1 trimmed every box to 112–150)
+      expect(boxWords(m, n), `${id} pop-up words`).toBeLessThanOrEqual(150);
     }
   });
   it('lines carry their question and why; non-root boxes restate a solid incoming question; the root asks the central question', () => {
@@ -71,7 +71,7 @@ describe('control-systems (question-chain rebuild)', () => {
       expect(d.html.trimStart().startsWith('<p><strong>The question:</strong>'), d.id).toBe(true);
     }
     const withDeriv = c.dives.filter((d) => d.html.includes('data-testid="derivation"')).map((d) => d.id).sort();
-    expect(withDeriv).toEqual(['blocks', 'index', 'reduce', 'refin', 'second', 'sep', 'ss2tf', 'sse']);
+    expect(withDeriv).toEqual(['blocks', 'index', 'reduce', 'refin', 'second', 'sens', 'sep', 'ss2tf', 'sse']);
   });
   it('pid-tuning is folded in: no links to the removed page anywhere in the content', () => {
     const c = load();
