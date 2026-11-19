@@ -24,7 +24,7 @@ The shaded area is the index; the lower curve is the index against the gain, wit
 ### The math
 
 ```eq
-ISE = ∫e² dt,   IAE = ∫|e| dt,   ITAE = ∫t|e| dt   (ITAE: not in lecture notes)
+ISE = ∫e² dt,   IAE = ∫|e| dt,   ITAE = ∫t|e| dt
 ```
 
 ```eq
@@ -47,4 +47,4 @@ The ISE minimum is at a₁ = 10, so K_r = 80 (ζ 0.5, ISE 0.1); IAE's is at 112.
 
 It ignores torque, noise and robustness, and a different index gives a different "best".
 
-<p class="src">Sources: LN2 s.23–28 (ISE, IAE, ITSE). Not in lecture notes: ITAE. Exam practice: Review › Mini exam 2, Problem 4.</p>
+<p class="src">Sources: LN2 s.23–28 (ISE, IAE, ITAE and ITSE defined on s.23–25; the telescope on s.26–28). Exam practice: Review › Mini exam 2, Problem 4.</p>

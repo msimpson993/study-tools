@@ -30,7 +30,7 @@ Notation follows the slides: the controller is $G_c$, the plant $G$, the loop ga
 | 14 | state the noise flip side: $E = CN$, so $Y \approx -N$ for large $L$ (the lecture treats it briefly) | [Why not infinite gain? The price of feedback](#/dive/fb) |
 | 15–18 | compare open-loop and closed-loop transient: time constant $\tau_1 \to \tau_1/(1+K_aK_tK_1)$ | [Why not infinite gain? The price of feedback](#/dive/fb) |
 | 19–22 | define the steady-state error $e_{ss}$; write the open-loop error $E_0 = (1 - G_cG)R$ and the closed-loop error $E_c = R/(1 + G_cG)$; apply the final-value theorem; work the boring machine (step command: $e_{ss} = 0$; unit-step disturbance: $y_{ss} = 1/K$). *(Not in lecture notes.)* System type, error constants $K_p$, $K_v$ and ramp errors (Problem 5 and a self-test question) | [Why not infinite gain? The price of feedback](#/dive/fb); not in lecture notes: [Why it stops short](#/dive/sse) |
-| 23–28 | define ISE, IAE and ITSE (ITAE: not in lecture notes); minimise an index with $dI/dK = 0$; quote the telescope result (ISE: $K_3 = \sqrt{10} = 3.16$, $\zeta = 0.5$; IAE: $K_3 = 4.2$, $\zeta = 0.665$) | [Why not infinite gain? The price of feedback](#/dive/fb) |
+| 23–28 | define ISE, IAE, ITAE and ITSE (s.23–25); minimise an index with $dI/dK = 0$; quote the telescope result (ISE: $K_3 = \sqrt{10} = 3.16$, $\zeta = 0.5$; IAE: $K_3 = 4.2$, $\zeta = 0.665$) | [Why not infinite gain? The price of feedback](#/dive/fb) |
 | 29–34 | reduce a model two ways: drop a far pole and keep the DC gain, or match the frequency response ($M_{2q} = \Delta_{2q}$); know the $6/((s+1)(s+2)(s+3))$ example and that more zeros than poles is not causal | [Which poles matter](#/dive/dominant), [Why not infinite gain? The price of feedback](#/dive/fb) |
 
 Underlying ideas elsewhere on the map: [the loop](#/dive/blocks) (where a disturbance enters), [Turn up the gain (P), the controller menu, and faster loops](#/dive/ctrl) and the [ζ and ωₙ](#/dive/second) read-offs the boring-machine problem uses.
@@ -292,9 +292,9 @@ For $T(s) = \dfrac{3}{s^2 + 2s + 3}$ find $\omega_n$, $\zeta$, the percent overs
 
 </details>
 
-#### Carry-over problem 2: The cart with proportional control (slides 50–62)
+#### Carry-over problem 2: A second-order plant with proportional control (the pattern of slides 50–62)
 
-The cart has $G(s) = \dfrac{1}{s^2 + 3s + 2}$ and the controller is a proportional gain $K = 7$ in a unity-feedback loop. Find the closed loop, $\omega_n$, $\zeta$, the steady-state error for a unit step, the percent overshoot and the settling time.
+The plant is $G(s) = \dfrac{1}{s^2 + 3s + 2}$ and the controller is a proportional gain $K = 7$ in a unity-feedback loop. Find the closed loop, $\omega_n$, $\zeta$, the steady-state error for a unit step, the percent overshoot and the settling time.
 
 <details class="fold">
 <summary>Solution</summary>
