@@ -131,7 +131,7 @@ test('where the Fullscreen API is missing the button is hidden and nothing throw
 });
 
 test('left-edge rightward swipe in full screen exits (touch fallback)', async ({ browser }) => {
-  const ctx = await browser.newContext({ viewport: { width: 390, height: 800 }, hasTouch: true, isMobile: true, baseURL: 'http://localhost:4173' });
+  const ctx = await browser.newContext({ viewport: { width: 390, height: 800 }, hasTouch: true, isMobile: true, baseURL: `http://localhost:${process.env.PW_PORT || 4173}` });
   const page = await ctx.newPage();
   await open(page, 'linear-systems', '#/');
   const startUrl = await page.evaluate(() => location.href);

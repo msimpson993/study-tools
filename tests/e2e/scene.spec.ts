@@ -64,9 +64,10 @@ const dives = (page: Page): Promise<Dv[]> => page.evaluate(() => (window as any)
 /** Hold the scene at a frame where its overlays have something to show, then repaint. */
 const freezeAt = async (page: Page, t: number) => { await page.evaluate((x) => { (window as any).__sceneFreeze = x; window.dispatchEvent(new Event('study-theme')); }, t); await page.waitForTimeout(120); };
 const restFor = (ov: string[]) => (ov.includes('hammer') ? 0.9 : ov.includes('shaker') ? 9 : ov.includes('push') ? 1.6 : ov.includes('window') || ov.includes('sampler') || ov.includes('envelope') ? 1.3 : 1.0);
-const SHOT_DIVES: Record<string, string[]> = { 'linear-systems': ['ss', 'eig', 'ctrl', 'obs', 'lti', 'sampling', 'jordan'], 'control-systems': ['model', 'sp8', 'blocks', 'sse'], 'pid-tuning': ['problem', 'windup', 'ap-kick', 'ap-delay', 'ap-noise'] };
+const SHOT_DIVES: Record<string, string[]> = { 'linear-systems': ['ss', 'eig', 'ctrl', 'obs', 'lti', 'sampling', 'jordan'] };
 
-for (const app of ['linear-systems', 'control-systems', 'pid-tuning'] as const) {
+// control-systems draws its three examples (house, corner, dish) in its own figures, so it has no core scene in dives or on the map.
+for (const app of ['linear-systems'] as const) {
   test.describe(`${app}: example scenes in dives and on the map`, () => {
     test('every dive shows the scene beside “what this adds”, with the overlays its content chose', async ({ page }) => {
       test.setTimeout(120_000);
@@ -133,11 +134,16 @@ for (const app of ['linear-systems', 'control-systems', 'pid-tuning'] as const) 
   });
 }
 
-test('control-systems and pid-tuning choose overlays for every dive (none falls back to the default) and declare a map hero', async ({ page }) => {
-  for (const app of ['control-systems', 'pid-tuning']) {
-    await open(page, app);
-    const { ds, hero } = await page.evaluate(() => { const c = (window as any).__study.content; return { ds: c.dives as Dv[], hero: c.subject.runningExample.scene }; });
-    expect(hero, `${app}: hero scene`).toMatchObject({ id: 'cart' });
-    for (const d of ds) { expect(d.exampleScene?.overlays?.length, `${app}/${d.id}: own overlays`).toBeGreaterThan(0); expect(d.exampleScene?.overlays, `${app}/${d.id}: not the default`).not.toEqual(['forces']); }
+test('control-systems: dives say what they add to their example, with no core scene (the house, corner and dish are drawn in the figures)', async ({ page }) => {
+  const errs = trackErrors(page);
+  await open(page, 'control-systems');
+  const { ds, hero } = await page.evaluate(() => { const c = (window as any).__study.content; return { ds: c.dives as Dv[], hero: c.subject.runningExample.scene }; });
+  expect(hero).toBeUndefined();
+  for (const id of ['model', 'second', 'ctrl', 'dist', 'sf']) {
+    await page.evaluate((x) => { location.hash = `#/dive/${x}`; }, id);
+    await expect(page.getByTestId('dive-example'), id).toBeVisible();
+    expect(await page.getByTestId('example-scene').count(), `${id}: no core scene`).toBe(0);
   }
+  for (const d of ds) expect(d.exampleScene, d.id).toBeUndefined();
+  expect(errs).toEqual([]);
 });

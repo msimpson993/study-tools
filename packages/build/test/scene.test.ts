@@ -64,7 +64,9 @@ describe('example scene content field', () => {
 
 describe('closed-loop params (cart)', () => {
   const cart = () => {
+    // control-systems no longer ships the cart scene (Nov 2026: house, corner and dish are drawn by the app), so the copy puts the cart hero back.
     const dir = copyApp('control-systems'); const f = fs.readdirSync(path.join(dir, 'content/dives'))[0];
+    edit(path.join(dir, 'subject.yaml'), (y) => { y.runningExample.scene = { id: 'cart' }; });
     return { dir, file: path.join(dir, 'content/dives', f), id: f.replace(/\.md$/, '') };
   };
   it('accepts overlays + params on a dive, a map node and the hero, and passes them through', () => {
@@ -101,23 +103,17 @@ describe('staged block diagram field', () => {
     ['empty list', { overlays: ['forces'], diagram: [] }, /diagram|empty|minItems/],
   ])('rejects %s', (_n, ex, re) => {
     const dir = copyApp('control-systems');
+    edit(path.join(dir, 'subject.yaml'), (y) => { y.runningExample.scene = { id: 'cart' }; });
     const file = path.join(dir, 'content/dives', fs.readdirSync(path.join(dir, 'content/dives'))[0]);
     front(file, (fm) => { fm.exampleScene = ex; });
     expect(msg(dir)).toMatch(re);
   });
-  it('control-systems ships a staged diagram on the hero and on the loop-building dives', () => {
+  it('control-systems draws its three examples in app figures: no core hero scene, no dive scenes, no scene warnings', () => {
     const { content, warnings } = loadApp(path.join(repoRoot, 'apps', 'control-systems'));
-    expect(content.subject.runningExample?.scene).toMatchObject({ id: 'cart', overlays: ['loop'], diagram: 'loop' });
-    const want: Record<string, string | string[]> = {
-      // map order: the plant (ODE → G(s) → poles → states), then the loop builds, then the inside opens up again
-      model: ['ode', 'open'], splane: 'poles', tf: 'open', order: 'states', first: 'open', dominant: 'poles', second: 'poles',
-      blocks: ['loop', 'disturb'], ctrl: 'pid', sse: 'error', fb: 'noise', ss: 'states', ss2tf: 'states', sp8: 'gain',
-      cc: 'states', sf: 'sfb', obs: 'observer', sep: 'sep', refin: 'refin',
-    };
-    for (const [id, d] of Object.entries(want)) {
-      expect(content.dives.find((x) => x.id === id)?.exampleScene?.diagram, id).toEqual(d);
-    }
+    expect(content.subject.runningExample?.scene).toBeUndefined();
+    for (const d of content.dives) expect(d.exampleScene, d.id).toBeUndefined();
     expect(warnings.filter((w) => /exampleScene|diagram/.test(w))).toEqual([]);
   });
+
 });
 

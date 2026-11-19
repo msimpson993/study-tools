@@ -36,7 +36,7 @@ for (const app of APPS) {
       test.setTimeout(240_000);
       const errs = trackErrors(page);
       const figs = (await figuresOf(page, app)).filter((f) => f.id !== 'expm');
-      expect(figs.length).toBeGreaterThanOrEqual(app === 'linear-systems' ? 18 : app === 'control-systems' ? 16 : app === 'pid-tuning' ? 23 : 0);
+      expect(figs.length).toBeGreaterThanOrEqual(app === 'linear-systems' ? 18 : app === 'control-systems' ? 50 : 0);
       for (const f of figs) {
         await page.goto(`/${app}/index.html#/figure/${f.id}`);
         await page.reload();

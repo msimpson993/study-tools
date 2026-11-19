@@ -6,7 +6,7 @@ const texts = (page: Page) => page.locator('[data-testid=qcard] button[data-choi
 
 test.describe('quiz: choices are shuffled on display', () => {
   test('the authored answer lands in different slots, and picking it is graded right however it is placed', async ({ page }) => {
-    await open(page, 'pid-tuning', '#/quiz'); // 45/46 authored answers sit at index 0
+    await open(page, 'control-systems', '#/quiz?tags=failures'); // the PID failure-card questions: most authored answers sit at index 0
     const slots = new Set<string>();
     for (let i = 0; i < 14; i++) {
       const card = page.getByTestId('qcard');
@@ -37,7 +37,7 @@ test.describe('quiz: choices are shuffled on display', () => {
   });
 
   test('keyboard: the letter of the displayed slot answers, 1-4 too', async ({ page }) => {
-    await open(page, 'control-systems', '#/quiz?tags=model');
+    await open(page, 'control-systems', '#/quiz?tags=mini-exam'); // the first two are choice questions
     const card = page.getByTestId('qcard');
     const qid = (await card.getAttribute('data-qid'))!;
     const right = await page.evaluate((id) => (window as any).__study.content.quiz.find((x: any) => x.id === id).answer, qid);

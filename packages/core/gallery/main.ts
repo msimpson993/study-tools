@@ -166,5 +166,10 @@ void suggestKMax;
     ['house', ['heat', 'flows', 'trace'], 'house-open'], ['house', ['modes', 'trace']], ['house', ['flow', 'poles'], 'house-modal'], ['house', ['both', 'avg', 'modes'], 'house-kalman'], ['house', ['heat', 'thermo', 'reach']], ['house', ['gramian']], ['house', ['optimal', 'trace']],
   ];
   for (const [scene, overlays, diagram] of ls) { const cell = h('div', { dataset: { sceneSet: `${scene}:${overlays.join('+')}` } }); grid.append(cell); mountScene(cell, { scene, overlays, diagram }); }
+  // cart with its staged block diagrams (the old control-systems hero and dives; kept here so the stages stay covered)
+  const staged: [string[], string | string[], Record<string, number>?][] = [
+    [['loop'], 'loop', { K: 7 }], [['forces'], ['ode', 'open']], [['disturb'], ['loop', 'disturb'], { K: 7 }], [['loop'], 'gain', { K: 7 }],
+  ];
+  for (const [overlays, diagram, params] of staged) { const cell = h('div', { dataset: { sceneSet: `cart:${overlays.join('+')}:${([] as string[]).concat(diagram).join('+')}` } }); grid.append(cell); mountScene(cell, { scene: 'cart', overlays, diagram, params }); }
   sec.append(grid); root.append(sec);
 }

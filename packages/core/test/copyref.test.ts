@@ -199,13 +199,13 @@ describe('typed reference builders (fixture graph)', () => {
 
 describe('control-systems running example (real content)', () => {
   const { content } = loadApp(path.join(repoRoot, 'apps', 'control-systems'));
-  const model = content.maps[0].nodes.find((n: MapNode) => n.id === 'model')!;
+  const model = content.maps[0].nodes.find((n: MapNode) => n.id === 'MODEL')!;
 
-  it('builds a real node reference with the cart example in context', () => {
+  it('builds a real node reference with the running example in context', () => {
     const text = nodeReference(content, model, content.maps[0].id);
     expect(text.startsWith(`[study-tools] ${content.subject.title} > `)).toBe(true);
     expect(text).toContain('Viewing: node panel');
-    expect(text).toContain('Link: #/node/model');
+    expect(text).toContain('Link: #/node/MODEL');
     expect(text).toMatch(/Path: .+/);
     expect(text).toMatch(/Context: .+/);
     expect(text.split('\n').length).toBeGreaterThanOrEqual(4);

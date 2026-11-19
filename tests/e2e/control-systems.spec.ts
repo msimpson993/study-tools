@@ -33,13 +33,23 @@ test.describe('control-systems: the migrated interactive guide', () => {
     await expect(page.getByTestId('qcard').first()).toBeVisible();
   });
 
-  test('quizzes: 83 course + 22 mini-exam questions, tagged to map nodes; figure questions render their diagram', async ({ page }) => {
+  test('quizzes: 38 box asks + 52 dive checks + 83 course + 22 mini-exam + 46 PID questions; figure questions render their diagram', async ({ page }) => {
     await open(page, 'control-systems');
     const q = await page.evaluate(() => (window as any).__study.content.quiz);
+    expect(q.length).toBe(259);
+    expect(q.filter((x: any) => /^q-/.test(x.id)).length).toBe(38);
+    expect(q.filter((x: any) => x.id.startsWith('ck-')).length).toBe(52);
     expect(q.filter((x: any) => x.id.startsWith('cs-')).length).toBe(83);
     expect(q.filter((x: any) => x.id.startsWith('mini-')).length).toBe(22);
-    expect(q.filter((x: any) => x.q.includes('<svg')).length).toBe(4);
+    expect(q.filter((x: any) => x.id.startsWith('pid-')).length).toBe(46);
+    expect(q.filter((x: any) => x.q.includes('<svg')).length).toBe(10);
     await page.goto('/control-systems/index.html#/quiz?tags=blocks&title=Block%20diagrams'); await page.reload();
+    // the box ask and dive checks lead (map order); step on until the first block-diagram question
+    for (let i = 0; i < 12 && !(await page.locator('[data-testid=qcard] svg.diagram').count()); i++) {
+      const card = page.getByTestId('qcard');
+      if (await card.locator('button[data-choice]').count()) { await card.locator('button[data-choice]').first().click(); await page.getByTestId('next').click(); }
+      else { await page.getByTestId('flip').click(); await page.getByTestId('missed-it').click(); }
+    }
     await expect(page.locator('[data-testid=qcard] svg.diagram').first()).toBeVisible();
   });
 
@@ -56,3 +66,37 @@ test.describe('control-systems: the migrated interactive guide', () => {
     expect(await page.evaluate(() => getComputedStyle(document.querySelector('.legacy-board')!).backgroundColor)).toBe('rgb(0, 0, 0)');
   });
 });
+
+test.describe('control-systems: PID folded in (the PID Lab on the dish, the failure cards, no pid-tuning page)', () => {
+  test('the PID Lab opens on the antenna dish with Kp 1000 and D on measurement, and switching plant resets the gains', async ({ page }) => {
+    const errs = trackErrors(page);
+    await open(page, 'control-systems', '#/figure/lab');
+    const v = await page.evaluate(() => (window as any).__study.content.figures.find((f: any) => f.id === 'lab').controls.map((c: any) => [c.id, c.default]));
+    const d = Object.fromEntries(v);
+    expect(d.plant).toBe('dish'); expect(d.Kp).toBe(1000); expect(d.Ki).toBe(0); expect(d.Kd).toBe(0); expect(d.dm).toBe(true);
+    await expect(page.getByTestId('fig-stage')).toBeVisible();
+    expect(errs).toEqual([]);
+  });
+  test('the failures dive embeds all 14 cards, each drawing a figure', async ({ page }) => {
+    const errs = trackErrors(page);
+    await open(page, 'control-systems', '#/dive/failures');
+    await expect(page.locator('[data-testid=dive] [data-figure^="fail-"]')).toHaveCount(14);
+    expect(errs).toEqual([]);
+  });
+  test('the hub lists control-systems and no pid-tuning page; /pid-tuning/ is gone', async ({ page, request }) => {
+    await page.goto('/index.html');
+    await expect(page.locator('a[href*="control-systems"]').first()).toBeVisible();
+    expect(await page.locator('a[href*="pid-tuning"]').count()).toBe(0);
+    const r = await request.get('/pid-tuning/index.html');
+    expect(r.status()).toBe(404);
+  });
+  test('the dish, corner and house dives render at 390 px with no horizontal scroll', async ({ page }) => {
+    await page.setViewportSize({ width: 390, height: 844 });
+    for (const id of ['overview', 'model', 'second', 'ctrl', 'tuning', 'lab', 'sf']) {
+      await open(page, 'control-systems', `#/dive/${id}`);
+      await expect(page.getByTestId('dive')).toBeVisible();
+      expect(await noHScroll(page), id).toBe(true);
+    }
+  });
+});
+

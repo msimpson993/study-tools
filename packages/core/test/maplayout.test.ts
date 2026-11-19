@@ -91,10 +91,10 @@ describe('map view: Fit to screen vs Actual size', () => {
 /** crossings / overlapping line pieces of the shipped maps BEFORE the crossing-minimising layout (measured on the previous layout), at widths 362 560 775 980 1400.
     control-systems/chain narrow ceilings were raised from 5/9 to 12/12 when the Designing-with-state-feedback chapter was added; wide ceilings are unchanged. */
 const BEFORE: Record<string, [number, number][]> = {
-  'control-systems/chain': [[12, 13], [12, 11], [7, 2], [3, 1], [3, 1]], 'control-systems/splane': [[0, 0], [0, 0], [0, 0], [0, 0], [0, 0]],
+  // control-systems was rebuilt (Nov 2026) as Big picture + Full detail with pid-tuning folded in (the pid-tuning page and its map were removed); ceilings are what the current layout draws.
+  'control-systems/big': [[1, 0], [1, 0], [1, 0], [1, 0], [1, 0]], 'control-systems/detail': [[17, 0], [17, 0], [17, 0], [19, 0], [17, 0]],
   // linear-systems was rebuilt (Nov 2026) as Big picture + Full detail, and again on Nov 18 to the 14-box pop-up format; these maps never had the old layout, so their ceilings are what the current layout draws.
   'linear-systems/big': [[1, 0], [1, 0], [1, 0], [1, 0], [1, 0]], 'linear-systems/full': [[7, 0], [7, 0], [3, 0], [3, 0], [2, 0]], // Nov 18 tutor review: Controllability box under 'Do inside and outside match?' (Kalman box folded into it) adds one crossing on phones
-  'pid-tuning/chain': [[21, 271], [21, 271], [47, 12], [30, 4], [39, 1]],
 };
 const WIDTHS5 = [362, 560, 775, 980, 1400];
 const shipped = () => listApps().flatMap((app) => loadApp(path.join(repoRoot, 'apps', app)).content.maps.map((m) => ({ id: `${app}/${m.id}`, m })));
@@ -105,7 +105,9 @@ describe('layout: fewer crossings, every line in its own lane', () => {
       const c = edgeCrossings(computeGeometry(m.nodes, m.edges, w)).length; before += BEFORE[id][i][0]; after += c;
       expect(c, `${id} @${w}`).toBeLessThanOrEqual(BEFORE[id][i][0]);
     });
-    expect(after, `total ${after} vs ${before}`).toBeLessThan(before * 0.4);
+    // The old-layout maps this ratio was measured on (control-systems/chain, pid-tuning/chain) have all been rebuilt or retired; every
+    // ceiling above is now the current layout's own count, so only the per-map ceilings are checked.
+    expect(after, `total ${after} vs ${before}`).toBeLessThanOrEqual(before);
   });
   it('lines no longer run on top of each other (the old layout stacked up to 271 pieces)', () => {
     for (const { id, m } of shipped()) WIDTHS5.forEach((w) => {

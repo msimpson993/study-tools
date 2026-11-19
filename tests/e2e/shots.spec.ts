@@ -79,7 +79,7 @@ for (const v of VIEWS) {
 }
 
 // New visuals: every live figure (desktop figure card + a phone dive page) plus the running-example popup. Run: npm run shots
-for (const app of ['linear-systems', 'control-systems', 'pid-tuning']) {
+for (const app of ['linear-systems', 'control-systems']) {
   test(`shots visuals ${app}`, async ({ browser }) => {
     test.setTimeout(240_000);
     const dir = path.join(OUT, 'viz'); fs.mkdirSync(dir, { recursive: true });
@@ -104,10 +104,9 @@ for (const app of ['linear-systems', 'control-systems', 'pid-tuning']) {
   });
 }
 
-// control-systems and pid-tuning: the map, the guide board, dives with their figures and the quiz (with a quiz figure), desktop and phone, dark and light.
+// control-systems: the map, the guide board, dives with their figures and the quiz (with a quiz figure), desktop and phone, dark and light.
 const GUIDE_APPS: Record<string, { dives: string[]; fig: string; quizTags: string }> = {
-  'control-systems': { dives: ['sp8', 'fb', 'ctrl'], fig: 'cart', quizTags: 'sse' },
-  'pid-tuning': { dives: ['lab', 'zn', 'ap-overshoot'], fig: 'lab', quizTags: 'ap-overshoot' },
+  'control-systems': { dives: ['second', 'ctrl', 'lab', 'failures'], fig: 'lab', quizTags: 'failures' },
 };
 for (const [app, cfg] of Object.entries(GUIDE_APPS)) {
   for (const v of VIEWS) {
