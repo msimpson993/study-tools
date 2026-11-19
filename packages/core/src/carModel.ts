@@ -74,10 +74,10 @@ export function carModes(p: CarP): Mode[] {
   return modes.sort((x, y) => x.fn - y.fn);
 }
 /** heave and pitch response to a sine of the FRONT wheel height (m per m, rad per m) */
-export function frontFR(p: CarP, fHz: number): { z: C; th: C } {
+export function frontFR(p: CarP, fHz: number, road: CarP = p): { z: C; th: C } {
   const { M, K, C: D } = mck(p); const w = 2 * Math.PI * fHz;
   const A11: C = [K[0][0] - M[0] * w * w, D[0][0] * w], A12: C = [K[0][1], D[0][1] * w], A22: C = [K[1][1] - M[1] * w * w, D[1][1] * w];
-  const r1: C = [p.kf, p.cf * w], r2: C = [p.kf * p.a, p.cf * p.a * w];
+  const r1: C = [road.kf, road.cf * w], r2: C = [road.kf * road.a, road.cf * road.a * w];
   const det = csub(cm(A11, A22), cm(A12, A12));
   return { z: cd(csub(cm(r1, A22), cm(A12, r2)), det), th: cd(csub(cm(A11, r2), cm(A12, r1)), det) };
 }
@@ -170,3 +170,29 @@ export const overshoot = (z: number) => 100 * Math.exp((-Math.PI * z) / Math.sqr
 export const cyclesTo5pct = (z: number) => Math.log(20) / ((2 * Math.PI * z) / Math.sqrt(1 - z * z));
 /** z-plane image of a pole at sample rate fs */
 export const zPole = (s: C, fs: number) => ({ r: Math.exp(s[0] / fs), deg: (s[1] / fs) * DEG });
+
+/* ---- Feedback: skyhook active damping. Each axle actuator pushes against the body's vertical speed at that axle,
+   F_f = −c_f·(ż + aθ̇), F_r = −c_r·(ż − bθ̇). That is a damper to the sky, so the closed loop is the same car with
+   c_f, c_r added to the shocks (the road still drives only the passive shocks). */
+export type Sky = { cf: number; cr: number };
+/** the car the closed loop behaves like (state matrix only; drive it with roadB of the passive car) */
+export const withSky = (p: CarP, g: Sky): CarP => ({ ...p, cf: p.cf + g.cf, cr: p.cr + g.cr });
+/** gains proportional to the springs (c = β·k) that put the bounce mode at damping ratio ζ; the car must have proportional shocks */
+export function skyGains(p: CarP, zeta = 0.7): Sky {
+  const w0 = 2 * Math.PI * carModes(p)[0].fn, beta = (2 * zeta) / w0 - p.cf / p.kf;
+  return { cf: beta * p.kf, cr: beta * p.kr };
+}
+/** one equal gain at both axles that puts bounce at ζ (bisection) */
+export function skyEqualGain(p: CarP, zeta = 0.7): number {
+  let lo = 0, hi = 6000;
+  for (let i = 0; i < 80; i++) { const mid = (lo + hi) / 2; if ((carModes(withSky(p, { cf: mid, cr: mid }))[0]?.zeta ?? 1) < zeta) lo = mid; else hi = mid; }
+  return (lo + hi) / 2;
+}
+/** feedback gain matrix: u = −Kx with u = [F_f, F_r] at x = [a, −b] (use with forceB(p, [p.a, −p.b])) */
+export const skyK = (p: CarP, g: Sky): Mat => [[0, 0, g.cf, g.cf * p.a], [0, 0, g.cr, -g.cr * p.b]];
+/** 5 cm bump with skyhook gains g (g = 0: passive): heave, pitch and the actuator forces */
+export function skyBump(p: CarP, g: Sky, Tend = 4, dt = 5e-4) {
+  const { u } = bumpInput(p), r = sim(carA(withSky(p, g)), roadB(p), u, [0, 0, 0, 0], Tend, dt), K = skyK(p, g);
+  const F = r.xs.map((x) => mvec(K, x).map((v) => -v));
+  return { ...r, F };
+}

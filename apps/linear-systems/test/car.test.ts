@@ -79,3 +79,40 @@ describe('car model (symmetric set, centre push/sensor story only)', () => {
     const W = gramian(carA(CAR_SYM), forceB(CAR_SYM, [0]), 0.5); expect(rank(W, 1e-9)).toBe(2);
   });
 });
+import { withSky, skyGains, skyEqualGain, skyBump } from '../src/figs/car';
+describe('feedback: skyhook active damping (tutor skyhook.py)', () => {
+  const g = skyGains(CAR, 0.7), cl = carModes(withSky(CAR, g));
+  it('gains proportional to the springs: c_f = 4,317, c_r = 4,771 N·s/m', () => { close(g.cf, 4317, 1); close(g.cr, 4771, 1); close(g.cf / CAR.kf, g.cr / CAR.kr, 1e-12); });
+  it('closed-loop poles: bounce −5.062 ± 5.164j (ζ 0.700), pitch −7.691 ± 4.506j (ζ 0.863); natural frequencies unchanged', () => {
+    close(cl[0].s[0], -5.062, 0.0005); close(cl[0].s[1], 5.164, 0.0005); close(cl[0].zeta, 0.7, 0.0005);
+    close(cl[1].s[0], -7.691, 0.0005); close(cl[1].s[1], 4.506, 0.0005); close(cl[1].zeta, 0.863, 0.0005);
+    close(cl[0].fn, 1.151, 0.0005); close(cl[1].fn, 1.419, 0.0005);
+  });
+  it('5 cm bump at 15 m/s: heave 8.77 → 6.25 mm, pitch 0.222° → 0.170°, above 1 mm until 1.17 → 0.50 s, actuator peaks 958 / 1,412 N', () => {
+    const P = skyBump(CAR, { cf: 0, cr: 0 }), S = skyBump(CAR, g);
+    const pk = (r: typeof P, i: number) => Math.max(...r.xs.map((x) => Math.abs(x[i])));
+    const last = (r: typeof P) => r.ts[r.xs.map((x) => Math.abs(x[0]) > 1e-3).lastIndexOf(true)];
+    close(pk(P, 0) * 1000, 8.77, 0.006); close(pk(S, 0) * 1000, 6.25, 0.006);
+    close(pk(P, 1) * DEG, 0.222, 0.0006); close(pk(S, 1) * DEG, 0.17, 0.0006);
+    close(last(P), 1.17, 0.006); close(last(S), 0.5, 0.006);
+    close(Math.max(...S.F.map((f) => Math.abs(f[0]))), 958, 1); close(Math.max(...S.F.map((f) => Math.abs(f[1]))), 1412, 1);
+  });
+  it('front-road heave resonance goes: peak 1.18 → 0.57, about the DC level b/(a+b) = 0.56', () => {
+    const pas = Math.max(...peaks((f) => cabs(frontFR(CAR, f).z)).map((q) => q.g)), sky = (f: number) => cabs(frontFR(withSky(CAR, g), f, CAR).z);
+    let m = 0; for (let f = 0.05; f <= 10; f += 0.0005) m = Math.max(m, sky(f));
+    close(pas, 1.177, 0.0006); close(m, 0.569, 0.0006); close(sky(0.001), CAR.b / (CAR.a + CAR.b), 0.001);
+  });
+  it('equal-gain alternative: 4,355 N·s/m gives ζ 0.700 / 0.823', () => {
+    const c = skyEqualGain(CAR, 0.7), md = carModes(withSky(CAR, { cf: c, cr: c })); close(c, 4355, 1); close(md[0].zeta, 0.7, 0.0005); close(md[1].zeta, 0.823, 0.0005);
+  });
+  it('an active damper wired backwards (−0.2 × new): ζ −0.058 / −0.071, motion grows ~2× every 1.66 s', () => {
+    const md = carModes(worn(CAR, -0.2)); close(md[0].zeta, -0.058, 0.0005); close(md[1].zeta, -0.071, 0.0005); close(Math.LN2 / md[0].s[0], 1.66, 0.006);
+  });
+  it('min-energy levelling at T = 0.5 s (tutor optcheck.py): front −476 N at 0.28 s, rear −652 N at 0.50 s, each changes sign twice', () => {
+    const r = minEnergy(CAR, [CAR.a, -CAR.b], [0, -2 / DEG, 0, 0], 0.5), ts = Array.from({ length: 5001 }, (_, i) => (0.5 * i) / 5000), U = ts.map((t) => r.u(t));
+    for (const [k, want, at] of [[0, -476, 0.28], [1, -652, 0.5]] as const) {
+      const i = U.reduce((b, u, j) => (Math.abs(u[k]) > Math.abs(U[b][k]) ? j : b), 0); close(U[i][k], want, 1); close(ts[i], at, 0.005);
+      expect(U.slice(1).filter((u, j) => Math.sign(u[k]) !== Math.sign(U[j][k])).length).toBe(2);
+    }
+  });
+});
