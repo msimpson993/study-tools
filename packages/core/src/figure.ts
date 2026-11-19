@@ -51,6 +51,8 @@ function wirePointer(cv: HTMLCanvasElement, ptr: PanelPointer): () => boolean {
  * Figure group: inline plots → expanded view that covers ONLY the plot stage (the controls rail stays live) → pair view
  * (forward + inverse side by side with a strip naming both directions). Legend is expandable; "how to read" shows only expanded.
  */
+/** “x: … · y: …” under a panel, only when it is a plot with both axes named (a formula, a table or a picture has none) */
+const axesCaption = (p: { x?: string; y?: string }) => (p.x?.trim() && p.y?.trim() ? `x: ${p.x} · y: ${p.y}` : '');
 export function mountFigure(host: HTMLElement, def: FigureDef, panels: FigurePanel[], controls: ControlSet): { redraw(): void; open(ids: string[]): void; close(): void; destroy(): void } {
   const stage = h('div', { class: 'fig-stage', dataset: { testid: 'fig-stage' } });
   const inline = h('div', { class: `pair2${panels.length === 1 ? ' one' : ''}` });
@@ -96,7 +98,7 @@ export function mountFigure(host: HTMLElement, def: FigureDef, panels: FigurePan
     inline.append(h('div', { class: 'fig' },
       h('h4', null, p.title),
       h('button', { class: 'st-xp', 'aria-label': `Expand ${p.title}`, title: 'Expand', dataset: { expand: p.id }, onclick: open }, '⤢'),
-      cv, h('div', { class: 'fig-axes' }, `x: ${p.x} · y: ${p.y}`)));
+      cv, axesCaption(p) ? h('div', { class: 'fig-axes' }, axesCaption(p)) : null));
     redrawers.push(() => { const f = fitCanvas(cv); p.draw(f.g, f.w, f.h, controls.values); });
   }
 
@@ -122,7 +124,7 @@ export function mountFigure(host: HTMLElement, def: FigureDef, panels: FigurePan
       if (p.pointer) wirePointer(cv, p.pointer);
       const lg = h('div', { class: 'st-lgbox', hidden: !legendOpen[i], dataset: { testid: 'legend-box' } }, ...def.legend.map((l) => h('div', { class: 'li' }, h('i', { class: l.dash ? 'dash' : '', style: `--c:${l.color};border-top-color:${l.color}` }), l.label)));
       const chip = h('button', { class: 'chip', 'aria-expanded': String(legendOpen[i]), dataset: { testid: 'legend-chip' }, onclick: () => { legendOpen[i] = !legendOpen[i]; chip.setAttribute('aria-expanded', String(legendOpen[i])); lg.hidden = !legendOpen[i]; } }, 'Legend ▾');
-      grid.append(h('div', { class: 'fig-slot' }, h('div', { class: 'sh' }, h('span', null, `${p.title}  ·  x: ${p.x}  ·  y: ${p.y}`), chip), lg, cv));
+      grid.append(h('div', { class: 'fig-slot' }, h('div', { class: 'sh' }, h('span', null, axesCaption(p) ? `${p.title}  ·  ${axesCaption(p).replace(' · ', '  ·  ')}` : p.title), chip), lg, cv));
     });
     box.append(grid, h('div', { class: 'fig-how', dataset: { testid: 'how-to-read' }, html: `<b>How to read this:</b> ${def.howToRead}` }));
     overlay.append(box);
