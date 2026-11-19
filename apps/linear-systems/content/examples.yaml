@@ -293,6 +293,18 @@ examples:
     why: The Kaiser window approximates the prolate-spheroidal window, which puts the most energy in the main lobe for a given width. β is the single knob between resolution and dynamic range.
     eq: "filter-design rule (kaiserord): β = 0.1102(A − 8.7) for A &gt; 50 dB"
     ml: "w = kaiser(M,beta);  % or: [n,Wn,beta] = kaiserord(...)"
+  - id: earbud
+    cat: 0
+    n: Earbud (ms / kHz)
+    p:
+      sig: 1.267
+      f0: 0.688
+      fs: 8
+    sel: map
+    look: "The page's earbud, drawn with time in ms and frequency in kHz so it fits the board (read σ in 1/ms, f₀ and f<sub>s</sub> in kHz): σ = 1.267 /ms (1,267 /s), f₀ = 0.688 kHz (688 Hz), sampled at 8 kHz. Z: the poles sit at r = e<sup>−σT</sup> ≈ 0.8535 and Ω = 2π f₀/f<sub>s</sub> ≈ 31°. The board's signal is the cone's free response (pushed in and let go), whose DTFT peaks near 0.69 kHz; the earbud's impulse response, used on the rest of the page, peaks lower, near 661 Hz."
+    why: Scaling time by 1000 and frequency by 1/1000 changes no angle or radius, so every z-plane number is the earbud's own; only the axis units change.
+    eq: r = e<sup>−1267/8000</sup> ≈ 0.8535, &nbsp; Ω = 2π·688/8000 ≈ 31°
+    ml: "p = [-1267+4322j, -1267-4322j];  zp = exp(p/8000)   % abs ≈ 0.8535, angle ≈ 31°"
 tryThis:
   - id: alias
     head: Push f₀ past Nyquist

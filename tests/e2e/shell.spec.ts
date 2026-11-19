@@ -100,6 +100,8 @@ test('linear-systems: boxes on the transforms branch open the six-domains board 
   await page.locator('[data-testid=map-panel] a.tbtn[href*="board"]').click();
   await page.waitForFunction(() => !!(window as any).S && (window as any).MOD?.k);
   expect(await page.evaluate(() => (window as any).S.sel)).toBe('ft');
+  expect(await page.evaluate(() => [(window as any).S.sig, (window as any).S.f0, (window as any).S.fs])).toEqual([1.267, 0.688, 8]); // the Earbud preset
+  await expect(page.locator('#ringNote')).toContainText('generic ring');
 });
 
 test('the retired transforms page redirects into linear-systems, keeping board deep links', async ({ page }) => {

@@ -15,12 +15,12 @@ test.describe('linear-systems: six-domains board (migrated 1:1 from the retired 
     await page.waitForFunction(() => !!(window as any).__EX && (window as any).S);
   });
 
-  test('loads with six panels, nine arrows, 20 examples in 5 tabs and no console errors', async ({ page }) => {
+  test('loads with six panels, nine arrows, 21 examples (20 + Earbud) in 5 tabs and no console errors', async ({ page }) => {
     const errs = trackErrors(page);
     await page.reload(); await page.waitForFunction(() => !!(window as any).S);
     await expect(page.locator('.legacy-board .panel')).toHaveCount(6);
     expect(await page.evaluate(() => new Set([...document.querySelectorAll('.legacy-board .tl')].map((e) => (e as HTMLElement).dataset.id)).size)).toBe(9);
-    expect(await page.evaluate(() => (window as any).__EX.length)).toBe(20);
+    expect(await page.evaluate(() => (window as any).__EX.length)).toBe(21);
     await expect(page.locator('#cats button')).toHaveCount(5);
     await expect(page.locator('#presets button')).not.toHaveCount(0);
     expect(await page.locator('#exinfo').evaluate((e) => (e as HTMLDetailsElement).open)).toBe(false); // About collapsed
@@ -38,13 +38,13 @@ test.describe('linear-systems: six-domains board (migrated 1:1 from the retired 
   test('every example is reachable by its preset button and round-trips through the visible controls (number boxes)', async ({ page }) => {
     await page.evaluate(`(${PAIRJS.replace('for(const A of acts)for(const B of acts)', 'for(const A of acts.slice(0,1))for(const B of acts.slice(0,1))')})()`);
     const r = await page.evaluate(`(${RTJS})('num')`) as any;
-    expect(r.n).toBe(20); expect(r.fails).toEqual([]); expect(r.notRepresentable).toEqual([]);
+    expect(r.n).toBe(21); expect(r.fails).toEqual([]); expect(r.notRepresentable).toEqual([]);
   });
 
   test('…and through the sliders only', async ({ page }) => {
     await page.evaluate(`(${PAIRJS.replace('for(const A of acts)for(const B of acts)', 'for(const A of acts.slice(0,1))for(const B of acts.slice(0,1))')})()`);
     const r = await page.evaluate(`(${RTJS})('range')`) as any;
-    expect(r.n).toBe(20); expect(r.fails).toEqual([]); expect(r.notRepresentable).toEqual([]);
+    expect(r.n).toBe(21); expect(r.fails).toEqual([]); expect(r.notRepresentable).toEqual([]);
   });
 
   test('pairwise: an example always renders identically, whatever was dialled before it', async ({ page }) => {

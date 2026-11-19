@@ -67,7 +67,7 @@ To turn samples back into a curve, each sample is replaced by a copy of a *recon
 - **First-order hold (FOH)**, drawn here as straight chords between samples (a triangle kernel): smoother, and it suppresses the spectral copies (images) better, but it droops more in band (its response is the ZOH's squared, about 7.8 dB down at f\_s/2), and each chord needs the next sample, so it runs one sample late.
 - **Ideal (sinc) reconstruction:** a brick-wall low-pass at f\_s/2. It rebuilds a band-limited signal exactly, but the sinc kernel is infinitely long and non-causal, so real systems only approximate it.
 
-See them side by side on the [six-domains board](#/board?pair=samp&preset=zohsinc), with [a tone aliasing](#/board?pair=samp&preset=alias) and [the poles carried by z = e^(sT)](#/board?pair=map&preset=oversamp).
+See them side by side on the [six-domains board](#/board?pair=samp&preset=zohsinc), drawn on a generic ring rather than the earbud, with [a tone aliasing](#/board?pair=samp&preset=alias) and [the poles carried by z = e^(sT)](#/board?pair=map&preset=oversamp).
 
 ### What it can't do
 

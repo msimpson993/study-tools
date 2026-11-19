@@ -102,9 +102,9 @@ describe('shipped content', () => {
     expect(new Set(content.glossary.map((t) => t.section)).size).toBe(8);
     for (const t of content.glossary) expect(t.meaning.replace(/<span class="katex[\s\S]*?<\/math>/g, '')).not.toMatch(/\^\{/);
   });
-  it('linear-systems carries the six-domains board (folded in from transforms): all 20 examples and 9 transform pairs', () => {
+  it('linear-systems carries the six-domains board (folded in from transforms): all 20 examples (plus the Earbud preset) and 9 transform pairs', () => {
     const { content } = loadApp(path.join(repoRoot, 'apps', 'linear-systems'));
-    expect((content.extra.examples as any).examples.length).toBe(20);
+    expect((content.extra.examples as any).examples.length).toBe(21); // 20 from transforms + the Earbud preset
     expect(content.subject.board!.pairs.length).toBe(9);
   });
   it('every node and edge has a non-empty popup', () => {

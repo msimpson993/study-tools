@@ -54,7 +54,7 @@ The DTFT is the analysis of a discrete-time, typically aperiodic, sequence again
 
 **Exam-style example.** For x[n] = (1/2)^n u[n], the DTFT is X(e^(jΩ)) = 1 / (1 − ½ e^(−jΩ)), which is the Z-transform 1 / (1 − ½ z^(−1)) evaluated on the unit circle (legal because the ROC is |z| &gt; 1/2). At Ω = 0, X = 2. At Ω = π, X = 2/3. At Ω = π/2, X = 0.8 − 0.4j, with magnitude 2/√5 ≈ 0.894.
 
-On the [six-domains board](#/board?pair=dtft&preset=heavy): the DTFT of a sampled ring, repeating every 2π; and [near Nyquist](#/board?pair=dtft&preset=nearnyq), where the copies crowd together.
+On the [six-domains board](#/board?pair=dtft&preset=heavy): the DTFT of a sampled generic ring (not the earbud), repeating every 2π; and [near Nyquist](#/board?pair=dtft&preset=nearnyq), where the copies crowd together.
 
 ### What it can't do
 

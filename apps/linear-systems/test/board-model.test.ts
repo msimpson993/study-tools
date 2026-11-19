@@ -72,3 +72,22 @@ describe('derived quantities', () => {
     expect(d.r).toBeCloseTo(Math.exp(-0.25), 12); expect(d.zz.re).toBeCloseTo(0.5841, 3);
   });
 });
+
+describe('Earbud preset (σ = 1,267 /s, f₀ = 688 Hz, fs = 8 kHz, drawn in ms / kHz)', () => {
+  const S: ModelParams = { ...DEF, sig: 1.267, f0: 0.688, fs: 8 };
+  const d = derive(S);
+  const peak = (s: ModelParams) => { const dd = derive(s); let pk = 0, fp = 0; for (let f = 0; f <= s.fs / 2; f += 1e-5) { const W = TAU * f / s.fs, m = cabs(Xz(C(Math.cos(W), Math.sin(W)), dd, s)); if (m > pk) { pk = m; fp = f; } } return fp; };
+  it('z-poles at r ≈ 0.8535 (e^(−1267/8000)) and ≈ 31°', () => {
+    expect(d.r).toBeCloseTo(Math.exp(-1267 / 8000), 12); expect(d.r).toBeCloseTo(0.8535, 4);
+    expect((d.Wd * 180) / Math.PI).toBeCloseTo(30.96, 2);
+    expect(d.zeta).toBeCloseTo(0.281, 3);
+  });
+  it('the scaling is exact: the same preset in s and Hz gives the same r and angle', () => {
+    const real = derive({ ...DEF, sig: 1267, f0: 688, fs: 8000 });
+    expect(real.r).toBeCloseTo(d.r, 12); expect(real.Wd).toBeCloseTo(d.Wd, 12);
+  });
+  it("the board's free response peaks near 0.692 kHz (cosine form 0.705); the earbud impulse response's 661 Hz is pinned in numbers.test", () => {
+    expect(peak(S)).toBeCloseTo(0.692, 3);
+    expect(peak({ ...S, wave: 'cos' })).toBeCloseTo(0.705, 3);
+  });
+});

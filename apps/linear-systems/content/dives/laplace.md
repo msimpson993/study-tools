@@ -55,7 +55,7 @@ Laplace (continuous time) and Z (discrete time) are the natural transforms for c
 
 **Exam-style example.** L{e^(−t) u(t)} = 1/(s+1) with ROC Re(s) &gt; −1. The Z-transform of its samples at T = ln 2 is the Z-transform of (1/2)^n u[n], namely 1 / (1 − ½ z^(−1)) with ROC |z| &gt; 1/2. That is the same pole, mapped by z = e^(s T): e^(−1 · ln 2) = 1/2. On the jω axis the Laplace transform is the FT 1/(1+jω); on the unit circle the Z-transform is the DTFT 1 / (1 − ½ e^(−jΩ)).
 
-On the [six-domains board](#/board?pair=lap&preset=under) the same ring is shown in all six domains; try [overdamped](#/board?pair=lap&preset=over), [a repeated pole in z](#/board?pair=zt&preset=crit) and [an unstable pole pair](#/board?pair=map&preset=unstable).
+On the [six-domains board](#/board?pair=lap&preset=earbud) the earbud's ring is shown in all six domains (drawn in ms and kHz). The board's other presets use a generic ring (a generic ring, not the earbud: σ = 0.6 /s, f₀ = 1 Hz, f\_s = 8 Hz); try [overdamped](#/board?pair=lap&preset=over), [a repeated pole in z](#/board?pair=zt&preset=crit) and [an unstable pole pair](#/board?pair=map&preset=unstable).
 
 ### What it can't do
 

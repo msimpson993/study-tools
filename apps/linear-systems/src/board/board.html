@@ -39,15 +39,16 @@
 <aside class="ui">
   <div class="card ctl" style="margin-top:0">
     <h4>Shared example system</h4>
+    <p class="sub" id="ringNote" style="margin:.1rem 0 .4rem">The default is a generic ring (σ = 0.6 /s, f<sub>0</sub> = 1 Hz, f<sub>s</sub> = 8 Hz), not the earbud. The <b>Earbud</b> preset (Basics) is the page's earbud, drawn with time in ms and frequency in kHz.</p>
     <div class="cats" id="cats"></div>
     <div class="presets" id="presets"></div>
     <details class="exinfo" id="exinfo"><summary id="exsum"></summary><div class="exb" id="exbody"></div></details>
     <label>Pole pair (damping)</label>
     <div class="seg" id="segMode"><button data-v="under">Complex · ζ&lt;1</button><button data-v="crit">Repeated · ζ=1</button><button data-v="over">Real · ζ&gt;1</button></div>
     <label>σ, damping (1/s) <input type="number" class="num" data-n="sig" min="-0.5" max="4" step="any" inputmode="decimal" aria-label="sig value"></label>
-    <input type="range" id="sSig" data-k="sig" min="-0.5" max="4" step="0.01">
+    <input type="range" id="sSig" data-k="sig" min="-0.5" max="4" step="0.001">
     <label id="lblF0">f<sub>0</sub> = ω<sub>d</sub>/2π (Hz) <input type="number" class="num" data-n="f0" min="0.1" max="15" step="any" inputmode="decimal" aria-label="f0 value"></label>
-    <input type="range" id="sF0" data-k="f0" min="0.1" max="15" step="0.005">
+    <input type="range" id="sF0" data-k="f0" min="0.1" max="15" step="0.001">
     <div id="rowDl"><label>δ, split: s = −σ ± δ (1/s) <input type="number" class="num" data-n="dl" min="0.05" max="4" step="any" inputmode="decimal" aria-label="dl value"></label><input type="range" id="sDl" data-k="dl" min="0.05" max="4" step="0.01"></div>
     <label>f<sub>s</sub> = 1/T (Hz) <span class="sub" id="oT"></span> <input type="number" class="num" data-n="fs" min="1" max="40" step="any" inputmode="decimal" aria-label="fs value"></label>
     <input type="range" id="sFs" data-k="fs" min="1" max="40" step="0.1">

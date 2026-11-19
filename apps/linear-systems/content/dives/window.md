@@ -54,7 +54,7 @@ $$x[n]\,w[n]\;\longleftrightarrow\;\frac{1}{2\pi}\int X(e^{j\theta})\,W(e^{j(\Om
 
 **Resolution.** Two tones closer than about one main lobe merge into one peak, and the main lobe is a fixed number of bins of width $f_s/M$, where $M$ is the number of samples recorded. So resolution comes from the record length (and the window), not from the DFT length $N$: zero-padding ($N > M$) only samples the same smeared curve more finely.
 
-Try it on the [six-domains board](#/board?pair=dft&preset=offbin): an off-bin tone leaking; then [windows compared in dB](#/board?pair=dft&preset=wincomp), [flat-top for amplitude](#/board?pair=dft&preset=flattop), [the Kaiser β trade-off](#/board?pair=dft&preset=kaiserb), and [a record too short to resolve](#/board?pair=fsamp&preset=short) next to [zero-padding with Hann](#/board?pair=fsamp&preset=zpad).
+Try it on the [six-domains board](#/board?pair=dft&preset=offbin), with a generic tone rather than the earbud's hum: an off-bin tone leaking; then [windows compared in dB](#/board?pair=dft&preset=wincomp), [flat-top for amplitude](#/board?pair=dft&preset=flattop), [the Kaiser β trade-off](#/board?pair=dft&preset=kaiserb), and [a record too short to resolve](#/board?pair=fsamp&preset=short) next to [zero-padding with Hann](#/board?pair=fsamp&preset=zpad).
 
 ### Worked example: on the earbud
 
