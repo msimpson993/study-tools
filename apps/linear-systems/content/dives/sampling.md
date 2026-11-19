@@ -63,6 +63,10 @@ Sampling a mode e^(s t) at t = n T produces (e^(s T))^n = z^n, so the planes are
 
 **Exam-style example.** Sample x(t) = cos(2π · 5 t) at f\_s = 6 Hz (T = 1/6). Then x[n] = cos(2π · 5 n / 6) = cos(2π n − 2π n / 6) = cos(2π · 1 · n / 6): a 1 Hz discrete-time cosine. The two complex poles at e^(± j 2π · 5 / 6) are the same unit-circle points as e^(∓ j 2π · 1 / 6). You cannot tell from the samples whether the original tone was at 5 Hz or at 1 Hz — that is the many-to-one map s → e^(s T).
 
+```picture:pic-ex-alias A 5 Hz cosine (blue) sampled at 6 Hz (yellow dots): a 1 Hz cosine (orange, dashed) passes through every sample.
+Two cosines, 5 Hz and 1 Hz, crossing at the same seven sample points over one second.
+```
+
 ### Back to continuous time: reconstruction
 
 To turn samples back into a curve, each sample is replaced by a copy of a *reconstruction kernel* and the copies are added (a convolution).

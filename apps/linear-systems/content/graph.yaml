@@ -621,7 +621,7 @@ maps:
     eq: "right-sided ⇒ |z| > r_max,   left-sided ⇒ |z| < r_min,   stable ⇔ |z| = 1 ∈ ROC"
     pop:
       rough: "where the sum for X(s) converges; same formula, different region = different signal"
-    addsToExample: "Puts the speaker's ROC to the right of both poles (Re s > −1,266): causal, and it contains the jω axis, so the speaker is stable and has a frequency response."
+    addsToExample: "Puts the speaker's ROC to the right of both poles, σ > −1.27 /ms (−1,266 /s): causal, and it contains the jω axis, so the speaker is stable and has a frequency response."
     accountsFor: "Why the frequency response exists at all, and why the ring dies away instead of growing."
     dive: roc
     quizTag: roc

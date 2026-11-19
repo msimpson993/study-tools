@@ -2,7 +2,7 @@
 id: roc
 order: 5
 title: Region of convergence
-addsToExample: "Puts the speaker's ROC to the right of both poles, Re s > −1,266 rad/s: the click response is causal, and the ROC contains the jω axis, so the speaker is stable and has a frequency response."
+addsToExample: "Puts the speaker's ROC to the right of both poles, σ > −1.27 /ms (−1,266 /s): the click response is causal, and the ROC contains the jω axis, so the speaker is stable and has a frequency response."
 accountsFor: "Why the speaker's frequency response exists at all, and why its ring dies away instead of growing."
 category: signals
 neighbors:
@@ -29,7 +29,7 @@ The same transform formula can belong to several different signals. What tells t
 ```figure:laplace
 ```
 
-**Second figure: one signal, from one choice of ROC.** The figure inverts the speaker's H(s) with the right-sided ROC σ > −1.27, the only one that gives a causal ring.
+**Second figure: one signal, from one choice of ROC.** The figure inverts the speaker's H(s) with the right-sided ROC σ > −1.27 /ms (−1,266 /s), the only one that gives a causal ring.
 
 ```figure:inverse
 ```
@@ -57,11 +57,15 @@ The Laplace integral ∫x(t)e^(−st)dt converges only for some s, because e^(�
 
 ### Worked example: on the earbud
 
-1. The earbud's click response starts at t = 0 (causal), so its ROC lies to the right of both poles: Re s > −1,266 /s.
+1. The earbud's click response starts at t = 0 (causal), so its ROC lies to the right of both poles: σ > −1.27 /ms (−1,266 /s).
 2. That region contains the jω axis, so the earbud is BIBO stable and $H(j\omega)$ exists.
 3. The same formula with a left-sided ROC would describe a ring running backwards in time, which no speaker does.
 
 **Exam-style example.** Convolution multiplies transforms, and the ROC of the product contains the overlap of the two ROCs. h = e^(−t)u(t) has Re s > −1 and x = e^(2t)u(−t) has Re s < 2, so Y = −1/((s + 1)(s − 2)) has ROC −1 < Re s < 2: a strip, so y is two-sided, y = ⅓e^(−t)u(t) + ⅓e^(2t)u(−t).
+
+```picture:pic-ex-roc-strip Left: h's ROC Re s > −1 (blue) and x's Re s < 2 (orange) overlap in the strip −1 < Re s < 2. Right: the two-sided y(t).
+The s-plane with two half-planes overlapping in a vertical strip, and y(t) rising as e^(2t)/3 before 0 and decaying as e^(−t)/3 after.
+```
 
 ### What it can't do
 

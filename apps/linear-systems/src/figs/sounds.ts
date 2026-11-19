@@ -96,7 +96,7 @@ export const sounds: AudioRegistry = {
         else text(g, 'dashed: true · solid: heard', w - 8, 8, col.text(), 'right', 10); } },
   },
   'snd-beat': {
-    label: 'Play 690 Hz + 700 Hz', note: 'Hear it: one tone pulsing 10 times a second (beating). A 64-sample block at 8 kHz (bins 125 Hz apart) cannot split them: leakage.',
+    label: 'Play 690 Hz + 700 Hz', note: 'Hear it: two tones 10 Hz apart (you hear beating). A 64-sample block at 8 kHz (bins 125 Hz apart) cannot split them: leakage.',
     render: (fs) => { const n = Math.round(fs * 3), y = new Float32Array(n); for (let i = 0; i < n; i++) y[i] = Math.sin((TAU * 690 * i) / fs) + Math.sin((TAU * 700 * i) / fs); return y; },
     view: { aspect: 2.4, alt: 'The sum of 690 and 700 Hz over 0.3 s, with its 10 Hz beat envelope.',
       draw(g, w, h) { const ts = linspace(0, 300, 3001), f = fr(g, w, h, [0, 300], [-2.2, 2.2], 't (ms)', '');

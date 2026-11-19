@@ -29,12 +29,12 @@ Before designing an actuator, check that it can do the job at all. A system is c
 ```figure:ctrl
 ```
 
-**Second figure: what reachability does to the transfer function.** It opens on the symmetric car, the blind-spot case from Box 13, with the push at the centre.
+**Second figure: what reachability does to the transfer function.** It opens on the symmetric car, the blind-spot case from Box 13, with push and sensor at the centre.
 
 ```figure:kalman
 ```
 
-*Look for here:* push at the centre and only the bounce hump survives in |G|; move the push point off the centre and the pitch hump comes back, as the bars above predict.
+*Look for here:* with push and sensor at the centre only the bounce hump survives in |G|. Move the push point off the centre and pitch is reached (the bars above), but its hump stays out of G(s) until the sensor moves off the centre too: a mode shows in G(s) only if it is reached and seen.
 
 ```eq
 Ctrb = [B,  AB,  A²B,  …,  A^(n−1)B],    rank(Ctrb) = n

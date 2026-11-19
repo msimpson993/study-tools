@@ -24,7 +24,11 @@ Often we know a system only from its transfer function, but the state tools need
 
 ### See it
 
-**Imagine it.** Three integrators in a chain. The input enters at the top; every integrator's output feeds back with weight −aₖ (the poles); the output taps the chain with weights bₖ (the zeros). Zeros live in C, poles live in the last row of A.
+**Imagine it.** Below: the speaker's two-integrator realization; a₀ = 20.28, a₁ = 2.533 (per ms², per ms) are the last row of A, as −a₀ and −a₁.
+
+```picture:pic-spk-chain The speaker as two integrators: ẍ = −a₀x − a₁ẋ + a₀·42.8·V, with x in µm and t in ms.
+Block diagram: the voltage, scaled by a₀ times the DC gain, into a sum, then two integrators giving ẋ and x, fed back with −a₁ and −a₀.
+```
 
 ```figure:ss
 ```
@@ -49,6 +53,10 @@ $$\frac{b_2s^2+b_1s+b_0}{s^3+a_2s^2+a_1s+a_0}:\quad A=\begin{bmatrix}0&1&0\\0&0&
 3. For the physical state (x, ẋ) keep the same A and use $B = (0, Bl/(R_eM))^\mathsf{T}$, $C = [1, 0]$.
 
 **Exam-style example.** H(s) = (6s + 1)(4s + 3)/(s³ + 8s² + 19s + 2). Expand the top: 24s² + 22s + 3. So A has last row [−2, −19, −8], B = e₃ and C = [3, 22, 24], D = 0. (MATLAB's tf2ss gives the reversed ordering, A's first row [−8, −19, −2] and C = [24, 22, 3]. Both are correct; do not mix them.)
+
+```picture:pic-rev-b3 The realization as a block diagram: feedback −2, −19, −8 (A's last row), output taps 3, 22, 24 (C).
+Block diagram: u into a sum, three integrators in a chain giving x₃, x₂, x₁, each fed back with its gain, and the output summed from the taps.
+```
 
 ### What it can't do
 

@@ -128,6 +128,7 @@ export const SCENES: Record<string, SceneInfo> = {
       { id: 'poles', label: 'poles', says: 'The four eigenvalues of A: bounce at −2.09 ± 6.92j and pitch at −3.18 ± 8.33j per second. With worn shocks they slide towards the imaginary axis.', inset: 'poles' },
       { id: 'bump', label: 'bump', says: 'A 5 cm bump at 15 m/s: the rear wheel meets it 0.18 s after the front, and the motion is the front response plus a delayed rear copy. Peak heave 8.8 mm at 0.24 s.', inset: 'trace' },
       { id: 'worn', label: 'worn shocks', says: 'Shocks worn to 20% of their damping: ζ falls to about 0.06 and 0.07, and after the bump the body keeps moving more than 1 mm until 3.9 s instead of 1.2 s.', inset: 'trace' },
+      { id: 'sensor', label: 'sensor at the centre', says: 'The symmetric car (kf·a = kr·b): a height sensor at the centre of gravity cannot see pitch, because the pitch mode does not move there.' },
       { id: 'centre', label: 'push at the centre', says: 'The symmetric car (kf·a = kr·b): a push at the centre of gravity cannot start pitch, and a height sensor there cannot see it.' },
       { id: 'active', label: 'active suspension', says: 'Front and rear actuators bring the body from 2° nose-down to level and still in 0.5 s with the least ∫|u|²dt: peaks of 476 N front and 652 N rear.', inset: 'ctrl' },
     ],

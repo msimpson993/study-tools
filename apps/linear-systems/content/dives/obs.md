@@ -11,7 +11,7 @@ neighbors:
   - tf
   - eig
 matlab: "rank(obsv(A, C)) == size(A, 1)    % PBH: rank([lam*eye(n)-A; C]) == n"
-exampleScene: { scene: car, overlays: [centre, pitch], caption: "A height sensor at the balance point: pitch moves the nose and tail, not the centre." }
+exampleScene: { scene: car, overlays: [sensor, pitch], caption: "A height sensor at the balance point: pitch moves the nose and tail, not the centre." }
 level: Some algebra
 check: [c-obs-1, m9]
 ---
@@ -33,12 +33,12 @@ Two states at the same heave but different pitch project onto the same reading.
 ```figure:obs
 ```
 
-**Second figure: what an unseen mode does to the transfer function.** This opens on the symmetric car, the blind-spot case from Box 13, with the sensor at the centre.
+**Second figure: what an unseen mode does to the transfer function.** This opens on the symmetric car, the blind-spot case from Box 13, with push and sensor at the centre.
 
 ```figure:kalman
 ```
 
-*Look for here:* with the sensor at the centre only the bounce hump shows in |G|: the pitch mode the sensor cannot see is missing from G(s).
+*Look for here:* with push and sensor at the centre only the bounce hump shows in |G|: the pitch mode the sensor cannot see is missing from G(s). Move the sensor off the centre and pitch is seen (the readings above), but its hump stays out of G(s) until the push moves off the centre too: a mode shows in G(s) only if it is reached and seen.
 
 ```eq
 O = [C;  CA;  CA²;  …;  CA^(n−1)],    rank(O) = n

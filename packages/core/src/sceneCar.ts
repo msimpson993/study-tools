@@ -23,11 +23,11 @@ export function carScenario(ov: string[]): Scn {
     const p = has(ov, 'worn') ? worn(CAR) : CAR, b = bumpInput(p);
     const out = sim(carA(p), roadB(p), b.u, [0, 0, 0, 0], 4, 2e-3);
     s = { kind: 'bump', p, T: 4, ...out, road: b.u, slow: 1.5, label: has(ov, 'worn') ? '5 cm bump at 15 m/s, worn shocks' : '5 cm bump at 15 m/s' };
-  } else if (has(ov, 'centre')) {
+  } else if (has(ov, 'centre', 'sensor')) { // 'sensor' (observability): the same run, named for the sensor
     // symmetric car, a short push at the centre of gravity: only bounce can start (the push size is illustrative)
     const u = (t: number) => [t > 0.2 && t < 0.4 ? 1500 * Math.sin((Math.PI * (t - 0.2)) / 0.2) : 0];
     const out = sim(carA(CAR_SYM), forceB(CAR_SYM, [0]), u, [0, 0, 0, 0], 3, 2e-3);
-    s = { kind: 'centre', p: CAR_SYM, T: 3, ...out, u, push: 0, slow: 1.5, label: 'symmetric car, push at the centre' };
+    s = { kind: 'centre', p: CAR_SYM, T: 3, ...out, u, push: 0, slow: 1.5, label: has(ov, 'sensor') ? 'symmetric car, sensor at the centre' : 'symmetric car, push at the centre' };
   } else {
     const which = has(ov, 'pitch') ? 1 : has(ov, 'bounce') ? 0 : -1, md = carModes(CAR);
     let x0: number[];

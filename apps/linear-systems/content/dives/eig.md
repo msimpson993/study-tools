@@ -24,7 +24,7 @@ Most directions get twisted when A acts on them, but a few special ones are only
 
 ### See it
 
-**Picture it first.** Think of A as an instruction to move the whole plane. Most vectors get turned as well as stretched, but a few special directions only stretch. On the car each eigenvector is a pose of the body that keeps its shape as it swings: bounce and pitch, below.
+**Picture it first.** A takes a pose of the body and gives how fast it changes. Started from most poses, the body changes shape as it moves; started from a few special poses, it keeps its shape and only swings bigger or smaller. Those poses are the eigenvectors. On the car they are bounce and pitch: below, each one swings and the outline keeps its shape.
 
 ```figure:eig
 ```

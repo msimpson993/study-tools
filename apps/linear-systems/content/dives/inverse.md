@@ -29,7 +29,7 @@ A transform is only useful if we can get the signal back. Split the transform in
 ```figure:inverse
 ```
 
-**Second figure: why the ROC decides which signal you get.** The inverse above uses the right-sided terms because the speaker's ROC is σ > −1.27.
+**Second figure: why the ROC decides which signal you get.** The inverse above uses the right-sided terms because the speaker's ROC is σ > −1.27 /ms (−1,266 /s).
 
 ```figure:laplace
 ```
@@ -69,6 +69,10 @@ If X(z) has a factor z upstairs, expand X(z)/z instead and use z/(z − a) ↔ a
 **Exam-style example.** X(z) = 1/((z − ½)(z + 2)(z + 3)) with ROC 2 < |z| < 3. Cover-up gives 4/35 at ½, −2/5 at −2 and 2/7 at −3. The poles ½ and −2 are inside the ring (right-sided), −3 is outside (left-sided):
 
 $$x(n)=\Big[\tfrac{4}{35}\big(\tfrac12\big)^{n-1}-\tfrac25(-2)^{n-1}\Big]u(n-1)-\tfrac27(-3)^{n-1}u(-n).$$
+
+```picture:pic-rev-a1 Left: the poles ½ and −2 inside the ring (blue, right-sided) and −3 outside (orange, left-sided). Right: x(n) for n = −4…4.
+z-plane with the ring ROC between radius 2 and 3, and the stems of x(n).
+```
 
 Laplace with a double pole: Y = 1/(s + 3)², Re s > −3. The residue of e^(st)/(s + 3)² at −3 is d/ds e^(st) = t e^(−3t), so y(t) = t e^(−3t)u(t).
 
