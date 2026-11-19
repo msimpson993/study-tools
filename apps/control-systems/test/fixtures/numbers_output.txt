@@ -254,7 +254,7 @@ kick dm False peak|u| unlimited 4200 OS 17.0 %, Ts 0.36 s, Tr 0.058 s
    with 200 limit OS 6.4 %, Ts 2.08 s, Tr 0.151 s
 kick dm True peak|u| unlimited 200 OS 6.6 %, Ts 2.16 s, Tr 0.153 s
    with 200 limit OS 6.6 %, Ts 2.16 s, Tr 0.153 s
-limits 2 rad clamp umax 200 OS 3.8 %, Ts 0.81 s, Tr 0.362 s
+limits 2 rad clamp umax 200 OS 3.8 %, Ts 0.79 s, Tr 0.362 s
 limits 2 rad clamp umax 400 OS 3.0 %, Ts 0.69 s, Tr 0.260 s
 limits 2 rad clamp umax 1000 OS 4.5 %, Ts 1.02 s, Tr 0.188 s
 delay 0.02 OS 6.5 %, Ts 2.18 s, Tr 0.120 s
@@ -276,6 +276,14 @@ twodof b 0.8 OS -0.0 %, Ts 3.94 s, Tr 0.861 s
 twodof b 0.9 OS -0.0 %, Ts 1.67 s, Tr 0.195 s
 lag fix (1000, 250, 100) OS 35.9 %, Ts 1.65 s, Tr 0.123 s
 lag fix (600, 150, 90) OS 16.8 %, Ts 3.56 s, Tr 0.185 s
+---- build 2: sensor-lag retune (50 ms first-order lag on the measurement, D on measurement, no D filter)
+lag scaled (1000, 500, 100) OS 40.0 %, Ts 2.26 s, Tr 0.121 s
+lag scaled (400, 200, 40) OS 47.3 %, Ts 2.80 s, Tr 0.193 s
+lag retune (600, 150, 90) OS 16.8 %, Ts 3.56 s, Tr 0.185 s
+lag retune (600, 150, 120) OS 5.1 %, Ts 4.61 s, Tr 0.233 s
+lag linear check (2000, 1000, 200) OS 32.2 %, Ts 2.14 s
+lag linear check (1000, 500, 120) OS 27.5 %, Ts 2.62 s
+lag linear check (600, 150, 90) OS 16.8 %, Ts 3.56 s
 
 All numbers recomputed.
 EXIT 0

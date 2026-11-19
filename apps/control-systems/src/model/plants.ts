@@ -260,7 +260,8 @@ export function dishCard(o: CardOpts) {
     yprev = sig;
     const uc = Kp * (bw * r - ym) + Ki * I + Kd * dsig;
     const us = umax !== null ? Math.max(-umax, Math.min(umax, uc)) : uc;
-    if (!(aw && umax !== null && us !== uc && Math.sign(e) === Math.sign(uc))) I += e * dt;
+    // clamping as in [P7] and the windup dive: stop integrating whenever the torque is saturated
+    if (!(aw && umax !== null && us !== uc)) I += e * dt;
     const d = twind !== null && i * dt >= twind ? wind : 0;
     om += ((us - B * om - d) / J) * dt; th += om * dt;
     t[i] = i * dt; y[i] = th; u[i] = us;

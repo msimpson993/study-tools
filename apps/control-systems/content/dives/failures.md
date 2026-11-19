@@ -155,7 +155,7 @@ Start with the most common surprise on a real motor: windup after a long slew. T
 
 **Symptom:** extra lag. **Cause:** slow encoder or filter (added). **Fix:** a faster sensor.
 
-**On the dish:** a 50 ms sensor lag gives 32.1 % overshoot with the tuned gains; a 20 ms sensor, 7.6 %.
+**On the dish:** a 50 ms sensor lag gives 32.1 % overshoot with the tuned gains; a 20 ms sensor, 7.6 %. If the sensor can't be changed, retune for a slower loop with relatively more damping: (600, 150, 90) gives 16.8 % but settles in 3.56 s instead of 2.20 s, and (600, 150, 120) gives 5.1 % but settles in 4.61 s. Simply scaling all three gains down makes it worse (half gains: 40.0 %).
 
 ```figure:fail-sensorlag
 ```

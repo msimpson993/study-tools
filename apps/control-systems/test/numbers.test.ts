@@ -9,7 +9,7 @@ import path from 'node:path';
 import { tf, polyMul } from '@study/core/dsp';
 import { HOUSE } from '@study/core/models';
 import * as M from '../src/model/plants';
-import { HOUSE_WALLS, CORNER, DISH, DISH_TUNED } from '../src/model/params';
+import { HOUSE_WALLS, CORNER, DISH, DISH_TUNED, DISH_LAG_RETUNE } from '../src/model/params';
 
 const OUT = fs.readFileSync(path.join(__dirname, 'fixtures/numbers_output.txt'), 'utf8');
 /** The numbers on the first output line matching `re` (minus signs kept). */
@@ -198,6 +198,16 @@ describe('[F] failure cards on the dish (build 1 answers)', () => {
     checkMet(met({ Kp: 2000, Ki: 1000, Kd: 200, T: 15, lag: 0.02 }), line(/^sensorlag 0\.02 /));
     checkMet(met({ Kp: 2000, Ki: 1000, Kd: 200, T: 15, lag: 0.05 }), line(/^sensorlag 0\.05 /));
     checkMet(met({ Kp: 1000, Ki: 500, Kd: 120, T: 15, lag: 0.05 }), line(/^ {2}lag fix \(1000,500,120\)/));
+  });
+  it('A11 sensor-lag retune (build 2): slower gains with relatively more damping help, plain scaling hurts; the dive quotes them', () => {
+    const R = DISH_LAG_RETUNE, at = (g: { Kp: number; Ki: number; Kd: number }) => met({ ...g, T: 30, lag: DISH.lag });
+    const a = at(R.retune), b = at(R.slower), h = at(R.half);
+    checkMet(a, line(/^lag retune \(600, 150, 90\)/)); checkMet(b, line(/^lag retune \(600, 150, 120\)/)); checkMet(h, line(/^lag scaled \(1000, 500, 100\)/));
+    checkMet(at({ Kp: 400, Ki: 200, Kd: 40 }), line(/^lag scaled \(400, 200, 40\)/));
+    const tuned = met({ ...DISH_TUNED, T: 20 }), lagged = met({ ...DISH_TUNED, T: 15, lag: DISH.lag });
+    expect(a.OS).toBeLessThan(lagged.OS); expect(b.OS).toBeLessThan(a.OS); expect(h.OS).toBeGreaterThan(lagged.OS); expect(b.Ts).toBeGreaterThan(a.Ts);
+    const dive = fs.readFileSync(path.join(__dirname, '../content/dives/failures.md'), 'utf8'), a11 = dive.split('#### A11')[1].split('####')[0];
+    for (const s of [`(600, 150, 90) gives ${a.OS.toFixed(1)} % but settles in ${a.Ts.toFixed(2)} s instead of ${tuned.Ts.toFixed(2)} s`, `(600, 150, 120) gives ${b.OS.toFixed(1)} % but settles in ${b.Ts.toFixed(2)} s`, `half gains: ${h.OS.toFixed(1)} %`, `${lagged.OS.toFixed(1)} % overshoot with the tuned gains`]) expect(a11).toContain(s);
   });
   it('set-point weight b: 1 and 0.5 (with the wind at 20 s), 0.9 (the fix)', () => {
     for (const bw of [1, 0.5]) {

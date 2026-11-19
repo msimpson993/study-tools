@@ -28,6 +28,8 @@ export const CORNER_DESIGN = { zeta: 0.8, wn: 10, observerSpeed: 5, rideStep: 0.
 export const DISH = { J: 10, B: 20, Tmax: 200, wind: 20, lag: 0.05, step: 0.1, windAt: 3, noiseDeg: 0.01, Nf: 200 } as const;
 /** The tuned dish PID (D on measurement), chosen by the tutor's grid search. */
 export const DISH_TUNED = { Kp: 2000, Ki: 1000, Kd: 200 } as const;
+/** A11 with a 50 ms sensor lag that can't be changed (numbers.py build 2): retunes that cut Kp and Ki much more than Kd, and the plain halving that makes it worse. */
+export const DISH_LAG_RETUNE = { retune: { Kp: 600, Ki: 150, Kd: 90 }, slower: { Kp: 600, Ki: 150, Kd: 120 }, half: { Kp: 1000, Ki: 500, Kd: 100 } } as const;
 
 /** Thermostat gains used on the page. */
 export const THERMOSTAT = { Kp: 1100, Ki: 200, KpSoft: 500, front: -5 } as const;
