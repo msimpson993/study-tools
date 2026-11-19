@@ -275,7 +275,7 @@ function w8(){var sg=+$("w8s").value,w=+$("w8w").value,zon=$("w8zon").checked,z=
   var pk=peak(r);
   ro("w8ro",[{k:"poles",v:w>0?f3(sg)+" ± j"+f3(w):f3(sg)+" (double)"},{k:"ωn = |p|",v:f3(wn)},{k:"ζ = −σ/ωn",v:wn>0?f3(zeta):"—"},{k:"zero",v:zon?f3(z):"none"},{k:"min y (undershoot)",v:f3(Math.min.apply(null,r.y.slice(0,600))),c:zon&&z>0?"warn":""},{k:"peak y",v:f3(pk.v)}]);}
 
-/* W9 root-locus preview */
+/* W9 root locus (not in lecture notes) */
 function w9(){var K=+$("w9k").value,hz=$("w9z").checked;$("w9kv").textContent=K.toFixed(1);
   function roots(K){var b=hz?2+K:2,c=hz?3*K:K,d=b*b-4*c;return d>=0?[[(-b+Math.sqrt(d))/2,0],[(-b-Math.sqrt(d))/2,0]]:[[-b/2,Math.sqrt(-d)/2],[-b/2,-Math.sqrt(-d)/2]];}
   var xr=hz?[-7,1]:[-4,1],yr=[-4.5,4.5];

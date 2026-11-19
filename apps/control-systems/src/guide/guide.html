@@ -345,10 +345,10 @@ Lay the s-plane flat and, above every point <i>s</i>, raise a surface to height 
 <div class="recog"><b class="h">Recognize</b><ul><li>FVT is a statement about the <b>neighborhood of the origin</b>: DC gain, integrators (× at 0 → ∞ gain), differentiators (○ at 0 → zero gain).</li><li>The validity check is a statement about the <b>whole plane</b>: any × of <i>sY</i> on the <i>j</i>ω axis or in the RHP ⇒ no final value (<a href="#q27">Q27</a> trap).</li><li>IVT: step response of a strictly proper <i>G</i> starts at <i>y</i>(0⁺) = 0. Relative degree 1 ⇒ it starts with a nonzero slope; relative degree 2 ⇒ it starts flat. Far from all the marks, <i>G</i> looks like 1/<i>s</i><sup>(relative degree)</sup>.</li></ul></div>
 </div>
 
-<div class="q" id="sp8"><span class="badge">S8</span><h3>What does closing the loop do on the map? (root-locus preview)</h3></div>
+<div class="q" id="sp8"><span class="badge">S8</span><h3>What does closing the loop do on the map? Root locus (not in lecture notes)</h3></div>
 <div class="ansr">
 <div class="short">Closed-loop poles are the roots of <b>1 + <i>K</i>·<i>L</i>(<i>s</i>) = 0</b>. As gain <i>K</i> goes from 0 to ∞, they <b>start at the open-loop ×'s</b> and travel toward the open-loop ○'s (or off to infinity). Open-loop zeros stay put. The path they trace is the <b>root locus</b>, which is a later topic. For now: feedback moves poles, and the open-loop pattern decides where they can go.</div>
-<div class="widget" id="w9"><h4 class="ui">Root-locus preview: L(s) = K / (s(s + 2)) &nbsp;→&nbsp; closed loop s² + 2s + K = 0</h4>
+<div class="widget" id="w9"><h4 class="ui">Root locus: where the poles move as the gain rises (not in lecture notes). L(s) = K / (s(s + 2)) &nbsp;→&nbsp; closed loop s² + 2s + K = 0</h4>
 <div class="wgrid"><div><div id="w9plot"></div><div class="legend ui" id="w9leg"></div></div>
 <div class="ctl"><div class="sp" id="w9sp"></div>
 <label>Gain K <output id="w9kv"></output></label><input type="range" id="w9k" min="0" max="20" step="0.1" value="0.5">
