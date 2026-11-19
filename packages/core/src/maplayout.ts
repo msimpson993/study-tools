@@ -101,7 +101,7 @@ function sizesFor(G: Graph, nodeW: number) {
   const out: Record<string, { lines: string[]; detailLines: string[]; h: number }> = {};
   for (const n of G.nodes) {
     const kind = n.kind ?? 'box', inner = nodeW - (kind === 'decision' ? 44 : 26);
-    const lines = wrapText(n.label, Math.max(8, Math.floor(inner / QM_TITLE_CHAR)), n.kind === 'terminal' ? 6 : 3); // the root (start) box is never truncated
+    const lines = wrapText(n.label, Math.max(8, Math.floor(inner / QM_TITLE_CHAR)), n.kind === 'terminal' ? 12 : 3); // the root (start) box is never truncated
     const detailLines = n.detail ? wrapText(n.detail, Math.max(8, Math.floor(inner / QM_DETAIL_CHAR)), 2) : [];
     out[n.id] = { lines, detailLines, h: Math.max(kind === 'decision' ? 60 : 50, 20 + lines.length * 15 + detailLines.length * 14) };
   }

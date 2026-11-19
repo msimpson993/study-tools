@@ -112,6 +112,8 @@ export function mountConceptMap(host: HTMLElement, content: AppContent, progress
     const rank = (e: MapEdge) => (edgeKey(e.from, e.to) === arrivedVia ? 0 : e.from === prev ? 1 : e.side ? 3 : 2);
     return ins.sort((a, b) => rank(a) - rank(b));
   };
+  /** a side line is a shortcut when its box leads on; a branch that ends there (a Full-detail side box) is a detour you come back from */
+  const sideTag = (e: MapEdge, m: MapDef) => (m.edges.some((x) => x.from === e.to && !x.dashed) ? 'Side path (shortcut)' : 'Side path (a detour; come back here)');
   /** Next order: main path first, side paths after */
   const nextOrder = (id: string, m: MapDef) => m.edges.filter((e) => e.from === id && !e.dashed).sort((a, b) => Number(!!a.side) - Number(!!b.side) || (a.rank ?? 0) - (b.rank ?? 0));
   /** the main-chain box a Full-detail branch hangs from: the last box on its path that is also on the first map */
@@ -351,11 +353,12 @@ export function mountConceptMap(host: HTMLElement, content: AppContent, progress
     if (outs.length) {
       const r = h('div', { class: 'pop-row pop-next', dataset: { testid: 'pop-next' } }, h('b', { class: 'pop-lead' }, outs.length > 1 ? 'Next questions:' : 'Next question:'));
       const ul = h('ul', { class: 'pop-next-list' });
-      for (const e of outs) ul.append(h('li', { class: fork ? (e.side ? 'nx-side' : 'nx-main') : undefined }, ...(fork ? [h('span', { class: 'nx-tag' }, e.side ? 'Side path (shortcut):' : 'Main path:'), ' '] : []), link(e, 'pop-next-link')));
+      for (const e of outs) ul.append(h('li', { class: fork ? (e.side ? 'nx-side' : 'nx-main') : undefined }, ...(fork ? [h('span', { class: 'nx-tag' }, e.side ? `${sideTag(e, m)}:` : 'Main path:'), ' '] : []), link(e, 'pop-next-link')));
       r.append(ul); out.push(r);
     } else if (p.next) out.push(row('pop-next', 'Next question:', p.next, 'pop-next'));
     // a Full-detail branch end is not a dead end: Back up the branch, or straight back to the main chain
-    const anc = !outs.length && !content.maps[0]?.nodes.some((x) => x.id === n.id) ? mainAncestor(n.id, m) : undefined;
+    // (a box with chain buttons gets its Back and Return there, once; see chainNav)
+    const anc = !outs.length && !n.pop && !content.maps[0]?.nodes.some((x) => x.id === n.id) ? mainAncestor(n.id, m) : undefined;
     if (anc) {
       const inc0 = backOrder(n.id, m)[0], ancN = m.nodes.find((x) => x.id === anc)!;
       const r = h('div', { class: 'pop-row pop-end', dataset: { testid: 'pop-end' } }, h('b', { class: 'pop-lead' }, 'End of this branch:'), ' ');
@@ -376,10 +379,11 @@ export function mountConceptMap(host: HTMLElement, content: AppContent, progress
     const nav2 = h('div', { class: 'chain-nav', dataset: { testid: 'chain-nav' } });
     const ins = backOrder(id, m), outs = nextOrder(id, m), fork = outs.length > 1 && outs.some((e) => e.side);
     const btn = (e: MapEdge, back: boolean) => h('button', { class: back ? 'tbtn chain-back' : e.side ? 'tbtn chain-next chain-side' : 'tbtn on chain-next', dataset: { testid: back ? 'chain-back' : 'chain-next', edge: edgeKey(e.from, e.to), to: back ? e.from : e.to, path: !back && fork ? (e.side ? 'side' : 'main') : undefined }, onclick: () => openEdge(edgeKey(e.from, e.to)) },
-      h('span', { class: 'ch-dir' }, back ? '← Back: the question that led here' : fork ? (e.side ? 'Side path (shortcut) →' : 'Next on the main path →') : 'Next question →'), h('span', { class: 'ch-name', html: e.question }));
-    for (const e of ins) nav2.append(btn(e, true));
-    for (const e of outs) nav2.append(btn(e, false));
+      h('span', { class: 'ch-dir' }, back ? '← Back: the question that led here' : fork ? (e.side ? `${sideTag(e, m)} →` : 'Next on the main path →') : 'Next question →'), h('span', { class: 'ch-name', html: e.question }));
     const anc = !outs.length && !content.maps[0]?.nodes.some((x) => x.id === id) ? mainAncestor(id, m) : undefined;
+    // a branch end: one Back (the line you came by) and one Return, not a Back for every line in
+    for (const e of anc ? ins.slice(0, 1) : ins) nav2.append(btn(e, true));
+    for (const e of outs) nav2.append(btn(e, false));
     if (anc) nav2.append(h('button', { class: 'tbtn chain-main', dataset: { testid: 'chain-main', to: anc }, onclick: () => openNode(anc) }, h('span', { class: 'ch-dir' }, 'Return to the main chain'), h('span', { class: 'ch-name' }, m.nodes.find((x) => x.id === anc)!.label)));
     return nav2;
   }

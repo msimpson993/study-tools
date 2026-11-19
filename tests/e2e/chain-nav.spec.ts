@@ -91,7 +91,7 @@ test.describe('linear-systems: walk the chain through the lines', () => {
     await expect(page.getByTestId('chain-back').first()).toHaveAttribute('data-edge', 'MODES__STAB');
   });
 
-  test('every Full-detail end box has Back and "Return to the main chain"', async ({ page }) => {
+  test('every Full-detail end box has one Back and one "Return to the main chain"', async ({ page }) => {
     await page.setViewportSize({ width: 390, height: 844 });
     await open(page, 'linear-systems');
     await page.locator('button[role=tab][data-map="full"]').first().click();
@@ -99,15 +99,15 @@ test.describe('linear-systems: walk the chain through the lines', () => {
     expect(ends.length).toBe(13);
     for (const id of ends) {
       await page.locator(`[data-testid=map-node][data-node="${id}"]`).first().dispatchEvent('click');
-      await expect(page.getByTestId('pop-end'), `${id} end row`).toBeVisible();
-      await expect(page.getByTestId('end-back'), `${id} Back link`).toHaveCount(1);
-      await expect(page.getByTestId('end-main'), `${id} main-chain link`).toContainText('Return to the main chain');
-      await expect(page.getByTestId('chain-back').first()).toBeVisible();
+      // one set only: the chain buttons (no second text row of Back · Return)
+      await expect(page.getByTestId('pop-end'), `${id} no second end row`).toHaveCount(0);
+      await expect(page.getByTestId('chain-back'), `${id} one Back`).toHaveCount(1);
+      await expect(page.getByTestId('chain-main'), `${id} main-chain button`).toContainText('Return to the main chain');
       await expect(page.getByTestId('chain-main')).toHaveCount(1);
     }
     // INV hangs under Laplace (box 8): Return opens that box
     await page.locator('[data-testid=map-node][data-node="INV"]').first().dispatchEvent('click');
-    await page.getByTestId('end-main').click();
+    await page.getByTestId('chain-main').click();
     await expect(heading(page)).toHaveText(await labelOf(page, 'LAP'));
   });
 

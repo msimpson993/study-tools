@@ -96,8 +96,10 @@ test.describe('control-systems: PID folded in (the PID Lab on the dish, the fail
     expect((await page.getByTestId('map-svg').boundingBox())!.y).toBeLessThan(844 * 0.6);
     const root = (await page.locator('[data-testid=map-node][data-node=root] text').allTextContents()).join(' ');
     expect(root).not.toContain('…');
-    expect(root).toContain('approximately-');
-    expect(root.replace(/\s+/g, ' ')).toContain('do what we command?');
+    // every line of the root label sits inside its box (a long word is hyphen-broken, never run past the edge)
+    const fits = await page.locator('[data-testid=map-node][data-node=root]').evaluate((g) => { const r = (g.querySelector('rect') as SVGGraphicsElement).getBoundingClientRect(); return [...g.querySelectorAll('text')].every((t) => { const b = t.getBoundingClientRect(); return b.left >= r.left - 1 && b.right <= r.right + 1; }); });
+    expect(fits).toBe(true);
+    expect(root.replace(/\s+/g, ' ')).toContain('before we build it?');
     // the map legend wraps on a phone instead of running off the right edge (both apps share it)
     for (const app of ['control-systems', 'linear-systems']) {
       if (app !== 'control-systems') await open(page, app);
