@@ -2824,7 +2824,7 @@
   x: time (s)
   y: angle · torque
   legend: *a1
-  howToRead: "The tuned dish (2000, 1000, 200) slewing against its 200 N·m limit (numbers.py [P7]). The thin line is the integrator's share of the torque. Solid: the problem at the slider settings; dashed: the fix, for contrast. Read-outs use the tutor's definitions (numbers.py [F])."
+  howToRead: "The tuned dish (2000, 1000, 200) slewing against its 200 N·m limit. The thin line is the integrator's share of the torque. Solid: the problem at the slider settings; dashed: the fix, for contrast. Read-outs: numbers.py [P7]."
   lookFor: A 2 rad slew with no anti-windup overshoots 21.6 % and settles in 4.64 s; with clamping 3.8 % and 0.79 s. A small 0.2 rad move barely saturates.
   controls:
     - id: slew
@@ -2988,7 +2988,7 @@
   y: angle · torque
   legend: *a1
   howToRead: "The antenna dish, G = 0.1/(s(s + 2)) (J = 10 kg·m², B = 20 N·m·s/rad), D on the measurement, a 0.1 rad step, tuned (2000, 1000, 200), with a first-order lag in the sensor. The dashed fix is a faster sensor (20 ms). Solid: the problem at the slider settings; dashed: the fix, for contrast. Read-outs use the tutor's definitions (numbers.py [F])."
-  lookFor: "A 50 ms sensor lag: 32.1 % overshoot; a 20 ms sensor: 7.6 %. The fix is the faster sensor."
+  lookFor: "A 50 ms sensor lag: 32.1 % overshoot; a 20 ms sensor: 7.6 %. The fix is the faster sensor. Retuning to (600, 150, 90) gets 16.8 %, but slower (Tₛ 3.56 s)."
   controls:
     - id: lag
       label: sensor lag

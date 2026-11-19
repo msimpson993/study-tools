@@ -41,9 +41,10 @@ const uPlot = (a: Run, b: Run, xr: V2, extra: Partial<Plot> = {}): Plot => {
 
 
 /** the torque of the problem run against the fixed one (dish cards, N·m) */
-const tPlot = (a: Run, b: Run, xr: V2, extra: Partial<Plot> = {}): Plot => {
+const tPlot = (a: Run, b: Run, xr: V2, extra: Partial<Plot> = {}, full = false): Plot => {
   const inX = (r: Run) => r.u.filter((_, i) => r.t[i] >= xr[0] && r.t[i] <= xr[1] && Number.isFinite(r.u[i]));
-  const all = [...inX(a), ...inX(b)].sort((x, y) => x - y), lo = all[Math.floor(0.005 * (all.length - 1))] ?? -1, hi = all[Math.floor(0.995 * (all.length - 1))] ?? 1, pad = (hi - lo) * 0.12 || 10;
+  // full: fit both runs' whole range (keeps a short starting spike in view); otherwise trim the extreme 0.5 % each side
+  const all = [...inX(a), ...inX(b)].sort((x, y) => x - y), q = full ? 0 : 0.005, lo = all[Math.floor(q * (all.length - 1))] ?? -1, hi = all[full ? all.length - 1 : Math.floor(0.995 * (all.length - 1))] ?? 1, pad = (hi - lo) * 0.12 || 10;
   return { title: 'Motor torque', y: 'torque (N·m)', xr, yr: [Math.max(-2000, lo - pad), Math.min(5000, hi + pad)], series: [{ t: a.t, y: a.u, color: PB(), width: 1.6 }, { t: b.t, y: b.u, color: FX(), dash: true }], ...extra };
 };
 /* ── dish runs: numbers.py [F] at dt = 1e-4, cached, thinned for drawing ── */
@@ -61,11 +62,11 @@ const pct = (x: number) => (Math.abs(x) > 1e4 ? 'unstable' : `${Math.max(0, x).t
 const mtxt = (m: ReturnType<typeof cardMet>, T: number) => (m.unstable ? 'unstable: the swing grows' : `%OS ${pct(m.OS)}, Ts ${m.Ts >= T - 0.01 ? `> ${T.toFixed(0)} s (still ringing)` : `${m.Ts.toFixed(2)} s`}, Tr ${m.Tr.toFixed(3)} s`);
 const wtxt = (w: ReturnType<typeof cardWind>, T: number) => `wind peak ${w.peak.toFixed(2)}°, ${Math.abs(w.final) > 0.05 ? `stays ${Math.abs(w.final).toFixed(2)}° off` : `cleared in ${w.recover >= T - 0.01 ? `> ${T.toFixed(0)}` : w.recover.toFixed(1)} s`}`;
 /** a dish step card: angle / target and torque, problem (solid) against the fix (dashed), with the [F] read-outs */
-function stepCard(title: string, a: CardOpts, b: CardOpts, xr: V2, opt: { r?: number; yr?: V2; upto?: number } = {}): Plot[] {
+function stepCard(title: string, a: CardOpts, b: CardOpts, xr: V2, opt: { r?: number; yr?: V2; upto?: number; fullTorque?: boolean } = {}): Plot[] {
   const r = opt.r ?? R0, sa = card(a), sb = card(b), T = a.T ?? 10, ma = cardMet(sa.t, sa.y, r, opt.upto), mb = cardMet(sb.t, sb.y, r, opt.upto);
   const pa = thin(sa, (y) => y / r), pb = thin(sb, (y) => y / r);
   return [{ title, y: 'angle ÷ target', xr, yr: opt.yr ?? [0, 2], series: [{ ...pa, color: PB() }, { ...pb, color: FX(), dash: true }], hl: [{ y: 1, label: `target ${r === R0 ? '0.1 rad' : `${r} rad`}` }], notes: [`solid: ${mtxt(ma, T)}`, `dashed: ${mtxt(mb, b.T ?? 10)}`] },
-    tPlot({ t: pa.t, u: pa.u }, { t: pb.t, u: pb.u }, xr)];
+    tPlot({ t: pa.t, u: pa.u }, { t: pb.t, u: pb.u }, xr, {}, opt.fullTorque)];
 }
 /** a dish wind card: pointing error after a 20 N·m gust at tw, problem against the fix */
 function windCard(title: string, a: CardOpts, b: CardOpts, tw: number, T: number): Plot[] {
@@ -77,7 +78,7 @@ function windCard(title: string, a: CardOpts, b: CardOpts, tw: number, T: number
 
 type Case = (v: V) => Plot[];
 const CASES: Record<string, Case> = {
-  slow: (v) => stepCard('Slow response on the dish', { ...gains(v), T: 20 }, { ...TUNED, T: 20 }, [0, 8], { yr: [0, 1.4] }),
+  slow: (v) => stepCard('Slow response on the dish', { ...gains(v), T: 20 }, { ...TUNED, T: 20 }, [0, 8], { yr: [0, 1.4], fullTorque: true }),
   offset: (v) => windCard('Steady-state offset in the wind', gains(v), { Kp: 1000, Ki: 500, Kd: 120 }, 10, 40),
   overshoot: (v) => stepCard('Overshoot', { ...gains(v), T: 20 }, { Kp: 1000, Ki: 500, Kd: 120, T: 20 }, [0, 6]),
   oscillation: (v) => stepCard('Sustained oscillation (Ki near the 2Kp bound)', { ...gains(v), T: 20 }, { Kp: 1000, Ki: 500, Kd: 120, T: 20 }, [0, 20], { yr: [-0.2, 2.2] }),
