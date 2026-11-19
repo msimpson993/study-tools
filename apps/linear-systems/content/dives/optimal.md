@@ -80,7 +80,7 @@ For $L = x^\mathsf{T}Qx + u^\mathsf{T}Ru$ the last gives $u = -\tfrac12R^{-1}B^\
 
 1. Car with front and rear actuators: minimise $\int_0^{0.5}|u|^2\,dt$ to go from 2° nose-down at rest to level and still.
 2. With $L = |u|^2$ the costate obeys $\dot p = -A^\mathsf{T}p$, so $u(t) = -B^\mathsf{T}p(t)/2$ is built from the car's modes run backwards from $T$; the end condition fixes $p(0)$.
-3. Result: small at first; the front force dips to −476 N at 0.28 s, the rear to −652 N right at the end, with $E = 96{,}160$ N²·s; the Gramian gives the same answer. Allowed 1 s, about 120 N is enough.
+3. Result: small at first; the front force dips to −476 N at 0.28 s, the rear to −652 N right at the end, with $E = 96{,}160$ N²·s; the Gramian gives the same answer. Allowed 1 s, about 120 N is enough. With the front actuator alone, 0.5 s needs 12.9 kN peaks: the second actuator and the extra time are what keep the forces small.
 
 **Exam-style example.** ẋ = 6x + u, J = ∫₀¹(x² + 2u²)dt, x(0) = 1, x(1) = 2. 𝓗 = x² + 2u² + p(6x + u), so u° = −p/4 and
 

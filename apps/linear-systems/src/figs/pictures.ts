@@ -2,6 +2,7 @@
 import { rangeFrame, graphAxes, curve, tline, text, dot, polyline, col, linspace, type QuizFigureDef, type Frame } from '@study/core';
 import { CAR, CAR_SYM, carA, forceB, carModes, gramian, minEnergy, sim, DEG } from './car';
 import { squareCoef } from './ex';
+import { popFigures } from './pop';
 
 const TAU = 2 * Math.PI;
 const frameOf = (g: CanvasRenderingContext2D, w: number, h: number, xr: [number, number], yr: [number, number], xl: string, yl: string, L = 40) => {
@@ -115,5 +116,7 @@ const optPath: QuizFigureDef = { aspect: 2, maxWidth: 460, draw(g, w, h) {
   text(g, 'yellow: least-energy path · dashed: left alone', f.box.l + 6, f.box.t + 10, col.muted(), 'left', 10);
 } };
 
-export const pictures: Record<string, QuizFigureDef> = { 'pic-gram-ellipse': gramEllipse, 'pic-jordan-shear': jordanShear, 'pic-fourier-arrows': fourierArrows, 'pic-obs-shadow': obsShadow, 'pic-diag-grid': diagGrid, 'pic-opt-path': optPath };
+/** Box 5's single-click panel, moved to the lti dive: one click → the ring h(t) (pop-kick, frame 1). */
+const oneClick: QuizFigureDef = { ...popFigures['pop-kick'], draw: (g, w, h) => popFigures['pop-kick'].draw(g, w, h, { frame: 1 }) };
+export const pictures: Record<string, QuizFigureDef> = { 'pic-one-click': oneClick, 'pic-gram-ellipse': gramEllipse, 'pic-jordan-shear': jordanShear, 'pic-fourier-arrows': fourierArrows, 'pic-obs-shadow': obsShadow, 'pic-diag-grid': diagGrid, 'pic-opt-path': optPath };
 void CAR_SYM;

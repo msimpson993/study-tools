@@ -58,6 +58,8 @@ The Fourier transform is the analysis formula for a continuous aperiodic time si
 
 The integral needs the signal to fade out. A signal that switches on and grows (an unstable ring, a ramp) has no Fourier transform, and the transform alone says nothing about start-up transients. That motivates Laplace and Z.
 
+**The four versions.** Fourier series (periodic signals), Fourier transform (one-off signals), DTFT (discrete-time Fourier transform, for samples) and DFT (discrete Fourier transform, for N samples, the one a computer runs). Sampling and finite records bring two catches, aliasing and leakage. Each has its own box in Full detail.
+
 **Next question.** What if x is periodic? Then only discrete harmonics fit, and you want a Fourier series. What if you only have samples? Then the DTFT, and a periodized frequency axis.
 
 ### Common pitfalls

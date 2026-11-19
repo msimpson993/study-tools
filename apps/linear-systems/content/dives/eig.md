@@ -45,7 +45,7 @@ An eigenvector is a line that A leaves invariant: the output is a scalar multipl
 
 - $v$: an eigenvector, a direction of the state that $A$ only stretches (a mode's shape).
 - $\lambda$: its eigenvalue, the rate (per second for the car) at which that mode grows or fades; a complex pair is one oscillating mode.
-- $\det(sI - A)$: the characteristic polynomial; its roots are the eigenvalues, which are also the poles.
+- $\det(sI - A)$: the characteristic polynomial; its roots are the eigenvalues, which are also the poles. So a mode's e^(λt) is a pole's rhythm e^(pt).
 
 ### Worked example: on the car
 

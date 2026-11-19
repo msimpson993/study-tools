@@ -24,6 +24,12 @@ Linear, time-invariant systems treat exponentials specially: an exponential goes
 
 ### See it
 
+**One click first.** A single click (bar) makes the cone ring and die away; that ring is the impulse response h(t). Box 5 on the map then adds four such rings.
+
+```picture:pic-one-click One click (bar) makes h(t), a ring that dies away.
+The earbud's impulse response: one click makes the cone ring and die away within a few milliseconds.
+```
+
 **Picture it first.** Convolution is a flip-and-slide: flip the impulse response, slide it along the input, and take the area of the overlap.
 
 ```figure:lti
@@ -49,7 +55,7 @@ A system is linear and time-invariant if and only if it is convolution with a fi
 
 ### Worked example: on the earbud
 
-1. Click the earbud once with a short voltage pulse. The cone rings at about 688 Hz (period ≈ 1.45 ms), and the ring's envelope decays with time constant 1/σ ≈ 0.79 ms (σ ≈ 1,267 /s): that ring is $h(t)$.
+1. Click the earbud once with a short voltage pulse. The cone rings at about 688 Hz (period ≈ 1.45 ms; undamped it would ring at 717 Hz, and damping slows it to 688 Hz), and the ring's envelope decays with time constant 1/σ ≈ 0.79 ms (σ ≈ 1,267 /s): that ring is $h(t)$.
 2. A 1 ms pulse is about four back-to-back clicks. Linearity scales each ring; time invariance shifts each one to its own start time.
 3. Add the four shifted rings: that sum is the cone motion for the pulse, $y = h * u$. No new measurement is needed for any other input.
 

@@ -58,7 +58,7 @@ The output is the input times one complex number. So e^(st) is an **eigenfunctio
 3. Near the peak, 658 Hz, the gain is about ×1.85 (+5.4 dB, 79 µm/V, lag ≈ 73°); at 3 kHz it is ×0.06 (2.6 µm/V).
 4. In every case the output is a 500 Hz (or 658 Hz, or 3 kHz) tone: only size and timing change.
 
-**More on the running example.** For the speaker, H(s) = X(s)/V(s) = (Bl/Re) / (Mms s² + R s + 1/Cms), with R = Rms + Bl²/Re. At 500 Hz, s = j2π·500 = j3,142 rad/s, which is below the 4,322 rad/s ring frequency, so the tone is boosted relative to the bass and lags by less than 90°.
+**More on the running example.** For the speaker, H(s) = X(s)/V(s) = (Bl/Re) / (Mms s² + R s + 1/Cms), with R = Rms + Bl²/Re. At 500 Hz, s = j2π·500 = j3,142 rad/s, which is below the 4,322 rad/s ring frequency, so the tone is boosted relative to the bass and lags by less than 90°. Three earbud frequencies, not to be mixed up: fₙ = 717 Hz is the undamped natural frequency, f_d = 688 Hz is a click's damped ring, and 658 Hz is the gain peak, the loudest steady tone.
 
 ### What it can't do
 
