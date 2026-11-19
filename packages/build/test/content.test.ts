@@ -54,6 +54,8 @@ describe('shipped content', () => {
     }
     // every outgoing edge carries the question the box ends on
     for (const e of big.edges) expect(e.question, `${e.from}->${e.to}`).toBeTruthy();
+    // every main-chain (solid) line says why you would ask its question there; the full map's lines too
+    for (const m of content.maps) for (const e of m.edges) if (!e.dashed || m.id === 'big') expect((e.why ?? '').length, `${m.id} ${e.from}->${e.to} why`).toBeGreaterThan(20);
   });
   it('linear-systems dives follow the dive template (level tag, worked example, what it can\'t do, 2-3 checks, >= 1 interactive figure)', () => {
     const { content } = loadApp(path.join(repoRoot, 'apps', 'linear-systems'));

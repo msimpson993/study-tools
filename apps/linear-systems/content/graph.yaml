@@ -342,72 +342,84 @@ maps:
     label: start here
     question: What exactly are we trying to predict?
     idea: "Before any shortcut we need the object: a system, the rule that turns an input into an output."
+    why: "Before predicting anything we need to pin down what goes in, what comes out, and what does the transforming."
   - &id021
     from: SYS
     to: SUP
     label: shortcut?
     question: "There are infinitely many possible inputs, so is there a shortcut?"
     idea: "If the system is linear, yes: know the outputs of a few simple pieces and add them up for any input."
+    why: "A system is defined by what it does to every possible input, and there are infinitely many; we cannot test them all, so we need a shortcut."
   - &id022
     from: SUP
     to: LIN
     label: which systems?
     question: What exactly counts as linear?
     idea: "The shortcut needs sums and scaling to pass straight through; time invariance makes every piece's response a shifted copy of one."
+    why: "The shortcut only works if the system is linear, so we need a precise test for when that holds."
   - &id023
     from: LIN
     to: NEAR
     label: does it help?
     question: "Real things are never perfectly linear, so does this help?"
     idea: "Yes: for small signals around an operating point almost everything is linear, and then the exact linear tools apply."
+    why: "The test is strict, and the earbud already fails it at 2 V. If no real system passes exactly, the shortcut looks useless."
   - &id024
     from: NEAR
     to: KICK
     label: which pieces?
     question: Which simple pieces should we use?
     idea: "The first choice is sharp kicks: one measured ring, h(t), then predicts every output by convolution."
+    why: "Linearity lets us split the input into pieces, but it doesn't say which pieces, and that choice decides how much work the rest is."
   - &id025
     from: KICK
     to: TONE
     label: same shape?
     question: "That's tedious. Is there an input that comes out with the same shape?"
     idea: "Steady sine waves: a linear time-invariant system only scales and delays them, so convolution becomes one multiplication per pitch."
+    why: "Convolution works for any input, but every output needs a fresh integral. Pieces that come out with their shape unchanged would turn each one into a single multiplication."
   - &id026
     from: TONE
     to: FOUR
     label: split into sines
     question: How do we split a real signal into sines?
     idea: Fourier analysis writes a signal as a sum of sines; multiply each by the gain at its pitch and add them back up.
+    why: "Sine waves pass through with just a gain and a delay, but real signals (a buzz, a click, speech) are not single sines."
   - &id027
     from: FOUR
     to: LAP
     label: "start, grow, die"
     question: "Sines last forever, so what about signals that start, grow or die?"
     idea: "Let the exponent be complex, e^(st): Laplace (and Z for samples) handles switch-ons, growth and decay, and turns equations into algebra."
+    why: "Sines go on forever, but switch-ons, dying rings and unstable growth do not; an unstable system has no Fourier transform at all."
   - &id028
     from: LAP
     to: PZ
     label: read H(s)
     question: What does H(s) tell us about the system?
     idea: Its poles are the natural rhythms and its zeros the blocked inputs; together they shape the gain at every pitch.
+    why: "The transform has turned the whole system into one fraction, H(s); now we need to read that fraction for what it says about behaviour."
   - &id029
     from: PZ
     to: STAB
     label: settle?
     question: Will it settle?
     idea: A pole in the right half-plane is a rhythm that grows; the system settles only if every pole lies to the left.
+    why: "Each pole is a rhythm e^(pt) that can grow or die, so the obvious worry is whether any of them grows."
   - &id030
     from: PZ
     to: STATE
     label: look inside
     question: "That's the outside view. What's going on inside?"
     idea: "Describe the system by what it remembers, the state, and how that memory changes: ẋ = Ax + Bu."
+    why: "H(s) only links input to output. It says nothing about what is going on inside, which matters once a system has several moving parts, like the car's heave and pitch."
   - &id031
     from: STATE
     to: MODES
     label: untangle
     question: Everything affects everything. How do we untangle it?
     idea: "Switch to the eigenvectors of A: in those coordinates every mode changes on its own."
+    why: "In ẋ = Ax + Bu every state variable drives the others (heave pushes pitch and back), so the equations cannot be solved one at a time."
   - &id032
     from: TONE
     to: MODES
@@ -416,24 +428,28 @@ maps:
     idea: "Same trick: find inputs (or states) that keep their shape. Tones are only scaled by H(jω); modes are only scaled by e^(λt)."
     dashed: true
     reverse: true
+    why: "Tones were the inputs a system only scales; modes look like the same trick applied to the state, so it is worth asking whether they are."
   - &id033
     from: MODES
     to: STAB
     label: settle?
     question: Will every mode fade?
     idea: "Each mode moves as e^(λt), so the state settles exactly when every eigenvalue has negative real part; these are the same poles."
+    why: "The motion is a mix of modes, each moving as e^(λt), so whether it settles must come down to those rates."
   - &id034
     from: STAB
     to: INOUT
     label: views agree?
     question: Do the inside and outside views always agree?
     idea: "Not always: H(s) can hide a mode the input cannot reach or the output cannot see."
+    why: "We can now judge stability two ways, from the poles of H(s) outside and the eigenvalues of A inside. If they ever disagree, one view is hiding something."
   - &id035
     from: INOUT
     to: WORK
     label: use it
     question: What can we do with all this?
     idea: "Design: filters, feedback and optimal control all use the same tools on the same models."
+    why: "We can now predict, check stability and spot hidden modes; the remaining step is to use the same tools to make a system do what we want."
 - id: full
   title: Full detail
   caption: "The same fourteen boxes plus every box the exams use, hung under the box it belongs to: ROC and residues under Laplace, the Fourier family under Fourier, e^(At), Jordan and Cayley–Hamilton under modes, realization under state, PBH, Gramians and the Kalman split under hidden modes, and filters, feedback and optimal control under applications."
@@ -890,113 +906,136 @@ maps:
     label: where it converges
     question: Where does the transform actually exist?
     idea: "Only where the integral or sum converges: a region bounded by poles. Its shape encodes causality and stability."
+    why: "The Laplace integral does not converge for every s, and the same formula can belong to different signals depending on where it does."
   - from: ROC
     to: INV
     label: pick the side
     question: How does the ROC change the inverse?
     idea: "In s, poles to the left of the ROC give right-sided terms and poles to its right give left-sided ones (in z: inside the ring, outside the ring)."
+    why: Knowing where the transform exists only matters if it changes how we get the signal back.
   - from: LAP
     to: DE
     label: use it
     question: What does the transform buy you for differential and difference equations?
     idea: "Derivatives and delays become multiplication by s and z⁻¹, so solving the equation is algebra on fractions."
+    why: Transforms were promised to turn equations into algebra; this is where that pays off.
   - from: FOUR
     to: ORTHO
     label: why it works
     question: Why can a signal be split into tones without the pieces interfering?
     idea: "Tones at different frequencies are orthogonal: the inner product of two harmonics over a period is zero."
+    why: Splitting a signal into sines only works if each piece can be found without disturbing the others.
   - from: ORTHO
     to: FS
     label: projections
     question: How do you find each harmonic of a periodic signal?
     idea: "Project onto it: cₖ is the inner product of x with e^(jkω₀t), divided by T."
+    why: "Orthogonality says the pieces don't interfere; now we need the actual recipe for each harmonic's amount."
   - from: ORTHO
     to: PARS
     label: energy
     question: "If the pieces are perpendicular, how does energy split among them?"
     idea: "Like Pythagoras: the total energy is the sum of the energies of the pieces."
+    why: "If the pieces are perpendicular, their sizes should add like Pythagoras, and here size means energy."
   - from: FS
     to: SAMP
     label: the other way round
     question: "Periodic in time gave a discrete spectrum. What does discrete time, sampling, do to the spectrum?"
     idea: "It makes the spectrum periodic, repeating every sample rate: the same duality the other way round. Anything above half the sample rate folds back."
+    why: "A repeating signal gave a spectrum of separate lines. Computers hold samples, so we need the mirror-image fact for sampling."
   - from: SAMP
     to: DTFT
     label: sampled spectrum
     question: What is the spectrum of a sampled signal?
     idea: "The DTFT: the Z-transform on the unit circle, periodic in Ω with period 2π."
+    why: Sampling copies the spectrum over and over; we need the transform that describes a sampled signal directly.
   - from: DTFT
     to: DFT
     label: finite and computable
     question: A computer has only N samples and can only list N numbers. What does it compute?
     idea: "The DFT: N samples of the DTFT, spaced 2π/N apart, computed fast by the FFT."
+    why: "The DTFT is a continuous function built from infinitely many samples, which no computer can hold."
   - from: DFT
     to: WIN
     label: finite block
     question: What does cutting out a finite block do to the spectrum?
     idea: "It multiplies by a window, which smears each tone into a main lobe and side lobes (leakage)."
+    why: "The DFT treats a short block as if it repeated forever, which is almost never true of a real signal."
   - from: STATE
     to: RE
     label: "build A, B, C"
     question: "Given only H(s), how do we build a state model for it?"
     idea: "Wire integrators so the denominator sits in A and the numerator in C: the phase-variable realization."
+    why: "We often start from a measured H(s), but the state tools need A, B and C."
   - from: MODES
     to: DIAG
     label: change basis
     question: What does the system look like in eigenvector coordinates?
     idea: "Diagonal: n separate one-state systems, one per mode."
+    why: Eigenvectors make each mode simple on its own; writing the whole system in them should make A simple too.
   - from: DIAG
     to: JOR
     label: not enough eigenvectors
     question: What if a repeated eigenvalue has only one eigenvector?
     idea: "A cannot be diagonalised; the closest form is a Jordan block, and t e^(λt) terms appear."
+    why: "Diagonalising needs a full set of eigenvectors, and a repeated eigenvalue may not supply one."
   - from: DIAG
     to: PHI
     label: evolve
     question: "In the eigenbasis, how does the state move?"
     idea: Each mode is multiplied by e^(λᵢt); changing back gives e^(At) = Ve^(Λt)V⁻¹.
+    why: "With A diagonal, each coordinate just follows its own exponential; we want the general formula for the motion."
   - from: PHI
     to: CH
     label: without eigenvectors
     question: Is there a way to get e^(At) without the eigenvectors?
     idea: "Cayley–Hamilton: A satisfies its characteristic polynomial, so e^(At) is a polynomial of degree n − 1 in A."
+    why: "Computing e^(At) through eigenvectors fails when there aren't enough of them, and is fiddly even when there are."
   - from: INOUT
     to: OBS
     label: the output side
     question: The input side is controllability. What is the matching question for the output?
     idea: "Observability: can the readings over time pin down every mode? It is the dual of controllability (A → Aᵀ, B ↔ Cᵀ)."
+    why: "Reaching every mode is half the story: a mode the output cannot see is hidden just as well."
   - from: INOUT
     to: PBH
     label: one mode at a time
     question: "Which mode, exactly, does the input miss?"
     idea: "Test each eigenvalue: the mode is reached if its left eigenvector is not orthogonal to B."
+    why: "The rank test says yes or no for the whole system, but not which mode is the problem."
   - from: INOUT
     to: GRAM
     label: how hard?
     question: "Controllable, yes, but how much effort does each direction take?"
     idea: "The Gramian measures it: its eigenvectors are the easy and hard directions, its inverse gives the minimum energy."
+    why: Controllable is a yes/no answer; in practice some directions take far more effort than others.
   - from: INOUT
     to: CO
     label: reach every mode?
     question: Can the input reach every mode?
     idea: "Controllability: a rank test on [B AB … A^(n−1)B]; on the car the answer depends on where you push."
+    why: "Hidden modes come in two kinds; first, the ones the input cannot reach."
   - from: WORK
     to: FILT
     label: filters
     question: How does the earbud make anti-noise?
     idea: "A digital filter, a difference equation designed as H(z), shapes the microphone signal into anti-noise."
+    why: "Shaping the frequency response is the first design tool, and the earbud's noise cancelling is the running example."
   - from: WORK
     to: FB
     label: feedback
     question: What happens when the output drives the input?
     idea: "Feedback changes A, so it moves the poles: it can steady a system or destabilise it."
+    why: "Filters act on signals; feedback changes the system itself, by feeding what we measure back to the input."
   - from: WORK
     to: OPT
     label: optimal control
     question: Which input reaches a target most cheaply?
     idea: "Pontryagin's principle: add a costate that tracks the cost of each push; the best input follows from it."
+    why: Feedback steadies the car in general; the next question is the best input for one specific job.
   - from: GRAM
     to: OPT
     label: least energy
     question: Which input reaches a target with the least energy?
     idea: "u(t) = Bᵀe^(Aᵀ(T−t))W(T)⁻¹(x_f − e^(AT)x₀), the same answer Pontryagin's principle gives with cost ∫uᵀu dt."
+    why: The Gramian gives the least energy; we also want the input that achieves it.
