@@ -95,9 +95,9 @@ describe('shipped content', () => {
       expect(d.html.trimStart().startsWith('<p><strong>The question:</strong>'), d.id).toBe(true);
     }
   });
-  it('linear-systems glossary: 106 terms, every one in a section, no raw ^{…} outside math', () => {
+  it('linear-systems glossary: 107 terms, every one in a section, no raw ^{…} outside math', () => {
     const { content } = loadApp(path.join(repoRoot, 'apps', 'linear-systems'));
-    expect(content.glossary.length).toBe(106);
+    expect(content.glossary.length).toBe(107);
     expect(content.glossary.every((t) => !!t.section)).toBe(true);
     expect(new Set(content.glossary.map((t) => t.section)).size).toBe(8);
     for (const t of content.glossary) expect(t.meaning.replace(/<span class="katex[\s\S]*?<\/math>/g, '')).not.toMatch(/\^\{/);

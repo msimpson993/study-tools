@@ -1,4 +1,4 @@
-# Glossary (rebuilt Nov 2026): 106 terms in 8 sections. The original 19 terms are kept (wording unchanged except e^(...) notation).
+# Glossary (rebuilt Nov 2026): 107 terms in 8 sections. The original 19 terms are kept (wording unchanged except e^(...) notation).
 - term: Linear
   meaning: "Superposition holds: the response to $a x_1 + b x_2$ is $a y_1 + b y_2$. Doubling the input doubles the output."
   section: Systems and the eigen idea
@@ -82,6 +82,9 @@
 - term: Right-sided / left-sided
   meaning: Zero before some time / zero after some time. Right-sided ↔ ROC to the right of (outside) all poles; left-sided ↔ left of (inside) them.
   section: "Laplace, Z and inverses"
+- term: "ζ, ωₙ"
+  meaning: "Damping ratio and natural frequency of a second-order denominator s² + 2ζωₙs + ωₙ²: under-damped if ζ < 1, critical if ζ = 1, over-damped if ζ > 1."
+  section: "Laplace, Z and inverses"
 - term: "Pole, zero"
   meaning: Root of the denominator (a mode the system can show) and root of the numerator (a frequency it blocks).
   section: "Laplace, Z and inverses"
@@ -110,7 +113,7 @@
   meaning: "Fourier transform, Fourier series, discrete-time Fourier transform, discrete Fourier transform: expansions in complex exponentials for the four combinations of continuous/discrete and aperiodic/periodic time."
   section: Fourier and sampling
 - term: "ω, Ω"
-  meaning: "Angular frequency: ω in rad/s (continuous time), Ω = ωT in rad/sample (discrete time)."
+  meaning: "Angular frequency: ω in rad/s (continuous time), Ω = ωT in rad/sample (discrete time), defined modulo 2π."
   units: "rad/s, rad/sample"
   section: Fourier and sampling
 - term: Orthogonal
@@ -129,7 +132,7 @@
   meaning: "Energy is the same in time and frequency: $\\int |x|^2 dt = \\frac1{2\\pi}\\int |X|^2 d\\omega$."
   section: Fourier and sampling
 - term: "T, fs"
-  meaning: "Sample period and sample rate, fs = 1/T. Nyquist frequency is fs/2."
+  meaning: "Sample period and sample rate, fs = 1/T; the samples are x[n] = x(nT). Nyquist frequency is fs/2."
   units: "s, Hz"
   section: Fourier and sampling
 - term: Aliasing

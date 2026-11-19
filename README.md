@@ -8,7 +8,7 @@ The former *Six domains of linear systems* page (`/transforms/`) was folded into
 
 | Page | URL | What it is |
 |---|---|---|
-| Linear Systems Analysis | [/linear-systems/](https://msimpson993.github.io/study-tools/linear-systems/) | 2 question maps (Big picture 15 boxes, Full detail 52 boxes in all), 30 deep dives, 28 live figures on two running examples (an earbud speaker and a car on its suspension), earbud sounds, 101-question self-check, 4 exam-review pages, 106-term glossary, and the six-domains board (9 transforms, forward/inverse pair views, draggable poles, 20 examples, 9 windows, ZOH/FOH/sinc) |
+| Linear Systems Analysis | [/linear-systems/](https://msimpson993.github.io/study-tools/linear-systems/) | 2 question maps (Big picture 15 boxes, Full detail 52 boxes in all), 30 deep dives, 28 live figures on two running examples (an earbud speaker and a car on its suspension), earbud sounds, 101-question self-check, 4 exam-review pages, 107-term glossary, and the six-domains board (9 transforms, forward/inverse pair views, draggable poles, 20 examples, 9 windows, ZOH/FOH/sinc) |
 | Control systems (EECE5130) | [/control-systems/](https://msimpson993.github.io/study-tools/control-systems/) | 2 maps (27 boxes), 23 deep dives, 16 live figures (s-plane, root locus, Bode, step metrics) on the cart plant, full original course guide, 90-question quiz (course + mini-exam) |
 | PID tuning (EECE5130) | [/pid-tuning/](https://msimpson993.github.io/study-tools/pid-tuning/) | question map (30 boxes), 29 deep dives, 23 live figures incl. the PID Lab and 14 failure cards (problem vs fix), full original guide, 46-question quiz with scope plots |
 
