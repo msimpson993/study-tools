@@ -55,6 +55,8 @@ Laplace (continuous time) and Z (discrete time) are the natural transforms for c
 
 **Exam-style example.** L{e^(−t) u(t)} = 1/(s+1) with ROC Re(s) &gt; −1. The Z-transform of its samples at T = ln 2 is the Z-transform of (1/2)^n u[n], namely 1 / (1 − ½ z^(−1)) with ROC |z| &gt; 1/2. That is the same pole, mapped by z = e^(s T): e^(−1 · ln 2) = 1/2. On the jω axis the Laplace transform is the FT 1/(1+jω); on the unit circle the Z-transform is the DTFT 1 / (1 − ½ e^(−jΩ)).
 
+On the [six-domains board](#/board?pair=lap&preset=under) the same ring is shown in all six domains; try [overdamped](#/board?pair=lap&preset=over), [a repeated pole in z](#/board?pair=zt&preset=crit) and [an unstable pole pair](#/board?pair=map&preset=unstable).
+
 ### What it can't do
 
 The same formula X(s) can belong to different signals: it only means something together with the region where the integral converges. And H(s) as a formula doesn't yet say what the system does; reading poles and zeros does.

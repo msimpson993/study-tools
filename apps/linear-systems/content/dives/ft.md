@@ -52,6 +52,8 @@ The Fourier transform is the analysis formula for a continuous aperiodic time si
 
 **Exam-style example.** For x(t) = e^(−t) u(t), the integral gives X(jω) = 1/(1 + jω). This is the restriction of the Laplace transform 1/(s+1) to s = jω, which is legal because the jω axis lies in the ROC Re(s) &gt; −1. At DC, X(j0) = 1. At ω = 1, |X(j1)| = 1/√2. As ω → ∞, |X| falls as 1/ω — a single pole, one order of rolloff.
 
+**Width of the peak.** How sharp a resonance is depends on how far left its poles sit. For a lightly damped pole pair −σ ± jω\_d the half-power width of the peak is about σ/π Hz: a long, slowly dying ring is a narrow line, a short ring a broad smear. For the earbud σ/π ≈ 403 Hz; its actual half-power band runs from 394 to 842 Hz, 448 Hz wide (the rule is rough at ζ ≈ 0.28). The same trade returns as record length in the DFT. Try it on the [six-domains board](#/board?pair=ft&preset=under).
+
 ### What it can't do
 
 The integral needs the signal to fade out. A signal that switches on and grows (an unstable ring, a ramp) has no Fourier transform, and the transform alone says nothing about start-up transients. That motivates Laplace and Z.

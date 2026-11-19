@@ -54,6 +54,8 @@ A period-T signal is already a discrete superposition of harmonics e^(j k ω₀ 
 
 **Exam-style example.** x(t) = cos(2π t) has period T = 1 and ω₀ = 2π. Because cos θ = (e^(jθ) + e^(−jθ))/2, the series is a two-line spectrum: c₁ = c\_{−1} = 1/2, and c\_k = 0 otherwise. There is no DC term (c₀ = 0). If you instead expand a square wave, infinitely many odd harmonics appear, with amplitude falling as 1/k, and partial sums show the Gibbs overshoot.
 
+On the [six-domains board](#/board?pair=fs&preset=fsview): repeat the ring periodically and its spectrum becomes a row of harmonic lines under the same envelope.
+
 ### What it can't do
 
 A Fourier series only describes signals that repeat for ever. A single click or a word happens once; for those the harmonics merge into a continuum, the Fourier transform.

@@ -5,12 +5,18 @@ import path from 'node:path';
 import YAML from 'yaml';
 import { loadApp, listApps, repoRoot, ContentError } from '../src';
 
+/** retired apps kept as small, stable test fixtures (packages/build/test/fixtures/apps/<id>) */
+const FIXTURES = path.join(repoRoot, 'packages/build/test/fixtures/apps');
+const srcOf = (a: string) => (fs.existsSync(path.join(repoRoot, 'apps', a, 'subject.yaml')) ? path.join(repoRoot, 'apps', a) : path.join(FIXTURES, a));
+const allApps = () => [...listApps(), ...fs.readdirSync(FIXTURES).filter((a) => !listApps().includes(a))];
+
+
 function copyApp(app: string): string {
   const dst = fs.mkdtempSync(path.join(os.tmpdir(), 'study-'));
   const target = path.join(dst, 'apps', app);
-  fs.cpSync(path.join(repoRoot, 'apps', app), target, { recursive: true, filter: (s) => !s.includes('node_modules') });
+  fs.cpSync(srcOf(app), target, { recursive: true, filter: (s) => !s.includes('node_modules') });
   // sibling apps so cross-app link checks work
-  for (const other of listApps()) if (other !== app) fs.cpSync(path.join(repoRoot, 'apps', other), path.join(dst, 'apps', other), { recursive: true, filter: (s) => !s.includes('node_modules') });
+  for (const other of allApps()) if (other !== app) fs.cpSync(srcOf(other), path.join(dst, 'apps', other), { recursive: true, filter: (s) => !s.includes('node_modules') });
   return target;
 }
 const edit = (file: string, f: (y: any) => void) => { const y = YAML.parse(fs.readFileSync(file, 'utf8')); f(y); fs.writeFileSync(file, YAML.stringify(y)); };
@@ -18,7 +24,7 @@ const errorsOf = (dir: string): string => { try { loadApp(dir); return ''; } cat
 
 describe('shipped content', () => {
   it.each(listApps())('%s validates and matches its porting guard', (app) => {
-    const { content } = loadApp(path.join(repoRoot, 'apps', app));
+    const { content } = loadApp(srcOf(app));
     expect(content.maps.length).toBeGreaterThan(0);
   });
   it('linear-systems keeps its 2 maps / 52 nodes / 55 edges / 30 dives (Big picture + Full detail rebuild)', () => {
@@ -28,7 +34,7 @@ describe('shipped content', () => {
     expect(content.maps.reduce((n, m) => n + m.edges.length, 0)).toBe(55);
     expect(content.dives.length).toBe(30);
     expect((content.review ?? []).map((r) => r.id)).toEqual(['part-a', 'part-b', 'formula-sheet', 'self-test']);
-    expect(content.quiz.length).toBe(97);
+    expect(content.quiz.length).toBe(101); // 97 + 4 kept from the retired transforms page
     expect(content.quiz.filter((q) => q.tags?.includes('variants')).length).toBe(21);
   });
   it('linear-systems Big-picture boxes follow the fixed pop-up template (answer, rough words, running example, next question; every figure captioned; ≤ ~180 words incl. captions)', () => {
@@ -89,21 +95,21 @@ describe('shipped content', () => {
       expect(d.html.trimStart().startsWith('<p><strong>The question:</strong>'), d.id).toBe(true);
     }
   });
-  it('linear-systems glossary: 101 terms, every one in a section, no raw ^{…} outside math', () => {
+  it('linear-systems glossary: 106 terms, every one in a section, no raw ^{…} outside math', () => {
     const { content } = loadApp(path.join(repoRoot, 'apps', 'linear-systems'));
-    expect(content.glossary.length).toBe(101);
+    expect(content.glossary.length).toBe(106);
     expect(content.glossary.every((t) => !!t.section)).toBe(true);
     expect(new Set(content.glossary.map((t) => t.section)).size).toBe(8);
     for (const t of content.glossary) expect(t.meaning.replace(/<span class="katex[\s\S]*?<\/math>/g, '')).not.toMatch(/\^\{/);
   });
-  it('transforms keeps all 20 examples and 9 transform pairs', () => {
-    const { content } = loadApp(path.join(repoRoot, 'apps', 'transforms'));
+  it('linear-systems carries the six-domains board (folded in from transforms): all 20 examples and 9 transform pairs', () => {
+    const { content } = loadApp(path.join(repoRoot, 'apps', 'linear-systems'));
     expect((content.extra.examples as any).examples.length).toBe(20);
     expect(content.subject.board!.pairs.length).toBe(9);
   });
   it('every node and edge has a non-empty popup', () => {
     for (const app of listApps()) {
-      const { content } = loadApp(path.join(repoRoot, 'apps', app));
+      const { content } = loadApp(srcOf(app));
       for (const m of content.maps) {
         for (const n of m.nodes) expect(n.short.trim().length, `${app}/${m.id}/${n.id}`).toBeGreaterThan(19);
         for (const e of m.edges) { expect(e.question.trim().length).toBeGreaterThan(7); expect(e.idea.trim().length).toBeGreaterThan(19); }

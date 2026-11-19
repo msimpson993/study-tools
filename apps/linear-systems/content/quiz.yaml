@@ -1220,3 +1220,52 @@
   - "The car has no input, only a state"
   answer: 0
   why: "The input is what acts on the car from outside: the road under the wheels, or forces from active actuators. The output is what we watch: heave z and pitch θ. The springs and shocks are part of the system's rule T."
+# --- from the retired transforms page (Nov 2026): the non-duplicate questions (t4, t6, t7, t9), on the board's ring and the windowing dive
+- id: tr-recon-1
+  tags:
+  - sampling
+  kind: recognize
+  q: Which reconstruction is causal and costs an average delay of T/2?
+  choices:
+  - Zero-order hold
+  - Ideal sinc
+  - Both
+  - Neither
+  answer: 0
+  why: "The ZOH holds each sample for T, so it needs only the samples so far (causal); its staircase lags the true curve by T/2 on average. The ideal sinc kernel is infinitely long and non-causal."
+- id: tr-leak-1
+  tags:
+  - window
+  kind: compute
+  q: A tone sits exactly half a bin off, with a rectangular window. About how far does its peak read low?
+  choices:
+  - 0 dB
+  - 1 dB
+  - 3.9 dB
+  - 13 dB
+  answer: 2
+  why: "The nearest bins sample the window's spectrum half a bin from its centre: 1/(N sin(π/2N)) ≈ 2/π ≈ 0.637, about −3.9 dB. This is the scalloping loss; 13 dB is the rectangular window's first side lobe."
+- id: tr-win-1
+  tags:
+  - window
+  kind: recognize
+  q: You need accurate tone amplitudes between bins, not low side lobes. Which window?
+  choices:
+  - Rectangular
+  - Hann
+  - Blackman–Harris
+  - Flat-top
+  answer: 3
+  why: "Flat-top's scalloping loss is about 0.01 dB, so a tone reads its true amplitude wherever it falls, at the price of a main lobe about 10 bins wide."
+- id: tr-dft-1
+  tags:
+  - dft
+  kind: compute
+  q: "N = 32 samples at fs = 8 Hz of a 1 Hz tone that fits a whole number of cycles. Which DFT bins are non-zero?"
+  choices:
+  - k = 1 and 31
+  - k = 4 and 28
+  - k = 8 and 24
+  - All bins
+  answer: 1
+  why: "Bins are fs/N = 0.25 Hz apart, so 1 Hz is bin k = 4, and a real signal has its mirror at N − 4 = 28."

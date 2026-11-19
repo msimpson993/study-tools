@@ -42,6 +42,20 @@ $$x[n]\,w[n]\;\longleftrightarrow\;\frac{1}{2\pi}\int X(e^{j\theta})\,W(e^{j(\Om
 - $W(e^{j\Omega})$: the window's own spectrum; its main lobe width and side lobes set the smearing.
 - $X(e^{j\Omega})$: the true spectrum, smeared by $W$.
 
+**Choosing a window.** Two numbers describe the damage a finite block does. *Scalloping loss* is how far a tone's peak reads low when it sits exactly half a bin from the nearest bin centre. *ENBW* (equivalent noise bandwidth) is how many bins' worth of noise the window lets into each bin, $M\sum w^2/(\sum w)^2$. For a 64-sample block:
+
+| window | peak side lobe | scalloping loss | ENBW | main lobe (null to null) | use it for |
+|---|---|---|---|---|---|
+| rectangular | −13 dB | 3.9 dB | 1.00 bin | 2 bins | on-bin tones, transients that fit the block |
+| Hann | −31 dB | 1.4 dB | 1.50 bins | 4 bins | general purpose |
+| Blackman–Harris (4-term) | −92 dB | 0.8 dB | 2.00 bins | 8 bins | weak tones next to strong ones |
+| flat-top | −88 dB | 0.01 dB | 3.77 bins | 10 bins | reading a tone's amplitude |
+| Kaiser, β = 6 | −44 dB | 1.5 dB | 1.49 bins | about 4.4 bins | a tunable trade: larger β, lower side lobes, wider lobe |
+
+**Resolution.** Two tones closer than about one main lobe merge into one peak, and the main lobe is a fixed number of bins of width $f_s/M$, where $M$ is the number of samples recorded. So resolution comes from the record length (and the window), not from the DFT length $N$: zero-padding ($N > M$) only samples the same smeared curve more finely.
+
+Try it on the [six-domains board](#/board?pair=dft&preset=offbin): an off-bin tone leaking; then [windows compared in dB](#/board?pair=dft&preset=wincomp), [flat-top for amplitude](#/board?pair=dft&preset=flattop), [the Kaiser β trade-off](#/board?pair=dft&preset=kaiserb), and [a record too short to resolve](#/board?pair=fsamp&preset=short) next to [zero-padding with Hann](#/board?pair=fsamp&preset=zpad).
+
 ### Worked example: on the earbud
 
 N = 64 at 8 kHz gives bins every 125 Hz. A steady 750 Hz hum sits exactly on bin 6 and shows a single spike. A steady 690 Hz hum near the resonance sits at bin 5.52 and spreads: bins 5 and 6 both read about 4 dB below the true peak (−4.7 and −3.2 dB for a cosine; a real tone's split depends on its phase, for example a sine reads about −3.9 dB in both), with a long tail of side lobes.

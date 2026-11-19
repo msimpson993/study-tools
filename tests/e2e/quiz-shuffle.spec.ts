@@ -54,8 +54,8 @@ test.describe('quiz: choices are shuffled on display', () => {
   });
 
   test('choices that point at the others ("Both", "Neither") stay after them', async ({ page }) => {
-    await open(page, 'transforms', '#/quiz?tags=recon'); // t4: Zero-order hold / Ideal sinc / Both / Neither
-    await expect(page.getByTestId('qcard')).toHaveAttribute('data-qid', 't4');
+    await open(page, 'linear-systems', '#/quiz?qid=tr-recon-1'); // Zero-order hold / Ideal sinc / Both / Neither (from the retired transforms page)
+    await expect(page.getByTestId('qcard')).toHaveAttribute('data-qid', 'tr-recon-1');
     for (let k = 0; k < 4; k++) { // a few fresh presentations
       expect((await texts(page)).slice(-2)).toEqual(['Both', 'Neither']);
       await page.reload(); await page.waitForFunction(() => !!(window as any).__study);

@@ -1,4 +1,4 @@
-# Glossary (rebuilt Nov 2026): 101 terms in 8 sections. The original 19 terms are kept (wording unchanged except e^(...) notation).
+# Glossary (rebuilt Nov 2026): 106 terms in 8 sections. The original 19 terms are kept (wording unchanged except e^(...) notation).
 - term: Linear
   meaning: "Superposition holds: the response to $a x_1 + b x_2$ is $a y_1 + b y_2$. Doubling the input doubles the output."
   section: Systems and the eigen idea
@@ -150,6 +150,24 @@
   section: Fourier and sampling
 - term: Window
   meaning: "A taper (Hann, Hamming, …) applied before the DFT to cut leakage, at the cost of a wider main lobe."
+  section: Fourier and sampling
+- term: Scalloping loss
+  meaning: "How far a tone's peak reads low when it sits half a bin from the nearest bin centre: 3.9 dB for the rectangular window, about 0.01 dB for flat-top."
+  units: dB
+  section: Fourier and sampling
+- term: ENBW
+  meaning: "Equivalent noise bandwidth of a window: how many bins' worth of noise each bin collects, M Σw² / (Σw)². 1 bin for rectangular, 1.5 for Hann."
+  units: bins
+  section: Fourier and sampling
+- term: "M, N (record, DFT length)"
+  meaning: "M = samples recorded, N = DFT length (bins computed). N > M zero-pads (finer sampling of the same spectrum, no new resolution); N < M truncates."
+  section: Fourier and sampling
+- term: "ZOH, FOH, sinc"
+  meaning: "Ways to rebuild a curve from samples: zero-order hold (a staircase, causal, T/2 delay), first-order hold (straight chords, one sample late), ideal sinc (a brick wall at fs/2, non-causal)."
+  section: Fourier and sampling
+- term: "σ, ω_d, f₀ (six-domains board)"
+  meaning: "The board's ring has poles s = −σ ± jω_d: σ is the decay rate (σ < 0 grows), ω_d the ringing frequency, f₀ = ω_d/2π."
+  units: "1/s, rad/s, Hz"
   section: Fourier and sampling
 - term: "x, u, y"
   meaning: "State, input, output of the state-space model ẋ = Ax + Bu, y = Cx + Du."

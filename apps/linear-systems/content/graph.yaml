@@ -187,7 +187,7 @@ maps:
     accountsFor: "Why earbuds sound the way they do across the band, and which frequencies the ANC has to fight."
     dive: ft
     link: &id011
-      href: "../transforms/#/board?pair=ft"
+      href: "#/board?pair=ft&preset=under"
       label: See it on the six-domains board
   - id: LAP
     label: Laplace and Z
@@ -209,7 +209,7 @@ maps:
     accountsFor: "The ring frequency and decay of the click response, read straight off two numbers."
     dive: laplace
     link: &id013
-      href: "../transforms/#/board?pair=lap"
+      href: "#/board?pair=lap&preset=under"
       label: See it on the six-domains board
   - id: PZ
     label: Poles and zeros
@@ -684,7 +684,7 @@ maps:
     dive: fs
     quizTag: fs
     link:
-      href: "../transforms/#/board?pair=fs"
+      href: "#/board?pair=fs&preset=fsview"
       label: See it on the six-domains board
   - id: PARS
     label: Parseval
@@ -710,6 +710,9 @@ maps:
     accountsFor: Why the chip needs an anti-alias filter and a fast sample rate.
     dive: sampling
     quizTag: sampling
+    link:
+      href: "#/board?pair=samp&preset=alias"
+      label: See it on the six-domains board
   - id: DTFT
     label: DTFT
     detail: "Z on |z| = 1; period 2π"
@@ -723,7 +726,7 @@ maps:
     dive: dtft
     quizTag: dtft
     link:
-      href: "../transforms/#/board?pair=dtft"
+      href: "#/board?pair=dtft&preset=heavy"
       label: See it on the six-domains board
   - id: DFT
     label: DFT / FFT
@@ -738,7 +741,7 @@ maps:
     dive: dft
     quizTag: dft
     link:
-      href: "../transforms/#/board?pair=dft"
+      href: "#/board?pair=dft&preset=onbin"
       label: See it on the six-domains board
   - id: WIN
     label: Windowing
@@ -754,6 +757,9 @@ maps:
     accountsFor: Why the DFT of a pure tone is not a single spike.
     dive: window
     quizTag: window
+    link:
+      href: "#/board?pair=dft&preset=offbin"
+      label: See it on the six-domains board
   - id: RE
     label: Realization
     detail: "Build A, B, C; minimal?"

@@ -54,6 +54,8 @@ The N-point DFT is the discrete Fourier series of a length-N sequence viewed as 
 
 **Exam-style example.** Take N = 4 and x[n] = cos(π n / 2) = [1, 0, −1, 0], which is exactly one period of a bin-1 cosine. Then X[k] = fft(x) = [0, 2, 0, 2]: the energy sits at k = 1 and k = 3 (≡ −1 mod 4), each with amplitude N/2 = 2, as the analysis of (e^(j π n / 2) + e^(−j π n / 2))/2 predicts. A tone whose frequency is not an integer number of cycles in N still has a DTFT peaked at that Ω, but the DFT samples miss the peak and you see leakage into every bin.
 
+On the [six-domains board](#/board?pair=dft&preset=onbin): an on-bin tone lands in a single bin; compare [an off-bin tone](#/board?pair=dft&preset=offbin) and [N < M, truncation](#/board?pair=fsamp&preset=trunc).
+
 ### What it can't do
 
 The DFT treats the block as one period of a repeating signal. A tone that doesn't fit a whole number of cycles in the block leaks into every bin; that is windowing's job.

@@ -59,14 +59,25 @@ Sampling a mode e^(s t) at t = n T produces (e^(s T))^n = z^n, so the planes are
 
 **Exam-style example.** Sample x(t) = cos(2π · 5 t) at f\_s = 6 Hz (T = 1/6). Then x[n] = cos(2π · 5 n / 6) = cos(2π n − 2π n / 6) = cos(2π · 1 · n / 6): a 1 Hz discrete-time cosine. The two complex poles at e^(± j 2π · 5 / 6) are the same unit-circle points as e^(∓ j 2π · 1 / 6). You cannot tell from the samples whether the original tone was at 5 Hz or at 1 Hz — that is the many-to-one map s → e^(s T).
 
+### Back to continuous time: reconstruction
+
+To turn samples back into a curve, each sample is replaced by a copy of a *reconstruction kernel* and the copies are added (a convolution).
+
+- **Zero-order hold (ZOH):** hold each sample for one period T, a staircase. It is causal (it needs only the samples so far), its average delay is T/2, and its frequency response droops like sin(πf/f\_s)/(πf/f\_s): about 3.9 dB down at f\_s/2. This is what a DAC does.
+- **First-order hold (FOH)**, drawn here as straight chords between samples (a triangle kernel): smoother, and it suppresses the spectral copies (images) better, but it droops more in band (its response is the ZOH's squared, about 7.8 dB down at f\_s/2), and each chord needs the next sample, so it runs one sample late.
+- **Ideal (sinc) reconstruction:** a brick-wall low-pass at f\_s/2. It rebuilds a band-limited signal exactly, but the sinc kernel is infinitely long and non-causal, so real systems only approximate it.
+
+See them side by side on the [six-domains board](#/board?pair=samp&preset=zohsinc), with [a tone aliasing](#/board?pair=samp&preset=alias) and [the poles carried by z = e^(sT)](#/board?pair=map&preset=oversamp).
+
 ### What it can't do
 
 Sampling decides which pitches survive, but it does not yet give a spectrum we can compute. The sampled signal's spectrum is the DTFT, and that repeats every $f_s$.
 
-**Next question.** Which reconstruction (ZOH, first-order hold, sinc) you use when going back to continuous time, and how the four Fourier tools are the periodize-or-sample versions of one another.
+**Next question.** The sampled signal's own spectrum: the DTFT, and how the four Fourier tools are the periodize-or-sample versions of one another.
 
 ### Common pitfalls
 
 - Nyquist is f\_s / 2, or Ω = π rad/sample. A real signal whose spectrum is not strictly bandlimited to that will alias, even if a single tone looks like a valid lower frequency.
+- Exactly at f\_s/2 the samples can lose the tone altogether: a cosine at f\_s/2 sampled at its zero crossings gives all zeros. So the sample rate must be strictly above twice the highest frequency ([see it at z = −1](#/board?pair=map&preset=atnyq)).
 - c2d(sys, T, 'zoh') is not the substitution s = (ln z)/T into G(s). Poles do map as z = e^(s T); zeros generally do not.
 - Impulse-invariant and bilinear (Tustin) mappings are different choices, with different frequency warping. Name the method when you discretize.
