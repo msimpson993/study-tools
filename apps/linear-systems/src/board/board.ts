@@ -63,6 +63,9 @@ function axes(F,o={}){
   const sx=niceStep(F.xr[1]-F.xr[0],o.nx||4);
   g.fillStyle=COL.muted;g.textAlign='center';g.textBaseline='top';
   for(let v=Math.ceil(F.xr[0]/sx)*sx;v<=F.xr[1]+1e-9;v+=sx){const px=F.X(v);g.strokeStyle=COL.grid;g.beginPath();g.moveTo(px,F.y);g.lineTo(px,F.y+F.h);g.stroke();if(!o.noxl)g.fillText(fmt(v,sx),px,F.y+F.h+1);}
+  // A22: y tick values, inside the left edge (clear of the y label at the top-left)
+  if(!o.noyt&&isFinite(F.yr[0])&&isFinite(F.yr[1])&&F.yr[1]>F.yr[0]){const sy=niceStep(F.yr[1]-F.yr[0],o.ny||(F.h<70?2:3));g.textAlign='left';g.textBaseline='middle';g.fillStyle=COL.muted;
+    for(let v=Math.ceil(F.yr[0]/sy)*sy;v<=F.yr[1]+1e-9;v+=sy){const py=F.Y(v);if(py<F.y+(o.yl?14:5)||py>F.y+F.h-4)continue;g.strokeStyle=COL.axis;g.beginPath();g.moveTo(F.x,py);g.lineTo(F.x+4,py);g.stroke();g.fillText(fmt(v,sy).replace('-','−'),F.x+6,py);}}
   if(o.y0!==false){const y0=F.Y(Math.min(Math.max(0,F.yr[0]),F.yr[1]));g.strokeStyle=COL.axis;g.beginPath();g.moveTo(F.x,y0);g.lineTo(F.x+F.w,y0);g.stroke();}
   if(o.xl){g.textAlign='right';g.textBaseline='bottom';g.fillStyle=COL.muted;g.fillText(o.xl,F.x+F.w,F.y+F.h-1);}
   if(o.yl){g.textAlign='left';g.textBaseline='top';g.fillStyle=COL.muted;g.fillText(o.yl,F.x+2,F.y+1);}
@@ -789,9 +792,11 @@ const show=(q)=>{
   // a board opened on a pair (from a box) loads that preset on that pair, or the earbud if none is named; never "(modified)" on load
   if(pair&&TX[pair]){applyExample(hasPre?preset:'earbud',pair);openPair(pair);}
   else if(hasPre)applyExample(preset);
+  else if(!pair&&first)applyExample('earbud'); // B13: plain #/board opens on the earbud, the site's running example
   else if(!pair&&MOD.k&&q&&q.get('view')==='board')closeModal();
-  layoutArrows();schedule();
+  layoutArrows();schedule();first=false;
 };
+let first=true;
 show(params);
 return {show,hide(){}};
 }

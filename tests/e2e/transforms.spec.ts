@@ -222,6 +222,11 @@ test.describe('linear-systems: six-domains board (migrated 1:1 from the retired 
     expect(await page.evaluate("document.getElementById('rowBeta').hidden")).toBe(false);
   });
 
+  test('plain #/board opens on the Earbud preset (B13), A22 y ticks drawn', async ({ page }) => {
+    await expect(page.locator('#presets button.on')).toHaveText(/Earbud/);
+    expect(await page.evaluate(() => (window as any).S.sig)).toBeCloseTo(1.266, 2);
+  });
+
   test('deep link #/board?pair=lap&preset=under opens the pair view on that example', async ({ page }) => {
     await page.goto('/linear-systems/index.html#/board?pair=lap&preset=over');
     await page.reload(); await page.waitForFunction(() => !!(window as any).S && (window as any).MOD.k);
