@@ -3514,8 +3514,8 @@
   tags:
     - methods
   kind: recognize
-  q: After clicking <b>Update Block</b>, why does the example simulate the full <b>nonlinear</b>
-    engine model?
+  q: In Project 1's MATLAB PID Tuner example (engine speed), why does the example simulate the
+    full <b>nonlinear</b> engine model after you click <b>Update Block</b>?
   choices:
     - The gains were designed on a linearization at one operating point; nonlinear behavior and
       limits may change the response
