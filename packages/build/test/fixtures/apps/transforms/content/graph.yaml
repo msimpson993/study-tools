@@ -15,7 +15,6 @@ maps:
           which exponentials to use and how to sum them.
         eq: y = h ∗ x   ⇒   Y = H · X
         live: board:ft?preset=under
-        link: { href: "../linear-systems/#/dive/lti", label: "Linear systems: Convolution, LTI & eigenfunctions" }
       - id: eigenfn
         dive: ring
         quizTag: eigenfn

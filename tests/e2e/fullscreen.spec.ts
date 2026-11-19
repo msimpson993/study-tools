@@ -123,7 +123,7 @@ test('where the Fullscreen API is missing the button is hidden and nothing throw
   await page.addInitScript(() => {
     (Element.prototype as any).requestFullscreen = undefined; (Element.prototype as any).webkitRequestFullscreen = undefined;
   });
-  await open(page, 'transforms');
+  await open(page, 'linear-systems');
   await expect(btn(page)).toBeHidden();
   await expect(page.getByTestId('theme-toggle')).toBeVisible();
   expect(await noHScroll(page)).toBe(true);
@@ -133,7 +133,7 @@ test('where the Fullscreen API is missing the button is hidden and nothing throw
 test('left-edge rightward swipe in full screen exits (touch fallback)', async ({ browser }) => {
   const ctx = await browser.newContext({ viewport: { width: 390, height: 800 }, hasTouch: true, isMobile: true, baseURL: 'http://localhost:4173' });
   const page = await ctx.newPage();
-  await open(page, 'transforms', '#/');
+  await open(page, 'linear-systems', '#/');
   const startUrl = await page.evaluate(() => location.href);
   await btn(page).tap(); await expect.poll(() => isFull(page)).toBe(true);
   await page.evaluate(() => {
@@ -150,7 +150,7 @@ test('left-edge rightward swipe in full screen exits (touch fallback)', async ({
 });
 
 test('copyref still works after full screen is toggled', async ({ page }) => {
-  await open(page, 'transforms');
+  await open(page, 'linear-systems');
   await btn(page).click(); await expect.poll(() => isFull(page)).toBe(true);
   await btn(page).click(); await expect.poll(() => isFull(page)).toBe(false);
   await page.waitForTimeout(300);

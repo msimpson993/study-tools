@@ -57,4 +57,20 @@ ap();document.getElementById('th').onclick=function(){t=t==='dark'?'light':'dark
 fs.mkdirSync(path.join(repoRoot, 'dist'), { recursive: true });
 fs.writeFileSync(path.join(repoRoot, 'dist', 'index.html'), hub);
 fs.writeFileSync(path.join(repoRoot, 'dist', '.nojekyll'), '');
+// ---------- retired pages: redirects ----------
+// transforms ("Six domains of linear systems") was folded into linear-systems (Nov 2026). Its board deep links
+// (#/board?pair=…&preset=…) keep working; its dives land on the matching linear-systems dive; anything else opens the board.
+const TRANSFORMS_DIVES: Record<string, string> = { ring: 'laplace', spectrum: 'ft', sampled: 'sampling', zmap: 'sampling', leakage: 'window' };
+const redirect = `<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Moved: Six domains of linear systems</title><meta name="robots" content="noindex">
+<noscript><meta http-equiv="refresh" content="0; url=../linear-systems/index.html#/board"></noscript>
+<script>
+(function(){var D=${JSON.stringify(TRANSFORMS_DIVES)};var h=location.hash||'',t='#/board',m;
+if(h.indexOf('#/board')===0)t=h;else if(h.indexOf('#/dive/')===0&&D[m=h.slice(7).split('?')[0]])t='#/dive/'+D[m];
+location.replace('../linear-systems/index.html'+t);})();
+</script></head>
+<body style="background:#000;color:#eee;font:16px system-ui;padding:2rem">The six-domains board now lives in <a style="color:#8ab4ff" href="../linear-systems/index.html#/board">Linear Systems Analysis</a>.</body></html>`;
+fs.mkdirSync(path.join(repoRoot, 'dist', 'transforms'), { recursive: true });
+fs.writeFileSync(path.join(repoRoot, 'dist', 'transforms', 'index.html'), redirect);
 console.log(`\n✓ hub: dist/index.html (${cards.length} pages) in ${((Date.now() - t0) / 1000).toFixed(1)}s`);

@@ -1,0 +1,314 @@
+categories:
+  - Basics
+  - Sampling & aliasing
+  - Stability
+  - DFT & resolution
+  - Windows
+defs:
+  damptab: <table class="wm"><tr><th></th><th>ζ &lt; 1</th><th>ζ = 1</th><th>ζ &gt; 1</th></tr><tr><th>s-poles</th><td>−σ ± jω<sub>d</sub></td><td>−σ (double)</td><td>−σ ± δ (real)</td></tr><tr><th>z-poles</th><td>r e<sup>±jΩ<sub>d</sub></sup></td><td>e<sup>−σT</sup> (double)</td><td>two on (0, 1)</td></tr><tr><th>x(t)</th><td>rings, overshoots</td><td>fastest return, no overshoot</td><td>slow tail from the pole nearest 0</td></tr><tr><th>|X(jω)|</th><td>resonant peak near ω<sub>d</sub></td><td>low-pass, corner ≈ ω<sub>n</sub></td><td>low-pass, corners at a and b</td></tr></table>
+examples:
+  - id: under
+    cat: 0
+    n: Underdamped
+    p: {}
+    sel: samp
+    extra: damptab
+    look: The same pole pair drives every panel. The CT ringing at 1 Hz, the CF peak at ±1 Hz and the z-pole angle Ω = 45° are all the same number in different units.
+    why: One pole pair −σ ± jω<sub>d</sub> sets the decay e<sup>−σt</sup>, the peak position and width, and the z-pole radius and angle.
+    eq: z<sub>p</sub> = e<sup>(−σ±jω<sub>d</sub>)T</sup> &nbsp;⇒&nbsp; r = e<sup>−σT</sup>, &nbsp;Ω = 2π f<sub>0</sub>/f<sub>s</sub>
+    ml: p = roots([1 2*sig sig^2+wd^2]);  zp = exp(p*T)
+  - id: crit
+    cat: 0
+    n: Critically damped (ζ = 1)
+    p:
+      mode: crit
+      sig: 2
+      fs: 8
+      M: 32
+      N: 64
+    sel: zt
+    look: "S: a double pole ✕×2 at s = −2 and the zero ○ at −4. Z: a double pole at r = e<sup>−σT</sup> = e<sup>−0.25</sup> ≈ 0.779 on the positive real axis, and a zero at r(1 − σT) ≈ 0.584. CT: (1 + σt)e<sup>−σt</sup> starts with zero slope and never crosses zero. CF: low-pass, no resonant peak. Drag a pole off the axis to go underdamped, or along it to split the pair (overdamped)."
+    why: ζ = σ/ω<sub>n</sub> = 1 makes the discriminant of s² + 2ζω<sub>n</sub>s + ω<sub>n</sub>² zero, so the two poles coincide. A repeated pole always brings in a t·e<sup>pt</sup> term (n·rⁿ in discrete time). That term is the double-pole signature in every domain.
+    extra: damptab
+    eq: s = −ζω<sub>n</sub> ± ω<sub>n</sub>√(ζ²−1); &nbsp; L{t e<sup>−σt</sup>} = 1/(s+σ)², &nbsp; Z{n rⁿ} = rz/(z−r)²
+    ml: sys = tf([1 2*sig],[1 2*sig sig^2]);  pole(sys)  % [-sig -sig];  impulse(sys)
+  - id: over
+    cat: 0
+    n: Overdamped (ζ > 1)
+    p:
+      mode: over
+      sig: 2.5
+      dl: 1.5
+      fs: 8
+      M: 40
+      N: 64
+    sel: lap
+    look: "S: two real poles at −1 and −4 (ζ = 1.25, ω<sub>n</sub> = 2) and the zero at −5. Z: poles at e<sup>−T</sup> ≈ 0.882 and e<sup>−4T</sup> ≈ 0.607 on the positive real axis. CT: no overshoot, but a slow tail set by the pole nearest the origin. Shrink δ toward 0 and the poles merge into critical damping."
+    why: With ζ &gt; 1 the characteristic roots are real and distinct, so the response is just two exponentials. The slow pole −a dominates (settling ≈ 4/a), which is slower than critical damping with the same ω<sub>n</sub>.
+    extra: damptab
+    eq: x(t) = A(b e<sup>−at</sup> − a e<sup>−bt</sup>)/(b − a), &nbsp; a, b = σ ∓ δ = ω<sub>n</sub>(ζ ∓ √(ζ²−1))
+    ml: sys = zpk(-(a+b),[-a -b],1);  damp(sys), impulse(sys)
+  - id: heavy
+    cat: 0
+    n: Heavy damping
+    p:
+      sig: 4
+      f0: 0.5
+      fs: 8
+      M: 32
+      N: 64
+      db: true
+    sel: dtft
+    look: "Continuous Frequency (dB): yellow |X(jω)| is broad and still high at ±fs/2, and the green T·DTFT rises above it near Nyquist. S-plane: pole far left. Z-plane: pole pulled in toward the origin (r ≈ 0.61)."
+    why: Fast decay means wide bandwidth (≈ σ), and the t = 0 step adds a 1/ω tail. The spectrum is not band-limited, so the neighbouring copies overlap even though f₀ is far below Nyquist. Aliasing is about the whole spectrum, not just the tone.
+    eq: T·X(e<sup>jωT</sup>) − X(jω) = Σ<sub>k≠0</sub> X(j(ω − kω<sub>s</sub>)) + AT/2
+    ml: H = freqs(b,a,2*pi*fs/2); 20*log10(abs(H))  % level that will alias
+  - id: oversamp
+    cat: 0
+    n: Oversampled (fs ≫ f₀)
+    p:
+      sig: 0.6
+      f0: 0.5
+      fs: 40
+      M: 256
+      N: 256
+    sel: map
+    look: "Z-plane: poles crowd z = 1 (Ω ≈ 4.5°, r ≈ 0.985). DT stems trace the CT curve and the ZOH staircase almost disappears. CF: copies are far apart, so there is essentially no aliasing."
+    why: For small T, z = e<sup>sT</sup> ≈ 1 + sT. The useful part of the s-plane maps into a tiny region around z = 1. Reconstruction is easy, but the filter coefficients sit close to 1 and become sensitive to quantization.
+    eq: z ≈ 1 + sT + (sT)²/2 &nbsp; for |sT| ≪ 1
+    ml: sysd = c2d(sys,1/40);  abs(pole(sysd))  % ≈ 1 → prefer zpk/ss, not tf
+  - id: fsview
+    cat: 0
+    n: Fourier-series view
+    p: {}
+    sel: fs
+    look: "CT panel: the orange curve is the periodic extension x̃(t) of the record (period NT). DF panel: its line spectrum, one line every 1/(NT) Hz."
+    why: The DFT quietly treats the record as one period. The jump at each period edge (x(0) = A, ≈ 0 at the end) causes Gibbs ringing and the slow 1/k decay of c<sub>k</sub>.
+    eq: X[k]/N = Σ<sub>m</sub> c<sub>k+mN</sub>, &nbsp; c<sub>k</sub> at f = k/(NT)
+    ml: ck = fft(x,N)/N;   f = (0:N-1)/(N*T)
+  - id: nearnyq
+    cat: 1
+    n: Near Nyquist
+    p:
+      sig: 0.4
+      f0: 3.6
+      fs: 8
+      M: 40
+      N: 64
+    sel: dtft
+    look: "CF: the 3.6 Hz peak and its copy at fs − 3.6 = 4.4 Hz almost touch at fs/2. Z: pole angle ≈ 162°, close to z = −1. DT: only 2.2 samples per cycle, so the stems look like a beat pattern."
+    why: The spectral copies sit fs apart. As f₀ → fs/2, the tone and its mirror image meet at Nyquist.
+    eq: Ω = 2πf<sub>0</sub>/f<sub>s</sub> → π &nbsp; as f<sub>0</sub> → f<sub>s</sub>/2
+    ml: '[H,f] = freqz(bz,az,2048,"whole",fs);  % watch |H| around fs/2'
+  - id: atnyq
+    cat: 1
+    n: Exactly at Nyquist (z = −1)
+    p:
+      sig: 0.4
+      f0: 4
+      fs: 8
+      M: 40
+      N: 64
+    sel: map
+    look: "Z-plane: the two conjugate poles merge on the negative real axis at z = −r, and the zero r·cos Ω<sub>d</sub> = −r lands on them. DT: x[n] = A rⁿ(−1)ⁿ, alternating signs. DF: the energy sits in the bin at fs/2."
+    why: At Ω = π, e<sup>jπn</sup> = e<sup>−jπn</sup> = (−1)ⁿ, so the +f₀ and −f₀ components give identical samples and phase is lost. A cosine survives and sin(πn) = 0 vanishes, which is why Nyquist needs fs &gt; 2f₀ strictly. X(z) collapses to z/(z + r), a pole-zero cancellation.
+    eq: e<sup>±jπn</sup> = (−1)<sup>n</sup>, &nbsp; z<sub>p</sub> = r e<sup>±jπ</sup> = −r
+    ml: n=0:9; cos(pi*n+phi) - cos(phi)*(-1).^n   % all zeros
+  - id: alias
+    cat: 1
+    n: Aliased (f₀ > fs/2)
+    p:
+      sig: 0.4
+      f0: 6.5
+      fs: 8
+      M: 40
+      N: 64
+      interp: sinc
+    sel: map
+    look: "Z-plane: the pole angle wraps to 2π·1.5/8, so it looks like 1.5 Hz. CT: the sinc reconstruction (pink) is a slow 1.5 Hz wave, not the yellow 6.5 Hz original. DF: the peak is at 1.5 Hz."
+    why: s and s + j2πk/T map to the same z, so the samples cannot tell 6.5 Hz from 6.5 − 8 = −1.5 Hz.
+    eq: f<sub>a</sub> = |f<sub>0</sub> − k f<sub>s</sub>|, &nbsp; k = round(f<sub>0</sub>/f<sub>s</sub>)
+    ml: Filter before you sample (anti-alias); for IF sampling, pick fs with bandpass-sampling rules
+  - id: zohsinc
+    cat: 1
+    n: ZOH vs sinc reconstruction
+    p:
+      sig: 0.3
+      f0: 1.2
+      fs: 5
+      M: 24
+      N: 64
+      interp: zoh
+    sel: samp
+    look: "CT panel: switch Interpolation between ZOH, FOH and Ideal sinc. ZOH is a staircase lagging by ≈ T/2. FOH is straight chords. Sinc matches the original in the middle but rings at the t = 0 step and at the end of the record."
+    why: "Reconstruction convolves the sample train with h(t). ZOH: droop, half-sample delay, and images only partly suppressed. FOH: sinc² droop. Ideal: a brick wall at fs/2, which is non-causal and infinitely long."
+    eq: H<sub>ZOH</sub>(f) = T sinc(fT) e<sup>−jπfT</sup>, &nbsp; H<sub>FOH</sub> = T sinc²(fT)
+    ml: c2d(sys,T,"zoh") models the DAC hold;  d2c(sysd,"zoh") goes back
+  - id: unstable
+    cat: 2
+    n: Unstable (σ < 0)
+    p:
+      sig: -0.3
+      f0: 1
+      fs: 8
+      M: 32
+      N: 64
+    sel: map
+    look: "S: poles in the right half-plane. Z: r = e<sup>0.3/8</sup> ≈ 1.038, just outside the unit circle. CT/DT: growing envelope. CF: faded, because there is no FT."
+    why: Under z = e<sup>sT</sup>, Re{s} &gt; 0 ⇔ |z| &gt; 1. The jω axis and the unit circle are outside the ROC, so the FT and DTFT don't exist, while Laplace (Re s &gt; 0.3) and Z (|z| &gt; r) still do.
+    eq: "|z| = e<sup>Re{s}·T</sup> &gt; 1 &nbsp;⇔&nbsp; Re{s} &gt; 0"
+    ml: isstable(sys),  abs(pole(c2d(sys,T)))
+  - id: marginal
+    cat: 2
+    n: Marginal (σ = 0)
+    p:
+      sig: 0
+      f0: 1
+      fs: 8
+      M: 64
+      N: 64
+      db: true
+    sel: dtft
+    look: "S: poles on the jω axis. Z: poles on the unit circle (r = 1). CF: X(jω) and the DTFT spike at ±1 Hz and at every copy. DF: f₀ = 8·Δf exactly, so only bins 8 and 56 are non-zero."
+    why: A sinusoid that never decays has infinite energy. Its FT/DTFT contains Dirac impulses at ±ω<sub>d</sub>, which a plot can only show as spikes. Laplace and Z are fine with ROC Re s &gt; 0 / |z| &gt; 1.
+    eq: FT{cos(ω<sub>d</sub>t)u(t)} = (π/2)[δ(ω−ω<sub>d</sub>)+δ(ω+ω<sub>d</sub>)] + jω/(ω<sub>d</sub>²−ω²)
+    ml: real(pole(sys)) == 0 → marginal;  isstable returns false
+  - id: onbin
+    cat: 3
+    n: On-bin tone (no leakage)
+    p:
+      sig: 0
+      f0: 1
+      fs: 8
+      M: 32
+      N: 32
+      win: rect
+    sel: dft
+    look: "DF: only k = 4 and k = N − 4 are non-zero; every other bin lands exactly on a zero of the green curve. CT/DT: the record holds exactly 4 whole cycles."
+    why: With σ = 0 and a whole number of cycles in the record, the periodic extension joins seamlessly. The bins then sample the Dirichlet kernel at its peak and at its nulls.
+    eq: f<sub>0</sub> = k<sub>0</sub> f<sub>s</sub>/N &nbsp;⇒&nbsp; X[k] = (N/2)·A(δ[k−k<sub>0</sub>] + δ[k−(N−k<sub>0</sub>)])
+    ml: mod(f0/(fs/N),1) == 0  % integer bin → no leakage (rect window)
+  - id: offbin
+    cat: 3
+    n: Off-bin tone (leakage)
+    p:
+      sig: 0
+      f0: 1.125
+      fs: 8
+      M: 32
+      N: 32
+      win: rect
+    sel: dft
+    look: "DF: the same tone moved half a bin (bin 4.5). Energy now spreads into every bin and the peak drops ≈ 3.9 dB (scalloping). Switch the window to Hann: wider main lobe, much lower sidelobes. Then raise N to see the curve between bins."
+    why: The record ends mid-cycle, so the periodic extension has a jump. Put another way, the bins now sample the Dirichlet kernel between its nulls.
+    eq: "|P<sub>N</sub>(½ bin)| = 1/(N sin(π/2N)) ≈ 2/π &nbsp;(−3.9 dB)"
+    ml: X = fft(x.*hann(N,"periodic").', N)
+  - id: zpad
+    cat: 3
+    n: Zero-padded + Hann
+    p:
+      sig: 0.15
+      f0: 1.3
+      fs: 8
+      M: 16
+      N: 256
+      win: hann
+    sel: fsamp
+    look: "DF: 256 dense bins trace the green windowed-DTFT curve exactly. The peak is still wide because only 16 samples were recorded. Switch to Rectangular: a narrower main lobe but higher sidelobes."
+    why: Zero-padding samples the same DTFT more densely; it cannot add resolution. The window sets the main-lobe vs. sidelobe trade-off.
+    eq: display spacing Δf = f<sub>s</sub>/N &nbsp;vs.&nbsp; resolution ≈ 1/(MT) &nbsp;(≈ 2× for Hann)
+    ml: X = fft(x.*hann(16,"periodic").', 256)
+  - id: short
+    cat: 3
+    n: Record too short to resolve
+    p:
+      sig: 0.05
+      f0: 0.4
+      fs: 8
+      M: 8
+      N: 256
+      win: rect
+    sel: fsamp
+    look: "DF: instead of peaks at 0.4 Hz and fs − 0.4 Hz you get one broad hump centred on DC (it wraps around at fs), and zero-padding to N = 256 doesn't split it. Raise M to about 40 and the two lobes separate."
+    why: The main lobe is ≈ 2/(MT) = 2 Hz wide, wider than the 0.8 Hz gap between +f₀ and −f₀. Resolution comes from record length, not from N.
+    eq: resolvable separation ≳ 1/(MT) = f<sub>s</sub>/M &nbsp;(rect window)
+    ml: M = ceil(fs/df_sep);  X = fft(x(1:M), Nfft)  % Nfft only interpolates
+  - id: trunc
+    cat: 3
+    n: N < M (truncation)
+    p:
+      sig: 0.3
+      M: 128
+      N: 24
+    sel: fsamp
+    look: "DT: samples n ≥ N are greyed out, because fft(x,N) drops them. DF: 24 coarse bins. The green curve is the DTFT of only the first 24 samples."
+    why: Sampling a spectrum at N points implies an N-periodic time signal. MATLAB avoids overlap by truncating. If you instead sample the full record's DTFT at N points, samples n ≥ N wrap onto n mod N (time aliasing).
+    eq: X(e<sup>j2πk/N</sup>) = DFT<sub>N</sub>{ Σ<sub>m</sub> x[n + mN] }
+    ml: fft(x,N) truncates;  fft(sum(reshape(x_padded,N,[]),2)) = full-record DTFT samples
+  - id: wincomp
+    cat: 4
+    n: Windows compared (dB)
+    p:
+      sig: 0
+      f0: 1.3
+      fs: 8
+      M: 64
+      N: 512
+      db: true
+      win: bh
+    sel: dft
+    look: "DF in dB: with Blackman-Harris the sidelobe floor sits ≈ 92 dB below the peak, but the main lobe is ≈ 8 bins wide. Step through the Window menu (Rect −13, Bartlett −27, Hann −31, Hamming −43, Blackman −58, BH −92 dB, Flat-top) and watch the floor and the lobe width trade off. The Window info box gives the live numbers."
+    why: Tapering the record ends removes the jump in the periodic extension, which lowers the sidelobes. The price is a shorter effective record, which means a wider main lobe and a higher noise bandwidth (ENBW).
+    eq: ENBW = M Σw² / (Σw)² &nbsp;bins; &nbsp; noise floor rises 10 log<sub>10</sub>(ENBW) dB
+    ml: wvtool(rectwin(64),hann(64),blackmanharris(64))
+  - id: flattop
+    cat: 4
+    n: Flat-top for amplitude
+    p:
+      sig: 0
+      f0: 1.125
+      fs: 8
+      M: 32
+      N: 32
+      win: flattop
+    sel: dft
+    look: "DF (linear): the tone sits exactly half a bin off, yet the peak bins read the same height an on-bin tone would. Scallop loss is ≈ 0 dB here, vs 3.9 dB for Rect and 1.4 dB for Hann (switch windows to compare). The price: the peak spans about 5 bins."
+    why: The flat-top window's main lobe is nearly flat across ±½ bin, so the amplitude estimate doesn't depend on where the tone falls between bins.
+    eq: amplitude ≈ 2|X[k<sub>peak</sub>]| / Σw &nbsp;(correct within ≈ 0.01 dB)
+    ml: w = flattopwin(M,"periodic"); X = fft(x(:).*w); A = 2*max(abs(X))/sum(w)
+  - id: kaiserb
+    cat: 4
+    n: Kaiser β trade-off
+    p:
+      sig: 0.1
+      f0: 1.3
+      fs: 8
+      M: 64
+      N: 512
+      db: true
+      win: kaiser
+      beta: 2
+    sel: dft
+    look: Drag β from 0 (rectangular) to about 12. The sidelobes drop and the main lobe widens; Window info shows PSL and width live. Around β ≈ 5 it resembles Hamming, and around 8.6 Blackman.
+    why: The Kaiser window approximates the prolate-spheroidal window, which puts the most energy in the main lobe for a given width. β is the single knob between resolution and dynamic range.
+    eq: "filter-design rule (kaiserord): β = 0.1102(A − 8.7) for A &gt; 50 dB"
+    ml: "w = kaiser(M,beta);  % or: [n,Wn,beta] = kaiserord(...)"
+tryThis:
+  - id: alias
+    head: Push f₀ past Nyquist
+    text: The z-pole wraps around through z = −1, the DTFT copies overlap, and the sinc reconstruction rebuilds a slower tone.
+  - id: unstable
+    head: Make σ negative
+    text: The s-pole crosses into the RHP and the z-pole leaves the unit circle (r = e<sup>−σT</sup> &gt; 1). The FT and DTFT stop existing.
+  - id: offbin
+    head: Move the tone off-bin
+    text: Half a bin off, the tone leaks into every bin. Compare with the on-bin case, then try Hann or a larger N.
+  - id: short
+    head: Shorten the record
+    text: With M = 8, the +f₀ and −f₀ lobes merge into one hump no matter how large N is. Resolution needs record length.
+  - id: zohsinc
+    head: Compare ZOH vs sinc
+    text: "Toggle the interpolation: staircase and half-sample lag vs. ideal (non-causal, ringing) reconstruction."
+  - id: fsview
+    head: See the Fourier-series view
+    text: The CT panel shows the periodic extension (period NT) that the DFT quietly assumes, and the jump at each period edge.

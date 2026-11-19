@@ -5,8 +5,9 @@ test('hub lists both pages and links to them', async ({ page }) => {
   const errs = trackErrors(page);
   await page.goto('/index.html');
   for (const app of APPS) await expect(page.locator(`a[href="./${app}/index.html"]`)).toBeVisible();
-  await page.locator('a[href="./transforms/index.html"]').click();
-  await expect(page).toHaveURL(/transforms\/index\.html/);
+  await expect(page.locator('a[href="./transforms/index.html"]')).toHaveCount(0); // retired: folded into linear-systems
+  await page.locator('a[href="./linear-systems/index.html"]').click();
+  await expect(page).toHaveURL(/linear-systems\/index\.html/);
   expect(errs).toEqual([]);
 });
 
@@ -89,9 +90,36 @@ test('every linear-systems dive opens without errors', async ({ page }) => {
   expect(errs).toEqual([]);
 });
 
-test('linear-systems: nodes on the transforms branch link to the transforms app', async ({ page }) => {
+test('linear-systems: boxes on the transforms branch open the six-domains board section on the right pair and preset', async ({ page }) => {
   await open(page, 'linear-systems');
-  const links: string[] = await page.evaluate(() => (window as any).__study.content.maps.flatMap((m: any) => m.nodes.filter((n: any) => n.link && !n.link.href.startsWith('#')).map((n: any) => n.link.href)));
-  expect(links.length).toBeGreaterThanOrEqual(5);
-  expect(links.every((h) => h.startsWith('../transforms/'))).toBe(true);
+  const links: string[] = await page.evaluate(() => (window as any).__study.content.maps.flatMap((m: any) => m.nodes.filter((n: any) => n.link?.href.includes('board')).map((n: any) => n.link.href)));
+  expect(links.length).toBeGreaterThanOrEqual(7);
+  expect(links.every((h) => /^#\/board\?pair=\w+&preset=\w+$/.test(h))).toBe(true);
+  // box 7 (Fourier) → the FT pair
+  await page.locator('[data-testid=map-node][data-node="FOUR"]').dispatchEvent('click');
+  await page.locator('[data-testid=map-panel] a.tbtn[href*="board"]').click();
+  await page.waitForFunction(() => !!(window as any).S && (window as any).MOD?.k);
+  expect(await page.evaluate(() => (window as any).S.sel)).toBe('ft');
+});
+
+test('the retired transforms page redirects into linear-systems, keeping board deep links', async ({ page }) => {
+  await page.goto('/transforms/index.html#/board?pair=lap&preset=over');
+  await expect(page).toHaveURL(/\/linear-systems\/index\.html#\/board\?pair=lap&preset=over$/);
+  await page.waitForFunction(() => !!(window as any).S && (window as any).MOD?.k);
+  expect(await page.evaluate(() => ({ sel: (window as any).S.sel, mode: (window as any).S.mode }))).toEqual({ sel: 'lap', mode: 'over' });
+  await page.goto('/transforms/index.html');
+  await expect(page).toHaveURL(/\/linear-systems\/index\.html#\/board$/);
+  await page.goto('/transforms/index.html#/dive/leakage');
+  await expect(page).toHaveURL(/\/linear-systems\/index\.html#\/dive\/window$/);
+});
+
+test('linear-systems: the windowing and sampling dives open the board on their presets', async ({ page }) => {
+  const errs = trackErrors(page);
+  for (const [dive, pair, preset] of [['window', 'dft', 'offbin'], ['sampling', 'samp', 'zohsinc']] as const) {
+    await open(page, 'linear-systems', `#/dive/${dive}`);
+    await page.locator(`a[href="#/board?pair=${pair}&preset=${preset}"]`).first().click();
+    await page.waitForFunction(() => !!(window as any).S && (window as any).MOD?.k);
+    expect(await page.evaluate(() => (window as any).S.sel)).toBe(pair);
+  }
+  expect(errs).toEqual([]);
 });

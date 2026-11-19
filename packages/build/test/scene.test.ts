@@ -5,10 +5,16 @@ import path from 'node:path';
 import YAML from 'yaml';
 import { loadApp, listApps, repoRoot, ContentError } from '../src';
 
+/** retired apps kept as small, stable test fixtures (packages/build/test/fixtures/apps/<id>) */
+const FIXTURES = path.join(repoRoot, 'packages/build/test/fixtures/apps');
+const srcOf = (a: string) => (fs.existsSync(path.join(repoRoot, 'apps', a, 'subject.yaml')) ? path.join(repoRoot, 'apps', a) : path.join(FIXTURES, a));
+const allApps = () => [...listApps(), ...fs.readdirSync(FIXTURES).filter((a) => !listApps().includes(a))];
+
+
 /** `runningExample.scene` + `exampleScene: {overlays}` on dives and map nodes: schema, catalogue validation, inheritance. Temp copy of a shipped app. */
 function copyApp(app: string): string {
   const dst = fs.mkdtempSync(path.join(os.tmpdir(), 'study-sc-')), target = path.join(dst, 'apps', app);
-  for (const a of listApps()) fs.cpSync(path.join(repoRoot, 'apps', a), path.join(dst, 'apps', a), { recursive: true, filter: (s) => !s.includes('node_modules') });
+  for (const a of allApps()) fs.cpSync(srcOf(a), path.join(dst, 'apps', a), { recursive: true, filter: (s) => !s.includes('node_modules') });
   return target;
 }
 const edit = (file: string, f: (y: any) => void) => { const y = YAML.parse(fs.readFileSync(file, 'utf8')); f(y); fs.writeFileSync(file, YAML.stringify(y)); };
@@ -48,7 +54,7 @@ describe('example scene content field', () => {
   });
   it('shipped: linear-systems and transforms give every dive an exampleScene that validates', () => {
     for (const [app, scene] of [['linear-systems', 'speaker'], ['transforms', 'tine']] as const) {
-      const { content, warnings } = loadApp(path.join(repoRoot, 'apps', app));
+      const { content, warnings } = loadApp(srcOf(app));
       expect(content.subject.runningExample?.scene?.id).toBe(scene);
       for (const d of content.dives) expect(d.exampleScene?.overlays?.length, `${app}/${d.id}`).toBeGreaterThan(0);
       expect(warnings.filter((w) => /exampleScene/.test(w))).toEqual([]);

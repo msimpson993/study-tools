@@ -5,11 +5,17 @@ import path from 'node:path';
 import YAML from 'yaml';
 import { loadApp, listApps, repoRoot, ContentError } from '../src';
 
+/** retired apps kept as small, stable test fixtures (packages/build/test/fixtures/apps/<id>) */
+const FIXTURES = path.join(repoRoot, 'packages/build/test/fixtures/apps');
+const srcOf = (a: string) => (fs.existsSync(path.join(repoRoot, 'apps', a, 'subject.yaml')) ? path.join(repoRoot, 'apps', a) : path.join(FIXTURES, a));
+const allApps = () => [...listApps(), ...fs.readdirSync(FIXTURES).filter((a) => !listApps().includes(a))];
+
+
 /** quiz.yaml `figure:` (schema + build validation + pass-through). Works on a temp copy of a shipped app. */
 function copyApp(app: string): string {
   const dst = fs.mkdtempSync(path.join(os.tmpdir(), 'study-qf-')), target = path.join(dst, 'apps', app);
-  fs.cpSync(path.join(repoRoot, 'apps', app), target, { recursive: true, filter: (s) => !s.includes('node_modules') });
-  for (const other of listApps()) if (other !== app) fs.cpSync(path.join(repoRoot, 'apps', other), path.join(dst, 'apps', other), { recursive: true, filter: (s) => !s.includes('node_modules') }); // sibling apps for cross-app link checks
+  fs.cpSync(srcOf(app), target, { recursive: true, filter: (s) => !s.includes('node_modules') });
+  for (const other of allApps()) if (other !== app) fs.cpSync(srcOf(other), path.join(dst, 'apps', other), { recursive: true, filter: (s) => !s.includes('node_modules') }); // sibling apps for cross-app link checks
   return target;
 }
 const edit = (file: string, f: (y: any) => void) => { const y = YAML.parse(fs.readFileSync(file, 'utf8')); f(y); fs.writeFileSync(file, YAML.stringify(y)); };
@@ -22,7 +28,7 @@ describe('quiz figure field', () => {
     const dir = copyApp(APP); edit(path.join(dir, 'content/quiz.yaml'), (y) => { y[0].figure = good; });
     const { content } = loadApp(dir);
     expect(content.quiz[0].figure).toEqual(good); expect(content.quiz[1].figure).toBeUndefined();
-    expect(loadApp(path.join(repoRoot, 'apps', APP)).content.quiz.every((q) => q.figure === undefined)).toBe(true);
+    expect(loadApp(srcOf(APP)).content.quiz.every((q) => q.figure === undefined)).toBe(true);
   });
   it.each([
     ['missing alt', { id: 'a', params: {} }, /alt/],

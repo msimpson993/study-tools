@@ -29,7 +29,7 @@ for (const v of VIEWS) {
       await page.goto('/index.html'); await setTheme(page, theme);
       await snap(page, `hub-${tag}`, true);
 
-      for (const app of ['transforms', 'linear-systems']) {
+      for (const app of ['linear-systems']) {
         await open(page, app); await setTheme(page, theme);
         await snap(page, `${app}-map-${tag}`);
         const maps: { title: string }[] = await page.evaluate(() => (window as any).__study.content.maps);
@@ -51,8 +51,8 @@ for (const v of VIEWS) {
         await snap(page, `${app}-quiz-${tag}`);
       }
 
-      // transforms board: collapsed, expanded, pair view
-      await open(page, 'transforms', '#/board'); await setTheme(page, theme);
+      // the six-domains board (a section of linear-systems since the transforms page was folded in): collapsed, expanded, pair view
+      await open(page, 'linear-systems', '#/board'); await setTheme(page, theme);
       await page.waitForFunction(() => !!(window as any).S);
       await snap(page, `transforms-board-${tag}`);
       await page.evaluate("__apply('alias')");
@@ -79,7 +79,7 @@ for (const v of VIEWS) {
 }
 
 // New visuals: every live figure (desktop figure card + a phone dive page) plus the running-example popup. Run: npm run shots
-for (const app of ['linear-systems', 'transforms', 'control-systems', 'pid-tuning']) {
+for (const app of ['linear-systems', 'control-systems', 'pid-tuning']) {
   test(`shots visuals ${app}`, async ({ browser }) => {
     test.setTimeout(240_000);
     const dir = path.join(OUT, 'viz'); fs.mkdirSync(dir, { recursive: true });
