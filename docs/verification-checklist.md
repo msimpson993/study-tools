@@ -14,6 +14,8 @@ Look at it (screenshots, `npm run shots`, then open `shots/*.png`):
 - [ ] Explanations collapsed on load; "More controls" collapsed; no auto-expanding boxes.
 - [ ] Figures: expanded view covers only the plot area; sliders stay visible and live; pair view shows both directions; legend expands; axes are named.
 - [ ] Every symbol and acronym on screen is defined (glossary drawer).
+- [ ] Every map figure/panel has a caption stating what it shows and what it demonstrates; the reader never has to guess.
+- [ ] Each pop-up first answers its incoming edge question directly; no unexplained leaps between boxes.
 - [ ] Single-file output opens from `file://` with no network (`dist/<app>/index.html`).
 - [ ] Ported pages: `expect:` counts unchanged, every legacy feature still present (compare to the original side by side).
 - [ ] CI green on GitHub; Pages URL returns 200 for the hub and each app.
