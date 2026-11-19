@@ -8,7 +8,7 @@ level: Conceptual
 check: [q-lab, ck-lab-1]
 ---
 
-**The question:** can I reproduce every claim in the PID series myself? This is the side box *PID Lab*, under *Tuning by hand*.
+**The question:** can I reproduce every claim in the PID series myself? This is the side box *PID Lab*, under *Choosing the three gains*.
 
 ### The big idea
 
@@ -34,7 +34,7 @@ P 1000; PD (1000, 0, 120); tuned (2000, 1000, 200); too much I (2000, 3000, 200)
 
 ### Worked example: on the dish
 
-1. Reproduce the three *Tuning by hand* panels.
+1. Reproduce the three *Choosing the three gains* panels.
 2. Make the dish meet "OS < 5 %, wind peak < 0.6°, recover < 10 s" within 200 N·m. One answer: (2000, 500, 200), giving 4.8 %, 0.57° and 9.7 s.
 
 ### Frequency view (*preview*)
@@ -46,4 +46,4 @@ Bode plots are not in LN1/2/4; this panel previews how the gains shape the loop'
 
 ### What it can't do
 
-A linear plant with ideal limits: no gear backlash or stiction (see *When tuning goes wrong*: nonlinear).
+A linear plant with ideal limits: no gear backlash or stiction (see *When it misbehaves*: nonlinear).

@@ -8,7 +8,7 @@ level: Worked calculation
 check: [q-methods, ck-zn-1]
 ---
 
-**The question:** is there a recipe that turns a couple of measurements into three gains? This is the side box *Recipes*, under *Tuning by hand*.
+**The question:** is there a recipe that turns a couple of measurements into three gains? This is the side box *Recipes*, under *Choosing the three gains*.
 
 ### The big idea
 

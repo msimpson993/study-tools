@@ -12,7 +12,7 @@ maps:
   - Design from the inside (state space)
   nodes:
   - id: root
-    label: How do we make an approximately-known system do what we command?
+    label: How do we make a system we only know approximately do what we command, and predict how it will behave before we build it?
     kind: terminal
     short: 'Write the plant down as a model, learn to predict its response from a few numbers, then wrap it in feedback: measure the output, compare it with the command, and correct the input. Feedback is what makes a rough model good enough.'
     dive: overview
@@ -850,7 +850,7 @@ maps:
   - Design from the inside (state space)
   nodes:
   - id: root
-    label: How do we make an approximately-known system do what we command?
+    label: How do we make a system we only know approximately do what we command, and predict how it will behave before we build it?
     kind: terminal
     short: 'Write the plant down as a model, learn to predict its response from a few numbers, then wrap it in feedback: measure the output, compare it with the command, and correct the input. Feedback is what makes a rough model good enough.'
     dive: overview
@@ -1917,6 +1917,7 @@ maps:
       **What we want:** N̄ = 1/(DC gain), and why only integral action makes the final value independent of the model.
   - from: MODEL
     to: ORDER
+    side: true
     label: why two?
     question: Why does the house have exactly two poles?
     idea: 'One pole per independent energy store: two rooms.'
@@ -1928,6 +1929,7 @@ maps:
       **What we want:** A counting rule based on the physical parts.
   - from: MODEL
     to: CIRC
+    side: true
     label: circuits?
     question: How do we get G(s) for a circuit or an op-amp stage?
     idea: Impedances R, sL, 1/(sC) in the usual divider and op-amp rules; the house is an RC circuit.
@@ -1939,6 +1941,7 @@ maps:
       **What we want:** The same G(s) recipe for electrical parts.
   - from: POLES
     to: INV
+    side: true
     label: back to time
     question: How do we get y(t) back from Y(s)?
     idea: 'Partial fractions: one term per pole, each a known motion.'
@@ -1950,6 +1953,7 @@ maps:
       **What we want:** A mechanical way to invert.
   - from: POLES
     to: PLANE
+    side: true
     label: picture it
     question: Is there a picture of G(s) over the whole s-plane?
     idea: '|G| as a landscape: poles are peaks and zeros are pits; the jω axis gives the frequency response.'
@@ -1961,6 +1965,7 @@ maps:
       **What we want:** One picture that holds poles, zeros and frequency response.
   - from: FIRST
     to: REDUCE
+    side: true
     label: shrink it
     question: Can we replace a high-order model with a smaller one that behaves the same?
     idea: Drop far poles keeping the DC gain, or match the low-frequency response (M₂q = Δ₂q).
@@ -1972,6 +1977,7 @@ maps:
       **What we want:** Two recipes, with a worked check.
   - from: SPECS
     to: DOM
+    side: true
     label: more poles?
     question: Real plants have more poles. When do the formulas still work?
     idea: 'When one pair is much slower: the wheel hops 12.8× faster than the body.'
@@ -1983,6 +1989,7 @@ maps:
       **What we want:** A rule for when to ignore them.
   - from: LOOP
     to: BLOCKALG
+    side: true
     label: reduce it
     question: The diagram has several loops and inputs. How do we get one transfer function?
     idea: Series ×, parallel +, loop = forward/(1 + loop), one input at a time.
@@ -1994,6 +2001,7 @@ maps:
       **What we want:** Rules that always reduce to one block.
   - from: PGAIN
     to: MENU
+    side: true
     label: which controller?
     question: What can the controller box be?
     idea: On/off, P, I, PI, PD or PID, written with Kp, Ti, T_D in the notes.
@@ -2005,6 +2013,7 @@ maps:
       **What we want:** The menu and its notation.
   - from: PGAIN
     to: SPEED
+    side: true
     label: faster too?
     question: Besides accuracy, does closing the loop change how fast the plant responds?
     idea: 'Yes: τ shrinks by 1 + loop gain (dish speed 0.5 → 0.1 s).'
@@ -2016,6 +2025,7 @@ maps:
       **What we want:** The speed-up factor.
   - from: SSE
     to: TYPE
+    side: true
     label: moving target?
     question: What about tracking a moving satellite, and is there a shortcut by counting integrators?
     idea: System type = integrators in L; type 1 leaves ramp error ω/K_v.
@@ -2027,6 +2037,7 @@ maps:
       **What we want:** A lookup by type.
   - from: INT
     to: WINDUP
+    side: true
     label: limits?
     question: What if the motor can't give the torque the controller asks for?
     idea: The integrator winds up while the torque is clipped; anti-windup stops it.
@@ -2038,6 +2049,7 @@ maps:
       **What we want:** The symptom and the fix.
   - from: TUNE
     to: LAB
+    side: true
     label: try it
     question: Can I feel the trade-offs myself?
     idea: 'The PID Lab: sliders on the dish, with wind, noise and a torque limit.'
@@ -2049,6 +2061,7 @@ maps:
       **What we want:** A live, honest sandbox.
   - from: TUNE
     to: METHODS
+    side: true
     label: recipes?
     question: Is there a systematic way to find the gains?
     idea: By hand, Ziegler–Nichols, or the PID Tuner, all as starting points.
@@ -2060,6 +2073,7 @@ maps:
       **What we want:** Recipes and their limits.
   - from: TUNE
     to: FAIL
+    side: true
     label: it misbehaves
     question: The loop misbehaves. How do I tell what's wrong and which knob fixes it?
     idea: Match the picture to one of 14 symptom cards.
@@ -2071,6 +2085,7 @@ maps:
       **What we want:** A diagnostic lookup.
   - from: TUNE
     to: INDEX
+    side: true
     label: one number?
     question: Can one number say which gain is best?
     idea: Minimise ISE, IAE or ITAE; each prefers different damping.
@@ -2082,6 +2097,7 @@ maps:
       **What we want:** A score and its optimum.
   - from: STATE
     to: SS2TF
+    side: true
     label: connect them
     question: How do state space and the transfer function connect?
     idea: G = C(sI − A)⁻¹B + D, and the poles are eig(A).
@@ -2093,6 +2109,7 @@ maps:
       **What we want:** The formula and the realization forms.
   - from: SF
     to: ACK
+    side: true
     label: formula?
     question: Is there a formula for K that skips matching coefficients?
     idea: 'Ackermann: K = [0 … 1] Pc⁻¹ q(A).'

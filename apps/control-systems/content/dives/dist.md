@@ -8,7 +8,7 @@ level: Some algebra
 check: [q-dist, ck-dist-1, ck-dist-2]
 ---
 
-**The question:** back at the house, what does feedback do about a push we didn't command, like a cold front? This is the box *A push we didn't command*, after *Tuning by hand*.
+**The question:** back at the house, what does feedback do about a push we didn't command, like a cold front? This is the box *A push we didn't command*, after *Choosing the three gains*.
 
 ### The big idea
 

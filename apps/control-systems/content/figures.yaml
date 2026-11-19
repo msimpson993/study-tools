@@ -1997,7 +1997,7 @@
         Ki: 1000
         Kd: 400
     - id: kick
-      label: "kick: dm off"
+      label: "kick: D on the error"
       set:
         plant: dish
         Kp: 2000
@@ -2005,7 +2005,7 @@
         Kd: 200
         dm: false
     - id: wnone
-      label: windup 2 rad, aw none
+      label: windup 2 rad, no anti-windup
       set:
         plant: dish
         Kp: 2000
@@ -2014,7 +2014,7 @@
         step: 2
         aw: none
     - id: wclamp
-      label: windup 2 rad, aw clamp
+      label: windup 2 rad, clamping anti-windup
       set:
         plant: dish
         Kp: 2000

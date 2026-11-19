@@ -1,14 +1,14 @@
 ---
 id: failures
 order: 21
-title: "When tuning goes wrong: 14 symptom cards"
+title: "When it misbehaves: 14 symptom cards"
 category: pid
 neighbors: [tuning, lab, windup, derivative]
 level: Conceptual
 check: [q-fail, ck-fail-1]
 ---
 
-**The question:** the loop misbehaves; which symptom is it, what causes it, and which knob fixes it? This is the side box *When tuning goes wrong*, under *Tuning by hand*.
+**The question:** the loop misbehaves; which symptom is it, what causes it, and which knob fixes it? This is the side box *When it misbehaves*, under *Choosing the three gains*.
 
 ### The big idea
 
@@ -16,12 +16,9 @@ Most PID trouble falls into a handful of patterns you can recognise from the plo
 
 ### See it
 
-Start with the most common surprise on a real motor: windup after a long slew. The other 13 cards follow, each with its own figure.
+The table sums up all 14 cards; each card below has its own figure, in order from A1 to A14.
 
-```figure:fail-windup
-```
-
-### The cards at a glance
+#### The cards at a glance
 
 | card | symptom | cause | fix | in the chain |
 |---|---|---|---|---|
@@ -29,7 +26,7 @@ Start with the most common surprise on a real motor: windup after a long slew. T
 | A2 · Steady-state offset | sits off-target in wind | no I (dish: 1.15° at Kp 1000) | add Ki | [Why it stops short](#/dive/sse) |
 | A3 · Overshoot | big overshoot | too little Kd or too much Ki (dish: 80 % at (1000, 500, 0)) | add Kd or cut Ki | [Derivative action](#/dive/derivative) |
 | A4 · Sustained oscillation | keeps ringing | Ki near the bound (2 + 0.1Kd)Kp | back off | [Integral action](#/dive/integral) |
-| A5 · Poor disturbance rejection | blown off by gusts | gains too low (dish: 2.08° at (500, 250, 100)) | raise Kp, Ki and Kd | [Tuning by hand](#/dive/tuning) |
+| A5 · Poor disturbance rejection | blown off by gusts | gains too low (dish: 2.08° at (500, 250, 100)) | raise Kp, Ki and Kd | [Choosing the three gains](#/dive/tuning) |
 | A6 · Noisy, jittery actuator | jittery torque | Kd too high, no filter | lower N_f or Kd | [The price of feedback](#/dive/fb) |
 | A7 · Integrator windup | huge overshoot after a long slew | integrator windup (dish: 21.6 % at 2 rad) | anti-windup | [When the push hits its limit](#/dive/windup) |
 | A8 · Derivative kick | torque spike at a command step | D on error | D on measurement | [Derivative action](#/dive/derivative) |
@@ -112,9 +109,12 @@ Start with the most common surprise on a real motor: windup after a long slew. T
 
 #### A7 · Integrator windup
 
-**Symptom:** huge overshoot after a long slew. **Cause:** integrator windup. **Fix:** anti-windup. Its figure is the one under *See it* above.
+**Symptom:** huge overshoot after a long slew. **Cause:** integrator windup. **Fix:** anti-windup.
 
 **On the dish:** a 2 rad slew at the 200 N·m limit with no anti-windup: 21.6 % overshoot, Tₛ 4.64 s. Clamping: 3.8 %, 0.79 s.
+
+```figure:fail-windup
+```
 
 <a id="fail-kick"></a>
 

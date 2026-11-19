@@ -8,7 +8,7 @@ level: Conceptual
 check: [q-tune, ck-tune-1, ck-tune-2]
 ---
 
-**The question:** with P, I and D each helping one thing and hurting another, how do we pick the three numbers? This is the box *Tuning by hand*, after *Derivative action*.
+**The question:** with P, I and D each helping one thing and hurting another, how do we pick the three numbers? This is the box *Choosing the three gains*, after *Derivative action*.
 
 ### The big idea
 
@@ -47,9 +47,9 @@ Gc = Kp + Ki/s + Kd·s  (D on measurement):  s³ + (2 + 0.1Kd)s² + 0.1Kp s + 0.
 ### Where next
 
 - Recipes and tools: *Recipes: Ziegler–Nichols and PID Tuner*.
-- When it misbehaves: *When tuning goes wrong*.
+- Symptoms and fixes: *When it misbehaves*.
 - Hands-on: the *PID Lab*.
-- One-number scores: *Performance indices*.
+- One-number scores: *The best gain in one number*.
 
 ### What it can't do
 
