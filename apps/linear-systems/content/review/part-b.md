@@ -2,7 +2,7 @@
 id: part-b
 order: 2
 title: "Practice exam, part B: state space"
-summary: "Step-by-step walkthroughs of B1 (companion form: eigenvectors, Φ(t), general solution, impulse response), B2 (eigenvalues, Φ(t), and controllability/observability with parameters, by rank and by PBH) and B3 (phase-variable realization), with the notes on what B2 and B3 leave ambiguous. The 9 matching practice variants make up this page's self-test."
+summary: "Step-by-step walkthroughs of B1 (companion form: eigenvectors, Φ(t), general solution, impulse response), B2 (eigenvalues, Φ(t), and controllability/observability with parameters, by rank and by PBH) and B3 (phase-variable realization), each with a picture, with the notes on what B2 and B3 leave ambiguous. The 9 matching practice variants make up this page's self-test."
 covers: "Practice problems B1–B3 and variants E1–E3, CO1–CO3, R1–R3"
 quizTag: part-b
 quizSubsets:
@@ -40,6 +40,10 @@ $$y(t)=\Big(\tfrac13e^{t}-e^{-t}+\tfrac53e^{-2t}\Big)u(t)$$
 
 **Picture it.** Three modes on the real axis at +1, −1 and −2. The impulse kicks the state to $B = e_3$; that point splits into the three eigen-directions, each evolving at its own rate. The +1 mode is unstable, so $y$ eventually grows like $e^t/3$. The zeros at $\pm j$ (from $C = [1\ 0\ 1]$) cancel no pole, so all three modes show in $y$.
 
+```picture:pic-rev-b1 Left: poles +1, −1, −2 and zeros ±j. Right: the impulse response y(t), which heads for eᵗ/3.
+s-plane with one unstable pole at +1, two stable poles and zeros on the imaginary axis; y(t) starts at 1 and grows like e to the t over 3.
+```
+
 **Traps.** Signs when reading the polynomial off the last row. Forgetting $u(t)$. Mis-normalised left eigenvectors (check the matrices add to $I$). Calling the system stable because two of three modes decay.
 
 ### B2. Eigenvalues, Φ(t), and parametric controllability and observability
@@ -66,6 +70,10 @@ The first input column $(-1, 1, 1)$ already reaches all three modes, so no condi
 
 **Picture it.** Three modes, each a direction $v_i$ that decays at its own rate. A sensor $y = fx_2 + gx_3$ is a projection; it is blind to a mode exactly when that direction is perpendicular to $[0\ f\ g]$. The −3 mode points straight along $x_3$, so $g = 0$ hides it. Controllability is the dual: an input column must not be perpendicular to any *left* eigenvector.
 
+```picture:pic-rev-b2 The eigenvectors seen in the (x₂, x₃) plane, with the sensor f = 1, g = 0: the λ = −3 mode lies on the sensor's blind line, so it reads 0.
+Three arrows for the eigenvectors; the sensor direction along x₂ and its perpendicular blind line along x₃, which contains the λ = −3 eigenvector.
+```
+
 **Traps.** Right eigenvectors for controllability (use left ones, or rank $[A-\lambda I,\ B]$). Writing "controllable iff $b\ne\dots$" by habit when the condition is vacuous. A $3\times6$ controllability matrix needs *some* nonzero $3\times3$ minor, not a particular one.
 
 ### B3. Phase-variable (controllable canonical) realization
@@ -87,5 +95,9 @@ This page uses the phase-variable ordering ($x_1$ is the internal signal, $A$'s 
 ```
 
 **Picture it.** A chain of three integrators ($x_3 \to x_2 \to x_1$). The input enters at the top, every integrator's output feeds back with weight $-a_k$ (the poles), and the output taps the chain with weights 3, 22, 24 (the zeros). Zeros live in $C$; poles live in $A$'s last row.
+
+```picture:pic-rev-b3 The phase-variable realization: three integrators, feedback −2, −19, −8 into the input sum (A's last row), output taps 3, 22, 24 (C).
+Block diagram: u into a sum, three integrators in a chain giving x₃, x₂, x₁, each fed back with its gain, and the output summed from the taps.
+```
 
 **Traps.** Missing minus signs in the last row. $C$ in the reverse order for your ordering. Not expanding the numerator. If $\deg$ num $= \deg$ den, divide first and put the quotient in $D$ (variant R2).
