@@ -1,0 +1,242 @@
+
+======== [G] Second-order spec table: %OS = 100 exp(-zeta pi / sqrt(1-zeta^2))
+zeta=0.2: 52.7%  zeta=0.25: 44.4%  zeta=0.3: 37.2%  zeta=0.4: 25.4%  zeta=0.5: 16.3%  zeta=0.6:  9.5%  zeta=0.7:  4.6%  zeta=0.8:  1.5%  zeta=1:  0.0%
+Ts = 4/(zeta wn) (LN1 slide 59), Tr1 = (2.16 zeta + 0.6)/wn for 0.3<=zeta<=0.8 (slide 60), Tp = pi/wd
+
+======== [H1] House model (sceneLsModels HOUSE): physics -> ODE -> G(s)
+b = 3600/C_th = 0.0036 K/h per W; between-room conductance = C_th*1/h = 277.8 W/K; leak to outdoors = C_th*0.2/h = 55.6 W/K per room
+room 1: x1' = -1.2 x1 + x2 + b u ;  room 2: x2' = x1 - 1.2 x2
+eliminate x1:  x2'' + 2.4 x2' + 0.44 x2 = b u   (check: det(sI-A) = [1.   2.4  0.44] )
+eig(A) = [-2.2 -0.2] 1/h -> time constants 5.0 h and 27.27272727272727 min (average mode, difference mode)
+G2(s) = X2/U = 0.0036/(s^2+2.4s+0.44) = 0.0036/((s+0.2)(s+2.2)); DC gain = 0.008182 K/W = 8.182 K per kW
+G1(s) = X1/U = 0.0036(s+1.2)/((s+0.2)(s+2.2)): zero at -1.2 between the poles; DC 0.009818 K/W
+2.5 kW steady state: room 1 24.55 K, room 2 20.45 K above outdoor -> 29.5 C / 25.5 C at 5 C outside
+power to hold room 2 at 15 K above outdoor (20 C): 1833 W; at 13 K (18 C): 1589 W
+both poles real and negative -> step response can never overshoot (open loop)
+
+======== [H2] House step: 2.5 kW heater switched on, room 2
+partial fractions: x2(t) = 20.4545 -22.5000 e^(-0.2t) +2.0455 e^(-2.2t)  (sum of residues -1.3e-15)
+x2(1 h) = 2.260 K, x2(5 h) = 12.177 K (59.5 % of final), x2(10 h) = 17.410 K
+metrics: final=20.45, peak=20.45, OS=0, Tp=60, Ts=20.04, Tr1090=11.06
+first-order stand-in (keep DC gain, drop -2.2): 20.45(1-e^(-t/5)): max gap 1.463 K; its Ts = 4*5 = 20 h
+room 1 metrics (zero at -1.2, still no overshoot): final=24.55, peak=24.55, OS=0, Tp=60, Ts=19.13, Tr1090=10.75
+
+======== [H3] House model reduction (frequency matching, LN2 31-33) and dominance ratio
+pole ratio 2.2/0.2 = 11.0 (> 5-10x rule) -> dominant pole -0.2 /h
+G2 = 0.00818/(1 + 5.4545s + 2.2727s^2): Delta2 = 25.2066 -> d1 = 5.0206 h  (dropping -2.2 gives 5 h)
+freq-matched first order 20.45/(5.021s+1): max step gap 1.447 K
+
+======== [H4] Thermostat in room 2: P vs PI, small changes around the operating point
+P, Kp=500 W/K: L(0)=4.091, e_ss = 1/(1+L(0)) = 0.1964; poles [-1.2+0.8944j -1.2-0.8944j], wn=1.497/h, zeta=0.802; setpoint step: final=0.8036, peak=0.8154, OS=1.477, Tp=3.512, Ts=2.519, Tr1090=1.653
+P, Kp=1100 W/K: L(0)=9.000, e_ss = 1/(1+L(0)) = 0.1000; poles [-1.2+1.7205j -1.2-1.7205j], wn=2.098/h, zeta=0.572; setpoint step: final=0.9, peak=1.001, OS=11.18, Tp=1.826, Ts=2.805, Tr1090=0.8527
+  -> feedback makes the house overshoot even though the open-loop house cannot
+PI, Kp=1100 W/K, Ki=200 W/(K h) (Ti = 5.5 h): poles [-1.11+1.6638j -1.11-1.6638j -0.18+0.j    ]; setpoint step: final=1, peak=1.114, OS=11.37, Tp=1.892, Ts=3.907, Tr1090=0.8866
+PI cubic bound (added): 2.4*(0.44+b Kp) > b Ki  ->  Ki < 2933.3333333333335 W/(K h)
+cold front -5 K, open loop (heater fixed): room 2 change after 24 h = -4.959 K, worst = -4.959 K, extra heater power at 24 h = 0 W, peak extra 0 W
+cold front -5 K, P 1100: room 2 change after 24 h = -0.500 K, worst = -0.605 K, extra heater power at 24 h = 550 W, peak extra 666 W
+cold front -5 K, PI 1100/200: room 2 change after 24 h = -0.007 K, worst = -0.581 K, extra heater power at 24 h = 611 W, peak extra 737 W
+steady extra heat for -5 K outside: 5/(b/0.44) = 611 W (= 5 K x 2 x 55.6 W/K)
+P droop prediction: 5 K x S(0) = 5/(1+9) = 0.5 K
+
+======== [H5] Sensitivity: insulation 20 % worse (leak 0.2 -> 0.24 /h)
+G2(0): 0.008182 -> 0.006696 K/W (-18.15 %): open loop the room loses 18.2 % of its rise
+P (Kp=1100): T(0) 0.9000 -> 0.8805 = -2.17 %; first-order prediction S(0) x dG/G = 0.1 x -18.15 % = -1.82 %
+PI: T(0) = 1 for any G(0) > 0 -> 0 % at steady state
+P 1100: |S| peak 1.331 at 2.577 rad/h; |C| peak 0.959 at 1.233 rad/h; crossover 1.480 rad/h
+
+======== [H6] Sensor error: thermostat reads 1 K high (sun on the sensor)
+P 1100: room settles C(0) x 1 K = 0.900 K too cold;  PI: C(0) = 1 -> the full 1 K too cold
+
+======== [H7] House controllability / observability (used in the CC dive)
+heater room 1, sensor room 2: det Pc = 1.296e-05 (= b^2), det Po = -1.000 -> both fine
+two equal heaters, one dial (B = [b, b]): AB = [-0.0007 -0.0007] parallel to B -> det Pc = -1.2e-21: the difference mode (-2.2) cannot be steered
+sensor reads the average of the rooms: det Po = 0.0e+00: the difference mode is invisible
+
+======== [S1] Passive quarter car: m=400 kg, k=25.6 kN/m, c=1.6 kN s/m
+s^2 + (c/m) s + k/m = s^2 + 4.0 s + 64.0: wn = 8.0 rad/s (fn = 1.273 Hz), zeta = 0.25, sigma = 2.0, wd = sqrt(60) = 7.7460 rad/s
+poles -2 +/- j7.7460; formulas: %OS = 44.43, Tp = pi/wd = 0.4056 s, Ts = 4/sigma = 2.0 s, period 2pi/wd = 0.811 s
+static sag under its own weight: m g / k = 15.33 cm;  c_crit = 2 sqrt(k m) = 6400 N s/m
+G_u(s) = Z/U = 1/(400 s^2 + 1600 s + 25600) = 0.0025/(s^2+4s+64); DC = 1/k = 39.0625 um/N
+G_w(s) = Z/W = (c s + k)/(m s^2 + c s + k) = 4(s+16)/(s^2+4s+64): zero at -16, DC 1
+1 kN load step (about 100 kg of luggage): sag 3.906 cm, final=0.03906, peak=0.05642, OS=44.43, Tp=0.4056, Ts=1.765, Tr1090=0.1575  -> worst dip 5.64 cm
+5 cm road step (driveway lip): final=0.05, peak=0.07531, OS=50.63, Tp=0.3403, Ts=1.711, Tr1090=0.1309  -> zero adds overshoot beyond the 44.4 % formula
+tuned-damper comparison: c for zeta = 0.4 / 0.7: 2560.0 / 4480.0 N s/m
+   zeta=0.4: load step final=0.03906, peak=0.04898, OS=25.38, Tp=0.4285, Ts=1.051, Tr1090=0.1829; road step final=0.05, peak=0.06818, OS=36.35, Tp=0.3162, Ts=1.247, Tr1090=0.1233
+   zeta=0.7: load step final=0.03906, peak=0.04086, OS=4.599, Tp=0.5499, Ts=0.7474, Tr1090=0.2658; road step final=0.05, peak=0.06051, OS=21.03, Tp=0.2785, Ts=0.6103, Tr1090=0.1061
+linear-systems car corner for comparison (CAR/4): m=350, k=20000, c=1600 -> fn = 1.203 Hz, zeta = 0.302
+
+======== [S2] Dominant poles: add the wheel (unsprung 40 kg, tyre 200 kN/m)
+poles [ -1.5985 -7.4473j  -1.5985 +7.4473j -20.4015-71.4095j -20.4015+71.4095j] ; body pair vs single-mass -2 +/- j7.746
+wheel hop: |p| = 74.27 rad/s (11.82 Hz), zeta = 0.275; decay ratio 12.8x faster than the body
+load step on the 2-DOF model: final=0.03906, peak=0.05892, OS=50.83, Tp=0.4294, Ts=2.251, Tr1090=0.1596 (single mass: OS 44.43, Ts 1.765)
+
+======== [S3] The passive suspension is a feedback loop (LOOP box)
+forward 1/(m s^2), feedback (c s + k) on (w - z): T = Gf/(1+L) with Gf = L = (cs+k)/(ms^2) -> (cs+k)/(ms^2+cs+k)  (check: same as G_w)
+force u at the body: Z/U = (1/ms^2)/(1+L) = 1/(ms^2+cs+k): same denominator 1+L
+
+======== [S4] State space, x = [z, z']
+A = [[0.0, 1.0], [-64.0, -4.0]]  B = [0.0, 0.0025]  C = [1, 0]; eig(A) = [-2.+7.746j -2.-7.746j]
+C(sI-A)^-1 B: (array([[0.    , 0.    , 0.0025]]), array([ 1.,  4., 64.]))
+released 5 cm high at rest: z(0.4 s) = -2.219 cm (first swing below)
+   min z = -2.22 cm at t = 0.41 s
+
+======== [S5] Controllability / observability of the suspension
+Pc = [[0.0, 0.0025], [0.0025, -0.01]], det -6.250e-06 (= -1/m^2); Po = [[1.0, 0.0], [0.0, 1.0]], det 1.0; velocity-only sensor det Po = 63.99999999999998
+
+======== [S6] Active suspension: state feedback u = -K x (LN4 13-21)
+design: zeta = 0.8, wn = 10.0 -> sigma = 8, wd = 6, poles -8 +/- j6, phi(s) = s^2 + 16 s + 100; Ts = 4/8 = 0.5 s, %OS = 1.52
+A - BK = [[0,1],[-(k+k1)/m, -(c+k2)/m]] -> (k+k1)/m = 100, (c+k2)/m = 16 -> k1 = 14400.0 N/m, k2 = 4800.0 N s/m
+Ackermann K = [[14400.  4800.]]  eig(A-BK) = [-8.+6.j -8.-6.j]
+1 kN load step with SF: final=0.025, peak=0.02538, OS=1.516, Tp=0.5236, Ts=0.3756, Tr1090=0.2467 (sag 2.50 cm instead of 3.91 cm)
+5 cm x 0.2 s speed bump, passive: peak body rise 3.89 cm, worst dip -1.73 cm, peak |accel| 5.71 m/s^2, |z| after 1 s <= 0.770 cm, peak |u| 0 N
+5 cm x 0.2 s speed bump, active SF: peak body rise 1.93 cm, worst dip -0.04 cm, peak |accel| 3.51 m/s^2, |z| after 1 s <= 0.001 cm, peak |u| 987 N
+
+======== [S7] Observer: estimate velocity from the position sensor (LN4 22-29)
+5x the controller poles (-40+30j): L = [  76. 2132.]  (char s^2 + (4+l1) s + (64 + 4 l1 + l2))
+2x the controller poles (-16+12j): L = [ 28. 224.]  (char s^2 + (4+l1) s + (64 + 4 l1 + l2))
+10x the controller poles (-80+60j): L = [ 156. 9312.]  (char s^2 + (4+l1) s + (64 + 4 l1 + l2))
+
+======== [S8] Separation and reference input (LN4 30-44)
+eigenvalues of [[A-BK, BK],[0, A-LC]] = [-40.-30.j -40.+30.j  -8. -6.j  -8. +6.j]
+Nbar = 1/(-C(A-BK)^-1 B) = 40000.0 N/m (= k + k1)
+ride height +2 cm, estimate starts 1 cm off: max |z_obs - z_ideal| = 0.441 cm at 0.144 s; at 0.5 s 0.0144 cm; z(2 s) = 2.000 cm
+ride height +2 cm: initial force Nbar r = 800 N; steady force Nbar r - k1 r = 512 N (= k x 2 cm = 512 N)
+SF step (Nbar applied): final=1, peak=1.015, OS=1.516, Tp=0.5236, Ts=0.3756, Tr1090=0.2467
+spring 10 % stiffer than the model: z_ss/r = Nbar/(k'+k1) = 0.9398 -> 6.0 % short
+
+======== [P1] Antenna positioner: J=10 kg m^2, B=20 N m s/rad, G(s) = 1/(J s^2 + B s) = 0.1/(s(s+2))
+speed loop alone: Omega/T = 1/(Js+B) = 0.1/(s+2): tau = J/B = 0.5 s; one free integrator (angle) -> type 1
+P, Kp=   10 N m/rad: wn=1.000, zeta=B/(2 sqrt(J Kp))=1.000, poles [-1. -1.], final=1, peak=1, OS=0, Tp=15, Ts=5.834, Tr1090=3.358
+P, Kp=   40 N m/rad: wn=2.000, zeta=B/(2 sqrt(J Kp))=0.500, poles [-1.+1.7321j -1.-1.7321j], final=1, peak=1.163, OS=16.3, Tp=1.814, Ts=4.038, Tr1090=0.8189
+P, Kp=  250 N m/rad: wn=5.000, zeta=B/(2 sqrt(J Kp))=0.200, poles [-1.+4.899j -1.-4.899j], final=1, peak=1.527, OS=52.66, Tp=0.6412, Ts=3.92, Tr1090=0.2407
+P, Kp= 1000 N m/rad: wn=10.000, zeta=B/(2 sqrt(J Kp))=0.100, poles [-1.+9.9499j -1.-9.9499j], final=1, peak=1.729, OS=72.92, Tp=0.3157, Ts=3.838, Tr1090=0.1104
+critical damping at Kp = B^2/(4J) = 10.0 N m/rad
+
+======== [P2] Steady-state error: step, wind torque, ramp (LN1 62-66, 72)
+step: L = Kp/(s(Js+B)) has a pole at 0 -> e_ss = 0 (type 1)
+steady wind torque Td = 20.0 N m under P (Kp = 1000): e_ss = -Td/Kp = -0.02 rad = -1.146 deg
+Ku-band (12 GHz) 1.2 m dish: 3 dB beamwidth ~ 70 lambda/D = 1.46 deg; pointing loss 12 (theta/theta3)^2 dB at 1.15 deg = 7.4 dB
+ramp 1 deg/s (LEO pass): e_ss = B w/Kp = 3.49e-04 rad = 0.020 deg; velocity constant Kv = Kp/B = 50.0 1/s
+for 0.1 deg wind error under P you would need Kp >= 11459 N m/rad (zeta then 0.030)
+
+======== [P3] Speed loop (SPEED box): P on velocity
+K_w = 0: tau = J/(B+K_w) = 0.500 s ; speed-up factor 1
+K_w = 80: tau = J/(B+K_w) = 0.100 s ; speed-up factor 5
+K_w = 180: tau = J/(B+K_w) = 0.050 s ; speed-up factor 10
+
+======== [P4] PI on the positioner: s^3 + 2 s^2 + 0.1 Kp s + 0.1 Ki; bound Ki < (B/J) Kp = 2 Kp (added)
+grid check mismatches: 0
+PI Kp=1000 Ki=200: poles [-0.8996+9.9413j -0.8996-9.9413j -0.2007+0.j    ], final=1, peak=1.759, OS=75.87, Tp=0.316, Ts=4.184, Tr1090=0.1094
+PI Kp=1000 Ki=500: poles [-0.7481+9.9341j -0.7481-9.9341j -0.5038+0.j    ], final=1, peak=1.802, OS=80.19, Tp=0.3162, Ts=5.106, Tr1090=0.108
+PI Kp=1000 Ki=1000: poles [-0.495 +9.9376j -0.495 -9.9376j -1.0101+0.j    ], final=1, peak=1.871, OS=87.11, Tp=0.3159, Ts=7.918, Tr1090=0.1058
+at Ki = 2000 the poles are [ 0.+10.j  0.-10.j -2. +0.j] (on the axis at 10 rad/s)
+wind 20 N m step, PI Kp=1000 Ki=500: peak error 1.911 deg at 0.31 s, error at 20 s 0.0000 deg
+
+======== [P5] PD: zeta = (B + Kd)/(2 sqrt(Kp J)) (LN1 72); D on error vs D on measurement
+Kd=120: zeta=0.70, poles [-7.+7.1414j -7.-7.1414j], formula %OS 4.60
+   D on error (zero at -Kp/Kd = -8.33): final=1, peak=1.156, OS=15.6, Tp=0.2458, Ts=0.4963, Tr1090=0.1011
+   D on measurement (rate feedback, no zero): final=1, peak=1.046, OS=4.599, Tp=0.4399, Ts=0.5979, Tr1090=0.2126
+Kd=140: zeta=0.80, poles [-8.+6.j -8.-6.j], formula %OS 1.52
+   D on error (zero at -Kp/Kd = -7.14): final=1, peak=1.126, OS=12.63, Tp=0.2382, Ts=0.5028, Tr1090=0.09638
+   D on measurement (rate feedback, no zero): final=1, peak=1.015, OS=1.516, Tp=0.5236, Ts=0.3756, Tr1090=0.2468
+Td = Kd/Kp = 0.12 s;  wind under PD: still e_ss = -Td/Kp (D does nothing at rest)
+
+======== [P6] PID, D on measurement (Lab default): from PD (1000, 0, 120) to the tuned (2000, 1000, 200)
+PD on the positioner with Kp=2000, Kd=200: s^2 + 22 s + 200 -> wn = 14.142 , zeta = 0.778
+(1000, 0, 120): poles [-7.+7.141j -7.-7.141j], final=1, peak=1.046, OS=4.599, Tp=0.4399, Ts=0.5979, Tr1090=0.2126 | wind 20 N m: peak 1.199 deg, final 1.146 deg, inside 0.05 deg after 30.00 s
+(2000, 0, 200): poles [-11.+8.888j -11.-8.888j], final=1, peak=1.02, OS=2.049, Tp=0.3535, Ts=0.3698, Tr1090=0.1687 | wind 20 N m: peak 0.585 deg, final 0.573 deg, inside 0.05 deg after 30.00 s
+(1000, 1000, 120): poles [-6.411+6.618j -6.411-6.618j -1.178+0.j   ], final=1, peak=1.181, OS=18.14, Tp=0.4466, Ts=2.005, Tr1090=0.1835 | wind 20 N m: peak 1.083 deg, final 0.000 deg, inside 0.05 deg after 2.95 s
+(2000, 500, 200): poles [-10.871+8.73j -10.871-8.73j  -0.257+0.j  ], final=1, peak=1.048, OS=4.759, Tp=0.3581, Ts=1.525, Tr1090=0.1619 | wind 20 N m: peak 0.569 deg, final 0.000 deg, inside 0.05 deg after 9.70 s
+(2000, 1000, 200): poles [-10.735+8.566j -10.735-8.566j  -0.53 +0.j   ], final=1, peak=1.074, OS=7.365, Tp=0.3599, Ts=2.198, Tr1090=0.1563 | wind 20 N m: peak 0.556 deg, final 0.000 deg, inside 0.05 deg after 4.82 s
+(2000, 2000, 200): poles [-10.433+8.215j -10.433-8.215j  -1.134+0.j   ], final=1, peak=1.123, OS=12.25, Tp=0.3574, Ts=1.798, Tr1090=0.1471 | wind 20 N m: peak 0.535 deg, final 0.000 deg, inside 0.05 deg after 2.38 s
+tuned PID, D on error instead: final=1, peak=1.158, OS=15.81, Tp=0.1662, Ts=0.3754, Tr1090=0.06492
+PI bound with D: Ki < (2 + 0.1 Kd) Kp = 44000 for (2000, ., 200)
+Lab step size: 0.1 rad (5.7 deg); tuned initial torque Kp x 0.1 = 200.0 N m (limit 200)
+
+======== [P7] Windup: torque limit 200 N m, tuned PID (2000, 1000, 200), D on measurement
+0.2 rad slew, no limit: overshoot 7.4 %, Ts 2.20 s, peak |T| 400 N m
+0.2 rad slew, |T|<=200, no anti-windup: overshoot 7.9 %, Ts 2.39 s, peak |T| 200 N m
+0.2 rad slew, |T|<=200, clamping: overshoot 5.9 %, Ts 1.62 s, peak |T| 200 N m
+2.0 rad slew, no limit: overshoot 7.4 %, Ts 2.20 s, peak |T| 4000 N m
+2.0 rad slew, |T|<=200, no anti-windup: overshoot 21.6 %, Ts 4.64 s, peak |T| 200 N m
+2.0 rad slew, |T|<=200, clamping: overshoot 3.8 %, Ts 0.79 s, peak |T| 200 N m
+
+======== [P8] Ziegler-Nichols: positioner + amplifier/current-loop lag 1/(0.05s+1)
+P only on 0.1/(s(s+2)): s^2+2s+0.1K stable for every K -> no ultimate gain; add the lag:
+20 s^3 ... : s^3 + 22 s^2 + 40 s + 2K = 0 -> Routh 22*40 = 2Ku -> Ku = 440 N m/rad, wu = sqrt(40) = 6.324555320336759
+Tu = 0.9935 s -> Kp = 264.0, Ti = 0.4967, Td = 0.1242, Ki = 531.5, Kd = 32.78
+ZN PID on the lagged positioner (D on error): final=1, peak=1.638, OS=63.8, Tp=0.5804, Ts=4.207, Tr1090=0.1993
+   same gains, D on measurement: final=1, peak=1.776, OS=77.56, Tp=0.6994, Ts=4.861, Tr1090=0.2271
+
+======== [P9] Performance index: rate (velocity) feedback Kv with Kp = 1000 (same structure as the LN2 telescope)
+T = 100/(s^2 + (2+0.1Kv) s + 100); step error E = (s + a1)/(s^2 + a1 s + 100), a1 = 2 + 0.1 Kv
+ISE = (a0 + a1^2)/(2 a0 a1) = 1/(2 a1) + a1/200 -> minimum at a1 = sqrt(100) = 10 -> Kv = 80 N m s/rad, zeta = 0.5, ISE = 0.1
+Kv=40: zeta=0.30, ISE=0.1133 (Lyapunov 0.1133), IAE=0.2367
+Kv=80: zeta=0.50, ISE=0.1000 (Lyapunov 0.1000), IAE=0.1713
+Kv=120: zeta=0.70, ISE=0.1057 (Lyapunov 0.1057), IAE=0.1610
+Kv=160: zeta=0.90, ISE=0.1178 (Lyapunov 0.1178), IAE=0.1808
+IAE optimum Kv = 112.5 (zeta 0.662); ITAE optimum Kv = 130.5 (zeta 0.752) [added]
+hand-tuned PD Kd = 120 at Kp = 1000 is zeta 0.7, between the IAE and ITAE optima
+at Kp = 2000 (a0 = 200): ISE optimum a1 = sqrt(200) -> Kv = 121.4; IAE optimum Kv = 167.4; ITAE optimum Kv = 192.8; tuned Kd = 200 (zeta 0.778)
+
+======== [P10] TUNE panels: raise one gain from the tuned (2000, 1000, 200), D on measurement
+(2000, 1000, 200): poles [-10.735+8.566j -10.735-8.566j  -0.53 +0.j   ], final=1, peak=1.074, OS=7.365, Tp=0.3599, Ts=2.198, Tr1090=0.1563 | wind peak 0.556 deg, inside 0.05 deg after 4.82 s
+(4000, 1000, 200): poles [-10.873+16.621j -10.873-16.621j  -0.253 +0.j   ], final=1, peak=1.143, OS=14.34, Tp=0.1889, Ts=0.3085, Tr1090=0.08574 | wind peak 0.319 deg, inside 0.05 deg after 7.00 s
+(2000, 3000, 200): poles [-10.079+7.828j -10.079-7.828j  -1.842+0.j   ], final=1, peak=1.167, OS=16.75, Tp=0.3509, Ts=1.447, Tr1090=0.1399 | wind peak 0.518 deg, inside 0.05 deg after 1.56 s
+(2000, 1000, 400): poles [-36.612  -4.822  -0.566], final=1, peak=1.076, OS=7.619, Tp=1.011, Ts=3.592, Tr1090=0.3276 | wind peak 0.488 deg, inside 0.05 deg after 4.77 s
+
+======== [X1] LN2 steel mill and tachometer (exam examples)
+steel mill: ratio 0.0385 (slides ~ 0.040); Ka for ratio 0.02: 196.0
+tachometer: tau 5.0 s -> 0.8333 s (factor 6.0), final 10.0 -> 1.6667
+
+======== [X2] LN2 boring machine Gc = K + 11 s, G = 1/(s(s+1))
+K=100: zeta=0.600, final=1, peak=1.22, OS=22.03, Tp=0.2424, Ts=0.6661, Tr1090=0.0971
+K=50: zeta=0.849, final=1, peak=1.129, OS=12.89, Tp=0.3207, Ts=0.718, Tr1090=0.126
+K=20: zeta=1.342, final=1, peak=1.039, OS=3.861, Tp=0.4758, Ts=0.9133, Tr1090=0.1697
+
+======== [X3] LN2 telescope (exam example in the INDEX dive)
+K3=4.0000: ISE = 1/K3 + 0.1 K3 = 0.6500 (table 0.6500), IAE = 1.0173, zeta = 0.6325
+K3=3.1623: ISE = 1/K3 + 0.1 K3 = 0.6325 (table 0.6325), IAE = 1.0835, zeta = 0.5000
+IAE optimum K3 = 4.189, zeta = 0.662 (slide 28: 4.2, 0.665)
+
+======== [X4] LN2 model reduction
+drop far pole: 300/((s+1)(s+3)(s+30)) -> 10/((s+1)(s+3)), DC 3.3333333333333335
+6/((s+1)(s+2)(s+3)): Delta2 = 1.361111 (49/36), Delta4 = 0.388889 (7/18) -> d1 = 1.6150, d2 = 0.6236 -> 1.6036/(s^2+2.5898s+1.6036); first order 0.857/(s+0.857)
+
+======== [X5] LN4 slide designs
+third order y'''+5y''+3y'+2y=u, (s^2+9.6s+36)(s+4.8) = [  1.    14.4   82.08 172.8 ]  K = [[170.8   79.08   9.4 ]]
+1/s^2, poles -1 +/- j: K = [[2. 2.]]
+observer example A=[[2,3],[-1,4]], zeta 0.8, wn 10: L = [22. 59.] (slides [22, 59])
+
+======== [L1] Current pid-tuning site claims on p2 = 2/(s^2+3s+2) and p3 = 1/(s+1)^3 (for the fix list)
+p2 Kp=3 (P only): final=0.75, peak=0.8551, OS=14.01, Tp=1.31, Ts=2.043, Tr1090=0.6004
+p2 PI (3, 2): final=1, peak=1.13, OS=12.99, Tp=1.423, Ts=3.468, Tr1090=0.6702
+p2 PID (3, 2, 0.5) ideal D: final=1, peak=1.019, OS=1.937, Tp=1.667, Ts=1.212, Tr1090=0.8702    <- site says ~8 %, ~2.8 s
+p2 PID (3, 2, 0.5) filter N=20: final=1, peak=1.014, OS=1.412, Tp=1.63, Ts=1.195, Tr1090=0.8174
+ZN on p3: Ku 8, Tu 3.6276, Kp 4.8, Ki 2.6464, Kd 2.1766; ideal D final=1, peak=1.406, OS=40.57, Tp=2.206, Ts=9.373, Tr1090=0.872
+   with filter N=20: final=1, peak=1.43, OS=42.98, Tp=2.163, Ts=9.177, Tr1090=0.828    <- site says 43 %
+LN4 slide 18 third-order: (s^2+9.6s+36)(s+4.8) middle coefficient 82.08 (slide 82.1) -> k2 = 79.08 (site sf dive: '79.4 from 82.4')
+
+======== [C] Check-yourself and dive extras (batch 2 ck-* answers)
+outdoor -> bedroom: num [[0.   0.2  0.44]] den [1.   2.4  0.44] -> 0.2/(s+0.2) = 1/(5s+1) (difference mode cancels)
+average sensor G: num [[0.     0.0018 0.004 ]] den [1.   2.4  0.44] -> 0.0018/(s+0.2)
+bedroom t90 true 11.99 h, stand-in 5 ln10 = 11.51 h
+max gap between tau 5 and 5.0206 first-order models: 0.0309 K
+|G2(j 2pi/24)| = 4.932 K/kW (daily heater cycle)
+P Kp=500, leak 0.2: T(0) = 0.8036
+P Kp=500, leak 0.24: T(0) = 0.7700
+Kp=500: droop after -5 K = 0.982 K; sensor +1 K -> C(0) = 0.804 K cold
+Kp=2200: droop = 0.263 K; L(0)=19 -> S(0) = 0.050
+300 kg corner: wn 9.487, zeta 0.316, %OS 35.09
+corner: c for Ts<=1 s (formula) = 8 m = 3200 N s/m; c for %OS<=10 %: zeta 0.5912 -> 3783 N s/m
+corner c 3200 (zeta 0.5) load step: final=3.906e-05, peak=4.543e-05, OS=16.3, Tp=0.4535, Ts=1.01, Tr1090=0.2047
+dish: Kp for zeta 0.7 = 20.41; step: final=1, peak=1.046, OS=4.599, Tp=3.079, Ts=4.185, Tr1090=1.488
+dish: K_w for tau 0.2 s = 30
+dish: Kd for zeta 0.7 at Kp 2000 = 177.99; D on meas: final=1, peak=1.046, OS=4.599, Tp=0.3111, Ts=0.4228, Tr1090=0.1504
+dish P 1000, wind 20 N m: peak -1.982 deg, final -1.146 deg
+wind 50 N m at Kp 2000: 0.025 rad = 1.432 deg; 0.5 deg/s ramp at Kp 1000: 0.010 deg
+SF -10+/-10j: k1 = 54400  k2 = 6400  Nbar = 80000
+observer -16+/-12j: l1 = 28  l2 = 224
+body-pair zeta with wheel: 0.210
+
+All numbers recomputed.
