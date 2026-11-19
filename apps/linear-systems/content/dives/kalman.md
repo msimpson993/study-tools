@@ -31,7 +31,7 @@ The first figure opens on the symmetric car: it is the blind-spot case from Box 
 ```figure:kalman
 ```
 
-**Second figure: the sensor's half of the story.** Kalman's sorting needs both halves: reached by the input (the push) and seen by the output (this sensor). This opens on the main car.
+**Second figure: the sensor's half of the story.** Kalman's sorting needs both halves: reached by the input (the push) and seen by the output (this sensor). This opens on the symmetric car (switch the parameter set to the main car to see the lopsided case).
 
 ```figure:obs
 ```
