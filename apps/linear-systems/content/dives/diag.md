@@ -12,15 +12,24 @@ neighbors:
   - expm
 matlab: "D = inv(V) * A * V    % equivalent: A = V * D * inv(V)"
 exampleScene: { scene: house, overlays: [modes, poles], diagram: house-modal, caption: "In modal coordinates the house is two independent first-order systems." }
+level: Some algebra
+check: [c-diag-1, m3]
 ---
 
-**The question:** what does the system look like in eigenvector coordinates? It follows *State view*: change basis to the eigenvectors, A becomes the diagonal Λ, and each mode evolves on its own.
+**The question:** what does the system look like in eigenvector coordinates? It hangs under *Modes: untangle A*: change basis to the eigenvectors, A becomes the diagonal Λ, and each mode evolves on its own.
 
-If the eigenvectors form a basis, stack them as the columns of V and write x = V ξ. In the ξ-coordinates A does nothing but scale each axis: Λ = V⁻¹ A V is diagonal. Solving, iterating, and exponentiating A all become scalar operations on those coordinates.
+### The big idea
+
+How to pick coordinates so the operator is as simple as possible: independent scalar multiplies, one per mode.
+
+### See it
 
 **Picture it first.** Ask the plane to use the eigenvectors as its grid. In those coordinates, A has nothing left to do but stretch each axis.
 
 ```figure:diag
+```
+
+```figure:eig
 ```
 
 ```eq
@@ -31,17 +40,29 @@ A = V Λ V⁻¹,    Λ = V⁻¹ A V
 x = V ξ    ⇒    ξ = V⁻¹ x
 ```
 
-````callout:note What this answers
-How to pick coordinates so the operator is as simple as possible: independent scalar multiplies, one per mode.
-````
+### The math
 
-````callout:note What it raises
-What if there are not enough independent eigenvectors? (Jordan.) And if A acts over time, what is the solution of x′ = Ax in this basis? (e^(At).)
-````
+If the eigenvectors form a basis, stack them as the columns of V and write x = V ξ. In the ξ-coordinates A does nothing but scale each axis: Λ = V⁻¹ A V is diagonal. Solving, iterating, and exponentiating A all become scalar operations on those coordinates.
 
-````callout:note Mini example
-For A = [[0, 1], [−2, −3]] (ÿ + 3ẏ + 2y = u), with eigenvalues −1, −2 and eigenvectors v₁ = [1, −1]ᵀ, v₂ = [1, −2]ᵀ: V = [[1, 1], [−1, −2]] and V⁻¹ = [[2, 1], [−1, −1]]. A vector x = [3, −4]ᵀ has eigen-coordinates ξ = V⁻¹ x = [2, 1]ᵀ, because 2 v₁ + 1 v₂ = [3, −4]ᵀ. In these coordinates A just multiplies by −1 and −2: Λ ξ = [−2, −2]ᵀ, and V(Λ ξ) = A x.
-````
+**What each symbol means.**
+
+- $V$: the matrix whose columns are the eigenvectors.
+- $\xi = V^{-1}x$: mode coordinates, how much of each mode the state contains.
+- $\Lambda$: the diagonal matrix of eigenvalues.
+
+### Worked example: on the house
+
+1. House: $V = [[1, 1], [1, -1]]$, so $\xi_1 = (T_1 + T_2)/2$ is the average and $\xi_2 = (T_1 - T_2)/2$ half the difference.
+2. In these coordinates $\dot\xi_1 = -0.2\,\xi_1$ and $\dot\xi_2 = -2.2\,\xi_2$: two separate one-room problems.
+3. From (10, 0) K: $\xi = (5, 5)$, then $\xi(t) = (5e^{-0.2t}, 5e^{-2.2t})$.
+
+**Exam-style example.** For A = [[0, 1], [−2, −3]] (ÿ + 3ẏ + 2y = u), with eigenvalues −1, −2 and eigenvectors v₁ = [1, −1]ᵀ, v₂ = [1, −2]ᵀ: V = [[1, 1], [−1, −2]] and V⁻¹ = [[2, 1], [−1, −1]]. A vector x = [3, −4]ᵀ has eigen-coordinates ξ = V⁻¹ x = [2, 1]ᵀ, because 2 v₁ + 1 v₂ = [3, −4]ᵀ. In these coordinates A just multiplies by −1 and −2: Λ ξ = [−2, −2]ᵀ, and V(Λ ξ) = A x.
+
+### What it can't do
+
+Not every matrix diagonalises: with a repeated eigenvalue and too few eigenvectors, the best you can do is Jordan form.
+
+**Next question.** What if there are not enough independent eigenvectors? (Jordan.) And if A acts over time, what is the solution of x′ = Ax in this basis? (e^(At).)
 
 ### Common pitfalls
 

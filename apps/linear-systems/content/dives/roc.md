@@ -12,15 +12,24 @@ neighbors:
   - dtft
 matlab: "% no single command: list the pole radii with abs(roots(a)) and pick the ring"
 exampleScene: { overlays: [click, poles], caption: "The click response starts at t = 0, so its ROC is everything right of the two poles." }
+level: Some algebra
+check: [c-roc-1, c-roc-2, c-roc-3]
 ---
 
 **The question:** where does the transform actually exist? It comes from *Laplace and Z*: the integral or sum only converges for some s or z, and that region, bounded by the poles, is part of the answer. The same formula with a different region is a different signal.
 
-The Laplace integral ∫x(t)e^(−st)dt converges only for some s, because e^(−σt) has to tame x(t) at both ends. The Z sum Σx[n]z⁻ⁿ is the same story with |z| playing the role of e^(σ). That region of convergence (ROC) is part of the transform.
+### The big idea
+
+Which of several signals a formula like 1/((z − ½)(z + 2)(z + 3)) means: with four possible regions (|z| < ½, ½ < |z| < 2, 2 < |z| < 3, |z| > 3) there are four different sequences. Only |z| > 3 is right-sided, and it is not stable, because the unit circle |z| = 1 is not in it.
+
+### See it
 
 **Picture it first.** Draw the poles. The ROC is a region with no poles in it, so its edges run through poles: a vertical strip or half-plane in s, a ring, disc or exterior in z. Each choice of region between the poles is a *different signal* with the same formula.
 
 ```figure:laplace
+```
+
+```figure:inverse
 ```
 
 | Signal | ROC in s | ROC in z |
@@ -32,17 +41,29 @@ The Laplace integral ∫x(t)e^(−st)dt converges only for some s, because e^(�
 
 $$\text{stable (BIBO)}\iff j\omega\text{ axis}\subset\text{ROC}\qquad\iff\qquad |z|=1\subset\text{ROC}$$
 
-````callout:note What this answers
-Which of several signals a formula like 1/((z − ½)(z + 2)(z + 3)) means: with four possible regions (|z| < ½, ½ < |z| < 2, 2 < |z| < 3, |z| > 3) there are four different sequences. Only |z| > 3 is right-sided, and it is not stable, because the unit circle |z| = 1 is not in it.
-````
+### The math
 
-````callout:note What it raises
-How do you invert term by term once the ROC is fixed? Each pole inside the inner edge contributes a right-sided term, each pole outside the outer edge a left-sided one. See *Going back*.
-````
+The Laplace integral ∫x(t)e^(−st)dt converges only for some s, because e^(−σt) has to tame x(t) at both ends. The Z sum Σx[n]z⁻ⁿ is the same story with |z| playing the role of e^(σ). That region of convergence (ROC) is part of the transform.
 
-````callout:note Mini example
-Convolution multiplies transforms, and the ROC of the product contains the overlap of the two ROCs. h = e^(−t)u(t) has Re s > −1 and x = e^(2t)u(−t) has Re s < 2, so Y = −1/((s + 1)(s − 2)) has ROC −1 < Re s < 2: a strip, so y is two-sided, y = ⅓e^(−t)u(t) + ⅓e^(2t)u(−t).
-````
+**What each symbol means.**
+
+- ROC: the region of convergence, the set of $s$ (or $z$) where the transform integral (or sum) converges.
+- $j\omega$ axis / unit circle $|z| = 1$: where steady tones live; if it is inside the ROC the system is stable and has a frequency response.
+- Right-sided: zero before some time, ROC to the right of the poles.
+
+### Worked example: on the earbud
+
+1. The earbud's click response starts at t = 0 (causal), so its ROC lies to the right of both poles: Re s > −1,267 /s.
+2. That region contains the jω axis, so the earbud is BIBO stable and $H(j\omega)$ exists.
+3. The same formula with a left-sided ROC would describe a ring running backwards in time, which no speaker does.
+
+**Exam-style example.** Convolution multiplies transforms, and the ROC of the product contains the overlap of the two ROCs. h = e^(−t)u(t) has Re s > −1 and x = e^(2t)u(−t) has Re s < 2, so Y = −1/((s + 1)(s − 2)) has ROC −1 < Re s < 2: a strip, so y is two-sided, y = ⅓e^(−t)u(t) + ⅓e^(2t)u(−t).
+
+### What it can't do
+
+The ROC tells you which signal a formula means; it doesn't give the signal back. For that you invert, pole by pole.
+
+**Next question.** How do you invert term by term once the ROC is fixed? Each pole inside the inner edge contributes a right-sided term, each pole outside the outer edge a left-sided one. See *Going back*.
 
 ### Common pitfalls
 

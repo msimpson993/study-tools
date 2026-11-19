@@ -12,15 +12,24 @@ neighbors:
   - stab
 matlab: sysd = c2d(sys, T, 'zoh')    % poles of sysd satisfy z = exp(s*T)
 exampleScene: { overlays: [sampler], diagram: [spk-digital, anc-hybrid], caption: "Sample, filter, hold: the digital path inside a hybrid noise-cancelling earbud." }
+level: Conceptual
+check: [c-samp-1, m14, m15]
 ---
 
 **The question:** a periodic signal gave a discrete spectrum; what does the reverse, discrete time, do to the spectrum? It comes from *Fourier series*: sampling makes the spectrum periodic, with copies every fs, and anything above fs/2 folds back.
 
-Sampling a mode e^(s t) at t = n T produces (e^(s T))^n = z^n, so the planes are related by z = e^(s T). This map is many-to-one: s and s + j 2π k / T land on the same z, which is aliasing. Equivalently, sampling in time periodizes the spectrum with period 2π / T (or f\_s). The left half-plane maps to the interior of the unit circle because |z| = e^(σ T), not because someone chose to draw it that way. Pole mapping of a continuous system under exact discretization is z = e^(s T); a ZOH equivalent also inserts the hold's dynamics, so G\_d(z) is not simply G(s) evaluated at s = (ln z)/T.
+### The big idea
+
+The precise link between the s- and z-planes, why aliases share a z-pole, and why stability regions match under that map.
+
+### See it
 
 **Picture it first.** Two different tones can pass through exactly the same samples. Sampling copies the spectrum at multiples of the rate, and whichever copy falls in the band is what you see.
 
 ```figure:sampling
+```
+
+```figure:dtft
 ```
 
 ```eq
@@ -31,17 +40,30 @@ x[n] = x(n T),    z = e^(s T),    |z| = e^(σ T)
 s  and  s + j 2π k / T    map to the same z
 ```
 
-````callout:note What this answers
-The precise link between the s- and z-planes, why aliases share a z-pole, and why stability regions match under that map.
-````
+### The math
 
-````callout:note What it raises
-Which reconstruction (ZOH, first-order hold, sinc) you use when going back to continuous time, and how the four Fourier tools are the periodize-or-sample versions of one another.
-````
+Sampling a mode e^(s t) at t = n T produces (e^(s T))^n = z^n, so the planes are related by z = e^(s T). This map is many-to-one: s and s + j 2π k / T land on the same z, which is aliasing. Equivalently, sampling in time periodizes the spectrum with period 2π / T (or f\_s). The left half-plane maps to the interior of the unit circle because |z| = e^(σ T), not because someone chose to draw it that way. Pole mapping of a continuous system under exact discretization is z = e^(s T); a ZOH equivalent also inserts the hold's dynamics, so G\_d(z) is not simply G(s) evaluated at s = (ln z)/T.
 
-````callout:note Mini example
-Sample x(t) = cos(2π · 5 t) at f\_s = 6 Hz (T = 1/6). Then x[n] = cos(2π · 5 n / 6) = cos(2π n − 2π n / 6) = cos(2π · 1 · n / 6): a 1 Hz discrete-time cosine. The two complex poles at e^(± j 2π · 5 / 6) are the same unit-circle points as e^(∓ j 2π · 1 / 6). You cannot tell from the samples whether the original tone was at 5 Hz or at 1 Hz — that is the many-to-one map s → e^(s T).
-````
+**What each symbol means.**
+
+- $f_s$: the sample rate (samples per second); $T = 1/f_s$ the sample spacing.
+- $f$: a tone's frequency (Hz).
+- $f_s/2$: the Nyquist frequency, the highest pitch the samples can tell apart.
+- $z = e^{sT}$: how a continuous rate $s$ appears after sampling.
+
+### Worked example: on the earbud
+
+1. Draw the ANC chip sampling at 8 kHz, so the Nyquist frequency is 4 kHz.
+2. A 5 kHz tone gives exactly the same samples as a 3 kHz tone, and a 7 kHz tone the same as 1 kHz: they alias.
+3. So the microphones need an anti-alias low-pass filter before the converter, and real ANC chips sample much faster than 8 kHz to keep the delay small.
+
+**Exam-style example.** Sample x(t) = cos(2π · 5 t) at f\_s = 6 Hz (T = 1/6). Then x[n] = cos(2π · 5 n / 6) = cos(2π n − 2π n / 6) = cos(2π · 1 · n / 6): a 1 Hz discrete-time cosine. The two complex poles at e^(± j 2π · 5 / 6) are the same unit-circle points as e^(∓ j 2π · 1 / 6). You cannot tell from the samples whether the original tone was at 5 Hz or at 1 Hz — that is the many-to-one map s → e^(s T).
+
+### What it can't do
+
+Sampling decides which pitches survive, but it does not yet give a spectrum we can compute. The sampled signal's spectrum is the DTFT, and that repeats every $f_s$.
+
+**Next question.** Which reconstruction (ZOH, first-order hold, sinc) you use when going back to continuous time, and how the four Fourier tools are the periodize-or-sample versions of one another.
 
 ### Common pitfalls
 

@@ -12,30 +12,52 @@ neighbors:
   - ctrl
 matlab: "[A, B, C, D] = tf2ss(b, a)    % note: MATLAB's ordering is reversed"
 exampleScene: { overlays: [coil, state], diagram: [spk-chain, spk-model], caption: "Voltage to motion, block by block; the fast coil pole drops out and two states remain." }
+level: Worked calculation
+check: [c-real-1, c-ss-2]
 ---
 
-**The question:** a transfer function and a state model: are they the same thing? It comes from *Laplace and Z* (the dashed line says it is the same system seen from two sides): read A, B, C straight off H(s), and the poles of H become the eigenvalues of A.
+**The question:** a transfer function and a state model: are they the same thing? It hangs under *State: what it remembers*: read A, B, C straight off H(s), and the poles of H become the eigenvalues of A.
 
-Write H(s) = N(s)/D(s), strictly proper, with D monic of degree n. Introduce an internal signal w with W/U = 1/D(s). Its derivatives w, ẇ, …, w^((n−1)) are the states, the ODE D(d/dt)w = u is the last row of A, and the output y = N(d/dt)w is a fixed combination of the states.
+### The big idea
 
-$$\frac{b_2s^2+b_1s+b_0}{s^3+a_2s^2+a_1s+a_0}:\quad A=\begin{bmatrix}0&1&0\\0&0&1\\-a_0&-a_1&-a_2\end{bmatrix},\ B=\begin{bmatrix}0\\0\\1\end{bmatrix},\ C=\begin{bmatrix}b_0&b_1&b_2\end{bmatrix}$$
+How to go from a transfer function to a state model, and why many state models (any T⁻¹AT, T⁻¹B, CT) give the same H(s). A realization is **minimal**, with the fewest possible states, exactly when it is controllable and observable.
+
+### See it
 
 **Picture it first.** Three integrators in a chain. The input enters at the top; every integrator's output feeds back with weight −aₖ (the poles); the output taps the chain with weights bₖ (the zeros). Zeros live in C, poles live in the last row of A.
 
 ```figure:ss
 ```
 
-````callout:note What this answers
-How to go from a transfer function to a state model, and why many state models (any T⁻¹AT, T⁻¹B, CT) give the same H(s). A realization is **minimal**, with the fewest possible states, exactly when it is controllable and observable.
-````
+```figure:tf
+```
 
-````callout:note What it raises
-If deg N = deg D (biproper), divide first: the quotient is D and the remainder is realized as above. And if a zero cancels a pole, the realization has a hidden mode: see the Kalman decomposition.
-````
+### The math
 
-````callout:note Mini example
-H(s) = (6s + 1)(4s + 3)/(s³ + 8s² + 19s + 2). Expand the top: 24s² + 22s + 3. So A has last row [−2, −19, −8], B = e₃ and C = [3, 22, 24], D = 0. (MATLAB's tf2ss gives the reversed ordering, A's first row [−8, −19, −2] and C = [24, 22, 3]. Both are correct; do not mix them.)
-````
+Write H(s) = N(s)/D(s), strictly proper, with D monic of degree n. Introduce an internal signal w with W/U = 1/D(s). Its derivatives w, ẇ, …, w^((n−1)) are the states, the ODE D(d/dt)w = u is the last row of A, and the output y = N(d/dt)w is a fixed combination of the states.
+
+$$\frac{b_2s^2+b_1s+b_0}{s^3+a_2s^2+a_1s+a_0}:\quad A=\begin{bmatrix}0&1&0\\0&0&1\\-a_0&-a_1&-a_2\end{bmatrix},\ B=\begin{bmatrix}0\\0\\1\end{bmatrix},\ C=\begin{bmatrix}b_0&b_1&b_2\end{bmatrix}$$
+
+**What each symbol means.**
+
+- $a_0, a_1, \dots$: denominator coefficients of $H(s)$, which become the last row of $A$.
+- $b_0, b_1, \dots$: numerator coefficients, which become $C$.
+- Phase variables: the state is a signal and its derivatives.
+- Minimal: no state that the input can't reach or the output can't see.
+
+### Worked example: on the earbud
+
+1. The earbud's full model has three states (coil current i, position x, velocity ẋ), but the coil's pole −R_e/L_e ≈ −186,750 rad/s is about 40 times faster than the mechanical poles, so two states are enough.
+2. In phase-variable form, $A = [[0, 1], [-a_0, -a_1]]$ with $a_0 \approx 2.03\times10^7\ \text{s}^{-2}$ and $a_1 \approx 2{,}533\ \text{s}^{-1}$, $B = (0, 1)^\mathsf{T}$.
+3. For the physical state (x, ẋ) keep the same A and use $B = (0, Bl/(R_eM))^\mathsf{T}$, $C = [1, 0]$.
+
+**Exam-style example.** H(s) = (6s + 1)(4s + 3)/(s³ + 8s² + 19s + 2). Expand the top: 24s² + 22s + 3. So A has last row [−2, −19, −8], B = e₃ and C = [3, 22, 24], D = 0. (MATLAB's tf2ss gives the reversed ordering, A's first row [−8, −19, −2] and C = [24, 22, 3]. Both are correct; do not mix them.)
+
+### What it can't do
+
+Many (A, B, C) give the same H(s), and some carry extra states that never show. Whether a realization is minimal is the hidden-modes question.
+
+**Next question.** If deg N = deg D (biproper), divide first: the quotient is D and the remainder is realized as above. And if a zero cancels a pole, the realization has a hidden mode: see the Kalman decomposition.
 
 ### Common pitfalls
 

@@ -12,28 +12,45 @@ neighbors:
   - sampling
 matlab: "X = fft(x .* hann(N))"
 exampleScene: { overlays: [dft], caption: "The click ring's DFT is wide because the ring dies out in under 1 ms (damping, not leakage); leakage is a steady tone falling between bins." }
+level: Some algebra
+check: [c-win-1, c-win-2]
 ---
 
 **The question:** what does cutting out a finite block do to the spectrum? It follows *DFT / FFT*: a block is the signal times a window, so the spectrum is smeared by the window's own spectrum, and a tone between bins leaks into its neighbours.
+
+### The big idea
+
+Why a tone that fits a whole number of periods in the block lands in one bin, and any other tone leaks into all of them.
+
+### See it
+
+```figure:window
+```
+
+```figure:dft
+```
+
+### The math
 
 A finite record x[n]w[n] has transform (1/2π)X ⊛ W: each spectral line is replaced by a copy of the window's transform. For the rectangular window W is a Dirichlet kernel, sin(NΩ/2)/sin(Ω/2), with a main lobe 4π/N wide and side lobes only 13 dB down.
 
 $$x[n]\,w[n]\;\longleftrightarrow\;\frac{1}{2\pi}\int X(e^{j\theta})\,W(e^{j(\Omega-\theta)})\,d\theta$$
 
-```figure:window
-```
+**What each symbol means.**
 
-````callout:note What this answers
-Why a tone that fits a whole number of periods in the block lands in one bin, and any other tone leaks into all of them.
-````
+- $w[n]$: the window, the weights applied to the block (rectangular = all ones; Hann = a smooth taper).
+- $W(e^{j\Omega})$: the window's own spectrum; its main lobe width and side lobes set the smearing.
+- $X(e^{j\Omega})$: the true spectrum, smeared by $W$.
 
-````callout:note What it raises
-Zero-padding samples the same smeared spectrum more finely; it does not add resolution. Only a longer record narrows the main lobe.
-````
+### Worked example: on the earbud
 
-````callout:note Mini example
 N = 64 at 8 kHz gives bins every 125 Hz. A steady 750 Hz hum sits exactly on bin 6 and shows a single spike. A steady 690 Hz hum near the resonance sits at bin 5.52 and spreads: bins 5 and 6 both read about 4 dB below the true peak (−4.7 and −3.2 dB for a cosine; a real tone's split depends on its phase, for example a sine reads about −3.9 dB in both), with a long tail of side lobes.
-````
+
+### What it can't do
+
+Windowing trades a narrower peak for lower skirts; it can't remove leakage, only reshape it. And all of Fourier assumes steady signals: to handle start-up, growth and decay we need Laplace and Z.
+
+**Next question.** Zero-padding samples the same smeared spectrum more finely; it does not add resolution. Only a longer record narrows the main lobe.
 
 ### Common pitfalls
 

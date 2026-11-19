@@ -12,9 +12,15 @@ neighbors:
   - tf
 matlab: "% superposition check on a model: max(abs(lsim(sys, u1+u2, t) - (lsim(sys, u1, t) + lsim(sys, u2, t))))"
 exampleScene: { overlays: [split, forces], caption: "A tone plus a click goes in; at normal volume the motion is exactly the tone's response plus the click's response." }
+level: Some algebra
+check: [c-linsys-1, c-linsys-3, c-linsys-5]
 ---
 
-**The question:** what is a linear system, and why do we care? This is the first branch below the root, *Inputs in, outputs out*: before any tool can predict an output, the system has to pass two tests, and almost every system you will meet passes them for small signals.
+**The question:** what is a linear system, and why do we care? This dive covers the first four boxes below the root, *What's a system?*, *The core idea*, *What counts as linear?* and *Never perfectly linear?*: before any tool can predict an output, the system has to pass two tests, and almost every system you will meet passes them for small signals.
+
+### The big idea
+
+What the word "linear" promises (sums and scaling pass through), what "time-invariant" adds (delays pass through), and why that pair is worth a whole course.
 
 **Big picture.** A system is a rule that turns an input signal into an output signal. It is linear if it respects sums and scaling, and time-invariant if it behaves the same today as tomorrow. Linearity lets you split any input into simple pieces, find the response to each piece, and add the responses back up; that idea, superposition, is the whole course. Real systems are never exactly linear, but nearly all of them are close to linear for small signals, and for linear systems we have closed-form tools that work the same way in every field.
 
@@ -43,6 +49,15 @@ Non-examples, and one example:
 - **y(t) = u(2t)**, playing the input at double speed, is linear but not time-invariant: delaying the input by τ delays the output by only τ/2.
 - **y(t) = u(t − 1)**, a pure delay, is LTI.
 
+**What each symbol means.**
+
+- $T$: the system's rule, taking a whole input signal to a whole output signal (earbud: voltage → cone motion).
+- $u_1, u_2$: any two input signals (volts for the earbud).
+- $a, b$: any two numbers, the scale factors.
+- $T\{u\}$: the output signal the rule gives for input $u$ (micrometres of cone motion).
+
+### See it
+
 **Picture it first.** Run the three tests on the earbud and five other systems. At a quiet drive the earbud's two curves lie on top of each other; turn the drive up and the cone runs into its limit.
 
 ```callout:predict Before you move the slider
@@ -52,6 +67,8 @@ Play the earbud quietly, then 10 times louder. Does the diaphragm move exactly 1
 ```figure:lintest
 ```
 
+```figure:lti
+```
 
 ### Why we care
 
@@ -64,17 +81,15 @@ Play the earbud quietly, then 10 times louder. Does the diaphragm move exactly 1
 Linear and time-invariant are two separate properties. Convolution needs both; a time-varying linear system has an h that depends on when you kick it.
 ```
 
-````callout:note What this answers
-What the word "linear" promises (sums and scaling pass through), what "time-invariant" adds (delays pass through), and why that pair is worth a whole course.
-````
+### Worked example: on the earbud
 
-````callout:note What it raises
-If sums pass through, what are the best pieces to split an input into? The next box answers with impulses: y = h ∗ u.
-````
-
-````callout:note Mini example
 Drive the earbud with u₁ = 0.2 V at 200 Hz and u₂ = 0.12 V at 690 Hz. Its small-signal gain at 200 Hz is 42.8 µm/V × |H(200 Hz)| ≈ 45.8 µm/V, so u₁ alone moves the cone about 9.2 µm peak (the linear model; 9.1 µm with the soft limit). The response to u₁ + u₂ matches the sum of the two responses to within 0.5%, and doubling u₁ doubles the motion to within 0.7%. At 2 V the linear model predicts about 92 µm, close to the illustrative ±100 µm limit, and through the soft limit the cone actually peaks at about 72 µm. At 4 V the linear model would give 183 µm, but the cone reaches only about 95 µm, well short of 2 × 72 ≈ 145 µm: T{2u₁} falls 29% (rms) short of 2·T{u₁}.
-````
+
+### What it can't do
+
+The tests tell you *whether* superposition is allowed; they do not tell you what the output is. For that you still need the response to some simple pieces, and the cone's ±100 µm limit means every result here holds only at normal volume.
+
+**Next question.** If sums pass through, what are the best pieces to split an input into? The next box answers with impulses: y = h ∗ u.
 
 ### Common pitfalls
 

@@ -12,9 +12,27 @@ neighbors:
   - eig
 matlab: "H = tf(b, a); [mag, ph] = bode(H, 2*pi*500)"
 exampleScene: { overlays: [tone], caption: "A 500 Hz tone in, a 500 Hz tone out: the speaker only scales and delays it." }
+level: Conceptual
+check: [c-eigfn-1, c-eigfn-2, pop-tone]
 ---
 
-**The question:** which signals does convolution only scale? This is the signals branch of *Which pieces are only scaled?*. For any LTI system the answer is the exponentials e^(st) (and zⁿ in discrete time): they come out as H(s) e^(st), the same shape times one complex number.
+**The question:** which signals does convolution only scale? This is the box *Pieces: steady sine waves*. For any LTI system the answer is the exponentials e^(st) (and zⁿ in discrete time): they come out as H(s) e^(st), the same shape times one complex number.
+
+### The big idea
+
+Why the transfer function is the whole system: knowing H(s) for every s means knowing the scale factor for every eigen-piece, and any input can be split into those pieces.
+
+### See it
+
+**Picture it first.** A complex exponential e^(jωt) is a point running round a circle. An LTI system can stretch the circle (|H|) and rotate the starting point (∠H), but it cannot change how fast the point runs. That is why tones keep their frequency.
+
+```figure:eigfn
+```
+
+```figure:tf
+```
+
+### The math
 
 Put an exponential e^(st) into a convolution and look at what comes out:
 
@@ -22,22 +40,27 @@ $$y(t)=\int h(\tau)\,e^{s(t-\tau)}\,d\tau=\underbrace{\int h(\tau)e^{-s\tau}d\ta
 
 The output is the input times one complex number. So e^(st) is an **eigenfunction** of every LTI system, and the transfer function H(s) is its **eigenvalue**. In discrete time the same calculation with zⁿ gives H(z) = Σ h[n] z⁻ⁿ.
 
-**Picture it first.** A complex exponential e^(jωt) is a point running round a circle. An LTI system can stretch the circle (|H|) and rotate the starting point (∠H), but it cannot change how fast the point runs. That is why tones keep their frequency.
+**What each symbol means.**
 
-```figure:eigfn
-```
+- $e^{st}$: an exponential input with complex rate $s = \sigma + j\omega$ ($\omega$ in rad/s sets the pitch; $\sigma$ sets growth or decay).
+- $h(\tau)$: the earbud's click response.
+- $H(s)$: one complex number per $s$; its size is the gain and its angle the phase shift.
+- $H(j\omega)$: the same number on steady tones, the frequency response.
 
-````callout:note What this answers
-Why the transfer function is the whole system: knowing H(s) for every s means knowing the scale factor for every eigen-piece, and any input can be split into those pieces.
-````
+### Worked example: on the earbud
 
-````callout:note What it raises
-Which s can we use? For real tones s = jω (Fourier). For decaying or growing signals we need s off the axis, and then the integral may only converge in part of the plane: the Laplace transform and its ROC.
-````
+1. Play a 500 Hz tone: $s = j2\pi\cdot500 \approx j3{,}142$ rad/s.
+2. The model gives $|H| \approx 1.55$ (+3.8 dB) and a lag of about 37°, so the cone moves about 66 µm per volt (42.8 µm/V in the bass × 1.55).
+3. Near the peak, 658 Hz, the gain is about ×1.85 (+5.4 dB, 79 µm/V, lag ≈ 73°); at 3 kHz it is ×0.06 (2.6 µm/V).
+4. In every case the output is a 500 Hz (or 658 Hz, or 3 kHz) tone: only size and timing change.
 
-````callout:note Mini example
-For the speaker, H(s) = X(s)/V(s) = (Bl/Re) / (Mms s² + R s + 1/Cms), with R = Rms + Bl²/Re. At 500 Hz, s = j2π·500 = j3,142 rad/s, which is below the 4,322 rad/s ring frequency, so the tone is boosted relative to the bass and lags by less than 90°.
-````
+**More on the running example.** For the speaker, H(s) = X(s)/V(s) = (Bl/Re) / (Mms s² + R s + 1/Cms), with R = Rms + Bl²/Re. At 500 Hz, s = j2π·500 = j3,142 rad/s, which is below the 4,322 rad/s ring frequency, so the tone is boosted relative to the bass and lags by less than 90°.
+
+### What it can't do
+
+Real signals are not single eternal tones: a click, a buzz or speech is a mix of many pitches, and a tone switched on at t = 0 also excites a transient. To use the fingerprint on those we must first split a signal into tones.
+
+**Next question.** Which s can we use? For real tones s = jω (Fourier). For decaying or growing signals we need s off the axis, and then the integral may only converge in part of the plane: the Laplace transform and its ROC.
 
 ### Common pitfalls
 

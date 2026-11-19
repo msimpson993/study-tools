@@ -209,7 +209,7 @@ maps:
     eq: "ẋ = Ax + Bu,  y = Cx + Du"
     pop: &id015
       rough: rate of change of the memory = (how the memory drives itself) + (how the input pushes); output = a reading of the memory
-      eqKey: "x = state (house: the two room temperatures above outdoors, K); u = heater power (kW); A = how the rooms leak and share heat (per hour); B = where the heater pushes; C = what the thermostat reads; D = direct feed-through (0 here)."
+      eqKey: "x = state (house: room temperatures above outdoors, K); u = heater power (kW); A = how the rooms leak and share heat (per hour); B = where the heater pushes; C = what the thermostat reads; D = direct feed-through (0 here)."
       example: "House: A = [[−1.2, 1], [1, −1.2]] per hour (shared wall 1/h, leak 0.2/h), B = (3.6, 0) K/h per kW for the heater in room 1."
       ask: c-ss-1
     addsToExample: "Writes the house as ẋ = Ax + Bu with x = (T₁, T₂): the shared wall couples the rooms and both leak heat outdoors."

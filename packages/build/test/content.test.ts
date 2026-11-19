@@ -31,6 +31,40 @@ describe('shipped content', () => {
     expect(content.quiz.length).toBe(97);
     expect(content.quiz.filter((q) => q.tags?.includes('variants')).length).toBe(21);
   });
+  it('linear-systems Big-picture boxes follow the fixed pop-up template (answer, rough words, running example, next question; ≤ ~140 words)', () => {
+    const { content } = loadApp(path.join(repoRoot, 'apps', 'linear-systems'));
+    const big = content.maps.find((m) => m.id === 'big')!;
+    expect(big.nodes.length).toBe(15);
+    const words = (h: string) => h.replace(/<[^>]+>/g, ' ').split(/\s+/).filter(Boolean).length;
+    for (const n of big.nodes) {
+      expect(n.short, n.id).toBeTruthy();
+      expect(n.pop?.rough, n.id).toBeTruthy();
+      const example = n.pop?.example ?? n.addsToExample;
+      expect(example, n.id).toBeTruthy();
+      const next = n.pop?.next ?? big.edges.find((e) => e.from === n.id && !e.dashed)?.question;
+      if (n.id !== 'WORK') expect(next, n.id).toBeTruthy();
+      if (n.id !== 'root') expect(n.pop?.ask, `${n.id} has an intuition question`).toBeTruthy();
+      const total = words(n.short ?? '') + words(n.pop?.rough ?? '') + words(example ?? '') + words(next ?? '') + words(n.pop?.eqKey ?? '');
+      expect(total, `${n.id} pop-up words`).toBeLessThanOrEqual(140);
+      expect((n.pop?.figures ?? []).length, n.id).toBeLessThanOrEqual(4);
+    }
+    // every outgoing edge carries the question the box ends on
+    for (const e of big.edges) expect(e.question, `${e.from}->${e.to}`).toBeTruthy();
+  });
+  it('linear-systems dives follow the dive template (level tag, worked example, what it can\'t do, 2-3 checks, >= 1 interactive figure)', () => {
+    const { content } = loadApp(path.join(repoRoot, 'apps', 'linear-systems'));
+    for (const d of content.dives) {
+      expect(['Conceptual', 'Some algebra', 'Worked calculation'], d.id).toContain(d.level);
+      expect(d.check?.length ?? 0, d.id).toBeGreaterThanOrEqual(2);
+      expect(d.check?.length ?? 0, d.id).toBeLessThanOrEqual(3);
+      expect(d.html, d.id).toMatch(/<h3[^>]*>Worked example: on /);
+      expect(d.html, d.id).toMatch(/<h3[^>]*>What it can(’|'|&#39;)t do/);
+      expect(d.html, d.id).toMatch(/<h3[^>]*>The big idea/);
+      expect((d.html.match(/data-figure=|class="figure|data-testid="figure/g) ?? []).length, `${d.id} interactive figures`).toBeGreaterThanOrEqual(1);
+    }
+    const withDeriv = content.dives.filter((d) => d.html.includes('data-testid="derivation"')).map((d) => d.id).sort();
+    expect(withDeriv).toEqual(['expm', 'gramian', 'optimal']);
+  });
   it('linear-systems dives open on their map question and parent box (no chain fold)', () => {
     const { content } = loadApp(path.join(repoRoot, 'apps', 'linear-systems'));
     for (const d of content.dives) {

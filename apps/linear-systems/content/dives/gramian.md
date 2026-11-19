@@ -12,9 +12,27 @@ neighbors:
   - kalman
 matlab: "W = gram(ss(A, B, C, 0), 'c')    % infinite-horizon; or integral(...) for finite T"
 exampleScene: { scene: house, overlays: [gramian, heat], caption: "States reachable with the same heating energy in 3 hours: a long, thin, tilted ellipse." }
+level: Worked calculation
+check: [c-gram-1, c-gram-2]
 ---
 
-**The question:** controllable, yes, but how much effort does each direction take? It follows *Controllability*: the Gramian W measures how much each direction of the state can be pushed per unit of input energy.
+**The question:** controllable, yes, but how much effort does each direction take? It hangs under *Do inside and outside match?*: the Gramian W measures how much each direction of the state can be pushed per unit of input energy.
+
+### The big idea
+
+How controllable a system is, not just whether. The observability Gramian answers the dual question: how much output energy each initial state produces, so which states are hard to see.
+
+### See it
+
+**Picture it first.** B and AB are the directions the input can push in, and the Gramian weighs how far each gets per unit of energy. The states you can reach with one unit of energy form an ellipse (an ellipsoid in n dimensions) whose axes are the eigenvectors of W_c, with half-lengths √(eigenvalues). A long axis is a cheap direction and a short axis an expensive one; if some eigenvalue is zero the ellipse is flat and that direction is unreachable.
+
+```figure:gramian
+```
+
+```figure:optimal
+```
+
+### The math
 
 $$W_c(T)=\int_0^T e^{A\tau}BB^{\mathsf T}e^{A^{\mathsf T}\tau}\,d\tau,\qquad W_o(T)=\int_0^T e^{A^{\mathsf T}\tau}C^{\mathsf T}Ce^{A\tau}\,d\tau$$
 
@@ -22,22 +40,35 @@ W_c(T) is positive definite exactly when (A, B) is controllable. The least energ
 
 $$u(t)=B^{\mathsf T}e^{A^{\mathsf T}(T-t)}W_c(T)^{-1}\big(x_f-e^{AT}x_0\big).$$
 
-**Picture it first.** B and AB are the directions the input can push in, and the Gramian weighs how far each gets per unit of energy. The states you can reach with one unit of energy form an ellipse (an ellipsoid in n dimensions) whose axes are the eigenvectors of W_c, with half-lengths √(eigenvalues). A long axis is a cheap direction and a short axis an expensive one; if some eigenvalue is zero the ellipse is flat and that direction is unreachable.
+**What each symbol means.**
 
-```figure:gramian
-```
+- $W_c(T)$: the controllability Gramian over a time window $T$ (K²/(kW²·h) for the house); its ellipse shows which states are cheap to reach.
+- $W_o(T)$: the observability Gramian, how strongly each state shows in the output.
+- $x_f$: the target state; $E_{\min} = x_f^\mathsf{T}W_c^{-1}x_f$ the least energy $\int u^2\,dt$ to reach it from rest.
 
-````callout:note What this answers
-How controllable a system is, not just whether. The observability Gramian answers the dual question: how much output energy each initial state produces, so which states are hard to see.
+````callout:derivation Full derivation
+Reach $x_f$ from $x(0) = 0$ at time $T$: $x(T) = \int_0^T e^{A(T-t)}Bu(t)\,dt$. Minimise $\int_0^T u^2\,dt$ subject to that constraint. A Lagrange multiplier $\eta$ gives $u(t) = B^\mathsf{T}e^{A^\mathsf{T}(T-t)}\eta$. Substitute:
+
+$$x_f=\Big(\int_0^T e^{A\tau}BB^\mathsf{T}e^{A^\mathsf{T}\tau}d\tau\Big)\eta=W_c(T)\,\eta,$$
+
+so $\eta = W_c^{-1}x_f$, and the energy is
+
+$$\int_0^T u^2dt=\eta^\mathsf{T}W_c\,\eta=x_f^\mathsf{T}W_c^{-1}x_f.$$
 ````
 
-````callout:note What it raises
-Balanced truncation: change coordinates until W_c = W_o is diagonal, then drop the states that are both hard to reach and hard to see.
-````
+### Worked example: on the house
 
-````callout:note Mini example
-For ẋ = u (one integrator), W(T) = T and the cheapest way from 0 to 1 in time T is u = 1/T, with energy 1/T. Halving the time doubles the energy. That is review variant P2.
-````
+1. House, heater in room 1, 3 hours: $W(3)$ has eigenvalues 0.78 and 12.0 K²/(kW²·h); its ellipse is about 4 times longer than wide, tilted about 31° up from the room-1 axis.
+2. Reaching (10, 10) K costs $\int u^2 \approx 3.1\times10^7$ W²·h.
+3. Reaching (5, −5) K, a 10 K gap with the average at outdoor temperature (heater allowed to cool), costs about $6.0\times10^7$ W²·h, nearly twice as much although half as far: the thin axis points along ≈(0.51, −0.86).
+
+**Exam-style example.** For ẋ = u (one integrator), W(T) = T and the cheapest way from 0 to 1 in time T is u = 1/T, with energy 1/T. Halving the time doubles the energy. That is review variant P2.
+
+### What it can't do
+
+The Gramian prices the cheapest input but only for the plain energy cost and a fixed endpoint. Other costs (state error, effort weights) need the general optimal-control machinery.
+
+**Next question.** Balanced truncation: change coordinates until W_c = W_o is diagonal, then drop the states that are both hard to reach and hard to see.
 
 ### Common pitfalls
 
