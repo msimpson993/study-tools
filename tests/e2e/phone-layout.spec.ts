@@ -6,6 +6,16 @@ test.describe('linear-systems at 390 px', () => {
   test.use({ viewport: { width: 390, height: 844 } });
   const noHScroll = (page: import('@playwright/test').Page) => page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth + 1);
 
+  test('the Variables drawer stops above an open box panel, and uses the site font', async ({ page }) => {
+    await open(page, 'linear-systems', '#/');
+    await page.locator('.qm-node').first().click();
+    await expect(page.locator('.cm-panel:not(.idle)')).toBeVisible();
+    await page.getByTestId('glossary-btn').click();
+    const r = await page.evaluate(() => ({ d: document.querySelector('[data-testid=glossary]')!.getBoundingClientRect().bottom, p: document.querySelector('.cm-panel')!.getBoundingClientRect().top, f: getComputedStyle(document.querySelector('[data-testid=glossary] dt')!).fontFamily }));
+    expect(r.d).toBeLessThanOrEqual(r.p);
+    expect(r.f).toMatch(/system-ui/); expect(r.f).not.toMatch(/Charter|Georgia/);
+  });
+
   test('Live figures: long titles wrap inside their buttons, no sideways page', async ({ page }) => {
     await open(page, 'linear-systems', '#/s/figures');
     await expect(page.getByTestId('figure-list')).toBeVisible();

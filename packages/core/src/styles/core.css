@@ -87,6 +87,8 @@ details.fold>div{padding:0 .8rem .6rem}
 .st-seg{display:flex;gap:.25rem;margin:.2rem 0}
 .st-seg button{flex:1;border:1px solid var(--border);background:var(--panel2);color:var(--muted);border-radius:8px;padding:.28rem .5rem;font:600 .76rem system-ui,sans-serif;cursor:pointer}
 .st-seg button.on{background:var(--accent);border-color:var(--accent);color:var(--on-accent)}
+.fig-layout .st-seg{flex-wrap:wrap}
+.fig-layout .st-seg button{flex:1 1 auto}
 .cm-wrap{display:grid;grid-template-columns:minmax(0,1fr);gap:.8rem}
 @media (min-width:1150px){.cm-wrap{grid-template-columns:minmax(0,1fr) 360px}}
 .cm-scroll{overflow-x:auto;-webkit-overflow-scrolling:touch;border:1px solid var(--border);border-radius:14px;background:var(--board);padding:.3rem}
@@ -202,7 +204,9 @@ details.st-more .st-badge{display:inline-block;margin-left:.35rem;padding:0 .4re
 /* ---- glossary drawer ---- */
 .drawer{position:fixed;right:0;top:44px;bottom:0;width:min(380px,92vw);z-index:80;background:var(--bg);border-left:1px solid var(--border-strong);box-shadow:-10px 0 40px rgba(0,0,0,.5);padding:.7rem .9rem;overflow:auto;font:.86rem/1.45 system-ui,sans-serif}
 .drawer[hidden]{display:none}
-.drawer dt{font:700 .9rem Charter,Georgia,serif;margin-top:.55rem}
+.drawer dt{font:700 .9rem system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;margin-top:.55rem}
+/* below 1150px the box panel is a bottom sheet: the drawer stops above it instead of covering it */
+@media (max-width:1149px){body:has(.cm-panel:not(.idle)) .drawer{bottom:calc(52vh + .8rem);border-bottom:1px solid var(--border-strong);border-radius:0 0 0 12px}}
 .drawer dd{margin:.1rem 0 0;color:var(--muted)}
 .drawer .gloss-sec{margin:1rem 0 .1rem;padding-top:.5rem;border-top:1px solid var(--border);font:700 .72rem system-ui,sans-serif;letter-spacing:.06em;text-transform:uppercase;color:var(--accent)}
 .drawer .gloss-sec:first-child{margin-top:.3rem;border-top:0;padding-top:0}
