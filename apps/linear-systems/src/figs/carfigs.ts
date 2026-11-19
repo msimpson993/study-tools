@@ -19,7 +19,7 @@ function shapes(p: CarP) {
 }
 const carFrame = (w: number, h: number): Frame => rangeFrame(w, h, [-2.65, 2.25], [-0.15, 1.75], 8, 8, 18, 14);
 /** side-view car on its two spring+shock pairs; z (m), th (rad), drawn with vertical gain `gn` */
-function drawCar(g: CanvasRenderingContext2D, f: Frame, p: CarP, z: number, th: number, gn: number, o: { color?: string; ghost?: boolean; road?: [number, number]; labels?: boolean } = {}) {
+function drawCar(g: CanvasRenderingContext2D, f: Frame, p: CarP, z: number, th: number, gn: number, o: { color?: string; ghost?: boolean; road?: [number, number]; labels?: boolean | 'key' } = {}) {
   const yb = 0.62, y = (x: number) => yb + gn * (z + x * th), c = o.color ?? col.text();
   const wr = 0.27, road = o.road ?? [0, 0];
   if (!o.ghost) {
@@ -28,13 +28,18 @@ function drawCar(g: CanvasRenderingContext2D, f: Frame, p: CarP, z: number, th: 
       const cy = wr + u; g.beginPath(); g.ellipse(f.X(x), f.Y(cy), Math.abs(f.X(wr) - f.X(0)), Math.abs(f.Y(0) - f.Y(wr)), 0, 0, 7); g.strokeStyle = col.strong(); g.lineWidth = 2; g.stroke();
       const top = y(x), n = 6, zz: [number, number][] = []; for (let i = 0; i <= n; i++) zz.push([x - 0.12 + (i % 2 ? 0.06 : -0.06) * (i > 0 && i < n ? 1 : 0), cy + 0.05 + ((top - cy - 0.05) * i) / n]);
       polyline(g, f, zz, col.a(), 1.6); tline(g, f, [x + 0.12, cy + 0.05], [x + 0.12, top], col.c(), 3);
+      if (o.labels === 'key' && x < 0) { // A4: name the rear zigzag and green bar in their own colours (front pair is the same)
+        const ym = f.Y((cy + 0.05 + top) / 2);
+        text(g, 'spring', f.X(x - 0.26), ym, col.a(), 'right', 10); text(g, 'shock', f.X(x + 0.2), ym, col.c(), 'left', 10);
+      }
     }
   }
   const bl = -p.b - 0.75, br = p.a + 0.75, H = 0.42;
   const pts: [number, number][] = [[bl, 0], [br, 0], [br, 0.55 * H / 0.42 * 0.42], [p.a - 0.5, 0.62], [p.a - 0.95, 1.05], [-p.b + 0.55, 1.05], [-p.b + 0.05, 0.66], [bl, 0.6], [bl, 0]];
   polyline(g, f, pts.map(([x, d]) => [x, y(x) + d * 0.8] as [number, number]), c, o.ghost ? 1.2 : 2, o.ghost ? [4, 3] : []);
   if (!o.ghost) { const cx = f.X(0), cy = f.Y(y(0) + 0.25); g.strokeStyle = c; g.lineWidth = 1.4; g.beginPath(); g.moveTo(cx - 5, cy); g.lineTo(cx + 5, cy); g.moveTo(cx, cy - 5); g.lineTo(cx, cy + 5); g.stroke(); }
-  if (o.labels && !o.ghost) { // A4: name the parts on the drawing
+  if (o.labels === 'key' && !o.ghost) text(g, '+ centre of gravity', f.X(0) + 8, f.Y(y(0) + 0.25) - 10, c, 'left', 10);
+  if (o.labels === true && !o.ghost) { // A4: name the parts on the drawing
     text(g, '+ = centre of gravity (x = 0)', f.X(0) + 8, f.Y(y(0) + 0.25) - 10, c, 'left', 10);
     text(g, 'wheel / axle', f.X(p.a), f.Y(-0.02) + 2, col.muted(), 'center', 10, 'top');
     text(g, 'spring + shock', f.X(-p.b) + 16, f.Y(0.45), col.muted(), 'left', 10);
@@ -69,7 +74,7 @@ export const diagFigure = figureOf((c) => {
   return [
     { id: 'pose', title: 'The pose (z, θ) and its two mode parts', x: 'position (m)', y: 'height (exaggerated)',
       draw(g, w, h) { wipe(g, w, h); const { p, S, z, th, q1, q2 } = split(), f = carFrame(w, h);
-        drawCar(g, f, p, q1, q1 * S.tb, 6, { ghost: true, color: col.a() }); drawCar(g, f, p, q2 * S.zp, q2, 6, { ghost: true, color: col.b() }); drawCar(g, f, p, z, th, 6);
+        drawCar(g, f, p, q1, q1 * S.tb, 6, { ghost: true, color: col.a() }); drawCar(g, f, p, q2 * S.zp, q2, 6, { ghost: true, color: col.b() }); drawCar(g, f, p, z, th, 6, { labels: 'key' });
         note(g, `z = ${fmt(z * 100, 1)} cm, θ = ${fmt(th * DEG, 2)}°`, 8, 12, col.text(), 'left', 11);
         note(g, 'dashed: the bounce part and the pitch part', w - 8, h - 6, col.muted(), 'right', 10); } },
     { id: 'modal', title: 'Mode coordinates: how much bounce, how much pitch', x: 'bounce amount q₁ (cm of heave)', y: 'pitch amount q₂ (°)',
@@ -165,9 +170,9 @@ const modeAt = (p: CarP, x: number) => { const S = shapes(p); return { b: S.phiB
 function shapesPanel(c: { values: V }, key: string, label: string, color: string) {
   return { id: 'car', title: `The two mode shapes and the ${label}`, x: 'position (m)', y: 'height (exaggerated)',
     draw(g: CanvasRenderingContext2D, w: number, h: number) { wipe(g, w, h); const p = carOf(c.values), S = shapes(p), f = carFrame(w, h), x = snap(p, num(c.values, key));
-      drawCar(g, f, p, 0, 0, 1); drawCar(g, f, p, 0.06, 0.06 * S.tb, 3, { ghost: true, color: col.a() }); drawCar(g, f, p, 0.04 * S.zp, 0.04, 3, { ghost: true, color: col.b() });
+      drawCar(g, f, p, 0, 0, 1, { labels: 'key' }); drawCar(g, f, p, 0.06, 0.06 * S.tb, 3, { ghost: true, color: col.a() }); drawCar(g, f, p, 0.04 * S.zp, 0.04, 3, { ghost: true, color: col.b() });
       markX(g, f, x, color, `${label} x = ${fmt(x, 2)} m`);
-      if (Number.isFinite(S.zp)) { const xn = -S.zp; if (xn > -2.6 && xn < 2.2) dot(g, f, [xn, 0.62], col.e(), 3.5); }
+      if (Number.isFinite(S.zp)) { const xn = -S.zp; if (xn > -2.6 && xn < 2.2) { dot(g, f, [xn, 0.62], col.e(), 3.5); text(g, 'still point', f.X(xn), f.Y(0.62) + 12, col.e(), 'center', 10); } }
       note(g, 'dashed: bounce (blue), pitch (orange)', 8, h - 6, col.muted(), 'left', 10); } };
 }
 const bars = (g: CanvasRenderingContext2D, w: number, h: number, vals: [string, number, string][], ylab: string, msg: string, msgColor: string) => {
@@ -180,7 +185,7 @@ export const ctrlFigure = figureOf((c) => [
   shapesPanel(c, 'xp', 'push at', col.bad()),
   { id: 'push', title: 'How hard a push there drives each mode (the PBH number wᵀB)', x: 'mode', y: 'push on the mode',
     draw(g, w, h) { wipe(g, w, h); const p = carOf(c.values), x = snap(p, num(c.values, 'xp')), { b, q } = modeAt(p, x), r = rank(ctrbM(carA(p), forceB(p, [x])), 1e-6);
-      bars(g, w, h, [['bounce', b, col.a()], ['pitch', q, col.b()]], 'push on the mode, wᵀB (scaled)', r === 4 ? 'rank [B AB A²B A³B] = 4: controllable' : `rank ${r} of 4: a mode is out of reach`, r === 4 ? col.ok() : col.bad()); } },
+      bars(g, w, h, [['bounce', b, col.a()], ['pitch', q, col.b()]], 'push per newton on the mode (1/√kg)', r === 4 ? 'rank [B AB A²B A³B] = 4: controllable' : `rank ${r} of 4: a mode is out of reach`, r === 4 ? col.ok() : col.bad()); } },
 ]);
 export const obsFigure = figureOf((c) => {
   const reading = (p: CarP, x: number, gyro: boolean) => (gyro ? [0, 0, 0, 1] : [1, x, 0, 0]);

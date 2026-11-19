@@ -358,7 +358,7 @@
   - label: pitch shape
     color: var(--org)
     dash: true
-  howToRead: "A vertical force u at x metres from the centre of gravity: B = (0, 0, 1/m, x/J). Left: the two mode shapes and the push point. Right (the PBH view): how hard the push drives each mode, which is how far that mode's shape moves at the push point. A mode with zero push can never be started; the controllability matrix [B AB A²B A³B] then has rank 2, not 4."
+  howToRead: "A vertical force u at x metres from the centre of gravity: B = (0, 0, 1/m, x/J). Left: the two mode shapes and the push point. Right (the PBH view): how hard the push drives each mode, which is how far that mode's shape moves at the push point. Bar height: the modal force from 1 N at x, with each shape scaled to unit modal mass (φᵀMφ = 1), so the two bars compare directly. A mode with zero push can never be started; the controllability matrix [B AB A²B A³B] then has rank 2, not 4."
   lookFor: "Main car, push at the centre: both bars are nonzero, rank 4. Switch to the symmetric car (More): a push at the centre cannot start pitch. On the main car, push at x = +0.56 m, the pitch still point: pitch is out of reach."
   controls:
   - id: xp
@@ -442,7 +442,7 @@
   - id: set
     label: parameter set
     type: select
-    default: main
+    default: sym
     group: more
     options: *id001
   presets:
@@ -979,7 +979,7 @@
     dash: true
   - label: samples
     color: var(--yel)
-  howToRead: "Top: a tone sampled at fs (yellow dots), with the lowest-frequency tone that passes through the same dots (orange). Bottom: sampling copies the spectrum at every multiple of fs; the green band ±fs/2 is all the samples can represent, and the copy inside it is what you hear back."
+  howToRead: "Left (top on a phone): a tone sampled at fs (yellow dots), with the lowest-frequency tone that passes through the same dots (orange). Right (below on a phone): sampling copies the spectrum at every multiple of fs; the green band ±fs/2 is all the samples can represent, and the copy inside it is what you hear back."
   lookFor: "At 8 kHz the 690 Hz ring is safe. Sweep f past 4 kHz: an orange copy walks down inside the band; 7.31 kHz samples exactly like 690 Hz."
   animate:
     control: f

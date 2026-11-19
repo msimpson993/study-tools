@@ -116,8 +116,10 @@ export const fsFigure = figureOf((c) => {
         const f = graph(g, w, h, [0, (K + 1) * f0], [0, top], 'frequency (Hz)', 'amplitude (V or DC-normalised)');
         const fs = linspace(0, (K + 1) * f0, 300); curve(g, f, fs, fs.map((q) => cabs(Hf(q)) * 0.5), col.muted(), 1, [3, 3]);
         for (let k = 1; k <= K; k++) { if (!squareCoef(k)) continue; const x = k * f0, on = k <= N; tline(g, f, [x - f0 * 0.12, 0], [x - f0 * 0.12, squareCoef(k)], on ? col.a() : col.grid(), 4); tline(g, f, [x + f0 * 0.12, 0], [x + f0 * 0.12, squareCoef(k) * cabs(Hf(x))], on ? col.b() : col.grid(), 4); }
+        // N3: three short right-aligned notes, clear of the y label and the tall first bars
         note(g, 'blue: drive 4/(πk) · orange: at the cone', f.box.r - 4, f.box.t + 10, col.muted(), 'right', 10);
-        note(g, 'dotted: ½|H(f)|, each line of a ±f pair carries half the one-sided amplitude', f.box.r - 4, f.box.t + 26, col.muted(), 'right', 10);
+        note(g, 'dotted: |H(f)| scaled ×½ to fit', f.box.r - 4, f.box.t + 25, col.muted(), 'right', 10);
+        note(g, 'grey: harmonics not included (k > N)', f.box.r - 4, f.box.t + 40, col.muted(), 'right', 10);
       },
     },
   ];
@@ -130,7 +132,7 @@ export const orthoFigure = figureOf((c) => {
   const proj = (m: number): [number, number] => { let a = 0, b = 0; const n = 2000; for (let i = 0; i < n; i++) { const t = (i + 0.5) * (P / n), y = buzz(t); a += (y * Math.cos((TAU * m * t) / P) * 2) / n; b += (y * Math.sin((TAU * m * t) / P) * 2) / n; } return [a, b]; };
   return [
     {
-      id: 'prod', title: 'Buzz y(t) times the probe cos(2π·m·200t): the area is the inner product', x: 'time t (ms)', y: 'amplitude',
+      id: 'prod', title: 'Cone response y(t) to the buzz, times the probe cos(2π·m·200t): the area is the inner product', x: 'time t (ms)', y: 'amplitude',
       draw(g, w, h) {
         wipe(g, w, h);
         const m = num(c.values, 'm'), ts = linspace(0, P, 501), ys = ts.map(buzz), pr = ts.map((t) => Math.cos((TAU * m * t) / P)), top = Math.max(1.3, ...ys.map(Math.abs)) * 1.1;
@@ -172,11 +174,14 @@ export const samplingFigure = figureOf((c) => {
       id: 'spectrum', title: 'Sampling copies the spectrum at multiples of fs', x: 'frequency (kHz)', y: 'spectral lines',
       draw(g, w, h) {
         wipe(g, w, h);
-        const fq = num(c.values, 'f') / 1000, fs = num(c.values, 'fs'), R = Math.max(16, fs * 1.6), f = graph(g, w, h, [-R, R], [0, 1.3], 'frequency (kHz)', 'amplitude', fs / 2, 1);
+        const fq = num(c.values, 'f') / 1000, fs = num(c.values, 'fs'), R = Math.max(16, fs * 1.6), f = graph(g, w, h, [-R, R], [0, 1.95], 'frequency (kHz)', 'amplitude', fs / 2, 1);
         g.fillStyle = 'rgba(110,226,110,.12)'; g.fillRect(f.X(-fs / 2), f.box.t, f.X(fs / 2) - f.X(-fs / 2), f.box.b - f.box.t);
         for (let k = -4; k <= 4; k++) for (const sg of [1, -1]) { const x = sg * fq + k * fs; if (Math.abs(x) > R) continue; const base = k === 0, inB = Math.abs(x) <= fs / 2 + 1e-9; const cl = base ? col.a() : inB ? col.b() : col.muted(); tline(g, f, [x, 0], [x, 1], cl, base ? 3 : 2); dot(g, f, [x, 1], cl, 3.5); }
-        note(g, `green band: ±fs/2 = ±${fmt(fs / 2, 1)} kHz`, f.box.l + 4, f.box.t + 12, col.ok(), 'left', 10);
-        note(g, 'blue: the tone ±f · orange: a copy inside the band (alias) · grey: copies at ±f + k·fs', f.box.l + 4, f.box.t + 28, col.muted(), 'left', 10);
+        // colour key on its own lines, above the stems (they stop at 1; the y range runs to 1.95)
+        note(g, `green band: ±fs/2 = ±${fmt(fs / 2, 1)} kHz`, f.box.l + 4, f.box.t + 12, col.ok(), 'left', 11);
+        note(g, 'blue: the tone, ±f', f.box.l + 4, f.box.t + 27, col.a(), 'left', 11);
+        note(g, 'orange: a copy inside the band (alias)', f.box.l + 4, f.box.t + 42, col.b(), 'left', 11);
+        note(g, 'grey: copies at ±f + k·fs', f.box.l + 4, f.box.t + 57, col.muted(), 'left', 11);
       },
     },
   ];
@@ -200,10 +205,11 @@ export const dtftFigure = figureOf((c) => {
       draw(g, w, h) {
         wipe(g, w, h);
         const fs = num(c.values, 'fs'), Om = num(c.values, 'Om'), os = linspace(-2 * Math.PI, 2 * Math.PI, 801), ms = os.map((o) => cabs(ringDTFT(o, fs)));
-        const f = graph(g, w, h, [-2 * Math.PI, 2 * Math.PI], [0, Math.max(...ms) * 1.15], 'Ω (rad/sample)', '|X(e^(jΩ))|', Math.PI, 0, 44, piTick);
+        const f = graph(g, w, h, [-2 * Math.PI, 2 * Math.PI], [0, Math.max(...ms) * 1.45], 'Ω (rad/sample)', '|X(e^(jΩ))|', Math.PI, 0, 44, piTick);
         g.fillStyle = 'rgba(110,226,110,.10)'; g.fillRect(f.X(-Math.PI), f.box.t, f.X(Math.PI) - f.X(-Math.PI), f.box.b - f.box.t);
         curve(g, f, os, ms, col.a(), 2.5); dot(g, f, [Om, cabs(ringDTFT(Om, fs))], col.e(), 5);
         const d = ringDigital(fs); note(g, `Ω = ${fmt(Om, 2)} ↔ ${fmt((Om * fs * 1000) / TAU, 0)} Hz · pole angle θ = ${fmt(d.th, 3)}`, f.box.r - 4, f.box.t + 10, col.text(), 'right', 10);
+        note(g, 'green: one period, −π…π', f.box.r - 4, f.box.t + 25, col.ok(), 'right', 10);
       },
     },
   ];
@@ -303,12 +309,15 @@ export const inverseFigure = figureOf((c) => {
       id: 'poles', title: 'Poles of H(s) = a₀/(s² + a₁s + a₀) and their residues', x: 'Re s (1/ms)', y: 'Im s (1/ms)',
       draw(g, w, h) {
         wipe(g, w, h);
-        const d = snapD(num(c.values, 'damp')), p = spk(d), f = planeFrame(w, h, 6, -4, 0, 8, false), r = residue(d);
+        const d = snapD(num(c.values, 'damp')), p = spk(d), f = planeFrame(w, h, 7, -4, 0, 8, false), r = residue(d);
         axes2(g, f, 'σ = Re s (1/ms)', 'ω = Im s (1/ms)'); planeTicks(g, f, 2); spanLine(g, f, [0, 1], col.grid(), 1, []);
         for (const q of p.poles) cross(g, f, q, col.bad(), 7);
         const rep = Math.abs(p.zeta - 1) < 0.01;
-        note(g, `ζ = ${fmt(p.zeta, 3)} · poles ${p.poles.map((q) => `${fmt(q[0])}${q[1] ? (q[1] > 0 ? ' + ' : ' − ') + fmt(Math.abs(q[1])) + 'j' : ''}`).join(', ')}`, f.box.l + 4, f.box.t + 10, col.text(), 'left', 10);
-        note(g, rep ? 'repeated pole: a₀/(s + σ)² → a₀ t e^(−σt) (Jordan block)' : p.wd > 0 ? `residue at the upper pole: ${fmt(r[0])} ${r[1] < 0 ? '−' : '+'} ${fmt(Math.abs(r[1]))}j` : `residues ±${fmt(Math.abs(r[0]), 2)}`, f.box.l + 4, f.box.b - 6, rep ? col.e() : col.text(), 'left', 10);
+        // readouts start right of the y tick labels (l + 3…l + 15) and stay above the x tick labels (b − 7); two short lines clear the Im-axis label
+        const L = f.box.l + 18;
+        note(g, `ζ = ${fmt(p.zeta, 3)}`, L, f.box.t + 10, col.text(), 'left', 10);
+        note(g, p.wd > 0 ? `poles ${fmt(p.poles[0][0])} ± ${fmt(Math.abs(p.poles[0][1]))}j` : `poles ${p.poles.map((q) => fmt(q[0])).join(', ')}`, L, f.box.t + 24, col.text(), 'left', 10);
+        note(g, rep ? 'repeated pole: a₀/(s + σ)² → a₀ t e^(−σt) (Jordan block)' : p.wd > 0 ? `residue at the upper pole: ${fmt(r[0])} ${r[1] < 0 ? '−' : '+'} ${fmt(Math.abs(r[1]))}j` : `residues ±${fmt(Math.abs(r[0]), 2)}`, L, f.box.b - 22, rep ? col.e() : col.text(), 'left', 10);
       },
     },
     {
