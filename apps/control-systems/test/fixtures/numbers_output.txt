@@ -35,7 +35,10 @@ PI cubic bound (added): 2.4*(0.44+b Kp) > b Ki  ->  Ki < 2933.3333333333335 W/(K
 cold front -5 K, open loop (heater fixed): room 2 change after 24 h = -4.959 K, worst = -4.959 K, extra heater power at 24 h = 0 W, peak extra 0 W
 cold front -5 K, P 1100: room 2 change after 24 h = -0.500 K, worst = -0.605 K, extra heater power at 24 h = 550 W, peak extra 666 W
 cold front -5 K, PI 1100/200: room 2 change after 24 h = -0.007 K, worst = -0.581 K, extra heater power at 24 h = 611 W, peak extra 737 W
-steady extra heat for -5 K outside: 5/(b/0.44) = 611 W (= 5 K x 2 x 55.6 W/K)
+steady extra heat for -5 K outside, PI (bedroom held): 5 K/G2(0) = 5/(b/0.44) = 611 W
+  PI (bedroom back on its set point): living room +1.00 K (6.00 K more above outdoors), bedroom +0.00 K (5.00 K more); extra leak = 55.56 W/K x (6.00 + 5.00) K = 611 W (living-room wall 333 W + bedroom wall 278 W) = (5 K - droop)/G2(0) = 611 W
+  P 1100 (bedroom 0.5 K low): living room +0.40 K (5.40 K more above outdoors), bedroom -0.50 K (4.50 K more); extra leak = 55.56 W/K x (5.40 + 4.50) K = 550 W (living-room wall 300 W + bedroom wall 250 W) = (5 K - droop)/G2(0) = 550 W
+  inner wall must carry the bedroom's extra leak: 55.56 x 5 = 278 W = 277.8 W/K x 1 K -> living room +1 K (6 K more above outdoors)
 P droop prediction: 5 K x S(0) = 5/(1+9) = 0.5 K
 
 ======== [H5] Sensitivity: insulation 20 % worse (leak 0.2 -> 0.24 /h)
@@ -250,10 +253,10 @@ offset PD (1000,0,120) wind peak 1.199 deg, final -1.146 deg, inside 0.05 deg af
 offset fix (1000,500,120) wind peak 1.130 deg, final -0.000 deg, inside 0.05 deg after 6.09 s
 dist (500,250,100) wind peak 2.076 deg, final -0.000 deg, inside 0.05 deg after 7.16 s
 dist fix tuned wind peak 0.554 deg, final -0.000 deg, inside 0.05 deg after 4.82 s
-kick dm False peak|u| unlimited 4200 OS 17.0 %, Ts 0.36 s, Tr 0.058 s
-   with 200 limit OS 6.4 %, Ts 2.08 s, Tr 0.151 s
-kick dm True peak|u| unlimited 200 OS 6.6 %, Ts 2.16 s, Tr 0.153 s
-   with 200 limit OS 6.6 %, Ts 2.16 s, Tr 0.153 s
+kick dm False peak|u| unlimited 4200 OS 16.6 %, Ts 0.37 s, Tr 0.057 s
+   with 200 limit OS 6.1 %, Ts 2.12 s, Tr 0.154 s
+kick dm True peak|u| unlimited 200 OS 6.3 %, Ts 2.20 s, Tr 0.156 s
+   with 200 limit OS 6.3 %, Ts 2.20 s, Tr 0.156 s
 limits 2 rad clamp umax 200 OS 3.8 %, Ts 0.79 s, Tr 0.362 s
 limits 2 rad clamp umax 400 OS 3.0 %, Ts 0.69 s, Tr 0.260 s
 limits 2 rad clamp umax 1000 OS 4.5 %, Ts 1.02 s, Tr 0.188 s
@@ -284,6 +287,31 @@ lag retune (600, 150, 120) OS 5.1 %, Ts 4.61 s, Tr 0.233 s
 lag linear check (2000, 1000, 200) OS 32.2 %, Ts 2.14 s
 lag linear check (1000, 500, 120) OS 27.5 %, Ts 2.62 s
 lag linear check (600, 150, 90) OS 16.8 %, Ts 3.56 s
+
+======== [R] Review 1 (Nov 19, student review at 0048691): W1, W5, W6, A12/A14 on the dish, Bode panel, |S| peak, CC(b)
+R2 PD (1000,0,120) D on measurement, filter none (ideal D): OS 4.6 %, Ts 0.60 s, Tr 0.213 s
+R2 PD (1000,0,120) D on measurement, filter N_f = 200 rad/s: OS 3.8 %, Ts 0.57 s, Tr 0.212 s
+R2 PD (1000,0,120) D on error, filter none (ideal D): OS 15.6 %, Ts 0.50 s, Tr 0.101 s
+R2 PD (1000,0,120) D on error, filter N_f = 200 rad/s: OS 16.1 %, Ts 0.49 s, Tr 0.093 s
+R2 linear check PD (1000,0,120), D on measurement, N_f 200: OS 3.77 %
+R2 linear check PD (1000,0,120), D on error, N_f 200: OS 16.08 %
+R2 linear check kick card PID (2000,1000,200), unlimited, D on measurement, N_f 200: OS 6.30 %
+R2 linear check kick card PID (2000,1000,200), unlimited, D on error, N_f 200: OS 16.59 %
+R3 second: %OS <= 10 % needs zeta >= 0.5912; c = 2 zeta sqrt(k m) = 3783.4 N s/m (Ts <= 1 s: c = 2 m 4 = 3200)
+R3 dominant: wheel-hop decay 20.4 /s over the body pair's decay WITH the wheel (1.5985 /s) = 12.76x; over the single-mass body's 2 /s = 10.2x (the figure's 10.2x divides by the wrong body pole)
+R3 integral: PI (1000, 500), 20 N m gust at 3 s on top of the step: wind's own effect (with-wind minus no-wind run) peaks at 1.911 deg; the largest |angle - target| after 3 s is 2.123 deg because the step's own ringing is still there
+R3 index: telescope ISE = 1/K3 + 0.1 K3 is minimal at K3 = sqrt(10) = 3.1623; a 0.25-step grid would read 3.25
+R4 A12 PD (2000,0,200), step 0.02 rad, stiction 0/0 N m: overshoot 2.0 %, stops +0.000 deg from target (+0.0 % of the step)
+R4 A12 PD (2000,0,200), step 0.02 rad, stiction 20/10 N m: overshoot -23.5 %, stops +0.269 deg from target (+23.5 % of the step)
+R4 A12 PD (2000,0,200), step 0.2 rad, stiction 0/0 N m: overshoot 2.0 %, stops +0.000 deg from target (+0.0 % of the step)
+R4 A12 PD (2000,0,200), step 0.2 rad, stiction 20/10 N m: overshoot -0.6 %, stops +0.064 deg from target (+0.6 % of the step)
+R4 A14 tuned PID, stiction 20/10 N m, 0.1 rad step, t = 60-200 s: error -0.145 .. +0.147 deg, 11 zero crossings, period 23.9 s
+R4 A14 tuned PID + integrator dead band 0.003 rad, stiction 20/10 N m, 0.1 rad step, t = 60-200 s: error +0.149 .. +0.149 deg, 0 zero crossings, period nan s (no hunting: it sticks and stays)
+R5 P 1000: |L| = 1 at 9.90 rad/s, phase margin 11.4 deg
+R5 PD (1000, 0, 120): |L| = 1 at 13.86 rad/s, phase margin 67.2 deg
+R5 tuned PID (2000, 1000, 200): |L| = 1 at 21.73 rad/s, phase margin 70.3 deg
+R6 |S| of the P thermostat peaks at 1.331 at 2.58 rad/h (log10 = 0.41); |S(0)| = 0.100
+R7 two equal heaters, 2.5 kW each: both rooms 45.0 K above outdoors, tau = 5 h, identical curves (the difference x1 - x2 never moves)
 
 All numbers recomputed.
 EXIT 0

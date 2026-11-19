@@ -256,7 +256,7 @@ export function dishCard(o: CardOpts) {
     const e = r - ym, sig = dm ? -ym : e;
     let dsig: number;
     if (Nf === null) dsig = i === 0 ? (dm ? 0 : Kd ? e / dt : 0) : (sig - yprev) / dt;
-    else { dstate += dt * Nf * (sig - dstate); dsig = i > 0 ? Nf * (sig - dstate) : Nf * sig; }
+    else { dsig = Nf * (sig - dstate); dstate += dt * Nf * (sig - dstate); } // read the filter before updating it (numbers.py review 1 fix)
     yprev = sig;
     const uc = Kp * (bw * r - ym) + Ki * I + Kd * dsig;
     const us = umax !== null ? Math.max(-umax, Math.min(umax, uc)) : uc;
@@ -286,3 +286,25 @@ export function cardWind(t: ArrayLike<number>, y: ArrayLike<number>, tw: number,
 }
 /** REF with N̄ off (u = −k₁(z − r) − k₂ż): the body stops at k₁/(k + k₁) of the command. */
 export const cornerNbarOffRatio = (K: number[] = cornerK(), p: Corner = cornerOf()) => K[0] / (p.k + K[0]);
+
+/** The dish with gear stiction (numbers.py [R4] sim_stick, review 1 W7): the gear needs |T| > T_st to break free, then drags at the Coulomb
+ *  torque T_c plus B·ω, and re-sticks when ω changes sign while |T| ≤ T_st. PID with ideal D on the measurement (−Kd·ω), torque limit umax,
+ *  and an optional integrator dead band (no integration while |e| ≤ edb). Illustration values (20 / 10 N·m), chosen, not measured. */
+export function simStick(Kp: number, Ki: number, Kd: number, o: { r?: number; T?: number; dt?: number; Ts?: number; Tc?: number; edb?: number; umax?: number; every?: number } = {}) {
+  const r = o.r ?? 0.1, T = o.T ?? 60, dt = o.dt ?? 1e-4, Ts = o.Ts ?? 20, Tc = o.Tc ?? 10, edb = o.edb ?? 0, umax = o.umax ?? 200, every = o.every ?? 1;
+  const n = Math.floor(T / dt + 1e-9), m = Math.ceil(n / every), t = new Float64Array(m), y = new Float64Array(m), uu = new Float64Array(m);
+  let th = 0, om = 0, I = 0, stuck = true, k = 0, yEnd = 0;
+  for (let i = 0; i < n; i++) {
+    const e = r - th; let u = Kp * e + Ki * I - Kd * om; u = Math.max(-umax, Math.min(umax, u));
+    if (Math.abs(e) > edb) I += e * dt;
+    if (stuck) { if (Math.abs(u) > Ts) stuck = false; else om = 0; }
+    if (!stuck) {
+      const a = (u - DISH.B * om - Tc * Math.sign(om !== 0 ? om : u)) / DISH.J; let omNew = om + a * dt;
+      if (om !== 0 && Math.sign(omNew) !== Math.sign(om) && Math.abs(u) <= Ts) { omNew = 0; stuck = true; }
+      om = omNew;
+    }
+    th += dt * om; yEnd = th;
+    if (i % every === 0) { t[k] = i * dt; y[k] = th; uu[k] = u; k++; }
+  }
+  return { t: t.subarray(0, k), y: y.subarray(0, k), u: uu.subarray(0, k), final: yEnd };
+}
