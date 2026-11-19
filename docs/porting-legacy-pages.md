@@ -10,4 +10,4 @@ Approach used for the transforms page (since folded into `apps/linear-systems`, 
 6. Check `docs/verification-checklist.md`, compare screenshots with the original.
 
 ## Control Systems Tutor (ported 2026-11-13)
-The three legacy pages (course-topics, pid-tuning, mini quiz) and the Control Systems Hub Canvas Pages now live in `apps/control-systems` and `apps/pid-tuning`, following steps 1-6 above. Each original guide is kept as a legacy board for reference, the quizzes moved 1:1 into `quiz.yaml`, and every map box has a visual dive on the shared cart plant. See each app's README for counts.
+The three legacy pages (course-topics, pid-tuning, mini quiz) and the Control Systems Hub Canvas Pages were ported following steps 1-6 above. In Nov 2026 `apps/control-systems` was rebuilt in the question-chain format on three running examples (house, car corner, antenna dish) and the pid-tuning app was folded into it and removed (its Lab, tuning figures, failure cards and quiz now live in control-systems). The course guide is kept as the legacy board, and the quizzes moved into `quiz.yaml`. See the app's README for counts.
