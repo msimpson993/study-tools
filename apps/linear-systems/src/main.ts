@@ -1,6 +1,7 @@
 import content from 'virtual:study-content';
 import { mountApp } from '@study/core';
 import { popFigures } from './figs/pop';
+import { pictures } from './figs/pictures';
 import { audioHook } from '@study/core/audio';
 import { sounds } from './figs/sounds';
 import { mountBoard } from './board/board';
@@ -9,7 +10,7 @@ import { ssFigure, ltiFigure, eigfnFigure, ftFigure, fsFigure, orthoFigure, samp
 
 mountApp(content, {
   board: (host, params) => mountBoard(host, params),
-  quizFigures: popFigures,
+  quizFigures: { ...popFigures, ...pictures },
   audio: audioHook(sounds),
   figures: {
     // car

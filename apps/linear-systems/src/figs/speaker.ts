@@ -1,7 +1,7 @@
 /** Live figures on the earbud speaker: time in ms, s in 1/ms (= krad/s), frequency in Hz. H(s) = X/V normalised to 1 at DC. */
-import { figureOf, planeFrame, spanLine, arrow, dot, cross, polyline, text, tline, axes2, wipe, curve, fillBetween, heat, clipBox, col, linspace, type V2 } from '@study/core';
+import { figureOf, planeFrame, planeTicks, spanLine, arrow, dot, cross, polyline, text, tline, axes2, wipe, curve, fillBetween, heat, clipBox, col, linspace, type V2 } from '@study/core';
 import { spk, hImp, hTerms, residue, Hs, Hf, cabs, dB, peakBand, ringDigital, ringSample, ringDTFT, ringDFT, humDFT, aliasOf, squareCoef, squarePowerShare, UM_PER_V, DAMP_CRIT, TAU, ltCompare, ltPeak, XMAX_UM, type LtSys, type LtTest } from './ex';
-import { num, fmt, graph, note } from './util';
+import { num, fmt, graph, note, piTick } from './util';
 
 const stems = (g: CanvasRenderingContext2D, f: ReturnType<typeof graph>, xs: number[], ys: number[], color: string, base = 0, r = 3) => xs.forEach((x, i) => { tline(g, f, [x, base], [x, ys[i]], color, 1.5); dot(g, f, [x, ys[i]], color, r); });
 
@@ -22,7 +22,7 @@ export const ltiFigure = figureOf((c) => {
         const hs = xs.map((tau) => hImp(t - tau) / 3), prod = xs.map((tau, i) => vin(tau) * hs[i]);
         fillBetween(g, f, xs, prod, 'rgba(110,226,110,.4)');
         curve(g, f, xs, xs.map(vin), col.a(), 2.2); curve(g, f, xs, hs, col.b(), 2.2); curve(g, f, xs, prod, col.c(), 1.8);
-        tline(g, f, [t, -1.2], [t, 1.3], col.muted(), 1, [4, 3]);
+        tline(g, f, [t, -1.2], [t, 1.3], col.muted(), 1, [4, 3]); note(g, `now: t = ${fmt(t, 1)} ms`, f.X(t) + 4, f.box.b - 10, col.muted(), 'left', 10);
         note(g, `x(${fmt(t, 1)} ms) = area × ${fmt(UM_PER_V, 1)} µm/V = ${fmt(yAt(t), 1)} µm`, f.box.l + 6, f.box.t + 10, col.c(), 'left', 11);
       },
     },
@@ -48,7 +48,8 @@ export const eigfnFigure = figureOf((c) => {
         const fq = num(c.values, 'f'), t = num(c.values, 't'), H = Hf(fq), m = cabs(H), ph = Math.atan2(H[1], H[0]), om = (TAU * fq) / 1000, ts = linspace(0, 5, 501), top = Math.max(1.2, m * 1.15);
         const f = graph(g, w, h, [0, 5], [-top, top], 'time t (ms)', 'drive · cone (DC = 1)');
         curve(g, f, ts, ts.map((s) => Math.cos(om * s)), col.a(), 2); curve(g, f, ts, ts.map((s) => m * Math.cos(om * s + ph)), col.b(), 2.5);
-        tline(g, f, [t, -top], [t, top], col.e(), 1.2, [4, 3]);
+        tline(g, f, [t, -top], [t, top], col.e(), 1.2, [4, 3]); note(g, `now: t = ${fmt(t, 2)} ms`, f.X(t) + 4, f.box.b - 10, col.e(), 'left', 10);
+        note(g, 'drive (blue) · cone (orange)', f.box.l + 4, f.box.t + 26, col.muted(), 'left', 10);
         note(g, `${fmt(fq, 0)} Hz in → ${fmt(fq, 0)} Hz out, ×${fmt(m, 2)}, lag ${fmt((-ph * 180) / Math.PI, 0)}°`, f.box.r - 4, f.box.t + 10, col.text(), 'right', 11);
       },
     },
@@ -60,6 +61,7 @@ export const eigfnFigure = figureOf((c) => {
         axes2(g, f, 'Re', 'Im');
         polyline(g, f, linspace(0, TAU, 97).map((q) => [Math.cos(q), Math.sin(q)] as V2), col.grid(), 1); polyline(g, f, linspace(0, TAU, 97).map((q) => [m * Math.cos(q), m * Math.sin(q)] as V2), col.grid(), 1, [3, 3]);
         arrow(g, f, [0, 0], [Math.cos(a), Math.sin(a)], col.a(), 2.5, 'in'); arrow(g, f, [0, 0], [m * Math.cos(a + ph), m * Math.sin(a + ph)], col.b(), 2.5, 'out');
+        note(g, `solid circle: radius 1 (drive) · dashed: radius |H| = ${fmt(m, 2)} (cone)`, f.box.l + 4, f.box.t + 10, col.muted(), 'left', 10);
         note(g, `H(j2π·${fmt(fq, 0)}) = ${fmt(H[0], 2)} ${H[1] < 0 ? '−' : '+'} ${fmt(Math.abs(H[1]), 2)}j`, f.box.l + 4, f.box.b - 6, col.text(), 'left', 11);
       },
     },
@@ -114,7 +116,8 @@ export const fsFigure = figureOf((c) => {
         const f = graph(g, w, h, [0, (K + 1) * f0], [0, top], 'frequency (Hz)', 'amplitude (V or DC-normalised)');
         const fs = linspace(0, (K + 1) * f0, 300); curve(g, f, fs, fs.map((q) => cabs(Hf(q)) * 0.5), col.muted(), 1, [3, 3]);
         for (let k = 1; k <= K; k++) { if (!squareCoef(k)) continue; const x = k * f0, on = k <= N; tline(g, f, [x - f0 * 0.12, 0], [x - f0 * 0.12, squareCoef(k)], on ? col.a() : col.grid(), 4); tline(g, f, [x + f0 * 0.12, 0], [x + f0 * 0.12, squareCoef(k) * cabs(Hf(x))], on ? col.b() : col.grid(), 4); }
-        note(g, 'dotted: ½|H(f)| · blue: drive 4/(πk) · orange: at the cone', f.box.r - 4, f.box.t + 10, col.muted(), 'right', 10);
+        note(g, 'blue: drive 4/(πk) · orange: at the cone', f.box.r - 4, f.box.t + 10, col.muted(), 'right', 10);
+        note(g, 'dotted: ½|H(f)|, each line of a ±f pair carries half the one-sided amplitude', f.box.r - 4, f.box.t + 26, col.muted(), 'right', 10);
       },
     },
   ];
@@ -138,12 +141,13 @@ export const orthoFigure = figureOf((c) => {
       },
     },
     {
-      id: 'bars', title: 'Each harmonic’s amplitude, measured on its own', x: 'harmonic m', y: 'amplitude',
+      id: 'bars', title: 'The cone response, one harmonic at a time', x: 'harmonic m (× 200 Hz)', y: 'amplitude at the cone (DC = 1)',
       draw(g, w, h) {
         wipe(g, w, h);
-        const m = num(c.values, 'm'), ms = Array.from({ length: 9 }, (_, i) => i + 1), amps = ms.map((q) => Math.hypot(...proj(q))), f = graph(g, w, h, [0.4, 9.6], [0, Math.max(1, ...amps) * 1.15], 'harmonic m (× 200 Hz)', 'amplitude at the cone', 1);
+        const m = num(c.values, 'm'), ms = Array.from({ length: 9 }, (_, i) => i + 1), amps = ms.map((q) => Math.hypot(...proj(q))), f = graph(g, w, h, [0.4, 9.6], [0, Math.max(1, ...amps) * 1.15], 'harmonic m (× 200 Hz)', 'cone amplitude (DC = 1)', 1);
         ms.forEach((q, i) => tline(g, f, [q, 0], [q, amps[i]], q === m ? col.e() : col.a(), q === m ? 10 : 7));
-        note(g, 'even harmonics: projection 0 (the drive has none)', f.box.r - 4, f.box.t + 10, col.muted(), 'right', 10);
+        note(g, `yellow bar: harmonic m = ${m}, the probe on the left`, f.box.r - 4, f.box.t + 10, col.e(), 'right', 10);
+        note(g, 'even harmonics: 0 (the drive has none)', f.box.r - 4, f.box.t + 26, col.muted(), 'right', 10);
       },
     },
   ];
@@ -171,7 +175,8 @@ export const samplingFigure = figureOf((c) => {
         const fq = num(c.values, 'f') / 1000, fs = num(c.values, 'fs'), R = Math.max(16, fs * 1.6), f = graph(g, w, h, [-R, R], [0, 1.3], 'frequency (kHz)', 'amplitude', fs / 2, 1);
         g.fillStyle = 'rgba(110,226,110,.12)'; g.fillRect(f.X(-fs / 2), f.box.t, f.X(fs / 2) - f.X(-fs / 2), f.box.b - f.box.t);
         for (let k = -4; k <= 4; k++) for (const sg of [1, -1]) { const x = sg * fq + k * fs; if (Math.abs(x) > R) continue; const base = k === 0, inB = Math.abs(x) <= fs / 2 + 1e-9; const cl = base ? col.a() : inB ? col.b() : col.muted(); tline(g, f, [x, 0], [x, 1], cl, base ? 3 : 2); dot(g, f, [x, 1], cl, 3.5); }
-        note(g, `green: ±fs/2 = ±${fmt(fs / 2, 1)} kHz`, f.box.l + 4, f.box.t + 12, col.ok(), 'left', 10);
+        note(g, `green band: ±fs/2 = ±${fmt(fs / 2, 1)} kHz`, f.box.l + 4, f.box.t + 12, col.ok(), 'left', 10);
+        note(g, 'blue: the tone ±f · orange: a copy inside the band (alias) · grey: copies at ±f + k·fs', f.box.l + 4, f.box.t + 28, col.muted(), 'left', 10);
       },
     },
   ];
@@ -195,7 +200,7 @@ export const dtftFigure = figureOf((c) => {
       draw(g, w, h) {
         wipe(g, w, h);
         const fs = num(c.values, 'fs'), Om = num(c.values, 'Om'), os = linspace(-2 * Math.PI, 2 * Math.PI, 801), ms = os.map((o) => cabs(ringDTFT(o, fs)));
-        const f = graph(g, w, h, [-2 * Math.PI, 2 * Math.PI], [0, Math.max(...ms) * 1.15], 'Ω (rad/sample)', '|X(e^(jΩ))|', Math.PI / 2);
+        const f = graph(g, w, h, [-2 * Math.PI, 2 * Math.PI], [0, Math.max(...ms) * 1.15], 'Ω (rad/sample)', '|X(e^(jΩ))|', Math.PI, 0, 44, piTick);
         g.fillStyle = 'rgba(110,226,110,.10)'; g.fillRect(f.X(-Math.PI), f.box.t, f.X(Math.PI) - f.X(-Math.PI), f.box.b - f.box.t);
         curve(g, f, os, ms, col.a(), 2.5); dot(g, f, [Om, cabs(ringDTFT(Om, fs))], col.e(), 5);
         const d = ringDigital(fs); note(g, `Ω = ${fmt(Om, 2)} ↔ ${fmt((Om * fs * 1000) / TAU, 0)} Hz · pole angle θ = ${fmt(d.th, 3)}`, f.box.r - 4, f.box.t + 10, col.text(), 'right', 10);
@@ -263,7 +268,7 @@ export const laplaceFigure = figureOf((c) => {
   const abscissa = () => spk(damp()).poles[0][0];
   return [
     {
-      id: 'integrand', title: 'h(t)·e^(−σt)·cos(ωt): the area is Re X(s)', x: 'time t (ms)', y: 'integrand',
+      id: 'integrand', title: 'h(t)·e^(−σt)·cos(ωt): the area is Re H(s)', x: 'time t (ms)', y: 'integrand',
       draw(g, w, h) {
         wipe(g, w, h);
         const s = num(c.values, 'sigma'), om = num(c.values, 'omega'), d = damp(), T = 6, ts = linspace(0, T, 600), ys = ts.map((t) => hImp(t, d) * Math.exp(-s * t) * Math.cos(om * t));
@@ -281,7 +286,7 @@ export const laplaceFigure = figureOf((c) => {
         const d = damp(), f = planeFrame(w, h, 6, -0.5, 0, 8, false), sc = abscissa(), s = num(c.values, 'sigma'), om = num(c.values, 'omega');
         heat(g, f, (x, y) => { const m = Math.log10(Math.max(1e-3, cabs(Hs([x, y], d)))), u = Math.max(0, Math.min(1, (m + 1.2) / 2.2)); return [Math.round(30 + 200 * u), Math.round(30 + 120 * u * u), Math.round(90 + 80 * (1 - u)), 255]; }, 5);
         g.save(); clipBox(g, f); g.fillStyle = 'rgba(0,0,0,.45)'; g.fillRect(f.box.l, f.box.t, f.X(sc) - f.box.l, f.box.b - f.box.t); g.restore();
-        axes2(g, f, 'σ', 'ω'); tline(g, f, [sc, -8], [sc, 8], col.e(), 2, [6, 4]);
+        axes2(g, f, 'σ (1/ms)', 'ω (1/ms)'); planeTicks(g, f, 2); tline(g, f, [sc, -8], [sc, 8], col.e(), 2, [6, 4]);
         note(g, `ROC: σ > ${fmt(sc)}`, f.X(sc) + 6, f.box.t + 12, col.e(), 'left', 11);
         for (const p of spk(d).poles) cross(g, f, p, '#fff', 6);
         dot(g, f, [s, om], col.c(), 6);
@@ -299,7 +304,7 @@ export const inverseFigure = figureOf((c) => {
       draw(g, w, h) {
         wipe(g, w, h);
         const d = snapD(num(c.values, 'damp')), p = spk(d), f = planeFrame(w, h, 6, -4, 0, 8, false), r = residue(d);
-        axes2(g, f, 'Re s', 'Im s'); spanLine(g, f, [0, 1], col.grid(), 1, []);
+        axes2(g, f, 'σ = Re s (1/ms)', 'ω = Im s (1/ms)'); planeTicks(g, f, 2); spanLine(g, f, [0, 1], col.grid(), 1, []);
         for (const q of p.poles) cross(g, f, q, col.bad(), 7);
         const rep = Math.abs(p.zeta - 1) < 0.01;
         note(g, `ζ = ${fmt(p.zeta, 3)} · poles ${p.poles.map((q) => `${fmt(q[0])}${q[1] ? (q[1] > 0 ? ' + ' : ' − ') + fmt(Math.abs(q[1])) + 'j' : ''}`).join(', ')}`, f.box.l + 4, f.box.t + 10, col.text(), 'left', 10);
@@ -329,7 +334,7 @@ export const tfFigure = figureOf((c) => {
       draw(g, w, h) {
         wipe(g, w, h);
         const fq = num(c.values, 'f'), d = num(c.values, 'damp'), p = spk(d), om = (TAU * fq) / 1000, f = planeFrame(w, h, 7, -2.5, 0);
-        axes2(g, f, 'Re s', 'Im s'); tline(g, f, [0, -10], [0, 10], col.accent(), 2);
+        axes2(g, f, 'σ = Re s (1/ms)', 'ω = Im s (1/ms)'); planeTicks(g, f, 2); tline(g, f, [0, -10], [0, 10], col.accent(), 2);
         const ds = p.poles.map((q) => { polyline(g, f, [q, [0, om]], col.b(), 1.8, [5, 3]); const L = Math.hypot(q[0], om - q[1]); note(g, fmt(L), f.X((q[0]) / 2) - 4, f.Y((q[1] + om) / 2), col.b(), 'right', 11); return L; });
         for (const q of p.poles) cross(g, f, q, col.bad(), 7); dot(g, f, [0, om], col.e(), 6);
         note(g, `|H| = a₀ / (d₁·d₂) = ${fmt(p.a0, 2)} / (${fmt(ds[0])}·${fmt(ds[1])}) = ${fmt(p.a0 / (ds[0] * ds[1]))}`, f.box.l + 4, f.box.b - 6, col.text(), 'left', 11);
@@ -360,6 +365,7 @@ export const zfilterFigure = figureOf((c) => {
         const L = poles.map((q) => { polyline(g, f, [q, P], col.b(), 1.6, [5, 3]); return Math.hypot(P[0] - q[0], P[1] - q[1]); });
         polyline(g, f, [[0, 0], P], col.c(), 1.6, [5, 3]);
         for (const q of poles) cross(g, f, q, col.bad(), 7); dot(g, f, [0, 0], col.c(), 6, true); dot(g, f, P, col.e(), 6);
+        note(g, '× poles · ○ zero at z = 0 · yellow: e^(jΩ) on the unit circle', f.box.l + 4, f.box.t + 10, col.muted(), 'left', 10);
         note(g, `r = ${fmt(dd.r, 3)}, θ = ${fmt(dd.th, 3)} rad · |H| ∝ 1/(${fmt(L[0])}·${fmt(L[1])})`, f.box.l + 4, f.box.b - 6, col.text(), 'left', 10);
       },
     },
@@ -371,7 +377,7 @@ export const zfilterFigure = figureOf((c) => {
         curve(g, f, fx, fx.map((q) => dB(cabs(Hf(q)))), col.muted(), 1.5, [5, 3]);
         curve(g, f, fx, fx.map((q) => dB(cabs(ringDTFT((TAU * q) / (fs * 1000), fs)))), col.a(), 2.5);
         const m = dB(cabs(ringDTFT((TAU * Math.min(fq, top)) / (fs * 1000), fs))); dot(g, f, [Math.min(fq, top), m], col.e(), 5);
-        note(g, `y[n] = ${fmt(-ringDigital(fs).a1, 3)}y[n−1] − ${fmt(ringDigital(fs).a2, 3)}y[n−2] + ${fmt(ringDigital(fs).b1, 3)}x[n−1]`, f.box.r - 4, f.box.t + 10, col.text(), 'right', 10);
+        note(g, `y[n] = ${fmt(-ringDigital(fs).a1, 3)}y[n−1] − ${fmt(ringDigital(fs).a2, 3)}y[n−2] + ${fmt(ringDigital(fs).b1, 3)}u[n−1]`, f.box.r - 4, f.box.t + 10, col.text(), 'right', 10);
       },
     },
   ];
@@ -409,7 +415,8 @@ export const ssFigure = figureOf((c) => {
         wipe(g, w, h);
         const s = sim(), t = num(c.values, 't'), top = Math.max(5, ...s.xs.map(Math.abs)) * 1.15, f = graph(g, w, h, [0, 6], [-top, top], 'time t (ms)', 'cone position x (µm)');
         const amp = Math.max(1e-6, num(c.values, 'amp')); curve(g, f, s.ts, s.us.map((u) => (u / amp) * top * 0.4), col.d(), 1.2, [3, 3]);
-        curve(g, f, s.ts, s.xs, col.a(), 2.5); tline(g, f, [t, -top], [t, top], col.e(), 1.2, [4, 3]);
+        curve(g, f, s.ts, s.xs, col.a(), 2.5); tline(g, f, [t, -top], [t, top], col.e(), 1.2, [4, 3]); note(g, `now: t = ${fmt(t, 2)} ms`, f.X(t) + 4, f.box.b - 10, col.e(), 'left', 10);
+        note(g, 'solid: cone x (µm) · dotted: drive shape', f.box.l + 4, f.box.t + 10, col.muted(), 'left', 10);
         note(g, `a₀ = ${fmt(spk().a0, 2)} ms⁻², a₁ = ${fmt(spk().a1, 3)} ms⁻¹`, f.box.r - 4, f.box.t + 10, col.text(), 'right', 10);
       },
     },

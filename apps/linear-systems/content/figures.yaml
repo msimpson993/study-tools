@@ -86,8 +86,8 @@
   - label: body at rest
     color: var(--muted)
     dash: true
-  howToRead: "Each panel animates one eigenvector of A drawn on the car: the body shape that, released on its own, keeps its shape and only grows or fades as e^(λt). Left: bounce; right: pitch. The yellow dot is the body point that does not move in that mode. The sliders change the front and rear spring rates (the shocks stay at 0.08 s times the springs)."
-  lookFor: "The main car: bounce at 1.151 Hz (ζ 0.289), mostly up and down, its still point 1.06 m behind the rear axle (off the drawing); pitch at 1.419 Hz (ζ 0.357) about x = +0.56 m. Pick the symmetric springs and the two modes separate exactly: pure bounce and pure pitch about the centre of gravity."
+  howToRead: "Each panel animates one eigenvector of A drawn on the car: the body shape that, released on its own, keeps its shape and only grows or fades as e^(λt). Left: bounce; right: pitch. The yellow dot is the body point that does not move in that mode; x is measured from the centre of gravity (the + on the body), the rear axle is at x = −1.5 m. The phase slider runs one cycle from 0 to 1. The sliders change the front and rear spring rates (the shocks stay at 0.08 s times the springs)."
+  lookFor: "The main car: bounce at 1.151 Hz (ζ 0.289), mostly up and down, its still point 1.06 m behind the rear axle (x = −2.56 m from the centre of gravity, at the left edge of the drawing); pitch at 1.419 Hz (ζ 0.357) about x = +0.56 m, 2.06 m ahead of the rear axle. Pick the symmetric springs and the two modes separate exactly: pure bounce and pure pitch about the centre of gravity."
   animate:
     control: t
     speed: 0.6
@@ -112,7 +112,7 @@
     group: primary
     unit: N/m
   - id: t
-    label: phase
+    label: phase (fraction of a cycle)
     type: range
     min: 0
     max: 1
@@ -157,8 +157,8 @@
   - label: its pitch part
     color: var(--org)
     dash: true
-  howToRead: "Left: the body at heave z and pitch θ (solid), and the two mode shapes it splits into (dashed): ξ = V⁻¹x, with V's columns the bounce shape (1, θ/z) and the pitch shape (z/θ, 1). Right: the same pose as a point in mode coordinates. In these coordinates A is diagonal: each part moves on its own."
-  lookFor: "Set z = 0 and θ = −2° (nose-down): the pose splits into a pitch part and a bounce part, and neither is zero, because the main car's pitch still point is not at the centre of gravity."
+  howToRead: "Left: the body at heave z and pitch θ (solid), and the two mode shapes it splits into (dashed): ξ = V⁻¹x, with V's columns the bounce shape (1, θ/z) and the pitch shape (z/θ, 1). Right: the same pose as a point in mode coordinates, reached by a blue step of bounce (q₁) and then an orange step of pitch (q₂). In these coordinates A is diagonal: each part moves on its own."
+  lookFor: "At the start, z = 0 and θ = −2° (nose-down): the pose splits into a pitch part and a bounce part, and neither is zero, because the main car's pitch still point is not at the centre of gravity."
   controls:
   - id: z0
     label: heave z
@@ -166,7 +166,7 @@
     min: -3
     max: 3
     step: 0.1
-    default: 1
+    default: 0
     group: primary
     unit: cm
   - id: th0
@@ -175,7 +175,7 @@
     min: -2
     max: 2
     step: 0.05
-    default: -1
+    default: -2
     group: primary
     unit: °
   presets:
@@ -1376,7 +1376,7 @@
       damp: 3.56
     about: No peak at all.
 - id: zfilter
-  title: "The speaker as a digital filter: a difference equation and its z-plane"
+  title: "The sampled speaker model as a digital filter: its difference equation and z-plane"
   x: Re z or frequency (Hz)
   y: "Im z or |H| (dB)"
   legend:
@@ -1390,7 +1390,7 @@
   - label: "analogue |H(j2πf)|"
     color: var(--muted)
     dash: true
-  howToRead: "Sampling the speaker’s impulse response gives the recursion y[n] = 2r cos θ·y[n−1] − r²y[n−2] + b₁x[n−1] with poles r e^(±jθ) (r = e^(−σT), θ = ω_d T) and a zero at the origin. Left: the z-plane, unit circle, poles, and the point e^(jΩ) for the chosen frequency; the distances from the poles and zero to that point shape the response. Right: the digital response against the analogue one."
+  howToRead: "Sampling the speaker’s impulse response gives the recursion y[n] = 2r cos θ·y[n−1] − r²y[n−2] + b₁u[n−1] (input u[n], as everywhere in this course) with poles r e^(±jθ) (r = e^(−σT), θ = ω_d T) and a zero at the origin. Left: the z-plane, unit circle, poles, and the point e^(jΩ) for the chosen frequency; the distances from the poles and zero to that point shape the response. Right: the digital response against the analogue one."
   lookFor: "At 8 kHz the poles sit at 0.854·e^(±0.540j), inside the unit circle (stable). Lower the sampling rate: the digital curve departs from the analogue one near fs/2."
   animate:
     control: f

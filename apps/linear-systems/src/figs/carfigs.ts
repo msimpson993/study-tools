@@ -19,7 +19,7 @@ function shapes(p: CarP) {
 }
 const carFrame = (w: number, h: number): Frame => rangeFrame(w, h, [-2.65, 2.25], [-0.15, 1.75], 8, 8, 18, 14);
 /** side-view car on its two spring+shock pairs; z (m), th (rad), drawn with vertical gain `gn` */
-function drawCar(g: CanvasRenderingContext2D, f: Frame, p: CarP, z: number, th: number, gn: number, o: { color?: string; ghost?: boolean; road?: [number, number] } = {}) {
+function drawCar(g: CanvasRenderingContext2D, f: Frame, p: CarP, z: number, th: number, gn: number, o: { color?: string; ghost?: boolean; road?: [number, number]; labels?: boolean } = {}) {
   const yb = 0.62, y = (x: number) => yb + gn * (z + x * th), c = o.color ?? col.text();
   const wr = 0.27, road = o.road ?? [0, 0];
   if (!o.ghost) {
@@ -34,6 +34,11 @@ function drawCar(g: CanvasRenderingContext2D, f: Frame, p: CarP, z: number, th: 
   const pts: [number, number][] = [[bl, 0], [br, 0], [br, 0.55 * H / 0.42 * 0.42], [p.a - 0.5, 0.62], [p.a - 0.95, 1.05], [-p.b + 0.55, 1.05], [-p.b + 0.05, 0.66], [bl, 0.6], [bl, 0]];
   polyline(g, f, pts.map(([x, d]) => [x, y(x) + d * 0.8] as [number, number]), c, o.ghost ? 1.2 : 2, o.ghost ? [4, 3] : []);
   if (!o.ghost) { const cx = f.X(0), cy = f.Y(y(0) + 0.25); g.strokeStyle = c; g.lineWidth = 1.4; g.beginPath(); g.moveTo(cx - 5, cy); g.lineTo(cx + 5, cy); g.moveTo(cx, cy - 5); g.lineTo(cx, cy + 5); g.stroke(); }
+  if (o.labels && !o.ghost) { // A4: name the parts on the drawing
+    text(g, '+ = centre of gravity (x = 0)', f.X(0) + 8, f.Y(y(0) + 0.25) - 10, c, 'left', 10);
+    text(g, 'wheel / axle', f.X(p.a), f.Y(-0.02) + 2, col.muted(), 'center', 10, 'top');
+    text(g, 'spring + shock', f.X(-p.b) + 16, f.Y(0.45), col.muted(), 'left', 10);
+  }
 }
 const markX = (g: CanvasRenderingContext2D, f: Frame, x: number, color: string, label: string, up = true) => { tline(g, f, [x, 0.05], [x, 1.55], color, 1.2, [3, 3]); text(g, label, f.X(x), f.Y(up ? 1.62 : 0.02) + (up ? 0 : 10), color, 'center', 10); };
 
@@ -45,10 +50,11 @@ export const eigFigure = figureOf((c) => {
     draw(g: CanvasRenderingContext2D, w: number, h: number) {
       wipe(g, w, h); const p = P(), S = shapes(p), m = S.md[which], f = carFrame(w, h), ph = Math.sin(2 * Math.PI * num(c.values, 't'));
       const z = which ? S.zp * 0.035 : 0.05, th = which ? 0.035 : S.tb * 0.05;
-      drawCar(g, f, p, 0, 0, 1, { ghost: true, color: col.muted() }); drawCar(g, f, p, z * ph, th * ph, 3, { color: which ? col.b() : col.a() });
+      drawCar(g, f, p, 0, 0, 1, { ghost: true, color: col.muted() }); drawCar(g, f, p, z * ph, th * ph, 3, { color: which ? col.b() : col.a(), labels: !which });
       const xn = which ? -S.zp : S.tb !== 0 ? -1 / S.tb : NaN;
-      if (Number.isFinite(xn) && xn > -2.6 && xn < 2.2) { dot(g, f, [xn, 0.62], col.e(), 4); text(g, `still point x = ${fmt(xn, 2)} m`, f.X(xn), f.Y(0.62) + 16, col.e(), 'center', 10); }
-      else note(g, Number.isFinite(xn) ? `still point at x = ${fmt(xn, 2)} m (off the drawing)` : 'no still point: pure up-and-down', 8, h - 8, col.e(), 'left', 10);
+      const rel = (x: number) => { const d = x + p.b; return `${fmt(Math.abs(d), 2)} m ${d < 0 ? 'behind' : 'ahead of'} the rear axle`; };
+      if (Number.isFinite(xn) && xn > -2.6 && xn < 2.2) { dot(g, f, [xn, 0.62], col.e(), 4); note(g, `• still point: ${rel(xn)} (x = ${fmt(xn, 2)} m from the CG)`, 8, 30, col.e(), 'left', 10); } // top-left, clear of the springs and wheels
+      else note(g, Number.isFinite(xn) ? `still point: ${rel(xn)} (x = ${fmt(xn, 2)} m from the CG), off the drawing` : 'no still point: pure up-and-down', 8, 30, col.e(), 'left', 10);
       note(g, `${fmt(m.fn, 3)} Hz, ζ = ${fmt(m.zeta, 3)}`, w - 8, 12, which ? col.b() : col.a(), 'right', 11);
     },
   });
@@ -69,7 +75,8 @@ export const diagFigure = figureOf((c) => {
     { id: 'modal', title: 'Mode coordinates: how much bounce, how much pitch', x: 'bounce amount q₁ (cm of heave)', y: 'pitch amount q₂ (°)',
       draw(g, w, h) { wipe(g, w, h); const { q1, q2 } = split(), f = graph(g, w, h, [-4, 4], [-3, 3], 'bounce amount q₁ (cm)', 'pitch amount q₂ (°)');
         tline(g, f, [0, 0], [q1 * 100, 0], col.a(), 3); tline(g, f, [q1 * 100, 0], [q1 * 100, q2 * DEG], col.b(), 3); dot(g, f, [q1 * 100, q2 * DEG], col.e(), 5);
-        note(g, `q₁ = ${fmt(q1 * 100, 2)} cm, q₂ = ${fmt(q2 * DEG, 2)}°: each fades on its own`, f.box.l + 4, f.box.t + 10, col.text(), 'left', 10); } },
+        note(g, `q₁ = ${fmt(q1 * 100, 2)} cm, q₂ = ${fmt(q2 * DEG, 2)}°: each fades on its own`, f.box.l + 4, f.box.t + 10, col.text(), 'left', 10);
+        note(g, 'blue segment: the bounce part q₁ · orange: the pitch part q₂', f.box.l + 4, f.box.b - 8, col.muted(), 'left', 10); } },
   ];
 });
 
@@ -118,10 +125,10 @@ export const cayleyFigure = figureOf((c) => {
   return [
     { id: 'alpha', title: 'The four coefficient functions αₖ(t)', x: 'time t (s)', y: 'αₖ(t) (scaled)',
       draw(g, w, h) { wipe(g, w, h); const a = A(), ts = linspace(0, 3, 121), al = ts.map((t) => alphas(a, t)), sc = [1, 10, 100, 1000];
-        const f = graph(g, w, h, [0, 3], [-1.2, 1.2], 'time t (s)', 'α₀, 10α₁, 100α₂, 1000α₃'); const cs = [col.a(), col.b(), col.c(), col.d()];
+        const top = Math.max(1, ...al.flatMap((v) => v.map((q, k) => Math.abs(q * sc[k])))) * 1.1, f = graph(g, w, h, [0, 3], [-top, top], 'time t (s)', 'α₀, 10α₁, 100α₂, 1000α₃'); const cs = [col.a(), col.b(), col.c(), col.d()];
         for (let k = 0; k < 4; k++) curve(g, f, ts, al.map((v) => v[k] * sc[k]), cs[k], 2);
-        const t0 = num(c.values, 't'); tline(g, f, [t0, -1.2], [t0, 1.2], col.e(), 1.2, [4, 3]);
-        note(g, 'α₀ α₁ α₂ α₃', f.box.r - 4, f.box.t + 10, col.muted(), 'right', 10); } },
+        const t0 = num(c.values, 't'); tline(g, f, [t0, -top], [t0, top], col.e(), 1.2, [4, 3]);
+        note(g, 'blue α₀ · orange 10α₁ · green 100α₂ · purple 1000α₃', f.box.r - 4, f.box.t + 10, col.muted(), 'right', 10); } },
     { id: 'check', title: 'Same motion two ways: e^(At)x(0) (line) and Σ αₖAᵏx(0) (dots)', x: 'time t (s)', y: 'θ (°)',
       draw(g, w, h) { wipe(g, w, h); const a = A(), x0 = [0, -2 / DEG, 0, 0], ts = linspace(0, 3, 121), f = graph(g, w, h, [0, 3], [-2.4, 2.4], 'time t (s)', 'pitch θ (°)');
         curve(g, f, ts, ts.map((t) => mvec(expm(a, t), x0)[1] * DEG), col.b(), 2.2);
@@ -164,7 +171,7 @@ function shapesPanel(c: { values: V }, key: string, label: string, color: string
       note(g, 'dashed: bounce (blue), pitch (orange)', 8, h - 6, col.muted(), 'left', 10); } };
 }
 const bars = (g: CanvasRenderingContext2D, w: number, h: number, vals: [string, number, string][], ylab: string, msg: string, msgColor: string) => {
-  const m = Math.max(0.02, ...vals.map((v) => Math.abs(v[1]))) * 1.2, f = graph(g, w, h, [0, vals.length], [-m, m], '', ylab);
+  const m = Math.max(0.02, ...vals.map((v) => Math.abs(v[1]))) * 1.2, f = graph(g, w, h, [0, vals.length], [-m, m], 'mode', ylab, 1, 0, 44, () => '');
   tline(g, f, [0, 0], [vals.length, 0], col.muted(), 1);
   vals.forEach(([name, v, cc], i) => { g.fillStyle = cc; const x0 = f.X(i + 0.25), x1 = f.X(i + 0.75), y0 = f.Y(0), y1 = f.Y(v); g.fillRect(x0, Math.min(y0, y1), x1 - x0, Math.max(1, Math.abs(y1 - y0))); text(g, name, (x0 + x1) / 2, f.box.b - 6, col.text(), 'center', 10); });
   note(g, msg, f.box.l + 4, f.box.t + 10, msgColor, 'left', 10);
@@ -173,17 +180,17 @@ export const ctrlFigure = figureOf((c) => [
   shapesPanel(c, 'xp', 'push at', col.bad()),
   { id: 'push', title: 'How hard a push there drives each mode (the PBH number wᵀB)', x: 'mode', y: 'push on the mode',
     draw(g, w, h) { wipe(g, w, h); const p = carOf(c.values), x = snap(p, num(c.values, 'xp')), { b, q } = modeAt(p, x), r = rank(ctrbM(carA(p), forceB(p, [x])), 1e-6);
-      bars(g, w, h, [['bounce', b, col.a()], ['pitch', q, col.b()]], 'push (per N, scaled)', r === 4 ? 'rank [B AB A²B A³B] = 4: controllable' : `rank ${r} of 4: a mode is out of reach`, r === 4 ? col.ok() : col.bad()); } },
+      bars(g, w, h, [['bounce', b, col.a()], ['pitch', q, col.b()]], 'push on the mode, wᵀB (scaled)', r === 4 ? 'rank [B AB A²B A³B] = 4: controllable' : `rank ${r} of 4: a mode is out of reach`, r === 4 ? col.ok() : col.bad()); } },
 ]);
 export const obsFigure = figureOf((c) => {
   const reading = (p: CarP, x: number, gyro: boolean) => (gyro ? [0, 0, 0, 1] : [1, x, 0, 0]);
   return [
     shapesPanel(c, 'xs', 'sensor at', col.c()),
-    { id: 'read', title: 'What the sensor reads after a pure-bounce start and a pure-pitch start', x: 'time t (s)', y: 'reading (scaled)',
+    { id: 'read', title: 'What the sensor reads after a pure-bounce start and a pure-pitch start', x: 'time t (s)', y: 'height (mm) or pitch rate (°/s)',
       draw(g, w, h) { wipe(g, w, h); const p = carOf(c.values), S = shapes(p), x = snap(p, num(c.values, 'xs')), gyro = c.values.sensor === 'gyro', Cr = reading(p, x, gyro), A = carA(p), ts = linspace(0, 3, 151);
         const xb = [0.02, 0.02 * S.tb, 0, 0], xp = [S.zp * (1 / DEG), 1 / DEG, 0, 0];
-        const yb = ts.map((t) => mvec([Cr], mvec(expm(A, t), xb))[0]), yp = ts.map((t) => mvec([Cr], mvec(expm(A, t), xp))[0]);
-        const m = Math.max(1e-6, ...yb.map(Math.abs), ...yp.map(Math.abs)) * 1.15, f = graph(g, w, h, [0, 3], [-m, m], 'time t (s)', gyro ? 'pitch rate read' : 'height read');
+        const u = gyro ? DEG : 1000, yb = ts.map((t) => mvec([Cr], mvec(expm(A, t), xb))[0] * u), yp = ts.map((t) => mvec([Cr], mvec(expm(A, t), xp))[0] * u);
+        const m = Math.max(1e-6, ...yb.map(Math.abs), ...yp.map(Math.abs)) * 1.15, f = graph(g, w, h, [0, 3], [-m, m], 'time t (s)', gyro ? 'pitch rate read (°/s)' : 'height read (mm)');
         curve(g, f, ts, yb, col.a(), 2.2); curve(g, f, ts, yp, col.b(), 2.2, [5, 3]);
         const r = rank(obsvM(A, [Cr]), 1e-6);
         note(g, r === 4 ? 'rank [C; CA; CA²; CA³] = 4: observable' : `rank ${r} of 4: a mode is invisible`, f.box.l + 4, f.box.t + 10, r === 4 ? col.ok() : col.bad(), 'left', 10);
@@ -227,9 +234,11 @@ export const gramianFigure = figureOf((c) => [
       const a = W.map((r) => r.slice()); for (let sweep = 0; sweep < 40; sweep++) for (let i = 0; i < 4; i++) for (let j = i + 1; j < 4; j++) { if (Math.abs(a[i][j]) < 1e-30) continue; const th = 0.5 * Math.atan2(2 * a[i][j], a[j][j] - a[i][i]), cs = Math.cos(th), sn = Math.sin(th);
         for (let k = 0; k < 4; k++) { const aki = a[k][i], akj = a[k][j]; a[k][i] = cs * aki - sn * akj; a[k][j] = sn * aki + cs * akj; } for (let k = 0; k < 4; k++) { const aik = a[i][k], ajk = a[j][k]; a[i][k] = cs * aik - sn * ajk; a[j][k] = sn * aik + cs * ajk; } }
       const ev = [0, 1, 2, 3].map((i) => Math.max(1e-30, a[i][i])).sort((x, y) => x - y), lg = ev.map((e) => Math.log10(e)), lo = Math.min(...lg) - 0.5, hi = Math.max(...lg) + 0.5;
-      const f = graph(g, w, h, [0, 4], [lo, hi], '', 'log₁₀ eigenvalue');
-      lg.forEach((v, i) => { g.fillStyle = i === 0 ? col.bad() : col.a(); const x0 = f.X(i + 0.25), x1 = f.X(i + 0.75); g.fillRect(x0, f.Y(v), x1 - x0, f.Y(lo) - f.Y(v)); });
-      note(g, `spread ×${(ev[3] / ev[0]).toExponential(1)}`, f.box.l + 4, f.box.t + 10, col.text(), 'left', 10); } },
+      const f = graph(g, w, h, [0, 4], [Math.floor(lo), Math.ceil(hi)], 'eigen-direction, cheapest last', 'log₁₀ eigenvalue', 1, Math.max(1, Math.ceil((hi - lo) / 5)), 44, () => '');
+      const NAMES = ['hardest', '2nd', '3rd', 'easiest'];
+      lg.forEach((v, i) => { g.fillStyle = i === 0 ? col.bad() : col.a(); const x0 = f.X(i + 0.25), x1 = f.X(i + 0.75); g.fillRect(x0, f.Y(v), x1 - x0, f.Y(Math.floor(lo)) - f.Y(v)); text(g, NAMES[i], (x0 + x1) / 2, f.box.b + 9, i === 0 ? col.bad() : col.muted(), 'center', 10); });
+      note(g, `spread = largest ÷ smallest eigenvalue = ${(ev[3] / ev[0]).toExponential(1)}`, f.box.l + 4, f.box.t + 10, col.text(), 'left', 10);
+      note(g, 'red: the hardest direction to push (costs the most energy)', f.box.l + 4, f.box.t + 26, col.bad(), 'left', 10); } },
 ]);
 export const optimalFigure = figureOf((c) => {
   const run = () => { const p = carOf(c.values), xs = acts(c.values, p), T = num(c.values, 'T'), r = minEnergy(p, xs, X0, T), ts = linspace(0, T, 201), U = ts.map((t) => r.u(t));
@@ -241,6 +250,7 @@ export const optimalFigure = figureOf((c) => {
         tline(g, f, [0, 0], [T, 0], col.muted(), 1); const cs = [col.a(), col.b()];
         xs.forEach((_, k) => curve(g, f, ts, U.map((u) => u[k]), xs.length === 1 && c.values.act === 'rear' ? col.b() : cs[k], 2.2));
         const pk = xs.map((_, k) => Math.max(...U.map((u) => Math.abs(u[k]))));
+        note(g, xs.length === 2 ? 'blue: front actuator · orange: rear actuator' : c.values.act === 'rear' ? 'orange: rear actuator' : 'blue: front actuator', f.box.r - 4, f.box.b - 10, col.muted(), 'right', 10);
         note(g, `peak ${pk.map((v) => `${Math.round(v).toLocaleString('en-US')} N`).join(' / ')} · E = ${Math.round(r.energy).toLocaleString('en-US')} N²·s`, f.box.l + 4, f.box.t + 10, col.text(), 'left', 10); } },
     { id: 'theta', title: 'Pitch θ(t): with the least-energy input (solid) and left alone (dashed)', x: 'time t (s)', y: 'θ (°)',
       draw(g, w, h) { wipe(g, w, h); const { ctl, free, T } = run(), Tm = ctl.ts[ctl.ts.length - 1], f = graph(g, w, h, [0, Tm], [-2.4, 1.2], 'time t (s)', 'pitch θ (°)');

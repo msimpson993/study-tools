@@ -33,12 +33,12 @@ const linearize: QuizFigureDef = { aspect: 2.2, maxWidth: 420, draw(g, w, h) {
 const kick: QuizFigureDef = { aspect: 1.25, maxWidth: 260, draw(g, w, h, p) {
   const fr2 = P(p, 'frame', 1), ts = linspace(0, 5, 251);
   if (fr2 === 1) {
-    const ys = ts.map((t) => hImp(t)), m = Math.max(...ys.map(Math.abs)) * 1.2, f = fr(g, w, h, [0, 5], [-m, m], 't (ms)', 'h');
+    const ys = ts.map((t) => hImp(t)), m = Math.max(...ys.map(Math.abs)) * 1.2, f = fr(g, w, h, [0, 5], [-m, m], 't (ms)', 'h(t) (1/ms)');
     tline(g, f, [0.05, 0], [0.05, m * 0.9], col.e(), 2.5); curve(g, f, ts, ys, col.a(), 2);
     title(g, 'one click → ring h(t)', w);
   } else {
     const shifts = [0, 0.25, 0.5, 0.75], parts = shifts.map((s) => ts.map((t) => 0.25 * hImp(t - s)));
-    const tot = ts.map((_, i) => parts.reduce((a, q) => a + q[i], 0)), m = Math.max(...tot.map(Math.abs)) * 1.2, f = fr(g, w, h, [0, 5], [-m, m], 't (ms)', 'x');
+    const tot = ts.map((_, i) => parts.reduce((a, q) => a + q[i], 0)), m = Math.max(...tot.map(Math.abs)) * 1.2, f = fr(g, w, h, [0, 5], [-m, m], 't (ms)', 'x (DC = 1)');
     parts.forEach((q) => curve(g, f, ts, q, col.muted(), 1)); curve(g, f, ts, tot, col.a(), 2.2);
     shifts.forEach((s) => tline(g, f, [s + 0.03, 0], [s + 0.03, m * 0.45], col.e(), 2));
     title(g, '4 clicks → sum of 4 rings', w);
@@ -73,14 +73,14 @@ const cone: QuizFigureDef = { aspect: 0.95, maxWidth: 150, draw(g, w, h, p) {
 /** Box 7: a ±1 square wave and the sum of its first three harmonics (k = 1, 3, 5). */
 const fourier: QuizFigureDef = { aspect: 2.4, maxWidth: 440, draw(g, w, h) {
   const ts = linspace(0, 10, 501), sq = ts.map((t) => (Math.sin(TAU * 0.2 * t) >= 0 ? 1 : -1)), ps = (K: number) => ts.map((t) => { let s = 0; for (let k = 1; k <= K; k += 2) s += (4 / (Math.PI * k)) * Math.sin(TAU * 0.2 * k * t); return s; });
-  const f = fr(g, w, h, [0, 10], [-1.5, 1.6], 't (ms)', '', 22);
+  const f = fr(g, w, h, [0, 10], [-1.5, 1.6], 't (ms)', 'drive (V)', 30);
   curve(g, f, ts, sq, col.muted(), 1.4); curve(g, f, ts, ps(1), col.e(), 1.5, [5, 3]); curve(g, f, ts, ps(5), col.a(), 2.2);
   text(g, '200 Hz buzz ≈ 200 + 600 + 1000 Hz tones', f.box.l + 4, f.box.t + 2, col.a(), 'left', 10);
 } };
 
 /** Box 8: e^(st) for three s: dying (σ < 0), steady (σ = 0), growing (σ > 0). */
 const est: QuizFigureDef = { aspect: 2.4, maxWidth: 440, draw(g, w, h) {
-  const ts = linspace(0, 4, 301), f = fr(g, w, h, [0, 4], [-3, 3], 't', 'Re e^(st)', 26);
+  const ts = linspace(0, 4, 301), f = fr(g, w, h, [0, 4], [-3, 3], 't (ms)', 'Re e^(st)', 26);
   curve(g, f, ts, ts.map((t) => Math.cos(TAU * t)), col.muted(), 1.4);
   curve(g, f, ts, ts.map((t) => Math.exp(-0.8 * t) * Math.cos(TAU * t)), col.c(), 2);
   curve(g, f, ts, ts.map((t) => Math.exp(0.27 * t) * Math.cos(TAU * t)), col.bad(), 2);
@@ -89,7 +89,7 @@ const est: QuizFigureDef = { aspect: 2.4, maxWidth: 440, draw(g, w, h) {
 
 /** Box 9: the earbud's poles in the s-plane (1/ms) and the distances to jω at 658 Hz. */
 const pz: QuizFigureDef = { aspect: 1.9, maxWidth: 400, draw(g, w, h) {
-  const p = spk(), f = fr(g, w, h, [-3, 1], [-5.5, 5.5], 'σ (1/ms)', 'jω', 26), wz = (TAU * 657.6) / 1000;
+  const p = spk(), f = fr(g, w, h, [-3, 1], [-5.5, 5.5], 'σ (1/ms)', 'ω (1/ms)', 26), wz = (TAU * 657.6) / 1000;
   tline(g, f, [0, -5.5], [0, 5.5], col.strong(), 1.2);
   for (const q of p.poles) { cross(g, f, q as [number, number], col.b(), 6); tline(g, f, q as [number, number], [0, wz], col.b(), 1, [4, 3]); }
   dot(g, f, [0, wz], col.e(), 4);
@@ -113,6 +113,7 @@ const carstate: QuizFigureDef = { aspect: 2.4, maxWidth: 420, draw(g, w, h) {
   g.clearRect(0, 0, w, h); miniCar(g, w, h, 0, 0, 1, col.muted(), true); const r = miniCar(g, w, h, 0.02, 0.025, 4, col.text());
   text(g, 'z: heave (up)', 6, 10, col.a(), 'left', 10); text(g, 'θ: pitch (nose-up +)', w - 6, 10, col.b(), 'right', 10);
   text(g, 'front', r.X(CAR.a), h - 2, col.muted(), 'center', 9);
+  text(g, 'blue lines: spring + shock, wheel to body', w / 2, 24, col.a(), 'center', 9.5);
 } };
 /** Box 11: bounce (mode 0) or pitch (mode 1) drawn on the car, with its still point. */
 const carmode: QuizFigureDef = { aspect: 1.5, maxWidth: 220, draw(g, w, h, p) {
@@ -133,13 +134,13 @@ const bump: QuizFigureDef = { aspect: 2.4, maxWidth: 440, draw(g, w, h) {
 /** Box 12: heave after the 5 cm bump, new (worn = 0) or worn (worn = 1) shocks. */
 const carsettle: QuizFigureDef = { aspect: 1.5, maxWidth: 220, draw(g, w, h, p) {
   const wn = P(p, 'worn', 0), car = wn ? worn(CAR) : CAR, b = bumpInput(car), r = sim(carA(car), roadB(car), b.u, [0, 0, 0, 0], 4, 4e-3);
-  const f = fr(g, w, h, [0, 4], [-10, 10], 't (s)', 'mm', 18); curve(g, f, r.ts, r.xs.map((x) => x[0] * 1000), wn ? col.bad() : col.c(), 1.8);
+  const f = fr(g, w, h, [0, 4], [-10, 10], 't (s)', 'heave (mm)', 30); curve(g, f, r.ts, r.xs.map((x) => x[0] * 1000), wn ? col.bad() : col.c(), 1.8);
   title(g, wn ? 'worn shocks: rings on' : 'new shocks: settles', w, wn ? col.bad() : col.ok());
 } };
 /** Box 13: symmetric car, a push at the centre: bounce moves, pitch never starts. */
 const carhidden: QuizFigureDef = { aspect: 2.4, maxWidth: 440, draw(g, w, h) {
   const u = (t: number) => [t > 0.1 && t < 0.3 ? 1500 * Math.sin((Math.PI * (t - 0.1)) / 0.2) : 0], r = sim(carA(CAR_SYM), forceB(CAR_SYM, [0]), u, [0, 0, 0, 0], 3, 4e-3);
-  const zs = r.xs.map((x) => x[0] * 1000), m = Math.max(...zs.map(Math.abs)) * 1.2, f = fr(g, w, h, [0, 3], [-m, m], 't (s)', 'heave (mm) / pitch', 34);
+  const zs = r.xs.map((x) => x[0] * 1000), m = Math.max(...zs.map(Math.abs)) * 1.2, f = fr(g, w, h, [0, 3], [-m, m], 't (s)', 'heave (mm) / pitch (0.01°)', 34);
   curve(g, f, r.ts, zs, col.a(), 2); curve(g, f, r.ts, r.xs.map((x) => x[1] * DEG * 100), col.b(), 3);
   text(g, 'heave: the push moves it', f.X(0.9), f.Y(m * 0.7), col.a(), 'left', 10); text(g, 'pitch: stays exactly 0', f.X(1.4), f.Y(-m * 0.25), col.b(), 'left', 10);
 } };
@@ -148,7 +149,7 @@ const caropt: QuizFigureDef = { aspect: 2.4, maxWidth: 440, draw(g, w, h) {
   const r = minEnergy(CAR, [CAR.a, -CAR.b], [0, -2 / DEG, 0, 0], 0.5), ts = linspace(0, 0.5, 101), U = ts.map((t) => r.u(t));
   const f = fr(g, w, h, [0, 0.5], [-750, 750], 't (s)', 'force (N)', 34);
   tline(g, f, [0, 0], [0.5, 0], col.muted(), 1); curve(g, f, ts, U.map((u) => u[0]), col.a(), 2); curve(g, f, ts, U.map((u) => u[1]), col.b(), 2);
-  text(g, 'front: peaks 476 N part-way', f.X(0.02), f.Y(-600), col.a(), 'left', 10); text(g, 'rear: 652 N at the end', f.X(0.02), f.Y(600), col.b(), 'left', 10);
+  text(g, 'front: dips to −476 N at 0.28 s', f.X(0.02), f.Y(-600), col.a(), 'left', 10); text(g, 'rear: −652 N at the end', f.X(0.02), f.Y(600), col.b(), 'left', 10);
 } };
 
 /** Box 12: where the pole sits decides: left → settles, on the axis → rings for ever, right → grows. */

@@ -1,7 +1,7 @@
 /** Numbers the Nov 19 learner-review rewrite states in the boxes, recomputed from the models. */
 import { describe, it, expect } from 'vitest';
 import { spk, Hf, cabs, peakBand } from '../src/figs/ex';
-import { CAR, minEnergy, DEG } from '../src/figs/car';
+import { CAR, minEnergy, DEG, carModes } from '../src/figs/car';
 
 describe('Box 6 / Box 8: the three earbud frequencies and a₀, a₁', () => {
   const s = spk();
@@ -33,5 +33,14 @@ describe('Box 14: E is the least total squared force over the move', () => {
     const iMin = U.reduce((b, u, i) => (u[0] < U[b][0] ? i : b), 0);
     expect(Math.round(U[iMin][0])).toBe(-476); expect(ts[iMin]).toBeCloseTo(0.28, 2);
     expect(Math.round(U[5000][1])).toBe(-652);
+  });
+});
+
+describe('pass 2 (A5): the car modes’ still points against the rear axle (x from the centre of gravity, rear axle at −b)', () => {
+  const md = carModes(CAR), xb = -1 / md[0].thPerZ[0], xp = md[1].node;
+  it('bounce: x = −2.56 m, 1.06 m behind the rear axle; pitch: x = +0.56 m, 2.06 m ahead of it', () => {
+    expect(CAR.b).toBe(1.5);
+    expect(xb).toBeCloseTo(-2.56, 2); expect(xb + CAR.b).toBeCloseTo(-1.06, 2);
+    expect(xp).toBeCloseTo(0.56, 2); expect(xp + CAR.b).toBeCloseTo(2.06, 2);
   });
 });
