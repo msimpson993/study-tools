@@ -32,7 +32,7 @@ Why a tone that fits a whole number of periods in the block lands in one bin, an
 
 ### The math
 
-A finite record x[n]w[n] has transform (1/2π)X ⊛ W: each spectral line is replaced by a copy of the window's transform. For the rectangular window W is a Dirichlet kernel, sin(NΩ/2)/sin(Ω/2), with a main lobe 4π/N wide and side lobes only 13 dB down.
+A finite record x[n]w[n] has transform (1/2π)X ⊛ W: each spectral line is replaced by a copy of the window's transform. For the rectangular window of M samples (the samples recorded), W is a Dirichlet kernel, sin(MΩ/2)/sin(Ω/2), with a main lobe 4π/M wide and side lobes only 13 dB down. (N stays the DFT length.)
 
 $$x[n]\,w[n]\;\longleftrightarrow\;\frac{1}{2\pi}\int X(e^{j\theta})\,W(e^{j(\Omega-\theta)})\,d\theta$$
 

@@ -918,7 +918,7 @@
   - "Yes, it removes leakage"
   - It halves the bin spacing only
   answer: 0
-  why: Resolution is set by the record length (main lobe width ≈ 4π/N for the rectangular window); zero-padding interpolates.
+  why: Resolution is set by the record length M, the number of samples recorded (main lobe width ≈ 4π/M for the rectangular window); zero-padding raises only the DFT length N, so it interpolates.
 - id: c-ss-2
   tags:
   - ss
