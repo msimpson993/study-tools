@@ -68,7 +68,7 @@ for (const v of VIEWS) {
       // linear-systems: dive, figure expanded, pair
       await open(page, 'linear-systems', '#/dive/eig'); await setTheme(page, theme);
       await snap(page, `linear-systems-dive-${tag}`);
-      await open(page, 'linear-systems', '#/figure/expm'); await setTheme(page, theme);
+      await open(page, 'linear-systems', '#/figure/diag'); await setTheme(page, theme);
       await snap(page, `linear-systems-figure-${tag}`, v.mobile);
       await page.locator('[data-testid=fig-stage] canvas').first().click({ force: true });
       await snap(page, `linear-systems-figure-expanded-${tag}`);

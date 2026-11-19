@@ -11,7 +11,7 @@ neighbors:
   - stab
   - tf
 matlab: Phi = expm(A * t)
-exampleScene: { scene: car, overlays: [pitch, trace], caption: "Released nose-down, e^(At) carries the body back to level: a bounce ring plus a pitch ring." }
+exampleScene: { scene: car, overlays: [trace], caption: "Released nose-down, e^(At) carries the body back to level: a bounce ring plus a pitch ring." }
 level: Worked calculation
 check: [c-expm-1, m5, m6]
 ---

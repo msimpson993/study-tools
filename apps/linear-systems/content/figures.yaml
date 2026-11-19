@@ -191,6 +191,12 @@
       z0: 1
       th0: -1
     about: Both parts.
+  pair:
+    forward: pose
+    inverse: modal
+    forwardName: "Analysis: q = V⁻¹(z, θ)"
+    inverseName: "Synthesis: (z, θ) = V q"
+    strip: "The columns of V are the bounce shape and the pitch shape: any pose = q₁·(bounce) + q₂·(pitch)."
 - id: flow
   title: "A bump: the front response plus a delayed copy for the rear wheel"
   x: time t (s)

@@ -11,7 +11,7 @@ neighbors:
   - ctrl
   - diag
 matlab: sys = ss(A, B, C, D)
-exampleScene: { scene: car, overlays: [springs, state], caption: "Two springs and two shocks hold the body; the state is heave, pitch and their rates." }
+exampleScene: { scene: car, overlays: [springs, state, bump], caption: "A bump under the front wheel, then the rear: the body heaves and pitches. The state is heave, pitch and their rates." }
 level: Some algebra
 check: [c-ss-1, c-ss-2]
 ---

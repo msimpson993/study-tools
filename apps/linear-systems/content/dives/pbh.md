@@ -11,7 +11,7 @@ neighbors:
   - kalman
   - eig
 matlab: "for l = eig(A).', rank([A - l*eye(n), B]), end"
-exampleScene: { scene: car, overlays: [centre, pitch], caption: "A push at the pitch mode's still point cannot start it, and a sensor there cannot see it." }
+exampleScene: { scene: car, overlays: [centre, pitch, trace], caption: "A push at the pitch mode's still point cannot start it, and a sensor there cannot see it." }
 level: Some algebra
 check: [c-pbh-1, c-ctrl-1, c-obs-1]
 ---

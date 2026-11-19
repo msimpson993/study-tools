@@ -93,6 +93,8 @@ export function drawCarMain(g: G, r: Rect, P: Pal, ov: string[], tAnim: number, 
   if (S.kind === 'centre') {
     const u = S.u!(st.t)[0]; if (Math.abs(u) > 30) arrow(g, X(0), yAt(0) + 26, X(0), yAt(0) + 4, P.bad, 2.6);
     text(g, 'push and sensor at the centre: pitch never starts', r.x + 4, r.y + 26, P.bad, { px: px - 0.5, wt: 700, optional: true });
+    if (has(ov, 'pitch')) { const c = pt(0, -4); g.fillStyle = P.warn; g.fillRect(c[0] - 4, c[1], 8, 6); text(g, 'height sensor here reads no pitch', r.x + 4, r.y + 40, P.warn, { px: px - 0.5, wt: 700, optional: true }); }
+    if (has(ov, 'bounce')) text(g, 'reached and seen: bounce only', r.x + 4, r.y + 40, P.s1, { px: px - 0.5, wt: 700, optional: true });
   }
   if (S.kind === 'active' && S.u) {
     const u = S.u(st.t); for (const [xm, f] of [[p.a, u[0]], [-p.b, u[1]]] as [number, number][]) if (Math.abs(f) > 20) { const L = Math.max(-24, Math.min(24, f / 30)); arrow(g, X(xm) + 18, yAt(xm) + 2 + L, X(xm) + 18, yAt(xm) + 2, P.bad, 2.4); }

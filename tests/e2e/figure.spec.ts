@@ -39,7 +39,7 @@ test.describe('linear-systems: live figure (core Figure component)', () => {
 
   test('pair view shows both directions; legends are expandable and independent', async ({ page }) => {
     await page.setViewportSize({ width: 1400, height: 900 });
-    await open(page, 'linear-systems', FIG);
+    await open(page, 'linear-systems', '#/figure/diag');
     await page.locator('.st-xp').first().click();
     await page.getByTestId('pair-open').click();
     await expect(page.getByTestId('fig-overlay')).toBeVisible();
@@ -57,9 +57,9 @@ test.describe('linear-systems: live figure (core Figure component)', () => {
 
   test('a preset is a setting of visible controls and round-trips through the URL', async ({ page }) => {
     await open(page, 'linear-systems', FIG);
-    await page.locator('[data-testid=controls] .st-presets button', { hasText: /difference mode/i }).click();
+    await page.locator('[data-testid=controls] .st-presets button', { hasText: /worn shocks/i }).click();
     const hash = await page.evaluate(() => location.hash);
-    expect(hash).toMatch(/x1=/);
+    expect(hash).toMatch(/wear=/);
     const vals = await page.locator('[data-testid=controls] input[type=range]').evaluateAll((els) => els.map((e) => (e as HTMLInputElement).value));
     await page.goto(`/linear-systems/index.html${hash}`); await page.reload(); await page.waitForFunction(() => !!(window as any).__study);
     const vals2 = await page.locator('[data-testid=controls] input[type=range]').evaluateAll((els) => els.map((e) => (e as HTMLInputElement).value));
