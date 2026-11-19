@@ -51,6 +51,8 @@ runningExample:
     Model assumptions: small angles, linear springs and shocks, rigid tyres, no wheel mass (valid up to about 5 Hz). A second, **symmetric** set (kf = 44,000, kr = 35,200 N/m, cf = 3300, cr = 2640 N·s/m, so kf·a = kr·b) is used only for the push-at-the-centre story: there bounce (1.197 Hz) and pitch (1.344 Hz) are completely separate, so a push or a height sensor at the centre of gravity can neither start nor see pitch.
 
     Every box of the map says what its idea **adds to one of these examples** and what it lets us **account for**.
+# opt-in sound examples (earbud only), played from the map pop-ups; generated in the browser (src/figs/sounds.ts)
+audio: [snd-clip, snd-ping, snd-ping-x, snd-sweep, snd-square, snd-alias, snd-beat]
 hub:
   order: 2
 # Porting guard (rebuilt Nov 2026): 2 maps (Big picture 15 boxes / 15 lines, Full detail 34 boxes / 39 lines),

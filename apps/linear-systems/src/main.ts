@@ -1,11 +1,14 @@
 import content from 'virtual:study-content';
 import { mountApp } from '@study/core';
 import { popFigures } from './figs/pop';
+import { audioHook } from '@study/core/audio';
+import { sounds } from './figs/sounds';
 import { expmFigure, eigFigure, diagFigure, flowFigure, cayleyFigure, stabFigure, ctrlFigure, obsFigure, kalmanFigure, gramianFigure, optimalFigure } from './figs/carfigs';
 import { ssFigure, ltiFigure, eigfnFigure, ftFigure, fsFigure, orthoFigure, samplingFigure, dtftFigure, dftFigure, windowFigure, laplaceFigure, inverseFigure, tfFigure, zfilterFigure, lintestFigure } from './figs/speaker';
 
 mountApp(content, {
   quizFigures: popFigures,
+  audio: audioHook(sounds),
   figures: {
     // car
     expm: expmFigure, eig: eigFigure, diag: diagFigure, flow: flowFigure, cayley: cayleyFigure, stab: stabFigure, ctrl: ctrlFigure, obs: obsFigure, kalman: kalmanFigure, gramian: gramianFigure, optimal: optimalFigure,

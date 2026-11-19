@@ -58,6 +58,8 @@ maps:
     short: Linear means it plays fair with sums and scaling; time-invariant means it behaves the same today as tomorrow.
     eq: "T{a u₁ + b u₂} = a T{u₁} + b T{u₂}"
     pop: &id006
+      audio:
+      - snd-clip
       rough: "twice the input → twice the output; a sum in → the sum out; the input later → the same output, later"
       eqKey: "T = the system's rule; u₁, u₂ = any two inputs; a, b = any numbers. Used to test whether a system is linear."
       figures:
@@ -101,6 +103,9 @@ maps:
     short: "Use sharp kicks (impulses) as the pieces. The response to one kick is the impulse response h(t); any input is a row of scaled, shifted kicks, so the output is the same row of scaled, shifted copies of h, added up: convolution."
     eq: y(t) = ∫ h(τ) u(t − τ) dτ
     pop: &id008
+      audio:
+      - snd-ping
+      - snd-ping-x
       rough: output now = sum over the past of (input then × how much the system still remembers it)
       eqKey: "y = output, u = input, h(τ) = the response τ after one kick. Used to compute any output from one measured ring."
       figures:
@@ -124,6 +129,8 @@ maps:
     series: 1
     short: "Feed a linear system a pure tone and a tone of the same pitch comes out; only its loudness and timing change. Sweep every pitch and you get H(jω), the system's fingerprint."
     pop: &id009
+      audio:
+      - snd-sweep
       rough: "output tone = (gain at that pitch) × (input tone, delayed)"
       figures:
       - id: pop-gain
@@ -152,6 +159,9 @@ maps:
     series: 1
     short: "Any practical signal is a sum of sines: harmonics for a repeating signal (Fourier series), a continuum for a one-off (Fourier transform), the DTFT for samples and the DFT for a finite block on a computer. Sampling too slowly aliases; a finite block leaks."
     pop: &id010
+      audio:
+      - snd-square
+      - snd-alias
       rough: "signal = Σ (amount of each pitch) × (that pitch); output = Σ (amount × gain) × (that pitch, delayed)"
       figures:
       - id: pop-fourier
@@ -684,6 +694,8 @@ maps:
     eq: "x[n]w[n] ↔ (1/2π) X ⊛ W"
     pop:
       rough: a finite block smears a pitch over nearby bins; a taper trades width for skirts
+      audio:
+      - snd-beat
     addsToExample: "Shows why a steady 690 Hz hum near the resonance, 64 samples at 8 kHz, falls between bins 5 and 6 (125 Hz apart): its peak reads about 4 dB low on both and smears."
     accountsFor: Why the DFT of a pure tone is not a single spike.
     dive: window
