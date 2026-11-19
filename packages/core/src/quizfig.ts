@@ -17,6 +17,7 @@ export type QuizFigureParams = NonNullable<QuizFigureRef['params']>;
 export interface QuizFigureDef {
   /** paint into a w×h CSS-pixel canvas; must be deterministic in `params` */ draw(g: CanvasRenderingContext2D, w: number, h: number, params: QuizFigureParams): void;
   /** width / height (default 360/176, the legacy scope) */ aspect?: number; /** CSS max width in px (default 440) */ maxWidth?: number;
+  /** optional width / height when the figure is under 480 px wide (a phone): lets a two-panel picture stack its panels */ phoneAspect?: number;
 }
 export type QuizFigureRegistry = Record<string, QuizFigureDef>;
 
@@ -56,9 +57,10 @@ export function mountQuizFigure(ref: QuizFigureRef, registry: QuizFigureRegistry
   const cap = ref.caption ? h('figcaption', { class: 'qfig-cap' }, ref.caption) : null;
   if (!def) return { el: h('figure', { class: 'qfigure missing', dataset: { testid: 'quiz-figure-missing', figure: ref.id } }, h('div', { class: 'qfig-miss' }, `[figure “${ref.id}” is not available in this build] `, ref.alt), cap), destroy() {} };
   const cv = h('canvas', { role: 'img', 'aria-label': ref.alt, dataset: { testid: 'quiz-figure', figure: ref.id } });
-  cv.style.cssText = `display:block;width:100%;max-width:${def.maxWidth ?? 440}px;aspect-ratio:${def.aspect ?? 360 / 176};margin:.1rem auto .5rem`;
+  const asp = () => String(def.phoneAspect && (cv.parentElement?.clientWidth || window.innerWidth) < 480 ? def.phoneAspect : def.aspect ?? 360 / 176);
+  cv.style.cssText = `display:block;width:100%;max-width:${def.maxWidth ?? 440}px;aspect-ratio:${asp()};margin:.1rem auto .5rem`;
   const el = h('figure', { class: 'qfigure', dataset: { figure: ref.id } }, cv, cap);
-  const draw = () => { const f = fitCanvas(cv); def.draw(f.g, f.w, f.h, ref.params ?? {}); };
+  const draw = () => { if (def.phoneAspect && cv.style.aspectRatio.replace(/ \/ 1$/, '') !== asp()) cv.style.aspectRatio = asp(); const f = fitCanvas(cv); def.draw(f.g, f.w, f.h, ref.params ?? {}); };
   const ro = new ResizeObserver(draw); ro.observe(cv);
   window.addEventListener('study-theme', draw);
   requestAnimationFrame(draw);
