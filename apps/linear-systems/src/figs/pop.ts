@@ -110,7 +110,7 @@ function miniCar(g: CanvasRenderingContext2D, w: number, h: number, z: number, t
 }
 /** Box 10: the car's state: heave z and pitch θ (and their rates). */
 const carstate: QuizFigureDef = { aspect: 2.4, maxWidth: 420, draw(g, w, h) {
-  g.clearRect(0, 0, w, h); miniCar(g, w, h, 0, 0, 1, col.muted(), true); const r = miniCar(g, w, h, 0.02, -0.03, 6, col.text());
+  g.clearRect(0, 0, w, h); miniCar(g, w, h, 0, 0, 1, col.muted(), true); const r = miniCar(g, w, h, 0.02, 0.025, 4, col.text());
   text(g, 'z: heave (up)', 6, 10, col.a(), 'left', 10); text(g, 'θ: pitch (nose-up +)', w - 6, 10, col.b(), 'right', 10);
   text(g, 'front', r.X(CAR.a), h - 2, col.muted(), 'center', 9);
 } };
@@ -128,7 +128,7 @@ const bump: QuizFigureDef = { aspect: 2.4, maxWidth: 440, draw(g, w, h) {
   const zf = fr_.xs.map((x) => x[0] * 1000), zr = rr.xs.map((x) => x[0] * 1000), zs = zf.map((v, i) => v + zr[i]);
   const f = fr(g, w, h, [0, T], [-6, 10], 't (s)', 'heave (mm)', 26);
   curve(g, f, fr_.ts, zf, col.a(), 1.4, [4, 3]); curve(g, f, rr.ts, zr, col.b(), 1.4, [2, 3]); curve(g, f, fr_.ts, zs, col.text(), 2);
-  text(g, 'front', f.X(0.05), f.Y(-3.5), col.a(), 'left', 10); text(g, 'rear: same, 0.18 s later', f.X(0.45), f.Y(-4.8), col.b(), 'left', 10); text(g, 'sum', f.X(0.3), f.Y(9), col.text(), 'left', 10);
+  text(g, 'front', f.X(0.05), f.Y(-3.5), col.a(), 'left', 10); text(g, 'rear wheel, 0.18 s later', f.X(0.45), f.Y(-4.8), col.b(), 'left', 10); text(g, 'sum', f.X(0.3), f.Y(9), col.text(), 'left', 10);
 } };
 /** Box 12: heave after the 5 cm bump, new (worn = 0) or worn (worn = 1) shocks. */
 const carsettle: QuizFigureDef = { aspect: 1.5, maxWidth: 220, draw(g, w, h, p) {

@@ -44,13 +44,16 @@ describe('car model (main set)', () => {
     const xn = carModes(CAR)[1].node; // proportional damping: real mode shapes, exact node
     const A = carA(CAR); expect(rank(ctrbM(A, forceB(CAR, [xn])))).toBe(2); expect(rank(obsvM(A, [[1, xn, 0, 0]]))).toBe(2);
   });
-  it('min-energy active suspension: 2° nose-down to level and still in 0.5 s: 476 N front / 652 N rear peak, E = 96,160 N²·s, force largest near the end', () => {
+  it('min-energy active suspension: 2° nose-down to level and still in 0.5 s: 476 N front / 652 N rear peak, E = 96,160 N²·s; front peaks part-way through, rear right at the end', () => {
     const x0 = [0, -2 / DEG, 0, 0]; const r = minEnergy(CAR, [CAR.a, -CAR.b], x0, 0.5);
     const ts = Array.from({ length: 501 }, (_, i) => i * 0.001), U = ts.map((t) => r.u(t));
     close(Math.max(...U.map((u) => Math.abs(u[0]))), 476, 1); close(Math.max(...U.map((u) => Math.abs(u[1]))), 652, 1); close(r.energy, 96160, 100);
     // small at the start (about 100 N combined), largest at the very end (about 736 N). NB the strict minimum is near 0.04 s, not t = 0.
     const mag = U.map((u) => Math.hypot(u[0], u[1])); close(mag[0], 100, 1); expect(mag[0]).toBeLessThan(0.15 * Math.max(...mag));
     expect(mag.indexOf(Math.max(...mag))).toBe(500);
+    const fi = U.map((u) => Math.abs(u[0])), ri = U.map((u) => Math.abs(u[1]));
+    const tf = ts[fi.indexOf(Math.max(...fi))]; expect(tf).toBeGreaterThan(0.2); expect(tf).toBeLessThan(0.35); // front: part-way (≈ 0.28 s)
+    expect(ri.indexOf(Math.max(...ri))).toBe(500); // rear: right at the end
   });
   it('T = 1 s needs only ~120 N; front-only at 0.5 s needs 12.9 kN', () => {
     const x0 = [0, -2 / DEG, 0, 0]; const ts = Array.from({ length: 1001 }, (_, i) => i / 1000);

@@ -296,8 +296,11 @@ export function mountConceptMap(host: HTMLElement, content: AppContent, progress
     if (n.eqHtml || n.eq) out.push(n.eqHtml ? h('div', { class: 'st-eq', html: n.eqHtml }) : h('div', { class: 'st-eq' }, n.eq!));
     if (p.eqKey) out.push(h('p', { class: 'pop-key st-hint', dataset: { testid: 'pop-key' }, html: p.eqKey }));
     if (p.figures?.length) {
-      const strip = h('div', { class: `pop-figs n${p.figures.length}`, dataset: { testid: 'pop-figures' } });
-      for (const f of p.figures) { const mf = mountQuizFigure(f, nav.figures); popStops.push(mf.destroy); strip.append(mf.el); }
+      // a wide figure (aspect ≥ 2.2) in a multi-figure strip gets its own full row; the grid is sized by the narrow ones
+      const wide = (f: { id: string }) => p.figures!.length > 1 && (nav.figures?.[f.id]?.aspect ?? 0) >= 2.2;
+      const narrow = p.figures.filter((f) => !wide(f)).length || p.figures.length;
+      const strip = h('div', { class: `pop-figs n${narrow}`, dataset: { testid: 'pop-figures' } });
+      for (const f of p.figures) { const mf = mountQuizFigure(f, nav.figures); popStops.push(mf.destroy); if (wide(f)) mf.el.style.gridColumn = '1 / -1'; strip.append(mf.el); }
       out.push(strip);
     }
     const ex = p.example ?? n.addsToExample;

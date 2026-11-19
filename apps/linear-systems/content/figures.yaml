@@ -598,7 +598,7 @@
     color: var(--muted)
     dash: true
   howToRead: "Pontryagin's principle (or the Gramian formula) gives the force profile with the least ∫|u|²dt that takes the body from 2° nose-down, at rest, to level and still at time T: u(t) = −Bᵀe^(Aᵀ(T−t))W(T)⁻¹e^(AT)x₀. Left: the forces. Right: the pitch with that input (solid) and with no input (dashed)."
-  lookFor: "T = 0.5 s with front and rear actuators: peaks of 476 N front and 652 N rear, E = 96,160 N²·s. The forces are small at the start and largest at the end. With T = 1 s about 120 N is enough."
+  lookFor: "T = 0.5 s with front and rear actuators: peaks of 476 N front and 652 N rear, E = 96,160 N²·s. Both start small; the front peaks part-way through, the rear right at the end. With T = 1 s about 120 N is enough."
   controls:
   - id: T
     label: time allowed T

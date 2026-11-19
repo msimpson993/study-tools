@@ -201,7 +201,7 @@ export const kalmanFigure = figureOf((c) => {
       draw(g, w, h) { wipe(g, w, h); const p = carOf(c.values), xp = snap(p, num(c.values, 'xp')), xs = snap(p, num(c.values, 'xs')), fs = linspace(0.1, 3, 291), gs = fs.map((f) => G(p, xp, xs, f) * 1e6);
         const f = graph(g, w, h, [0, 3], [0, Math.max(0.1, ...gs) * 1.15], 'frequency f (Hz)', '|G| (mm per kN)'); curve(g, f, fs, gs, col.e(), 2.4);
         const md = carModes(p); md.forEach((m, i) => tline(g, f, [m.fn, 0], [m.fn, Math.max(...gs) * 1.1], i ? col.b() : col.a(), 1, [3, 3])); } },
-    { id: 'table', title: 'Which modes are reached (by the push) and seen (by the sensor)', x: '', y: '',
+    { id: 'table', title: 'Which modes are reached (by the push) and seen (by the sensor)', x: 'mode', y: 'reached / seen (yes or no)',
       draw(g, w, h) { wipe(g, w, h); const p = carOf(c.values), xp = snap(p, num(c.values, 'xp')), xs = snap(p, num(c.values, 'xs')), r = modeAt(p, xp), s = modeAt(p, xs), tol = 1e-6;
         const rows: [string, boolean, boolean, string][] = [['bounce', Math.abs(r.b) > tol, Math.abs(s.b) > tol, col.a()], ['pitch', Math.abs(r.q) > tol, Math.abs(s.q) > tol, col.b()]];
         text(g, 'mode', 16, 30, col.muted(), 'left', 11); text(g, 'reached', w * 0.45, 30, col.muted(), 'center', 11); text(g, 'seen', w * 0.7, 30, col.muted(), 'center', 11); text(g, 'in G(s)?', w * 0.9, 30, col.muted(), 'center', 11);

@@ -2,8 +2,8 @@
 id: optimal
 order: 29
 title: "Application: optimal control (Pontryagin's principle)"
-addsToExample: "Finds the least-energy front and rear actuator forces (active suspension) that bring the body from 2° nose-down to level and still in 0.5 s. With ∫|u|² dt as the cost the costate obeys λ̇ = −Aᵀλ, so u(t) = −Bᵀλ(t)/2 is built from the car's modes run backwards from T: small at first, growing to peaks of 476 N front and 652 N rear near the end, with E = 96,160 N²·s. Given 1 s, about 120 N is enough."
-accountsFor: "Why the cheapest levelling force starts small and grows toward the end, and why a shorter time costs so much more."
+addsToExample: "Finds the least-energy front and rear actuator forces (active suspension) that bring the body from 2° nose-down to level and still in 0.5 s. With ∫|u|² dt as the cost the costate obeys λ̇ = −Aᵀλ, so u(t) = −Bᵀλ(t)/2 is built from the car's modes run backwards from T: small at first, the front force peaking at 476 N part-way through and the rear at 652 N right at the end, with E = 96,160 N²·s. Given 1 s, about 120 N is enough."
+accountsFor: "Why the cheapest levelling force starts small and does its hardest work late, and why a shorter time costs so much more."
 category: structure
 neighbors:
   - gramian
@@ -70,7 +70,7 @@ For $L = x^\mathsf{T}Qx + u^\mathsf{T}Ru$ the last gives $u = -\tfrac12R^{-1}B^\
 
 1. Car with front and rear actuators: minimise $\int_0^{0.5}|u|^2\,dt$ to go from 2° nose-down at rest to level and still.
 2. With $L = |u|^2$ the costate obeys $\dot\lambda = -A^\mathsf{T}\lambda$, so $u(t) = -B^\mathsf{T}\lambda(t)/2$ is built from the car's modes run backwards from $T$; the end condition fixes $\lambda(0)$.
-3. Result: small at first, growing to peaks of about 476 N front and 652 N rear near the end, with $E = 96{,}160$ N²·s; the Gramian gives the same answer. Allowed 1 s, about 120 N is enough.
+3. Result: small at first; the front force peaks at about 476 N part-way through, the rear at about 652 N right at the end, with $E = 96{,}160$ N²·s; the Gramian gives the same answer. Allowed 1 s, about 120 N is enough.
 
 **Exam-style example.** ẋ = 6x + u, J = ∫₀¹(x² + 2u²)dt, x(0) = 1, x(1) = 2. H = x² + 2u² + λ(6x + u), so u° = −λ/4 and
 

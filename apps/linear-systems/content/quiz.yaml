@@ -1202,7 +1202,7 @@
   kind: action
   q: "Front and rear actuators bring the body from 2° nose-down to level and still in 0.5 s with the least ∫|u|²dt. What do the forces look like?"
   choices:
-  - "Small at first, growing to peaks of about 476 N front and 652 N rear, largest near the end"
+  - "Small at first; the front peaks at about 476 N part-way through, the rear at about 652 N right at the end"
   - Constant forces for 0.5 s
   - "A big kick at the start, then nothing"
   - Only the front actuator works
