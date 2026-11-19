@@ -57,7 +57,7 @@ export const sounds: AudioRegistry = {
         curve(g, f, ts, ys, col.a(), 2); text(g, `rings at ${spk().fd.toFixed(1)} Hz, τ = ${(1 / spk().sigma).toFixed(2)} ms`, w - 8, 8, col.text(), 'right', 10); } },
   },
   'snd-ping-x': {
-    label: 'EXAGGERATED: play a low-damping ping', note: `3% damping, not the real earbud's, so you hear the ring's pitch.`,
+    label: 'EXAGGERATED: play a low-damping ping', note: `Damping cut to 3% of the earbud's, so you hear the ring's pitch.`,
     render: (fs) => pings(fs, 0.03, 3, 0.6),
     view: { aspect: 2.4, alt: 'An exaggerated, lightly damped ring over 60 ms.',
       draw(g, w, h) { const ts = linspace(0, 60, 1201), ys = ts.map((t) => hImp(t, 0.03)), m = Math.max(...ys.map(Math.abs)) * 1.1, f = fr(g, w, h, [0, 60], [-m, m], 't (ms)', 'h');
