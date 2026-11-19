@@ -46,21 +46,87 @@ test.describe('linear-systems: walk the chain through the lines', () => {
     expect(errs).toEqual([]);
   });
 
-  test('box 9 lists both next questions, each opening its own line; buttons tappable at 390 px, no overlap', async ({ page }) => {
+  test('box 9 fork: the main path (box 10) comes first and is the primary button; the side path to "Will it settle?" is labelled; 390 px, no overlap', async ({ page }) => {
     await page.setViewportSize({ width: 390, height: 844 });
     await open(page, 'linear-systems');
     await page.locator('[data-testid=map-node][data-node="PZ"]').dispatchEvent('click');
-    await expect(page.getByTestId('pop-next-link')).toHaveCount(2);
+    const links = page.getByTestId('pop-next-link');
+    await expect(links).toHaveCount(2);
+    await expect(links.first()).toHaveAttribute('data-edge', 'PZ__STATE');
+    await expect(page.locator('.pop-next-list li').first()).toContainText('Main path:');
+    await expect(page.locator('.pop-next-list li').nth(1)).toContainText('Side path');
     const next = page.getByTestId('chain-next'), back = page.getByTestId('chain-back');
     await expect(next).toHaveCount(2); await expect(back).toHaveCount(1);
-    await expect(next.first()).toHaveAttribute('data-edge', 'PZ__STAB'); await expect(next.nth(1)).toHaveAttribute('data-edge', 'PZ__STATE');
+    await expect(next.first()).toHaveAttribute('data-edge', 'PZ__STATE'); await expect(next.first()).toHaveAttribute('data-path', 'main');
+    await expect(next.first()).toHaveClass(/\bon\b/); await expect(next.first()).toContainText('main path');
+    await expect(next.nth(1)).toHaveAttribute('data-edge', 'PZ__STAB'); await expect(next.nth(1)).toHaveAttribute('data-path', 'side');
+    await expect(next.nth(1)).not.toHaveClass(/\bon\b/); await expect(next.nth(1)).toContainText('Side path');
+    const styles = await next.evaluateAll((els) => els.map((e) => { const c = getComputedStyle(e); return `${c.backgroundColor}|${c.borderStyle}`; }));
+    expect(styles[0], 'main and side Next buttons look different').not.toBe(styles[1]);
     await expect(back.first()).toHaveAttribute('data-edge', 'LAP__PZ');
     const boxes = await page.locator('[data-testid=chain-nav] .tbtn').evaluateAll((els) => els.map((e) => e.getBoundingClientRect()).map((r) => ({ l: r.left, t: r.top, r: r.right, b: r.bottom, w: r.width, h: r.height })));
     for (const b of boxes) { expect(b.h).toBeGreaterThanOrEqual(44); expect(b.w).toBeGreaterThanOrEqual(44); expect(b.r).toBeLessThanOrEqual(390); }
     for (let i = 0; i < boxes.length; i++) for (let j = i + 1; j < boxes.length; j++) { const a = boxes[i], c = boxes[j]; expect(a.r <= c.l + 0.5 || c.r <= a.l + 0.5 || a.b <= c.t + 0.5 || c.b <= a.t + 0.5, `buttons ${i} and ${j} overlap`).toBe(true); }
-    await next.nth(1).click();
+    await next.first().click();
     await expect(page.getByTestId('edge-why')).toContainText('Still open');
     await page.getByTestId('edge-next').click(); await expect(heading(page)).toHaveText(await labelOf(page, 'STATE'));
+  });
+
+  test('Back from "Will it settle?" goes first to the line you actually came through (side path), else the main chain', async ({ page }) => {
+    await open(page, 'linear-systems');
+    // arrive by the side path PZ → STAB
+    await page.locator('[data-testid=map-node][data-node="PZ"]').dispatchEvent('click');
+    await page.locator('[data-testid=chain-next][data-path=side]').click();
+    await page.getByTestId('edge-next').click(); await expect(heading(page)).toHaveText(await labelOf(page, 'STAB'));
+    await expect(page.getByTestId('chain-back').first()).toHaveAttribute('data-edge', 'PZ__STAB');
+    await expect(page.getByTestId('pop-question')).toHaveAttribute('data-edge', 'PZ__STAB');
+    // go on to box 13 and come back: STAB still remembers the side path it was reached by
+    await page.locator('[data-testid=chain-next][data-to=INOUT]').click(); await page.getByTestId('edge-next').click();
+    await page.getByTestId('chain-back').first().click(); await page.getByTestId('edge-back').click();
+    await expect(heading(page)).toHaveText(await labelOf(page, 'STAB'));
+    await expect(page.getByTestId('chain-back').first()).toHaveAttribute('data-edge', 'PZ__STAB');
+    // tapped directly on the map: no path walked, so Back falls back to the main chain (box 11)
+    await page.getByTestId('panel-close').click();
+    await page.locator('[data-testid=map-node][data-node="STAB"]').dispatchEvent('click');
+    await expect(page.getByTestId('chain-back').first()).toHaveAttribute('data-edge', 'MODES__STAB');
+  });
+
+  test('every Full-detail end box has Back and "Return to the main chain"', async ({ page }) => {
+    await page.setViewportSize({ width: 390, height: 844 });
+    await open(page, 'linear-systems');
+    await page.locator('button[role=tab][data-map="full"]').first().click();
+    const ends = await page.evaluate(() => { const c = (window as any).__study.content; const big = new Set(c.maps[0].nodes.map((n: any) => n.id)); const m = c.maps[1]; return m.nodes.filter((n: any) => !big.has(n.id) && !m.edges.some((e: any) => e.from === n.id && !e.dashed)).map((n: any) => n.id); });
+    expect(ends.length).toBe(13);
+    for (const id of ends) {
+      await page.locator(`[data-testid=map-node][data-node="${id}"]`).first().dispatchEvent('click');
+      await expect(page.getByTestId('pop-end'), `${id} end row`).toBeVisible();
+      await expect(page.getByTestId('end-back'), `${id} Back link`).toHaveCount(1);
+      await expect(page.getByTestId('end-main'), `${id} main-chain link`).toContainText('Return to the main chain');
+      await expect(page.getByTestId('chain-back').first()).toBeVisible();
+      await expect(page.getByTestId('chain-main')).toHaveCount(1);
+    }
+    // INV hangs under Laplace (box 8): Return opens that box
+    await page.locator('[data-testid=map-node][data-node="INV"]').first().dispatchEvent('click');
+    await page.getByTestId('end-main').click();
+    await expect(heading(page)).toHaveText(await labelOf(page, 'LAP'));
+  });
+
+  test('review progress counts unique boxes: a box on both maps counts once, seen on either is seen', async ({ page }) => {
+    await open(page, 'linear-systems');
+    const total = await page.evaluate(() => new Set((window as any).__study.content.maps.flatMap((m: any) => m.nodes.map((n: any) => n.id))).size);
+    await page.locator('[data-testid=map-node][data-node="LIN"]').dispatchEvent('click');
+    await page.locator('button[data-mode=review]').first().click();
+    const sum = page.locator('.cm-sum').first();
+    await expect(sum).toContainText(`${total} different boxes`);
+    await expect(sum).toContainText(`${total - 1} unseen`);
+    await expect(sum).toContainText('1 seen');
+    await page.locator('button[role=tab][data-map="full"]').first().click();
+    await expect(page.locator('[data-testid=map-node][data-node="LIN"]').first()).toHaveAttribute('data-status', 'seen');
+  });
+
+  test("the quiz opens on an easy foundational question (box 1's quick check), not the eigenbasis one", async ({ page }) => {
+    await open(page, 'linear-systems', '#/quiz');
+    await expect(page.locator('[data-testid=qcard]').first()).toHaveAttribute('data-qid', 'pop-sys');
   });
 
   test('a line pop-up teaches why you ask it (with a captioned figure where one helps) and has Back / Next', async ({ page }) => {

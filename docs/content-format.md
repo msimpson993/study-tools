@@ -5,7 +5,7 @@ An app is `apps/<id>/subject.yaml` + `apps/<id>/content/*`. `npm run validate` (
 ## subject.yaml
 `id, title, centralQuestion, blurb, archetype (guide|overview), categories[], sections[], hub.order, board.pairs[], expect{}`.
 - `sections` order = sidebar order. **The first section must be `kind: map`.** Kinds: `map | dives | md | quiz | board | glossary | figures` (`md` reads `content/sections/<id>.md`).
-- `runningExample: {title, summary, details?, scene?: {id, overlays?}}` is the one concrete system threaded through the subject (see below). `scene` picks a core example scene (`cart`, `tine`) drawn in every dive and as the map hero: see [example-scenes.md](example-scenes.md). `expect` is the porting guard: `maps, nodes, edges, dives, quiz, examples`. Build fails if counts drift.
+- `runningExample: {title, summary, details?, scene?: {id, overlays?}}` is the one concrete system threaded through the subject (see below). `scene` picks a core example scene (`cart`, `tine`) drawn in every dive and as the map hero: see [example-scenes.md](example-scenes.md). `quizOrder: chain` (optional) runs the quiz in map order, each box's quick check first, so it opens on an easy foundational question. `expect` is the porting guard: `maps, nodes, edges, dives, quiz, examples`. Build fails if counts drift.
 
 ## graph.yaml (the map)
 ```yaml
@@ -31,6 +31,7 @@ maps:
         quizTag: <tag>             # default: dive ?? id; ties the node to quiz questions
     edges:
       - { from: a, to: b, label: short pill text, dashed: false, question: ≥8 chars, idea: ≥20 chars, eq: optional }
+      - { from: a, to: c, …, side: true }   # optional: a shortcut out of a fork; listed after the main path, labelled 'Side path', never the main chain
 ```
 Rules enforced: unique ids per map, no dangling or duplicate edges, graph is a DAG, every node reachable from `root`, popups non-empty, `live` targets exist (figure id, board pair, preset id), cross-app link targets exist.
 YAML gotchas: quote any scalar containing `: `, `{`, `|`, `#` (labels like `Finite record: DFT` break).

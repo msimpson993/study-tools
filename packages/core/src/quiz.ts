@@ -1,6 +1,7 @@
 import { h, clear } from './dom';
 import type { AppContent, Question } from './types';
 import type { Progress } from './progress';
+import { quizTagOf } from './progress';
 import { mountQuizFigure, type QuizFigureRegistry } from './quizfig';
 import { copyRefButton, quizReference } from './copyref';
 import { choiceOrder } from './choiceorder';
@@ -47,10 +48,18 @@ export function mountQuiz(host: HTMLElement, content: AppContent, progress: Prog
 
   const subsetLabel = (q: Question) => (content.review ?? []).flatMap((r) => r.quizSubsets ?? []).find((x) => q.tags.includes(x.tag))?.label ?? '';
 
+  /** map order: rank each question by the first box (on the first map, main chain order) whose quiz tag it carries; a box's own quick check leads its group */
+  function chainOrder(qs: Question[]): Question[] {
+    const nodes = content.maps[0]?.nodes ?? [];
+    const rank = (q: Question) => { const i = nodes.findIndex((n) => q.tags.includes(quizTagOf(n))); return i < 0 ? nodes.length : i; };
+    const askOf = new Map<string, number>(); nodes.forEach((n, i) => { if (n.pop?.ask && !askOf.has(n.pop.ask)) askOf.set(n.pop.ask, i); });
+    return qs.map((q, i) => ({ q, i, r: askOf.get(q.id) ?? rank(q), a: askOf.has(q.id) ? 0 : 1 })).sort((x, y) => x.r - y.r || x.a - y.a || x.i - y.i).map((x) => x.q);
+  }
+
   function rebuild() {
     let qs = content.quiz.filter((q) => !activeTags || q.tags.some((t) => activeTags!.has(t)));
     if (missedOnly) qs = qs.filter((q) => progress.answer(q.id) === 'm');
-    list = shuffle ? shuffled(qs) : qs;
+    list = shuffle ? shuffled(qs) : content.subject.quizOrder === 'chain' ? chainOrder(qs) : qs;
     idx = 0;
     if (pendingQid) { const at = list.findIndex((q) => q.id === pendingQid); if (at >= 0) idx = at; pendingQid = null; }
     chosen = null; revealed = false; graded = null; session = { ok: 0, bad: 0 }; orders = new Map();

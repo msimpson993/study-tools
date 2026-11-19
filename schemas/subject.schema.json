@@ -19,6 +19,10 @@
       "type": "string",
       "minLength": 3
     },
+    "quizOrder": {
+      "enum": ["authored", "chain"],
+      "description": "chain: the quiz runs in map order (box 1's questions first, each box's quick check leading), so it opens on an easy foundational question"
+    },
     "centralQuestion": {
       "type": "string",
       "minLength": 10

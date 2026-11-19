@@ -413,18 +413,19 @@ maps:
     why: "**Still open:** in Box 8 the Laplace transform turned the earbud's differential equation into a single fraction, H(s), the *transfer function* (output ÷ input, as a function of s).\n\n**Why it matters:** a fraction on the page does not yet tell us whether the earbud rings, at what pitch, or whether it settles.\n\n**What we want:** a fast way to read behaviour from H(s), by looking at where the fraction blows up and where it drops to zero."
   - &id029
     from: PZ
-    to: STAB
-    label: settle?
-    question: Will it settle?
-    idea: A pole in the right half-plane is a rhythm that grows; the system settles only if every pole lies to the left.
-    why: "**Still open:** Box 9 showed that each pole p is a natural rhythm e^(pt), and its real part sets whether that rhythm grows or dies. The earbud's poles at −1.27 ± 4.32j per ms die away.\n\n**Why it matters:** one growing rhythm is enough to wreck a system: a squeal from the earbud, or a car that bounces higher at every bump.\n\n**What we want:** a yes/no test for settling that we can read straight from where the poles sit."
-  - &id030
-    from: PZ
     to: STATE
     label: look inside
     question: "That's the outside view. What's going on inside?"
     idea: "Describe the system by what it remembers, the state, and how that memory changes: ẋ = Ax + Bu."
     why: "**Still open:** H(s) links only the input to the output. For the car, the road goes in and the body motion comes out, but the heave, the pitch and what each spring is doing all stay hidden.\n\n**Why it matters:** with several moving parts, one part can misbehave while the output still looks fine. The parts also push on each other, which one fraction cannot show.\n\n**What we want:** a description of what the system *remembers* from moment to moment (its *state*) and the rule for how that memory changes."
+  - &id030
+    from: PZ
+    to: STAB
+    label: settle?
+    question: Will it settle?
+    idea: A pole in the right half-plane is a rhythm that grows; the system settles only if every pole lies to the left.
+    side: true
+    why: "**Still open:** Box 9 showed that each pole p is a natural rhythm e^(pt), and its real part sets whether that rhythm grows or dies. The earbud's poles at −1.27 ± 4.32j per ms die away.\n\n**Why it matters:** one growing rhythm is enough to wreck a system: a squeal from the earbud, or a car that bounces higher at every bump.\n\n**What we want:** a yes/no test for settling that we can read straight from where the poles sit.\n\n**A side path:** this shortcut asks the question from the outside view only. The main path first looks inside (Boxes 10 and 11) and reaches the same box by asking \"Will every mode fade?\"."
   - &id031
     from: STATE
     to: MODES

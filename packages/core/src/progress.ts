@@ -34,11 +34,17 @@ export class Progress {
     const marks = qs.map((q) => this.d.q[q.id]);
     if (marks.includes('m')) return 'missed';
     if (qs.length && marks.every((m) => m === 'c')) return 'correct';
-    return this.d.seen[nodeKey(mapId, n.id)] ? 'seen' : 'unseen';
+    return this.seenAnywhere(n.id) ? 'seen' : 'unseen';
+  }
+  /** a box shared by several maps (same id) is one box: seen on any map means seen */
+  private seenAnywhere(nodeId: string): boolean {
+    return Object.keys(this.d.seen).some((k) => k.slice(k.indexOf('/') + 1) === nodeId);
   }
   summary(): { total: number; unseen: number; seen: number; correct: number; missed: number } {
     const s = { total: 0, unseen: 0, seen: 0, correct: 0, missed: 0 };
-    for (const m of this.maps) for (const n of m.nodes) { s.total++; s[this.status(m.id, n)]++; }
+    // count unique boxes: a box on both maps counts once
+    const done = new Set<string>();
+    for (const m of this.maps) for (const n of m.nodes) { if (done.has(n.id)) continue; done.add(n.id); s.total++; s[this.status(m.id, n)]++; }
     return s;
   }
   reset(): void { this.d = { seen: {}, q: {} }; this.save(); }

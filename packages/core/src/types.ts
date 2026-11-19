@@ -47,6 +47,8 @@ export interface MapEdge {
   dashed?: boolean;
   /** draw the arrowhead at the `from` end */
   reverse?: boolean;
+  /** a side path (a shortcut) out of a fork: listed after the main path, styled and labelled as a side path, and never part of the main chain */
+  side?: boolean;
   /** the follow-up question this line asks (the next box answers it) (rendered HTML) */
   question: string;
   /** the idea behind the link (rendered HTML) */
@@ -154,6 +156,8 @@ export interface Subject {
   audio?: string[];
   runningExample?: { title: string; summary: string; details?: string; /** which core example scene draws it (`cart`, `tine`) and the overlays of the small hero on the map page */ scene?: SceneRef; /** further scenes (more than one running example): the map hero switches between them, dives pick one with exampleScene.scene */ moreScenes?: SceneRef[] };
   board?: { pairs: string[] };
+  /** `chain`: the unfiltered, unshuffled quiz runs in map order (questions tagged to box 1 first, each box's own quick check leading), so it opens on an easy foundational question */
+  quizOrder?: 'authored' | 'chain';
 }
 
 export interface AppContent {

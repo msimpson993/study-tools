@@ -89,13 +89,33 @@ export function mountConceptMap(host: HTMLElement, content: AppContent, progress
     }
     if (st.pick?.kind === 'node' && st.pick.id === id) return setPick(null);
     progress.markSeen(st.mapId, id);
-    arrivedVia = undefined;
+    arrivedVia = undefined; cameBy.delete(`${st.mapId}/${id}`);
     setPick({ kind: 'node', id });
   };
   /** open a box (never toggles it shut): used by the Next/Back chain controls */
   /** the solid line the reader last arrived by (its Next button), so the box can restate that question */
   let arrivedVia: string | undefined;
-  const openNode = (id: string, via?: string) => { arrivedVia = via; progress.markSeen(st.mapId, id); setPick({ kind: 'node', id }); panel.scrollTop = 0; };
+  /** the path actually walked: for each box, the line the reader came in by (kept while they walk Back up the chain) */
+  const cameBy = new Map<string, string>();
+  const openNode = (id: string, via?: string) => {
+    const k = `${st.mapId}/${id}`;
+    if (via) cameBy.set(k, via);
+    arrivedVia = via ?? cameBy.get(k);
+    progress.markSeen(st.mapId, id); setPick({ kind: 'node', id }); panel.scrollTop = 0;
+  };
+  /** the main chain: solid lines that are not side paths (falls back to every solid line if a box is only reachable by a side path) */
+  const mainEdges = (m: MapDef) => m.edges.filter((e) => !e.dashed && !e.side);
+  const mainPath = (id: string, m: MapDef) => { const p = pathToRoot(id, mainEdges(m)); return p.length > 1 || id === 'root' ? p : pathToRoot(id, m.edges.filter((e) => !e.dashed)); };
+  /** Back order: the line you actually came through, then the main chain, then the rest */
+  const backOrder = (id: string, m: MapDef) => {
+    const ins = m.edges.filter((e) => e.to === id && !e.dashed), up = mainPath(id, m), prev = up.length > 1 ? up[up.length - 2] : undefined;
+    const rank = (e: MapEdge) => (edgeKey(e.from, e.to) === arrivedVia ? 0 : e.from === prev ? 1 : e.side ? 3 : 2);
+    return ins.sort((a, b) => rank(a) - rank(b));
+  };
+  /** Next order: main path first, side paths after */
+  const nextOrder = (id: string, m: MapDef) => m.edges.filter((e) => e.from === id && !e.dashed).sort((a, b) => Number(!!a.side) - Number(!!b.side));
+  /** the main-chain box a Full-detail branch hangs from: the last box on its path that is also on the first map */
+  const mainAncestor = (id: string, m: MapDef) => { const first = new Set(content.maps[0]?.nodes.map((n) => n.id)); const up = mainPath(id, m).filter((x) => x !== id && first.has(x)); return up[up.length - 1]; };
   const openEdge = (key: string) => { setPick({ kind: 'edge', id: key }); panel.scrollTop = 0; };
   const toggleEdge = (key: string) => setPick(st.pick?.kind === 'edge' && st.pick.id === key ? null : { kind: 'edge', id: key });
 
@@ -126,7 +146,7 @@ export function mountConceptMap(host: HTMLElement, content: AppContent, progress
     const missed = m.nodes.filter((n) => progress.status(m.id, n) === 'missed');
     const missedTags = missed.map(quizTagOf);
     reviewBar.append(
-      h('span', { class: 'cm-sum', html: `<span class="badge-dot"></span><b>${sm.unseen}</b> unseen · <span class="badge-dot seen"></span><b>${sm.seen}</b> seen · <span class="badge-dot correct"></span><b>${sm.correct}</b> correct · <span class="badge-dot missed"></span><b>${sm.missed}</b> missed (all maps, ${sm.total} boxes)` }),
+      h('span', { class: 'cm-sum', html: `<span class="badge-dot"></span><b>${sm.unseen}</b> unseen · <span class="badge-dot seen"></span><b>${sm.seen}</b> seen · <span class="badge-dot correct"></span><b>${sm.correct}</b> correct · <span class="badge-dot missed"></span><b>${sm.missed}</b> missed (all maps: ${sm.total} different boxes; a box on two maps counts once)` }),
       h('button', { class: `tbtn${st.recall ? ' on' : ''}`, dataset: { testid: 'recall-toggle' }, title: 'Hide box text; tap a box to reveal it, tap again to open it', onclick: () => { st.recall = !st.recall; st.revealed.clear(); renderAll(); } }, st.recall ? 'Recall: on' : 'Recall: hide text'),
       h('button', { class: 'tbtn', disabled: !missedTags.length, title: missedTags.length ? '' : 'Nothing missed yet', onclick: () => nav.openQuiz(missedTags, 'Missed boxes on this map') }, `Quiz missed (${missed.length})`),
       h('button', { class: 'tbtn', disabled: !sel, title: sel ? '' : 'Select a box first', dataset: { testid: 'quiz-branch' }, onclick: () => { if (sel) nav.openQuiz(subtree(m, sel.id).map((id) => quizTagOf(m.nodes.find((n) => n.id === id)!)), `Branch from “${sel.label}”`); } }, 'Quiz this branch'),
@@ -301,8 +321,7 @@ export function mountConceptMap(host: HTMLElement, content: AppContent, progress
     const p = n.pop!, out: HTMLElement[] = [];
     const row = (cls: string, lead: string, html: string, testid: string) => h('p', { class: `pop-row ${cls}`, dataset: { testid } }, h('b', { class: 'pop-lead' }, lead), ' ', h('span', { html }));
     // restate the question this box answers: the line the reader arrived by, else the main-chain incoming line; the root states the central question
-    const ins = m.edges.filter((e) => e.to === n.id && !e.dashed), up = pathToRoot(n.id, m.edges), prev = up.length > 1 ? up[up.length - 2] : undefined;
-    const inc = ins.find((e) => edgeKey(e.from, e.to) === arrivedVia) ?? ins.find((e) => e.from === prev) ?? ins[0];
+    const inc = backOrder(n.id, m)[0];
     const qText = inc ? inc.question : n.label;
     out.push(h('p', { class: 'pop-question', dataset: { testid: 'pop-question', edge: inc ? edgeKey(inc.from, inc.to) : '' } }, h('span', { class: 'pq-lead' }, inc ? 'The question:' : 'The central question:'), ' ', h('span', { class: 'pq-text', html: qText })));
     out.push(h('div', { class: 'pop-answer', dataset: { testid: 'pop-answer' }, html: `<p>${n.short}</p>` }));
@@ -326,14 +345,23 @@ export function mountConceptMap(host: HTMLElement, content: AppContent, progress
     const ex = p.example ?? n.addsToExample;
     if (ex) out.push(row('pop-example', 'On the running example:', ex, 'adds-to-example'));
     // the chain goes THROUGH the lines: each outgoing (solid) line's question is a link that opens that line's pop-up
-    const outs = m.edges.filter((e) => e.from === n.id && !e.dashed);
+    const outs = nextOrder(n.id, m), fork = outs.length > 1 && outs.some((e) => e.side);
     const link = (e: MapEdge, testid: string) => h('a', { href: '#', class: 'pop-next-link', dataset: { testid, edge: edgeKey(e.from, e.to), to: e.to }, onclick: (ev: Event) => { ev.preventDefault(); openEdge(edgeKey(e.from, e.to)); }, html: e.question });
     if (outs.length) {
       const r = h('div', { class: 'pop-row pop-next', dataset: { testid: 'pop-next' } }, h('b', { class: 'pop-lead' }, outs.length > 1 ? 'Next questions:' : 'Next question:'));
       const ul = h('ul', { class: 'pop-next-list' });
-      for (const e of outs) ul.append(h('li', null, link(e, 'pop-next-link')));
+      for (const e of outs) ul.append(h('li', { class: fork ? (e.side ? 'nx-side' : 'nx-main') : undefined }, ...(fork ? [h('span', { class: 'nx-tag' }, e.side ? 'Side path (shortcut):' : 'Main path:'), ' '] : []), link(e, 'pop-next-link')));
       r.append(ul); out.push(r);
     } else if (p.next) out.push(row('pop-next', 'Next question:', p.next, 'pop-next'));
+    // a Full-detail branch end is not a dead end: Back up the branch, or straight back to the main chain
+    const anc = !outs.length && !content.maps[0]?.nodes.some((x) => x.id === n.id) ? mainAncestor(n.id, m) : undefined;
+    if (anc) {
+      const inc0 = backOrder(n.id, m)[0], ancN = m.nodes.find((x) => x.id === anc)!;
+      const r = h('div', { class: 'pop-row pop-end', dataset: { testid: 'pop-end' } }, h('b', { class: 'pop-lead' }, 'End of this branch:'), ' ');
+      if (inc0) { const src = m.nodes.find((x) => x.id === inc0.from)!; r.append(h('a', { href: '#', dataset: { testid: 'end-back', edge: edgeKey(inc0.from, inc0.to) }, onclick: (ev: Event) => { ev.preventDefault(); openEdge(edgeKey(inc0.from, inc0.to)); } }, `← Back to “${src.label}”`), ' · '); }
+      r.append(h('a', { href: '#', dataset: { testid: 'end-main', to: anc }, onclick: (ev: Event) => { ev.preventDefault(); openNode(anc); } }, `Return to the main chain (“${ancN.label}”)`));
+      out.push(r);
+    }
     // a dashed line touching this box joins it to another box that uses the same idea
     const side = m.edges.filter((e) => e.dashed && (e.from === n.id || e.to === n.id));
     if (side.length) { const ul = h('ul', { class: 'pop-next-list' }); for (const e of side) ul.append(h('li', null, link(e, 'pop-side-link'))); out.push(h('div', { class: 'pop-row pop-side', dataset: { testid: 'pop-side' } }, h('b', { class: 'pop-lead' }, 'Look across:'), ul)); }
@@ -345,12 +373,13 @@ export function mountConceptMap(host: HTMLElement, content: AppContent, progress
   /** Back (each incoming solid line, main chain first) and Next (each outgoing solid line) buttons for a box; both open the LINE, whose own Back / Next open the boxes */
   function chainNav(id: string, m: MapDef): HTMLElement {
     const nav2 = h('div', { class: 'chain-nav', dataset: { testid: 'chain-nav' } });
-    const ins = m.edges.filter((e) => e.to === id && !e.dashed), main = pathToRoot(id, m.edges), prev = main.length > 1 ? main[main.length - 2] : undefined;
-    ins.sort((a, b) => Number(b.from === prev) - Number(a.from === prev));
-    const btn = (e: MapEdge, back: boolean) => h('button', { class: back ? 'tbtn chain-back' : 'tbtn on chain-next', dataset: { testid: back ? 'chain-back' : 'chain-next', edge: edgeKey(e.from, e.to), to: back ? e.from : e.to }, onclick: () => openEdge(edgeKey(e.from, e.to)) },
-      h('span', { class: 'ch-dir' }, back ? '← Back: the question that led here' : 'Next question →'), h('span', { class: 'ch-name', html: e.question }));
+    const ins = backOrder(id, m), outs = nextOrder(id, m), fork = outs.length > 1 && outs.some((e) => e.side);
+    const btn = (e: MapEdge, back: boolean) => h('button', { class: back ? 'tbtn chain-back' : e.side ? 'tbtn chain-next chain-side' : 'tbtn on chain-next', dataset: { testid: back ? 'chain-back' : 'chain-next', edge: edgeKey(e.from, e.to), to: back ? e.from : e.to, path: !back && fork ? (e.side ? 'side' : 'main') : undefined }, onclick: () => openEdge(edgeKey(e.from, e.to)) },
+      h('span', { class: 'ch-dir' }, back ? '← Back: the question that led here' : fork ? (e.side ? 'Side path (shortcut) →' : 'Next on the main path →') : 'Next question →'), h('span', { class: 'ch-name', html: e.question }));
     for (const e of ins) nav2.append(btn(e, true));
-    for (const e of m.edges.filter((x) => x.from === id && !x.dashed)) nav2.append(btn(e, false));
+    for (const e of outs) nav2.append(btn(e, false));
+    const anc = !outs.length && !content.maps[0]?.nodes.some((x) => x.id === id) ? mainAncestor(id, m) : undefined;
+    if (anc) nav2.append(h('button', { class: 'tbtn chain-main', dataset: { testid: 'chain-main', to: anc }, onclick: () => openNode(anc) }, h('span', { class: 'ch-dir' }, 'Return to the main chain'), h('span', { class: 'ch-name' }, m.nodes.find((x) => x.id === anc)!.label)));
     return nav2;
   }
 
@@ -390,7 +419,7 @@ export function mountConceptMap(host: HTMLElement, content: AppContent, progress
         const v = n.pop ? undefined : n[k];
         if (v) panel.append(h('aside', { class: `callout c-${k}` }, h('b', { class: 'lead' }, lead), h('div', { class: 'cb', html: `<p>${v}</p>` })));
       }
-      panel.append(pathChips(pathToRoot(n.id, m.edges), m));
+      panel.append(pathChips(mainPath(n.id, m), m));
       const acts = h('div', { class: 'acts' });
       if (n.dive) acts.append(h('button', { class: 'tbtn on', dataset: { testid: 'open-dive' }, onclick: () => nav.openDive(n.dive!) }, 'Deep dive'));
       if (n.live) acts.append(h('button', { class: 'tbtn on', dataset: { testid: 'open-live' }, onclick: () => nav.openLive(n.live!) }, 'Try it live'));
@@ -414,7 +443,7 @@ export function mountConceptMap(host: HTMLElement, content: AppContent, progress
         ...(e.why ? [whyBox(e)] : []),
         e.why ? h('div', { class: 'edge-idea', dataset: { testid: 'edge-idea' } }, h('b', { class: 'pop-lead' }, 'The answer, in short: '), h('span', { html: e.idea })) : h('div', { html: `<p>${e.idea}</p>` }));
       if (e.eq) panel.append(h('div', { class: 'st-eq' }, e.eq));
-      const pl = pathToRoot(e.from, m.edges); if (pl[pl.length - 1] !== e.to) pl.push(e.to);
+      const pl = mainPath(e.from, m); if (pl[pl.length - 1] !== e.to) pl.push(e.to);
       panel.append(pathChips(pl, m));
       // a reversed (dashed) line is read from its arrow's tail: `to` looks back at `from`
       const [src, dst] = e.reverse ? [t, f] : [f, t];

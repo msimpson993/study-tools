@@ -1,5 +1,6 @@
 id: linear-systems
 title: Linear Systems Analysis
+quizOrder: chain   # the quiz opens on box 1's quick check and follows the map, easy and foundational first
 centralQuestion: How can we predict what a system will do with ANY input?
 blurb: "A map-first review of Linear Systems Analysis: what a linear system is, and the tools that predict what it does to any input: the eigen idea, Laplace/Z transforms, Fourier analysis, state space and modes, reachability and observability, and realization. Drawn on two running examples (a noise-cancelling earbud speaker and a car on its suspension), with deep dives, live figures, worked exam problems and a self-test. Optimal control appears at the end as one application."
 archetype: guide
