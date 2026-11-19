@@ -17,7 +17,8 @@ Look at it (screenshots, `npm run shots`, then open `shots/*.png`):
 - [ ] Every map figure/panel has a caption stating what it shows and what it demonstrates; the reader never has to guess.
 - [ ] Each pop-up first answers its incoming edge question directly; no unexplained leaps between boxes.
 - [ ] linear-systems pop-ups aim for about 120 words; up to about 150 is fine when the idea needs it (about 180 with figure captions). Going past ~150 is OK only when truly needed, and a pop-up that needs that much should first be considered for splitting into two map topics.
-- [ ] Chain navigation: every box pop-up's next question(s) link to the next box, with Back / Next buttons naming the boxes (root has no Back); every line pop-up says why you ask it there and has Back / Next.
+- [ ] Chain navigation goes THROUGH the lines: box → line → box → line. A box's Next-question link(s) and Next button(s) open the outgoing line's pop-up (one per outgoing line), not the next box; a box's Back opens its incoming line (main chain first; the root has no Back). A line's Next opens its target box and its Back opens its source box (for a reversed dashed line, the box its arrow starts from). The e2e walk root → line → 1 → line → … → 14 and back must pass.
+- [ ] Every main-chain line (including the dashed look-back) has a "why ask it here" that teaches how to think: what the previous box left unanswered, why that gap matters, and what kind of answer we are looking for. It may be as long as it needs, but leans brief (~150 words), and follows the pop-up rules: plain words first, real terms defined, figures (reused or small new ones on the running examples) captioned, no leaps.
 - [ ] Single-file output opens from `file://` with no network (`dist/<app>/index.html`).
 - [ ] Ported pages: `expect:` counts unchanged, every legacy feature still present (compare to the original side by side).
 - [ ] CI green on GitHub; Pages URL returns 200 for the hub and each app.
