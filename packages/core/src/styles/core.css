@@ -318,3 +318,7 @@ details.derivation{margin:.7rem 0}details.derivation>summary{font-weight:650}
 .edge-idea { margin: .6rem 0; }
 .pop-side .pop-lead { color: var(--muted, inherit); }
 .chain-nav .tbtn .ch-name { white-space: normal; }
+
+/* the question a box answers, restated above its one-line answer */
+.pop-question { margin: .1rem 0 .5rem; padding: .45rem .65rem; border-left: 3px solid var(--warn, #e3b341); background: color-mix(in srgb, var(--warn, #e3b341) 9%, transparent); border-radius: 6px; font-size: .98rem; font-weight: 650; line-height: 1.35; }
+.pop-question .pq-lead { display: block; font-size: .72rem; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; opacity: .8; }

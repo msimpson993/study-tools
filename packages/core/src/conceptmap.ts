@@ -89,10 +89,13 @@ export function mountConceptMap(host: HTMLElement, content: AppContent, progress
     }
     if (st.pick?.kind === 'node' && st.pick.id === id) return setPick(null);
     progress.markSeen(st.mapId, id);
+    arrivedVia = undefined;
     setPick({ kind: 'node', id });
   };
   /** open a box (never toggles it shut): used by the Next/Back chain controls */
-  const openNode = (id: string) => { progress.markSeen(st.mapId, id); setPick({ kind: 'node', id }); panel.scrollTop = 0; };
+  /** the solid line the reader last arrived by (its Next button), so the box can restate that question */
+  let arrivedVia: string | undefined;
+  const openNode = (id: string, via?: string) => { arrivedVia = via; progress.markSeen(st.mapId, id); setPick({ kind: 'node', id }); panel.scrollTop = 0; };
   const openEdge = (key: string) => { setPick({ kind: 'edge', id: key }); panel.scrollTop = 0; };
   const toggleEdge = (key: string) => setPick(st.pick?.kind === 'edge' && st.pick.id === key ? null : { kind: 'edge', id: key });
 
@@ -297,6 +300,11 @@ export function mountConceptMap(host: HTMLElement, content: AppContent, progress
   function popTemplate(n: MapNode, m: MapDef): HTMLElement[] {
     const p = n.pop!, out: HTMLElement[] = [];
     const row = (cls: string, lead: string, html: string, testid: string) => h('p', { class: `pop-row ${cls}`, dataset: { testid } }, h('b', { class: 'pop-lead' }, lead), ' ', h('span', { html }));
+    // restate the question this box answers: the line the reader arrived by, else the main-chain incoming line; the root states the central question
+    const ins = m.edges.filter((e) => e.to === n.id && !e.dashed), up = pathToRoot(n.id, m.edges), prev = up.length > 1 ? up[up.length - 2] : undefined;
+    const inc = ins.find((e) => edgeKey(e.from, e.to) === arrivedVia) ?? ins.find((e) => e.from === prev) ?? ins[0];
+    const qText = inc ? inc.question : n.label;
+    out.push(h('p', { class: 'pop-question', dataset: { testid: 'pop-question', edge: inc ? edgeKey(inc.from, inc.to) : '' } }, h('span', { class: 'pq-lead' }, inc ? 'The question:' : 'The central question:'), ' ', h('span', { class: 'pq-text', html: qText })));
     out.push(h('div', { class: 'pop-answer', dataset: { testid: 'pop-answer' }, html: `<p>${n.short}</p>` }));
     out.push(row('pop-rough', 'In rough words:', p.rough, 'pop-rough'));
     if (n.eqHtml || n.eq) out.push(n.eqHtml ? h('div', { class: 'st-eq', html: n.eqHtml }) : h('div', { class: 'st-eq' }, n.eq!));
@@ -412,7 +420,7 @@ export function mountConceptMap(host: HTMLElement, content: AppContent, progress
       const [src, dst] = e.reverse ? [t, f] : [f, t];
       panel.append(h('div', { class: 'chain-nav', dataset: { testid: 'chain-nav' } },
         h('button', { class: 'tbtn chain-back', dataset: { testid: 'edge-back', to: src.id }, onclick: () => openNode(src.id) }, h('span', { class: 'ch-dir' }, '← Back to the box'), h('span', { class: 'ch-name' }, src.label)),
-        h('button', { class: 'tbtn on chain-next', dataset: { testid: 'edge-next', to: dst.id }, onclick: () => openNode(dst.id) }, h('span', { class: 'ch-dir' }, 'Next box →'), h('span', { class: 'ch-name' }, dst.label))));
+        h('button', { class: 'tbtn on chain-next', dataset: { testid: 'edge-next', to: dst.id }, onclick: () => openNode(dst.id, e.dashed ? undefined : edgeKey(e.from, e.to)) }, h('span', { class: 'ch-dir' }, 'Next box →'), h('span', { class: 'ch-name' }, dst.label))));
       const acts = h('div', { class: 'acts' });
       const dv = t.dive ?? f.dive;
       if (dv) acts.append(h('button', { class: 'tbtn on', onclick: () => nav.openDive(dv) }, 'Deep dive'));
