@@ -195,3 +195,7 @@ h2.sec{font-size:1.1rem;margin:1.4rem 0 .5rem}
 footer{color:var(--muted);font:.76rem/1.5 system-ui,sans-serif;text-align:center;margin:1.5rem 0 1rem}
 @media (max-width:560px){&{font-size:15px}.bbar .sub{display:none}.layout{padding:.5rem .45rem}.card{padding:.7rem .7rem}}
 }
+/* phone: the pair view's equation rows wrap inside the card instead of widening the page */
+.xgrid>*{min-width:0}
+.drow{max-width:100%;box-sizing:border-box}
+.drow .deq{overflow-wrap:anywhere}

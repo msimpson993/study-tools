@@ -47,7 +47,7 @@ export function mountConceptMap(host: HTMLElement, content: AppContent, progress
   const panel = h('aside', { class: 'cm-panel idle', 'aria-live': 'polite', dataset: { testid: 'map-panel' } });
   const top = h('div', { class: 'cm-top' });
   const reviewBar = h('div', { class: 'cm-top', dataset: { testid: 'review-bar' } });
-  const caption = h('div');
+  const caption = h('div', { class: 'cm-caps' });
   const legend = h('div', { class: 'cm-legend', role: 'group', 'aria-label': 'How to read the lines and boxes', dataset: { testid: 'map-legend' } });
   const heroScene = content.subject.runningExample?.scene;
   const hero = h('div', { class: `cm-hero${heroScene ? ' has-scene' : ''}`, dataset: { testid: 'map-hero' } },
@@ -131,9 +131,10 @@ export function mountConceptMap(host: HTMLElement, content: AppContent, progress
     top.append(tabs, modes);
     const m = map();
     clear(caption);
-    if (m.caption) caption.append(h('details', { class: 'fold' }, h('summary', null, 'How to read this map'), h('div', { html: `<p>${m.caption}</p>` })));
+    // on a phone the two folds sit side by side with short summaries (the long ones return on wider screens)
+    if (m.caption) caption.append(h('details', { class: 'fold' }, h('summary', null, h('span', { class: 'sum-long' }, 'How to read this map'), h('span', { class: 'sum-short' }, 'How to read it')), h('div', { html: `<p>${m.caption}</p>` })));
     const re = content.subject.runningExample;
-    if (re) caption.append(h('details', { class: 'fold', dataset: { testid: 'running-example' } }, h('summary', null, `Running example: ${re.title}`), h('div', { html: `<p>${re.summary}</p>${re.details ?? ''}` })));
+    if (re) caption.append(h('details', { class: 'fold', dataset: { testid: 'running-example' } }, h('summary', null, h('span', { class: 'sum-long' }, `Running example: ${re.title}`), h('span', { class: 'sum-short' }, 'Running example')), h('div', { html: `<p><b>${re.title}.</b> ${re.summary}</p>${re.details ?? ''}` })));
   }
 
   function renderReview() {

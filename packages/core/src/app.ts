@@ -1,4 +1,5 @@
 import { h, clear } from './dom';
+import { scrollHints } from './scrollhint';
 import { initTheme, toggleTheme, currentTheme } from './theme';
 import { storeGet, storeSet } from './store';
 import type { AppContent, FigureDef } from './types';
@@ -216,8 +217,8 @@ export function mountApp(content: AppContent, hooks: AppHooks = {}): void {
       }
       main.append(dl);
     } else if (sec.kind === 'figures') {
-      const wrap = h('div', { class: 'prose' }, h('p', null, 'Live figures. Each is also reachable from a map box.'));
-      for (const f of content.figures) wrap.append(h('p', null, h('a', { class: 'tbtn on', href: `#/figure/${f.id}` }, f.title)));
+      const wrap = h('div', { class: 'prose fig-list', dataset: { testid: 'figure-list' } }, h('p', null, 'Live figures. Each is also reachable from a map box.'));
+      for (const f of content.figures) wrap.append(h('p', null, h('a', { class: 'tbtn on fig-link', href: `#/figure/${f.id}` }, f.title)));
       main.append(wrap);
     }
   }
@@ -306,7 +307,9 @@ export function mountApp(content: AppContent, hooks: AppHooks = {}): void {
     }
     const stops = embedFigures(body);
     const prevCleanup = cleanup;
-    cleanup = () => { prevCleanup?.(); stops.forEach((f) => f()); sceneStop?.(); };
+    let hintStop: (() => void) | null = null;
+    requestAnimationFrame(() => { if (body.isConnected) hintStop = scrollHints(body); });
+    cleanup = () => { prevCleanup?.(); stops.forEach((f) => f()); sceneStop?.(); hintStop?.(); };
     if (d.matlab) art.append(h('details', { class: 'fold' }, h('summary', null, 'MATLAB'), h('div', null, h('pre', null, h('code', null, d.matlab)))));
     if (d.neighbors.length) art.append(h('div', null, h('b', { class: 'ui' }, 'Neighbors'), h('div', { class: 'chips' }, ...d.neighbors.map((n) => h('a', { class: 'chip', href: `#/dive/${n}` }, content.dives.find((x) => x.id === n)?.title ?? n)))));
     const qs = progress.questionsFor([d.id]);

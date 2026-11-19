@@ -330,3 +330,31 @@ details.derivation{margin:.7rem 0}details.derivation>summary{font-weight:650}
 .pop-next-list li.nx-side .pop-next-link{font-weight:500}
 .pop-end a{font-weight:600}
 .chain-nav .chain-main{border-style:solid}
+/* folds above the map: long summaries on wide screens, short ones side by side on a phone */
+.cm-caps .sum-short{display:none}
+@media (max-width:600px){
+  /* phone landing: compact header and intro so the map shows near the top */
+  .cm-q{font-size:.95rem;line-height:1.28}
+  .cm-q small{font-size:.74rem}
+  .cm-hero{gap:.3rem}
+  .cm-hero-switch button{font-size:.74rem;padding:.2rem .5rem;white-space:nowrap}
+  .cm-top:not([data-testid=review-bar]){flex-wrap:nowrap;gap:.35rem;margin:.15rem 0 .3rem}
+  .cm-top:not([data-testid=review-bar])>.st-seg{min-width:0 !important;flex:1 1 auto}
+  .cm-top:not([data-testid=review-bar])>.st-seg button{padding:.3rem .4rem;font-size:.8rem;white-space:nowrap}
+  .cm-caps{display:flex;flex-wrap:wrap;gap:.35rem;margin-bottom:.25rem}
+  .cm-caps>details{flex:1 1 0;min-width:0;margin:0}
+  .cm-caps>details[open]{flex-basis:100%}
+  .cm-caps .sum-long{display:none}.cm-caps .sum-short{display:inline}
+  .cm-caps summary{font-size:.8rem;padding:.3rem .5rem}
+  .cm-legend{flex-wrap:nowrap;overflow-x:auto;gap:.2rem .7rem;padding-bottom:3px;margin-bottom:.3rem;scrollbar-width:thin}
+  .cm-legend .lg-series{flex-wrap:nowrap}
+  .cm-legend .lg-chip,.cm-legend .lg-view{white-space:nowrap}
+}
+/* the Live figures list: long titles wrap inside their button (no page wider than the phone) */
+.fig-list .fig-link{white-space:normal;display:inline-block;max-width:100%;text-align:left;line-height:1.3;height:auto;overflow-wrap:anywhere}
+/* a display equation wider than the screen: a fade on the side with more, and a scroll cue under it */
+.katex-display.x-scroll{position:relative;-webkit-mask-image:none;mask-image:none;border-radius:6px;outline:1px dashed var(--border);outline-offset:2px}
+.katex-display.x-more-right{-webkit-mask-image:linear-gradient(to right,#000 calc(100% - 44px),rgba(0,0,0,.18));mask-image:linear-gradient(to right,#000 calc(100% - 44px),rgba(0,0,0,.18))}
+.katex-display.x-more-left.x-more-right{-webkit-mask-image:linear-gradient(to right,rgba(0,0,0,.18),#000 44px,#000 calc(100% - 44px),rgba(0,0,0,.18));mask-image:linear-gradient(to right,rgba(0,0,0,.18),#000 44px,#000 calc(100% - 44px),rgba(0,0,0,.18))}
+.katex-display.x-more-left:not(.x-more-right){-webkit-mask-image:linear-gradient(to right,rgba(0,0,0,.18),#000 44px);mask-image:linear-gradient(to right,rgba(0,0,0,.18),#000 44px)}
+.x-cue{font:600 .72rem system-ui,sans-serif;color:var(--accent);text-align:right;margin:-.15rem 0 .5rem;letter-spacing:.02em}

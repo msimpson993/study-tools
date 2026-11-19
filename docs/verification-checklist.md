@@ -29,3 +29,4 @@ Look at it (screenshots, `npm run shots`, then open `shots/*.png`):
 - [ ] CI green on GitHub; Pages URL returns 200 for the hub and each app.
 
 Full legacy pairwise check for the six-domains board (now in linear-systems; slow, ~10 min): `npm run test:e2e:full`.
+- [ ] At 390 px nothing makes the page scroll sideways: the Live figures list wraps its buttons, the board's pair views wrap their equation rows, and a wide dive equation scrolls inside its own box with a fade and a *scroll sideways* cue (`scrollhint.ts`). The phone landing shows the map in the top 60% of the screen and the root label whole (`tests/e2e/phone-layout.spec.ts`).
