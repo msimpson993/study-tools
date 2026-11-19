@@ -68,6 +68,8 @@ test.describe('linear-systems: walk the chain through the lines', () => {
     await page.setViewportSize({ width: 390, height: 844 });
     await open(page, 'linear-systems');
     await page.locator('[data-testid=map-edge][data-edge="LIN__NEAR"]').first().dispatchEvent('click');
+    await expect(page.locator('.c-predict .lead').first(), 'the line poses the question; the next box answers it').toHaveText('The question this line asks');
+    await expect(page.getByText('The question this line answers')).toHaveCount(0);
     const why = page.getByTestId('edge-why');
     for (const t of ['Still open', 'Why it matters', 'What we want', '2 V']) await expect(why).toContainText(t);
     await expect(page.getByTestId('edge-why-figures').locator('svg, canvas').first()).toBeVisible();

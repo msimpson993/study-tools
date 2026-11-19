@@ -47,7 +47,7 @@ export interface MapEdge {
   dashed?: boolean;
   /** draw the arrowhead at the `from` end */
   reverse?: boolean;
-  /** the follow-up question this line answers (rendered HTML) */
+  /** the follow-up question this line asks (the next box answers it) (rendered HTML) */
   question: string;
   /** the idea behind the link (rendered HTML) */
   idea: string;

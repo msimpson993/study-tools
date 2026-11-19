@@ -410,7 +410,7 @@ export function mountConceptMap(host: HTMLElement, content: AppContent, progress
       const f = m.nodes.find((x) => x.id === e.from)!, t = m.nodes.find((x) => x.id === e.to)!;
       const head = h('div', { class: 'cm-head' }, h('h3', null, e.reverse ? `${t.label} ⇢ ${f.label}` : `${f.label} → ${t.label}`), copyRefButton(() => edgeReference(content, e, f, t, m.id)), close);
       panel.append(head, h('div', { class: 'st-hint' }, e.dashed ? 'Dashed: the same idea in another language' : 'Next step in the chain of questions'),
-        h('aside', { class: 'callout c-predict' }, h('b', { class: 'lead' }, 'The question this line answers'), h('div', { class: 'cb', html: `<p>${e.question}</p>` })),
+        h('aside', { class: 'callout c-predict' }, h('b', { class: 'lead' }, 'The question this line asks'), h('div', { class: 'cb', html: `<p>${e.question}</p>` })),
         ...(e.why ? [whyBox(e)] : []),
         e.why ? h('div', { class: 'edge-idea', dataset: { testid: 'edge-idea' } }, h('b', { class: 'pop-lead' }, 'The answer, in short: '), h('span', { html: e.idea })) : h('div', { html: `<p>${e.idea}</p>` }));
       if (e.eq) panel.append(h('div', { class: 'st-eq' }, e.eq));
