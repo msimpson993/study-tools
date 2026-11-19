@@ -166,7 +166,7 @@
   meaning: "M = samples recorded, N = DFT length (bins computed). N > M zero-pads (finer sampling of the same spectrum, no new resolution); N < M truncates."
   section: Fourier and sampling
 - term: "ZOH, FOH, sinc"
-  meaning: "Ways to rebuild a curve from samples: zero-order hold (a staircase, causal, T/2 delay), first-order hold (straight chords, one sample late), ideal sinc (a brick wall at fs/2, non-causal)."
+  meaning: "Ways to rebuild a curve from samples: zero-order hold (a staircase, causal, T/2 delay), triangle hold (linear interpolation, often called FOH: straight chords, one sample late), ideal sinc (a brick wall at fs/2, non-causal)."
   section: Fourier and sampling
 - term: "σ, ω_d, f₀ (six-domains board)"
   meaning: "The board's ring has poles s = −σ ± jω_d: σ is the decay rate (σ < 0 grows), ω_d the ringing frequency, f₀ = ω_d/2π."
