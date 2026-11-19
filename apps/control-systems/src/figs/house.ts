@@ -6,6 +6,8 @@ import { b, houseA, housePoly, houseG1, houseG2, houseSteadyAt, houseColdFront, 
 import { type V, num, str, on, f, legend, plotFrame, hline, range, lin, para } from './util';
 import { drawHouse } from './draw';
 
+/** the house runs in hours: its s-plane axes say so */
+const HOURS = { xLabel: 'σ (1/h)', yLabel: 'jω (rad/h)' };
 /** Response from rest of A = [[−a, c], [c, −a]] to a constant heater u (W) in room 1: closed form through the two modes. */
 export function houseRun(u: number, Gin: number, Gout: number, T = 24, n = 241) {
   const A = houseA(Gin, Gout), a = -A[0][0], c = A[0][1], [s1, s2] = houseSteadyAt(u, A), pa = -(a - c), pd = -(a + c);
@@ -51,7 +53,7 @@ const TFSTEPS = [
 ];
 export const tfbuildFigure = figureOf(() => [
   {
-    id: 'eqs', title: 'From the ODEs to one fraction, step by step', x: 'step', y: 'equations',
+    id: 'eqs', title: 'From the ODEs to one fraction, step by step', x: '', y: '',
     draw(g, w, h, v) {
       g.clearRect(0, 0, w, h); const k = Math.max(1, Math.min(4, Math.round(num(v, 'step', 4)))); let y = 14;
       for (let i = 0; i < k; i++) { const s = TFSTEPS[i], cur = i === k - 1; y = para(g, `${i + 1}. ${s[0]}`, 8, y, w - 16, cur ? col.e() : col.muted(), 10.5); for (const l of s.slice(1)) y = para(g, l, 22, y, w - 30, cur ? col.text() : col.muted(), 11); y += 4; }
@@ -84,7 +86,7 @@ export const splaneFigure = figureOf((c) => [
     id: 'plane', title: 'The poles on the s-plane (drag them)', x: 'σ (1/h)', y: 'jω (rad/h)',
     draw(g, w, h, v) {
       const { slow, fast, wi } = sp(v), poles: Cx[] = wi > 1e-6 ? [C(slow, wi), C(slow, -wi), C(fast, 0)] : [C(slow, 0), C(fast, 0)];
-      const fr = drawSPlane(g, w, h, { range: 2.6, reCenter: -1.6, poles, labels: true, handles: [C(slow, wi), C(fast, 0)], marks: [{ s: C(-0.2, 0), shape: 'ring', color: col.muted() }, { s: C(-2.2, 0), shape: 'ring', color: col.muted() }] });
+      const fr = drawSPlane(g, w, h, { ...HOURS, range: 2.6, reCenter: -1.6, poles, labels: true, handles: [C(slow, wi), C(fast, 0)], marks: [{ s: C(-0.2, 0), shape: 'ring', color: col.muted() }, { s: C(-2.2, 0), shape: 'ring', color: col.muted() }] });
       para(g, wi > 1e-6 ? 'Off the axis: this "house" would ring. No arrangement of rooms and walls can do that.' : `slow ${f(slow)} /h (τ = ${f(-1 / slow, 1)} h) · fast ${f(fast)} /h (${f(-60 / fast, 0)} min) · grey rings: the real house`, fr.box.l + 4, fr.box.t + 10, fr.box.r - fr.box.l - 8, wi > 1e-6 ? col.bad() : col.text(), 10);
     },
     pointer: splaneDrag({ range: 2.6, reCenter: -1.6, handles: () => { const { slow, fast, wi } = sp(c.values); return [{ id: 'slow', s: C(slow, wi) }, { id: 'fast', s: C(fast, 0) }]; }, realOnly: ['fast'], upperOnly: true, onDrag: (id, s) => { if (id === 'fast') c.set('fast', Math.max(-4, Math.min(-0.5, s.re))); else { c.set('slow', Math.max(-1, Math.min(-0.05, s.re))); c.set('w', Math.max(0, Math.min(1.5, Math.abs(s.im)))); } } }),
@@ -143,7 +145,7 @@ function reduceModels(v: V) {
 }
 export const reduceFigure = figureOf(() => [
   {
-    id: 'step', title: 'Full model vs the reduced one: step response', x: 'time', y: 'output',
+    id: 'step', title: 'Full model vs the reduced one: step response', x: 'time (h for the house, s otherwise)', y: 'output',
     draw(g, w, h, v) {
       const m = reduceModels(v), a = step(m.full, m.T, 601), r = step(m.red, m.T, 601), gap = Math.max(...a.y.map((q, i) => Math.abs(q - r.y[i])));
       const fr = plotFrame(g, w, h, [0, m.T], range([a.y, r.y], 0.08, 0), `time (${m.unit})`, m.yl);
@@ -152,7 +154,7 @@ export const reduceFigure = figureOf(() => [
     },
   },
   {
-    id: 'mag', title: '|G(jω)| / |G(0)|: matched at low frequency', x: 'ω', y: 'relative gain',
+    id: 'mag', title: '|G(jω)| / |G(0)|: matched at low frequency', x: 'ω (rad/h for the house, rad/s otherwise)', y: 'relative gain',
     draw(g, w, h, v) {
       const m = reduceModels(v), wmax = m.unit === 'h' ? 2 : 5, ws = lin(0, wmax, 201), mag = (G: TF) => { const g0 = Math.hypot(...Object.values(tfEval(G, C(0, 0))) as [number, number]); return ws.map((q) => Math.hypot(...Object.values(tfEval(G, C(0, q))) as [number, number]) / g0); };
       const a = mag(m.full), r = mag(m.red), fr = plotFrame(g, w, h, [0, wmax], [0, 1.05], `ω (rad/${m.unit})`, 'relative gain');
@@ -180,7 +182,7 @@ export const partialFigure = figureOf(() => [
     id: 'poles', title: 'Poles of X₂(s) and the residue each one carries', x: 'σ (1/h)', y: 'jω (rad/h)',
     draw(g, w, h, v) {
       const p1 = num(v, 'p1', -0.2), p2 = num(v, 'p2', -2.2), F = 20.45, r1 = (F * p2) / (p1 - p2), r2 = (F * p1) / (p2 - p1);
-      drawSPlane(g, w, h, { range: 3, reCenter: -1.2, poles: [], marks: [{ s: C(0, 0), label: `s = 0: ${f(F)}`, color: col.muted(), shape: 'dot' }, { s: C(p1, 0), label: `${f(p1)}: ${f(r1)}`, color: col.c(), shape: 'dot' }, { s: C(p2, 0), label: `${f(p2)}: ${f(r2, 3)}`, color: col.d(), shape: 'dot' }] });
+      drawSPlane(g, w, h, { ...HOURS, range: 3, reCenter: -1.2, poles: [], marks: [{ s: C(0, 0), label: `s = 0: ${f(F)}`, color: col.muted(), shape: 'dot' }, { s: C(p1, 0), label: `${f(p1)}: ${f(r1)}`, color: col.c(), shape: 'dot' }, { s: C(p2, 0), label: `${f(p2)}: ${f(r2, 3)}`, color: col.d(), shape: 'dot' }] });
     },
   },
 ] as FigurePanel[]);
@@ -217,11 +219,11 @@ const planeG = (v: V): { G: TF; range: number; re: number; wmax: number; unit: s
   return { G: p === 'living' ? tf([0.44 / 1.2, 0.44], housePoly()) : tf([0.44], housePoly()), range: 2.6, re: -1.2, wmax: 2, unit: 'rad/h' };
 };
 export const planeFigure = figureOf(() => [
-  { id: 'map', title: '|G(s)| over the s-plane: poles are peaks, zeros are pits', x: 'σ', y: 'jω', draw: (g, w, h, v) => { const P = planeG(v); drawHeightMap(g, w, h, { G: P.G, range: P.range, reCenter: P.re, omega: num(v, 'omega', 0.262) }); } },
+  { id: 'map', title: '|G(s)| over the s-plane: poles are peaks, zeros are pits', x: 'σ (1/h; 1/s for the corner)', y: 'jω (rad/h; rad/s for the corner)', draw: (g, w, h, v) => { const P = planeG(v); drawHeightMap(g, w, h, { G: P.G, range: P.range, reCenter: P.re, omega: num(v, 'omega', 0.262), xLabel: `σ (${P.unit === 'rad/h' ? '1/h' : '1/s'})`, yLabel: `jω (${P.unit})`, scale: true }); } },
   {
-    id: 'slice', title: '|G(jω)| along the jω axis (frequency response, preview)', x: 'ω', y: '|G(jω)| / G(0)',
+    id: 'slice', title: '|G(jω)| along the jω axis (frequency response, preview)', x: 'ω (rad/h; rad/s for the corner)', y: '|G(jω)| / G(0)',
     draw(g, w, h, v) {
-      const P = planeG(v); drawJwSlice(g, w, h, { G: P.G, wmax: P.wmax, omega: num(v, 'omega', 0.262) });
+      const P = planeG(v); drawJwSlice(g, w, h, { G: P.G, wmax: P.wmax, omega: num(v, 'omega', 0.262), xLabel: `ω (${P.unit}) along the jω axis` });
       if (str(v, 'plant', 'bed') !== 'corner') text(g, `daily heater cycle ω = 0.262 rad/h: |G₂| = ${f(houseG2mag(0.262) * 1000)} K/kW vs ${f(dc(houseG2()) * 1000)} at DC`, 8, 12, col.muted(), 'left', 9.5);
     },
   },

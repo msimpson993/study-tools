@@ -1,5 +1,5 @@
 /** Antenna-dish figures (PGAIN → TUNE and children): azimuth angle θ in rad (readouts in °), torque in N·m, t in s. Numbers from ../model. */
-import { figureOf, drawSPlane, drawRootLocus, curve, tline, dot, text, col, type FigurePanel } from '@study/core';
+import { figureOf, drawSPlane, drawRootLocus, rangeFrame, graphAxes, withLabelRole, curve, tline, dot, text, col, type FigurePanel, type V2 } from '@study/core';
 import { C, rlocus, type Cx } from '@study/core/dsp';
 import { DISH, DISH_TUNED, BEAM } from '../model/params';
 import { dishG, dishP, dishSim, dishMetrics, dishZN, iseClosed, iaeOf, telescopeISE, telescopeIAE, roots, deg, type DishSimOpts } from '../model/plants';
@@ -173,7 +173,7 @@ export const TUNE_START = { os: 7.4, ts: 2.2, wind: 0.556 };
 export const TUNE_NUM = [{ id: 'Kp', os: 14.3, ts: 0.31, wind: 0.319 }, { id: 'Ki', os: 16.8, ts: 1.45, wind: 0.518 }, { id: 'Kd', os: 7.6, ts: 3.6, wind: 0.488 }];
 export const tunetableFigure = figureOf(() => [
   {
-    id: 'table', title: 'Raise one gain from (2000, 1000, 200): what changes', x: 'effect', y: 'gain raised', height: 260,
+    id: 'table', title: 'Raise one gain from (2000, 1000, 200): what changes', x: '', y: '', height: 340,
     draw(g, w, h, v) {
       g.clearRect(0, 0, w, h); const cols = ['rise 10–90 %', 'overshoot', 'settling', 'wind peak', 'wind recovery', 'noise in torque'];
       const pick = str(v, 'row');
@@ -182,15 +182,18 @@ export const tunetableFigure = figureOf(() => [
     },
   },
   {
-    id: 'bars', title: 'Overshoot, settling and wind peak: one gain raised, against the start', x: 'gain raised', y: 'value ÷ start value', height: 220,
+    id: 'bars', title: 'Overshoot, settling and wind peak: one gain raised, against the start', x: 'gain raised', y: 'value ÷ start value', height: 260,
     draw(g, w, h, v) {
       g.clearRect(0, 0, w, h); const pick = str(v, 'row'), rows = TUNE_NUM.filter((r) => pick === 'all' || !pick || r.id === pick);
-      const fr = plotFrame(g, w, h, [0, rows.length], [0, 2.6], 'gain raised (from 2000, 1000, 200)', 'value ÷ start (1 = no change)');
+      // categories, not numbers, along x: each group is named under its bars, with its three values on a second line
+      const yr: V2 = [0, 3.7], fr = rangeFrame(w, h, [0, rows.length], yr, 48, 12, 10, 50);
+      graphAxes(g, fr, [0, rows.length], yr, '', 'value ÷ start (1 = no change)', 1, 0.5, () => '');
+      text(g, 'gain raised (from 2000, 1000, 200)', (fr.box.l + fr.box.r) / 2, h - 6, col.text(), 'center', 11);
       tline(g, fr, [0, 1], [rows.length, 1], col.muted(), 1, [5, 4]);
       const keys: ['os' | 'ts' | 'wind', string, () => string][] = [['os', '%OS', col.a], ['ts', 'Ts', col.b], ['wind', 'wind peak', col.d]];
       rows.forEach((r, i) => {
         keys.forEach(([k, , c], j) => { const x0 = fr.X(i + 0.15 + j * 0.24), x1 = fr.X(i + 0.37 + j * 0.24), q = r[k] / TUNE_START[k]; g.fillStyle = c(); g.fillRect(x0, fr.Y(Math.min(q, 2.6)), x1 - x0, fr.Y(0) - fr.Y(Math.min(q, 2.6))); });
-        text(g, `${r.id}: ${f(r.os, 1)} %, ${f(r.ts, 2)} s, ${f(r.wind, 3)}°`, fr.X(i + 0.5), fr.box.t + 8 + (rows.length > 1 ? (i % 2) * 12 : 0), col.text(), 'center', 9.5);
+        withLabelRole('axis', () => { text(g, `raise ${r.id}`, fr.X(i + 0.5), fr.box.b + 10, col.text(), 'center', 10.5); text(g, `${f(r.os, 1)} %, ${f(r.ts, 2)} s, ${f(r.wind, 3)}°`, fr.X(i + 0.5), fr.box.b + 23, col.muted(), 'center', 9); });
       });
       legend(g, fr, [...keys.map(([, l, c]) => ({ label: l, color: c() })), { label: 'start: 7.4 %, 2.2 s, 0.556°', color: col.muted(), dash: true }], 'tr');
     },

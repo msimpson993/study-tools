@@ -69,7 +69,7 @@ export const labFigure = figureOf((c) => {
       },
     },
     {
-      id: 'read', title: 'Readouts against the dish specs', x: 'quantity', y: 'value', height: 230,
+      id: 'read', title: 'Readouts against the dish specs', x: '', y: '', height: 230,
       draw(g, w, h, v) {
         g.clearRect(0, 0, w, h); const r = run(v), maxRe = r.poles.length ? Math.max(...r.poles.map((p) => p.re)) : -1, rows: [string, string, boolean | null][] = [
           ['Overshoot (spec < 10 %)', r.unstable ? '—' : `${f(r.OS, 1)} %`, isDish(r.plant) ? r.OS < 10 : null],

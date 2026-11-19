@@ -6,12 +6,14 @@
  */
 import { figureOf, rangeFrame, graphAxes, curve, tline, dot, text, wipe, col, type FigurePanel, type V2 } from '@study/core';
 import { runLoop } from './loopsim';
+import { legend, type Item } from './util';
+const f2 = (x: number) => String(+x.toFixed(2));
 import { dishCard, cardMet, cardWind, dishSat, dishSim, deg, type CardOpts } from '../model/plants';
 import { DISH, DISH_TUNED } from '../model/params';
 
 type V = Record<string, number | string | boolean>;
 interface Series { t: ArrayLike<number>; y: ArrayLike<number>; color: string; dash?: boolean; width?: number }
-interface Plot { title: string; y: string; xr: V2; yr: V2; series: Series[]; hl?: { y: number; label?: string }[]; vl?: { x: number; label?: string }[]; peak?: { t: number; y: number; label: string }; notes?: string[] }
+interface Plot { title: string; y: string; xr: V2; yr: V2; series: Series[]; hl?: { y: number; label?: string }[]; vl?: { x: number; label?: string }[]; peak?: { t: number; y: number; label: string }; notes?: string[]; /** an in-plot legend (the full-screen legend box is not the only key) */ legend?: Item[]; legendAt?: 'tl' | 'tr' | 'bl' | 'br' }
 const n = (v: V, k: string) => v[k] as number;
 const on = (v: V, k: string) => v[k] === true || v[k] === 'true';
 const nz = (a: number | undefined) => a ?? 0;
@@ -30,6 +32,7 @@ const draw = (g: CanvasRenderingContext2D, w: number, h: number, p: Plot) => {
   }
   (p.notes ?? []).forEach((l, i) => text(g, l, f.box.l + 6, f.box.t + 12 + i * 13, i ? FX() : PB(), 'left', 10));
   if (p.peak) { dot(g, f, [p.peak.t, p.peak.y], col.b(), 4); text(g, p.peak.label, f.X(p.peak.t) + 8, f.Y(p.peak.y) - 8, col.b(), 'left', 10.5); }
+  if (p.legend?.length) legend(g, f, p.legend, p.legendAt ?? 'br');
   };
 const PB = () => col.b(), FX = () => col.c();
 type Run = { t: number[]; u: number[] };
@@ -98,7 +101,7 @@ const CASES: Record<string, Case> = {
   windup: (v) => {
     const r = n(v, 'slew'), a = dishSat(TUNED.Kp, TUNED.Ki, TUNED.Kd, r, DISH.Tmax, v.aw === 'clamp'), b = dishSat(TUNED.Kp, TUNED.Ki, TUNED.Kd, r, DISH.Tmax, true);
     return [{ title: 'Windup on a long slew (200 N·m limit)', y: 'angle ÷ target', xr: [0, 8], yr: [0, 1.5], series: [{ t: a.t, y: a.y.map((y) => y / r), color: PB() }, { t: b.t, y: b.y.map((y) => y / r), color: FX(), dash: true }], hl: [{ y: 1, label: `target ${r} rad` }], notes: [`solid: %OS ${a.OS.toFixed(1)} %, Ts ${a.Ts.toFixed(2)} s`, `dashed (clamping): %OS ${b.OS.toFixed(1)} %, Ts ${b.Ts.toFixed(2)} s`] },
-      { title: 'Torque and the integrator\'s share', y: 'torque (N·m)', xr: [0, 8], yr: fitY([{ t: a.t, y: a.u }, { t: a.t, y: a.ii }, { t: b.t, y: b.u }], [0, 8], 0.08, [-260, 400]), series: [{ t: a.t, y: a.u, color: PB() }, { t: a.t, y: a.ii, color: col.d(), width: 1.4 }, { t: b.t, y: b.u, color: FX(), dash: true }], hl: [{ y: DISH.Tmax, label: 'limit 200 N·m' }] }];
+      { title: 'Torque and the integrator\'s share', y: 'torque (N·m)', xr: [0, 8], yr: fitY([{ t: a.t, y: a.u }, { t: a.t, y: a.ii }, { t: b.t, y: b.u }], [0, 8], 0.08, [-260, 400]), series: [{ t: a.t, y: a.u, color: PB() }, { t: a.t, y: a.ii, color: col.d(), width: 1.4 }, { t: b.t, y: b.u, color: FX(), dash: true }], hl: [{ y: DISH.Tmax, label: 'limit 200 N·m' }], legend: [{ label: `torque, ${v.aw === 'clamp' ? 'clamping' : 'no anti-windup'}`, color: PB() }, { label: 'integrator\'s share of it', color: col.d() }, { label: 'torque with clamping', color: FX(), dash: true }], legendAt: 'tr' }];
   },
   kick: (v) => {
     const a = card({ ...TUNED, dm: !!v.dm, Nf: DISH.Nf, T: 5, umax: on(v, 'limit') ? DISH.Tmax : null }), b = card({ ...TUNED, dm: true, Nf: DISH.Nf, T: 5 }), ma = cardMet(a.t, a.y, R0), mb = cardMet(b.t, b.y, R0);
@@ -112,14 +115,14 @@ const CASES: Record<string, Case> = {
   nonlinear: (v) => {
     const f = (u: number) => Math.max(0, u) ** 2, r = n(v, 'r'), run = (rr: number, kp: number, ki: number) => { const s = runLoop({ taus: [1, 0.5], f, Kp: kp, Ki: ki, T: 30, dt: 0.01, r: () => rr }); return { t: s.t, y: s.y.map((y) => y / rr), u: s.u }; };
     const pb = run(r, n(v, 'Kp'), n(v, 'Ki')), fx = run(r, 2 / 3, 0.5);
-    return [{ title: 'Nonlinearity: the plant gain depends on the operating point', y: 'normalised output y / r', xr: [0, 30], yr: [0, 2.4], series: [{ ...run(1, 2, 1.5), color: col.a() }, { ...pb, color: PB() }, { ...fx, color: FX(), dash: true }], hl: [{ y: 1, label: 'y / r = 1' }] }, uPlot(pb, fx, [0, 30])]; },
+    return [{ title: 'Nonlinearity: the plant gain depends on the operating point', y: 'normalised output y / r', xr: [0, 30], yr: [0, 2.4], series: [{ ...run(1, 2, 1.5), color: col.a() }, { ...pb, color: PB() }, { ...fx, color: FX(), dash: true }], hl: [{ y: 1, label: 'y / r = 1' }], legend: [{ label: 'gains (2, 1.5) at r = 1, where they were tuned', color: col.a() }, { label: `slider gains (${f2(n(v, 'Kp'))}, ${f2(n(v, 'Ki'))}) at r = ${f2(r)}`, color: PB() }, { label: `fix: gains ÷ 3 at r = ${f2(r)}`, color: FX(), dash: true }], legendAt: 'tr' }, uPlot(pb, fx, [0, 30], { legend: [{ label: 'slider gains', color: PB() }, { label: 'fix: gains ÷ 3', color: FX(), dash: true }], legendAt: 'tr' })]; },
   twodof: (v) => {
     const a = card({ ...TUNED, T: 40, b: n(v, 'b'), wind: WIND, twind: 20 }), b = card({ ...TUNED, T: 40, b: 0.9, wind: WIND, twind: 20 }), pa = thin(a, (y) => y / R0), pb = thin(b, (y) => y / R0);
     const t1 = (s: typeof a) => { const m = cardMet(s.t, s.y, R0, 20); return `%OS ${pct(m.OS)}, Ts ${m.Ts.toFixed(2)} s; ${wtxt(cardWind(s.t, s.y, 20), 20)}`; };
     return [{ title: 'Set-point weight b: the step, then a 20 N·m gust at 20 s', y: 'angle ÷ target', xr: [0, 30], yr: [0, 1.4], series: [{ ...pa, color: PB() }, { ...pb, color: FX(), dash: true }], hl: [{ y: 1, label: 'target 0.1 rad' }], vl: [{ x: 20, label: 'wind' }], notes: [`solid: ${t1(a)}`, `dashed (b = 0.9): ${t1(b)}`] },
       tPlot({ t: pa.t, u: pa.u }, { t: pb.t, u: pb.u }, [0, 30], { vl: [{ x: 20, label: 'wind' }] })];
   },
-  limitcycle: (v) => { const o = { taus: [1, Infinity], Kp: 0.5, dz: n(v, 'dz'), T: 100, dt: 0.02 }, a = runLoop({ ...o, Ki: n(v, 'Ki') }), b = runLoop({ ...o, dz: 0.3, Ki: 0.3 }); return [{ title: 'Limit cycle from a dead zone', y: 'output y', xr: [0, 100], yr: [-0.5, 2.5], series: [{ ...a, color: PB() }, { ...b, color: FX(), dash: true }], hl: [{ y: 1, label: 'r = 1' }] }, uPlot(a, b, [0, 100])]; },
+  limitcycle: (v) => { const o = { taus: [1, Infinity], Kp: 0.5, dz: n(v, 'dz'), T: 100, dt: 0.02 }, a = runLoop({ ...o, Ki: n(v, 'Ki') }), b = runLoop({ ...o, dz: 0.3, Ki: 0.3 }); const la = `dead zone ${f2(n(v, 'dz'))}, Ki ${f2(n(v, 'Ki'))}`, lb = 'fix: dead zone 0.3, Ki 0.3'; return [{ title: 'Limit cycle from a dead zone', y: 'output y', xr: [0, 100], yr: [-0.5, 2.5], series: [{ ...a, color: PB() }, { ...b, color: FX(), dash: true }], hl: [{ y: 1, label: 'r = 1' }], legend: [{ label: la, color: PB() }, { label: lb, color: FX(), dash: true }], legendAt: 'tr' }, uPlot(a, b, [0, 100], { legend: [{ label: la, color: PB() }, { label: lb, color: FX(), dash: true }], legendAt: 'tr' })]; },
 };
 void nz;
 /** values used once to build each card's panel list (titles do not depend on them) */

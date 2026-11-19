@@ -1,5 +1,6 @@
 /** Kept pid-tuning tools (problem: open vs closed loop on the old lag plant; bodepid: preview, not in LN1/2/4). */
 import { figureOf, drawBode, drawStepResponse, rangeFrame, graphAxes, curve, tline, text, wipe, col, type V2 } from '@study/core';
+import { legend } from './util';
 import { tf, step, simulatePid, pidMetrics, pidLoopTF, pidClosedLoopTF, isStable, type PlantId, type TF } from '@study/core/dsp';
 
 type V = Record<string, number | string | boolean>;
@@ -33,7 +34,13 @@ export const bodepidFigure = figureOf(() => {
   const gains = (v: V) => ({ Kp: num(v, 'Kp'), Ki: num(v, 'Ki'), Kd: num(v, 'Kd'), N: 20 });
   const plant = (v: V) => String(v.plant ?? 'p3') as PlantId;
   return [
-    { id: 'bode', title: 'Loop L = Gc·G with its margins', x: 'ω (rad/s)', y: 'dB · degrees', height: 300, draw: (g: CanvasRenderingContext2D, w: number, h: number, v: V) => { drawBode(g, w, h, { L: pidLoopTF(plant(v), gains(v)), wmin: 0.02, wmax: 100 }); } },
+    { id: 'bode', title: 'Loop L = Gc·G with its margins', x: 'ω (rad/s)', y: 'dB · degrees', height: 300, draw: (g: CanvasRenderingContext2D, w: number, h: number, v: V) => {
+      drawBode(g, w, h, { L: pidLoopTF(plant(v), gains(v)), wmin: 0.02, wmax: 100 });
+      // the key on the plot itself: magnitude and phase curves, and the two margin bars (drawBode's split: top 52 % magnitude)
+      const hTop = Math.round((h - 8) * 0.52), hb = { box: { l: 46, t: hTop + 8 + 6, r: w - 12, b: h - 38 } };
+      legend(g, { box: { l: 46, t: 8, r: w - 12, b: hTop - 6 } }, [{ label: '|L| (dB)', color: col.a() }, { label: 'gain margin (bar to 0 dB)', color: col.c() }], 'tr', 9.5);
+      legend(g, hb, [{ label: 'phase of L', color: col.b() }, { label: 'phase margin (bar from −180°)', color: col.ok() }], 'bl', 9.5);
+    } },
     {
       id: 'step', title: 'Closed-loop step response', x: 'time (s)', y: 'output', height: 300,
       draw: (g: CanvasRenderingContext2D, w: number, h: number, v: V) => {

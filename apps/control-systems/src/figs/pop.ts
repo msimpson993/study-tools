@@ -1,5 +1,5 @@
 /** Box pop-up figures (one renderer per box, panels picked by params.panel) and the kept pid-tuning quiz scope. All numbers from ../model. */
-import { rangeFrame, graphAxes, curve, tline, dot, text, col, drawSPlane, type QuizFigureDef, type QuizFigureRegistry, type V2 } from '@study/core';
+import { rangeFrame, graphAxes, curve, tline, dot, text, col, drawSPlane, withLabelRole, type QuizFigureDef, type QuizFigureRegistry, type V2 } from '@study/core';
 import { C, step, tf } from '@study/core/dsp';
 import { HOUSE_WALLS, CORNER_DESIGN, DISH, DISH_TUNED } from '../model/params';
 import { houseG2, houseColdFront, houseSC, cornerOf, cornerGu, cornerNumbers, cornerRelease, cornerBump, cornerSep, cornerK, roots, deg, metricsOf, dc, houseA, housePoly } from '../model/plants';
@@ -8,13 +8,19 @@ import { obsRun, refRun } from './corner';
 import { dishPoles } from './dish';
 import { dishSim } from '../model/plants';
 import { drawHouse, drawCorner, drawDish, drawLoop } from './draw';
-import { legend, lin, para, f, range } from './util';
+import { legend, lin, para, f, range, wrap } from './util';
 import { quizFigures as pidQuiz } from './pidquiz';
 
 type G = CanvasRenderingContext2D; type P = Record<string, unknown>;
 const panel = (p: P) => String(p.panel ?? 'a');
 const fr = (g: G, w: number, h: number, xr: V2, yr: V2, xl: string, yl: string) => { g.setLineDash([]); g.clearRect(0, 0, w, h); const F = rangeFrame(w, h, xr, yr, 36, 8, 8, 26); graphAxes(g, F, xr, yr, xl, yl); return F; };
-const lines = (g: G, w: number, rows: [string, string][], y0 = 16, size = 11) => { g.clearRect(0, 0, 9999, 9999); let y = y0; for (const [s, c] of rows) y = para(g, s, 8, y, w - 16, c, size) + 5; };
+/** a text panel: rows of wrapped text, shrunk (down to 7.5 px) until every row fits the canvas height, so nothing is cut off */
+const lines = (g: G, w: number, rows: [string, string][], y0 = 16, size = 11) => {
+  g.clearRect(0, 0, 9999, 9999);
+  const H = g.canvas.height / (g.getTransform().d || 1), need = (z: number) => y0 * (z / size) + rows.reduce((a, [s]) => a + wrap(g, s, w - 16, z).length * (z + 3) + 5, 0) - z / 2;
+  let z = size; while (z > 7.5 && need(z) > H - 2) z -= 0.25;
+  let y = y0 * (z / size); for (const [s, c] of rows) y = para(g, s, 8, y, w - 16, c, z) + 5;
+};
 const mini = (draw: QuizFigureDef['draw'], aspect = 1.3, maxWidth = 300): QuizFigureDef => ({ aspect, maxWidth, draw });
 const degs = (a: number[]) => a.map(deg);
 
@@ -26,7 +32,8 @@ export const popFigures: QuizFigureRegistry = {
   'hero-three': mini((g, w, h) => {
     g.clearRect(0, 0, w, h); const cw = w / 3;
     drawHouse(g, 4, 6, cw - 8, h * 0.62, { t1: 24.55, t2: 20.45, labels: false }); drawCorner(g, cw + 4, 4, cw - 8, h * 0.72, { labels: true }); drawDish(g, 2 * cw + 2, 0, cw - 4, h * 0.78, { theta: 0.3, ref: 0.5, labels: false });
-    const lab = (s: string, x: number) => text(g, s, x, h - 8, col.text(), 'center', 10.5);
+    // each plant's name wraps inside its own third, so the three never run into each other
+    const lab = (s: string, x: number) => { const ls = wrap(g, s, cw - 8, 10.5); ls.forEach((l, i) => withLabelRole('axis', () => text(g, l, x, h - 8 - (ls.length - 1 - i) * 12.5, col.text(), 'center', 10.5))); };
     lab('house: heater → temperatures', cw / 2); lab('car corner: force → height', cw * 1.5); lab('dish: torque → angle', cw * 2.5);
     g.save(); g.globalAlpha = 0.28; for (let i = 0; i < 3; i++) { const x = i * cw + 8, yy = h - 26; g.strokeStyle = col.muted(); g.setLineDash([4, 3]); g.strokeRect(x, yy - 6, cw - 16, 6); } g.restore();
   }, 2.6, 560),
@@ -44,7 +51,7 @@ export const popFigures: QuizFigureRegistry = {
   }),
 
   'pop-housemodes': mini((g, w, h, p) => {
-    if (panel(p) === 'a') { const F = drawSPlane(g, w, h, { range: 2.6, reCenter: -1.2, poles: [C(-0.2), C(-2.2)], labels: true }); text(g, 'both real: no ringing', F.box.l + 4, F.box.t + 10, col.muted(), 'left', 10); return; }
+    if (panel(p) === 'a') { const F = drawSPlane(g, w, h, { range: 2.6, reCenter: -1.2, poles: [C(-0.2), C(-2.2)], labels: true, xLabel: 'σ (1/h)', yLabel: 'jω (rad/h)' }); text(g, 'both real: no ringing', F.box.l + 4, F.box.t + 10, col.muted(), 'left', 10); return; }
     const t = lin(0, 6, 241), F = fr(g, w, h, [0, 6], [-1.1, 1.1], 'time (h)', 'K'); tline(g, F, [0, 0], [6, 0], col.strong(), 1);
     curve(g, F, t, t.map((q) => Math.exp(-0.2 * q)), col.c(), 2.2); curve(g, F, t, t.map((q) => Math.exp(-2.2 * q)), col.b(), 2); curve(g, F, t, t.map((q) => -Math.exp(-2.2 * q)), col.a(), 2, [5, 3]);
     legend(g, F, [{ label: 'slow: both rooms together (τ 5 h)', color: col.c() }, { label: 'fast: room 1 ↓ …', color: col.b() }, { label: '… room 2 ↑ (27 min)', color: col.a(), dash: true }], 'br', 9.5);

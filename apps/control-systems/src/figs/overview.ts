@@ -1,6 +1,6 @@
 /** Root dive figure: the three plants, each with a stage scrubber that rebuilds its loop one box at a time. */
 import { figureOf, text, col, type FigurePanel } from '@study/core';
-import { type V, num, para } from './util';
+import { type V, num, para, wrap } from './util';
 import { drawHouse, drawCorner, drawDish, drawLoop, type LoopDiagram } from './draw';
 
 /** What each stage adds (batch 1 stages H0–H6, C0–C6, A0–A4). */
@@ -31,15 +31,18 @@ export const STAGES: Record<'house' | 'corner' | 'dish', { say: string; d: LoopD
     { say: 'A4 TUNE: torque limit ±200 N·m', d: { input: 'r', output: 'θ', blocks: [{ label: 'PID' }, { label: 'sat ±200', hi: true }, { label: 'dish' }], feedback: true, dist: 'T_d' } },
   ],
 };
+/** the batch-1 stage code in front of each line ("H6 NOISE: ") is for the builders, not the reader */
+const STAGE_ID = /^[HCA]\d+ [A-Z][A-Z, ]*: /;
 const panelFor = (id: 'house' | 'corner' | 'dish', title: string, key: string): FigurePanel => ({
-  id, title, x: 'picture and loop', y: 'stage',
+  id, title, x: '', y: '',
   draw(g, w, h, v: V) {
     g.clearRect(0, 0, w, h); const st = STAGES[id], k = Math.max(0, Math.min(st.length - 1, Math.round(num(v, key, st.length - 1)))), s = st[k], ph = h * 0.45;
     if (id === 'house') drawHouse(g, w * 0.2, 4, w * 0.6, ph - 8, { t1: 24.55, t2: 20.45, thermostat: k >= 4, sun: k >= 6, labels: false });
     else if (id === 'corner') drawCorner(g, w * 0.3, 2, w * 0.4, ph - 4, { actuator: k >= 4, ghostZ: k >= 5 ? 0.01 : undefined, labels: false });
     else drawDish(g, w * 0.25, 0, w * 0.5, ph, { theta: 0.3, ref: 0.5, wind: k >= 1, labels: false });
     if (s.d) drawLoop(g, 2, ph + 2, w - 4, h - ph - 26, s.d, 10); else text(g, '(no loop yet)', w / 2, ph + (h - ph) / 2 - 10, col.muted(), 'center', 10.5);
-    para(g, s.say, 8, h - 14, w - 16, col.e(), 10);
+    const say = `Stage ${k + 1} of ${st.length}: ${s.say.replace(STAGE_ID, '')}`, nl = wrap(g, say, w - 16, 10).length;
+    para(g, say, 8, h - 8 - (nl - 1) * 13, w - 16, col.e(), 10);
   },
 });
-export const overviewFigure = figureOf(() => [panelFor('house', 'House (series 0, 1, 3)', 'hs'), panelFor('corner', 'Car corner (series 1, 4)', 'cs'), panelFor('dish', 'Antenna dish (series 2)', 'as')]);
+export const overviewFigure = figureOf(() => [panelFor('house', 'House', 'hs'), panelFor('corner', 'Car corner', 'cs'), panelFor('dish', 'Antenna dish', 'as')]);
