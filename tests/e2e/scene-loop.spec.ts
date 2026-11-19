@@ -13,6 +13,12 @@ const hash = (page: Page, sel: string) => page.locator(sel).first().evaluate((cv
   for (let i = 3; i < d.length; i += 4) if (d[i] > 20) { n++; h = (h * 31 + d[i - 3] + d[i - 2] * 3 + d[i - 1] * 7 + i) | 0; }
   return { n, h };
 });
+/** the canvas hash once two reads a frame apart agree (the frozen redraw has landed) */
+const settled = async (page: Page, sel: string) => {
+  let prev = await hash(page, sel);
+  for (let i = 0; i < 20; i++) { await page.waitForTimeout(60); const cur = await hash(page, sel); if (cur.h === prev.h && cur.n > 0) return cur; prev = cur; }
+  return prev;
+};
 const SETS = [['loop', 'loop+poles'], ['pid', 'pid'], ['disturb', 'disturb'], ['noise', 'noise'], ['limit', 'limit'], ['delay', 'delay'], ['lag', 'lag']] as const;
 /** the moment each overlay is photographed: when it is doing its thing */
 const SHOT_T: Record<string, number> = { loop: 1.2, pid: 1.2, disturb: 4.6, noise: 5, limit: 0.3, delay: 1.4, lag: 1.4 };
@@ -26,8 +32,9 @@ test.describe('closed-loop overlays in the gallery', () => {
     const seen = new Set<number>();
     for (const [name, key] of SETS) {
       const sel = `${cellSel(key)} [data-testid=scene-canvas]`; await page.locator(sel).scrollIntoViewIfNeeded();
-      await freeze(page, 2.4); const a = await hash(page, sel); expect(a.n, `${name}: painted`).toBeGreaterThan(3000);
-      await freeze(page, 7); const b = await hash(page, sel); expect(b.h, `${name}: moves`).not.toBe(a.h);
+      // the redraw after a freeze lands on a later frame: wait for the picture to settle, then poll for the change (no single-frame race)
+      await freeze(page, 2.4); const a = await settled(page, sel); expect(a.n, `${name}: painted`).toBeGreaterThan(3000);
+      await freeze(page, 7); await expect.poll(async () => (await hash(page, sel)).h, { message: `${name}: moves`, timeout: 5000 }).not.toBe(a.h);
       expect(seen.has(a.h), `${name}: differs from the others`).toBe(false); seen.add(a.h);
       expect(await page.locator(`${cellSel(key)} .scene-chip`).count()).toBeGreaterThanOrEqual(1);
     }
