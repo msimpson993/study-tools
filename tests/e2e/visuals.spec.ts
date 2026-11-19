@@ -119,7 +119,9 @@ for (const app of APPS) {
       if (mi > 0) await page.locator('[data-testid=concept-map] [role=tab]').nth(mi).click();
       await page.locator(`[data-testid=map-node][data-node="${node.id}"]`).dispatchEvent('click');
       await expect(page.getByTestId('adds-to-example')).toBeVisible();
-      await expect(page.getByTestId('accounts-for')).toBeVisible();
+      // the fixed pop-up template (node.pop, opt-in per app) shows rough words + next question instead of the accounts-for callout
+      if (node.pop) { await expect(page.getByTestId('pop-rough')).toBeVisible(); await expect(page.getByTestId('pop-next')).toBeVisible(); }
+      else await expect(page.getByTestId('accounts-for')).toBeVisible();
       const dive = c.dives[0];
       if (!dive) return; // apps ported verbatim (legacy board) have no dives yet
       await page.goto(`/${app}/index.html#/dive/${dive.id}`); await page.reload();

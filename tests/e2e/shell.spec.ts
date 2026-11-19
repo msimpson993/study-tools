@@ -91,7 +91,7 @@ test('every linear-systems dive opens without errors', async ({ page }) => {
 
 test('linear-systems: nodes on the transforms branch link to the transforms app', async ({ page }) => {
   await open(page, 'linear-systems');
-  const links: string[] = await page.evaluate(() => (window as any).__study.content.maps.flatMap((m: any) => m.nodes.filter((n: any) => n.link).map((n: any) => n.link.href)));
+  const links: string[] = await page.evaluate(() => (window as any).__study.content.maps.flatMap((m: any) => m.nodes.filter((n: any) => n.link && !n.link.href.startsWith('#')).map((n: any) => n.link.href)));
   expect(links.length).toBeGreaterThanOrEqual(5);
   expect(links.every((h) => h.startsWith('../transforms/'))).toBe(true);
 });

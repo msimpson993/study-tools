@@ -1172,3 +1172,51 @@
   - "Zero at first, then full power"
   answer: 0
   why: u(t) = bᵀe^(Aᵀ(3−t))W(3)⁻¹x_f mixes e^(0.2(t−3)) and e^(2.2(t−3)) shapes. It eases off at the end because late heat mostly widens the room-1/room-2 gap (the fast difference mode) instead of warming room 2. Its energy is ∫u² dt ≈ 13.4 kW²·h.
+- id: pop-sys
+  tags:
+  - linsys
+  kind: recognize
+  q: "In the house, which is the input and which is the output?"
+  choices:
+  - "Input: heater power; output: the two room temperatures"
+  - "Input: the room temperatures; output: the heater power"
+  - "Input: the shared wall; output: the outdoor temperature"
+  - "The house has no input, only a state"
+  answer: 0
+  why: "The input is what you set (heater power, kW); the output is what you get (the room temperatures above outdoors, K). The wall and the leaks are part of the system's rule T."
+- id: pop-near
+  tags:
+  - linsys
+  kind: compute
+  q: "The earbud's illustrative cone curve is x = 100·tanh(x_lin/100) µm. At normal volume the linear model says x_lin = 10 µm. How far off is linear?"
+  choices:
+  - "About 0.3%: 100·tanh(0.1) ≈ 9.97 µm, so small signals are almost exactly linear"
+  - "About 29%, the same as at 2 V"
+  - "Exactly 0%"
+  - "About 10%"
+  answer: 0
+  why: "tanh(0.1) ≈ 0.0997, so x ≈ 9.97 µm against 10 µm: 0.3% low. The curve bends only near the ±100 µm limit; up close it is a straight line."
+- id: pop-kick
+  tags:
+  - lti
+  kind: recognize
+  q: "You measured the earbud's ring after one click. A pulse twice as tall, starting 1 ms later, arrives. What comes out?"
+  choices:
+  - "The same ring, twice as big and 1 ms later"
+  - A ring at twice the pitch
+  - A ring that decays twice as fast
+  - Nothing can be said without measuring again
+  answer: 0
+  why: Linearity scales the ring; time invariance shifts it. That is why one measured h(t) predicts every output.
+- id: pop-tone
+  tags:
+  - eigfn
+  kind: compute
+  q: A 0.1 V tone at 658 Hz drives the earbud. Roughly how far does the cone swing (peak)?
+  choices:
+  - "About 7.9 µm: 79.3 µm/V at 658 Hz × 0.1 V"
+  - "About 4.3 µm: the low-pitch 42.8 µm/V × 0.1 V"
+  - "About 0.26 µm, as at 3 kHz"
+  - About 79 µm
+  answer: 0
+  why: "Near the peak the gain is ×1.85 on the low-pitch 42.8 µm/V, i.e. 79.3 µm/V; 0.1 V gives about 7.9 µm, a tone of the same pitch, lagging about 73°."

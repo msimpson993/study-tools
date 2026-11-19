@@ -1,4 +1,4 @@
-> **The question this class keeps answering.** What is a linear system, and how do we predict what it does to any input?
+> **The question this class keeps answering.** How can we predict what a system will do with ANY input?
 
 A system is a rule that turns an input signal into an output signal. It is linear when it respects sums and scaling: the response to a sum of inputs is the sum of their responses, and doubling the input doubles the output. That one property is what makes prediction possible. A linear system is completely known once you know what it does to a few simple pieces: split any input into those pieces, let the system act on each one, and add the answers back up. The whole course is a search for the best pieces.
 
@@ -22,5 +22,5 @@ The same tools work in every field below; only the names of the signals change.
 ```
 
 ```callout:note How the map works
-Each box shows its question and a one-line answer. Tap a box for a short explanation, a key equation and a button into the deep dive; tap a line for why one idea leads to the next. **Big picture** is the whole course in 15 boxes; **Full detail** adds the boxes the exams use (ROC rules, Parseval, windowing, Jordan form, Cayley–Hamilton, PBH, Gramians, the Kalman split). Diamonds are questions; dashed lines join the same idea seen from two sides. Switch to **Review** on the map to track what you have seen, quiz a branch, or hide the text and rebuild the chain from memory.
+The map is the course as a chain of questions. Tap a box for a pop-up you can read in half a minute: a one-line answer, the formula in rough words, a picture where words aren't enough, what it means for the earbud or the house, the next question and a quick check, plus a button into the deep dive. The line out of each box is labelled with that next question; tap it for why one idea leads to the next. **Big picture** is the starting question plus 14 boxes; **Full detail** hangs the boxes the exams use under the box they belong to (ROC and residues, the Fourier family, $e^{At}$, Jordan form, Cayley–Hamilton, realization, PBH, Gramians, the Kalman split, filters, feedback and optimal control). Diamonds are questions; the dashed line joins two boxes that use the same trick. Switch to **Review** on the map to track what you have seen, quiz a branch, or hide the text and rebuild the chain from memory.
 ```

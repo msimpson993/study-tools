@@ -285,7 +285,7 @@ details.st-more .st-badge{display:inline-block;margin-left:.35rem;padding:0 .4re
 .pop-answer p{margin:.2rem 0 .45rem;font-size:1rem}
 .pop-row{margin:.35rem 0;font-size:.93rem;line-height:1.45}.pop-lead{color:var(--accent);font-weight:650}
 .pop-key{margin:.1rem 0 .4rem;font-size:.85rem}
-.pop-figs{display:grid;gap:.35rem;margin:.4rem 0}.pop-figs.n2{grid-template-columns:1fr 1fr}.pop-figs.n3{grid-template-columns:1fr 1fr 1fr}
+.pop-figs{display:grid;gap:.35rem;margin:.4rem 0}.pop-figs.n2{grid-template-columns:1fr 1fr}.pop-figs.n3{grid-template-columns:1fr 1fr 1fr}.pop-figs.n4{grid-template-columns:1fr 1fr 1fr}.pop-figs.n4>:first-child{grid-column:1/-1}
 .pop-figs .qfigure{margin:0}.pop-figs canvas{background:var(--panel2);border:1px solid var(--border);border-radius:10px;margin:0 auto!important}.pop-figs .qfig-cap{font-size:.75rem;color:var(--muted);text-align:center;line-height:1.25}
 .mini-q{margin:.45rem 0;padding:.55rem .7rem;border:1px solid var(--border);border-radius:12px;background:var(--panel)}
 .mini-q .qtext{font:600 .95rem/1.4 Charter,Georgia,serif;margin-bottom:.25rem}
