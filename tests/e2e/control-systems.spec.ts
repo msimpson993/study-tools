@@ -90,6 +90,16 @@ test.describe('control-systems: PID folded in (the PID Lab on the dish, the fail
     const r = await request.get('/pid-tuning/index.html');
     expect(r.status()).toBe(404);
   });
+  test('phone landing: the map starts in the top 60% and the root label is whole (hyphen break, no ellipsis)', async ({ page }) => {
+    await page.setViewportSize({ width: 390, height: 844 });
+    await open(page, 'control-systems');
+    expect((await page.getByTestId('map-svg').boundingBox())!.y).toBeLessThan(844 * 0.6);
+    const root = (await page.locator('[data-testid=map-node][data-node=root] text').allTextContents()).join(' ');
+    expect(root).not.toContain('…');
+    expect(root).toContain('approximately-');
+    expect(root.replace(/\s+/g, ' ')).toContain('do what we command?');
+    expect(await noHScroll(page)).toBe(true);
+  });
   test('the dish, corner and house dives render at 390 px with no horizontal scroll', async ({ page }) => {
     await page.setViewportSize({ width: 390, height: 844 });
     for (const id of ['overview', 'model', 'second', 'ctrl', 'tuning', 'lab', 'sf']) {

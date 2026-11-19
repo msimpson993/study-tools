@@ -31,6 +31,13 @@ export function wrapText(text: string, maxChars: number, maxLines: number): stri
   for (const raw of words) {
     let word = raw;
     while (word.length > maxChars) {
+      // a hyphenated compound ("approximately-known") breaks after its own hyphen when that part fits
+      const hy = word.lastIndexOf('-', maxChars - 1);
+      if (hy > 0) {
+        const head = word.slice(0, hy + 1), joined = cur ? `${cur} ${head}` : head;
+        if (joined.length <= maxChars) lines.push(joined); else { if (cur) lines.push(cur); lines.push(head); }
+        cur = ''; word = word.slice(hy + 1); continue;
+      }
       if (cur) { lines.push(cur); cur = ''; }
       lines.push(word.slice(0, maxChars - 1) + '-');
       word = word.slice(maxChars - 1);

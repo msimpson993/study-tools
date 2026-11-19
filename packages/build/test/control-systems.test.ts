@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import path from 'node:path';
 import { loadApp, repoRoot } from '../src';
+import { wrapText } from '../../core/src/maplayout';
 
 /** Guards for the control-systems question-chain rebuild (Nov 2026): three running examples, pid-tuning folded in. */
 const load = () => loadApp(path.join(repoRoot, 'apps', 'control-systems')).content;
@@ -78,5 +79,17 @@ describe('control-systems (question-chain rebuild)', () => {
     expect(all).not.toMatch(/pid-tuning\//);
     for (const id of ['lab', 'tuning', 'windup', 'methods', 'failures', 'integral', 'derivative']) expect(c.dives.some((d) => d.id === id), id).toBe(true);
     expect(c.figures.filter((f) => f.id.startsWith('fail-')).length).toBe(14);
+  });
+});
+
+describe('map label wrapping (root label at 390 px)', () => {
+  it('breaks a long hyphenated word after its hyphen, not mid-word', () => {
+    const lines = wrapText('How do we make an approximately-known system do what we command?', 14, 6);
+    expect(lines).toContain('approximately-');
+    expect(lines.join(' ')).not.toContain('…');
+    expect(lines.every((l) => l.length <= 14)).toBe(true);
+  });
+  it('still hard-splits a long word without a hyphen', () => {
+    expect(wrapText('abcdefghijklmnop', 8, 3)[0]).toBe('abcdefg-');
   });
 });

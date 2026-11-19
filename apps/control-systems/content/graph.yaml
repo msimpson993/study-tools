@@ -13,7 +13,6 @@ maps:
   nodes:
   - id: root
     label: How do we make an approximately-known system do what we command?
-    detail: and predict how it behaves before we build it
     kind: terminal
     short: 'Write the plant down as a model. Learn to predict its response from a few numbers (its poles). Then wrap it in feedback: measure the output, compare it with the command, and correct the input. Feedback is what makes a rough model good enough. Three everyday plants carry the story: a house that warms slowly, a car corner that bounces, and an antenna that must point where we say.'
     dive: overview
@@ -851,7 +850,6 @@ maps:
   nodes:
   - id: root
     label: How do we make an approximately-known system do what we command?
-    detail: and predict how it behaves before we build it
     kind: terminal
     short: 'Write the plant down as a model. Learn to predict its response from a few numbers (its poles). Then wrap it in feedback: measure the output, compare it with the command, and correct the input. Feedback is what makes a rough model good enough. Three everyday plants carry the story: a house that warms slowly, a car corner that bounces, and an antenna that must point where we say.'
     dive: overview
