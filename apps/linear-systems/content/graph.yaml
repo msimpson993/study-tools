@@ -12,6 +12,7 @@ maps:
   - Applications
   nodes:
   - id: root
+    examples: [earbud, car]
     label: How do we predict the output for ANY input?
     detail: "Inputs in, outputs out"
     kind: terminal
@@ -25,6 +26,7 @@ maps:
       href: "#/s/central"
       label: Where this shows up
   - id: SYS
+    examples: [earbud, car]
     label: "What's a system?"
     detail: "Input in, output out"
     kind: box
@@ -38,6 +40,7 @@ maps:
     dive: linsys
     quizTag: linsys
   - id: SUP
+    examples: [earbud]
     label: The core idea
     detail: "Split, respond, add"
     kind: box
@@ -55,6 +58,7 @@ maps:
     dive: linsys
     quizTag: linsys
   - id: LIN
+    examples: [earbud]
     label: What counts as linear?
     detail: Sums and scaling pass
     kind: box
@@ -84,6 +88,7 @@ maps:
     live: "figure:lintest"
     quizTag: linsys
   - id: NEAR
+    examples: [earbud, car]
     label: Never perfectly linear?
     detail: Linear up close
     kind: box
@@ -101,6 +106,7 @@ maps:
     dive: linsys
     quizTag: linsys
   - id: KICK
+    examples: [earbud]
     label: "Pieces: sharp kicks"
     detail: Impulse response h(t)
     kind: box
@@ -124,6 +130,7 @@ maps:
     accountsFor: "Why the speaker's response to music, or to anti-noise, can be predicted from that one ring."
     dive: lti
   - id: TONE
+    examples: [earbud]
     label: "Pieces: steady sine waves"
     detail: "H(jω): the fingerprint"
     kind: box
@@ -159,6 +166,7 @@ maps:
     accountsFor: "Why a speaker never changes the pitch of a note, only its loudness and timing."
     dive: eigfn
   - id: FOUR
+    examples: [earbud]
     label: "Fourier: split into sines"
     detail: "Series, FT, DTFT, DFT"
     kind: box
@@ -181,6 +189,7 @@ maps:
       href: "#/board?pair=ft&preset=earbud"
       label: See the earbud on the six-domains board
   - id: LAP
+    examples: [earbud]
     label: Laplace and Z
     detail: Growing and dying e^(st)
     kind: box
@@ -202,6 +211,7 @@ maps:
       href: "#/board?pair=lap&preset=earbud"
       label: See the earbud on the six-domains board
   - id: PZ
+    examples: [earbud]
     label: Poles and zeros
     detail: Natural rhythms
     kind: box
@@ -220,6 +230,7 @@ maps:
     accountsFor: "Why lighter damping would give a sharper, louder resonance."
     dive: tf
   - id: STATE
+    examples: [car]
     label: "State: what it remembers"
     detail: "ẋ = Ax + Bu, y = Cx + Du"
     kind: box
@@ -239,6 +250,7 @@ maps:
     accountsFor: "Why a bump under the front wheel makes the body both rise and pitch: the axles sit at different distances from the centre of gravity."
     dive: ss
   - id: MODES
+    examples: [earbud, car]
     label: "Modes: untangle A"
     detail: Eigenvectors of A
     kind: box
@@ -265,6 +277,7 @@ maps:
     accountsFor: "Why a pure tone comes out of the speaker as the same tone, and why the car has two ways of swaying, at 1.151 Hz and 1.419 Hz."
     dive: eig
   - id: STAB
+    examples: [earbud, car]
     label: Will it settle?
     detail: Every mode must fade
     kind: box
@@ -290,6 +303,7 @@ maps:
     accountsFor: "Why worn shocks make a car float: the poles creep toward the axis, so the ringing lasts about 8 cycles instead of 1.6."
     dive: stab
   - id: INOUT
+    examples: [car]
     label: Do inside and outside match?
     detail: Hidden modes
     kind: decision
@@ -307,6 +321,7 @@ maps:
     accountsFor: "Why that car's transfer function from push to height has only the bounce poles."
     dive: kalman
   - id: WORK
+    examples: [car]
     label: Put it to work
     detail: Design with the tools
     kind: box
@@ -458,6 +473,7 @@ maps:
   seriesNames: *id001
   nodes:
   - id: root
+    examples: [earbud, car]
     label: How do we predict the output for ANY input?
     detail: "Inputs in, outputs out"
     kind: terminal
@@ -466,6 +482,7 @@ maps:
     accountsFor: "Why the same handful of ideas predicts a 717 Hz speaker resonance and a car's 1.15 Hz bounce."
     link: *id003
   - id: SYS
+    examples: [earbud, car]
     label: "What's a system?"
     detail: "Input in, output out"
     kind: box
@@ -476,6 +493,7 @@ maps:
     dive: linsys
     quizTag: linsys
   - id: SUP
+    examples: [earbud]
     label: The core idea
     detail: "Split, respond, add"
     kind: box
@@ -486,6 +504,7 @@ maps:
     dive: linsys
     quizTag: linsys
   - id: LIN
+    examples: [earbud]
     label: What counts as linear?
     detail: Sums and scaling pass
     kind: box
@@ -498,6 +517,7 @@ maps:
     live: "figure:lintest"
     quizTag: linsys
   - id: NEAR
+    examples: [earbud, car]
     label: Never perfectly linear?
     detail: Linear up close
     kind: box
@@ -508,6 +528,7 @@ maps:
     dive: linsys
     quizTag: linsys
   - id: KICK
+    examples: [earbud]
     label: "Pieces: sharp kicks"
     detail: Impulse response h(t)
     kind: box
@@ -519,6 +540,7 @@ maps:
     accountsFor: "Why the speaker's response to music, or to anti-noise, can be predicted from that one ring."
     dive: lti
   - id: TONE
+    examples: [earbud]
     label: "Pieces: steady sine waves"
     detail: "H(jω): the fingerprint"
     kind: box
@@ -529,6 +551,7 @@ maps:
     accountsFor: "Why a speaker never changes the pitch of a note, only its loudness and timing."
     dive: eigfn
   - id: FOUR
+    examples: [earbud]
     label: "Fourier: split into sines"
     detail: "Series, FT, DTFT, DFT"
     kind: box
@@ -540,6 +563,7 @@ maps:
     dive: ft
     link: *id011
   - id: LAP
+    examples: [earbud]
     label: Laplace and Z
     detail: Growing and dying e^(st)
     kind: box
@@ -552,6 +576,7 @@ maps:
     dive: laplace
     link: *id013
   - id: PZ
+    examples: [earbud]
     label: Poles and zeros
     detail: Natural rhythms
     kind: box
@@ -562,6 +587,7 @@ maps:
     accountsFor: "Why lighter damping would give a sharper, louder resonance."
     dive: tf
   - id: STATE
+    examples: [car]
     label: "State: what it remembers"
     detail: "ẋ = Ax + Bu, y = Cx + Du"
     kind: box
@@ -573,6 +599,7 @@ maps:
     accountsFor: "Why a bump under the front wheel makes the body both rise and pitch: the axles sit at different distances from the centre of gravity."
     dive: ss
   - id: MODES
+    examples: [earbud, car]
     label: "Modes: untangle A"
     detail: Eigenvectors of A
     kind: box
@@ -584,6 +611,7 @@ maps:
     accountsFor: "Why a pure tone comes out of the speaker as the same tone, and why the car has two ways of swaying, at 1.151 Hz and 1.419 Hz."
     dive: eig
   - id: STAB
+    examples: [earbud, car]
     label: Will it settle?
     detail: Every mode must fade
     kind: box
@@ -594,6 +622,7 @@ maps:
     accountsFor: "Why worn shocks make a car float: the poles creep toward the axis, so the ringing lasts about 8 cycles instead of 1.6."
     dive: stab
   - id: INOUT
+    examples: [car]
     label: Do inside and outside match?
     detail: Hidden modes
     kind: decision
@@ -604,6 +633,7 @@ maps:
     accountsFor: "Why that car's transfer function from push to height has only the bounce poles."
     dive: kalman
   - id: WORK
+    examples: [car]
     label: Put it to work
     detail: Design with the tools
     kind: box
@@ -614,6 +644,7 @@ maps:
     accountsFor: "Why the cheapest forces start small, swing in sign, and do their hardest work in the second half, and why a shorter time or a single actuator costs so much more."
     dive: optimal
   - id: ROC
+    examples: [earbud]
     label: Region of convergence
     detail: Poles bound it; it picks x(t)
     series: 1
@@ -630,6 +661,7 @@ maps:
     dive: roc
     quizTag: roc
   - id: INV
+    examples: [earbud]
     label: Going back
     detail: Residues; ROC picks the side
     series: 1
@@ -642,6 +674,7 @@ maps:
     dive: inverse
     quizTag: inverse
   - id: DE
+    examples: [earbud]
     label: Equations as algebra
     detail: "ODEs, recursions → fractions"
     series: 1
@@ -654,6 +687,7 @@ maps:
     dive: diffeq
     quizTag: diffeq
   - id: ORTHO
+    examples: [earbud]
     label: Orthogonality
     detail: Coefficients are projections
     series: 1
@@ -670,6 +704,7 @@ maps:
     dive: ortho
     quizTag: ortho
   - id: FS
+    examples: [earbud]
     label: Fourier series
     detail: Periodic = sum of harmonics
     series: 1
@@ -685,6 +720,7 @@ maps:
       href: "#/board?pair=fs&preset=fsview"
       label: See a generic ring on the six-domains board
   - id: PARS
+    examples: [earbud]
     label: Parseval
     detail: "Energy: time = frequency"
     series: 1
@@ -697,6 +733,7 @@ maps:
     dive: parseval
     quizTag: parseval
   - id: SAMP
+    examples: [earbud]
     label: Sampling
     detail: Copies every fs; fold at fs/2
     series: 1
@@ -718,6 +755,7 @@ maps:
       href: "#/board?pair=samp&preset=alias"
       label: See a generic ring on the six-domains board
   - id: DTFT
+    examples: [earbud]
     label: DTFT
     detail: "Σ x[n]e^(−jΩn); period 2π"
     series: 1
@@ -737,6 +775,7 @@ maps:
       href: "#/board?pair=dtft&preset=heavy"
       label: See a generic ring on the six-domains board
   - id: DFT
+    examples: [earbud]
     label: DFT / FFT
     detail: "N samples in, N bins out"
     series: 1
@@ -752,6 +791,7 @@ maps:
       href: "#/board?pair=dft&preset=onbin"
       label: See a generic ring on the six-domains board
   - id: WIN
+    examples: [earbud]
     label: Windowing
     detail: Finite block → leakage
     series: 1
@@ -773,6 +813,7 @@ maps:
       href: "#/board?pair=dft&preset=offbin"
       label: See a generic ring on the six-domains board
   - id: RE
+    examples: [earbud]
     label: Realization
     detail: "Build A, B, C; minimal?"
     series: 2
@@ -786,6 +827,7 @@ maps:
     dive: realize
     quizTag: realize
   - id: DIAG
+    examples: [car]
     label: Diagonalization
     detail: "A = VΛV⁻¹: separate modes"
     series: 2
@@ -798,6 +840,7 @@ maps:
     dive: diag
     quizTag: diag
   - id: JOR
+    examples: [earbud]
     label: Jordan form
     detail: "Repeated λ, one eigenvector"
     series: 2
@@ -810,6 +853,7 @@ maps:
     dive: jordan
     quizTag: jordan
   - id: CH
+    examples: [car]
     label: Cayley–Hamilton
     detail: "p(A) = 0: eᴬᵗ is a polynomial"
     series: 2
@@ -822,6 +866,7 @@ maps:
     dive: cayley
     quizTag: cayley
   - id: PHI
+    examples: [car]
     label: "e^(At): how it evolves"
     detail: Φ(t) = eᴬᵗ; h(t) = CΦ(t)B
     series: 2
@@ -835,6 +880,7 @@ maps:
     live: "figure:expm"
     quizTag: expm
   - id: CO
+    examples: [car]
     label: Controllability
     detail: Can u reach every mode?
     kind: decision
@@ -848,6 +894,7 @@ maps:
     dive: ctrl
     quizTag: ctrl
   - id: OBS
+    examples: [car]
     label: Observability
     detail: Does y show every mode?
     series: 3
@@ -860,6 +907,7 @@ maps:
     dive: obs
     quizTag: obs
   - id: PBH
+    examples: [car]
     label: PBH test
     detail: "One mode at a time: wᵀB, Cv"
     series: 3
@@ -872,6 +920,7 @@ maps:
     dive: pbh
     quizTag: pbh
   - id: GRAM
+    examples: [car]
     label: Gramians
     detail: Energy cost of each direction
     series: 3
@@ -884,6 +933,7 @@ maps:
     dive: gramian
     quizTag: gramian
   - id: OPT
+    examples: [car]
     label: Optimal control
     detail: "Best u: Pontryagin, costate p"
     series: 4
@@ -896,6 +946,7 @@ maps:
     dive: optimal
     quizTag: optimal
   - id: FB
+    examples: [car]
     label: "Feedback: active damping"
     detail: u = −Kx moves the poles
     series: 4
@@ -910,6 +961,7 @@ maps:
     dive: skyhook
     live: "figure:skyhook"
   - id: FILT
+    examples: [earbud]
     label: "Filters: noise cancelling"
     detail: Difference equations H(z)
     series: 4
