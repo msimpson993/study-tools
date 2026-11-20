@@ -48,7 +48,7 @@ describe('expanded map numbers agree with the models', () => {
     expect([o(CAR_SYM, [1, 0, 0, 0]), o(CAR_SYM, [0, 0, 0, 1]), o(CAR, [1, 0, 0, 0]), o(CAR, [1, m[1].node, 0, 0])]).toEqual([2, 2, 4, 2]);
     const E = (xs: number[], T: number) => { const q = minEnergy(CAR, xs, [0, -2 / (180 / Math.PI), 0, 0], T); const us = Array.from({ length: 501 }, (_, i) => q.u((i * T) / 500)); return [q.energy, ...xs.map((_, j) => Math.max(...us.map((u) => Math.abs(u[j]))))]; };
     const e25 = E([CAR.a, -CAR.b], 0.25), e5 = E([CAR.a, -CAR.b], 0.5), e1 = E([CAR.a, -CAR.b], 1), ef = E([CAR.a], 0.5);
-    expect(Math.round(e25[0] / 100) * 100).toBe(387200); expect(Math.round(e25[1])).toBe(2002); expect(Math.round(e25[2])).toBe(1750);
+    expect(Math.round(e25[0] / 10) * 10).toBe(387240); expect(Math.round(e25[1])).toBe(2002); expect(Math.round(e25[2])).toBe(1750);
     expect(Math.round(e5[0] / 10) * 10).toBe(96160); expect(Math.round(e5[1])).toBe(476); expect(Math.round(e5[2])).toBe(652);
     expect(Math.round(e1[0])).toBe(4564); expect(Math.round(e1[1])).toBe(121); expect(Math.round(e1[2])).toBe(114);
     expect(ef[0] / 1e6).toBeCloseTo(6.999, 3); expect(Math.round(ef[1])).toBe(12885); expect(ef[0] / e5[0]).toBeCloseTo(72.8, 1);
