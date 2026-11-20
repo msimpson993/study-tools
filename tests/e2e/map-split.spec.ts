@@ -49,13 +49,13 @@ for (const app of APPS) for (const [vw, vh] of VPS) {
       const deep = await widths(page); expect(deep.split).toBe(true); expect(deep.map / (deep.map + deep.panel)).toBeLessThan(0.43);
     });
 
-    if (vw >= 1366) test('the wheel zooms the side map about the cursor; drag pans; Reset zoom restores; the page does not scroll; no zoom outside the map or with nothing open', async ({ page }) => {
+    if (vw >= 1366) test('the wheel zooms the side map about the cursor; drag pans; Reset zoom restores; the page does not scroll; no zoom outside the map', async ({ page }) => {
       await open(page, app);
-      // nothing open: the wheel over the map scrolls the page as before (no zoom)
+      // (with nothing open the full-width map zooms too: full-map-zoom.spec; here Fit to screen puts it back at 100%)
       const sc = page.locator('.cm-scroll');
       let bb = (await sc.boundingBox())!;
       await page.mouse.move(bb.x + bb.width / 2, Math.min(bb.y + 60, 850)); await page.mouse.wheel(0, 300); await page.waitForTimeout(200);
-      expect(await zoomOf(page), 'no zoom without an entry open').toBe(1);
+      await page.getByTestId('map-zoom-reset').click(); expect(await zoomOf(page), 'Fit to screen: 100%').toBe(1);
       await page.evaluate(() => scrollTo(0, 0));
       await page.locator('[data-testid=map-node]').nth(3).dispatchEvent('click');
       await page.evaluate(() => (document.querySelector('[data-testid=map-wrap]') as HTMLElement).scrollIntoView({ block: 'start' }));

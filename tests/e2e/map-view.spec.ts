@@ -27,7 +27,7 @@ for (const app of APPS) {
         expect(act.boxW, 'natural box size (184 px)').toBeGreaterThanOrEqual(183); expect(act.boxW).toBeGreaterThanOrEqual(fit.boxW - 0.5);
         if (view === 'mobile') { expect(act.sw, 'wider than the phone: pans').toBeGreaterThan(act.cw + 200); expect(fit.boxW).toBeLessThan(180); }
         expect(await page.evaluate(() => { const s = document.querySelector('.cm-scroll')!.getBoundingClientRect(); return [...document.querySelectorAll('[data-testid=map-node]')].filter((n) => { const r = n.getBoundingClientRect(); return r.right > s.left + 20 && r.left < s.right - 20 && r.bottom > s.top && r.top < s.bottom; }).length; }), 'Actual size opens on the boxes, not on the empty margin').toBeGreaterThanOrEqual(2);
-        expect(act.ch, 'the map is a bounded viewport that pans vertically too').toBeLessThanOrEqual(920);
+        expect(act.ch, 'the map is a bounded viewport (the screen under the header) that pans vertically too').toBeLessThanOrEqual(page.viewportSize()!.height);
         expect(await page.evaluate((k) => localStorage.getItem(k), KEY)).toBe('"actual"');
         await page.reload(); await expect(page.getByTestId('map-svg')).toBeVisible();
         await expect(page.locator('[data-testid=map-view] [data-view=actual]')).toHaveAttribute('aria-pressed', 'true');
@@ -35,7 +35,7 @@ for (const app of APPS) {
         await pick(page, 'fit'); expect(await page.evaluate((k) => localStorage.getItem(k), KEY)).toBe('"fit"'); expect((await dims(page)).actual).toBe(false);
       });
 
-      test('a mouse drag pans and is not a tap; a plain click still opens a box and a line; the wheel scrolls; re-render keeps the position', async ({ page }) => {
+      test('a mouse drag pans and is not a tap; a plain click still opens a box and a line; the wheel zooms; re-render keeps the position', async ({ page }) => {
         await open(page, app); await pick(page, 'actual');
         await page.evaluate(() => (document.querySelector('.cm-scroll') as HTMLElement).scrollIntoView({ block: 'start' }));
         const sc = page.locator('.cm-scroll'), bb = (await sc.boundingBox())!;
@@ -62,9 +62,12 @@ for (const app of APPS) {
         // (desktop: an open entry moves the map into its side column, a deliberate re-layout; map-split.spec covers that)
         if (view === 'mobile') { const kept = await dims(page); expect(Math.abs(kept.st - atTap.st) + Math.abs(kept.sl - atTap.sl), 'position kept across re-render').toBeLessThan(3); }
         else { await expect(page.getByTestId('map-wrap')).toHaveClass(/split/); expect(await page.evaluate(() => { const e = document.querySelector('.qm-edge.e-sel .dot')!.getBoundingClientRect(), b = document.querySelector('.cm-scroll')!.getBoundingClientRect(); return e.left >= b.left && e.right <= b.right && e.top >= b.top && e.bottom <= b.bottom; }), 'the open line is in view in the side map').toBe(true); }
-        // wheel scrolls the map
-        await page.keyboard.press('Escape'); await page.mouse.move(sx, sy); const w0 = (await dims(page)).st; await page.mouse.wheel(0, 200); await page.waitForTimeout(150);
-        const w1 = await dims(page); expect(w1.st > w0 || w1.sh <= w1.ch, 'wheel scrolled (or nothing to scroll)').toBe(true);
+        // the wheel over the map zooms it (the full-width map is a zoomable viewport too; full-map-zoom.spec)
+        await page.keyboard.press('Escape'); await page.mouse.move(sx, sy);
+        const z0 = await page.evaluate(() => Number((document.querySelector('[data-testid=map-wrap]') as HTMLElement).dataset.zoom ?? '1'));
+        await page.mouse.wheel(0, 200); await page.waitForTimeout(150);
+        const z1 = await page.evaluate(() => Number((document.querySelector('[data-testid=map-wrap]') as HTMLElement).dataset.zoom ?? '1'));
+        expect(z1, 'wheel down zooms out').toBeLessThan(z0);
       });
 
       test('a real click on a box and on a line dot works in both modes', async ({ page }) => {
