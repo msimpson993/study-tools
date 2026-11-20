@@ -3,16 +3,18 @@ import { APPS, open } from './helpers';
 
 /* Desktop reading layout (Nov 19): with a box or line pop-up open, the map takes the left ~40% and the entry the right
    ~60%; the side map shrinks to fit its column and the mouse wheel zooms it about the cursor (drag pans, Reset zoom
-   restores it). With nothing open the map is alone, full width. Phones keep the bottom sheet (phone-layout.spec). */
+   restores it). With nothing open the map is alone, full width. Since Nov 19 (9:29 PM) tablets get the same split from
+   700 px (portrait 768/923, landscape 1024/1280) and touch pinch-zooms the side map; phones get the entry card (phone-entry.spec). */
 const widths = (page: Page) => page.evaluate(() => {
   const w = (s: string) => { const e = document.querySelector(s) as HTMLElement | null; return e && e.offsetParent !== null ? e.getBoundingClientRect().width : 0; };
   return { wrap: w('[data-testid=map-wrap]'), map: w('.cm-mapcol'), panel: w('[data-testid=map-panel]'), split: document.querySelector('[data-testid=map-wrap]')!.classList.contains('split') };
 });
 const zoomOf = (page: Page) => page.evaluate(() => Number((document.querySelector('[data-testid=map-wrap]') as HTMLElement).dataset.zoom ?? '1'));
 
-for (const app of APPS) for (const vw of [1366, 1920]) {
-  test.describe(`${app} @${vw}: split layout`, () => {
-    test.use({ viewport: { width: vw, height: vw > 1500 ? 1080 : 900 } });
+const VPS: [number, number][] = [[768, 1024], [923, 1300], [1024, 700], [1280, 760], [1366, 900], [1920, 1080]];
+for (const app of APPS) for (const [vw, vh] of VPS) {
+  test.describe(`${app} @${vw}x${vh}: split layout`, () => {
+    test.use({ viewport: { width: vw, height: vh } });
 
     test('no entry: the map is full width; an entry open: map ~40% left, entry ~60% right; Back/Next and deep links keep it', async ({ page }) => {
       await open(page, app);
@@ -47,7 +49,7 @@ for (const app of APPS) for (const vw of [1366, 1920]) {
       const deep = await widths(page); expect(deep.split).toBe(true); expect(deep.map / (deep.map + deep.panel)).toBeLessThan(0.43);
     });
 
-    test('the wheel zooms the side map about the cursor; drag pans; Reset zoom restores; the page does not scroll; no zoom outside the map or with nothing open', async ({ page }) => {
+    if (vw >= 1366) test('the wheel zooms the side map about the cursor; drag pans; Reset zoom restores; the page does not scroll; no zoom outside the map or with nothing open', async ({ page }) => {
       await open(page, app);
       // nothing open: the wheel over the map scrolls the page as before (no zoom)
       const sc = page.locator('.cm-scroll');
@@ -93,3 +95,61 @@ for (const app of APPS) for (const vw of [1366, 1920]) {
     });
   });
 }
+
+/** tablets: the open entry and its side map fill the screen under the top bar, nothing clipped, entry text readable */
+for (const app of APPS) for (const [vw, vh] of VPS.slice(0, 4)) test(`${app} @${vw}x${vh}: tablet split fills the screen, nothing clipped, entry text readable`, async ({ page }) => {
+  await page.setViewportSize({ width: vw, height: vh });
+  await open(page, app);
+  await page.locator('[data-testid=map-node]').nth(3).dispatchEvent('click');
+  await expect(page.getByTestId('map-wrap')).toHaveClass(/split/);
+  const r = await page.evaluate(() => {
+    const g = (q: string) => document.querySelector(q)!.getBoundingClientRect(), m = g('.cm-mapcol'), p = g('[data-testid=map-panel]');
+    const t = (document.querySelector('[data-testid=map-panel] .pop-answer p') ?? document.querySelector('[data-testid=map-panel] [data-body]')) as HTMLElement;
+    return { mt: m.top, mb: m.bottom, pt: p.top, pb: p.bottom, pw: p.width, vh: innerHeight, over: document.documentElement.scrollWidth - innerWidth, font: parseFloat(getComputedStyle(t).fontSize), sb: !!document.querySelector('.sidebar:not([hidden])') && innerWidth < 1100,
+      zoomOverRoot: (() => { const z = document.querySelector('[data-testid=map-zoom]')!.getBoundingClientRect(), sc = document.querySelector('.cm-scroll') as HTMLElement; return z.bottom > sc.getBoundingClientRect().top + parseFloat(getComputedStyle(sc).paddingTop) + 1; })() };
+  });
+  expect(r.over, 'no sideways page').toBeLessThanOrEqual(1);
+  expect(r.pt, 'entry starts under the top bar').toBeLessThan(80); expect(r.mt).toBeLessThan(80);
+  expect(r.pb, 'entry ends on screen').toBeLessThanOrEqual(r.vh + 1); expect(r.mb).toBeLessThanOrEqual(r.vh + 1);
+  expect(Math.max(r.pb - r.pt, r.mb - r.mt) / r.vh, 'map/entry get most of the height').toBeGreaterThan(0.85);
+  expect(r.pw, 'entry column wide enough to read').toBeGreaterThan(400);
+  expect(r.font, 'entry text size').toBeGreaterThanOrEqual(15);
+  expect(r.sb, 'below 1100 px the sidebar is an overlay, closed').toBe(false);
+  expect(r.zoomOverRoot, 'the zoom bar sits above the map, not on it').toBe(false);
+});
+
+/** touch: two fingers pinch-zoom the side map about their midpoint; one finger pans it; the page does not scroll */
+for (const app of APPS) test(`${app} @923x1300 touch: pinch zooms the side map, one finger pans it, Reset zoom restores`, async ({ page, browserName }) => {
+  test.skip(browserName !== 'chromium', 'multi-touch via CDP');
+  await page.setViewportSize({ width: 923, height: 1300 });
+  await open(page, app);
+  await page.locator('[data-testid=map-node]').nth(3).dispatchEvent('click');
+  await expect(page.getByTestId('map-wrap')).toHaveClass(/split/);
+  const cdp = await page.context().newCDPSession(page);
+  const bb = (await page.locator('.cm-scroll').boundingBox())!, cx = bb.x + bb.width / 2, cy = bb.y + 300;
+  const y0 = await page.evaluate(() => scrollY);
+  const touch = (type: string, pts: [number, number][]) => cdp.send('Input.dispatchTouchEvent', { type, touchPoints: pts.map(([x, y], id) => ({ x, y, id })) } as any);
+  await touch('touchStart', [[cx - 30, cy], [cx + 30, cy]]);
+  for (let i = 1; i <= 8; i++) await touch('touchMove', [[cx - 30 - i * 10, cy], [cx + 30 + i * 10, cy]]);
+  await touch('touchEnd', []);
+  await page.waitForTimeout(150);
+  const z = await zoomOf(page);
+  expect(z, 'pinch out zooms in (~×2.3)').toBeGreaterThan(1.8);
+  await expect(page.getByTestId('map-zoom-pct')).toHaveText(`${Math.round(z * 100)}%`);
+  expect(Math.abs((await page.evaluate(() => scrollY)) - y0), 'the page did not scroll').toBeLessThanOrEqual(1);
+  // one finger pans the zoomed map (native scrolling inside the map)
+  const s0 = await page.locator('.cm-scroll').evaluate((e) => [e.scrollLeft, e.scrollTop]);
+  await touch('touchStart', [[cx, cy + 100]]);
+  for (let i = 1; i <= 8; i++) await touch('touchMove', [[cx - i * 8, cy + 100 - i * 15]]);
+  await touch('touchEnd', []);
+  await page.waitForTimeout(400);
+  const s1 = await page.locator('.cm-scroll').evaluate((e) => [e.scrollLeft, e.scrollTop]);
+  expect(s1[0] !== s0[0] || s1[1] !== s0[1], `one-finger pan (${s0} → ${s1})`).toBe(true);
+  // pinch in, never below fit; Reset zoom
+  await touch('touchStart', [[cx - 150, cy], [cx + 150, cy]]);
+  for (let i = 1; i <= 8; i++) await touch('touchMove', [[cx - 150 + i * 17, cy], [cx + 150 - i * 17, cy]]);
+  await touch('touchEnd', []);
+  expect(await zoomOf(page)).toBeGreaterThanOrEqual(0.999);
+  await page.getByTestId('map-zoom-in').click(); await page.getByTestId('map-zoom-reset').click();
+  expect(await zoomOf(page)).toBe(1);
+});

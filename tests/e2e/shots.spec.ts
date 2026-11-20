@@ -36,7 +36,7 @@ for (const v of VIEWS) {
         // map with an open node popup
         const node = page.locator('[data-testid=map-node]').nth(2);
         await node.dispatchEvent('click'); await snap(page, `${app}-map-popup-${tag}`);
-        // review mode (close the popup first: on a phone its bottom sheet can sit over the mode buttons)
+        // review mode (close the popup first: on a phone its entry card sits over the mode buttons)
         await page.getByTestId('panel-close').click();
         await page.getByRole('button', { name: 'Review', exact: true }).click();
         for (let i = 0; i < 4; i++) await page.locator('[data-testid=map-node]').nth(i).dispatchEvent('click');
