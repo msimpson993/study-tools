@@ -111,9 +111,9 @@ function miniCar(g: CanvasRenderingContext2D, w: number, h: number, z: number, t
 }
 /** Box 10: the car's state: heave z and pitch θ (and their rates). */
 const carstate: QuizFigureDef = { aspect: 2.4, maxWidth: 420, draw(g, w, h) {
-  g.clearRect(0, 0, w, h); miniCar(g, w, h, 0, 0, 1, col.muted(), true); const r = miniCar(g, w, h, 0.02, 0.025, 4, col.text());
+  g.clearRect(0, 0, w, h); miniCar(g, w, h, 0, 0, 1, col.muted(), true); const r = miniCar(g, w, h, 0.02, 0.025, 4, col.text()), wr = Math.max(5, r.sx * 0.25);
   text(g, 'z: heave (up)', 6, 10, col.a(), 'left', 10); text(g, 'θ: pitch (nose-up +)', w - 6, 10, col.b(), 'right', 10);
-  text(g, 'front', r.X(CAR.a), h - 2, col.muted(), 'center', 9);
+  text(g, 'front', r.X(CAR.a) + wr + 3, h - 6 - wr, col.muted(), 'left', 9); // beside the front wheel, above the ground line
   text(g, 'blue lines: spring + shock, wheel to body', w / 2, 24, col.a(), 'center', 9.5);
 } };
 /** Box 11: bounce (mode 0) or pitch (mode 1) drawn on the car, with its still point. */
