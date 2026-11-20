@@ -80,3 +80,25 @@ for (const vw of [1366, 390]) {
     expect(uniq, uniq.slice(0, 40).join('\n')).toEqual([]);
   });
 }
+
+/** linear-systems Nov 19 expansion: the six new box pop-up pictures (ROC, ORTHO, SAMP, DTFT, WIN, FB) at both widths,
+ * opened by deep link (the desktop split layout puts them in the right-hand column) */
+const LS_EXPANDED = ['ROC', 'ORTHO', 'SAMP', 'DTFT', 'WIN', 'FB'];
+for (const vw of [1366, 390]) {
+  test(`linear-systems @${vw}: the expanded boxes' pop-up pictures keep their labels apart and on the canvas`, async ({ page }) => {
+    test.setTimeout(180_000);
+    await page.setViewportSize({ width: vw, height: vw > 500 ? 900 : 844 });
+    await page.addInitScript(() => { (window as any).__textLog = []; (window as any).__textCanvases = []; });
+    const bad: string[] = [];
+    for (const id of LS_EXPANDED) {
+      await open(page, 'linear-systems', `#/node/${id}`); await page.reload();
+      const strip = page.locator('[data-testid=map-panel] [data-testid=pop-figures]').first();
+      await expect(strip, `${id} has its picture`).toHaveCount(1);
+      await strip.scrollIntoViewIfNeeded(); await page.waitForTimeout(600);
+      const log = (await take(page)).filter((e) => e.id.startsWith('pop-'));
+      expect(log.length, `${id}: the picture drew its labels`).toBeGreaterThan(3);
+      bad.push(...collisions(log).map((s) => `box ${id} · ${s}`), ...clipped(log).map((s) => `box ${id} · ${s}`));
+    }
+    expect(bad, bad.join('\n')).toEqual([]);
+  });
+}
