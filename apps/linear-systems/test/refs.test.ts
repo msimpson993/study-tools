@@ -33,14 +33,14 @@ describe('linear-systems Example nodes', () => {
     const t = all('earbud');
     for (const bad of ['ζ', 'pole', 'Hz', 'resonan', 'damping ratio', `${Math.round(SPK.fd)}`, thou(SPK.sigma), thou(SPK.wd), `${(1000 / SPK.sigma).toFixed(1)} ms`]) expect(t, bad).not.toContain(bad);
   });
-  it('car at STATE: body, axles, springs, shocks, the bump delay and the state; not its modes (MODES) or their damping', () => {
+  it('car at STATE: body, axles, springs, shocks, the bump and the state; not its modes (MODES), their rates or their damping', () => {
     const s = ref('car').numbers, [b, p] = carModes(CAR);
     expect(s).toContain(`m = ${CAR.m} kg`); expect(s).toContain(`J = ${CAR.J} kg·m²`); expect(s).toContain(`front ${CAR.a} m ahead`); expect(s).toContain(`rear ${CAR.b} m behind`);
     expect(s).toContain(`kf = ${thou(CAR.kf)} N/m`); expect(s).toContain(`kr = ${thou(CAR.kr)} N/m`); expect(s).toContain(`${thou(CAR.cf)} and ${thou(CAR.cr)} N·s/m`);
     expect(s).toContain(`${((CAR.a + CAR.b) / 15).toFixed(2)} s after the front`);
-    expect(s).toContain(`about ${b.fn.toFixed(2)} times a second`);
+    expect(s).toContain('5 cm high');
     expect(ref('car').about).toContain('x = (z, θ, ż, θ̇)');
     const t = all('car');
-    for (const bad of ['ζ', 'mode', 'Hz', `${p.fn.toFixed(2)}`, `${b.zeta.toFixed(2)}`, `${p.zeta.toFixed(2)}`, 'eigen']) expect(t, bad).not.toContain(bad);
+    for (const bad of ['ζ', 'mode', 'Hz', `${b.fn.toFixed(2)}`, `${p.fn.toFixed(2)}`, `${b.zeta.toFixed(2)}`, `${p.zeta.toFixed(2)}`, 'eigen']) expect(t, bad).not.toContain(bad);
   });
 });

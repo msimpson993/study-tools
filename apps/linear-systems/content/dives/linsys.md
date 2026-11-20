@@ -24,7 +24,7 @@ A system is a rule that turns an input signal into an output signal. It is linea
 
 ### A system is a rule: y = T{u}
 
-A system is an operator T: it takes a whole input signal u(t) and returns a whole output signal y(t) = T{u}(t). The earbud takes the drive voltage V(t) and returns the diaphragm motion x(t). The car takes the road heights under its wheels and returns the body's heave and pitch. "The system" always means the rule, not any one input or output.
+A system is an operator T: it takes a whole input signal u(t) and returns a whole output signal y(t) = T{u}(t). The earbud takes the drive voltage V(t) and returns the diaphragm motion x(t). Ask a different question and the same earbud is a different system: drive voltage in, coil current out. "The system" always means the rule, not any one input or output.
 
 ```eq
 y = T{u}

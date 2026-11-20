@@ -6,7 +6,7 @@
   meaning: Delaying the input only delays the output; the system does not change with time.
   section: Systems and the eigen idea
 - term: "System, operator"
-  meaning: "A rule $T$ that maps a whole input signal to a whole output signal, $y = T\\{u\\}$: the earbud maps voltage to diaphragm motion, the car maps road heights under its wheels to the body's heave and pitch."
+  meaning: "A rule $T$ that maps a whole input signal to a whole output signal, $y = T\\{u\\}$: the earbud maps voltage to diaphragm motion (or, for another question, voltage to coil current)."
   section: Systems and the eigen idea
 - term: Additivity
   meaning: "The response to a sum is the sum of the responses: $T\\{u_1 + u_2\\} = T\\{u_1\\} + T\\{u_2\\}$. Fails for $y = u^2$ and for clipping at large signals."
@@ -15,7 +15,7 @@
   meaning: "Scaling the input scales the output by the same factor: $T\\{a u\\} = a\\,T\\{u\\}$. With additivity it makes a system linear; taking $a = 0$ shows zero in must give zero out."
   section: Systems and the eigen idea
 - term: Superposition
-  meaning: "For a linear system, split the input into pieces, find each piece's response, and add them: the response to the sum is the sum of the responses. The car's bump response is the front wheel's response plus the rear wheel's response to the same bump, 0.18 s later."
+  meaning: "For a linear system, split the input into pieces, find each piece's response, and add them: the response to the sum is the sum of the responses. Two earbud clicks, the second 0.40 times the size and 0.73 ms later: the motion is the first ring plus the second, scaled and shifted, and from 0.73 ms on they cancel."
   section: Systems and the eigen idea
 - term: Affine
   meaning: "Linear plus a constant, like $y = 2u + 1$: a straight-line graph that misses the origin. Not linear, but linear in the deviations $\\delta y = 2\\,\\delta u$ about an operating point."
@@ -89,7 +89,7 @@
   meaning: Root of the denominator (a mode the system can show) and root of the numerator (a frequency it blocks).
   section: "Laplace, Z and inverses"
 - term: "G(s), H(s)"
-  meaning: "Transfer function: $G(s) = C(sI - A)^{-1}B + D$. The eigenvalue an LTI system assigns to $e^{st}$. G(s) and H(s) are the same thing. The map boxes, the transfer-function dive and the Broader picture write H(s); the state-space, controllability, observability, Kalman, Jordan, stability and sampling dives and the car figures write G(s), as many textbooks do."
+  meaning: "Transfer function: $G(s) = C(sI - A)^{-1}B + D$. The eigenvalue an LTI system assigns to $e^{st}$. G(s) and H(s) are the same thing. The map boxes, the transfer-function dive and the Broader picture write H(s); the state-space, controllability, observability, Kalman, Jordan, stability and sampling dives and the state-space figures write G(s), as many textbooks do."
   section: "Laplace, Z and inverses"
 - term: Partial fractions
   meaning: Splitting $X(s)$ into $\sum c_p/(s-p)$ so each term inverts to one exponential (a repeated pole adds $c/(s-p)^k$ terms).

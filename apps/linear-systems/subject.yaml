@@ -56,15 +56,15 @@ runningExample:
       scene: { id: car, overlays: [springs, bump], caption: "Road bumps in, the body's heave and pitch out." }
       about: |
         - **In:** the road height under the front and rear wheels (a bump reaches each wheel in turn).
-        - **Out:** the body's heave z (up and down) and pitch θ (nose up or down).
+        - **Out:** the body's heave z (up and down) and pitch θ (nose up or down). A point x metres ahead of the centre of gravity rises z + xθ.
         - **The system in between:** the body on a spring and a shock absorber at each axle.
-        - **Why this one:** one bump moves the body two ways at once, so it needs more than one number to remember where it is: four, the state x = (z, θ, ż, θ̇).
+        - **Why this example now:** the earbud carried the map this far because its cone moves one way only: one input, one motion, one H(s). Looking inside needs parts that push on each other. One bump moves the car's body two ways at once, and each motion drags the other, so it needs four numbers to remember where it is: the state x = (z, θ, ż, θ̇).
       numbers: |
         - **Body:** m = 1400 kg; pitch inertia J = 2000 kg·m² (its resistance to tilting).
         - **Axles:** front 1.2 m ahead of the centre of gravity, rear 1.5 m behind.
         - **Springs:** kf = 38,000 N/m front, kr = 42,000 N/m rear; **shocks:** 3,040 and 3,360 N·s/m.
-        - **A bump:** at 15 m/s it reaches the rear wheel 0.18 s after the front.
-        - **Natural bounce:** about 1.15 times a second (as the first box said).
+        - **A bump:** 5 cm high; at 15 m/s it reaches the rear wheel 0.18 s after the front (2.7 m ÷ 15 m/s).
+        - **Operating point:** motion is measured from ride height, springs already squeezed by the car's weight, so gravity drops out.
         - **Model:** small angles, linear springs and shocks, rigid tyres, no wheel mass.
 # the Variables drawer opens at this glossary section for each box (Full-detail boxes inherit their main-path ancestor's)
 glossaryTopics:

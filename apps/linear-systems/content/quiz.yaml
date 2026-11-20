@@ -1209,18 +1209,16 @@
   answer: 0
   why: "u(t) = −Bᵀe^(Aᵀ(T−t))W(T)⁻¹e^(AT)x₀ with the Gramian W. Its energy is about 96,160 N²·s. Allowed 1 s, the shocks do most of the work and about 120 N is enough."
 - id: pop-sys
-  tags:
-  - linsys
+  tags: [linsys]
   kind: recognize
-  q: "In the car model, which is the input and which is the output?"
+  q: In the earbud model, which is the input and which is the output?
   choices:
-  - "Input: the road heights under the wheels (or actuator forces); output: the body's heave and pitch"
-  - "Input: the body's heave; output: the road"
-  - "Input: the springs; output: the shocks"
-  - "The car has no input, only a state"
+    - "Input: the drive voltage on the coil; output: the cone's motion"
+    - "Input: the cone's motion; output: the voltage"
+    - "Input: the magnet; output: the suspension"
+    - "Neither: the earbud only has a rule T"
   answer: 0
-  why: "The input is what acts on the car from outside: the road under the wheels, or forces from active actuators. The output is what we watch: heave z and pitch θ. The springs and shocks are part of the system's rule T."
-# --- from the retired transforms page (Nov 2026): the non-duplicate questions (t4, t6, t7, t9), on the board's ring and the windowing dive
+  why: "The input is what acts on the earbud from outside: the voltage the chip puts on the coil. The output is what we watch: the cone's displacement x(t), which makes the sound. The magnet, coil, cone and suspension are part of the system's rule T. (Ask another question, say what current the amplifier must supply, and coil current becomes the output.)"
 - id: tr-recon-1
   tags:
   - sampling
