@@ -123,14 +123,16 @@ const carmode: QuizFigureDef = { aspect: 1.5, maxWidth: 220, draw(g, w, h, p) {
   if (k) dot(g, rangeFrame(w, h, [0, w], [h, 0], 0, 0, 0, 0), [r.X(m.node), r.yb], col.e(), 3);
   title(g, k ? `pitch ${m.fn.toFixed(2)} Hz` : `bounce ${m.fn.toFixed(2)} Hz`, w, k ? col.b() : col.a());
 } };
-/** Box 2 (the core idea): the bump reaches the rear wheel 0.18 s after the front; the response is the front response plus a delayed copy. */
-const bump: QuizFigureDef = { aspect: 2.4, maxWidth: 440, draw(g, w, h) {
-  const A = carA(CAR), B = roadB(CAR), b = bumpInput(CAR), T = 2;
-  const fr_ = sim(A, B, (t) => { const u = b.u(t); return [u[0], 0, u[2], 0]; }, [0, 0, 0, 0], T, 4e-3), rr = sim(A, B, (t) => { const u = b.u(t); return [0, u[1], 0, u[3]]; }, [0, 0, 0, 0], T, 4e-3);
-  const zf = fr_.xs.map((x) => x[0] * 1000), zr = rr.xs.map((x) => x[0] * 1000), zs = zf.map((v, i) => v + zr[i]);
-  const f = fr(g, w, h, [0, T], [-6, 10], 't (s)', 'heave (mm)', 26);
-  curve(g, f, fr_.ts, zf, col.a(), 1.4, [4, 3]); curve(g, f, rr.ts, zr, col.b(), 1.4, [2, 3]); curve(g, f, fr_.ts, zs, col.text(), 2);
-  text(g, 'front', f.X(0.05), f.Y(-3.5), col.a(), 'left', 10); text(g, 'rear wheel, 0.18 s later', f.X(0.45), f.Y(-4.8), col.b(), 'left', 10); text(g, 'sum', f.X(0.3), f.Y(9), col.text(), 'left', 10);
+/** Box 2 (the core idea, earbud): a click, then a click e^(−σd) ≈ 0.40 the size half a ring later (d = π/ω_d ≈ 0.73 ms);
+ *  the rings add and, from d on, cancel exactly. */
+const twoclick: QuizFigureDef = { aspect: 2.4, maxWidth: 440, draw(g, w, h) {
+  const p = spk(), d = Math.PI / p.wd, s = Math.exp(-p.sigma * d), T = 3, ts = linspace(0, T, 601);
+  const y1 = ts.map((t) => hImp(t)), y2 = ts.map((t) => (t < d ? 0 : s * hImp(t - d))), ys = y1.map((v, i) => v + y2[i]);
+  const m = Math.max(...y1) * 1.15, f = fr(g, w, h, [0, T], [-m * 0.55, m], 't (ms)', 'motion', 26);
+  tline(g, f, [0.01, 0], [0.01, m * 0.9], col.e(), 2.5); tline(g, f, [d, 0], [d, m * 0.9 * s], col.e(), 2.5);
+  curve(g, f, ts, y1, col.a(), 1.4, [4, 3]); curve(g, f, ts, y2, col.b(), 1.4, [2, 3]); curve(g, f, ts, ys, col.text(), 2);
+  text(g, 'click 1', f.X(0.06), f.Y(m * 0.9), col.a(), 'left', 10); text(g, `click 2: ×${s.toFixed(2)}, ${d.toFixed(2)} ms later`, f.X(d + 0.06), f.Y(m * 0.55), col.b(), 'left', 10);
+  text(g, 'sum: still from here on', f.X(1.75), f.Y(m * 0.32), col.text(), 'left', 10);
 } };
 /** Box 12: heave after the 5 cm bump, new (worn = 0) or worn (worn = 1) shocks. */
 const carsettle: QuizFigureDef = { aspect: 1.5, maxWidth: 220, draw(g, w, h, p) {
@@ -160,5 +162,5 @@ const settle: QuizFigureDef = { aspect: 1.1, maxWidth: 150, draw(g, w, h, p) {
   title(g, sg < 0 ? 'Re p < 0: settles' : sg > 0 ? 'Re p > 0: grows' : 'Re p = 0: rings on', w, sg < 0 ? col.ok() : sg > 0 ? col.bad() : col.text());
 } };
 
-export const popFigures: Record<string, QuizFigureDef> = { ...popExpandFigures, 'pop-lintest': lintest, 'pop-linearize': linearize, 'pop-kick': kick, 'pop-gain': gain, 'pop-cone': cone, 'pop-fourier': fourier, 'pop-est': est, 'pop-pz': pz, 'pop-settle': settle, 'pop-carstate': carstate, 'pop-carmode': carmode, 'pop-bump': bump, 'pop-carsettle': carsettle, 'pop-carhidden': carhidden, 'pop-caropt': caropt };
+export const popFigures: Record<string, QuizFigureDef> = { ...popExpandFigures, 'pop-lintest': lintest, 'pop-linearize': linearize, 'pop-kick': kick, 'pop-gain': gain, 'pop-cone': cone, 'pop-fourier': fourier, 'pop-est': est, 'pop-pz': pz, 'pop-settle': settle, 'pop-carstate': carstate, 'pop-carmode': carmode, 'pop-twoclick': twoclick, 'pop-carsettle': carsettle, 'pop-carhidden': carhidden, 'pop-caropt': caropt };
 
