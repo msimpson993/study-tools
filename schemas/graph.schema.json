@@ -113,6 +113,12 @@
                   },
                   "additionalProperties": false
                 },
+                "examples": {
+                  "type": "array",
+                  "items": { "type": "string" },
+                  "uniqueItems": true,
+                  "description": "Ids of the running examples (subject.yaml runningExample.refs) this box uses. Opt-in: when any box has it, the map marks those boxes with the example's glyph and lights them from the Example node."
+                },
                 "addsToExample": {
                   "type": "string",
                   "minLength": 15,

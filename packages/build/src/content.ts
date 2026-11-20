@@ -103,7 +103,7 @@ export function loadApp(appDir: string): { content: AppContent; warnings: string
       maps.push({
         id: m.id, title: m.title, caption: m.caption, seriesNames: m.seriesNames,
         nodes: (m.nodes ?? []).map((n: any) => ({
-          id: n.id, label: n.label, detail: n.detail, kind: n.kind, series: n.series,
+          id: n.id, label: n.label, detail: n.detail, kind: n.kind, series: n.series, ...(n.examples ? { examples: n.examples } : {}),
           short: inline(n.short, `graph.yaml ${m.id}/${n.id}`),
           eq: n.eq,
           eqHtml: n.eqTex ? (where = `graph.yaml ${m.id}/${n.id} eqTex`, md.renderInline(`$${n.eqTex}$`)) : undefined,
@@ -282,6 +282,9 @@ export function loadApp(appDir: string): { content: AppContent; warnings: string
       if (r.panels && !r.figure) problems.push(`${where}: panels only apply to a figure`);
       if (r.figure) { const fd = figuresR.find((f: any) => f.id === r.figure) as any; if (!fd) problems.push(`${where}: figure "${r.figure}" is not in figures.yaml`); else if (r.preset && !(fd.presets ?? []).some((p: any) => p.id === r.preset)) problems.push(`${where}: figure "${r.figure}" has no preset "${r.preset}"`); }
     }); }
+  // boxes' `examples` name real Example nodes, and a host box always uses its own example
+  for (const m of maps) for (const n of m.nodes) for (const x of n.examples ?? []) if (!refs.some((r) => r.id === x)) problems.push(`graph.yaml ${m.id}/${n.id}: examples: "${x}" is not a runningExample.refs id`);
+  if (maps.some((m) => m.nodes.some((n) => n.examples))) for (const r of refs) for (const m of maps) { const host = m.nodes.find((n) => n.id === r.at); if (host && !(host.examples ?? []).includes(r.id)) problems.push(`graph.yaml ${m.id}/${r.at}: host of Example node "${r.id}" must list it in examples`); }
   for (const [id, sec] of Object.entries(subject.glossaryTopics ?? {})) {
     if (!maps.some((m) => m.nodes.some((n) => n.id === id))) problems.push(`subject.yaml glossaryTopics: "${id}" is not a box`);
     if (!glossary.some((t: any) => t.section === sec)) problems.push(`subject.yaml glossaryTopics.${id}: "${sec}" is not a glossary section`);

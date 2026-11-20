@@ -21,6 +21,9 @@ export interface MapNode {
   recognize?: string;
   trap?: string;
   predict?: string;
+  /** ids of the running examples (runningExample.refs) this box uses: opt-in; when any box has it the map marks those boxes
+   *  with the example's glyph, and hovering / opening the Example node lights them */
+  examples?: string[];
   /** what this box adds to the subject's running example (HTML) */
   addsToExample?: string;
   /** what it lets us account for (HTML) */
