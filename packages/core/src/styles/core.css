@@ -95,20 +95,24 @@ details.fold>div{padding:0 .8rem .6rem}
 /* tablets and desktops (≥ 700px): no entry open = the map alone, full width; an entry open = map left ~40% (sticky, shrunk to fit;
    wheel or pinch zoom, drag or one-finger pan), entry right ~60%. Phones (< 700px) get the floating entry card below. */
 .cm-mapcol{position:relative;min-width:0}
-.cm-zoom{display:none}
+.cm-zoom{display:flex;align-items:center;gap:.25rem;position:absolute;top:.45rem;right:.6rem;z-index:3;background:color-mix(in srgb,var(--panel) 88%,transparent);border:1px solid var(--border);border-radius:10px;padding:.15rem .25rem;font:600 .72rem system-ui,sans-serif;max-width:calc(100% - 1.2rem);flex-wrap:wrap;justify-content:flex-end}
+.cm-zoom .tbtn{padding:.15rem .5rem;min-width:1.9rem}
+.cm-zoom-pct{min-width:2.6rem;text-align:center;color:var(--muted)}
+.cm-zoom .cm-view{display:inline-flex;gap:.2rem;margin-left:.2rem}
+.cm-zoom .lg-vbtn.on{color:var(--text);border-color:var(--accent);box-shadow:inset 0 0 0 1px var(--accent)}
 @media (min-width:700px){
   .cm-wrap .cm-panel.idle{display:none}
   .cm-wrap.split{grid-template-columns:minmax(0,2fr) minmax(0,3fr)}
   .cm-wrap.split .cm-mapcol{position:sticky;top:52px;align-self:start}
   .cm-wrap.split .cm-scroll{overflow:auto;max-height:calc(100vh - 64px);padding-top:2.4rem;cursor:grab;overscroll-behavior:contain;touch-action:pan-x pan-y}
   .cm-wrap.split .cm-scroll.panning{cursor:grabbing;user-select:none}.cm-wrap.split .cm-scroll.panning *{cursor:grabbing!important}
-  .cm-wrap.split .cm-zoom{display:flex;align-items:center;gap:.25rem;position:absolute;top:.45rem;right:.6rem;z-index:3;background:color-mix(in srgb,var(--panel) 88%,transparent);border:1px solid var(--border);border-radius:10px;padding:.15rem .25rem;font:600 .72rem system-ui,sans-serif}
-  .cm-wrap.split .cm-zoom .tbtn{padding:.15rem .5rem;min-width:1.9rem}
-  .cm-zoom-pct{min-width:2.6rem;text-align:center;color:var(--muted)}
 }
-.cm-scroll{overflow-x:auto;-webkit-overflow-scrolling:touch;border:1px solid var(--border);border-radius:14px;background:var(--board);padding:.3rem}
+/* the map is one framed, zoomable viewport in every layout: wheel zooms over it (only over it), drag or one finger pans,
+   two fingers pinch; its height is set by the app to fill the screen under the header (the side map: below) */
+.cm-scroll{overflow:auto;-webkit-overflow-scrolling:touch;border:1px solid var(--border);border-radius:14px;background:var(--board);padding:.3rem;padding-top:2.4rem;cursor:grab;overscroll-behavior:contain;touch-action:pan-x pan-y}
+.cm-scroll.panning{cursor:grabbing;user-select:none}.cm-scroll.panning *{cursor:grabbing!important}
 .cm-scroll svg{display:block;margin:0 auto;max-width:none;touch-action:manipulation;font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
-.cm-scroll.actual{overflow:auto;max-height:min(78vh,920px);cursor:grab;touch-action:pan-x pan-y}
+.cm-scroll.actual{overflow:auto}
 .cm-scroll.actual svg{margin:0}.cm-scroll.actual.panning{cursor:grabbing;user-select:none}.cm-scroll.actual.panning *{cursor:grabbing!important}
 .cm-scroll g[role=button]{cursor:pointer;outline:none}
 .cm-scroll g[role=button]:focus-visible .focus-ring{stroke:var(--accent);stroke-width:3}
