@@ -635,3 +635,41 @@ export function sideNodeOverlaps(geom: Geometry, nodes: SideNode[], labels: Labe
   }
   return n;
 }
+
+// ---------- example usage (per-box `examples`, opt-in) ----------
+/** an example glyph is a GLYPH px square */
+export const GLYPH = 9;
+/** Where a box's example glyphs sit: in its right padding (the label wrap keeps 13 px clear; a fork's 22 px), stacked (in ref order, top
+ *  down) in the bottom-right corner; a terminal's round end puts them at mid-height; a fork's keeps them inside its slanted side. */
+export function exampleGlyphRects(b: { x: number; y: number; w: number; h: number; kind: string }, count: number): Rect[] {
+  const out: Rect[] = [], step = GLYPH + 2;
+  for (let i = 0; i < count; i++) {
+    if (b.kind === 'terminal') out.push({ x: b.x + b.w - 12, y: b.y + b.h / 2 - (count * step - 2) / 2 + i * step, w: GLYPH, h: GLYPH });
+    else if (b.kind === 'decision') out.push({ x: b.x + b.w - 14 - GLYPH + 0.5, y: b.y + b.h - 5 - GLYPH - (count - 1 - i) * step, w: GLYPH, h: GLYPH });
+    else out.push({ x: b.x + b.w - 12, y: b.y + b.h - 5 - GLYPH - (count - 1 - i) * step, w: GLYPH, h: GLYPH });
+  }
+  return out;
+}
+/** Reading order of a map: depth-first from the root along the main (not dashed) lines, a box's lines taken by rank, side paths last.
+ *  Boxes not reached that way (none in a valid map) follow in file order. */
+export function walkOrder(nodes: { id: string }[], edges: { from: string; to: string; dashed?: boolean; side?: boolean; rank?: number }[], rootId = 'root'): string[] {
+  const seen = new Set<string>(), out: string[] = [];
+  const kids = (id: string) => edges.map((e, i) => ({ e, i })).filter(({ e }) => e.from === id && !e.dashed)
+    .sort((a, b) => (a.e.side ? 1 : 0) - (b.e.side ? 1 : 0) || (a.e.rank ?? 0) - (b.e.rank ?? 0) || a.i - b.i).map(({ e }) => e.to);
+  const go = (id: string) => { if (seen.has(id)) return; seen.add(id); out.push(id); for (const k of kids(id)) go(k); };
+  if (nodes.some((n) => n.id === rootId)) go(rootId);
+  for (const n of nodes) if (!seen.has(n.id)) out.push(n.id);
+  return out;
+}
+const clipOut = (c: Pt, to: Pt, r: Rect): Pt => {
+  // the point where the ray c → to leaves rect r (c inside r)
+  const dx = to.x - c.x, dy = to.y - c.y; let t = 1;
+  if (dx > 0) t = Math.min(t, (r.x + r.w - c.x) / dx); else if (dx < 0) t = Math.min(t, (r.x - c.x) / dx);
+  if (dy > 0) t = Math.min(t, (r.y + r.h - c.y) / dy); else if (dy < 0) t = Math.min(t, (r.y - c.y) / dy);
+  return { x: c.x + dx * t, y: c.y + dy * t };
+};
+/** The faint "this example comes back here" links: a straight segment from the Example node's outline to each box's outline. */
+export function useLinkSegments(node: Rect, boxes: Rect[]): [Pt, Pt][] {
+  const c = { x: node.x + node.w / 2, y: node.y + node.h / 2 };
+  return boxes.map((b) => { const bc = { x: b.x + b.w / 2, y: b.y + b.h / 2 }; return [clipOut(c, bc, node), clipOut(bc, c, b)] as [Pt, Pt]; });
+}
