@@ -31,11 +31,15 @@ const shadeX = (g: CanvasRenderingContext2D, f: Frame, x0: number, x1: number, c
 
 /* ---------- ROC: same poles, two regions, two signals ---------- */
 export const rocFig = () => { const p = spk(); return { sigma: p.sigma, wd: p.wd, fd: p.fd }; };
+/** the left-sided signal with the same poles: the ring formula negated, for t < 0 (envelope e^(σ|t|) grows into the past) */
+export const rocLeft = (t: number) => { const p = spk(); return t < 0 ? -(p.a0 / p.wd) * Math.exp(-p.sigma * t) * Math.sin(p.wd * t) : 0; };
+/** where |rocLeft| is largest on the drawn window [−3, 1] ms, and the envelope growth at −3 and −6 ms */
+export const rocLeftPeak = () => { const ts = linspace(-3, 1, 4001); let tm = 0, m = 0; for (const t of ts) { const v = Math.abs(rocLeft(t)); if (v > m) { m = v; tm = t; } } const p = spk(); return { t: tm, env3: Math.exp(3 * p.sigma), env6: Math.exp(6 * p.sigma) }; };
 const roc: QuizFigureDef = { aspect: 2.0, phoneAspect: 0.75, maxWidth: 560, draw(g, w, h) {
   g.clearRect(0, 0, w, h); const p = spk(), P = panels(w, h, 2);
   [0, 1].forEach((i) => {
     const r = P[i], right = i === 0;
-    const top = header(g, r, right ? [['(a) ROC σ > −1.27 /ms: right-sided, causal', col.c()], ['contains the jω axis: stable', col.muted()]] : [['(b) ROC σ < −1.27 /ms: left-sided', col.b()], ['runs backward in time', col.muted()]]);
+    const top = header(g, r, right ? [['(a) ROC σ > −1.27 /ms: right-sided, causal', col.c()], ['contains the jω axis: stable', col.muted()]] : [['(b) ROC σ < −1.27 /ms: left-sided', col.b()], ['runs backward in time, growing into the past: not stable', col.muted()]]);
     const ph = (r.h - top) * 0.58, rp = { ...r, h: top + ph };
     const f = frameIn(w, h, rp, top, [-3, 1], [-6, 6], 36, 28);
     axes(g, f, [-3, 1], [-6, 6], 'σ (1/ms)', 'ω', 1, 3);
@@ -43,9 +47,9 @@ const roc: QuizFigureDef = { aspect: 2.0, phoneAspect: 0.75, maxWidth: 560, draw
     tline(g, f, [0, -6], [0, 6], col.strong(), 2.4); tline(g, f, [-p.sigma, -6], [-p.sigma, 6], col.muted(), 1, [4, 3]);
     for (const q of p.poles) cross(g, f, q as [number, number], col.bad(), 5);
     const ri = { x: r.x, y: r.y + top + ph, w: r.w, h: r.h - top - ph };
-    const ts = linspace(-6, 6, 481), y0 = ts.map((t) => (right ? (t >= 0 ? hImp(t) : 0) : t <= 0 ? -hImp(-t) : 0)), pk = Math.max(...y0.map(Math.abs)), ys = y0.map((y) => y / pk), m = 1.15;
-    const fi = rangeFrame(w, h, [-6, 6], [-m, m], ri.x + 34, w - (ri.x + ri.w) + 10, ri.y + 8, h - (ri.y + ri.h) + 30);
-    axes(g, fi, [-6, 6], [-m, m], 't (ms), peak = 1', '', 3, 1); curve(g, fi, ts, ys, right ? col.c() : col.b(), 1.8);
+    const tw: [number, number] = right ? [-6, 6] : [-3, 1], ts = linspace(tw[0], tw[1], 481), y0 = ts.map((t) => (right ? (t >= 0 ? hImp(t) : 0) : rocLeft(t))), pk = Math.max(...y0.map(Math.abs)), ys = y0.map((y) => y / pk), m = 1.15;
+    const fi = rangeFrame(w, h, tw, [-m, m], ri.x + 34, w - (ri.x + ri.w) + 10, ri.y + 8, h - (ri.y + ri.h) + 30);
+    axes(g, fi, tw, [-m, m], right ? 't (ms), peak = 1' : `t (ms), largest value = 1 (at ${rocLeftPeak().t.toFixed(2).replace('-', '−')} ms)`, '', right ? 3 : 1, 1); curve(g, fi, ts, ys, right ? col.c() : col.b(), 1.8);
   });
 } };
 
@@ -54,7 +58,7 @@ const sq = (t: number) => (Math.sin(TAU * t / 5) >= 0 ? 1 : -1);
 const s200 = (t: number) => Math.sin(TAU * t / 5), s600 = (t: number) => Math.sin(3 * TAU * t / 5);
 const mean = (fn: (t: number) => number, n = 20000) => { let s = 0; for (let i = 0; i < n; i++) s += fn(((i + 0.5) * 5) / n); return s / n; };
 export const orthoAverages = () => ({ a: mean((t) => sq(t) * s200(t)), b: mean((t) => sq(t) * s600(t)), c: mean((t) => s200(t) * s600(t)), b1: squareCoef(1), b3: squareCoef(3) });
-const ortho: QuizFigureDef = { aspect: 1.25, phoneAspect: 0.8, maxWidth: 460, draw(g, w, h) {
+const ortho: QuizFigureDef = { aspect: 1.25, phoneAspect: 0.8, maxWidth: 520, draw(g, w, h) {
   g.clearRect(0, 0, w, h); const P = panels(w, h, 3, 99), av = orthoAverages(), ts = linspace(0, 5, 401);
   const rows: [string, (t: number) => number, (t: number) => number, number, string][] = [
     ['(a) square × 200 Hz sine', sq, s200, av.a, `average ${av.a.toFixed(3)} → 2 × ${av.a.toFixed(3)} = ${(2 * av.a).toFixed(2)} V`],
@@ -143,9 +147,10 @@ const fbpoles: QuizFigureDef = { aspect: 2.1, phoneAspect: 0.8, maxWidth: 560, d
     const f = frameIn(w, h, r, top, [-9, 0], [0, 12], 38, 31);
     axes(g, f, [-9, 0], [0, 12], 'σ (1/s)', 'ω (rad/s)', 3, 5);
     tline(g, f, [0, 0], [0, 12], col.strong(), 2);
-    for (const z of [0.3, 0.5, 0.7]) { const rr = 13, a: [number, number] = [-z * rr, Math.sqrt(1 - z * z) * rr]; tline(g, f, [0, 0], a, col.grid(), 1, [2, 3]);
+    for (const z of [0.3, 0.5, 0.7]) { const rr = 13, a: [number, number] = [-z * rr, Math.sqrt(1 - z * z) * rr]; g.save(); g.globalAlpha = 0.5; tline(g, f, [0, 0], a, col.muted(), 1, [3, 3]); g.restore();
       const lab: [number, number] = [-z * 11.4, Math.sqrt(1 - z * z) * 11.4]; if (lab[1] <= 11.8 && lab[0] >= -8.8) text(g, `ζ ${z}`, f.X(lab[0]) + 3, f.Y(lab[1]), col.muted(), 'left', 9); }
-    F.pas.forEach((m, i) => { const a: [number, number] = [m.s[0], m.s[1]], b: [number, number] = [F.sky[i].s[0], F.sky[i].s[1]]; arrow(g, f, a, b, i ? col.b() : col.a(), 1.4); dot(g, f, a, i ? col.b() : col.a(), 5, true); dot(g, f, b, i ? col.b() : col.a(), 5); }); }
+    F.pas.forEach((m, i) => { const a: [number, number] = [m.s[0], m.s[1]], b: [number, number] = [F.sky[i].s[0], F.sky[i].s[1]]; arrow(g, f, a, b, i ? col.b() : col.a(), 1.4); dot(g, f, a, i ? col.b() : col.a(), 5, true); dot(g, f, b, i ? col.b() : col.a(), 5);
+      text(g, i ? 'pitch' : 'bounce', f.X(b[0]), f.Y(b[1]) + 13, i ? col.b() : col.a(), 'center', 9); }); }
   { const r = P[1], top = header(g, r, [[`heave over the 5 cm bump: peak ${F.peaks[0].toFixed(2)} → ${F.peaks[1].toFixed(2)} mm`, col.text()], [`within ±1 mm by ${F.settle[1].toFixed(2)} s (passive ${F.settle[0].toFixed(2)} s)`, col.c()]]);
     const f = frameIn(w, h, r, top, [0, 2], [-6, 10], 38, 31);
     axes(g, f, [0, 2], [-6, 10], 't (s)', 'heave (mm)', 0.5, 5);

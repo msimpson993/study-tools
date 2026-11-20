@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { spk, Hf, cabs, peakBand, ringDigital, squareCoef, squarePowerShare, dB, TAU } from '../src/figs/ex';
 import { CAR, CAR_SYM, worn, carA, carModes, minEnergy, rank, ctrbM, obsvM, forceB } from '../src/figs/car';
-import { rocFig, orthoAverages, foldCases, dtftPeak, windowBins, fbPoles } from '../src/figs/popexpand';
+import { rocFig, rocLeft, rocLeftPeak, orthoAverages, foldCases, dtftPeak, windowBins, fbPoles } from '../src/figs/popexpand';
 import { SPEAKER } from '../../../packages/core/src/sceneLsModels';
 
 /* Nov 19 expanded map text (Linear Systems Tutor): the numbers in the new box and line bodies and in the six new pop-up
@@ -60,5 +60,19 @@ describe('expanded map numbers agree with the models', () => {
   it('noise-cancelling residual |1 − g e^(jφ)| (FILT)', () => {
     const res = (g: number, d: number) => 20 * Math.log10(Math.hypot(1 - g * Math.cos((d * Math.PI) / 180), g * Math.sin((d * Math.PI) / 180)));
     expect(res(1, 6)).toBeCloseTo(-19.6, 1); expect(res(0.9, 0)).toBeCloseTo(-20.0, 1); expect(res(1, 30)).toBeCloseTo(-5.7, 1);
+  });
+});
+
+describe('ROC panel (b): the left-sided signal with the same poles (tutor fix, Nov 19)', () => {
+  it('is the ring negated for t < 0, zero after, and grows into the past (×45 by −3 ms, ×2,000 by −6 ms)', async () => {
+    const { spk } = await import('../src/figs/ex'); const p = spk();
+    expect(rocLeft(0.5)).toBe(0); expect(rocLeft(0)).toBe(0);
+    // same formula as the causal ring, negated, on the other side of t = 0 (so the same poles, −σ ± jω_d)
+    for (const t of [-0.3, -1.1, -2.2]) expect(rocLeft(t)).toBeCloseTo(-(p.a0 / p.wd) * Math.exp(-p.sigma * t) * Math.sin(p.wd * t), 12);
+    expect(p.sigma).toBeCloseTo(1.266, 3);
+    const pk = rocLeftPeak();
+    expect(Math.round(pk.env3)).toBe(45); expect(Math.round(pk.env6 / 100) * 100).toBe(2000);
+    // largest |x| on the drawn window [−3, 1] ms sits at −2.61 ms (the sine's last crest before −3 ms), shown in the axis title
+    expect(pk.t).toBeCloseTo(-2.61, 2);
   });
 });
