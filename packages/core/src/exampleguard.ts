@@ -16,14 +16,16 @@ export interface ExampleGuard {
   figureIds?: RegExp;
   /** words that also mean something else (a tone's pitch): they count only in a field that already names the example otherwise */
   weak?: string[];
+  /** more texts a box shows (e.g. its quiz items: the quick check and "quiz this box"), as [field, text] pairs */
+  boxExtra?: (n: GNode) => [string, string][];
   /** phrases where a word means something else (e.g. a tone's pitch, not the car's): blanked before matching */
   ignore?: RegExp[];
 }
 export interface Leak { map: string; kind: 'box' | 'line'; id: string; field: string; term: string; snippet: string; path: string[]; /** reached before the host only by taking a side path (a shortcut that skips the host) */ sideOnly: boolean }
 
-interface GNode { id: string; label?: string; detail?: string; short?: string; why?: string; recognize?: string; trap?: string; predict?: string; addsToExample?: string;
-  pop?: { rough?: string; eqKey?: string; figures?: { id: string; alt?: string; caption?: string }[]; figCaption?: string; example?: string; next?: string } }
-interface GEdge { from: string; to: string; label?: string; dashed?: boolean; question?: string; idea?: string; why?: string; whyFigures?: { id: string; alt?: string; caption?: string }[]; whyFigCaption?: string }
+export interface GNode { id: string; quizTag?: string; label?: string; detail?: string; short?: string; why?: string; recognize?: string; trap?: string; predict?: string; addsToExample?: string;
+  pop?: { ask?: string; rough?: string; eqKey?: string; figures?: { id: string; alt?: string; caption?: string }[]; figCaption?: string; example?: string; next?: string } }
+interface GEdge { from: string; to: string; label?: string; dashed?: boolean; reverse?: boolean; side?: boolean; question?: string; idea?: string; why?: string; whyFigures?: { id: string; alt?: string; caption?: string }[]; whyFigCaption?: string }
 interface GMap { id: string; nodes: GNode[]; edges: GEdge[] }
 
 const plain = (t: string) => t.replace(/<[^>]+>/g, ' ').replace(/\*\*|__|`/g, '').replace(/&nbsp;/g, ' ').replace(/&amp;/g, '&').replace(/\s+/g, ' ').trim();
@@ -60,20 +62,22 @@ function edgeFields(e: GEdge): [string, string][] {
 
 /** Every box and line that a reader can reach from the root before the host, with the first path that gets there. */
 export function beforeHost(map: GMap, at: string, rootId = 'root', sides = true): { boxes: Map<string, string[]>; lines: Map<string, string[]> } {
-  const out = map.edges.filter((e) => !e.dashed && (sides || !(e as { side?: boolean }).side)), boxes = new Map<string, string[]>(), lines = new Map<string, string[]>();
+  const out = map.edges.filter((e) => !e.dashed), boxes = new Map<string, string[]>(), lines = new Map<string, string[]>();
   let walked = 0;
   const walk = (id: string, path: string[]) => {
     if (++walked > 200_000) throw new Error(`exampleguard: too many paths in map ${map.id}`);
     if (id === at) return; // introduced here: the rest of this path may use it
     if (!boxes.has(id)) boxes.set(id, path);
     for (const e of out.filter((x) => x.from === id)) {
+      // a side line leaving a box is read there even when its shortcut is not taken
       const k = `${e.from}->${e.to}`; if (!lines.has(k)) lines.set(k, [...path, e.to]);
-      if (!path.includes(e.to)) walk(e.to, [...path, e.to]);
+      if ((sides || !e.side) && !path.includes(e.to)) walk(e.to, [...path, e.to]);
     }
   };
   if (map.nodes.some((n) => n.id === rootId)) walk(rootId, [rootId]);
-  // a dashed cross-link is not walked, but a reader at either end before the host can open it
-  for (const e of map.edges) if (e.dashed) { const p = boxes.get(e.from) ?? boxes.get(e.to); if (p) lines.set(`${e.from}->${e.to}`, p); }
+  // a dashed cross-link is not walked, but a reader at either end before the host can open it; a look-back (reversed) is
+  // listed only at the box that looks back (its `to` end)
+  for (const e of map.edges) if (e.dashed) { const p = e.reverse ? boxes.get(e.to) : boxes.get(e.from) ?? boxes.get(e.to); if (p) lines.set(`${e.from}->${e.to}`, p); }
   return { boxes, lines };
 }
 
@@ -94,7 +98,7 @@ export function exampleLeaks(map: GMap, g: ExampleGuard): Leak[] {
       }
     }
   };
-  for (const n of map.nodes) { const p = boxes.get(n.id); if (p) scan('box', n.id, boxFields(n), p, (n.pop?.figures ?? []).map((x) => x.id)); }
+  for (const n of map.nodes) { const p = boxes.get(n.id); if (p) scan('box', n.id, [...boxFields(n), ...(g.boxExtra?.(n) ?? [])], p, (n.pop?.figures ?? []).map((x) => x.id)); }
   for (const e of map.edges) { const p = lines.get(`${e.from}->${e.to}`); if (p) scan('line', `${e.from}->${e.to}`, edgeFields(e), p, (e.whyFigures ?? []).map((x) => x.id)); }
   return leaks;
 }
