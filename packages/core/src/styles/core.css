@@ -36,7 +36,8 @@ button{color:var(--text)}
 .content{padding:.8rem 1rem 3rem;min-width:0}
 .crumbs{font:.8rem system-ui,sans-serif;color:var(--muted);margin:.1rem 0 .6rem;display:flex;gap:.4rem;flex-wrap:wrap;align-items:center}
 .crumbs a{color:var(--accent);text-decoration:none;font-weight:600}
-@media (max-width:900px){
+/* below 1100px (phones and tablets) the sidebar is an overlay opened from ☰, so the map and entry get the full width */
+@media (max-width:1099px){
   .frame{grid-template-columns:minmax(0,1fr)}
   .sidebar{position:fixed;z-index:70;left:0;top:44px;width:min(82vw,280px);background:var(--bg);box-shadow:8px 0 30px rgba(0,0,0,.5)}
   .topbar .q{display:none}
@@ -91,14 +92,15 @@ details.fold>div{padding:0 .8rem .6rem}
 .fig-layout .st-seg{flex-wrap:wrap}
 .fig-layout .st-seg button{flex:1 1 auto}
 .cm-wrap{display:grid;grid-template-columns:minmax(0,1fr);gap:.8rem}
-/* desktop: no entry open = the map alone, full width; an entry open = map left ~40% (sticky, shrunk to fit, wheel zoom + drag pan), entry right ~60% */
+/* tablets and desktops (≥ 700px): no entry open = the map alone, full width; an entry open = map left ~40% (sticky, shrunk to fit;
+   wheel or pinch zoom, drag or one-finger pan), entry right ~60%. Phones (< 700px) get the floating entry card below. */
 .cm-mapcol{position:relative;min-width:0}
 .cm-zoom{display:none}
-@media (min-width:1150px){
+@media (min-width:700px){
   .cm-wrap .cm-panel.idle{display:none}
   .cm-wrap.split{grid-template-columns:minmax(0,2fr) minmax(0,3fr)}
   .cm-wrap.split .cm-mapcol{position:sticky;top:52px;align-self:start}
-  .cm-wrap.split .cm-scroll{overflow:auto;max-height:calc(100vh - 64px);cursor:grab;overscroll-behavior:contain;touch-action:pan-x pan-y}
+  .cm-wrap.split .cm-scroll{overflow:auto;max-height:calc(100vh - 64px);padding-top:2.4rem;cursor:grab;overscroll-behavior:contain;touch-action:pan-x pan-y}
   .cm-wrap.split .cm-scroll.panning{cursor:grabbing;user-select:none}.cm-wrap.split .cm-scroll.panning *{cursor:grabbing!important}
   .cm-wrap.split .cm-zoom{display:flex;align-items:center;gap:.25rem;position:absolute;top:.45rem;right:.6rem;z-index:3;background:color-mix(in srgb,var(--panel) 88%,transparent);border:1px solid var(--border);border-radius:10px;padding:.15rem .25rem;font:600 .72rem system-ui,sans-serif}
   .cm-wrap.split .cm-zoom .tbtn{padding:.15rem .5rem;min-width:1.9rem}
@@ -119,12 +121,11 @@ details.fold>div{padding:0 .8rem .6rem}
 .cm-panel .path{font-size:.76rem;color:var(--muted);margin:.4rem 0}
 .cm-panel .acts{display:flex;flex-wrap:wrap;gap:.35rem;margin:.55rem 0 .2rem}
 .cm-panel .st-hint{color:var(--muted)}
-@media (max-width:1149px){
-  .cm-panel{position:fixed;left:.4rem;right:.4rem;bottom:.4rem;top:auto;z-index:65;max-height:52vh;box-shadow:0 -6px 30px rgba(0,0,0,.55);border-color:var(--border-strong)}
+@media (max-width:699px){
+  .cm-panel{position:fixed;z-index:65;border-color:var(--border-strong)}
   .cm-panel.idle{display:none}
-  .cm-pad{height:44vh}
 }
-@media (min-width:1150px){.cm-pad{display:none}}
+.cm-pad{display:none}
 /* phones (< 700px): an open entry is a floating card over most of the screen (10px margins, rounded, the map faint at its
    edges) with a fixed "← Back to map" bar at its foot; the card's bottom padding keeps the bar off the last content */
 .cm-backbar{display:none}
@@ -133,7 +134,6 @@ details.fold>div{padding:0 .8rem .6rem}
   .cm-panel .cm-backbar{display:block;position:fixed;left:11px;right:11px;bottom:calc(11px + env(safe-area-inset-bottom));z-index:66;padding:.75rem .9rem calc(.6rem + env(safe-area-inset-bottom));border-radius:0 0 13px 13px;background:linear-gradient(to bottom,transparent,var(--panel) 38%)}
   .cm-panel .cm-backbar button{display:block;width:100%;min-height:44px;font-size:.95rem}
   .cm-panel :is(button,a,[tabindex]){scroll-margin-bottom:calc(5rem + env(safe-area-inset-bottom))}
-  html body:has(.cm-panel:not(.idle)) .drawer{bottom:0;border-bottom:0;border-radius:0}
 }
 /* a figure scrolled into view clears the card's top edge */
 .pop-figs{scroll-margin-top:24px}
@@ -230,8 +230,6 @@ details.st-more .st-badge{display:inline-block;margin-left:.35rem;padding:0 .4re
 .drawer{position:fixed;right:0;top:44px;bottom:0;width:min(380px,92vw);z-index:80;background:var(--bg);border-left:1px solid var(--border-strong);box-shadow:-10px 0 40px rgba(0,0,0,.5);padding:.7rem .9rem;overflow:auto;font:.86rem/1.45 system-ui,sans-serif}
 .drawer[hidden]{display:none}
 .drawer dt{font:700 .9rem system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;margin-top:.55rem}
-/* below 1150px the box panel is a bottom sheet: the drawer stops above it instead of covering it */
-@media (max-width:1149px){body:has(.cm-panel:not(.idle)) .drawer{bottom:calc(52vh + .8rem);border-bottom:1px solid var(--border-strong);border-radius:0 0 0 12px}}
 .drawer dd{margin:.1rem 0 0;color:var(--muted)}
 /* the glossary page uses the site (UI) font like the drawer, not the prose serif */
 .gloss-page dt,.gloss-page dd{font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
@@ -399,3 +397,12 @@ details.derivation{margin:.7rem 0}details.derivation>summary{font-weight:650}
 .katex-display.x-more-left.x-more-right{-webkit-mask-image:linear-gradient(to right,rgba(0,0,0,.18),#000 44px,#000 calc(100% - 44px),rgba(0,0,0,.18));mask-image:linear-gradient(to right,rgba(0,0,0,.18),#000 44px,#000 calc(100% - 44px),rgba(0,0,0,.18))}
 .katex-display.x-more-left:not(.x-more-right){-webkit-mask-image:linear-gradient(to right,rgba(0,0,0,.18),#000 44px);mask-image:linear-gradient(to right,rgba(0,0,0,.18),#000 44px)}
 .x-cue{font:600 .72rem system-ui,sans-serif;color:var(--accent);text-align:right;margin:-.15rem 0 .5rem;letter-spacing:.02em}
+
+/* tablets and small laptops (700–1279px): a compact header so the map and the open entry get most of the height */
+@media (min-width:700px) and (max-width:1279px){
+  .cm-q{font-size:1rem;line-height:1.3}
+  .cm-hero{gap:.4rem}
+  .cm-hero.has-scene{grid-template-columns:minmax(0,1fr) 250px}
+  .cm-top:not([data-testid=review-bar]){margin:.2rem 0 .35rem}
+  .cm-caps summary{padding:.3rem .55rem}
+}

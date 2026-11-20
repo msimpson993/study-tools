@@ -48,15 +48,15 @@ export function mountConceptMap(host: HTMLElement, content: AppContent, progress
   const root = h('div', { class: 'cm', dataset: { testid: 'concept-map' } });
   const scroll = h('div', { class: 'cm-scroll' });
   // desktop reading layout: with an entry open the map takes the left ~40% (shrunk to fit, wheel-zoomable) and the entry the right ~60%
-  const WIDE = '(min-width: 1150px)';
+  const WIDE = '(min-width: 700px)'; // tablets and desktops share the split; phones get the entry card
   const wide = typeof window.matchMedia === 'function' ? window.matchMedia(WIDE) : null;
-  let zoom = 1;
+  let zoom = 1, zoomFit = true; // zoomFit: the side map follows its column's fit (a narrow tablet column can be a little narrower than the map)
   const zoomPct = h('span', { class: 'cm-zoom-pct', dataset: { testid: 'map-zoom-pct' } }, '100%');
   const zoomBar = h('div', { class: 'cm-zoom', role: 'group', 'aria-label': 'Map zoom', dataset: { testid: 'map-zoom' } },
-    h('button', { type: 'button', class: 'tbtn', title: 'Zoom out (or scroll the wheel over the map)', 'aria-label': 'Zoom out', dataset: { testid: 'map-zoom-out' }, onclick: () => zoomAtCentre(1 / 1.25) }, '−'),
+    h('button', { type: 'button', class: 'tbtn', title: 'Zoom out (or scroll the wheel / pinch on the map)', 'aria-label': 'Zoom out', dataset: { testid: 'map-zoom-out' }, onclick: () => zoomAtCentre(1 / 1.25) }, '−'),
     zoomPct,
-    h('button', { type: 'button', class: 'tbtn', title: 'Zoom in (or scroll the wheel over the map)', 'aria-label': 'Zoom in', dataset: { testid: 'map-zoom-in' }, onclick: () => zoomAtCentre(1.25) }, '+'),
-    h('button', { type: 'button', class: 'tbtn', title: 'Back to the whole map in its column', dataset: { testid: 'map-zoom-reset' }, onclick: () => { setZoom(1); centerSel(); } }, 'Reset zoom'));
+    h('button', { type: 'button', class: 'tbtn', title: 'Zoom in (or scroll the wheel / pinch on the map)', 'aria-label': 'Zoom in', dataset: { testid: 'map-zoom-in' }, onclick: () => zoomAtCentre(1.25) }, '+'),
+    h('button', { type: 'button', class: 'tbtn', title: 'Back to the whole map in its column', dataset: { testid: 'map-zoom-reset' }, onclick: () => { zoomFit = true; setZoom(minZoom()); centerSel(); } }, 'Reset zoom'));
   const mapCol = h('div', { class: 'cm-mapcol' }, scroll, zoomBar);
   const panel = h('aside', { class: 'cm-panel idle', 'aria-live': 'polite', dataset: { testid: 'map-panel' } });
   const wrap = h('div', { class: 'cm-wrap', dataset: { testid: 'map-wrap' } }, mapCol, panel);
@@ -97,13 +97,19 @@ export function mountConceptMap(host: HTMLElement, content: AppContent, progress
   ro.observe(scroll);
   width = Math.floor(scroll.clientWidth - 8) || 960;
 
-  const setPick = (p: MapState['pick']) => { st.pick = p; if (p) st.series = null; renderLegend(); renderSvg(); renderPanel(); nav.onState?.(); if (p && isSplit()) centerSel(); };
+  const setPick = (p: MapState['pick']) => { st.pick = p; if (p) st.series = null; renderLegend(); renderSvg(); renderPanel(); nav.onState?.(); if (p && isSplit()) { revealSplit(); centerSel(); } };
   const isSplit = () => wrap.classList.contains('split');
+  /** an entry opened while the header still fills the top: scroll the page so the map and entry start under the top bar
+   *  (they are sticky there), giving them the screen's height; already in place = no scroll */
+  function revealSplit() {
+    const top = wrap.getBoundingClientRect().top;
+    if (top > innerHeight * 0.2) window.scrollTo({ top: scrollY + top - 52, behavior: 'instant' as ScrollBehavior });
+  }
   /** split on (desktop + an entry open) or off; the map is re-laid out for its new column at once, and the zoom resets when it leaves the side */
   function applySplit() {
     const on = !!st.pick && !!wide?.matches;
     if (on === isSplit()) return;
-    wrap.classList.toggle('split', on); if (!on) zoom = 1;
+    wrap.classList.toggle('split', on); if (!on) { zoom = 1; zoomFit = true; }
     width = Math.floor(scroll.clientWidth - 8) || width;
   }
   const minZoom = () => (geom ? Math.min(1, (scroll.clientWidth - 8) / geom.width) : 1);
@@ -113,7 +119,7 @@ export function mountConceptMap(host: HTMLElement, content: AppContent, progress
     z = Math.max(minZoom(), Math.min(4, z));
     const r0 = svg.getBoundingClientRect(), b = scroll.getBoundingClientRect();
     const x = cx ?? b.left + b.width / 2, y = cy ?? b.top + b.height / 2, px = (x - r0.left) / zoom, py = (y - r0.top) / zoom;
-    zoom = z; svg.setAttribute('width', String(geom.width * z)); svg.setAttribute('height', String(geom.height * z));
+    zoom = z; zoomFit = z <= minZoom() + 1e-3; svg.setAttribute('width', String(geom.width * z)); svg.setAttribute('height', String(geom.height * z));
     const r1 = svg.getBoundingClientRect();
     scroll.scrollLeft += r1.left + px * z - x; scroll.scrollTop += r1.top + py * z - y;
     zoomPct.textContent = `${Math.round(z * 100)}%`; wrap.dataset.zoom = z.toFixed(3);
@@ -132,6 +138,18 @@ export function mountConceptMap(host: HTMLElement, content: AppContent, progress
     const dy = ev.deltaMode === 1 ? ev.deltaY * 16 : ev.deltaMode === 2 ? ev.deltaY * 400 : ev.deltaY;
     setZoom(zoom * Math.exp(-dy * 0.0015), ev.clientX, ev.clientY);
   }, { passive: false });
+  // touch (tablets): two fingers pinch-zoom the side map about their midpoint; one finger pans it natively (the scroll area
+  // contains its own overscroll, so the page only scrolls from outside the map)
+  let pinch: { d0: number; z0: number } | null = null;
+  const tdist = (t: TouchList) => Math.hypot(t[0].clientX - t[1].clientX, t[0].clientY - t[1].clientY);
+  scroll.addEventListener('touchstart', (ev) => { if (isSplit() && ev.touches.length === 2) pinch = { d0: tdist(ev.touches) || 1, z0: zoom }; }, { passive: true });
+  scroll.addEventListener('touchmove', (ev) => {
+    if (!pinch || ev.touches.length !== 2 || !isSplit()) return;
+    ev.preventDefault();
+    const t = ev.touches; setZoom(pinch.z0 * (tdist(t) / pinch.d0), (t[0].clientX + t[1].clientX) / 2, (t[0].clientY + t[1].clientY) / 2);
+  }, { passive: false });
+  const endPinch = (ev: TouchEvent) => { if (ev.touches.length < 2) pinch = null; };
+  scroll.addEventListener('touchend', endPinch); scroll.addEventListener('touchcancel', endPinch);
   const onWide = () => { applySplit(); renderSvg(); };
   wide?.addEventListener?.('change', onWide);
   const toggleNode = (id: string) => {
@@ -297,6 +315,7 @@ export function mountConceptMap(host: HTMLElement, content: AppContent, progress
     labels = placeLabels(geom, m.edges, hl.priority);
     const recallHide = (id: string) => st.mode === 'review' && st.recall && !st.revealed.has(`${st.mapId}/${id}`);
 
+    if (isSplit() && zoomFit) { zoom = minZoom(); wrap.dataset.zoom = zoom.toFixed(3); zoomPct.textContent = `${Math.round(zoom * 100)}%`; }
     const svg = s('svg', { width: geom.width * zoom, height: geom.height * zoom, viewBox: `0 0 ${geom.width} ${geom.height}`, role: 'group', 'aria-label': 'Question-chain map. Tap a box, a line, or a line’s dot for more.', 'data-testid': 'map-svg' });
     svg.append(s('rect', { x: 0, y: 0, width: geom.width, height: geom.height, fill: 'transparent', onclick: () => { if (st.pick) setPick(null); } }));
     const edgeData: Record<string, MapEdge> = Object.fromEntries(m.edges.map((e) => [edgeKey(e.from, e.to), e]));

@@ -51,7 +51,7 @@ export function mountApp(content: AppContent, hooks: AppHooks = {}): void {
   const boardHost = h('div', { dataset: { testid: 'board-host' }, hidden: true });
   const frame = h('div', { class: 'frame' }, sidebar, h('div', null, main, boardHost));
   const glossary = h('aside', { class: 'drawer', hidden: true, 'aria-label': 'Variables and glossary', dataset: { testid: 'glossary' } });
-  let sbOpen = storeGet<boolean>('study-tools:sidebar', window.innerWidth > 900);
+  let sbOpen = storeGet<boolean>('study-tools:sidebar', window.innerWidth > 1099);
   // The board route is wide, so it starts with the sidebar tucked away (the ☰ button still opens it).
   let onBoard = false, boardSb = false;
   const applySb = () => { const open = onBoard ? boardSb : sbOpen; sidebar.hidden = !open; frame.classList.toggle('nosb', !open); if (!onBoard) storeSet('study-tools:sidebar', sbOpen); };
@@ -82,7 +82,7 @@ export function mountApp(content: AppContent, hooks: AppHooks = {}): void {
   themeBtn.textContent = currentTheme() === 'dark' ? '☾' : '☀';
   root.append(topbar, frame, glossary);
   applySb();
-  if (window.innerWidth <= 900) { sbOpen = false; applySb(); }
+  if (window.innerWidth <= 1099) { sbOpen = false; applySb(); }
 
   // glossary drawer
   let glossaryToTopic = () => {};
