@@ -91,7 +91,19 @@ details.fold>div{padding:0 .8rem .6rem}
 .fig-layout .st-seg{flex-wrap:wrap}
 .fig-layout .st-seg button{flex:1 1 auto}
 .cm-wrap{display:grid;grid-template-columns:minmax(0,1fr);gap:.8rem}
-@media (min-width:1150px){.cm-wrap{grid-template-columns:minmax(0,1fr) 360px}}
+/* desktop: no entry open = the map alone, full width; an entry open = map left ~40% (sticky, shrunk to fit, wheel zoom + drag pan), entry right ~60% */
+.cm-mapcol{position:relative;min-width:0}
+.cm-zoom{display:none}
+@media (min-width:1150px){
+  .cm-wrap .cm-panel.idle{display:none}
+  .cm-wrap.split{grid-template-columns:minmax(0,2fr) minmax(0,3fr)}
+  .cm-wrap.split .cm-mapcol{position:sticky;top:52px;align-self:start}
+  .cm-wrap.split .cm-scroll{overflow:auto;max-height:calc(100vh - 64px);cursor:grab;overscroll-behavior:contain;touch-action:pan-x pan-y}
+  .cm-wrap.split .cm-scroll.panning{cursor:grabbing;user-select:none}.cm-wrap.split .cm-scroll.panning *{cursor:grabbing!important}
+  .cm-wrap.split .cm-zoom{display:flex;align-items:center;gap:.25rem;position:absolute;top:.45rem;right:.6rem;z-index:3;background:color-mix(in srgb,var(--panel) 88%,transparent);border:1px solid var(--border);border-radius:10px;padding:.15rem .25rem;font:600 .72rem system-ui,sans-serif}
+  .cm-wrap.split .cm-zoom .tbtn{padding:.15rem .5rem;min-width:1.9rem}
+  .cm-zoom-pct{min-width:2.6rem;text-align:center;color:var(--muted)}
+}
 .cm-scroll{overflow-x:auto;-webkit-overflow-scrolling:touch;border:1px solid var(--border);border-radius:14px;background:var(--board);padding:.3rem}
 .cm-scroll svg{display:block;margin:0 auto;max-width:none;touch-action:manipulation;font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
 .cm-scroll.actual{overflow:auto;max-height:min(78vh,920px);cursor:grab;touch-action:pan-x pan-y}

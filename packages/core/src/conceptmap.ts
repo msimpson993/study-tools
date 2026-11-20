@@ -44,7 +44,19 @@ export function mountConceptMap(host: HTMLElement, content: AppContent, progress
   let view: MapView = readMapView();
   const root = h('div', { class: 'cm', dataset: { testid: 'concept-map' } });
   const scroll = h('div', { class: 'cm-scroll' });
+  // desktop reading layout: with an entry open the map takes the left ~40% (shrunk to fit, wheel-zoomable) and the entry the right ~60%
+  const WIDE = '(min-width: 1150px)';
+  const wide = typeof window.matchMedia === 'function' ? window.matchMedia(WIDE) : null;
+  let zoom = 1;
+  const zoomPct = h('span', { class: 'cm-zoom-pct', dataset: { testid: 'map-zoom-pct' } }, '100%');
+  const zoomBar = h('div', { class: 'cm-zoom', role: 'group', 'aria-label': 'Map zoom', dataset: { testid: 'map-zoom' } },
+    h('button', { type: 'button', class: 'tbtn', title: 'Zoom out (or scroll the wheel over the map)', 'aria-label': 'Zoom out', dataset: { testid: 'map-zoom-out' }, onclick: () => zoomAtCentre(1 / 1.25) }, '−'),
+    zoomPct,
+    h('button', { type: 'button', class: 'tbtn', title: 'Zoom in (or scroll the wheel over the map)', 'aria-label': 'Zoom in', dataset: { testid: 'map-zoom-in' }, onclick: () => zoomAtCentre(1.25) }, '+'),
+    h('button', { type: 'button', class: 'tbtn', title: 'Back to the whole map in its column', dataset: { testid: 'map-zoom-reset' }, onclick: () => { setZoom(1); centerSel(); } }, 'Reset zoom'));
+  const mapCol = h('div', { class: 'cm-mapcol' }, scroll, zoomBar);
   const panel = h('aside', { class: 'cm-panel idle', 'aria-live': 'polite', dataset: { testid: 'map-panel' } });
+  const wrap = h('div', { class: 'cm-wrap', dataset: { testid: 'map-wrap' } }, mapCol, panel);
   const top = h('div', { class: 'cm-top' });
   const reviewBar = h('div', { class: 'cm-top', dataset: { testid: 'review-bar' } });
   const caption = h('div', { class: 'cm-caps' });
@@ -70,7 +82,7 @@ export function mountConceptMap(host: HTMLElement, content: AppContent, progress
   root.append(
     hero,
     top, reviewBar, caption, legend,
-    h('div', { class: 'cm-wrap' }, scroll, panel),
+    wrap,
     h('div', { class: 'cm-pad' }),
   );
   host.append(root);
@@ -82,7 +94,43 @@ export function mountConceptMap(host: HTMLElement, content: AppContent, progress
   ro.observe(scroll);
   width = Math.floor(scroll.clientWidth - 8) || 960;
 
-  const setPick = (p: MapState['pick']) => { st.pick = p; if (p) st.series = null; renderLegend(); renderSvg(); renderPanel(); nav.onState?.(); };
+  const setPick = (p: MapState['pick']) => { st.pick = p; if (p) st.series = null; renderLegend(); renderSvg(); renderPanel(); nav.onState?.(); if (p && isSplit()) centerSel(); };
+  const isSplit = () => wrap.classList.contains('split');
+  /** split on (desktop + an entry open) or off; the map is re-laid out for its new column at once, and the zoom resets when it leaves the side */
+  function applySplit() {
+    const on = !!st.pick && !!wide?.matches;
+    if (on === isSplit()) return;
+    wrap.classList.toggle('split', on); if (!on) zoom = 1;
+    width = Math.floor(scroll.clientWidth - 8) || width;
+  }
+  const minZoom = () => (geom ? Math.min(1, (scroll.clientWidth - 8) / geom.width) : 1);
+  /** zoom so the map point under (cx, cy) stays under it */
+  function setZoom(z: number, cx?: number, cy?: number) {
+    const svg = scroll.querySelector('svg'); if (!svg || !geom) return;
+    z = Math.max(minZoom(), Math.min(4, z));
+    const r0 = svg.getBoundingClientRect(), b = scroll.getBoundingClientRect();
+    const x = cx ?? b.left + b.width / 2, y = cy ?? b.top + b.height / 2, px = (x - r0.left) / zoom, py = (y - r0.top) / zoom;
+    zoom = z; svg.setAttribute('width', String(geom.width * z)); svg.setAttribute('height', String(geom.height * z));
+    const r1 = svg.getBoundingClientRect();
+    scroll.scrollLeft += r1.left + px * z - x; scroll.scrollTop += r1.top + py * z - y;
+    zoomPct.textContent = `${Math.round(z * 100)}%`; wrap.dataset.zoom = z.toFixed(3);
+  }
+  const zoomAtCentre = (f: number) => setZoom(zoom * f);
+  /** keep the open box or line in view in the side map */
+  function centerSel() {
+    const sel = scroll.querySelector('.qm-node.n-sel, .qm-edge.e-sel') as SVGGraphicsElement | null; if (!sel) return;
+    const a = sel.getBoundingClientRect(), b = scroll.getBoundingClientRect();
+    scroll.scrollLeft += a.left - b.left - (b.width - a.width) / 2; scroll.scrollTop += a.top - b.top - (b.height - a.height) / 2;
+  }
+  // the wheel zooms the side map about the cursor (only over the map, only in the split layout; elsewhere it scrolls as usual)
+  scroll.addEventListener('wheel', (ev) => {
+    if (!isSplit()) return;
+    ev.preventDefault();
+    const dy = ev.deltaMode === 1 ? ev.deltaY * 16 : ev.deltaMode === 2 ? ev.deltaY * 400 : ev.deltaY;
+    setZoom(zoom * Math.exp(-dy * 0.0015), ev.clientX, ev.clientY);
+  }, { passive: false });
+  const onWide = () => { applySplit(); renderSvg(); };
+  wide?.addEventListener?.('change', onWide);
   const toggleNode = (id: string) => {
     if (st.mode === 'review' && st.recall && !st.revealed.has(`${st.mapId}/${id}`)) {
       st.revealed.add(`${st.mapId}/${id}`); renderSvg(); return;
@@ -214,7 +262,7 @@ export function mountConceptMap(host: HTMLElement, content: AppContent, progress
   // drag-to-pan with a mouse or pen in Actual size (touch pans natively); a drag never counts as a tap
   let drag: { x: number; y: number; sl: number; st: number; id: number; moved: boolean } | null = null;
   scroll.addEventListener('pointerdown', (ev) => {
-    if (view !== 'actual' || ev.pointerType === 'touch' || ev.button !== 0) return;
+    if ((view !== 'actual' && !isSplit()) || ev.pointerType === 'touch' || ev.button !== 0) return;
     drag = { x: ev.clientX, y: ev.clientY, sl: scroll.scrollLeft, st: scroll.scrollTop, id: ev.pointerId, moved: false };
   });
   scroll.addEventListener('pointermove', (ev) => {
@@ -234,6 +282,7 @@ export function mountConceptMap(host: HTMLElement, content: AppContent, progress
   let geom: Geometry | null = null;
   let labels: Label[] = [];
   function renderSvg() {
+    applySplit();
     const m = map();
     const byId: Record<string, MapNode> = Object.fromEntries(m.nodes.map((n) => [n.id, n]));
     geom = computeGeometry(m.nodes, m.edges, layoutWidth(view, width));
@@ -245,7 +294,7 @@ export function mountConceptMap(host: HTMLElement, content: AppContent, progress
     labels = placeLabels(geom, m.edges, hl.priority);
     const recallHide = (id: string) => st.mode === 'review' && st.recall && !st.revealed.has(`${st.mapId}/${id}`);
 
-    const svg = s('svg', { width: geom.width, height: geom.height, viewBox: `0 0 ${geom.width} ${geom.height}`, role: 'group', 'aria-label': 'Question-chain map. Tap a box, a line, or a line’s dot for more.', 'data-testid': 'map-svg' });
+    const svg = s('svg', { width: geom.width * zoom, height: geom.height * zoom, viewBox: `0 0 ${geom.width} ${geom.height}`, role: 'group', 'aria-label': 'Question-chain map. Tap a box, a line, or a line’s dot for more.', 'data-testid': 'map-svg' });
     svg.append(s('rect', { x: 0, y: 0, width: geom.width, height: geom.height, fill: 'transparent', onclick: () => { if (st.pick) setPick(null); } }));
     const edgeData: Record<string, MapEdge> = Object.fromEntries(m.edges.map((e) => [edgeKey(e.from, e.to), e]));
     for (const g of geom.edges) {
@@ -303,6 +352,7 @@ export function mountConceptMap(host: HTMLElement, content: AppContent, progress
     const sl = scroll.scrollLeft, stp = scroll.scrollTop; // a re-render (a tap, a theme change) must not throw the reader back to the corner
     scroll.classList.toggle('actual', view === 'actual');
     scroll.replaceChildren(svg);
+    zoomPct.textContent = `${Math.round(zoom * 100)}%`; wrap.dataset.zoom = zoom.toFixed(3);
     scroll.scrollLeft = sl; scroll.scrollTop = stp;
   }
 
@@ -468,7 +518,7 @@ export function mountConceptMap(host: HTMLElement, content: AppContent, progress
   const off = progress.onChange(() => { renderReview(); renderSvg(); renderPanel(); });
   const onKey = (ev: KeyboardEvent) => { if (ev.key === 'Escape' && (st.pick || st.series !== null) && !document.querySelector('.fig-overlay:not([hidden])')) { st.series = null; setPick(null); } };
   document.addEventListener('keydown', onKey);
-  return () => { popStops.forEach((f) => f()); heroHandle?.destroy(); ro.disconnect(); off(); document.removeEventListener('keydown', onKey); root.remove(); };
+  return () => { popStops.forEach((f) => f()); heroHandle?.destroy(); ro.disconnect(); off(); document.removeEventListener('keydown', onKey); wide?.removeEventListener?.('change', onWide); root.remove(); };
 }
 
 /** Expose geometry+labels of the *current* render to tests. */
