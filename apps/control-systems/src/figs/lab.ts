@@ -7,30 +7,31 @@ import { figureOf, drawSPlane, curve, tline, dot, text, col, type FigurePanel } 
 import { simulatePid, pidMetrics, pidClosedLoopPoles, PID_PLANTS, type PlantId, type Cx, type AntiWindup } from '@study/core/dsp';
 import { DISH } from '../model/params';
 import { dishSim, dishMetrics, dishZN, roots, deg } from '../model/plants';
-import { type V, num, str, on, f, k3, legend, plotFrame, range, para } from './util';
+import { type V, num, str, on, f, k3, legend, plotFrame, range, para, readoutRows } from './util';
 
 export type LabPlant = 'dish' | 'lag' | PlantId;
 /** The legacy presets per lag plant ([Kp, Ki, Kd], PI used when switching plant). */
 export const LEGACY_PI: Record<PlantId, [number, number, number]> = { p1: [2, 4, 0], p2: [2, 2, 0], p3: [1, 0.4, 0] };
 const LEG = { dist: -0.5, umax: 1.2, noise: 0.01, seed: 99 };
-interface Run { plant: LabPlant; t: number[]; y: number[]; u: number[]; r: number; T: number; windAt: number | null; umax: number | null; OS: number; Ts: number; ess: number; peakU: number; poles: Cx[]; windPeak: number; unstable: boolean }
+interface Run { plant: LabPlant; t: number[]; y: number[]; u: number[]; r: number; T: number; windAt: number | null; umax: number | null; OS: number; Ts: number; ess: number; peakU: number; poles: Cx[]; windPeak: number; unstable: boolean; windOn: boolean }
 export function labRun(v: V): Run {
   const plant = str(v, 'plant', 'dish') as LabPlant, Kp = num(v, 'Kp', 1000), Ki = num(v, 'Ki', 0), Kd = num(v, 'Kd', 0), dm = v.dm === undefined ? true : on(v, 'dm'), aw = str(v, 'aw', 'none') as AntiWindup, wind = on(v, 'wind'), noise = on(v, 'noise');
   if (plant === 'dish' || plant === 'lag') {
     const r = num(v, 'step', DISH.step), umax = num(v, 'sat', DISH.Tmax), T = num(v, 'T', 16), Nf = num(v, 'Nf', DISH.Nf), lag = plant === 'lag' ? DISH.lag : 0;
-    const s = dishSim({ Kp, Ki, Kd, Nf, dm, aw, umax, lag, r: () => r, d: wind ? (t) => (t >= DISH.windAt ? DISH.wind : 0) : undefined, noise: noise ? DISH.noiseDeg / deg(1) : 0, T, dt: lag ? 1e-4 : 2e-4 });
-    const pre = s.t.filter((t) => !wind || t < DISH.windAt).length, m = dishMetrics(s.t.slice(0, pre), s.y.slice(0, pre), r);
+    const gust = wind && T > DISH.windAt; // a window that ends before the gust has no gust in it (pass 2, R3)
+    const s = dishSim({ Kp, Ki, Kd, Nf, dm, aw, umax, lag, r: () => r, d: gust ? (t) => (t >= DISH.windAt ? DISH.wind : 0) : undefined, noise: noise ? DISH.noiseDeg / deg(1) : 0, T, dt: lag ? 1e-4 : 2e-4 });
+    const pre = s.t.filter((t) => !gust || t < DISH.windAt).length, m = dishMetrics(s.t.slice(0, pre), s.y.slice(0, pre), r);
     // steady error: with wind on, read just before the gust (t = windAt − 0.1 s); with wind off, at the window end (tutor build 4c follow-up)
-    let essIdx = s.y.length - 1; if (wind) { const tq = DISH.windAt - 0.1; for (let i = 0; i < s.t.length && s.t[i] <= tq + 1e-9; i++) essIdx = i; }
-    let wp = 0; if (wind) s.t.forEach((t, i) => { if (t >= DISH.windAt) wp = Math.max(wp, Math.abs(deg(s.y[i] - r))); });
+    let essIdx = s.y.length - 1; if (gust) { const tq = DISH.windAt - 0.1; for (let i = 0; i < s.t.length && s.t[i] <= tq + 1e-9; i++) essIdx = i; }
+    let wp = 0; if (gust) s.t.forEach((t, i) => { if (t >= DISH.windAt) wp = Math.max(wp, Math.abs(deg(s.y[i] - r))); });
     const den = lag ? [DISH.J * lag, DISH.J + DISH.B * lag, DISH.B + Kd, Kp, Ki] : [DISH.J, DISH.B + Kd, Kp, Ki];
     const poles = roots(Ki ? den : den.slice(0, -1)).filter((p) => Number.isFinite(p.re));
-    return { plant, t: s.t, y: s.y, u: s.u, r, T, windAt: wind ? DISH.windAt : null, umax, OS: m.OS, Ts: m.Ts, ess: r - s.y[essIdx], peakU: Math.max(...s.u.map(Math.abs)), poles, windPeak: wp, unstable: s.unstable };
+    return { plant, t: s.t, y: s.y, u: s.u, r, T, windAt: gust ? DISH.windAt : null, windOn: wind, umax, OS: m.OS, Ts: m.Ts, ess: r - s.y[essIdx], peakU: Math.max(...s.u.map(Math.abs)), poles, windPeak: wp, unstable: s.unstable };
   }
   const T = num(v, 'T', plant === 'p3' ? 30 : 10), sat = num(v, 'sat', DISH.Tmax) < 1000;
   const sim = simulatePid({ plant, Kp, Ki, Kd, N: 20, T, dt: 0.01, dist: wind ? { t: T / 2, amp: LEG.dist } : null, noise: noise ? LEG.noise : 0, umax: sat ? LEG.umax : null, aw, dOnMeasurement: dm, seed: LEG.seed });
   const m = pidMetrics(sim, { tEnd: wind ? T / 2 : undefined }); let poles: Cx[] = []; try { if (Kp || Ki || Kd) poles = pidClosedLoopPoles(plant, { Kp, Ki, Kd, N: 20 }); } catch { poles = []; }
-  return { plant, t: sim.t, y: sim.y, u: sim.u, r: 1, T, windAt: wind ? T / 2 : null, umax: sat ? LEG.umax : null, OS: m.overshootPct, Ts: m.settlingTime, ess: m.ess, peakU: m.peakU, poles, windPeak: NaN, unstable: sim.unstable };
+  return { plant, t: sim.t, y: sim.y, u: sim.u, r: 1, T, windAt: wind ? T / 2 : null, umax: sat ? LEG.umax : null, OS: m.overshootPct, Ts: m.settlingTime, ess: m.ess, peakU: m.peakU, poles, windPeak: NaN, unstable: sim.unstable, windOn: wind };
 }
 const isDish = (p: LabPlant) => p === 'dish' || p === 'lag';
 export const labFigure = figureOf((c) => {
@@ -73,16 +74,20 @@ export const labFigure = figureOf((c) => {
     {
       id: 'read', title: 'Readouts against the dish specs', x: '', y: '', height: 230,
       draw(g, w, h, v) {
-        g.clearRect(0, 0, w, h); const r = run(v), maxRe = r.poles.length ? Math.max(...r.poles.map((p) => p.re)) : -1, rows: [string, string, boolean | null][] = [
-          ['Overshoot (spec < 10 %)', r.unstable ? '—' : `${f(r.OS, 1)} %`, isDish(r.plant) ? r.OS < 10 : null],
-          ['Settling 2 %', r.unstable || !Number.isFinite(r.Ts) ? 'not settled' : `${f(r.Ts, 2)} s`, null],
-          [r.windAt !== null && isDish(r.plant) ? 'Steady error (measured just before the gust)' : 'Steady error', isDish(r.plant) ? `${f(deg(r.ess), 3)}°` : f(r.ess, 3), Math.abs(r.ess) < 1e-3 * r.r],
-          ['Wind peak (spec < 0.6°)', r.windAt !== null && isDish(r.plant) ? `${f(r.windPeak, 3)}°` : 'wind off', r.windAt !== null && isDish(r.plant) ? r.windPeak < 0.6 : null],
-          ['Peak torque (limit 200 N·m)', isDish(r.plant) ? `${k3(r.peakU)} N·m` : f(r.peakU), isDish(r.plant) ? r.peakU <= DISH.Tmax + 1e-6 : null],
-          ['Stability', maxRe < -1e-3 ? 'all poles left' : maxRe < 1e-3 ? 'on the jω axis' : 'unstable pole', maxRe < -1e-3],
+        g.clearRect(0, 0, w, h); const r = run(v), maxRe = r.poles.length ? Math.max(...r.poles.map((p) => p.re)) : -1, d = isDish(r.plant);
+        const c = (ok: boolean | null) => (ok === null ? col.text() : ok ? col.ok() : col.bad()), gust = r.windAt !== null && d;
+        const rows: [string, string, string][] = [
+          ['Overshoot (spec < 10 %)', r.unstable ? '—' : `${f(r.OS, 1)} %`, c(d ? r.OS < 10 : null)],
+          ['Settling 2 %', r.unstable || !Number.isFinite(r.Ts) ? 'not settled' : `${f(r.Ts, 2)} s`, c(null)],
+          [gust ? `Steady error (t = ${f(DISH.windAt - 0.1, 1)} s, before gust)` : 'Steady error', d ? `${f(deg(r.ess), 3)}°` : f(r.ess, 3), c(Math.abs(r.ess) < 1e-3 * r.r)],
+          ['Wind peak (spec < 0.6°)', !d || !r.windOn ? 'wind off' : gust ? `${f(r.windPeak, 3)}°` : '— (no gust in window)', c(gust ? r.windPeak < 0.6 : null)],
+          ['Peak torque (limit 200 N·m)', d ? `${k3(r.peakU)} N·m` : f(r.peakU), c(d ? r.peakU <= DISH.Tmax + 1e-6 : null)],
+          ['Stability', maxRe < -1e-3 ? 'all poles left' : maxRe < 1e-3 ? 'on the jω axis' : 'unstable pole', c(maxRe < -1e-3)],
         ];
-        let y = 14; for (const [k, val, ok] of rows) { text(g, k, 8, y, col.muted(), 'left', 11); text(g, val, w - 8, y, ok === null ? col.text() : ok ? col.ok() : col.bad(), 'right', 11); y += 17; }
-        para(g, isDish(r.plant) ? 'Plant: 0.1/(s(s + 2)), J = 10 kg·m², B = 20 N·m·s/rad' : `Legacy plant ${PID_PLANTS[r.plant as PlantId].name}`, 8, y + 4, w - 16, col.muted(), 10);
+        const y = readoutRows(g, w, rows);
+        // the plant's own transfer function, built from params (pass 2, R9): 1/(J s² + B s) = (1/J)/(s(s + B/J)), times 1/(τs + 1) with the lag
+        const gTxt = `${f(1 / DISH.J, 1)}/(s(s + ${f(DISH.B / DISH.J, 0)})${r.plant === 'lag' ? `(${f(DISH.lag, 2)}s + 1)` : ''})`;
+        para(g, d ? `Plant: ${gTxt}, J = ${f(DISH.J, 0)} kg·m², B = ${f(DISH.B, 0)} N·m·s/rad${r.plant === 'lag' ? `, amplifier lag τ = ${f(DISH.lag, 2)} s` : ''}` : `Legacy plant ${PID_PLANTS[r.plant as PlantId].name}`, 8, y + 4, w - 16, col.muted(), 10);
       },
     },
   ] as FigurePanel[];

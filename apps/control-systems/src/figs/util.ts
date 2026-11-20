@@ -52,3 +52,19 @@ export const range = (ys: ArrayLike<number>[], pad = 0.08, lo0?: number, hi0?: n
   if (lo0 !== undefined) lo = Math.min(lo, lo0); if (hi0 !== undefined) hi = Math.max(hi, hi0); if (!(hi > lo)) { hi = lo + 1; } const p = (hi - lo) * pad; return [lo - p, hi + p];
 };
 export const lin = (a: number, b: number, n: number) => Array.from({ length: n }, (_, i) => a + ((b - a) * i) / (n - 1));
+/** A two-column readout table on its own canvas: label left, value right, each row on a fixed line. Both columns are drawn as 'axis'
+ *  labels, so the label-placement pass never slides a value onto the next row; a label too long for the room left beside its value is
+ *  shrunk (down to 8 px) and then cut with an ellipsis, so it can never wrap or push the value. Returns the y after the last row. */
+export function readoutRows(g: CanvasRenderingContext2D, w: number, rows: [string, string, string][], y0 = 14, step = 17, size = 11) {
+  const font = (z: number) => `${z}px system-ui,sans-serif`;
+  let y = y0;
+  for (const [k, val, c] of rows) {
+    g.font = font(size); const vw = g.measureText(val).width, room = Math.max(20, w - 16 - vw - 10);
+    let z = size, lab = k; g.font = font(z); let lw = g.measureText(lab).width;
+    if (lw > room) { z = Math.max(8, (size * room) / lw); g.font = font(z); lw = g.measureText(lab).width; }
+    while (lw > room && lab.length > 2) { lab = lab.slice(0, -2).trimEnd() + '…'; lw = g.measureText(lab).width; }
+    withLabelRole('axis', () => { text(g, lab, 8, y, col.muted(), 'left', z); text(g, val, w - 8, y, c, 'right', size); });
+    y += step;
+  }
+  return y;
+}
