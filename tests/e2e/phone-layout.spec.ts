@@ -6,13 +6,14 @@ test.describe('linear-systems at 390 px', () => {
   test.use({ viewport: { width: 390, height: 844 } });
   const noHScroll = (page: import('@playwright/test').Page) => page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth + 1);
 
-  test('the Variables drawer stops above an open box panel, and uses the site font', async ({ page }) => {
+  test('the Variables drawer opens over an open box card (phones: the card fills the screen), and uses the site font', async ({ page }) => {
     await open(page, 'linear-systems', '#/');
     await page.locator('.qm-node').first().click();
     await expect(page.locator('.cm-panel:not(.idle)')).toBeVisible();
     await page.getByTestId('glossary-btn').click();
-    const r = await page.evaluate(() => ({ d: document.querySelector('[data-testid=glossary]')!.getBoundingClientRect().bottom, p: document.querySelector('.cm-panel')!.getBoundingClientRect().top, f: getComputedStyle(document.querySelector('[data-testid=glossary] dt')!).fontFamily }));
-    expect(r.d).toBeLessThanOrEqual(r.p);
+    const r = await page.evaluate(() => { const d = document.querySelector('[data-testid=glossary]') as HTMLElement, b = d.getBoundingClientRect(), hit = document.elementFromPoint(b.left + b.width / 2, b.top + b.height / 2);
+      return { onTop: !!hit && d.contains(hit), bottom: b.bottom, vh: innerHeight, f: getComputedStyle(d.querySelector('dt')!).fontFamily }; });
+    expect(r.onTop, 'the drawer sits over the card').toBe(true); expect(r.bottom).toBeGreaterThan(r.vh - 2);
     expect(r.f).toMatch(/system-ui/); expect(r.f).not.toMatch(/Charter|Georgia/);
   });
 

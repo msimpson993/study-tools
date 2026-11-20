@@ -39,7 +39,8 @@ for (const app of ['control-systems'] as const) for (const vw of [1366, 390]) {
     }
     await open(page, app);
     for (const [mi, m] of maps.entries()) {
-      if (mi > 0) await page.locator(`button[role=tab][data-map]`).nth(mi).click();
+      // on phones an open entry is a card over the map: close it before switching maps
+      if (mi > 0) { await page.keyboard.press('Escape'); await page.locator(`button[role=tab][data-map]`).nth(mi).click(); }
       for (const n of m.nodes) {
         await start(page); await page.locator(`[data-testid=map-node][data-node="${n}"]`).first().dispatchEvent('click'); await page.waitForTimeout(350);
         bad.push(...collisions(await take(page)).map((s) => `${m.id} box ${n} · ${s}`));
