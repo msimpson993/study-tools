@@ -64,7 +64,8 @@ test.describe('cart scene: the staged block diagram builds with the example', ()
 
   test('apps that did not ask for a diagram do not grow one', async ({ page }) => {
     await page.goto('/linear-systems/index.html');
-    const hero = page.getByTestId('map-hero').getByTestId('example-scene');
+    await page.locator('[data-testid=map-ref][data-ref=earbud]').dispatchEvent('click');
+    const hero = page.getByTestId('ref-live').getByTestId('example-scene');
     await expect(hero).toBeVisible();
     expect(await hero.getAttribute('data-diagram')).toBeFalsy();
   });

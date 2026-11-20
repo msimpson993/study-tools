@@ -78,11 +78,16 @@ for (const app of APPS) for (const [vw, vh] of VPS) {
       const s1 = await sc.evaluate((e) => [e.scrollLeft, e.scrollTop]);
       expect(s1[0] > s0[0] || s1[1] > s0[1], `dragged (${s0} → ${s1})`).toBe(true);
       expect(await page.locator('.qm-node.n-sel').count(), 'a drag does not change the open box').toBe(1);
-      // wheel down zooms out, never below fit
-      for (let i = 0; i < 12; i++) await page.mouse.wheel(0, 240);
+      // wheel down zooms out past 100%, to 60% at most (pass 5: the whole map at a glance), and stays there
+      for (let i = 0; i < 16; i++) await page.mouse.wheel(0, 240);
       await page.waitForTimeout(150);
-      expect(await zoomOf(page)).toBeGreaterThanOrEqual(0.999);
+      const zOut = await zoomOf(page);
+      expect(zOut, 'wheel zooms out below 100%').toBeLessThan(0.95); expect(zOut, 'never below 60%').toBeGreaterThanOrEqual(0.599);
+      await expect(page.getByTestId('map-zoom-pct')).toHaveText(`${Math.round(zOut * 100)}%`);
+      expect(await page.locator('.qm-node.n-sel').count(), 'still open after zooming out').toBe(1);
       // + then Reset zoom
+      await page.getByTestId('map-zoom-in').click(); expect(await zoomOf(page), '+ steps ×1.25').toBeCloseTo(zOut * 1.25, 2);
+      await page.getByTestId('map-zoom-reset').click(); expect(await zoomOf(page)).toBe(1);
       await page.getByTestId('map-zoom-in').click(); expect(await zoomOf(page)).toBeGreaterThan(1.2);
       await page.getByTestId('map-zoom-reset').click(); expect(await zoomOf(page)).toBe(1);
       await expect(page.getByTestId('map-zoom-pct')).toHaveText('100%');
@@ -145,11 +150,11 @@ for (const app of APPS) test(`${app} @923x1300 touch: pinch zooms the side map, 
   await page.waitForTimeout(400);
   const s1 = await page.locator('.cm-scroll').evaluate((e) => [e.scrollLeft, e.scrollTop]);
   expect(s1[0] !== s0[0] || s1[1] !== s0[1], `one-finger pan (${s0} → ${s1})`).toBe(true);
-  // pinch in, never below fit; Reset zoom
+  // pinch in: down to 60% (or the fit, if smaller), never further; Reset zoom
   await touch('touchStart', [[cx - 150, cy], [cx + 150, cy]]);
   for (let i = 1; i <= 8; i++) await touch('touchMove', [[cx - 150 + i * 17, cy], [cx + 150 - i * 17, cy]]);
   await touch('touchEnd', []);
-  expect(await zoomOf(page)).toBeGreaterThanOrEqual(0.999);
+  expect(await zoomOf(page)).toBeGreaterThanOrEqual(0.599);
   await page.getByTestId('map-zoom-in').click(); await page.getByTestId('map-zoom-reset').click();
   expect(await zoomOf(page)).toBe(1);
 });

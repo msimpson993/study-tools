@@ -11,8 +11,10 @@ Style (3Blue1Brown): minimal, every symbol named on the picture, and motion that
 runningExample:
   title: …
   summary: …
-  scene: { id: cart, overlays: [forces] }     # which core scene, and the overlays of the small hero on the map page
-  # optional: diagram: loop, caption: "…"     # staged block diagram under the hero (see below)
+  scene: { id: cart, overlays: [forces] }     # which core scene dives draw by default
+  # optional: diagram: loop, caption: "…"     # staged block diagram under the picture (see below)
+  refs:                                       # Example bubbles on the map (Nov 19): each opens its scene live in a card
+    - { id: cart, at: SYS, label: the cart, title: The cart on a spring, scene: { id: cart, overlays: [forces] }, specs: "- …" }
 
 # dives/<id>.md front matter (or on a graph.yaml node; a dive inherits the overlays of the first node that links to it)
 exampleScene: { overlays: [push, reach], caption: "The push acts on the velocity (B) …" }
@@ -40,7 +42,7 @@ cartEigs(m, k, c), tineX(t), tineSpectrum(f), sceneLayout(scene, overlays, w, co
 
 Test hook: `window.__sceneFreeze = seconds` (set before load, or set and dispatch `study-theme`) draws one fixed frame, so screenshots and e2e are deterministic. Test ids: `example-scene` (`data-scene`, `data-overlays`, `data-diagram`), `scene-canvas`, `map-hero`, `dive-example-row`, `diagram-k` (gain slider).
 
-Layout: on ≥ 900 px the callout and the scene sit side by side; below that the scene stacks under the callout (390 px phones: no horizontal scroll). The map hero sits beside the central question from 760 px, under it below.
+Layout: on ≥ 900 px the callout and the scene sit side by side; below that the scene stacks under the callout (390 px phones: no horizontal scroll). The map no longer has a hero picture (Nov 19): the running examples open from their Example bubbles (`runningExample.refs`), in the panel from 700 px and in the phone card below.
 
 ## Adding a scene for another app
 

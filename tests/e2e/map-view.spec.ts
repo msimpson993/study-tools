@@ -54,10 +54,13 @@ for (const app of APPS) {
         // plain taps still work
         await page.locator('[data-testid=map-node]').nth(2).dispatchEvent('click'); expect((await state(page)).sel).toBe(1);
         await page.keyboard.press('Escape');
+        // (closing an entry on a phone may bring the box it showed into view, by design: phone-entry.spec; measure from here)
+        await page.evaluate(() => new Promise(r => requestAnimationFrame(() => requestAnimationFrame(() => setTimeout(r, 60)))));
+        const atTap = await dims(page);
         await page.locator('[data-testid=map-edge]').first().dispatchEvent('click'); expect((await state(page)).edge).toBe(1);
         // the tap re-rendered the svg but the pan position stayed
         // (desktop: an open entry moves the map into its side column, a deliberate re-layout; map-split.spec covers that)
-        if (view === 'mobile') { const kept = await dims(page); expect(Math.abs(kept.st - after.st) + Math.abs(kept.sl - after.sl), 'position kept across re-render').toBeLessThan(3); }
+        if (view === 'mobile') { const kept = await dims(page); expect(Math.abs(kept.st - atTap.st) + Math.abs(kept.sl - atTap.sl), 'position kept across re-render').toBeLessThan(3); }
         else { await expect(page.getByTestId('map-wrap')).toHaveClass(/split/); expect(await page.evaluate(() => { const e = document.querySelector('.qm-edge.e-sel .dot')!.getBoundingClientRect(), b = document.querySelector('.cm-scroll')!.getBoundingClientRect(); return e.left >= b.left && e.right <= b.right && e.top >= b.top && e.bottom <= b.bottom; }), 'the open line is in view in the side map').toBe(true); }
         // wheel scrolls the map
         await page.keyboard.press('Escape'); await page.mouse.move(sx, sy); const w0 = (await dims(page)).st; await page.mouse.wheel(0, 200); await page.waitForTimeout(150);
@@ -70,6 +73,7 @@ for (const app of APPS) {
           await pick(page, v);
           const node = page.locator('[data-testid=map-node]').first(); await node.scrollIntoViewIfNeeded(); await node.click({ position: { x: 20, y: 10 } });
           expect((await state(page)).sel, `${v}: box click`).toBe(1); await page.keyboard.press('Escape');
+          await page.evaluate(() => new Promise(r => requestAnimationFrame(() => requestAnimationFrame(() => setTimeout(r, 60))))); // the phone close re-shows the walked-to box a frame later
           const dot = page.locator('[data-testid=map-edge] circle.dot').first(); await dot.scrollIntoViewIfNeeded(); const d = (await dot.boundingBox())!;
           await page.mouse.click(d.x + d.width / 2, d.y + d.height / 2); expect((await state(page)).edge, `${v}: line click`).toBe(1); await page.keyboard.press('Escape');
         }
