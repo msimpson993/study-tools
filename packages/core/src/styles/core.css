@@ -318,6 +318,7 @@ details.st-more .st-badge{display:inline-block;margin-left:.35rem;padding:0 .4re
 }
 /* opt-in pop-up template (node.pop), inline checks, dive template (level tag, At a glance, Full derivation) */
 .pop-answer p{margin:.2rem 0 .45rem;font-size:1rem}
+.pop-answer ul{margin:.1rem 0 .45rem;padding-left:1.15rem} .pop-answer li{margin:.15rem 0;font-size:1rem}
 .pop-row{margin:.35rem 0;font-size:.93rem;line-height:1.45}.pop-lead{color:var(--accent);font-weight:650}
 .pop-key{margin:.1rem 0 .4rem;font-size:.85rem}
 .pop-figs{display:grid;gap:.35rem;margin:.4rem 0}.pop-figs.n2{grid-template-columns:1fr 1fr}.pop-figs.n3{grid-template-columns:1fr 1fr 1fr}.pop-figs.n4{grid-template-columns:1fr 1fr 1fr}.pop-figs.n4>:first-child{grid-column:1/-1}
@@ -349,6 +350,9 @@ details.derivation{margin:.7rem 0}details.derivation>summary{font-weight:650}
 /* edge pop-ups: the why text can run to a few paragraphs and carry a figure */
 .callout.c-why .cb p { margin: 0 0 .45rem; }
 .callout.c-why .cb p:last-child { margin-bottom: 0; }
+.callout.c-why .cb ul { margin: .1rem 0 .45rem; padding-left: 1.15rem; }
+.callout.c-why .cb li { margin: .15rem 0; }
+.callout.c-why .cb li > p { margin: 0; }
 .callout.c-why .pop-figs { margin-top: .5rem; }
 .edge-idea { margin: .6rem 0; }
 .pop-side .pop-lead { color: var(--muted, inherit); }
