@@ -2,7 +2,7 @@ id: linear-systems
 title: Linear Systems Analysis
 quizOrder: chain   # the quiz opens on box 1's quick check and follows the map, easy and foundational first
 centralQuestion: How can we predict what a system will do with ANY input?
-blurb: "A map-first review of Linear Systems Analysis: what a linear system is, and the tools that predict what it does to any input: the eigen idea, Laplace/Z transforms, Fourier analysis, state space and modes, reachability and observability, and realization. Drawn on two running examples (a noise-cancelling earbud speaker and a car on its suspension), with deep dives, live figures, worked exam problems and a self-test. Optimal control appears at the end as one application."
+blurb: "A map-first review of Linear Systems Analysis: what a linear system is, and the tools that predict what it does to any input: the eigen idea, Laplace/Z transforms, Fourier analysis, state space and modes, reachability and observability, and realization. Drawn on two running examples (a noise-cancelling earbud speaker from the start, and a car on its suspension that joins at state space), with deep dives, live figures, worked exam problems and a self-test. Optimal control appears at the end as one application."
 archetype: guide
 categories:
   - { id: foundations, label: "Linearity & eigen idea" }
@@ -27,7 +27,7 @@ runningExample:
   title: A noise-cancelling earbud speaker and a car on its suspension
   moreScenes:
     - { id: car, overlays: [springs], title: Car on its suspension, caption: "Seen from the side: the body on front and rear spring+shock pairs." }
-  summary: "Two drawn systems run through the page: an earbud speaker (voltage in, diaphragm motion out) for the signals boxes and a car on its suspension (road bumps in, heave and pitch out) for the state-space boxes. Each is its own dashed Example node on the map, beside the box where it first appears."
+  summary: "Two drawn systems run through the page: an earbud speaker (voltage in, diaphragm motion out) carries the map from the start, and a car on its suspension joins later, at the state-space boxes, when the map needs two motions tied together. Each is its own dashed Example node on the map, beside the box where it first appears."
   # Example nodes on the map (Nov 20): each running example is its own dashed node beside the box where it first appears,
   # joined by a plain dotted link; its pop-up is the example's introduction. Numbers: only those the path has introduced
   # by that box (no circularity); every one is recomputed in test/refs.test.ts.
