@@ -11,7 +11,7 @@ import { mountQuiz } from './quiz';
 import { mountQuizFigure, type QuizFigureRegistry } from './quizfig';
 import type { PopAudioHook } from './conceptmap';
 import { ControlSet } from './controls';
-import { createFullscreen, replaceUrl } from './fullscreen';
+import { createFullscreen, replaceUrl, fullscreenActive } from './fullscreen';
 import { setRefContent, pickFromHash, mapHashFor, isMapHash, copyRefButton, diveReference } from './copyref';
 
 export interface BoardHandle { destroy?(): void; show?(params: URLSearchParams): void; hide?(): void }
@@ -33,6 +33,8 @@ function parseHash(): Route {
   return { path: p.split('/').filter(Boolean), q: new URLSearchParams(qs ?? '') };
 }
 const go = (hash: string) => { location.hash = hash; };
+/** phone layout: a map entry opens as a near-full-screen card with a fixed "← Back to map" bar (core.css, max-width 699px) */
+const PHONE = typeof matchMedia === 'function' ? matchMedia('(max-width: 699px)') : ({ matches: false } as MediaQueryList);
 
 export function mountApp(content: AppContent, hooks: AppHooks = {}): void {
   setRefContent(content);
@@ -124,7 +126,9 @@ export function mountApp(content: AppContent, hooks: AppHooks = {}): void {
   // ---------- views ----------
   let cleanup: (() => void) | null = null;
   let boardHandle: BoardHandle | null = null;
+  let lastPick: MapState['pick'] = null, mapPop: ((p: MapState['pick']) => void) | null = null;
   const navMap = {
+    onPop: (fn: (p: MapState['pick']) => void) => { mapPop = fn; return () => { if (mapPop === fn) mapPop = null; }; },
     openDive: (id: string) => go(`/dive/${id}?from=${encodeURIComponent(`${mapState.mapId}/${mapState.pick?.kind === 'node' ? mapState.pick.id : ''}`)}`),
     openLive: (live: string) => {
       const [kind, rest] = live.split(':');
@@ -135,6 +139,12 @@ export function mountApp(content: AppContent, hooks: AppHooks = {}): void {
     audio: hooks.audio,
     onState: () => {
       if (!isMapHash(location.hash || '#/')) return;
+      const prev = lastPick; lastPick = mapState.pick;
+      const entry = !!(history.state && history.state.cmEntry);
+      // phones: opening an entry pushes a history step, so the browser/Android Back returns to the map; closing it (✕, Esc,
+      // "← Back to map") steps back over that entry instead of leaving it in the history
+      if (PHONE.matches && mapState.pick && !prev && !entry && !fullscreenActive()) { history.pushState({ ...(history.state ?? {}), cmEntry: 1 }, '', mapHashFor(mapState.pick)); return; }
+      if (!mapState.pick && entry) { history.back(); return; }
       const want = mapHashFor(mapState.pick);
       const cur = location.hash || '#/';
       if (cur !== want && cur !== want.replace(/^#/, '')) replaceUrl(want);
@@ -186,6 +196,7 @@ export function mountApp(content: AppContent, hooks: AppHooks = {}): void {
       const picked = (a === 'node' || a === 'edge') ? pickFromHash(content, path) : null;
       if (picked) { mapState.mapId = picked.mapId; mapState.pick = picked.pick; }
       renderSidebar('map');
+      lastPick = mapState.pick;
       cleanup = mountConceptMap(main, content, progress, mapState, navMap);
     } else if (a === 'dive' && b) {
       renderSidebar(`dive:${b}`);
@@ -383,7 +394,18 @@ export function mountApp(content: AppContent, hooks: AppHooks = {}): void {
     if (def.presets.length) main.append(h('div', { class: 'prose' }, ...def.presets.filter((p) => p.about).map((p) => h('details', { class: 'fold' }, h('summary', null, `About: ${p.label}`), h('div', { html: `<p>${p.about}</p>` })))));
   }
 
-  window.addEventListener('hashchange', route);
+  // a Back/Forward step between two map hashes while the map is mounted: change the open entry in place (no remount, so
+  // the map keeps its position and zoom); anything else routes as before
+  let popped = false;
+  window.addEventListener('popstate', () => { popped = true; });
+  window.addEventListener('hashchange', () => {
+    const wasPop = popped; popped = false;
+    if (wasPop && mapPop && isMapHash(location.hash || '#/')) {
+      const p = pickFromHash(content, parseHash().path);
+      if (!p || p.mapId === mapState.mapId) { lastPick = p?.pick ?? null; mapPop(p?.pick ?? null); return; }
+    }
+    route();
+  });
   progress.onChange(() => { /* sidebar bar refresh */ const act = sidebar.querySelector('a.on'); if (!act) return; const sm = progress.summary(); const bar = sidebar.querySelector('.bar i') as HTMLElement | null; if (bar) bar.style.width = `${((sm.seen + sm.correct + sm.missed) / sm.total) * 100}%`; });
   route();
   (window as any).__study = { content, progress, mapState };

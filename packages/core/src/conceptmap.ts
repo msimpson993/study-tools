@@ -24,6 +24,9 @@ export interface MapNav {
   openLive(live: string): void;
   openQuiz(tags: string[], title: string): void;
   onState?(): void;
+  /** the app hands back a Back-button (popstate) map change here, so it closes/switches the entry without remounting the map
+   *  (keeps the map's scroll position and zoom); returns the unregister function */
+  onPop?(fn: (pick: MapState['pick']) => void): () => void;
   /** renderers for pop-up figures (`node.pop.figures`); the same registry as quiz figures */
   figures?: QuizFigureRegistry;
   /** opt-in sound players for `node.pop.audio` (see audio.ts: audioHook) */
@@ -462,6 +465,8 @@ export function mountConceptMap(host: HTMLElement, content: AppContent, progress
       return;
     }
     const close = h('button', { class: 'tbtn x', 'aria-label': 'Close', dataset: { testid: 'panel-close' }, onclick: () => setPick(null) }, '✕');
+    // phones (< 700 px): the entry is a near-full-screen card; this bar stays fixed at its foot (CSS shows it only there)
+    panel.append(h('div', { class: 'cm-backbar', dataset: { testid: 'map-backbar' } }, h('button', { class: 'tbtn on', dataset: { testid: 'back-to-map-fixed' }, onclick: () => setPick(null) }, '← Back to map')));
     if (pick.kind === 'node') {
       const n = m.nodes.find((x) => x.id === pick.id);
       if (!n) return;
@@ -516,9 +521,10 @@ export function mountConceptMap(host: HTMLElement, content: AppContent, progress
   function renderAll() { renderTop(); renderLegend(); renderReview(); renderSvg(); renderPanel(); }
   renderAll(); if (view === 'actual') centerOnBoxes();
   const off = progress.onChange(() => { renderReview(); renderSvg(); renderPanel(); });
+  const offPop = nav.onPop?.((p) => setPick(p)) ?? (() => {});
   const onKey = (ev: KeyboardEvent) => { if (ev.key === 'Escape' && (st.pick || st.series !== null) && !document.querySelector('.fig-overlay:not([hidden])')) { st.series = null; setPick(null); } };
   document.addEventListener('keydown', onKey);
-  return () => { popStops.forEach((f) => f()); heroHandle?.destroy(); ro.disconnect(); off(); document.removeEventListener('keydown', onKey); wide?.removeEventListener?.('change', onWide); root.remove(); };
+  return () => { offPop(); popStops.forEach((f) => f()); heroHandle?.destroy(); ro.disconnect(); off(); document.removeEventListener('keydown', onKey); wide?.removeEventListener?.('change', onWide); root.remove(); };
 }
 
 /** Expose geometry+labels of the *current* render to tests. */

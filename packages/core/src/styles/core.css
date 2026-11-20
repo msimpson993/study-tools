@@ -125,6 +125,18 @@ details.fold>div{padding:0 .8rem .6rem}
   .cm-pad{height:44vh}
 }
 @media (min-width:1150px){.cm-pad{display:none}}
+/* phones (< 700px): an open entry is a floating card over most of the screen (10px margins, rounded, the map faint at its
+   edges) with a fixed "← Back to map" bar at its foot; the card's bottom padding keeps the bar off the last content */
+.cm-backbar{display:none}
+@media (max-width:699px){
+  .cm-panel{align-self:stretch;justify-self:stretch;left:10px;right:10px;top:54px;bottom:calc(10px + env(safe-area-inset-bottom));max-height:none;border-radius:14px;padding-bottom:calc(4.4rem + env(safe-area-inset-bottom));box-shadow:0 0 0 100vmax rgba(0,0,0,.38),0 10px 34px rgba(0,0,0,.6)}
+  .cm-panel .cm-backbar{display:block;position:fixed;left:11px;right:11px;bottom:calc(11px + env(safe-area-inset-bottom));z-index:66;padding:.75rem .9rem calc(.6rem + env(safe-area-inset-bottom));border-radius:0 0 13px 13px;background:linear-gradient(to bottom,transparent,var(--panel) 38%)}
+  .cm-panel .cm-backbar button{display:block;width:100%;min-height:44px;font-size:.95rem}
+  .cm-panel :is(button,a,[tabindex]){scroll-margin-bottom:calc(5rem + env(safe-area-inset-bottom))}
+  html body:has(.cm-panel:not(.idle)) .drawer{bottom:0;border-bottom:0;border-radius:0}
+}
+/* a figure scrolled into view clears the card's top edge */
+.pop-figs{scroll-margin-top:24px}
 .cm-sum{font:.8rem system-ui,sans-serif;color:var(--muted)}
 .cm-sum b{color:var(--text)}
 .badge-dot{display:inline-block;width:.7rem;height:.7rem;border-radius:50%;vertical-align:-1px;margin-right:.25rem;border:2px solid var(--border-strong)}
