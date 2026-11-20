@@ -13,8 +13,8 @@ runningExample:
   summary: …
   scene: { id: cart, overlays: [forces] }     # which core scene dives draw by default
   # optional: diagram: loop, caption: "…"     # staged block diagram under the picture (see below)
-  refs:                                       # Example bubbles on the map (Nov 19): each opens its scene live in a card
-    - { id: cart, at: SYS, label: the cart, title: The cart on a spring, scene: { id: cart, overlays: [forces] }, specs: "- …" }
+  refs:                                       # Example nodes on the map (Nov 20): each opens the example's introduction
+    - { id: cart, at: SYS, label: the cart, title: The cart on a spring, question: What's the running example?, scene: { id: cart, overlays: [forces] }, about: "- **In:** …", numbers: "- **Mass:** …" }
 
 # dives/<id>.md front matter (or on a graph.yaml node; a dive inherits the overlays of the first node that links to it)
 exampleScene: { overlays: [push, reach], caption: "The push acts on the velocity (B) …" }
@@ -42,7 +42,7 @@ cartEigs(m, k, c), tineX(t), tineSpectrum(f), sceneLayout(scene, overlays, w, co
 
 Test hook: `window.__sceneFreeze = seconds` (set before load, or set and dispatch `study-theme`) draws one fixed frame, so screenshots and e2e are deterministic. Test ids: `example-scene` (`data-scene`, `data-overlays`, `data-diagram`), `scene-canvas`, `map-hero`, `dive-example-row`, `diagram-k` (gain slider).
 
-Layout: on ≥ 900 px the callout and the scene sit side by side; below that the scene stacks under the callout (390 px phones: no horizontal scroll). The map no longer has a hero picture (Nov 19): the running examples open from their Example bubbles (`runningExample.refs`), in the panel from 700 px and in the phone card below.
+Layout: on ≥ 900 px the callout and the scene sit side by side; below that the scene stacks under the callout (390 px phones: no horizontal scroll). The map no longer has a hero picture (Nov 19): the running examples are introduced by their Example nodes (`runningExample.refs`), in the panel from 700 px and in the phone card below.
 
 ## Adding a scene for another app
 
