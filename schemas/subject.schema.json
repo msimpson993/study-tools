@@ -563,6 +563,11 @@
                 "minLength": 10,
                 "description": "Key numbers: markdown bullets, ONLY numbers the path has introduced by the host box (no circularity)"
               },
+              "comesBack": {
+                "type": "object",
+                "additionalProperties": { "type": "array", "items": { "type": "string" }, "uniqueItems": true },
+                "description": "Per map id: the boxes listed under 'Where this example comes back', in this order (each must use the example). Without it the list is derived from the boxes' examples."
+              },
               "panels": {
                 "type": "array",
                 "items": {

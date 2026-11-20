@@ -1,7 +1,7 @@
 import { h, s, clear } from './dom';
 import type { AppContent, MapDef, MapNode, MapEdge } from './types';
 import { copyRefButton, nodeReference, edgeReference } from './copyref';
-import { computeGeometry, layoutWidth, placeLabels, roundedPath, arrowHead, edgeKey, pathToRoot, mapHighlight, placeSideNodes, SIDE_TAG_H, sideFont, exampleGlyphRects, useLinkSegments, walkOrder, type Geometry, type Label, type MapView, type SideNode } from './maplayout';
+import { computeGeometry, layoutWidth, placeLabels, roundedPath, arrowHead, edgeKey, pathToRoot, mapHighlight, placeSideNodes, SIDE_TAG_H, sideFont, exampleGlyphRects, useLinkSegments, exampleComesBack, type Geometry, type Label, type MapView, type SideNode } from './maplayout';
 import { storeGet, storeSet } from './store';
 import { exampleGlyph } from './exglyphs';
 import { mountScene } from './scene';
@@ -592,12 +592,13 @@ export function mountConceptMap(host: HTMLElement, content: AppContent, progress
       else if (r.figure) { const stop = nav.mountFigure?.(live, r.figure, r.preset, { intro: { panels: r.panels } }); if (stop) popStops.push(stop); else live.append(h('p', { class: 'st-hint' }, `(figure ${r.figure} is not available)`)); if (r.caption) live.append(h('p', { class: 'scene-cap ref-cap', dataset: { testid: 'ref-caption' }, html: r.caption })); }
       panel.append(h('h4', { class: 'ref-h' }, 'What it is and why we use it'), h('div', { class: 'ref-about', dataset: { testid: 'ref-about', body: '' }, html: r.about }));
       panel.append(h('h4', { class: 'ref-h' }, 'Key numbers so far'), h('div', { class: 'ref-numbers', dataset: { testid: 'ref-numbers', body: '' }, html: r.numbers }));
-      // where it comes back: every other box on this map that uses it, in reading order, each opening that box
+      // where it comes back: the boxes on this map that use it after its own first stretch, in reading order, each opening that
+      // box, with the box's one-line why (exampleComesBack)
       if (usesOn(m)) {
-        const back = walkOrder(m.nodes, m.edges).filter((id) => id !== r.at && m.nodes.find((x) => x.id === id)?.examples?.includes(r.id));
+        const back = r.comesBack?.[m.id] ?? exampleComesBack(m, exRefs, r.id);
         if (back.length) {
           const ul = h('ul', { class: 'ref-back', dataset: { testid: 'ref-comesback' } });
-          for (const id of back) { const n = m.nodes.find((x) => x.id === id)!; ul.append(h('li', null, h('a', { href: '#', dataset: { node: id, testid: 'ref-comesback-link' }, onclick: (ev: Event) => { ev.preventDefault(); refFrom = null; openNode(id); } }, n.label))); }
+          for (const id of back) { const n = m.nodes.find((x) => x.id === id)!; ul.append(h('li', null, h('a', { href: '#', dataset: { node: id, testid: 'ref-comesback-link' }, onclick: (ev: Event) => { ev.preventDefault(); refFrom = null; openNode(id); } }, n.label), ...(n.exampleWhy ? [h('span', { class: 'ref-why', dataset: { testid: 'ref-comesback-why' }, html: `: ${n.exampleWhy}` })] : []))); }
           panel.append(h('h4', { class: 'ref-h' }, 'Where this example comes back'), ul);
         }
       }

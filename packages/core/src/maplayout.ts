@@ -650,16 +650,33 @@ export function exampleGlyphRects(b: { x: number; y: number; w: number; h: numbe
   }
   return out;
 }
-/** Reading order of a map: depth-first from the root along the main (not dashed) lines, a box's lines taken by rank, side paths last.
+/** Reading order of a map: depth-first from the root along the main (not dashed) lines. At each box the boxes hung under it
+ *  (shorter branches) come first and the line that carries the chain on (the deepest) last, then by rank; side paths last of all.
  *  Boxes not reached that way (none in a valid map) follow in file order. */
 export function walkOrder(nodes: { id: string }[], edges: { from: string; to: string; dashed?: boolean; side?: boolean; rank?: number }[], rootId = 'root'): string[] {
+  const main = edges.filter((e) => !e.dashed), depth = new Map<string, number>();
+  const deep = (id: string, stack = new Set<string>()): number => {
+    const hit = depth.get(id); if (hit !== undefined) return hit; if (stack.has(id)) return 0;
+    stack.add(id); const d = Math.max(0, ...main.filter((e) => e.from === id).map((e) => 1 + deep(e.to, stack))); stack.delete(id); depth.set(id, d); return d;
+  };
   const seen = new Set<string>(), out: string[] = [];
-  const kids = (id: string) => edges.map((e, i) => ({ e, i })).filter(({ e }) => e.from === id && !e.dashed)
-    .sort((a, b) => (a.e.side ? 1 : 0) - (b.e.side ? 1 : 0) || (a.e.rank ?? 0) - (b.e.rank ?? 0) || a.i - b.i).map(({ e }) => e.to);
+  const kids = (id: string) => main.map((e, i) => ({ e, i })).filter(({ e }) => e.from === id)
+    .sort((a, b) => (a.e.side ? 1 : 0) - (b.e.side ? 1 : 0) || deep(a.e.to) - deep(b.e.to) || (a.e.rank ?? 0) - (b.e.rank ?? 0) || a.i - b.i).map(({ e }) => e.to);
   const go = (id: string) => { if (seen.has(id)) return; seen.add(id); out.push(id); for (const k of kids(id)) go(k); };
   if (nodes.some((n) => n.id === rootId)) go(rootId);
   for (const n of nodes) if (!seen.has(n.id)) out.push(n.id);
   return out;
+}
+/** Where an example "comes back" on a map: the boxes that use it, in reading order, except its host and except the boxes its
+ *  first run covers (reached from the root along the main lines before the host of any LATER example: the earbud's boxes up
+ *  to STATE are its own stretch, not a return). refs in introduction order. */
+export function exampleComesBack(map: { nodes: { id: string; examples?: string[] }[]; edges: { from: string; to: string; dashed?: boolean; side?: boolean; rank?: number }[] }, refs: { id: string; at: string }[], id: string): string[] {
+  const i = refs.findIndex((r) => r.id === id); if (i < 0) return [];
+  const host = refs[i].at, on = new Set(map.nodes.map((n) => n.id)), later = new Set(refs.slice(i + 1).map((r) => r.at).filter((a) => on.has(a)));
+  const early = new Set<string>();
+  if (later.size) { const main = map.edges.filter((e) => !e.dashed && !e.side), st = ['root']; while (st.length) { const u = st.pop()!; if (early.has(u) || later.has(u)) continue; early.add(u); for (const e of main) if (e.from === u) st.push(e.to); } }
+  const uses = new Set(map.nodes.filter((n) => n.examples?.includes(id)).map((n) => n.id));
+  return walkOrder(map.nodes, map.edges).filter((x) => x !== host && uses.has(x) && !early.has(x));
 }
 const clipOut = (c: Pt, to: Pt, r: Rect): Pt => {
   // the point where the ray c → to leaves rect r (c inside r)

@@ -119,6 +119,11 @@
                   "uniqueItems": true,
                   "description": "Ids of the running examples (subject.yaml runningExample.refs) this box uses. Opt-in: when any box has it, the map marks those boxes with the example's glyph and lights them from the Example node."
                 },
+                "exampleWhy": {
+                  "type": "string",
+                  "minLength": 10,
+                  "description": "One line: why this box uses the example(s) it lists (shown beside it in the Example node's 'Where this example comes back')."
+                },
                 "addsToExample": {
                   "type": "string",
                   "minLength": 15,

@@ -24,6 +24,8 @@ export interface MapNode {
   /** ids of the running examples (runningExample.refs) this box uses: opt-in; when any box has it the map marks those boxes
    *  with the example's glyph, and hovering / opening the Example node lights them */
   examples?: string[];
+  /** one line: why this box uses that example (HTML; shown in the Example node's "Where this example comes back") */
+  exampleWhy?: string;
   /** what this box adds to the subject's running example (HTML) */
   addsToExample?: string;
   /** what it lets us account for (HTML) */
@@ -205,6 +207,8 @@ export interface ExampleRef {
   about: string;
   /** key numbers: ONLY those the path has introduced by the host box (no circularity; markdown, HTML after the build) */
   numbers: string;
+  /** per map id: the boxes under "Where this example comes back", in this order (else derived: exampleComesBack) */
+  comesBack?: Record<string, string[]>;
 }
 /** A subject-level scene reference (runningExample.scene / moreScenes). */
 export interface SceneRef { id: string; title?: string; overlays?: string[]; params?: Record<string, number>; caption?: string; diagram?: DiagramSpec | string | string[] }

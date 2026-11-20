@@ -103,7 +103,7 @@ export function loadApp(appDir: string): { content: AppContent; warnings: string
       maps.push({
         id: m.id, title: m.title, caption: m.caption, seriesNames: m.seriesNames,
         nodes: (m.nodes ?? []).map((n: any) => ({
-          id: n.id, label: n.label, detail: n.detail, kind: n.kind, series: n.series, ...(n.examples ? { examples: n.examples } : {}),
+          id: n.id, label: n.label, detail: n.detail, kind: n.kind, series: n.series, ...(n.examples ? { examples: n.examples } : {}), ...(n.exampleWhy ? { exampleWhy: inline(n.exampleWhy, `graph.yaml ${m.id}/${n.id} exampleWhy`) } : {}),
           short: inline(n.short, `graph.yaml ${m.id}/${n.id}`),
           eq: n.eq,
           eqHtml: n.eqTex ? (where = `graph.yaml ${m.id}/${n.id} eqTex`, md.renderInline(`$${n.eqTex}$`)) : undefined,
@@ -280,6 +280,10 @@ export function loadApp(appDir: string): { content: AppContent; warnings: string
       { const words = `${r.about} ${r.numbers}`.split(/\s+/).filter(Boolean).length; if (words > 400) problems.push(`${where}: about + numbers is ${words} words (keep the introduction under 400)`); }
       for (const k of ['about', 'numbers'] as const) if (r[k] && !/^\s*- /.test(r[k])) problems.push(`${where}: ${k} should be markdown bullets ("- **Lead:** …")`);
       if (r.panels && !r.figure) problems.push(`${where}: panels only apply to a figure`);
+      for (const [mid, ids] of Object.entries((r as { comesBack?: Record<string, string[]> }).comesBack ?? {})) {
+        const mm = maps.find((x) => x.id === mid); if (!mm) { problems.push(`${where}: comesBack map "${mid}" is not a map`); continue; }
+        for (const b of ids) { const n = mm.nodes.find((x) => x.id === b); if (!n) problems.push(`${where}: comesBack.${mid} "${b}" is not a box on that map`); else if (!(n.examples ?? []).includes(r.id)) problems.push(`${where}: comesBack.${mid} "${b}" does not list ${r.id} in its examples`); }
+      }
       if (r.figure) { const fd = figuresR.find((f: any) => f.id === r.figure) as any; if (!fd) problems.push(`${where}: figure "${r.figure}" is not in figures.yaml`); else if (r.preset && !(fd.presets ?? []).some((p: any) => p.id === r.preset)) problems.push(`${where}: figure "${r.figure}" has no preset "${r.preset}"`); }
     }); }
   // boxes' `examples` name real Example nodes, and a host box always uses its own example
