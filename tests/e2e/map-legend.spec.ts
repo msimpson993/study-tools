@@ -25,7 +25,7 @@ for (const app of APPS) {
         await expect(legend).toBeVisible();
         const got = (await items(page)).map((i) => i.key).filter((k) => !k!.startsWith('series-'));
         const kinds = new Set(m.nodes.map((n) => n.kind ?? 'box'));
-        const want = ['solid', ...(m.edges.some((e) => e.side) ? ['side'] : []), ...(m.edges.some((e) => e.dashed) ? ['dashed'] : []), ...(kinds.has('decision') ? ['decision'] : []), ...(kinds.has('terminal') ? ['terminal'] : []), ...(refs.some((r) => m.nodes.some((n) => n.id === r.at)) ? ['example'] : [])];
+        const want = ['solid', ...(m.edges.some((e) => e.side) ? ['side'] : []), ...(m.edges.some((e) => e.dashed) ? ['dashed'] : []), ...(kinds.has('decision') ? ['decision'] : []), ...(kinds.has('terminal') ? ['terminal'] : []), ...(refs.some((r) => m.nodes.some((n) => n.id === r.at)) ? ['example'] : []), ...((m.nodes as { examples?: string[] }[]).some((n) => n.examples?.length) ? ['uses'] : [])];
         expect(got, `${m.id} legend entries`).toEqual(want);
         const txt = (await legend.textContent()) ?? '';
         expect(txt).toContain('next question');
