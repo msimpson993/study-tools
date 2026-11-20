@@ -27,7 +27,32 @@ runningExample:
   title: A noise-cancelling earbud speaker and a car on its suspension
   moreScenes:
     - { id: car, overlays: [springs], title: Car on its suspension, caption: "Seen from the side: the body on front and rear spring+shock pairs." }
-  summary: "Two drawn systems run through the page. The signals boxes use an earbud speaker: voltage in, diaphragm motion out, with a natural frequency of about 717 Hz (a click rings at 688 Hz). The state-space boxes use a car on its suspension, seen from the side: road and actuator forces in, the body's heave and pitch out, with two modes, bounce (1.15 Hz) and pitch (1.42 Hz). Use the switch on the map to see either one."
+  summary: "Two drawn systems run through the page. The signals boxes use an earbud speaker: voltage in, diaphragm motion out, with a natural frequency of about 717 Hz (a click rings at 688 Hz). The state-space boxes use a car on its suspension, seen from the side: road and actuator forces in, the body's heave and pitch out, with two modes, bounce (1.15 Hz) and pitch (1.42 Hz). Open the dashed Example bubbles on the map (on the first box and on the state-space box) to see either one live."
+  # Example bubbles on the map (Nov 19): each opens its live scene with brief specs; not part of the Next/Back chain
+  refs:
+    - id: earbud
+      at: SYS
+      label: the earbud speaker
+      title: The noise-cancelling earbud speaker
+      scene: { id: speaker, overlays: [forces], caption: "Voltage in, cone (diaphragm) motion out." }
+      specs: |
+        - **In → out:** the voltage V(t) on the coil → the diaphragm's motion x(t).
+        - **Resonance:** fₙ ≈ 717 Hz undamped; a click rings at ≈ 688 Hz and is gone within a few milliseconds (decay time ≈ 0.8 ms).
+        - **Damping:** ζ ≈ 0.28; poles −1,266 ± j4,322 rad/s.
+        - **Parts:** moving mass M_ms = 0.084 g, compliance C_ms = 0.587 mm/N, force factor Bl = 0.545 T·m, coil R_e = 7.47 Ω.
+        - **Used in:** the signals boxes (impulse response, tones, Fourier, Laplace, sampling).
+    - id: car
+      at: STATE
+      label: the car suspension
+      title: A car on its suspension, seen from the side
+      scene: { id: car, overlays: [springs, bump], caption: "Road bumps in, the body's heave and pitch out." }
+      specs: |
+        - **In → out:** the road (a bump under each wheel) and actuator forces → the body's heave z and pitch θ.
+        - **Modes:** bounce 1.15 Hz (ζ 0.29) and pitch 1.42 Hz (ζ 0.36).
+        - **State:** x = (z, θ, ż, θ̇), four states.
+        - **Body:** m = 1400 kg, pitch inertia J = 2000 kg·m²; front axle 1.2 m ahead of the centre of gravity, rear 1.5 m behind.
+        - **A bump:** 5 cm at 15 m/s reaches the rear wheel 0.18 s after the front.
+        - **Used in:** the state-space boxes (modes, stability, reachability, optimal control).
   details: |
     **Earbud speaker**: a micro-speaker, voltage in, diaphragm motion out, ζ ≈ 0.28; poles −1,266 ± j4,322 rad/s, so it rings at ≈ 688 Hz (717 Hz undamped).
 
@@ -60,6 +85,18 @@ runningExample:
     Model assumptions: small angles, linear springs and shocks, rigid tyres, no wheel mass (valid up to about 5 Hz). A second, **symmetric** set (kf = 44,000, kr = 35,200 N/m, cf = 3300, cr = 2640 N·s/m, so kf·a = kr·b) is used only for the push-at-the-centre story: there bounce (1.197 Hz) and pitch (1.344 Hz) are completely separate, so a push or a height sensor at the centre of gravity can neither start nor see pitch.
 
     Every box of the map says what its idea **adds to one of these examples** and what it lets us **account for**.
+# the Variables drawer opens at this glossary section for each box (Full-detail boxes inherit their main-path ancestor's)
+glossaryTopics:
+  root: Systems and the eigen idea
+  SYS: Systems and the eigen idea
+  FOUR: Fourier and sampling
+  LAP: Laplace, Z and inverses
+  STATE: State space
+  MODES: State space
+  STAB: Systems and the eigen idea
+  INOUT: Reachability and observability
+  WORK: "Application: optimal control"
+  FB: Car on its suspension
 # opt-in sound examples (earbud only), played from the map pop-ups; generated in the browser (src/figs/sounds.ts)
 audio: [snd-clip, snd-ping, snd-ping-x, snd-sweep, snd-square, snd-alias, snd-beat]
 hub:

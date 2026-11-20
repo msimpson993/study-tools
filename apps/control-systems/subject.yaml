@@ -25,7 +25,39 @@ board:
   pairs: [overview, s1, splane, sp1, sp-meaning, sp2, sp3, sp4, sp5, sp6, sp7, sp8, s2, s3, s4, s5, s6, s7, s8, s9, s10, s11, s12, s13, cheatsec, glossary]
 runningExample:
   title: A house, a car corner and an antenna dish
-  summary: "Three plants, each where it teaches best. The **house** (two rooms, a heater, a thermostat) is slow and can't overshoot: models, poles and what feedback buys a regulator. The **car corner** (400 kg on a spring and a shock) bounces: second-order behaviour, then state-space design. The **antenna dish** (a motor turning a satellite dish) is the servo that P, I and D act on."
+  summary: "Three plants, each where it teaches best. The **house** (two rooms, a heater, a thermostat) is slow and can't overshoot: models, poles and what feedback buys a regulator. The **car corner** (400 kg on a spring and a shock) bounces: second-order behaviour, then state-space design. The **antenna dish** (a motor turning a satellite dish) is the servo that P, I and D act on. Each one has a dashed Example bubble on the map that opens it live."
+  # Example bubbles on the map (Nov 19): each opens its live scene or figure with brief specs; not part of the Next/Back chain
+  refs:
+    - id: house
+      at: MODEL
+      label: the house thermostat
+      title: The two-room house and its thermostat
+      scene: { id: house, overlays: [heat, flows], caption: "The heater in room 1 switches on; room 2 follows through the shared wall." }
+      specs: |
+        - **In → out:** the heater power u (in room 1) → the room temperatures, read by the thermostat.
+        - **Poles:** −0.2 and −2.2 per hour; the slow one (τ = 5 h) dominates, so the house warms over hours and never overshoots.
+        - **Used in:** models, transfer functions, poles, first-order response, disturbances, sensitivity and noise.
+    - id: corner
+      at: SECOND
+      label: the car suspension
+      title: "The car corner: spring, shock and bounce"
+      figure: corner
+      specs: |
+        - **In → out:** a load or the road → the body's height z.
+        - **Numbers:** m = 400 kg, k = 25.6 kN/m, c = 1.6 kN·s/m, so ωₙ = 8 rad/s and ζ = 0.25: it bounces.
+        - **Used in:** second-order response, specs, the loop, then state-space design (state feedback, observer, reference input).
+        - Press play to watch the bounce.
+    - id: dish
+      at: PGAIN
+      label: the antenna dish
+      title: The antenna dish with P control
+      figure: antenna
+      specs: |
+        - **In → out:** the motor torque T → the dish angle θ; the controller turns the pointing error into torque.
+        - **Numbers:** J = 10 kg·m², B = 20 N·m·s/rad, motor ±200 N·m, so Θ/T = 0.1/(s(s + 2)).
+        - **With P control:** the closed loop is s² + 2s + Kp/10; raise Kp and it gets faster but overshoots.
+        - **Used in:** P, I and D control, steady-state error, tuning and the torque limit.
+        - Press play to watch the dish turn.
   details: |
     **The house** (time in hours; temperatures above outdoor)
 
