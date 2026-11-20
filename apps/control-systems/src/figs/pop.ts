@@ -21,6 +21,11 @@ const lines = (g: G, w: number, rows: [string, string][], y0 = 16, size = 11) =>
   let z = size; while (z > 7.5 && need(z) > H - 2) z -= 0.25;
   let y = y0 * (z / size); for (const [s, c] of rows) y = para(g, s, 8, y, w - 16, c, z) + 5;
 };
+/** wrapped text that shrinks (down to 7.5 px) until it ends above yMax: it never runs off the canvas (pass 2, N4) */
+const fitPara = (g: G, s: string, x: number, y: number, maxW: number, yMax: number, c: string, size = 10) => {
+  let z = size; while (z > 7.5 && y + (wrap(g, s, maxW, z).length - 0.5) * (z + 3) > yMax) z -= 0.25;
+  return para(g, s, x, y, maxW, c, z);
+};
 const mini = (draw: QuizFigureDef['draw'], aspect = 1.3, maxWidth = 300): QuizFigureDef => ({ aspect, maxWidth, draw });
 const degs = (a: number[]) => a.map(deg);
 
@@ -48,7 +53,7 @@ export const popFigures: QuizFigureRegistry = {
     if (k === 'a') lines(g, w, [['two first-order balances', col.muted()], ['ẋ₁ = −1.2x₁ + x₂ + 0.0036u', col.b()], ['ẋ₂ = x₁ − 1.2x₂', col.a()]]);
     else if (k === 'b') lines(g, w, [['from the bedroom: x₁ = ẋ₂ + 1.2x₂', col.muted()], ['put it in the living-room line:', col.muted()], ['ẍ₂ + 2.4ẋ₂ + 0.44x₂ = 0.0036u', col.e()]]);
     else lines(g, w, [['Laplace from rest: d/dt → s', col.muted()], ['G₂(s) = X₂/U = 0.0036 / (s² + 2.4s + 0.44)', col.e()], ['2.4 and 0.44 come straight from the ODE; the 0.0036 is the heater term', col.muted()]]);
-  }),
+  }, 0.85), // text only: taller, so the rows fit without shrinking past legibility (pass 2, N4)
 
   'pop-housemodes': mini((g, w, h, p) => {
     if (panel(p) === 'a') { const F = drawSPlane(g, w, h, { range: 2.6, reCenter: -1.2, poles: [C(-0.2), C(-2.2)], labels: true, xLabel: 'σ (1/h)', yLabel: 'jω (rad/h)' }); text(g, 'both real: no ringing', F.box.l + 4, F.box.t + 10, col.muted(), 'left', 10); return; }
@@ -64,7 +69,7 @@ export const popFigures: QuizFigureRegistry = {
   }),
 
   'pop-zeta': mini((g, w, h, p) => {
-    if (panel(p) === 'a') { const F = drawSPlane(g, w, h, { range: 10, reCenter: -3, poles: [C(-cn.sigma, cn.wd), C(-cn.sigma, -cn.wd)], labels: true, zetaRays: [0.25], wnCircles: [8] }); text(g, 'ωn = 8, ζ = cos θ = 0.25', F.box.l + 4, F.box.b - 10, col.muted(), 'left', 10); return; }
+    if (panel(p) === 'a') { const F = drawSPlane(g, w, h, { range: 10, reCenter: -3, poles: [C(-cn.sigma, cn.wd), C(-cn.sigma, -cn.wd)], labels: true, zetaRays: [0.25], wnCircles: [8] }); text(g, 'ζ = cos θ', F.box.l + 4, F.box.t + 11, col.muted(), 'left', 10); return; } // top-left, clear of the poles and ticks; ωn 8 and ζ 0.25 are on the circle and the ray (pass 2, N5)
     const runs = [[0.25, col.a()], [0.7, col.c()], [1, col.b()]] as [number, string][], F = fr(g, w, h, [0, 2], [-6, 0.4], 'time (s)', 'z (cm)');
     for (const [z, c] of runs) { const r = loadStep(z * cn.cCrit, 2); curve(g, F, r.t, r.y, c, 2); }
     legend(g, F, runs.map(([z, c]) => ({ label: `ζ = ${z}`, color: c })), 'tr', 9.5);
@@ -117,7 +122,9 @@ export const popFigures: QuizFigureRegistry = {
       for (const [Kd, dm, c] of runs) { const s = dishSim({ Kp: 1000, Kd, dm, T: 1.5, dt: 1e-4, every: 20 }); curve(g, F, s.t, degs(s.y), c, 2); }
       legend(g, F, runs.map((r) => ({ label: r[3], color: r[2] })), 'br', 9.5); return;
     }
-    drawSPlane(g, w, h, { range: 12, reCenter: -4, poles: dishPoles(1000, 0, 120), labels: true, marks: dishPoles(1000, 0, 0).map((s) => ({ s, shape: 'ring' as const, color: col.muted() })), zetaRays: [0.1, 0.7] });
+    const F = drawSPlane(g, w, h, { range: 12, reCenter: -4, poles: dishPoles(1000, 0, 120), labels: false, marks: dishPoles(1000, 0, 0).map((s) => ({ s, shape: 'ring' as const, color: col.muted() })), zetaRays: [0.1, 0.7] });
+    // the pole value goes under the upper pole, off both ζ rays and their names (pass 2, N5)
+    const up = dishPoles(1000, 0, 120).find((q) => q.im > 0); if (up) text(g, `${f(up.re, 0)} ± j${f(up.im, 2)}`, F.X(up.re), F.Y(up.im) + 20, col.b(), 'center', 10);
   }),
 
   'pop-tune': mini((g, w, h) => {
@@ -154,11 +161,11 @@ export const popFigures: QuizFigureRegistry = {
   'pop-states': mini((g, w, h, p) => {
     if (panel(p) === 'a') {
       g.clearRect(0, 0, w, h); drawLoop(g, 2, 6, w - 4, h * 0.6, { input: 'u/m', output: 'z', blocks: [{ label: '∫ → ż', color: col.b() }, { label: '∫ → z', color: col.a() }], feedback: { label: '−4ż − 64z', color: col.c() } }, 10);
-      para(g, 'spring −k/m = −64, shock −c/m = −4 feed back to the acceleration', 8, h * 0.78, w - 16, col.muted(), 10); return;
+      fitPara(g, 'spring −k/m = −64 and shock −c/m = −4 feed back into the acceleration', 8, h * 0.7, w - 16, h - 2, col.muted(), 10); return;
     }
     const t = lin(0, 4, 401), z = cornerRelease(0.05), zs = t.map((q) => z(q) * 100), vs = zs.map((q, i) => (i ? (q - zs[i - 1]) / 100 / (t[1] - t[0]) : 0));
     const F = fr(g, w, h, [-6, 6], [-0.5, 0.5], 'z (cm)', 'ż (m/s)'); curve(g, F, zs, vs, col.a(), 2); dot(g, F, [5, 0], col.e(), 4); dot(g, F, [0, 0], col.ok(), 3);
-  }),
+  }, 1.05),
 
   'pop-cc': mini((g, w, h, p) => {
     if (panel(p) === 'a') {

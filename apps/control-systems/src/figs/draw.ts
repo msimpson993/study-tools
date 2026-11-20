@@ -1,5 +1,5 @@
 /** Hand-drawn pictures of the three running examples (house, car corner, antenna dish) and small block diagrams, in canvas pixels. */
-import { text, col } from '@study/core';
+import { text, col, withLabelRole } from '@study/core';
 
 type G = CanvasRenderingContext2D;
 const line = (g: G, x1: number, y1: number, x2: number, y2: number, c: string, w = 2, dash: number[] = []) => { g.save(); g.strokeStyle = c; g.lineWidth = w; g.setLineDash(dash); g.beginPath(); g.moveTo(x1, y1); g.lineTo(x2, y2); g.stroke(); g.restore(); };
@@ -90,7 +90,7 @@ export function drawLoop(g: G, x: number, y: number, w: number, h: number, d: Lo
   if (sumR) { g.save(); g.strokeStyle = d.hiSum ? col.e() : col.text(); g.lineWidth = 1.5; g.beginPath(); g.arc(sumX, midY, sumR, 0, 2 * Math.PI); g.stroke(); g.restore(); text(g, '+', sumX - 10, midY - 9, col.muted(), 'center', 9); if (d.feedback) text(g, '−', sumX - 10, midY + 11, col.muted(), 'center', 10); }
   let cx = sumX + sumR + gap;
   d.blocks.forEach((b, i) => {
-    alpha(g, b.dim ? 0.3 : 1, () => { rect(g, cx, midY - bh / 2, bw, bh, b.hi ? col.e() : b.color ?? col.text(), b.hi ? 'rgba(255,214,90,.12)' : undefined, b.hi ? 2.2 : 1.5); for (const [j, l] of fitLines(g, b.label, bw - 6, size).entries()) text(g, l, cx + bw / 2, midY + (j - (fitLines(g, b.label, bw - 6, size).length - 1) / 2) * (size + 2), b.hi ? col.e() : b.color ?? col.text(), 'center', size); });
+    alpha(g, b.dim ? 0.3 : 1, () => { rect(g, cx, midY - bh / 2, bw, bh, b.hi ? col.e() : b.color ?? col.text(), b.hi ? 'rgba(255,214,90,.12)' : undefined, b.hi ? 2.2 : 1.5); blockText(g, b.label, cx + bw / 2, midY, bw - 6, bh - 4, b.hi ? col.e() : b.color ?? col.text(), size); });
     const nx = cx + bw + gap; arrowPx(g, cx + bw, midY, i === n - 1 ? x1 : nx, midY, col.text(), 1.4, 6);
     if (d.dist && i === n - 1) { arrowPx(g, cx - gap / 2, midY - h * 0.32, cx - gap / 2, midY - 4, col.d(), 1.4, 5); text(g, d.dist, cx - gap / 2, midY - h * 0.32 - 7, col.d(), 'center', size - 1); }
     cx = nx;
@@ -100,10 +100,18 @@ export function drawLoop(g: G, x: number, y: number, w: number, h: number, d: Lo
     const fbY = y + h * 0.82, xr = x1 - 6;
     line(g, xr, midY, xr, fbY, col.text(), 1.4);
     if (d.feedback === true) { line(g, xr, fbY, sumX, fbY, col.text(), 1.4); }
-    else { const fw = Math.min(110, w * 0.3), fx = (sumX + xr) / 2 - fw / 2, b = d.feedback; line(g, xr, fbY, fx + fw, fbY, col.text(), 1.4); alpha(g, b.dim ? 0.3 : 1, () => { rect(g, fx, fbY - 12, fw, 24, b.hi ? col.e() : b.color ?? col.text(), undefined, b.hi ? 2.2 : 1.5); text(g, b.label, fx + fw / 2, fbY, b.hi ? col.e() : b.color ?? col.text(), 'center', size); }); line(g, fx, fbY, sumX, fbY, col.text(), 1.4); }
+    else { const fw = Math.min(110, w * 0.3), fx = (sumX + xr) / 2 - fw / 2, b = d.feedback; line(g, xr, fbY, fx + fw, fbY, col.text(), 1.4); alpha(g, b.dim ? 0.3 : 1, () => { rect(g, fx, fbY - 12, fw, 24, b.hi ? col.e() : b.color ?? col.text(), undefined, b.hi ? 2.2 : 1.5); blockText(g, b.label, fx + fw / 2, fbY, fw - 6, 20, b.hi ? col.e() : b.color ?? col.text(), size); }); line(g, fx, fbY, sumX, fbY, col.text(), 1.4); }
     arrowPx(g, sumX, fbY, sumX, midY + sumR, col.text(), 1.4, 6);
     if (d.noise) { text(g, d.noise, xr + 2, (midY + fbY) / 2, col.d(), 'left', size - 1); }
   }
+}
+/** a block's label, wrapped and shrunk (down to 7 px) until every line fits the block's width and the lines fit its height; drawn as
+ *  'axis' labels so nothing slides it out of its box (pass 2, N5: "1/(ms²" ran past its block) */
+export function blockText(g: G, s: string, cx: number, cy: number, maxW: number, maxH: number, c: string, size = 10.5) {
+  let z = size, ls = fitLines(g, s, maxW, z);
+  const wide = (a: string[], q: number) => { g.font = `${q}px system-ui, sans-serif`; return a.some((l) => g.measureText(l).width > maxW); };
+  while (z > 7 && (wide(ls, z) || ls.length * (z + 2) - 2 > maxH)) { z -= 0.25; ls = fitLines(g, s, maxW, z); }
+  withLabelRole('axis', () => ls.forEach((l, j) => text(g, l, cx, cy + (j - (ls.length - 1) / 2) * (z + 2), c, 'center', z)));
 }
 function fitLines(g: G, s: string, maxW: number, size: number): string[] {
   g.font = `${size}px system-ui, sans-serif`; if (g.measureText(s).width <= maxW) return [s];

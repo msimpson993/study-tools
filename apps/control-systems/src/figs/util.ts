@@ -24,13 +24,43 @@ export function para(g: CanvasRenderingContext2D, s: string, x: number, y: numbe
   for (const l of wrap(g, s, maxW, size)) { text(g, l, x, y, color, align, size); y += size + 3; } return y;
 }
 /** A legend drawn INSIDE the plot (top-left by default), one row per item, wrapping when the plot is narrow. */
+/** How much curve ink (saturated, opaque pixels: the coloured curves, not grey grid, axes or text) lies in a user-space box. */
+function inkIn(g: CanvasRenderingContext2D, x0: number, y0: number, x1: number, y1: number): number {
+  const m = typeof g.getTransform === 'function' ? g.getTransform() : null; if (!m || typeof g.getImageData !== 'function') return 0;
+  const X0 = Math.max(0, Math.floor(m.a * x0 + m.e)), Y0 = Math.max(0, Math.floor(m.d * y0 + m.f)), X1 = Math.min(g.canvas.width, Math.ceil(m.a * x1 + m.e)), Y1 = Math.min(g.canvas.height, Math.ceil(m.d * y1 + m.f));
+  if (X1 - X0 < 2 || Y1 - Y0 < 2) return 0;
+  let d: Uint8ClampedArray; try { d = g.getImageData(X0, Y0, X1 - X0, Y1 - Y0).data; } catch { return 0; }
+  let n = 0; for (let i = 0; i < d.length; i += 8) { if (d[i + 3] < 140) continue; const mx = Math.max(d[i], d[i + 1], d[i + 2]), mn = Math.min(d[i], d[i + 1], d[i + 2]); if (mx - mn > 60) n++; }
+  return n;
+}
+/** The colour the canvas shows through to (it is transparent): the first opaque background up its parents. */
+function pageBg(cv: HTMLCanvasElement | undefined): string {
+  for (let el: Element | null = cv && typeof getComputedStyle === 'function' ? cv : null; el; el = el.parentElement) { const c = getComputedStyle(el).backgroundColor; if (c && c !== 'transparent' && !/rgba\([^)]*,\s*0\)$/.test(c)) return c; }
+  return '#1d2330';
+}
+/** An in-plot legend. It starts in the asked corner; if the curves already drawn run through that spot, it moves to whichever corner
+ *  (or the middle of the right or left edge) has the least curve under it, so a legend never sits on the lines it names (pass 2, N5).
+ *  Draw the curves first. */
 export function legend(g: CanvasRenderingContext2D, fr: { box: { l: number; t: number; r: number; b: number } }, items: Item[], where: 'tl' | 'tr' | 'bl' | 'br' = 'tl', size = 10) {
-  const W = fr.box.r - fr.box.l, maxW = Math.max(60, W - 34); let y = where[0] === 't' ? fr.box.t + 9 : fr.box.b - 6 - items.length * (size + 4);
+  const W = fr.box.r - fr.box.l, maxW = Math.max(60, W - 34);
   g.font = `${size}px system-ui, sans-serif`;
-  // lay the rows out first, then slide the whole block (swatches with their rows) clear of labels already drawn (core labels.ts)
-  const rows = items.map((it) => { const lines = wrap(g, it.label, maxW, size), widest = Math.max(...lines.map((l) => g.measureText(l).width)); return { it, lines, x0: where[1] === 'l' ? fr.box.l + 6 : fr.box.r - 6 - widest - 22, widest }; });
-  const hgt = rows.reduce((a, r) => a + r.lines.length * (size + 3) + 1, 0), bx0 = Math.min(...rows.map((r) => r.x0)), bx1 = Math.max(...rows.map((r) => r.x0 + 21 + r.widest));
+  const base = items.map((it) => { const lines = wrap(g, it.label, maxW, size), widest = Math.max(...lines.map((l) => g.measureText(l).width)); return { it, lines, widest }; });
+  const hgt = base.reduce((a, r) => a + r.lines.length * (size + 3) + 1, 0), bw = Math.max(...base.map((r) => r.widest)) + 22;
+  type Spot = 'tl' | 'tr' | 'bl' | 'br' | 'ml' | 'mr';
+  const top = (sp: Spot) => (sp[0] === 't' ? fr.box.t + 9 : sp[0] === 'b' ? fr.box.b - 6 - items.length * (size + 4) : (fr.box.t + fr.box.b) / 2 - hgt / 2 + size * 0.6);
+  const left = (sp: Spot) => sp[1] === 'l';
+  const boxOf = (sp: Spot) => { const y = top(sp), x0 = left(sp) ? fr.box.l + 6 : fr.box.r - 6 - bw; return [x0, y - size * 0.6, x0 + bw, y - size * 0.6 + hgt] as const; };
+  const order: Spot[] = [where, ...(['tr', 'tl', 'br', 'bl', 'mr', 'ml'] as Spot[]).filter((q) => q !== where)];
+  const score = (sp: Spot) => { const [a, b, c, d] = boxOf(sp); return inkIn(g, a, b, c, d); };
+  let best: Spot = where, bs = score(where);
+  if (bs > 3) for (const sp of order.slice(1)) { const sc = score(sp); if (sc < bs) { best = sp; bs = sc; } if (bs <= 3) break; }
+  let y = top(best);
+  const rows = base.map((r) => ({ ...r, x0: left(best) ? fr.box.l + 6 : fr.box.r - 6 - r.widest - 22 }));
+  const bx0 = Math.min(...rows.map((r) => r.x0)), bx1 = Math.max(...rows.map((r) => r.x0 + 21 + r.widest));
+  // then slide the whole block (swatches with their rows) clear of labels already drawn (core labels.ts)
   y += freeBlockShift(g, bx0, y - size * 0.6, bx1, y - size * 0.6 + hgt, size + 3);
+  // a small plot can have no clear spot: then the legend gets a card in the page colour, so its text never sits on a line
+  if (bs > 3) { g.save(); g.fillStyle = pageBg(g.canvas as HTMLCanvasElement); g.globalAlpha = 0.88; g.beginPath(); g.roundRect?.(bx0 - 3, y - size * 0.6 - 3, bx1 - bx0 + 6, hgt + 4, 3); g.fill(); g.restore(); }
   withLabelRole('axis', () => {
     for (const { it, lines, x0 } of rows) {
       g.save(); g.strokeStyle = it.color; g.lineWidth = 2.2; g.setLineDash(it.dash ? [5, 3] : []); g.beginPath(); g.moveTo(x0, y); g.lineTo(x0 + 16, y); g.stroke(); g.restore();

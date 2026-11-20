@@ -63,8 +63,12 @@ export const specsPanels = (c: { values: V; set(k: string, v: number | string | 
       const poles: Cx[] = nb.zeta < 1 ? [C(-nb.sigma, nb.wd), C(-nb.sigma, -nb.wd)] : roots([p.m, p.c, p.k]);
       const ok = poles.every((q) => -q.re >= sig - 1e-9 && (q.im === 0 || -q.re / Math.hypot(q.re, q.im) >= z - 1e-9));
       const fr = drawSPlane(g, w, h, { range: 12, reCenter: -6, poles, labels: true, zetaRays: [z], region: { zeta: z, sigma: sig }, handles: [poles[0]] });
-      para(g, `%OS ≤ ${f(os, 0)} % ⇒ ζ ≥ ${f(z, 3)};  Ts ≤ ${f(ts, 1)} s ⇒ σ ≥ 4/Ts = ${f(sig, 1)}/s`, fr.box.l + 4, fr.box.t + 10, fr.box.r - fr.box.l - 8, col.text(), 10);
-      para(g, ok ? 'poles inside: specs met' : `poles outside: c = ${k3(p.c)} N·s/m misses`, fr.box.l + 4, fr.box.b - 12, fr.box.r - fr.box.l - 8, ok ? col.ok() : col.bad(), 10.5);
+      // the notes keep to the left part of the plane (inside the allowed region, away from the poles near σ = −2) and start below the
+      // top grid number; the bottom one sits just under the σ axis, not on the tick numbers along the bottom (pass 2, N5)
+      const nw = (fr.box.r - fr.box.l) * 0.58, xl = fr.box.l + 22, ym = (fr.box.t + fr.box.b) / 2;
+      let y = para(g, `%OS ≤ ${f(os, 0)} % ⇒ ζ ≥ ${f(z, 3)}`, xl, fr.box.t + 24, nw, col.text(), 10);
+      para(g, `Ts ≤ ${f(ts, 1)} s ⇒ σ ≥ 4/Ts = ${f(sig, 1)}/s`, xl, y + 2, nw, col.text(), 10);
+      para(g, ok ? 'poles inside: specs met' : `poles outside: c = ${k3(p.c)} N·s/m misses`, xl, ym + 14, nw, ok ? col.ok() : col.bad(), 10.5);
     },
     pointer: splaneDrag({ range: 12, reCenter: -6, upperOnly: true, handles: () => { const nb = cornerNumbers(cornerParams(c.values)); return [{ id: 'p', s: C(-nb.sigma, nb.wd) }]; }, onDrag: (_id, s) => { const p = cornerParams(c.values), cc = Math.max(0.5, Math.min(6.4, (-2 * p.m * s.re) / 1000)); c.set('c', Math.round(cc * 20) / 20); } }),
   },
