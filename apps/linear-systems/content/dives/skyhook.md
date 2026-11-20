@@ -16,7 +16,7 @@ level: Some algebra
 check: [c-sky-1, c-sky-2, c-stab-1]
 ---
 
-**The question:** what happens when the output drives the input? This is the Full-detail box *Feedback: active damping*, after *Put it to work*: feeding the measured body speed back to the actuators changes A itself, so it moves the poles.
+**The question:** what happens when a measurement of the system drives its input? This is the Full-detail box *Feedback: active damping*, after *Put it to work*: feeding the measured body speed back to the actuators changes A itself, so it moves the poles.
 
 ### The big idea
 

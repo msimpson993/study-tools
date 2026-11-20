@@ -1,7 +1,7 @@
 /** Pop-up pictures for the expanded Full-detail boxes (Nov 19, Linear Systems Tutor's specs): ROC, ORTHO, SAMP, DTFT, WIN, FB.
  * Every number is computed here from the models (ex.ts for the earbud, carModel for the car); test/expand.test.ts pins them. */
 import { rangeFrame, graphAxes, curve, tline, text, dot, cross, col, linspace, fillBetween, arrow, withLabelRole, type QuizFigureDef, type Frame } from '@study/core';
-import { spk, hImp, cabs, TAU, ringDigital, ringDTFT, humDFT, dB, aliasOf, squareCoef } from './ex';
+import { spk, hImp, cabs, TAU, ringDigital, ringDTFT, ringSample, humDFT, dB, aliasOf, squareCoef } from './ex';
 import { CAR, carModes, skyGains, withSky, bumpResponse, skyBump } from './car';
 
 type R4 = { x: number; y: number; w: number; h: number };
@@ -42,14 +42,14 @@ const roc: QuizFigureDef = { aspect: 2.0, phoneAspect: 0.75, maxWidth: 560, draw
     const top = header(g, r, right ? [['(a) ROC σ > −1.27 /ms: right-sided, causal', col.c()], ['contains the jω axis: stable', col.muted()]] : [['(b) ROC σ < −1.27 /ms: left-sided', col.b()], ['runs backward in time, growing into the past: not stable', col.muted()]]);
     const ph = (r.h - top) * 0.58, rp = { ...r, h: top + ph };
     const f = frameIn(w, h, rp, top, [-3, 1], [-6, 6], 36, 28);
-    axes(g, f, [-3, 1], [-6, 6], 'σ (1/ms)', 'ω', 1, 3);
+    axes(g, f, [-3, 1], [-6, 6], 'σ (1/ms)', 'ω (rad/ms)', 1, 3);
     shadeX(g, f, right ? -p.sigma : -3, right ? 1 : -p.sigma, right ? 'rgba(110,226,110,.16)' : 'rgba(120,170,255,.16)');
     tline(g, f, [0, -6], [0, 6], col.strong(), 2.4); tline(g, f, [-p.sigma, -6], [-p.sigma, 6], col.muted(), 1, [4, 3]);
     for (const q of p.poles) cross(g, f, q as [number, number], col.bad(), 5);
     const ri = { x: r.x, y: r.y + top + ph, w: r.w, h: r.h - top - ph };
     const tw: [number, number] = right ? [-6, 6] : [-3, 1], ts = linspace(tw[0], tw[1], 481), y0 = ts.map((t) => (right ? (t >= 0 ? hImp(t) : 0) : rocLeft(t))), pk = Math.max(...y0.map(Math.abs)), ys = y0.map((y) => y / pk), m = 1.15;
     const fi = rangeFrame(w, h, tw, [-m, m], ri.x + 34, w - (ri.x + ri.w) + 10, ri.y + 8, h - (ri.y + ri.h) + 30);
-    axes(g, fi, tw, [-m, m], right ? 't (ms), peak = 1' : `t (ms), largest value = 1 (at ${rocLeftPeak().t.toFixed(2).replace('-', '−')} ms)`, '', right ? 3 : 1, 1); curve(g, fi, ts, ys, right ? col.c() : col.b(), 1.8);
+    axes(g, fi, tw, [-m, m], right ? 't (ms), peak = 1' : `t (ms), deepest trough = −1 (at ${rocLeftPeak().t.toFixed(2).replace('-', '−')} ms)`, '', right ? 3 : 1, 1); curve(g, fi, ts, ys, right ? col.c() : col.b(), 1.8);
   });
 } };
 
@@ -93,16 +93,13 @@ const fold: QuizFigureDef = { aspect: 2.0, phoneAspect: 1.15, maxWidth: 520, dra
 export function dtftPeak() { let best = 0, om = 0; for (let i = 1; i < 20000; i++) { const o = (i * Math.PI) / 20000, m = cabs(ringDTFT(o)); if (m > best) { best = m; om = o; } } const d = ringDigital(8); return { r: d.r, deg: (d.th * 180) / Math.PI, om, hz: (om * 8000) / TAU, gain: best / cabs(ringDTFT(0)) }; }
 const dtft: QuizFigureDef = { aspect: 2.1, phoneAspect: 0.8, maxWidth: 560, draw(g, w, h) {
   g.clearRect(0, 0, w, h); const P = panels(w, h, 2), d = ringDigital(8), pk = dtftPeak();
-  // (a) z-plane
-  { const r = P[0], top = header(g, r, [[`(a) poles at r = ${d.r.toFixed(4)}, ±${pk.deg.toFixed(0)}°`, col.b()], [`peak where the poles are nearest: Ω = ${pk.om.toFixed(3)}`, col.e()]]);
-    const ph = r.h - top - 8, R = Math.min(ph / 2.5, (r.w - 24) / 2.6), cx = r.x + r.w / 2, cy = r.y + top + 4 + ph / 2;
-    g.save(); g.strokeStyle = col.strong(); g.lineWidth = 1; g.beginPath(); g.moveTo(cx - 1.25 * R, cy); g.lineTo(cx + 1.25 * R, cy); g.moveTo(cx, cy - 1.2 * R); g.lineTo(cx, cy + 1.2 * R); g.stroke();
-    g.strokeStyle = col.muted(); g.lineWidth = 1.4; g.beginPath(); g.arc(cx, cy, R, 0, 7); g.stroke(); g.restore();
-    const zx = (re: number) => cx + re * R, zy = (im: number) => cy - im * R, zp = [cx + Math.cos(pk.om) * R, cy - Math.sin(pk.om) * R];
-    for (const sgn of [1, -1]) { const px = zx(d.r * Math.cos(d.th)), py = zy(sgn * d.r * Math.sin(d.th)); g.save(); g.setLineDash([4, 3]); g.strokeStyle = col.e(); g.beginPath(); g.moveTo(zp[0], zp[1]); g.lineTo(px, py); g.stroke(); g.restore();
-      g.strokeStyle = col.b(); g.lineWidth = 2; g.beginPath(); g.moveTo(px - 4, py - 4); g.lineTo(px + 4, py + 4); g.moveTo(px - 4, py + 4); g.lineTo(px + 4, py - 4); g.stroke(); }
-    g.beginPath(); g.arc(zp[0], zp[1], 4, 0, 7); g.fillStyle = col.e(); g.fill();
-    text(g, 'Ω = 0', zx(1) + 4, cy + 10, col.muted(), 'left', 9); text(g, 'π/2 (2 kHz)', cx + 4, zy(1) - 6, col.muted(), 'left', 9); text(g, 'π (4 kHz)', zx(-1) - 4, cy + 10, col.muted(), 'right', 9); }
+  // (a) the sampled click ring: the numbers the DTFT adds up
+  { const r = P[0], top = header(g, r, [[`(a) click ring sampled at 8 kHz: ${(TAU / d.th).toFixed(1)} samples per cycle`, col.b()], [`dashed: envelope ×${d.r.toFixed(4)} per sample`, col.muted()]]);
+    const N = 40, ns = Array.from({ length: N + 1 }, (_, n) => n), xs = ns.map((n) => ringSample(n)), m = Math.max(...xs.map(Math.abs)), C = d.b1 / (d.r * Math.sin(d.th)) / m;
+    const f = frameIn(w, h, r, top, [0, N], [-1.15, 1.15], 30, 31);
+    axes(g, f, [0, N], [-1.15, 1.15], 'n (samples, 0.125 ms each)', '', 8, 1);
+    ns.forEach((n, i) => { const y = xs[i] / m; tline(g, f, [n, 0], [n, y], col.b(), 1.4); dot(g, f, [n, y], col.b(), 2.2); });
+    const ne = linspace(0, N, 200); curve(g, f, ne, ne.map((n) => C * d.r ** n), col.muted(), 1, [4, 3]); curve(g, f, ne, ne.map((n) => -C * d.r ** n), col.muted(), 1, [4, 3]); }
   // (b) gain against Ω
   { const r = P[1], top = header(g, r, [[`(b) gain, 1 at Ω = 0: peak ×${pk.gain.toFixed(2)} at ${pk.om.toFixed(3)} rad ≈ ${pk.hz.toFixed(0)} Hz`, col.a()], ['dashed: the mirror repeat past π (fs/2)', col.muted()]]);
     const f = frameIn(w, h, r, top, [0, 2 * Math.PI], [0, 2.2], 30, 31), g0 = cabs(ringDTFT(0));
