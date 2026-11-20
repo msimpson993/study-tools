@@ -53,7 +53,11 @@ function wirePointer(cv: HTMLCanvasElement, ptr: PanelPointer): () => boolean {
  */
 /** “x: … · y: …” under a panel, only when it is a plot with both axes named (a formula, a table or a picture has none) */
 const axesCaption = (p: { x?: string; y?: string }) => (p.x?.trim() && p.y?.trim() ? `x: ${p.x} · y: ${p.y}` : '');
-export function mountFigure(host: HTMLElement, def: FigureDef, panels: FigurePanel[], controls: ControlSet): { redraw(): void; open(ids: string[]): void; close(): void; destroy(): void } {
+/** `intro`: the compact form an Example node's introduction uses: only the named panels (the animated picture), with its
+ *  play button but no controls rail and no "Look for" (those belong to the boxes that introduce what they show) */
+export interface FigureMountOpts { intro?: { panels?: string[] } }
+export function mountFigure(host: HTMLElement, def: FigureDef, panels0: FigurePanel[], controls: ControlSet, opts: FigureMountOpts = {}): { redraw(): void; open(ids: string[]): void; close(): void; destroy(): void } {
+  const intro = opts.intro, panels = intro?.panels?.length ? panels0.filter((p) => intro.panels!.includes(p.id)) : panels0;
   const stage = h('div', { class: 'fig-stage', dataset: { testid: 'fig-stage' } });
   const inline = h('div', { class: `pair2${panels.length === 1 ? ' one' : ''}` });
   const overlay = h('div', { class: 'fig-overlay', hidden: true, dataset: { testid: 'fig-overlay' } });
@@ -62,7 +66,7 @@ export function mountFigure(host: HTMLElement, def: FigureDef, panels: FigurePan
     return figureRefWithControls(refContent(), def, controls.values, controls.serialize(), auto);
   };
   stage.append(h('div', { class: 'fig-stage-head' }, h('h4', null, def.title), copyRefButton(() => figRef())), inline);
-  if (def.lookFor) stage.append(h('p', { class: 'fig-look', dataset: { testid: 'look-for' }, html: `<b>Look for:</b> ${def.lookFor}` }));
+  if (def.lookFor && !intro) stage.append(h('p', { class: 'fig-look', dataset: { testid: 'look-for' }, html: `<b>Look for:</b> ${def.lookFor}` }));
   // animation: play/pause drives one control (its own slider is the scrubber); reduced motion => explicit step button, no autoplay loop
   let stopAnim = () => {};
   if (def.animate) {
@@ -76,11 +80,11 @@ export function mountFigure(host: HTMLElement, def: FigureDef, panels: FigurePan
     const setPlaying = (on: boolean) => { playing = on; btn.textContent = on ? '⏸ Pause' : (reduce ? 'Step ▶' : '▶ Play'); btn.setAttribute('aria-pressed', String(on)); if (on) { last = performance.now(); raf = requestAnimationFrame(tick); } else cancelAnimationFrame(raf); };
     btn.onclick = () => { if (reduce) advance(span / 20); else setPlaying(!playing); };
     stopAnim = () => { playing = false; cancelAnimationFrame(raf); };
-    stage.append(h('div', { class: 'fig-anim' }, btn, h('span', null, reduce ? 'Reduced motion: stepping instead of animating. ' : '', `Scrub with the “${cd.label}” slider.`)));
+    stage.append(h('div', { class: 'fig-anim' }, btn, h('span', null, reduce ? 'Reduced motion: stepping instead of animating. ' : '', intro ? '' : `Scrub with the “${cd.label}” slider.`)));
   }
   stage.append(overlay);
   const rail = controls.render('Controls');
-  host.append(h('div', { class: 'fig-layout' }, stage, rail));
+  host.append(h('div', { class: `fig-layout${intro ? ' fig-intro' : ''}` }, stage, intro ? null : rail));
 
   const canvases = new Map<string, HTMLCanvasElement>();
   const redrawers: (() => void)[] = [];

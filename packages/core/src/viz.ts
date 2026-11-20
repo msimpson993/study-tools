@@ -1,6 +1,6 @@
 import { cssVar } from './plot';
 import { labelRole, labelsOn, labelOverlaps, freeSpot, resetLabels, withLabelRole, labelGen, type LabelRect } from './labels';
-import { mountFigure, type FigurePanel } from './figure';
+import { mountFigure, type FigurePanel, type FigureMountOpts } from './figure';
 import type { ControlSet } from './controls';
 import type { FigureDef } from './types';
 
@@ -218,8 +218,8 @@ export const deg = (d: number) => (d * Math.PI) / 180;
 
 /** Build a figure mount function from a panel factory so a subject app registers one line per figure. */
 export function figureOf(build: (c: ControlSet, def: FigureDef) => FigurePanel[]) {
-  return (host: HTMLElement, def: FigureDef, controls: ControlSet) => {
-    const api = mountFigure(host, def, build(controls, def), controls);
+  return (host: HTMLElement, def: FigureDef, controls: ControlSet, opts?: FigureMountOpts) => {
+    const api = mountFigure(host, def, build(controls, def), controls, opts);
     return () => api.destroy();
   };
 }

@@ -1,7 +1,7 @@
 import { h, s, clear } from './dom';
 import type { AppContent, MapDef, MapNode, MapEdge } from './types';
 import { copyRefButton, nodeReference, edgeReference } from './copyref';
-import { computeGeometry, layoutWidth, placeLabels, roundedPath, arrowHead, edgeKey, pathToRoot, mapHighlight, type Geometry, type Label, type MapView } from './maplayout';
+import { computeGeometry, layoutWidth, placeLabels, roundedPath, arrowHead, edgeKey, pathToRoot, mapHighlight, placeSideNodes, SIDE_TAG_H, sideFont, type Geometry, type Label, type MapView, type SideNode } from './maplayout';
 import { storeGet, storeSet } from './store';
 import { mountScene } from './scene';
 import { Progress, quizTagOf, subtree } from './progress';
@@ -12,7 +12,7 @@ export interface MapState {
   mapId: string;
   mode: 'explore' | 'review';
   recall: boolean;
-  /** the open entry: a box, a line, or an Example bubble (`ref`, runningExample.refs; outside the Next/Back chain) */
+  /** the open entry: a box, a line, or an Example node (`ref`, runningExample.refs; outside the Next/Back chain) */
   pick: { kind: 'node' | 'edge' | 'ref'; id: string } | null;
   /** colour family (node.series) whose boxes are lit via the legend chips, or null */
   series: number | null;
@@ -24,7 +24,8 @@ export interface MapNav {
   openDive(id: string): void;
   openLive(live: string): void;
   openQuiz(tags: string[], title: string): void;
-  onState?(): void;
+  /** the map's state changed; `endTrip` = an Example side trip is being closed (✕, Esc or a second tap), so a history step it pushed is stepped back over */
+  onState?(o?: { endTrip?: boolean }): void;
   /** the app hands back a Back-button (popstate) map change here, so it closes/switches the entry without remounting the map
    *  (keeps the map's scroll position and zoom); returns the unregister function */
   onPop?(fn: (pick: MapState['pick']) => void): () => void;
@@ -32,8 +33,8 @@ export interface MapNav {
   figures?: QuizFigureRegistry;
   /** opt-in sound players for `node.pop.audio` (see audio.ts: audioHook) */
   audio?: PopAudioHook;
-  /** mounts a live figures.yaml figure (an Example bubble's `figure`); returns its stop function, or null if the app has none */
-  mountFigure?(host: HTMLElement, id: string, preset?: string): (() => void) | null;
+  /** mounts a live figures.yaml figure (an Example node's `figure`); returns its stop function, or null if the app has none */
+  mountFigure?(host: HTMLElement, id: string, preset?: string, opts?: { intro?: { panels?: string[] } }): (() => void) | null;
 }
 export interface PopAudioHook { mount(id: string): { el: HTMLElement; destroy(): void } }
 
@@ -67,14 +68,12 @@ export function mountConceptMap(host: HTMLElement, content: AppContent, progress
   const reviewBar = h('div', { class: 'cm-top', dataset: { testid: 'review-bar' } });
   const caption = h('div', { class: 'cm-caps' });
   const legend = h('div', { class: 'cm-legend', role: 'group', 'aria-label': 'How to read the lines and boxes', dataset: { testid: 'map-legend' } });
-  // the running examples live in Example bubbles on the map (runningExample.refs), so the header is one slim line
+  // the running examples live in Example nodes on the map (runningExample.refs), so the header is one slim line
   const exRefs = content.subject.runningExample?.refs ?? [];
   const hero = h('div', { class: 'cm-hero slim', dataset: { testid: 'map-hero' } },
-    h('div', { class: 'cm-q', dataset: { testid: 'central-question' } }, content.subject.centralQuestion, h('small', null, exRefs.length ? 'Central question. Tap any box or line to open it; a dashed Example bubble opens a running example.' : 'Central question. Tap any box or line to open it.')));
-  /** the bubbles on map m (each on its host box) */
+    h('div', { class: 'cm-q', dataset: { testid: 'central-question' } }, content.subject.centralQuestion, h('small', null, exRefs.length ? 'Central question. Tap any box or line to open it; a dashed Example node beside a box introduces a running example.' : 'Central question. Tap any box or line to open it.')));
+  /** the Example nodes on map m (each beside its host box) */
   const refsOn = (m: MapDef) => exRefs.filter((r) => m.nodes.some((n) => n.id === r.at));
-  /** px a host box grows at its foot to hold its bubble */
-  const REF_H = 30;
   root.append(
     hero,
     top, reviewBar, caption, legend,
@@ -90,7 +89,7 @@ export function mountConceptMap(host: HTMLElement, content: AppContent, progress
   ro.observe(scroll);
   width = Math.floor(scroll.clientWidth - 8) || 960;
 
-  const setPick = (p: MapState['pick']) => { const was = st.pick; st.pick = p; if (p) st.series = null; renderLegend(); renderSvg(); renderPanel(); nav.onState?.(); if (p && isSplit()) { revealSplit(); centerSel(); } if (!p && was && !wide?.matches) showWalkedTo(was); };
+  const setPick = (p: MapState['pick']) => { const was = st.pick; st.pick = p; if (p) st.series = null; renderLegend(); renderSvg(); renderPanel(); nav.onState?.({ endTrip: endingTrip }); if (p && isSplit()) { revealSplit(); centerSel(); } if (!p && was && !wide?.matches) showWalkedTo(was); };
   /** phone: closing the entry card returns to the map AT the box or line the reader walked to; if it is already in view
    *  nothing moves (so a box opened and closed keeps the map exactly where it was) */
   function showWalkedTo(was: NonNullable<MapState['pick']>) {
@@ -112,7 +111,8 @@ export function mountConceptMap(host: HTMLElement, content: AppContent, progress
    *  (they are sticky there), giving them the screen's height; already in place = no scroll */
   function revealSplit() {
     const top = wrap.getBoundingClientRect().top;
-    if (top > innerHeight * 0.2) window.scrollTo({ top: scrollY + top - 52, behavior: 'instant' as ScrollBehavior });
+    // (any start below the top bar: the header is one slim line now, so the old "a fifth of the screen" test missed it)
+    if (top > 64) window.scrollTo({ top: scrollY + top - 52, behavior: 'instant' as ScrollBehavior });
   }
   /** split on (desktop + an entry open) or off; the map is re-laid out for its new column at once, and the zoom resets when it leaves the side */
   function applySplit() {
@@ -203,8 +203,13 @@ export function mountConceptMap(host: HTMLElement, content: AppContent, progress
   /** the main-chain box a Full-detail branch hangs from: the last box on its path that is also on the first map */
   const mainAncestor = (id: string, m: MapDef) => { const first = new Set(content.maps[0]?.nodes.map((n) => n.id)); const up = mainPath(id, m).filter((x) => x !== id && first.has(x)); return up[up.length - 1]; };
   const openEdge = (key: string) => { setPick({ kind: 'edge', id: key }); panel.scrollTop = 0; };
-  /** an Example bubble opens its card in the panel (the phone card below 700 px); tapping it again closes it */
-  const toggleRef = (id: string) => setPick(st.pick?.kind === 'ref' && st.pick.id === id ? null : { kind: 'ref', id });
+  /** an Example node opens its card in the panel (the phone card below 700 px); tapping it again closes it */
+  /** an Example node is a side trip: remember where the reader was (a box or a line, or nothing) and go back there on Close,
+   *  Esc or a second tap; the browser's Back does the same (app.ts pushes a history step for it) */
+  let refFrom: MapState['pick'] = null;
+  const toggleRef = (id: string) => { if (st.pick?.kind === 'ref' && st.pick.id === id) return closeRef(); if (st.pick?.kind !== 'ref') refFrom = st.pick; setPick({ kind: 'ref', id }); };
+  function closeRef() { const back = refFrom && (refFrom.kind !== 'node' || map().nodes.some((n) => n.id === refFrom!.id)) ? refFrom : null; refFrom = null; endingTrip = true; try { setPick(back); } finally { endingTrip = false; } }
+  let endingTrip = false;
   const toggleEdge = (key: string) => setPick(st.pick?.kind === 'edge' && st.pick.id === key ? null : { kind: 'edge', id: key });
 
   function renderTop() {
@@ -222,7 +227,8 @@ export function mountConceptMap(host: HTMLElement, content: AppContent, progress
     // on a phone the two folds sit side by side with short summaries (the long ones return on wider screens)
     if (m.caption) caption.append(h('details', { class: 'fold' }, h('summary', null, h('span', { class: 'sum-long' }, 'How to read this map'), h('span', { class: 'sum-short' }, 'How to read it')), h('div', { html: `<p>${m.caption}</p>` })));
     const re = content.subject.runningExample;
-    if (re) caption.append(h('details', { class: 'fold', dataset: { testid: 'running-example' } }, h('summary', null, h('span', { class: 'sum-long' }, `Running example: ${re.title}`), h('span', { class: 'sum-short' }, 'Running example')), h('div', { html: `<p><b>${re.title}.</b> ${re.summary}</p>${re.details ?? ''}` })));
+    // the running examples' introductions live in their Example nodes (runningExample.refs): no separate section then
+    if (re && !exRefs.length) caption.append(h('details', { class: 'fold', dataset: { testid: 'running-example' } }, h('summary', null, h('span', { class: 'sum-long' }, `Running example: ${re.title}`), h('span', { class: 'sum-short' }, 'Running example')), h('div', { html: `<p><b>${re.title}.</b> ${re.summary}</p>${re.details ?? ''}` })));
   }
 
   function renderReview() {
@@ -259,7 +265,8 @@ export function mountConceptMap(host: HTMLElement, content: AppContent, progress
       sw.append(k === 'decision' ? s('path', { class: 'lg-shape', d: 'M 5 1 L 19 1 L 23 7 L 19 13 L 5 13 L 1 7 Z' }) : s('rect', { class: 'lg-shape', x: 1, y: 1, width: 22, height: 12, rx: k === 'terminal' ? 6 : 3 }));
       return sw;
     };
-    const exChip = () => { const sw = s('svg', { class: 'lg-sw', width: 30, height: 14, viewBox: '0 0 30 14', 'aria-hidden': 'true' }); sw.append(s('rect', { class: 'lg-ref', x: 1, y: 2, width: 28, height: 10, rx: 5 })); return sw; };
+    // a dashed example node and its dotted link, side by side (the link is drawn on the left, as from its host box)
+    const exChip = () => { const sw = s('svg', { class: 'lg-sw', width: 40, height: 14, viewBox: '0 0 40 14', 'aria-hidden': 'true' }); sw.append(s('line', { class: 'lg-exlink', x1: 1, y1: 7, x2: 14, y2: 7 }), s('rect', { class: 'lg-ref', x: 15, y: 1, width: 24, height: 12, rx: 5 })); return sw; };
     const item = (key: string, icon: Element, text: string) => h('span', { class: 'lg-item', dataset: { legend: key } }, icon as unknown as Node, h('span', null, text));
     legend.append(
       item('solid', line(false), 'next question'),
@@ -267,7 +274,7 @@ export function mountConceptMap(host: HTMLElement, content: AppContent, progress
       ...(hasDashed ? [item('dashed', line(true), 'same idea, other view')] : []),
       ...(kinds.has('decision') ? [item('decision', shape('decision'), 'a fork: the answer picks the way')] : []),
       ...(kinds.has('terminal') ? [item('terminal', shape('terminal'), 'where the map starts')] : []),
-      ...(refsOn(m).length ? [item('example', exChip(), 'a running example (opens it live)')] : []),
+      ...(refsOn(m).length ? [item('example', exChip(), 'running example (dashed), dotted to the box where it starts')] : []),
     );
     // the coloured bar on the left of a box is its chapter (node.series): name it, and let a tap light that chapter up
     const used = [...new Set(m.nodes.map((n) => n.series).filter((x): x is number => x !== undefined))].sort();
@@ -322,19 +329,22 @@ export function mountConceptMap(host: HTMLElement, content: AppContent, progress
 
   let geom: Geometry | null = null;
   let labels: Label[] = [];
+  let sideNodes: SideNode[] = [];
   function renderSvg() {
     applySplit();
     const m = map();
     const byId: Record<string, MapNode> = Object.fromEntries(m.nodes.map((n) => [n.id, n]));
-    const hosts = new Set(refsOn(m).map((r) => r.at));
-    geom = computeGeometry(hosts.size ? m.nodes.map((n) => (hosts.has(n.id) ? { ...n, extra: REF_H } : n)) : m.nodes, m.edges, layoutWidth(view, width));
+    geom = computeGeometry(m.nodes, m.edges, layoutWidth(view, width));
+    // Example nodes: placed in free space beside their host boxes once the chain is laid out (the chain never moves for them)
+    const sideIn = refsOn(m).map((r) => ({ id: r.id, at: r.at, label: r.label }));
+    if (sideIn.length) { const ps = placeSideNodes(geom, sideIn, placeLabels(geom, m.edges, [])); geom = ps.geom; sideNodes = ps.nodes; } else sideNodes = [];
     const pick = st.pick, openRef = pick?.kind === 'ref' ? exRefs.find((r) => r.id === pick.id) : undefined;
-    // an open bubble lights its host box's path like the box itself would (the box is not "selected": the bubble is)
+    // an open Example node lights its host box's path like the box itself would (the box is not "selected": the node is)
     const hl = mapHighlight(pick?.kind === 'ref' ? (openRef ? { kind: 'node', id: openRef.at } : null) : pick as { kind: 'node' | 'edge'; id: string } | null, m.edges);
     const ser = pick === null ? st.series : null;
     const selNode = openRef ? null : hl.selected, selEdgeKey = pick?.kind === 'edge' && hl.edges.size ? pick.id : null;
     const pathSet = hl.path, neigh = hl.neigh, pathKeys = hl.edges;
-    labels = placeLabels(geom, m.edges, hl.priority);
+    labels = placeLabels(geom, m.edges, hl.priority, sideNodes);
     const recallHide = (id: string) => st.mode === 'review' && st.recall && !st.revealed.has(`${st.mapId}/${id}`);
 
     if (isSplit() && zoomFit) { zoom = fitZoom(); wrap.dataset.zoom = zoom.toFixed(3); zoomPct.textContent = `${Math.round(zoom * 100)}%`; }
@@ -393,23 +403,23 @@ export function mountConceptMap(host: HTMLElement, content: AppContent, progress
       if (status) grp.append(s('circle', { class: 'st', cx: b.x + b.w - 9, cy: b.y + 9, r: 6 }));
       svg.append(grp);
     }
-    // Example bubbles: a dashed, tinted chip in the foot of the host box with a small "Example" tag on its border; its own
-    // tap target (not the box's), and never part of the Next/Back chain
-    for (const r of refsOn(m)) {
-      const b = geom.boxes[r.at]; if (!b) continue;
-      const on = openRef?.id === r.id, dim = pick !== null && !on && !pathSet.has(r.at) && selNode !== r.at;
-      const cw = b.w - 14, ch = 18, x = b.x + 7, y = b.y + b.h - ch - 5, fs = Math.max(8.5, Math.min(10.5, (cw - 10) / (r.label.length * 0.56)));
+    // Example nodes: a dashed, tinted node with an "Example" tag in a side column beside its host box, joined to it by a
+    // plain dotted link (no arrowhead, no label, not clickable, no line pop-up). Its own tap target; never in the Next/Back chain.
+    for (const sn of sideNodes) {
+      const r = exRefs.find((x) => x.id === sn.id); if (!r) continue;
+      const on = openRef?.id === r.id, dim = (pick !== null && !on && !pathSet.has(r.at) && selNode !== r.at) || (ser !== null && byId[r.at]?.series !== ser);
+      svg.append(s('line', { class: `qm-exlink${on ? ' x-on' : ''}${dim ? ' x-dim' : ''}`, x1: sn.link[0].x, y1: sn.link[0].y, x2: sn.link[1].x, y2: sn.link[1].y, 'pointer-events': 'none', 'aria-hidden': 'true', 'data-testid': 'map-exlink', 'data-ref': r.id, 'data-at': r.at }));
       const act = () => toggleRef(r.id);
       const grp = s('g', {
-        class: `qm-ref${on ? ' r-sel' : ''}${dim ? ' r-dim' : ''}`, role: 'button', tabindex: 0, 'aria-label': `Example: ${r.label}. Opens the live picture.`, 'aria-pressed': on,
-        'data-ref': r.id, 'data-at': r.at, 'data-testid': 'map-ref',
+        class: `qm-ref${on ? ' r-sel' : ''}${dim ? ' r-dim' : ''}`, role: 'button', tabindex: 0, 'aria-label': `Example: ${r.label}. Opens the running example's introduction.`, 'aria-pressed': on,
+        'data-ref': r.id, 'data-at': r.at, 'data-side': sn.side, 'data-testid': 'map-ref',
         onclick: (ev: Event) => { ev.stopPropagation(); act(); },
         onkeydown: (ev: KeyboardEvent) => { if (ev.key === 'Enter' || ev.key === ' ') { ev.preventDefault(); ev.stopPropagation(); act(); } },
       });
-      grp.append(s('rect', { class: 'chip', x, y, width: cw, height: ch, rx: ch / 2 }),
-        s('rect', { class: 'tag-bg', x: x + 9, y: y - 5, width: 40, height: 9, rx: 3 }),
-        s('text', { class: 'tag', x: x + 29, y: y + 2, 'text-anchor': 'middle', 'font-size': 7.5 }, 'EXAMPLE'),
-        s('text', { class: 'lab', x: x + cw / 2, y: y + ch / 2 + fs * 0.36 + 0.5, 'text-anchor': 'middle', 'font-size': fs }, r.label));
+      const cx = sn.x + sn.w / 2;
+      grp.append(s('rect', { class: 'shape chip focus-ring', x: sn.x, y: sn.y, width: sn.w, height: sn.h, rx: 12 }),
+        s('text', { class: 'tag', x: cx, y: sn.y + 5 + SIDE_TAG_H - 3, 'text-anchor': 'middle', 'font-size': 8.5 }, 'EXAMPLE'));
+      sn.lines.forEach((line, i) => grp.append(s('text', { class: 'lab', x: cx, y: sn.y + 5 + SIDE_TAG_H + 10 + i * 13, 'text-anchor': 'middle', 'font-size': sideFont(sn.w) }, line)));
       svg.append(grp);
     }
     const sl = scroll.scrollLeft, stp = scroll.scrollTop; // a re-render (a tap, a theme change) must not throw the reader back to the corner
@@ -534,15 +544,23 @@ export function mountConceptMap(host: HTMLElement, content: AppContent, progress
     if (pick.kind === 'ref') {
       const r = exRefs.find((x) => x.id === pick.id), host = r && m.nodes.find((x) => x.id === r.at);
       if (!r) return;
-      // the reference card: the example live, then its specs; Close / Back return to the map (no Next/Back chain here)
-      panel.append(h('div', { class: 'cm-head' }, h('h3', null, h('span', { class: 'ref-tag' }, 'Example'), ' ', r.title), close),
-        h('div', { class: 'st-hint', dataset: { testid: 'ref-hint' } }, host ? `A running example, opened from “${host.label}”. Not a step in the chain: close it to carry on.` : 'A running example.'));
+      // the example's introduction: restated question, the live drawing and its caption, what it is and why we use it, and
+      // the key numbers introduced so far. A side trip: no Next/Back chain; Close / Esc / browser Back return to where you were.
+      const xClose = h('button', { class: 'tbtn x', 'aria-label': 'Close', dataset: { testid: 'panel-close' }, onclick: () => closeRef() }, '✕');
+      panel.append(h('div', { class: 'cm-head' }, h('h3', null, h('span', { class: 'ref-tag' }, 'Example'), ' ', r.title), xClose));
+      if (host) {
+        const crumb = h('div', { class: 'path ref-trail', dataset: { testid: 'ref-trail' } }, 'Side trip from: ');
+        crumb.append(h('a', { href: '#', dataset: { node: host.id }, onclick: (ev: Event) => { ev.preventDefault(); openNode(host.id); } }, host.label), ' ⇢ ', h('span', { class: 'ref-here' }, `Example: ${r.label}`));
+        panel.append(crumb);
+      }
+      panel.append(h('p', { class: 'pop-question', dataset: { testid: 'ref-question' } }, h('span', { class: 'pq-lead' }, 'The question:'), ' ', h('span', { class: 'pq-text' }, r.question ?? "What's the running example?")));
       const live = h('div', { class: 'ref-live', dataset: { testid: 'ref-live' } });
       panel.append(live);
       if (r.scene) { const hd = mountScene(live, { scene: r.scene.id, overlays: r.scene.overlays, params: r.scene.params, caption: r.scene.caption, diagram: r.scene.diagram }); popStops.push(() => hd.destroy()); }
-      else if (r.figure) { const stop = nav.mountFigure?.(live, r.figure, r.preset); if (stop) popStops.push(stop); else live.append(h('p', { class: 'st-hint' }, `(figure ${r.figure} is not available)`)); }
-      if (r.specs) panel.append(h('div', { class: 'ref-specs', dataset: { testid: 'ref-specs' }, html: r.specs }));
-      if (host) panel.append(h('div', { class: 'chain-nav', dataset: { testid: 'ref-nav' } }, h('button', { class: 'tbtn', dataset: { testid: 'ref-host', to: host.id }, onclick: () => openNode(host.id) }, h('span', { class: 'ch-dir' }, 'Open the box it sits on'), h('span', { class: 'ch-name' }, host.label))));
+      else if (r.figure) { const stop = nav.mountFigure?.(live, r.figure, r.preset, { intro: { panels: r.panels } }); if (stop) popStops.push(stop); else live.append(h('p', { class: 'st-hint' }, `(figure ${r.figure} is not available)`)); if (r.caption) live.append(h('p', { class: 'scene-cap ref-cap', dataset: { testid: 'ref-caption' }, html: r.caption })); }
+      panel.append(h('h4', { class: 'ref-h' }, 'What it is and why we use it'), h('div', { class: 'ref-about', dataset: { testid: 'ref-about', body: '' }, html: r.about }));
+      panel.append(h('h4', { class: 'ref-h' }, 'Key numbers so far'), h('div', { class: 'ref-numbers', dataset: { testid: 'ref-numbers', body: '' }, html: r.numbers }));
+      if (host) panel.append(h('div', { class: 'chain-nav', dataset: { testid: 'ref-nav' } }, h('button', { class: 'tbtn', dataset: { testid: 'ref-host', to: host.id }, onclick: () => { refFrom = null; openNode(host.id); } }, h('span', { class: 'ch-name' }, `← Back to ${host.label}`))));
       return;
     }
     if (pick.kind === 'node') {
@@ -602,13 +620,14 @@ export function mountConceptMap(host: HTMLElement, content: AppContent, progress
   renderAll(); if (view === 'actual') centerOnBoxes();
   const off = progress.onChange(() => { renderReview(); renderSvg(); renderPanel(); });
   const offPop = nav.onPop?.((p) => setPick(p)) ?? (() => {});
-  const onKey = (ev: KeyboardEvent) => { if (ev.key === 'Escape' && (st.pick || st.series !== null) && !document.querySelector('.fig-overlay:not([hidden])')) { st.series = null; setPick(null); } };
+  const onKey = (ev: KeyboardEvent) => { if (ev.key === 'Escape' && (st.pick || st.series !== null) && !document.querySelector('.fig-overlay:not([hidden])')) { st.series = null; if (st.pick?.kind === 'ref') closeRef(); else setPick(null); } };
   document.addEventListener('keydown', onKey);
   return () => { offPop(); popStops.forEach((f) => f()); ro.disconnect(); off(); document.removeEventListener('keydown', onKey); wide?.removeEventListener?.('change', onWide); root.remove(); };
 }
 
 /** Expose geometry+labels of the *current* render to tests. */
-export function mapGeometryFor(map: MapDef, width: number) {
-  const geom = computeGeometry(map.nodes, map.edges, width);
-  return { geom, labels: placeLabels(geom, map.edges, []) };
+export function mapGeometryFor(map: MapDef, width: number, refs: { id: string; at: string; label: string }[] = []) {
+  const g0 = computeGeometry(map.nodes, map.edges, width);
+  const on = refs.filter((r) => map.nodes.some((n) => n.id === r.at)), side = on.length ? placeSideNodes(g0, on, placeLabels(g0, map.edges, [])) : { geom: g0, nodes: [] };
+  return { geom: side.geom, labels: placeLabels(side.geom, map.edges, [], side.nodes), side: side.nodes };
 }

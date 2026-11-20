@@ -3,6 +3,7 @@ import { scrollHints } from './scrollhint';
 import { initTheme, toggleTheme, currentTheme } from './theme';
 import { storeGet, storeSet } from './store';
 import type { AppContent, FigureDef } from './types';
+import type { FigureMountOpts } from './figure';
 import { Progress } from './progress';
 import { mountScene } from './scene';
 import { mountConceptMap, newMapState, type MapState } from './conceptmap';
@@ -17,7 +18,7 @@ import { setRefContent, pickFromHash, mapHashFor, isMapHash, copyRefButton, dive
 export interface BoardHandle { destroy?(): void; show?(params: URLSearchParams): void; hide?(): void }
 export interface AppHooks {
   /** Mount a live figure for figures.yaml entry `def`. Return a cleanup. */
-  figures?: Record<string, (host: HTMLElement, def: FigureDef, controls: ControlSet) => (() => void) | void>;
+  figures?: Record<string, (host: HTMLElement, def: FigureDef, controls: ControlSet, opts?: FigureMountOpts) => (() => void) | void>;
   /** Renderers for quiz questions with a `figure:` (id → def); see quizfig.ts. */
   quizFigures?: QuizFigureRegistry;
   /** Opt-in sound examples for map pop-ups: the app imports `audioHook(registry)` from '@study/core/audio' (so apps without sound never bundle it). */
@@ -140,17 +141,25 @@ export function mountApp(content: AppContent, hooks: AppHooks = {}): void {
     openQuiz: (tags: string[], title: string) => go(`/quiz?tags=${encodeURIComponent(tags.join(','))}&title=${encodeURIComponent(title)}`),
     figures: hooks.quizFigures,
     audio: hooks.audio,
-    // an Example bubble that draws a live figure (runningExample.refs[].figure): the same mounter a dive's figure slot uses
-    mountFigure: (host: HTMLElement, id: string, preset?: string) => {
+    // an Example node that draws a live figure (runningExample.refs[].figure): the same mounter a dive's figure slot uses
+    mountFigure: (host: HTMLElement, id: string, preset?: string, opts?: FigureMountOpts) => {
       const def = content.figures.find((f) => f.id === id), mounter = hooks.figures?.[id];
       if (!def || !mounter) return null;
       const controls = new ControlSet(def.controls, def.presets); if (preset) controls.applyPreset(preset);
-      const stop = mounter(host, def, controls); return typeof stop === 'function' ? stop : () => {};
+      const stop = mounter(host, def, controls, opts); return typeof stop === 'function' ? stop : () => {};
     },
-    onState: () => {
+    onState: (o?: { endTrip?: boolean }) => {
       if (!isMapHash(location.hash || '#/')) return;
       const prev = lastPick; lastPick = mapState.pick;
-      const entry = !!(history.state && history.state.cmEntry);
+      const entry = !!(history.state && history.state.cmEntry), trip = !!(history.state && history.state.cmRef);
+      // an Example node is a side trip with its own history step (any width): browser Back returns to where the reader was
+      // (the box or line they had open, or the bare map); closing it (✕, Esc, a second tap) steps back over that step
+      if (mapState.pick?.kind === 'ref' && prev?.kind !== 'ref' && !trip && !fullscreenActive() && (prev || !PHONE.matches)) { history.pushState({ ...(history.state ?? {}), cmRef: 1 }, '', mapHashFor(mapState.pick)); return; }
+      if (trip && mapState.pick?.kind !== 'ref') {
+        if (o?.endTrip) { history.back(); return; }
+        // left the trip another way (its "Back to" button, a box tapped on the map): keep the step, drop its mark
+        const { cmRef: _drop, ...rest } = history.state; history.replaceState(rest, '', mapHashFor(mapState.pick)); return;
+      }
       // phones: opening an entry pushes a history step, so the browser/Android Back returns to the map; closing it (✕, Esc,
       // browser Back) steps back over that entry instead of leaving it in the history
       if (PHONE.matches && mapState.pick && !prev && !entry && !fullscreenActive()) { history.pushState({ ...(history.state ?? {}), cmEntry: 1 }, '', mapHashFor(mapState.pick)); return; }

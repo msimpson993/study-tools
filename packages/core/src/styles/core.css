@@ -251,15 +251,18 @@ details.st-more .st-badge{display:inline-block;margin-left:.35rem;padding:0 .4re
 .qm-node.recall-hidden text{opacity:.0}.qm-node .qmark{fill:var(--muted);font-size:18px;font-weight:700}
 .qm-node .st{fill:var(--panel);stroke:var(--border-strong);stroke-width:2}
 .qm-ref{cursor:pointer}
-/* Example bubble: dashed, tinted, with an "EXAMPLE" tag on its border: plainly not a box and not a line */
-.qm-ref .chip{fill:color-mix(in srgb,var(--warn,#e0b341) 13%,var(--elev));stroke:var(--warn,#e0b341);stroke-width:1.2;stroke-dasharray:4 3}
-.qm-ref .tag-bg{fill:var(--warn,#e0b341)}
-.qm-ref .tag{fill:var(--bg);font-weight:800;letter-spacing:.06em}
+/* Example node: its own dashed, tinted node with an EXAMPLE tag, in a side column beside its host box */
+.qm-ref .chip{fill:color-mix(in srgb,var(--warn,#e0b341) 12%,var(--elev));stroke:var(--warn,#e0b341);stroke-width:1.4;stroke-dasharray:5 3}
+.qm-ref .tag{fill:var(--warn,#e0b341);font-weight:800;letter-spacing:.08em}
 .qm-ref .lab{fill:var(--text);font-weight:600}
 .qm-ref:hover .chip,.qm-ref:focus-visible .chip{stroke-width:2}
-.qm-ref.r-sel .chip{fill:color-mix(in srgb,var(--warn,#e0b341) 30%,var(--elev));stroke-width:2.2;stroke-dasharray:none}
-.qm-ref.r-dim{opacity:.55}
+.qm-ref.r-sel .chip{fill:color-mix(in srgb,var(--warn,#e0b341) 28%,var(--elev));stroke-width:2.2}
+.qm-ref.r-dim,.qm-exlink.x-dim{opacity:.5}
 .qm-ref:focus{outline:none}.qm-ref:focus-visible .chip{stroke:var(--accent)}
+/* its link to the host box: plain dotted, no arrowhead, no label, not a tap target */
+.qm-exlink{stroke:var(--warn,#e0b341);stroke-width:1.6;stroke-dasharray:0 4.5;stroke-linecap:round;fill:none}
+.qm-exlink.x-on{stroke-width:2.2}
+.cm-legend .lg-exlink{stroke:var(--warn,#e0b341);stroke-width:1.6;stroke-dasharray:0 4.5;stroke-linecap:round}
 .cm-legend .lg-ref{fill:color-mix(in srgb,var(--warn,#e0b341) 13%,var(--elev));stroke:var(--warn,#e0b341);stroke-width:1.2;stroke-dasharray:4 3}
 /* the Example card in the panel */
 .cm-panel .ref-tag{display:inline-block;font:800 .62rem/1 system-ui,sans-serif;letter-spacing:.07em;text-transform:uppercase;color:var(--warn,#e0b341);border:1px dashed var(--warn,#e0b341);border-radius:6px;padding:.2rem .35rem;vertical-align:.15rem}
@@ -267,7 +270,9 @@ details.st-more .st-badge{display:inline-block;margin-left:.35rem;padding:0 .4re
 /* a live figure in the card: one column, its panels stacked (the card is never wide enough for side-by-side) */
 .cm-panel .ref-live .fig-layout{grid-template-columns:minmax(0,1fr)}
 .cm-panel .ref-live .fig-grid{flex-direction:column}
-.cm-panel .ref-specs{font-size:.92rem}.cm-panel .ref-specs table{font-size:.84rem}.cm-panel .ref-specs ul{margin:.3rem 0;padding-left:1.2rem}
+.cm-panel .ref-h{margin:.7rem 0 .2rem;font-size:.95rem}
+.cm-panel .ref-about,.cm-panel .ref-numbers{font-size:.92rem}.cm-panel .ref-about ul,.cm-panel .ref-numbers ul{margin:.2rem 0;padding-left:1.2rem}
+.cm-panel .ref-trail{margin:.1rem 0 .3rem}.cm-panel .ref-trail .ref-here{color:var(--warn,#e0b341);font-weight:600}
 .qm-node.st-seen .st{fill:var(--accent);stroke:var(--accent)}.qm-node.st-correct .st{fill:var(--ok);stroke:var(--ok)}.qm-node.st-missed .st{fill:var(--bad);stroke:var(--bad)}
 .cm,.cm-legend{--qm-dash:8 5}
 .qm-edge .line{fill:none;stroke:var(--border-strong);stroke-width:1.4;stroke-linejoin:round;pointer-events:none}
@@ -285,6 +290,8 @@ details.st-more .st-badge{display:inline-block;margin-left:.35rem;padding:0 .4re
 .cm-legend .lg-vbtn{font:inherit;color:var(--muted);background:var(--panel);border:1px solid var(--border);border-radius:999px;padding:.08rem .6rem;cursor:pointer;line-height:1.3}
 .cm-legend .lg-vbtn:hover{border-color:var(--border-strong);color:var(--text)}.cm-legend .lg-vbtn.on{color:var(--text);border-color:var(--accent);box-shadow:inset 0 0 0 1px var(--accent)}.cm-legend .lg-vbtn:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 .cm-legend .lg-item{display:inline-flex;align-items:center;gap:.35rem;white-space:nowrap}
+.cm-legend .lg-item[data-legend="example"]{white-space:normal;max-width:100%}
+.cm-legend .lg-item svg{flex:none}
 .cm-legend .lg-sw{flex:none;overflow:visible}
 .cm-legend .lg-line,.cm-legend .lg-head{fill:none;stroke:var(--text);stroke-opacity:.6;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round}
 .cm-legend .lg-line.dashed{stroke-dasharray:var(--qm-dash);stroke-linecap:butt}
@@ -318,7 +325,7 @@ details.st-more .st-badge{display:inline-block;margin-left:.35rem;padding:0 .4re
 .ex-row>.callout{margin:0}
 @media (min-width:900px){.ex-row.has-scene{grid-template-columns:minmax(0,1fr) minmax(300px,430px)}}
 .cm-hero{display:grid;grid-template-columns:minmax(0,1fr);gap:.5rem;align-items:center}
-/* the slim header: just the central question (the running examples are bubbles on the map) */
+/* the slim header: just the central question (the running examples are Example nodes on the map) */
 .cm-hero.slim{display:block;margin:0 0 .15rem}
 @media (min-width:760px){.cm-hero.has-scene{grid-template-columns:minmax(0,1fr) 340px}}
 .cm-hero-sc{display:flex;flex-direction:column;gap:.3rem;min-width:0}

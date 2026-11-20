@@ -140,7 +140,7 @@ export function pickFromHash(content: AppContent, path: string[]): { mapId: stri
     return m ? { mapId: m.id, pick: { kind: 'edge', id } } : null;
   }
   if (a === 'ref') {
-    // an Example bubble: on the first map that has its host box
+    // an Example node: on the first map that has its host box
     const r = content.subject.runningExample?.refs?.find((x) => x.id === id), m = r && content.maps.find((m) => m.nodes.some((n) => n.id === r.at));
     return m ? { mapId: m.id, pick: { kind: 'ref', id } } : null;
   }
