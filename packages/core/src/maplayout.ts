@@ -1,7 +1,7 @@
 /** Pure geometry for the question map: auto-layout in staggered rows, orthogonal edges, collision-avoided labels. No DOM. */
 export interface Pt { x: number; y: number }
 export interface Rect { x: number; y: number; w: number; h: number }
-export interface InNode { id: string; label: string; detail?: string; kind?: string; /** px reserved at the box's foot for an attached chip (an Example bubble) */ extra?: number }
+export interface InNode { id: string; label: string; detail?: string; kind?: string; /** px reserved at the box's foot for an attached chip (none today) */ extra?: number }
 export interface InEdge { from: string; to: string; label?: string }
 export interface NodeBox extends Rect { id: string; row: number; lines: string[]; detailLines: string[]; kind: string; /** px at the foot kept for an attached chip (0 if none) */ extra: number }
 export interface EdgeGeom { key: string; from: string; to: string; points: Pt[]; dot: Pt; gapTop: number; gapBottom: number; /** hop-overs: where this line's horizontal piece jumps over another line's vertical piece */ hops: Hop[] }
@@ -289,7 +289,7 @@ export function computeGeometry(nodes: InNode[], edges: InEdge[], containerWidth
 }
 
 
-export function placeLabels(geom: Geometry, edges: InEdge[], priority: string[]): Label[] {
+export function placeLabels(geom: Geometry, edges: InEdge[], priority: string[], avoid: Rect[] = []): Label[] {
   const labelOf: Record<string, string> = {};
   for (const e of edges) if (e.label) labelOf[edgeKey(e.from, e.to)] = e.label;
   const order = [
@@ -320,6 +320,7 @@ export function placeLabels(geom: Geometry, edges: InEdge[], priority: string[])
           if (rect.x < 2 || rect.x + rect.w > geom.width - 2) continue;
           if (rect.y < g.gapTop + 2 || rect.y + rect.h > g.gapBottom - 2) continue;
           if (boxes.some((b) => overlaps(rect, b, 4))) continue;
+          if (avoid.some((b) => overlaps(rect, b, 4))) continue;
           if (placed.some((p) => overlaps(rect, p, 3))) continue;
           if (dotRects.some((d) => d.key !== key && overlaps(rect, d, 0))) continue;
           placed.push({ key, text: txt, ...rect });
@@ -526,3 +527,111 @@ function addHops(geom: Geometry): void {
 }
 /** Crossings that stayed plain (no room for an arc). */
 export const unhoppedCrossings = (geom: Geometry): number => computeHops(geom.edges).unhopped.length;
+
+// ---------------------------------------------------------------------------------------------------------------------
+// Example nodes (runningExample.refs): each running example is its own small node in a side column beside the box where it
+// first appears, joined to it by a short plain dotted link. They are placed AFTER the chain is laid out, in free space
+// (never moving a box or a line), so the main chain keeps its shape and width; only if no free spot exists does the
+// drawing grow a column on the right.
+export interface SideIn { id: string; at: string; label: string }
+export interface SideNode extends Rect { id: string; at: string; side: 'right' | 'left'; lines: string[]; /** the dotted link, host → node: level from the host's side, or (in a band under a full row) a short drop from its foot */ link: [Pt, Pt]; /** placed in a band the drawing opened under its host's row (no free spot beside it) */ column: boolean }
+export const SIDE_TAG_H = 13;
+/** label font size on an Example node of width w (a narrow node uses 10 px) and its average character width */
+export const sideFont = (w: number) => (w < 70 ? 9.5 : w < 92 ? 10 : 11);
+const sideCharW = (w: number) => (w < 70 ? 5.2 : w < 92 ? 5.6 : 6.2);
+const SIDE_LINE_H = 13;
+const segRects = (geom: Geometry, pad: number): Rect[] => geom.edges.flatMap((g) => g.points.slice(1).map((q, i) => {
+  const p = g.points[i]; return { x: Math.min(p.x, q.x) - pad, y: Math.min(p.y, q.y) - pad, w: Math.abs(q.x - p.x) + 2 * pad, h: Math.abs(q.y - p.y) + 2 * pad };
+}));
+/** the same drawing with a band of height dh opened at y0 (everything below moves down; lines crossing y0 just get longer) */
+function stretchGeometry(geom: Geometry, y0: number, dh: number): Geometry {
+  const Y = (y: number) => (y > y0 + 0.01 ? y + dh : y);
+  const boxes = Object.fromEntries(Object.entries(geom.boxes).map(([k, b]) => [k, { ...b, y: Y(b.y) }]));
+  const edges = geom.edges.map((e) => ({ ...e, points: e.points.map((p) => ({ x: p.x, y: Y(p.y) })), dot: { x: e.dot.x, y: Y(e.dot.y) }, gapTop: Y(e.gapTop), gapBottom: Y(e.gapBottom), hops: e.hops.map((h) => ({ ...h, y: Y(h.y) })) }));
+  return { ...geom, height: geom.height + dh, boxes, edges };
+}
+const linkRect = (l: [Pt, Pt]): Rect => (Math.abs(l[0].y - l[1].y) < 0.01
+  ? { x: Math.min(l[0].x, l[1].x) + 1, y: l[0].y - 0.5, w: Math.abs(l[1].x - l[0].x) - 2, h: 1 }
+  : { x: l[0].x - 0.5, y: Math.min(l[0].y, l[1].y) + 1, w: 1, h: Math.abs(l[1].y - l[0].y) - 2 });
+/** Where the Example nodes go. First choice: free space right beside the host (right, then left; growing gaps; then
+ *  narrower), clear of every box, line, dot, line label and other example, with a level link that crosses nothing.
+ *  When the host's row is full (dense maps on narrow columns), the drawing makes room without re-laying out the chain or
+ *  growing wider (Fit must still fit): a short band opens under the host's row, and the node hangs under its host on a
+ *  short vertical dotted stub. */
+export function placeSideNodes(geom0: Geometry, items: SideIn[], labels0: Label[] = []): { geom: Geometry; nodes: SideNode[]; width: number } {
+  const narrow = geom0.nodeW < 150 || geom0.width < 600;
+  const wMax = narrow ? 104 : 128, wMin = narrow ? 60 : 96;
+  /** the label in lines of whole words (never hyphenated or cut: a width too narrow for its longest word gives no lines) */
+  const size = (label: string, w: number) => {
+    const per = Math.floor((w - 8) / sideCharW(w)), words = label.split(/\s+/);
+    if (Math.max(...words.map((x) => x.length)) > per) return { lines: [] as string[], h: 0 };
+    const lines: string[] = []; for (const wd of words) { const last = lines[lines.length - 1]; if (last !== undefined && `${last} ${wd}`.length <= per) lines[lines.length - 1] = `${last} ${wd}`; else lines.push(wd); }
+    return { lines, h: 10 + SIDE_TAG_H + lines.length * SIDE_LINE_H };
+  };
+  const free = (geom: Geometry, labels: Label[], placed: SideNode[], it: SideIn): SideNode | null => {
+    const b = geom.boxes[it.at]; if (!b) return null;
+    const boxes = Object.values(geom.boxes), segs = segRects(geom, 0), dots = geom.edges.map((g) => ({ x: g.dot.x - QM_DOT_R, y: g.dot.y - QM_DOT_R, w: 2 * QM_DOT_R, h: 2 * QM_DOT_R }));
+    const ok = (r: Rect, link: Rect) =>
+      r.x >= 4 && r.x + r.w <= geom.width - 4 && r.y >= 4 && r.y + r.h <= geom.height - 4 &&
+      !boxes.some((q) => overlaps(r, q, 10) || overlaps(link, q)) && !segs.some((q) => overlaps(r, q, 8) || overlaps(link, q, 3)) &&
+      !dots.some((d) => overlaps(r, d, 8) || overlaps(link, d, 3)) && !labels.some((l) => overlaps(r, l, 6) || overlaps(link, l, 2)) && !placed.some((p) => overlaps(r, p, 8));
+    for (let w = wMax; w >= wMin; w -= 8) {
+      const { lines, h } = size(it.label, w); if (!lines.length) continue;
+      for (const side of ['right', 'left'] as const) for (const gap of [14, 18, 26, 34, 44, 56]) for (const dy of [0, -8, 8, -16, 16, -24, 24]) {
+        const cy = b.y + b.h / 2 + dy, ly = Math.min(b.y + b.h - 10, Math.max(b.y + 10, cy));
+        const x = side === 'right' ? b.x + b.w + gap : b.x - gap - w, r = { x, y: cy - h / 2, w, h };
+        if (ly < r.y + 8 || ly > r.y + r.h - 8) continue;
+        const link: [Pt, Pt] = side === 'right' ? [{ x: b.x + b.w, y: ly }, { x, y: ly }] : [{ x: b.x, y: ly }, { x: x + w, y: ly }];
+        if (!ok(r, linkRect(link))) continue;
+        return { id: it.id, at: it.at, side, lines, ...r, link, column: false };
+      }
+    }
+    return null;
+  };
+  let geom = geom0, nodes: SideNode[] = [];
+  const moveAll = (f: (n: SideNode) => SideNode) => { nodes = nodes.map(f); };
+  for (const it of items) {
+    if (!geom.boxes[it.at]) continue;
+    // labels0 belong to the first drawing; once room has been made the caller re-places the labels around the nodes anyway
+    const f = free(geom, geom === geom0 ? labels0 : [], nodes, it);
+    if (f) { nodes.push(f); continue; }
+    const b = geom.boxes[it.at], row = Object.values(geom.boxes).filter((q) => q.row === b.row);
+    const { h } = size(it.label, wMax);
+    // a band under (or else over) the host's row: only vertical line pieces cross it, so the node takes a free stretch
+    // under (over) its host, joined by a short vertical dotted stub from the host's foot (head)
+    const band = (where: 'under' | 'over') => {
+      const y0 = where === 'under' ? Math.max(...row.map((q) => q.y + q.h)) : Math.min(...row.map((q) => q.y)) - 0.02, dh = h + 22;
+      const g3 = stretchGeometry(geom, y0, dh), b3 = g3.boxes[it.at], top = y0 + 10;
+      const xs = segRects(g3, 0).filter((q) => q.y < y0 + dh - 1 && q.y + q.h > y0 + 1).map((q) => q.x);
+      for (let w = wMax; w >= wMin; w -= 4) {
+        const { lines, h: hh } = size(it.label, w); if (!lines.length) continue;
+        const cands = [b3.x + b3.w - w, b3.x, b3.x + (b3.w - w) / 2, 4, g3.width - 4 - w, ...xs.flatMap((v) => [v + 7, v - 7 - w])].sort((p, q) => Math.abs(p + w / 2 - (b3.x + b3.w * 0.75)) - Math.abs(q + w / 2 - (b3.x + b3.w * 0.75)));
+        for (const x of cands) {
+          if (x < 4 || x + w > g3.width - 4 || xs.some((v) => v > x - 6 && v < x + w + 6)) continue;
+          if (Object.values(g3.boxes).some((q) => overlaps({ x, y: top, w, h: hh }, q, 6)) || nodes.some((n) => overlaps({ x, y: top, w, h: hh }, n.y > y0 ? { ...n, y: n.y + dh } : n, 8))) continue;
+          const lo = Math.max(b3.x + 10, x + 8), hi = Math.min(b3.x + b3.w - 10, x + w - 8);
+          const sx = [hi, lo, (lo + hi) / 2].find((c) => c >= lo && c <= hi && !xs.some((v) => Math.abs(v - c) < 7)); if (sx === undefined) continue;
+          const link: [Pt, Pt] = where === 'under' ? [{ x: sx, y: b3.y + b3.h }, { x: sx, y: top }] : [{ x: sx, y: b3.y }, { x: sx, y: top + hh }];
+          return { g3, y0, dh, node: { id: it.id, at: it.at, side: 'right' as const, lines, x, y: top, w, h: hh, link, column: true } };
+        }
+      }
+      return null;
+    };
+    const got = band('under') ?? band('over');
+    if (!got) continue; // nowhere clear at all: better no node on this map than one on top of the chain (the tests say there is always one)
+    moveAll((n) => (n.y > got.y0 ? { ...n, y: n.y + got.dh, link: [{ x: n.link[0].x, y: n.link[0].y + got.dh }, { x: n.link[1].x, y: n.link[1].y + got.dh }] } : n));
+    geom = got.g3; nodes.push(got.node);
+  }
+  // keep the caller's order
+  const byId = Object.fromEntries(nodes.map((n) => [n.id, n]));
+  return { geom, nodes: items.map((it) => byId[it.id]).filter(Boolean), width: geom.width };
+}
+/** Overlap count of the Example nodes with boxes, lines, labels and each other (tests: must be 0). */
+export function sideNodeOverlaps(geom: Geometry, nodes: SideNode[], labels: Label[]): number {
+  const segs = segRects(geom, 0); let n = 0;
+  for (const s of nodes) {
+    n += Object.values(geom.boxes).filter((b) => overlaps(s, b)).length + segs.filter((q) => overlaps(s, q)).length + labels.filter((l) => overlaps(s, l)).length;
+    n += nodes.filter((o) => o !== s && overlaps(s, o)).length / 2;
+  }
+  return n;
+}
