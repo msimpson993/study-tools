@@ -11,6 +11,7 @@ Look at it (screenshots, `npm run shots`, then open `shots/*.png`):
 - [ ] Every deep dive has at least one manipulable figure that opens with a picture, says what to look for, responds to its controls, and (if animated) has play/pause + scrub and a reduced-motion fallback. Look at the screenshot, not just the test.
 - [ ] Dark is true black (`rgb(0,0,0)`); light toggle works and persists.
 - [ ] 390 px: no horizontal scroll on map, dive, quiz, figure, board.
+- [ ] Layouts: below 700 px an open entry is the floating card with "← Back to map"; from 700 px up (768 and 923 portrait, 1024 and 1280 landscape, 1366, 1920) it is the 40/60 split, nothing clipped, entry text at least 15 px, map and entry filling most of the height; touch pinch-zooms the side map (map-split.spec, phone-entry.spec).
 - [ ] Explanations collapsed on load; "More controls" collapsed; no auto-expanding boxes.
 - [ ] Figures: expanded view covers only the plot area; sliders stay visible and live; pair view shows both directions; legend expands; axes are named.
 - [ ] Every symbol and acronym on screen is defined (glossary drawer).
