@@ -45,11 +45,12 @@ const roc: QuizFigureDef = { aspect: 2.0, phoneAspect: 0.75, maxWidth: 560, draw
     axes(g, f, [-3, 1], [-6, 6], 'σ (1/ms)', 'ω (rad/ms)', 1, 3);
     shadeX(g, f, right ? -p.sigma : -3, right ? 1 : -p.sigma, right ? 'rgba(110,226,110,.16)' : 'rgba(120,170,255,.16)');
     tline(g, f, [0, -6], [0, 6], col.strong(), 2.4); tline(g, f, [-p.sigma, -6], [-p.sigma, 6], col.muted(), 1, [4, 3]);
+    withLabelRole('axis', () => text(g, '← jω axis', f.X(0) + 4, f.box.t + 9, col.text(), 'left', 10));
     for (const q of p.poles) cross(g, f, q as [number, number], col.bad(), 5);
     const ri = { x: r.x, y: r.y + top + ph, w: r.w, h: r.h - top - ph };
     const tw: [number, number] = right ? [-6, 6] : [-3, 1], ts = linspace(tw[0], tw[1], 481), y0 = ts.map((t) => (right ? (t >= 0 ? hImp(t) : 0) : rocLeft(t))), pk = Math.max(...y0.map(Math.abs)), ys = y0.map((y) => y / pk), m = 1.15;
     const fi = rangeFrame(w, h, tw, [-m, m], ri.x + 34, w - (ri.x + ri.w) + 10, ri.y + 8, h - (ri.y + ri.h) + 30);
-    axes(g, fi, tw, [-m, m], right ? 't (ms), peak = 1' : `t (ms), deepest trough = −1 (at ${rocLeftPeak().t.toFixed(2).replace('-', '−')} ms)`, '', right ? 3 : 1, 1); curve(g, fi, ts, ys, right ? col.c() : col.b(), 1.8);
+    axes(g, fi, tw, [-m, m], right ? 't (ms), peak = 1' : `t (ms), deepest trough = −1 (at ${rocLeftPeak().t.toFixed(2).replace('-', '−')} ms)`, right ? 'h(t), scaled' : 'x(t), scaled', right ? 3 : 1, 1); curve(g, fi, ts, ys, right ? col.c() : col.b(), 1.8);
   });
 } };
 
@@ -62,11 +63,13 @@ const ortho: QuizFigureDef = { aspect: 1.25, phoneAspect: 0.8, maxWidth: 520, dr
   g.clearRect(0, 0, w, h); const P = panels(w, h, 3, 99), av = orthoAverages(), ts = linspace(0, 5, 401);
   const rows: [string, (t: number) => number, (t: number) => number, number, string][] = [
     ['(a) square × 200 Hz sine', sq, s200, av.a, `average ${av.a.toFixed(3)} → 2 × ${av.a.toFixed(3)} = ${(2 * av.a).toFixed(2)} V`],
-    ['(b) square × 600 Hz sine', sq, s600, av.b, `average ${av.b.toFixed(3)} → ${(2 * av.b).toFixed(2)} V`],
+    ['(b) square × 600 Hz sine', sq, s600, av.b, `average ${av.b.toFixed(3)} → 2 × ${av.b.toFixed(3)} = ${(2 * av.b).toFixed(2)} V`],
     ['(c) 200 Hz sine × 600 Hz sine', s200, s600, av.c, 'average 0: orthogonal'],
   ];
+  // the key, on the figure: which line is which in each panel, and what the shading means
+  const keys = ['thin: square wave · dashed: 200 Hz sine · thick: their product', 'thin: square wave · dashed: 600 Hz sine · thick: product', 'thin: 200 Hz sine · dashed: 600 Hz sine · thick: product'];
   rows.forEach(([name, u, v, , note], i) => {
-    const r = P[i], top = header(g, r, [[`${name}: ${note}`, col.text()]]);
+    const r = P[i], top = header(g, r, [[`${name}: ${note}`, col.text()], [i === 0 ? `${keys[0]}; blue = above 0, red = below` : keys[i], col.muted()]]);
     const f = frameIn(w, h, r, top, [0, 5], [-1.3, 1.3], 30, i === 2 ? 31 : 16);
     axes(g, f, [0, 5], [-1.3, 1.3], i === 2 ? 't (ms), one 200 Hz period' : '', '', 1, 1);
     const pr = ts.map((t) => u(t) * v(t));
@@ -80,13 +83,17 @@ export const foldCases = () => ({ f3: aliasOf(3, 8), f5: aliasOf(5, 8), f11: ali
 const fold: QuizFigureDef = { aspect: 2.0, phoneAspect: 1.15, maxWidth: 520, draw(g, w, h) {
   g.clearRect(0, 0, w, h); const r = { x: 0, y: 0, w, h }, c = foldCases();
   const top = header(g, r, [['fs = 8 kHz: every true frequency folds into 0–4 kHz', col.text()], ['3, 5 and 11 kHz all read as 3 kHz · 7.8 kHz reads as 200 Hz', col.e()]]);
-  const f = frameIn(w, h, r, top + 4, [0, 16], [0, 4.6], 36, 31);
-  axes(g, f, [0, 16], [0, 4.6], 'true frequency (kHz)', 'reads as (kHz)', 2, 1);
+  // x starts a little left of 0 so the y axis's 0 tick has room beside the x axis's 0
+  const f = frameIn(w, h, r, top + 4, [-0.6, 16], [0, 4.6], 36, 31);
+  axes(g, f, [-0.6, 16], [0, 4.6], 'true frequency (kHz)', 'reads as (kHz)', 2, 1);
   shadeX(g, f, 0, 4, 'rgba(110,226,110,.18)');
   const xs = linspace(0, 16, 641); curve(g, f, xs, xs.map((x) => aliasOf(x, 8)), col.a(), 2);
   tline(g, f, [3, c.f3], [11, c.f11], col.e(), 1.2, [5, 4]);
   for (const x of [3, 5, 11]) dot(g, f, [x, aliasOf(x, 8)], col.e(), 4.5);
   dot(g, f, [7.8, c.f78], col.bad(), 4.5);
+  // the red dot's own label sits in the gap between the fold's two arms, with a leader down to the dot
+  tline(g, f, [7.8, 2.0], [7.8, c.f78 + 0.3], col.bad(), 1);
+  withLabelRole('axis', () => text(g, `${7.8} kHz → ${Math.round(c.f78 * 1000)} Hz`, f.X(7.8), f.Y(2.3), col.bad(), 'center', 10));
 } };
 
 /* ---------- DTFT: walking the unit circle ---------- */
@@ -110,19 +117,23 @@ const dtft: QuizFigureDef = { aspect: 2.1, phoneAspect: 0.8, maxWidth: 560, draw
 } };
 
 /* ---------- WIN: rectangular vs Hann ---------- */
-export const windowBins = () => { const r = humDFT(690), hn = humDFT(690, 64, 8000, true); return { rect: [5, 6, 10, 20].map((k) => dB(r[k])), hann: [5, 6, 10, 20].map((k) => dB(hn[k])), r, hn }; };
+export const windowBins = () => { const r = humDFT(690), hn = humDFT(690, 64, 8000, true); return { rect: [5, 6, 10, 20].map((k) => dB(r[k])), hann: [5, 6, 10, 20].map((k) => dB(hn[k])), r, hn, hum: 690 / 125, floorBin: hn.findIndex((m, b) => b > 6 && b <= 32 && dB(m) < -80) }; };
 const windowFig: QuizFigureDef = { aspect: 2.1, phoneAspect: 0.85, maxWidth: 560, draw(g, w, h) {
   g.clearRect(0, 0, w, h); const P = panels(w, h, 2), wb = windowBins();
   [0, 1].forEach((i) => {
     const r = P[i], hann = i === 1, v = hann ? wb.hn : wb.r, k = hann ? wb.hann : wb.rect;
     const top = header(g, r, [[hann ? '(b) Hann taper' : '(a) rectangular block', hann ? col.c() : col.bad()], [`bins 5, 6: ${k[0].toFixed(1)}, ${k[1].toFixed(1)} dB · bin 10: ${k[2].toFixed(0)} dB`, col.muted()]]);
-    const f = frameIn(w, h, r, top, [0, 32], [-80, 0], 40, 31);
-    axes(g, f, [0, 32], [-80, 0], 'DFT bin (125 Hz each)', 'dB', 8, 20);
+    // headroom above 0 dB for the hum line's label
+    const f = frameIn(w, h, r, top, [0, 32], [-80, 12], 40, 31);
+    axes(g, f, [0, 32], [-80, 12], 'DFT bin (125 Hz each)', 'dB', 8, 20);
     g.save(); g.fillStyle = hann ? col.c() : col.bad();
     v.forEach((m, b) => { const y = Math.max(-80, dB(m)), x = f.X(b), y0 = f.Y(-80), y1 = f.Y(y), bw = Math.max(1.5, f.sx * 0.55); g.fillRect(x - bw / 2, y1, bw, y0 - y1); });
-    g.restore(); tline(g, f, [5.52, -80], [5.52, 0], col.e(), 1, [3, 3]);
+    g.restore(); tline(g, f, [wb.hum, -80], [wb.hum, 12], col.e(), 1, [3, 3]);
+    withLabelRole('axis', () => text(g, `hum: 690 Hz = bin ${wb.hum.toFixed(2)}`, f.X(wb.hum) + 4, f.Y(6), col.e(), 'left', 10));
+    if (hann && wb.floorBin > 0) withLabelRole('axis', () => { text(g, `bins ${wb.floorBin}+ are below`, f.X(32) - 2, f.Y(-62), col.muted(), 'right', 9); text(g, '−80 dB: off the scale', f.X(32) - 2, f.Y(-70), col.muted(), 'right', 9); });
     // inset: the 64-sample block and its window, top right inside the plot
-    const iw = Math.min(90, (f.box.r - f.box.l) * 0.38), ih = 30, ix = f.box.r - iw - 4, iy = f.box.t + 4;
+    const iw = Math.min(90, (f.box.r - f.box.l) * 0.38), ih = 30, ix = f.box.r - iw - 4, iy = f.Y(0) + 2;
+    withLabelRole('axis', () => { text(g, 'inset: the 64 samples', ix + iw, iy + ih + 8, col.muted(), 'right', 9); text(g, hann ? 'yellow: the Hann taper' : 'yellow: the flat window', ix + iw, iy + ih + 18, col.e(), 'right', 9); });
     g.save(); g.fillStyle = 'rgba(0,0,0,.35)'; g.fillRect(ix, iy, iw, ih); g.strokeStyle = col.muted(); g.lineWidth = 1; g.beginPath();
     for (let n = 0; n < 64; n++) { const wn = hann ? 0.5 - 0.5 * Math.cos((TAU * n) / 64) : 1, y = Math.cos((TAU * 690 * n) / 8000) * wn, px = ix + (n / 63) * iw, py = iy + ih / 2 - y * (ih / 2 - 2); if (n) g.lineTo(px, py); else g.moveTo(px, py); } g.stroke();
     g.strokeStyle = col.e(); g.beginPath(); for (let n = 0; n < 64; n++) { const wn = hann ? 0.5 - 0.5 * Math.cos((TAU * n) / 64) : 1, px = ix + (n / 63) * iw, py = iy + ih / 2 - wn * (ih / 2 - 2); if (n) g.lineTo(px, py); else g.moveTo(px, py); } g.stroke(); g.restore();

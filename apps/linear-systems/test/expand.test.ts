@@ -31,7 +31,9 @@ describe('expanded map numbers agree with the models', () => {
     const fc = foldCases(); expect([fc.f3, fc.f5, fc.f11]).toEqual([3, 3, 3]); expect(fc.f78).toBeCloseTo(0.2, 9);
     expect(20 * Math.log10(2 / Math.PI)).toBeCloseTo(-3.92, 2); // ZOH droop at fs/2
     const d = ringDigital(8), pk = dtftPeak(); expect(d.r).toBeCloseTo(0.8536, 4); expect((d.th * 180) / Math.PI).toBeCloseTo(30.95, 2); expect(pk.om).toBeCloseTo(0.519, 3); expect(pk.hz).toBeCloseTo(661, 0);
-    const wb = windowBins(); expect(wb.rect.map((v) => +v.toFixed(1))).toEqual([-4.7, -3.2, -20.7, -28.1]); expect(wb.hann.map((v) => +v.toFixed(1))).toEqual([-1.5, -1.3, -48.4, -78.7]);
+    const wb = windowBins(); expect(wb.rect.map((v) => +v.toFixed(1))).toEqual([-4.7, -3.2, -20.7, -28.1]); expect(wb.hann.map((v) => +v.toFixed(1))).toEqual([-1.5, -1.3, -48.4, -78.7]); expect(wb.hum).toBeCloseTo(5.52, 9);
+    // the Hann figure's floor note: the first bin past the peak below −80 dB (bars from there on are off the scale)
+    expect(wb.floorBin).toBeGreaterThan(20); expect(dB(wb.hn[wb.floorBin])).toBeLessThan(-80); expect(dB(wb.hn[wb.floorBin - 1])).toBeGreaterThanOrEqual(-80);
     expect(690 / 125).toBeCloseTo(5.52, 2); expect(64 * Math.log2(64)).toBe(384);
   });
   it('ROC figure: the boundary sits at the poles\' real part', () => { const r = rocFig(); expect(r.sigma).toBeCloseTo(1.2664, 4); expect(r.fd).toBeCloseTo(687.8, 1); });
