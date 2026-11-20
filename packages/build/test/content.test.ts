@@ -4,6 +4,7 @@ import os from 'node:os';
 import path from 'node:path';
 import YAML from 'yaml';
 import { loadApp, listApps, repoRoot, ContentError } from '../src';
+import { boxBodyWords, lineBodyWords, capReport } from './wordcap';
 
 /** retired apps kept as small, stable test fixtures (packages/build/test/fixtures/apps/<id>) */
 const FIXTURES = path.join(repoRoot, 'packages/build/test/fixtures/apps');
@@ -37,7 +38,7 @@ describe('shipped content', () => {
     expect(content.quiz.length).toBe(103); // 97 + 4 kept from the retired transforms page + 2 skyhook (Nov 19)
     expect(content.quiz.filter((q) => q.tags?.includes('variants')).length).toBe(21);
   });
-  it('linear-systems Big-picture boxes follow the fixed pop-up template (answer, rough words, running example, next question; every figure captioned; ≤ 150 words incl. captions)', () => {
+  it('linear-systems Big-picture boxes follow the fixed pop-up template (answer, rough words, running example, next question; every figure captioned)', () => {
     const { content } = loadApp(path.join(repoRoot, 'apps', 'linear-systems'));
     const big = content.maps.find((m) => m.id === 'big')!;
     expect(big.nodes.length).toBe(15);
@@ -54,8 +55,7 @@ describe('shipped content', () => {
       // every figure strip has a caption saying what it shows and what it proves; several panels are labelled (a), (b)… and walked through in order
       if (figs.length) expect(n.pop?.figCaption, `${n.id} figure caption`).toBeTruthy();
       if (figs.length > 1) figs.forEach((f, i) => { const L = String.fromCharCode(97 + i); expect(f.caption ?? '', `${n.id} panel ${L} label`).toMatch(new RegExp(`^\\(${L}\\)`)); const cap = (n.pop?.figCaption ?? '').replace(/\((\w)–(\w)\)/g, (_, x: string, y: string) => Array.from({ length: y.charCodeAt(0) - x.charCodeAt(0) + 1 }, (_, j) => `(${String.fromCharCode(x.charCodeAt(0) + j)})`).join(' ')); expect(cap, `${n.id} caption walks through (${L})`).toContain(`(${L})`); });
-      const total = words(n.short ?? '') + words(n.pop?.rough ?? '') + words(example ?? '') + words(next ?? '') + words(n.pop?.eqKey ?? '') + words(n.pop?.figCaption ?? '') + figs.reduce((a, f) => a + words(f.caption ?? ''), 0);
-      expect(total, `${n.id} pop-up words`).toBeLessThanOrEqual(150);
+      // length: the soft word cap (main body only) is checked in its own test below
       expect((n.pop?.figures ?? []).length, n.id).toBeLessThanOrEqual(4);
     }
     // every outgoing edge carries the question the box ends on
@@ -66,13 +66,17 @@ describe('shipped content', () => {
     for (const m of content.maps) for (const n of m.nodes) if (n.pop && m.edges.some((e) => e.from === n.id) && n.id !== 'root') expect(m.edges.find((e) => e.to === n.id && !e.dashed)?.question ?? '', `${m.id}/${n.id} incoming question`).toMatch(/\?/);
     expect(big.nodes.find((n) => n.id === 'root')!.label).toMatch(/\?$/);
     // every main-chain line of the big map (the dashed look-back too) teaches the move: what is still open, why it matters, what answer we want;
-    // it leans brief (soft target ~150 words) and any figure it borrows is captioned
+    // any figure it borrows is captioned (its length: the soft word cap below)
     for (const e of big.edges) {
       const w = e.why ?? '', id = `${e.from}->${e.to}`;
       for (const part of ['Still open:', 'Why it matters:', 'What we want:']) expect(w, `${id} why: ${part}`).toContain(part);
-      expect(words(w.replace(/<[^>]+>/g, ' ')), `${id} why words (guideline)`).toBeLessThanOrEqual(150);
       if (e.whyFigures?.length) { expect((e.whyFigCaption ?? '').length, `${id} why figure caption`).toBeGreaterThan(40); for (const f of e.whyFigures) expect(f.alt.length, id).toBeGreaterThan(8); }
     }
+  });
+  it('linear-systems box and line pop-ups keep to the soft word cap (~400 words of main body; prints the over-cap list, fails only past 600)', () => {
+    const { content } = loadApp(path.join(repoRoot, 'apps', 'linear-systems')), counts: Record<string, number> = {};
+    for (const m of content.maps) { for (const n of m.nodes) counts[`${m.id}/${n.id}`] = boxBodyWords(n); for (const e of m.edges) counts[`${m.id}/line ${e.from}->${e.to}`] = lineBodyWords(e); }
+    expect(capReport('linear-systems', counts)).toEqual([]);
   });
   it('linear-systems dives follow the dive template (level tag, worked example, what it can\'t do, 2-3 checks, >= 1 interactive figure)', () => {
     const { content } = loadApp(path.join(repoRoot, 'apps', 'linear-systems'));

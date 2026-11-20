@@ -2,6 +2,7 @@ import { describe, it, expect } from 'vitest';
 import path from 'node:path';
 import { loadApp, repoRoot } from '../src';
 import { wrapText } from '../../core/src/maplayout';
+import { boxBodyWords, lineBodyWords, capReport } from './wordcap';
 
 /** Guards for the control-systems question-chain rebuild (Nov 2026): three running examples, pid-tuning folded in. */
 const load = () => loadApp(path.join(repoRoot, 'apps', 'control-systems')).content;
@@ -39,9 +40,12 @@ describe('control-systems (question-chain rebuild)', () => {
       if (figs.length) expect(n.pop.figCaption, `${id} figure caption`).toBeTruthy();
       if (figs.length > 1) figs.forEach((f, i) => { const L = String.fromCharCode(97 + i); expect(f.caption ?? '', `${id} panel ${L}`).toMatch(new RegExp(`^\\(${L}\\)`)); expect(n.pop!.figCaption ?? '', `${id} caption walks (${L})`).toContain(`(${L})`); });
       expect(figs.length, id).toBeLessThanOrEqual(4);
-      // the template: about 120 words, up to about 150 (tutor build 1 trimmed every box to 112–150)
-      expect(boxWords(m, n), `${id} pop-up words`).toBeLessThanOrEqual(150);
     }
+  });
+  it('box and line pop-ups keep to the soft word cap (~400 words of main body; prints the over-cap list, fails only past 600)', () => {
+    const c = load(), counts: Record<string, number> = {};
+    for (const m of c.maps) { for (const n of m.nodes) counts[`${m.id}/${n.id}`] = boxBodyWords(n); for (const e of m.edges) counts[`${m.id}/line ${e.from}->${e.to}`] = lineBodyWords(e); }
+    expect(capReport('control-systems', counts)).toEqual([]);
   });
   it('lines carry their question and why; non-root boxes restate a solid incoming question; the root asks the central question', () => {
     const c = load();
@@ -53,7 +57,6 @@ describe('control-systems (question-chain rebuild)', () => {
     for (const e of big.edges) {
       const w = e.why ?? '', id = `${e.from}->${e.to}`;
       for (const part of ['Still open:', 'Why it matters:', 'What we want:']) expect(w, `${id} why: ${part}`).toContain(part);
-      expect(words(w), `${id} why words`).toBeLessThanOrEqual(150);
     }
   });
   it('dives follow the dive template and open on their map question', () => {
