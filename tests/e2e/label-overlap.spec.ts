@@ -1,6 +1,6 @@
 import { test, expect, type Page } from '@playwright/test';
 import fs from 'node:fs';
-import { open } from './helpers';
+import { open, exampleNodeClashes } from './helpers';
 
 /** In-plot labels must not sit on each other: a note (or a legend row) on an axis name, a tick number or another note.
  * Core text() records every label it draws when window.__textLog is an array (packages/core/src/viz.ts); we keep each canvas's latest draw. */
@@ -103,3 +103,32 @@ for (const vw of [1366, 390]) {
     expect(bad, bad.join('\n')).toEqual([]);
   });
 }
+
+/** Example nodes (Nov 20): on both maps of both apps, at phone, tablet and desktop widths, in Fit and Actual size, nothing
+ *  lies under a node (box, line, line label or another node) and its dotted link runs from its host into no box and across no line. */
+for (const app of ['linear-systems', 'control-systems'] as const) test(`${app}: Example nodes clear of boxes, lines and labels at every width`, async ({ page }) => {
+  test.setTimeout(120_000);
+  const bad: string[] = [];
+  for (const [W, H] of [[390, 844], [768, 1024], [923, 1300], [1024, 768], [1280, 900], [1600, 1000]] as const) {
+    await page.setViewportSize({ width: W, height: H });
+    await open(page, app);
+    const maps: string[] = await page.evaluate(() => (window as any).__study.content.maps.map((m: any) => m.id));
+    for (const view of ['fit', 'actual'] as const) {
+      await page.locator(`[data-testid=map-view] [data-view=${view}]`).click();
+      for (const m of maps) {
+        await page.locator(`button[role=tab][data-map="${m}"]`).first().click(); await page.waitForTimeout(80);
+        const c = await exampleNodeClashes(page);
+        bad.push(...c.clashes.map((s) => `@${W} ${view} ${m}: ${s}`));
+        if (c.nodes !== c.links) bad.push(`@${W} ${view} ${m}: ${c.nodes} nodes but ${c.links} links`);
+      }
+    }
+    // the side map with a box open (desktop split: the map re-lays out in its narrow column)
+    if (W >= 700) {
+      await page.locator(`button[role=tab][data-map="${maps[0]}"]`).first().click();
+      await page.locator('[data-testid=map-node]').nth(1).dispatchEvent('click'); await page.waitForTimeout(150);
+      bad.push(...(await exampleNodeClashes(page)).clashes.map((s) => `@${W} split: ${s}`));
+      await page.keyboard.press('Escape');
+    }
+  }
+  expect(bad, bad.slice(0, 30).join('\n')).toEqual([]);
+});

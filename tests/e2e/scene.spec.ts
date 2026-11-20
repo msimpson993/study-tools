@@ -100,19 +100,19 @@ for (const app of ['linear-systems'] as const) {
     });
 
     for (const [view, vp] of [['desktop', { width: 1300, height: 900 }], ['mobile', { width: 390, height: 844 }]] as const) {
-      test(`${view}: the running example opens live from its Example bubble (the map header stays slim)`, async ({ page }) => {
+      test(`${view}: the running example opens live from its Example node (the map header stays slim)`, async ({ page }) => {
         await page.addInitScript(() => { (window as any).__sceneFreeze = 1.2; });
         await page.setViewportSize(vp); await open(page, app);
         await expect(page.getByTestId('map-hero').getByTestId('example-scene')).toHaveCount(0);
         const refs: { id: string; scene?: { id: string } }[] = await page.evaluate(() => (window as any).__study.content.subject.runningExample?.refs ?? []);
-        const r = refs.find((x) => x.scene); test.skip(!r, 'no scene bubble');
+        const r = refs.find((x) => x.scene); test.skip(!r, 'no scene example');
         await page.locator(`[data-testid=map-ref][data-ref="${r!.id}"]`).dispatchEvent('click');
         const sc = page.getByTestId('map-panel').getByTestId('example-scene'); await expect(sc).toBeVisible();
         const s = (await sc.boundingBox())!;
         expect(s.x + s.width, 'scene inside viewport').toBeLessThanOrEqual(vp.width + 1);
         expect((await ink(page, '[data-testid=ref-live] [data-testid=scene-canvas]')).n).toBeGreaterThan(800);
         expect(await noHScroll(page)).toBe(true);
-        for (const th of ['light', 'dark'] as const) { await setTheme(page, th); await page.waitForTimeout(150); await page.screenshot({ path: path.join(OUT, `scene-bubble-${app}-${view}-${th}.png`) }); }
+        for (const th of ['light', 'dark'] as const) { await setTheme(page, th); await page.waitForTimeout(150); await page.screenshot({ path: path.join(OUT, `scene-example-${app}-${view}-${th}.png`) }); }
       });
       test(`${view}: dives fit with no horizontal scroll, light and dark; screenshots`, async ({ page }) => {
         test.setTimeout(120_000);

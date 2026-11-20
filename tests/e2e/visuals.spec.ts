@@ -110,10 +110,12 @@ for (const app of APPS) {
       await open(page, app);
       const c = await page.evaluate(() => (window as any).__study.content);
       expect(c.subject.runningExample.title.length).toBeGreaterThan(5);
-      const fold = page.getByTestId('running-example');
-      await expect(fold).toBeVisible();
-      await fold.locator('summary').first().click();
-      await expect(fold).toContainText(c.subject.runningExample.title.slice(0, 10));
+      // the running examples are Example nodes on the map (Nov 20): the first one opens its introduction; no separate section
+      await expect(page.getByTestId('running-example')).toHaveCount(0);
+      const ex = c.subject.runningExample.refs[0];
+      await page.locator(`[data-testid=map-ref][data-ref="${ex.id}"]`).dispatchEvent('click');
+      await expect(page.getByTestId('ref-question')).toBeVisible(); await expect(page.getByTestId('ref-about')).toBeVisible();
+      await page.keyboard.press('Escape');
       const node = c.maps.flatMap((m: any) => m.nodes.map((n: any) => ({ ...n, map: m }))).find((n: any) => n.id !== 'root' && n.addsToExample);
       const mi = c.maps.indexOf(node.map);
       if (mi > 0) await page.locator('[data-testid=concept-map] [role=tab]').nth(mi).click();

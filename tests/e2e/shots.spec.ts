@@ -78,7 +78,7 @@ for (const v of VIEWS) {
   }
 }
 
-// New visuals: every live figure (desktop figure card + a phone dive page) plus the running-example popup. Run: npm run shots
+// New visuals: every live figure (desktop figure card + a phone dive page) plus the first running example's introduction. Run: npm run shots
 for (const app of ['linear-systems', 'control-systems']) {
   test(`shots visuals ${app}`, async ({ browser }) => {
     test.setTimeout(240_000);
@@ -91,9 +91,8 @@ for (const app of ['linear-systems', 'control-systems']) {
       await open(page, app, `#/figure/${f.id}`); await page.waitForTimeout(500);
       await page.locator('.fig-layout').first().screenshot({ path: path.join(dir, `${app}-${f.id}.png`) });
     }
-    // running example: fold + a node popup that says what it adds
-    await open(page, app); await page.getByTestId('running-example').locator('summary').first().click();
-    await page.locator('[data-testid=map-node]').nth(3).dispatchEvent('click'); await page.waitForTimeout(250);
+    // running example: the first Example node's introduction (Nov 20: the examples are nodes on the map, no fold)
+    await open(page, app); await page.locator('[data-testid=map-ref]').first().dispatchEvent('click'); await page.waitForTimeout(400);
     await page.screenshot({ path: path.join(dir, `${app}-running-example-popup.png`) });
     await ctx.close();
     const m = await browser.newContext({ viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true, deviceScaleFactor: 2 });
