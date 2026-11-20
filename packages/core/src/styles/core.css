@@ -255,6 +255,9 @@ details.st-more .st-badge{display:inline-block;margin-left:.35rem;padding:0 .4re
 .qm-edge .line{fill:none;stroke:var(--border-strong);stroke-width:1.4;stroke-linejoin:round;pointer-events:none}
 .qm-edge .head{fill:none;stroke:var(--border-strong);stroke-width:1.4;stroke-linecap:round;stroke-linejoin:round;pointer-events:none}
 .qm-edge.dashed .line{stroke-dasharray:var(--qm-dash);stroke-linecap:butt}
+/* a side path (shortcut): dash-dot, so it never reads as the main chain or as a dashed same-idea line (and never as dots) */
+.cm,.cm-legend{--qm-side:12 4 2.5 4}
+.qm-edge.side .line{stroke-dasharray:var(--qm-side);stroke-linecap:butt}
 .qm-edge.e-path .line,.qm-edge.e-path .head{stroke:var(--s0);stroke-width:2.4}
 .qm-edge.e-dim .line,.qm-edge.e-dim .head{stroke:var(--border-strong);stroke-opacity:.45}
 .qm-edge .dot{fill:var(--elev);stroke:var(--border-strong);stroke-width:1.25}
@@ -267,6 +270,7 @@ details.st-more .st-badge{display:inline-block;margin-left:.35rem;padding:0 .4re
 .cm-legend .lg-sw{flex:none;overflow:visible}
 .cm-legend .lg-line,.cm-legend .lg-head{fill:none;stroke:var(--text);stroke-opacity:.6;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round}
 .cm-legend .lg-line.dashed{stroke-dasharray:var(--qm-dash);stroke-linecap:butt}
+.cm-legend .lg-line.side{stroke-dasharray:var(--qm-side);stroke-linecap:butt}
 .cm-legend .lg-shape{fill:var(--elev);stroke:var(--border-strong);stroke-width:1.25}
 .cm-legend .lg-series{display:inline-flex;flex-wrap:wrap;align-items:center;gap:.25rem .4rem}
 .cm-legend .lg-lead{margin-right:.1rem}

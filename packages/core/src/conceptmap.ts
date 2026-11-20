@@ -158,7 +158,9 @@ export function mountConceptMap(host: HTMLElement, content: AppContent, progress
     }
     if (st.pick?.kind === 'node' && st.pick.id === id) return setPick(null);
     progress.markSeen(st.mapId, id);
-    arrivedVia = undefined; cameBy.delete(`${st.mapId}/${id}`);
+    // tapping the box a just-opened line leads to counts as arriving by that line (a shortcut restates its own question)
+    const prev = st.pick, via = prev?.kind === 'edge' && map().edges.some((e) => !e.dashed && edgeKey(e.from, e.to) === prev.id && e.to === id) ? prev.id : undefined;
+    arrivedVia = via; if (via) cameBy.set(`${st.mapId}/${id}`, via); else cameBy.delete(`${st.mapId}/${id}`);
     setPick({ kind: 'node', id });
   };
   /** open a box (never toggles it shut): used by the Next/Back chain controls */
@@ -231,10 +233,10 @@ export function mountConceptMap(host: HTMLElement, content: AppContent, progress
     clear(legend);
     const m = map();
     const kinds = new Set(m.nodes.map((n) => n.kind ?? 'box'));
-    const hasDashed = m.edges.some((e) => e.dashed);
-    const line = (dashed: boolean) => {
+    const hasDashed = m.edges.some((e) => e.dashed), hasSide = m.edges.some((e) => e.side);
+    const line = (dashed: boolean, side = false) => {
       const sw = s('svg', { class: 'lg-sw', width: 34, height: 12, viewBox: '0 0 34 12', 'aria-hidden': 'true' });
-      sw.append(s('path', { class: `lg-line${dashed ? ' dashed' : ''}`, d: 'M 1 6 H 27' }), s('path', { class: 'lg-head', d: 'M 23 2.5 L 28 6 L 23 9.5' }));
+      sw.append(s('path', { class: `lg-line${dashed ? ' dashed' : ''}${side ? ' side' : ''}`, d: 'M 1 6 H 27' }), s('path', { class: 'lg-head', d: 'M 23 2.5 L 28 6 L 23 9.5' }));
       return sw;
     };
     const shape = (k: string) => {
@@ -245,6 +247,7 @@ export function mountConceptMap(host: HTMLElement, content: AppContent, progress
     const item = (key: string, icon: Element, text: string) => h('span', { class: 'lg-item', dataset: { legend: key } }, icon as unknown as Node, h('span', null, text));
     legend.append(
       item('solid', line(false), 'next question'),
+      ...(hasSide ? [item('side', line(false, true), 'shortcut (side path)')] : []),
       ...(hasDashed ? [item('dashed', line(true), 'same idea, other view')] : []),
       ...(kinds.has('decision') ? [item('decision', shape('decision'), 'a fork: the answer picks the way')] : []),
       ...(kinds.has('terminal') ? [item('terminal', shape('terminal'), 'where the map starts')] : []),
@@ -326,7 +329,7 @@ export function mountConceptMap(host: HTMLElement, content: AppContent, progress
       const d = roundedPath(g.points), dHop = roundedPath(g.points, undefined, g.hops);
       const act = () => toggleEdge(g.key);
       const grp = s('g', {
-        class: `qm-edge${data.dashed ? ' dashed' : ''}${active ? ' e-path' : ''}${dim ? ' e-dim' : ''}${selEdgeKey === g.key ? ' e-sel' : ''}`,
+        class: `qm-edge${data.dashed ? ' dashed' : ''}${data.side ? ' side' : ''}${active ? ' e-path' : ''}${dim ? ' e-dim' : ''}${selEdgeKey === g.key ? ' e-sel' : ''}`,
         role: 'button', tabindex: 0, 'aria-label': `Link: ${byId[g.from].label} to ${byId[g.to].label}`, 'aria-pressed': selEdgeKey === g.key,
         'data-edge': g.key, 'data-testid': 'map-edge', onclick: act,
         onkeydown: (ev: KeyboardEvent) => { if (ev.key === 'Enter' || ev.key === ' ') { ev.preventDefault(); act(); } },
@@ -378,13 +381,13 @@ export function mountConceptMap(host: HTMLElement, content: AppContent, progress
     scroll.scrollLeft = sl; scroll.scrollTop = stp;
   }
 
-  function pathChips(ids: string[], m: MapDef) {
-    const wrap = h('div', { class: 'path' }, 'Path from the central question: ');
+  function pathChips(ids: string[], m: MapDef, lookBack = false) {
+    const wrap = h('div', { class: 'path', dataset: { testid: 'path-chips' } }, 'Path from the central question: ');
     ids.forEach((id, i) => {
       const n = m.nodes.find((x) => x.id === id);
       if (!n) return;
-      wrap.append(h('a', { href: '#', onclick: (ev: Event) => { ev.preventDefault(); toggleNode(id); } }, n.label));
-      if (i < ids.length - 1) wrap.append(' → ');
+      wrap.append(h('a', { href: '#', dataset: { node: id }, onclick: (ev: Event) => { ev.preventDefault(); toggleNode(id); } }, n.label));
+      if (i < ids.length - 1) wrap.append(lookBack && i === ids.length - 2 ? ' ⇢ looks back at ' : ' → ');
     });
     return wrap;
   }
@@ -440,8 +443,10 @@ export function mountConceptMap(host: HTMLElement, content: AppContent, progress
       out.push(r);
     }
     // a dashed line touching this box joins it to another box that uses the same idea
-    const side = m.edges.filter((e) => e.dashed && (e.from === n.id || e.to === n.id));
-    if (side.length) { const ul = h('ul', { class: 'pop-next-list' }); for (const e of side) ul.append(h('li', null, link(e, 'pop-side-link'))); out.push(h('div', { class: 'pop-row pop-side', dataset: { testid: 'pop-side' } }, h('b', { class: 'pop-lead' }, 'Look across:'), ul)); }
+    // a reversed dashed line is a look-back: it is listed only at its arrow's tail (`to`), the box that looks back, so the
+    // earlier box never previews a later idea
+    const side = m.edges.filter((e) => e.dashed && (e.reverse ? e.to === n.id : (e.from === n.id || e.to === n.id)));
+    if (side.length) { const back = side.every((e) => e.reverse); const ul = h('ul', { class: 'pop-next-list' }); for (const e of side) ul.append(h('li', null, link(e, 'pop-side-link'))); out.push(h('div', { class: 'pop-row pop-side', dataset: { testid: 'pop-side' } }, h('b', { class: 'pop-lead' }, back ? 'Look back:' : 'Look across:'), ul)); }
     const q = p.ask ? content.quiz.find((x) => x.id === p.ask) : undefined;
     if (q) { const d = h('details', { class: 'fold pop-ask', open: askOpen.has(n.id), dataset: { testid: 'pop-ask' } }, h('summary', null, 'Quick check'), miniCheck(q, progress)); d.addEventListener('toggle', () => { if (d.open) askOpen.add(n.id); else askOpen.delete(n.id); }); out.push(d); }
     return out;
@@ -518,13 +523,15 @@ export function mountConceptMap(host: HTMLElement, content: AppContent, progress
       if (!e) return;
       const f = m.nodes.find((x) => x.id === e.from)!, t = m.nodes.find((x) => x.id === e.to)!;
       const head = h('div', { class: 'cm-head' }, h('h3', null, e.reverse ? `${t.label} ⇢ ${f.label}` : `${f.label} → ${t.label}`), copyRefButton(() => edgeReference(content, e, f, t, m.id)), close);
-      panel.append(head, h('div', { class: 'st-hint' }, e.dashed ? 'Dashed: the same idea in another language' : 'Next step in the chain of questions'),
+      panel.append(head, h('div', { class: 'st-hint', dataset: { testid: 'edge-kind' } }, e.dashed ? (e.reverse ? `Look-back (dashed): ${t.label} looks back at the same idea in ${f.label}` : 'Dashed: the same idea in another language') : e.side ? 'Shortcut (side path): a quicker way to the next box; the main path gets there too' : 'Next step in the chain of questions'),
         h('aside', { class: 'callout c-predict' }, h('b', { class: 'lead' }, 'The question this line asks'), h('div', { class: 'cb', html: `<p>${e.question}</p>` })),
         ...(e.why ? [whyBox(e)] : []),
         e.why ? h('div', { class: 'edge-idea', dataset: { testid: 'edge-idea' } }, h('b', { class: 'pop-lead' }, 'The answer, in short: '), h('span', { html: e.idea })) : h('div', { html: `<p>${e.idea}</p>`, dataset: { body: '' } }));
       if (e.eq) panel.append(h('div', { class: 'st-eq' }, e.eq));
-      const pl = mainPath(e.from, m); if (pl[pl.length - 1] !== e.to) pl.push(e.to);
-      panel.append(pathChips(pl, m));
+      // breadcrumb: the main path to where the reader stands, then the box the line leads to (a look-back stands at `to`)
+      const [at, goes] = e.dashed && e.reverse ? [e.to, e.from] : [e.from, e.to];
+      const pl = mainPath(at, m); if (pl[pl.length - 1] !== goes) pl.push(goes);
+      panel.append(pathChips(pl, m, !!(e.dashed && e.reverse)));
       // a reversed (dashed) line is read from its arrow's tail: `to` looks back at `from`
       const [src, dst] = e.reverse ? [t, f] : [f, t];
       panel.append(h('div', { class: 'chain-nav', dataset: { testid: 'chain-nav' } },

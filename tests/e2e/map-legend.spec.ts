@@ -7,7 +7,7 @@ import { APPS, open, selectMap, noHScroll } from './helpers';
 // It must list only what the current map uses, draw its swatches with the SAME dash pattern as the real lines, and no line state may read as dotted.
 const OUT = path.resolve(import.meta.dirname, '..', '..', 'shots');
 fs.mkdirSync(OUT, { recursive: true });
-type M = { id: string; title: string; seriesNames?: string[]; nodes: { id: string; kind?: string; series?: number }[]; edges: { from: string; to: string; dashed?: boolean }[] };
+type M = { id: string; title: string; seriesNames?: string[]; nodes: { id: string; kind?: string; series?: number }[]; edges: { from: string; to: string; dashed?: boolean; side?: boolean }[] };
 const maps = (page: Page): Promise<M[]> => page.evaluate(() => (window as any).__study.content.maps);
 const items = (page: Page) => page.locator('[data-testid=map-legend] [data-legend]').evaluateAll((els) => els.map((e) => ({ key: e.getAttribute('data-legend'), text: e.textContent?.trim() })));
 const dash = (page: Page, sel: string) => page.locator(sel).first().evaluate((el) => { const c = getComputedStyle(el); return { arr: c.strokeDasharray, cap: c.strokeLinecap }; });
@@ -24,7 +24,7 @@ for (const app of APPS) {
         await expect(legend).toBeVisible();
         const got = (await items(page)).map((i) => i.key).filter((k) => !k!.startsWith('series-'));
         const kinds = new Set(m.nodes.map((n) => n.kind ?? 'box'));
-        const want = ['solid', ...(m.edges.some((e) => e.dashed) ? ['dashed'] : []), ...(kinds.has('decision') ? ['decision'] : []), ...(kinds.has('terminal') ? ['terminal'] : [])];
+        const want = ['solid', ...(m.edges.some((e) => e.side) ? ['side'] : []), ...(m.edges.some((e) => e.dashed) ? ['dashed'] : []), ...(kinds.has('decision') ? ['decision'] : []), ...(kinds.has('terminal') ? ['terminal'] : [])];
         expect(got, `${m.id} legend entries`).toEqual(want);
         const txt = (await legend.textContent()) ?? '';
         expect(txt).toContain('next question');
@@ -74,15 +74,19 @@ for (const app of APPS) {
       }
     });
 
-    test('no line state renders dotted: solid lines stay solid, dashed stay dashed with the one pattern, also when dimmed or selected', async ({ page }) => {
+    test('no line state renders dotted: solid lines stay solid, dashed stay dashed with the one pattern, shortcuts dash-dot, also when dimmed or selected', async ({ page }) => {
       await open(page, app);
       for (const m of await maps(page)) {
         await selectMap(page, m.title);
-        const pattern = async () => page.locator('[data-testid=map-edge]').evaluateAll((els) => els.map((g) => ({ dashed: g.classList.contains('dashed'), arr: getComputedStyle(g.querySelector('.line')!).strokeDasharray })));
-        const check = (rows: { dashed: boolean; arr: string }[], what: string) => {
+        const pattern = async () => page.locator('[data-testid=map-edge]').evaluateAll((els) => els.map((g) => ({ dashed: g.classList.contains('dashed'), side: g.classList.contains('side'), arr: getComputedStyle(g.querySelector('.line')!).strokeDasharray })));
+        const check = (rows: { dashed: boolean; side: boolean; arr: string }[], what: string) => {
           const pats = new Set(rows.filter((r) => r.dashed).map((r) => r.arr));
           expect(pats.size, `${m.id} ${what}: one dash pattern`).toBeLessThanOrEqual(1);
-          for (const r of rows) if (!r.dashed) expect(r.arr, `${m.id} ${what}: solid line`).toBe('none');
+          for (const r of rows) if (!r.dashed && !r.side) expect(r.arr, `${m.id} ${what}: solid line`).toBe('none');
+          // a shortcut (side path) is one dash-dot pattern: a long dash first, never the dashed pattern, never dots alone
+          const sides = new Set(rows.filter((r) => r.side && !r.dashed).map((r) => r.arr));
+          expect(sides.size, `${m.id} ${what}: one shortcut pattern`).toBeLessThanOrEqual(1);
+          for (const p of sides) { expect(nums(p)[0]).toBeGreaterThanOrEqual(6); expect(pats.has(p)).toBe(false); }
           for (const p of pats) expect(nums(p)[0]).toBeGreaterThanOrEqual(6);
           return pats;
         };
