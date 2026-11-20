@@ -248,9 +248,12 @@ describe('the 21 practice variants', () => {
 describe('the page states the numbers tested above', () => {
   const app = path.resolve(__dirname, '..');
   const read = (p: string) => fs.readFileSync(path.join(app, p), 'utf8');
-  it('subject details and review pages carry the tested values', () => {
-    const subj = read('subject.yaml'); const a = read('content/review/part-a.md');
-    for (const v of ['717', '186', '0.28', '1.151', '0.289', '1.419', '0.357', '0.56']) expect(subj).toContain(v);
+  // the old runningExample.details block is gone (Nov 20: Example-node intros carry only numbers introduced by then),
+  // so the tested values are checked where the map boxes introduce them
+  it('map boxes and review pages carry the tested values', () => {
+    const graph = read('content/graph.yaml'); const a = read('content/review/part-a.md');
+    for (const v of ['717', '186', '0.28', '1.151', '0.289', '1.419', '0.357', '0.56']) expect(graph).toContain(v);
+    expect(read('subject.yaml')).toContain('717');
     for (const v of ['{4}{35}', '47.9', '0.3125', '−0.003527']) expect(a).toContain(v);
   });
 });

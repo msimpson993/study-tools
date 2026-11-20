@@ -25,75 +25,60 @@ board:
   pairs: [overview, s1, splane, sp1, sp-meaning, sp2, sp3, sp4, sp5, sp6, sp7, sp8, s2, s3, s4, s5, s6, s7, s8, s9, s10, s11, s12, s13, cheatsec, glossary]
 runningExample:
   title: A house, a car corner and an antenna dish
-  summary: "Three plants, each where it teaches best. The **house** (two rooms, a heater, a thermostat) is slow and can't overshoot: models, poles and what feedback buys a regulator. The **car corner** (400 kg on a spring and a shock) bounces: second-order behaviour, then state-space design. The **antenna dish** (a motor turning a satellite dish) is the servo that P, I and D act on. Each one has a dashed Example bubble on the map that opens it live."
-  # Example bubbles on the map (Nov 19): each opens its live scene or figure with brief specs; not part of the Next/Back chain
+  summary: "Three plants, each where it teaches best: the **house** (two rooms, a heater, a thermostat), the **car corner** (a body on a spring and a shock) and the **antenna dish** (a motor turning a satellite dish). Each is its own dashed Example node on the map, beside the box where it first appears."
+  # Example nodes on the map (Nov 20): each running example is its own dashed node beside the box where it first appears,
+  # joined by a plain dotted link; its pop-up is the example's introduction. Numbers: only those the path has introduced
+  # by that box (no circularity); every one is recomputed in test/refs.test.ts.
   refs:
     - id: house
       at: MODEL
       label: the house thermostat
       title: The two-room house and its thermostat
+      question: What's the running example?
       scene: { id: house, overlays: [heat, flows], caption: "The heater in room 1 switches on; room 2 follows through the shared wall." }
-      specs: |
-        - **In → out:** the heater power u (in room 1) → the room temperatures, read by the thermostat.
-        - **Poles:** −0.2 and −2.2 per hour; the slow one (τ = 5 h) dominates, so the house warms over hours and never overshoots.
-        - **Used in:** models, transfer functions, poles, first-order response, disturbances, sensitivity and noise.
+      about: |
+        - **In:** the heater power u, in room 1 (the living room).
+        - **Out:** the two room temperatures x₁, x₂ above outdoors; the thermostat reads room 2 (the bedroom).
+        - **Inside:** two heat stores (the rooms) and three heat paths: the shared wall and each room's outside wall.
+        - **Why this one:** everyone knows how a house warms, so the model's answers are easy to check against common sense; it is slow and gentle, warming smoothly over hours.
+      numbers: |
+        - **Rooms:** each stores C_th = 1 MJ/K (the heat to warm it 1 K).
+        - **Walls:** the shared wall passes 277.8 W/K; each room leaks 55.6 W/K outdoors.
+        - **Heater:** 2.5 kW left on, the bedroom settles 20.45 K above outdoors and the living room 24.55 K.
     - id: corner
       at: SECOND
       label: the car suspension
       title: "The car corner: spring, shock and bounce"
+      question: Meet the second running example
       figure: corner
-      specs: |
-        - **In → out:** a load or the road → the body's height z.
-        - **Numbers:** m = 400 kg, k = 25.6 kN/m, c = 1.6 kN·s/m, so ωₙ = 8 rad/s and ζ = 0.25: it bounces.
-        - **Used in:** second-order response, specs, the loop, then state-space design (state feedback, observer, reference input).
+      panels: [scene]
+      caption: "<b>The car corner</b>: the body on its spring and shock; a 1 kN load pushes it down. The readout gives ωₙ, ζ and the poles."
+      about: |
+        - **In:** a load on the body, or the road under the wheel.
+        - **Out:** the body's height z.
+        - **Inside:** one corner of a car: its share of the body on a spring and a shock absorber.
+        - **Why this one:** two energy stores (the spring and the moving body) trade energy back and forth, so it swings: the simplest plant that bounces, and one you have felt in every car.
         - Press play to watch the bounce.
+      numbers: |
+        - **Parts:** m = 400 kg, k = 25.6 kN/m, c = 1.6 kN·s/m.
+        - **Its two numbers:** ωₙ = 8 rad/s and ζ = 0.25, light damping, so it bounces.
     - id: dish
       at: PGAIN
       label: the antenna dish
       title: The antenna dish with P control
+      question: Meet the third running example
       figure: antenna
-      specs: |
-        - **In → out:** the motor torque T → the dish angle θ; the controller turns the pointing error into torque.
-        - **Numbers:** J = 10 kg·m², B = 20 N·m·s/rad, motor ±200 N·m, so Θ/T = 0.1/(s(s + 2)).
-        - **With P control:** the closed loop is s² + 2s + Kp/10; raise Kp and it gets faster but overshoots.
-        - **Used in:** P, I and D control, steady-state error, tuning and the torque limit.
+      panels: [scene]
+      caption: "<b>The antenna dish</b>, seen from above, turning toward the satellite (angles drawn 4× larger); the motor pushes with torque Kp × error."
+      about: |
+        - **In:** the motor torque T; the controller turns the pointing error into torque.
+        - **Out:** the dish angle θ, which should follow the satellite.
+        - **Inside:** the dish's inertia, the bearing friction and a motor with a torque limit.
+        - **Why this one:** a servo has to go to a target and stop there, so P control's trade of speed for overshoot shows at a glance.
         - Press play to watch the dish turn.
-  details: |
-    **The house** (time in hours; temperatures above outdoor)
-
-    | stage | what is drawn | block diagram | box |
-    |---|---|---|---|
-    | H0 | two rooms, heater in room 1, thermostat in room 2, heat-flow arrows | none | MODEL |
-    | H1 | same | [u] → G(s) → [x₂] | TF |
-    | H2 | poles at −0.2 and −2.2 /h | G = 0.0036/((s + 0.2)(s + 2.2)) | POLES |
-    | H3 | the warming trace with τ = 5 h marked | same | FIRST |
-    | H4 | thermostat dial r; a cold front d at the walls | r → Σ → Gc → heater → house → y, fed back; d enters at the house | DIST |
-    | H5 | walls drawn thinner (worse insulation) | G marked "G + ΔG" | SENS |
-    | H6 | sun on the thermostat (sensor error n) | n enters at the sensor | NOISE |
-
-    **The car corner** (m = 400 kg, k = 25.6 kN/m, c = 1.6 kN·s/m: ωₙ = 8 rad/s, ζ = 0.25)
-
-    | stage | what is drawn | block diagram | box |
-    |---|---|---|---|
-    | C0 | body on spring and shock; a 1 kN load; the bounce trace | [u] → 1/(ms² + cs + k) → [z] | SECOND |
-    | C1 | spec marks on the trace (%OS, Tₚ, Tₛ band) | same | SPECS |
-    | C2 | road profile w with a step and a bump | w → Σ → (cs + k) → Σ (+u) → 1/(ms²) → z, fed back | LOOP |
-    | C3 | two gauges: height z, velocity ż | 1/(ms²) opens into ∫ → ∫ | STATE |
-    | C4 | an actuator between body and wheel | both states fed back through K = [k₁, k₂] | SF |
-    | C5 | position sensor; ghost body (the estimate) | observer corrected by L(y − ŷ) | OBS, SEP |
-    | C6 | ride-height dial r | r → N̄ → Σ → u | REF |
-
-    **The antenna dish** (J = 10 kg·m², B = 20 N·m·s/rad, motor ±200 N·m: Θ/T = 0.1/(s(s + 2)))
-
-    | stage | what is drawn | block diagram | box |
-    |---|---|---|---|
-    | A0 | dish pointed at θ, satellite at r | r → Σ → Kp → T → 1/(Js² + Bs) → θ, fed back | PGAIN |
-    | A1 | wind on the dish (T_d) | T_d enters at the torque | SSE |
-    | A2 | same | Kp opens to Kp + Ki/s | INT |
-    | A3 | tachometer on the motor | Kd·s from θ (on the measurement) | DER |
-    | A4 | torque-limit meter | sat block (±200 N·m) before the plant | TUNE |
-
-    Every box of the map says what its idea **adds to its example**.
+      numbers: |
+        - **Parts:** J = 10 kg·m², B = 20 N·m·s/rad, motor ±200 N·m, so Θ/T = 0.1/(s(s + 2)).
+        - **With P control:** the closed loop is s² + 2s + Kp/10; raise Kp and it gets faster but overshoots (stiff but bouncy at Kp = 1000).
 hub:
   order: 3
 # Porting guard (rebuilt Nov 2026, question-chain format; pid-tuning folded in): 2 maps (Big picture 22 boxes / 24 lines,

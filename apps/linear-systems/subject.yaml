@@ -27,64 +27,45 @@ runningExample:
   title: A noise-cancelling earbud speaker and a car on its suspension
   moreScenes:
     - { id: car, overlays: [springs], title: Car on its suspension, caption: "Seen from the side: the body on front and rear spring+shock pairs." }
-  summary: "Two drawn systems run through the page. The signals boxes use an earbud speaker: voltage in, diaphragm motion out, with a natural frequency of about 717 Hz (a click rings at 688 Hz). The state-space boxes use a car on its suspension, seen from the side: road and actuator forces in, the body's heave and pitch out, with two modes, bounce (1.15 Hz) and pitch (1.42 Hz). Open the dashed Example bubbles on the map (on the first box and on the state-space box) to see either one live."
-  # Example bubbles on the map (Nov 19): each opens its live scene with brief specs; not part of the Next/Back chain
+  summary: "Two drawn systems run through the page: an earbud speaker (voltage in, diaphragm motion out) for the signals boxes and a car on its suspension (road bumps in, heave and pitch out) for the state-space boxes. Each is its own dashed Example node on the map, beside the box where it first appears."
+  # Example nodes on the map (Nov 20): each running example is its own dashed node beside the box where it first appears,
+  # joined by a plain dotted link; its pop-up is the example's introduction. Numbers: only those the path has introduced
+  # by that box (no circularity); every one is recomputed in test/refs.test.ts.
   refs:
     - id: earbud
       at: SYS
       label: the earbud speaker
       title: The noise-cancelling earbud speaker
+      question: What's the running example?
       scene: { id: speaker, overlays: [forces], caption: "Voltage in, cone (diaphragm) motion out." }
-      specs: |
-        - **In → out:** the voltage V(t) on the coil → the diaphragm's motion x(t).
-        - **Resonance:** fₙ ≈ 717 Hz undamped; a click rings at ≈ 688 Hz and is gone within a few milliseconds (decay time ≈ 0.8 ms).
-        - **Damping:** ζ ≈ 0.28; poles −1,266 ± j4,322 rad/s.
-        - **Parts:** moving mass M_ms = 0.084 g, compliance C_ms = 0.587 mm/N, force factor Bl = 0.545 T·m, coil R_e = 7.47 Ω.
-        - **Used in:** the signals boxes (impulse response, tones, Fourier, Laplace, sampling).
+      about: |
+        - **In:** the voltage V(t) on the coil, a signal we choose.
+        - **Out:** the diaphragm's motion x(t), which pushes the air in your ear canal.
+        - **The system in between:** a magnet and coil (the motor), a light diaphragm, the springy suspension that holds it, and the damping that slows it.
+        - **Why this one:** it's in your ear every day, it has memory (a clicked cone keeps swinging), and predicting what it does with ANY sound is exactly the page's question.
+      numbers: |
+        - **Moving mass:** M_ms = 0.084 g.
+        - **Suspension:** compliance C_ms = 0.587 mm/N, a stiffness of k = 1/C_ms ≈ 1,704 N/m.
+        - **Motor:** force factor Bl = 0.545 T·m (newtons per amp in the coil), coil resistance R_e = 7.47 Ω.
+        - **Natural swing:** about 717 times a second (as the first box said); after a click it is still again within a few milliseconds.
     - id: car
       at: STATE
       label: the car suspension
       title: A car on its suspension, seen from the side
+      question: Meet the second running example
       scene: { id: car, overlays: [springs, bump], caption: "Road bumps in, the body's heave and pitch out." }
-      specs: |
-        - **In → out:** the road (a bump under each wheel) and actuator forces → the body's heave z and pitch θ.
-        - **Modes:** bounce 1.15 Hz (ζ 0.29) and pitch 1.42 Hz (ζ 0.36).
-        - **State:** x = (z, θ, ż, θ̇), four states.
-        - **Body:** m = 1400 kg, pitch inertia J = 2000 kg·m²; front axle 1.2 m ahead of the centre of gravity, rear 1.5 m behind.
-        - **A bump:** 5 cm at 15 m/s reaches the rear wheel 0.18 s after the front.
-        - **Used in:** the state-space boxes (modes, stability, reachability, optimal control).
-  details: |
-    **Earbud speaker**: a micro-speaker, voltage in, diaphragm motion out, ζ ≈ 0.28; poles −1,266 ± j4,322 rad/s, so it rings at ≈ 688 Hz (717 Hz undamped).
-
-    <details class="model-details"><summary>Model details: the speaker's Thiele–Small values and noise cancelling</summary>
-
-    | piece | value | what it gives |
-    |---|---|---|
-    | moving mass M_ms | 0.084 g | with the suspension: ωₙ = 1/√(M_ms C_ms) ≈ 4,503 rad/s, fₙ ≈ 717 Hz (undamped) |
-    | suspension compliance C_ms | 0.587 mm/N | stiffness k = 1/C_ms ≈ 1,704 N/m |
-    | mechanical damping R_ms | 0.173 kg/s | ζ ≈ 0.229 from R_ms alone |
-    | force factor Bl, coil resistance R_e | 0.545 T·m, 7.47 Ω | back-EMF damping Bl²/R_e ≈ 0.040 kg/s; the coil is voltage-driven, so the total gives **ζ ≈ 0.28**, the value used throughout |
-    | coil inductance L_e | 0.04 mH | coil pole −R_e/L_e ≈ −186,750 rad/s: far faster, so 2 states (x, ẋ) suffice |
-    | poles | −1,266 ± j4,322 rad/s | ring at ≈ 688 Hz, decay time ≈ 0.8 ms |
-
-    Noise cancelling comes as feedforward (outside microphone), feedback (in-ear microphone) or hybrid, with an adaptive FxLMS filter running at low latency (beyond this course).
-
-    </details>
-
-    **Car on its suspension** (a side view, "half car"; the tutor's parameter set)
-
-    | piece | value | what it gives |
-    |---|---|---|
-    | body | m = 1400 kg, pitch inertia J = 2000 kg·m² | heave z (m, + up) and pitch θ (rad, + nose-up); a body point x ahead of the centre of gravity moves z + x·θ |
-    | axles | front a = 1.2 m ahead, rear b = 1.5 m behind the centre of gravity | the wheelbase 2.7 m: a bump reaches the rear wheel 0.18 s after the front at 15 m/s |
-    | springs | kf = 38,000 N/m, kr = 42,000 N/m | |
-    | shocks | cf = 3040 N·s/m, cr = 3360 N·s/m | proportional damping, C = 0.08 s · K |
-    | state | x = (z, θ, ż, θ̇) | ẋ = Ax + Bu, four states |
-    | modes | bounce 1.151 Hz, ζ 0.289, s = −2.092 ± 6.92j; pitch 1.419 Hz, ζ 0.357, s = −3.178 ± 8.328j | bounce is mostly up-down (still point 1.06 m behind the rear axle, off the body); pitch turns about x = +0.56 m |
-
-    Model assumptions: small angles, linear springs and shocks, rigid tyres, no wheel mass (valid up to about 5 Hz). A second, **symmetric** set (kf = 44,000, kr = 35,200 N/m, cf = 3300, cr = 2640 N·s/m, so kf·a = kr·b) is used only for the push-at-the-centre story: there bounce (1.197 Hz) and pitch (1.344 Hz) are completely separate, so a push or a height sensor at the centre of gravity can neither start nor see pitch.
-
-    Every box of the map says what its idea **adds to one of these examples** and what it lets us **account for**.
+      about: |
+        - **In:** the road height under the front and rear wheels (a bump reaches each wheel in turn).
+        - **Out:** the body's heave z (up and down) and pitch θ (nose up or down).
+        - **The system in between:** the body on a spring and a shock absorber at each axle.
+        - **Why this one:** one bump moves the body two ways at once, so it needs more than one number to remember where it is: four, the state x = (z, θ, ż, θ̇).
+      numbers: |
+        - **Body:** m = 1400 kg; pitch inertia J = 2000 kg·m² (its resistance to tilting).
+        - **Axles:** front 1.2 m ahead of the centre of gravity, rear 1.5 m behind.
+        - **Springs:** kf = 38,000 N/m front, kr = 42,000 N/m rear; **shocks:** 3,040 and 3,360 N·s/m.
+        - **A bump:** at 15 m/s it reaches the rear wheel 0.18 s after the front.
+        - **Natural bounce:** about 1.15 times a second (as the first box said).
+        - **Model:** small angles, linear springs and shocks, rigid tyres, no wheel mass.
 # the Variables drawer opens at this glossary section for each box (Full-detail boxes inherit their main-path ancestor's)
 glossaryTopics:
   root: Systems and the eigen idea
