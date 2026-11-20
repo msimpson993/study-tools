@@ -1,8 +1,9 @@
 import { h, s, clear } from './dom';
 import type { AppContent, MapDef, MapNode, MapEdge } from './types';
 import { copyRefButton, nodeReference, edgeReference } from './copyref';
-import { computeGeometry, layoutWidth, placeLabels, roundedPath, arrowHead, edgeKey, pathToRoot, mapHighlight, placeSideNodes, SIDE_TAG_H, sideFont, type Geometry, type Label, type MapView, type SideNode } from './maplayout';
+import { computeGeometry, layoutWidth, placeLabels, roundedPath, arrowHead, edgeKey, pathToRoot, mapHighlight, placeSideNodes, SIDE_TAG_H, sideFont, exampleGlyphRects, useLinkSegments, walkOrder, type Geometry, type Label, type MapView, type SideNode } from './maplayout';
 import { storeGet, storeSet } from './store';
+import { exampleGlyph } from './exglyphs';
 import { mountScene } from './scene';
 import { Progress, quizTagOf, subtree } from './progress';
 import { mountQuizFigure, type QuizFigureRegistry } from './quizfig';
@@ -74,6 +75,16 @@ export function mountConceptMap(host: HTMLElement, content: AppContent, progress
     h('div', { class: 'cm-q', dataset: { testid: 'central-question' } }, content.subject.centralQuestion, h('small', null, exRefs.length ? 'Central question. Tap any box or line to open it; a dashed Example node beside a box introduces a running example.' : 'Central question. Tap any box or line to open it.')));
   /** the Example nodes on map m (each beside its host box) */
   const refsOn = (m: MapDef) => exRefs.filter((r) => m.nodes.some((n) => n.id === r.at));
+  /** example usage is opt-in: only a map whose boxes carry `examples` gets the box glyphs, the highlight and the comes-back list */
+  const usesOn = (m: MapDef) => exRefs.length > 0 && m.nodes.some((n) => n.examples?.length);
+  /** light (or unlight) the boxes that use example `id` and its faint links; an open introduction keeps its own lit */
+  const lightUses = (id: string, on: boolean) => {
+    const svg = scroll.querySelector('svg'); if (!svg) return;
+    if (!on && st.pick?.kind === 'ref' && st.pick.id === id) return;
+    svg.querySelectorAll(`.qm-node[data-uses~="${id}"]`).forEach((e) => e.classList.toggle('u-hl', on));
+    svg.querySelector(`.qm-uselinks[data-ref="${id}"]`)?.classList.toggle('u-on', on);
+    svg.querySelector(`.qm-ref[data-ref="${id}"]`)?.classList.toggle('r-hov', on);
+  };
   root.append(
     hero,
     top, reviewBar, caption, legend,
@@ -267,6 +278,8 @@ export function mountConceptMap(host: HTMLElement, content: AppContent, progress
     };
     // a dashed example node and its dotted link, side by side (the link is drawn on the left, as from its host box)
     const exChip = () => { const sw = s('svg', { class: 'lg-sw', width: 40, height: 14, viewBox: '0 0 40 14', 'aria-hidden': 'true' }); sw.append(s('line', { class: 'lg-exlink', x1: 1, y1: 7, x2: 14, y2: 7 }), s('rect', { class: 'lg-ref', x: 15, y: 1, width: 24, height: 12, rx: 5 })); return sw; };
+    // the per-box example glyphs, one per example on this map
+    const usesIcon = (mm: MapDef) => { const ids = refsOn(mm).map((r) => r.id), sw = s('svg', { class: 'lg-sw', width: ids.length * 13, height: 14, viewBox: `0 0 ${ids.length * 13} 14`, 'aria-hidden': 'true' }); ids.forEach((id, i) => sw.append(exampleGlyph(id, { x: i * 13 + 1, y: 2, w: 10, h: 10 }, { 'data-testid': 'legend-exglyph' }))); return sw; };
     const item = (key: string, icon: Element, text: string) => h('span', { class: 'lg-item', dataset: { legend: key } }, icon as unknown as Node, h('span', null, text));
     legend.append(
       item('solid', line(false), 'next question'),
@@ -275,6 +288,7 @@ export function mountConceptMap(host: HTMLElement, content: AppContent, progress
       ...(kinds.has('decision') ? [item('decision', shape('decision'), 'a fork: the answer picks the way')] : []),
       ...(kinds.has('terminal') ? [item('terminal', shape('terminal'), 'where the map starts')] : []),
       ...(refsOn(m).length ? [item('example', exChip(), 'running example (dashed), dotted to the box where it starts')] : []),
+      ...(usesOn(m) ? [item('uses', usesIcon(m), 'the box uses that example (point at or open the Example node to light them all)')] : []),
     );
     // the coloured bar on the left of a box is its chapter (node.series): name it, and let a tap light that chapter up
     const used = [...new Set(m.nodes.map((n) => n.series).filter((x): x is number => x !== undefined))].sort();
@@ -377,6 +391,15 @@ export function mountConceptMap(host: HTMLElement, content: AppContent, progress
       grp.append(s('rect', { x: l.x, y: l.y, width: l.w, height: l.h, rx: l.h / 2 }), s('text', { x: l.x + l.w / 2, y: l.y + l.h / 2 + 4, 'text-anchor': 'middle' }, l.text));
       svg.append(grp);
     }
+    // example usage (opt-in: boxes carry `examples`): faint dotted links from each Example node to the other boxes that use it,
+    // shown only while the node is pointed at or its introduction is open (never permanent lines)
+    const uses = usesOn(m), litRef = openRef?.id ?? null;
+    if (uses) for (const sn of sideNodes) {
+      const users = geom.order.filter((id) => id !== sn.at && byId[id].examples?.includes(sn.id));
+      const g = s('g', { class: `qm-uselinks${litRef === sn.id ? ' u-on' : ''}`, 'data-ref': sn.id, 'data-testid': 'map-uselinks', 'aria-hidden': 'true', 'pointer-events': 'none' });
+      useLinkSegments(sn, users.map((id) => geom!.boxes[id])).forEach(([a, b], i) => g.append(s('line', { class: 'qm-uselink', x1: a.x, y1: a.y, x2: b.x, y2: b.y, 'data-to': users[i], 'data-testid': 'map-uselink' })));
+      svg.append(g);
+    }
     for (const id of geom.order) {
       const b = geom.boxes[id], n = byId[id];
       const selected = selNode === id, onPath = pathSet.has(id), isNeigh = neigh.has(id) && !onPath;
@@ -384,11 +407,12 @@ export function mountConceptMap(host: HTMLElement, content: AppContent, progress
       const dim = (pick !== null && !selected && !onPath && !isNeigh) || (ser !== null && !inSer);
       const status = st.mode === 'review' ? progress.status(m.id, n) : null;
       const hide = recallHide(id);
-      const cls = ['qm-node', selected ? 'n-sel' : onPath ? 'n-path' : isNeigh ? 'n-neigh' : inSer ? 'n-ser' : dim ? 'n-dim' : '', status ? `st-${status}` : '', hide ? 'recall-hidden' : ''].filter(Boolean).join(' ');
+      const exs = uses ? exRefs.map((r) => r.id).filter((x) => n.examples?.includes(x)) : [];
+      const cls = ['qm-node', selected ? 'n-sel' : onPath ? 'n-path' : isNeigh ? 'n-neigh' : inSer ? 'n-ser' : dim ? 'n-dim' : '', status ? `st-${status}` : '', hide ? 'recall-hidden' : '', litRef && exs.includes(litRef) ? 'u-hl' : ''].filter(Boolean).join(' ');
       const act = () => toggleNode(id);
       const grp = s('g', {
         class: cls, role: 'button', tabindex: 0, 'aria-label': hide ? `Hidden box ${m.nodes.indexOf(n)}. Tap to reveal.` : `${n.label}${n.detail ? `. ${n.detail}` : ''}. Tap for more.`,
-        'aria-pressed': selected, style: n.series !== undefined ? `--c:${SERIES[n.series]}` : undefined, 'data-node': id, 'data-status': status ?? undefined, 'data-testid': 'map-node', onclick: act,
+        'aria-pressed': selected, style: n.series !== undefined ? `--c:${SERIES[n.series]}` : undefined, 'data-node': id, 'data-status': status ?? undefined, 'data-uses': exs.length ? exs.join(' ') : undefined, 'data-testid': 'map-node', onclick: act,
         onkeydown: (ev: KeyboardEvent) => { if (ev.key === 'Enter' || ev.key === ' ') { ev.preventDefault(); act(); } },
       });
       const r = 14;
@@ -399,6 +423,8 @@ export function mountConceptMap(host: HTMLElement, content: AppContent, progress
       const cx = b.x + b.w / 2, textH = b.lines.length * 15 + b.detailLines.length * 14, top0 = b.y + (b.h - b.extra - textH) / 2 + 11;
       b.lines.forEach((line, i) => grp.append(s('text', { x: cx, y: top0 + i * 15, 'text-anchor': 'middle', 'font-size': 12, 'font-weight': 600 }, line)));
       b.detailLines.forEach((line, i) => grp.append(s('text', { class: 'det', x: cx, y: top0 + b.lines.length * 15 + i * 14, 'text-anchor': 'middle', 'font-size': 11 }, line)));
+      // the example glyphs in the box's right padding, up from the bottom-right corner (never on the label)
+      exampleGlyphRects(b, exs.length).forEach((gr, i) => grp.append(exampleGlyph(exs[i], gr)));
       if (hide) grp.append(s('text', { class: 'qmark', x: cx, y: b.y + b.h / 2 + 6, 'text-anchor': 'middle', style: 'opacity:1' }, '?'));
       if (status) grp.append(s('circle', { class: 'st', cx: b.x + b.w - 9, cy: b.y + 9, r: 6 }));
       svg.append(grp);
@@ -415,6 +441,12 @@ export function mountConceptMap(host: HTMLElement, content: AppContent, progress
         'data-ref': r.id, 'data-at': r.at, 'data-side': sn.side, 'data-testid': 'map-ref',
         onclick: (ev: Event) => { ev.stopPropagation(); act(); },
         onkeydown: (ev: KeyboardEvent) => { if (ev.key === 'Enter' || ev.key === ' ') { ev.preventDefault(); ev.stopPropagation(); act(); } },
+        // pointing at it (a mouse or pen; a touch taps it open instead) or focusing it lights the boxes that use it
+        ...(uses ? {
+          onpointerenter: (ev: PointerEvent) => { if (ev.pointerType !== 'touch') lightUses(r.id, true); },
+          onpointerleave: (ev: PointerEvent) => { if (ev.pointerType !== 'touch') lightUses(r.id, false); },
+          onfocus: () => lightUses(r.id, true), onblur: () => lightUses(r.id, false),
+        } : {}),
       });
       const cx = sn.x + sn.w / 2;
       grp.append(s('rect', { class: 'shape chip focus-ring', x: sn.x, y: sn.y, width: sn.w, height: sn.h, rx: 12 }),
@@ -560,6 +592,15 @@ export function mountConceptMap(host: HTMLElement, content: AppContent, progress
       else if (r.figure) { const stop = nav.mountFigure?.(live, r.figure, r.preset, { intro: { panels: r.panels } }); if (stop) popStops.push(stop); else live.append(h('p', { class: 'st-hint' }, `(figure ${r.figure} is not available)`)); if (r.caption) live.append(h('p', { class: 'scene-cap ref-cap', dataset: { testid: 'ref-caption' }, html: r.caption })); }
       panel.append(h('h4', { class: 'ref-h' }, 'What it is and why we use it'), h('div', { class: 'ref-about', dataset: { testid: 'ref-about', body: '' }, html: r.about }));
       panel.append(h('h4', { class: 'ref-h' }, 'Key numbers so far'), h('div', { class: 'ref-numbers', dataset: { testid: 'ref-numbers', body: '' }, html: r.numbers }));
+      // where it comes back: every other box on this map that uses it, in reading order, each opening that box
+      if (usesOn(m)) {
+        const back = walkOrder(m.nodes, m.edges).filter((id) => id !== r.at && m.nodes.find((x) => x.id === id)?.examples?.includes(r.id));
+        if (back.length) {
+          const ul = h('ul', { class: 'ref-back', dataset: { testid: 'ref-comesback' } });
+          for (const id of back) { const n = m.nodes.find((x) => x.id === id)!; ul.append(h('li', null, h('a', { href: '#', dataset: { node: id, testid: 'ref-comesback-link' }, onclick: (ev: Event) => { ev.preventDefault(); refFrom = null; openNode(id); } }, n.label))); }
+          panel.append(h('h4', { class: 'ref-h' }, 'Where this example comes back'), ul);
+        }
+      }
       if (host) panel.append(h('div', { class: 'chain-nav', dataset: { testid: 'ref-nav' } }, h('button', { class: 'tbtn', dataset: { testid: 'ref-host', to: host.id }, onclick: () => { refFrom = null; openNode(host.id); } }, h('span', { class: 'ch-name' }, `← Back to ${host.label}`))));
       return;
     }

@@ -262,6 +262,18 @@ details.st-more .st-badge{display:inline-block;margin-left:.35rem;padding:0 .4re
 /* its link to the host box: plain dotted, no arrowhead, no label, not a tap target */
 .qm-exlink{stroke:var(--warn,#e0b341);stroke-width:1.6;stroke-dasharray:0 4.5;stroke-linecap:round;fill:none}
 .qm-exlink.x-on{stroke-width:2.2}
+/* example usage (opt-in, per-box `examples`): a glyph per example in the box's corner; pointing at or opening an Example node lights
+   every box that uses it (outline tint, full glyph) and shows faint dotted links to them; nothing extra stays drawn */
+.qm-exg{fill:var(--warn,#e0b341);opacity:.8;pointer-events:none}
+.qm-node.n-dim .qm-exg{opacity:.45}
+.qm-node.u-hl .shape{stroke:var(--warn,#e0b341);stroke-width:2.2;fill:color-mix(in srgb,var(--warn,#e0b341) 9%,var(--elev))}
+.qm-node.u-hl .qm-exg{opacity:1}.qm-node.n-dim.u-hl text{opacity:.9}
+.qm-ref.r-hov .chip{stroke-width:2}
+.qm-uselinks{display:none}.qm-uselinks.u-on{display:inline}
+.qm-uselink{stroke:var(--warn,#e0b341);stroke-width:1.3;stroke-dasharray:0 4;stroke-linecap:round;opacity:.55;fill:none}
+.cm-legend .lg-item[data-legend="uses"]{white-space:normal;max-width:100%}
+.cm-legend .qm-exg{opacity:1}
+.ref-back{margin:.2rem 0 .6rem;padding-left:1.2rem}.ref-back li{margin:.15rem 0}
 .cm-legend .lg-exlink{stroke:var(--warn,#e0b341);stroke-width:1.6;stroke-dasharray:0 4.5;stroke-linecap:round}
 .cm-legend .lg-ref{fill:color-mix(in srgb,var(--warn,#e0b341) 13%,var(--elev));stroke:var(--warn,#e0b341);stroke-width:1.2;stroke-dasharray:4 3}
 /* the Example card in the panel */

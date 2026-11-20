@@ -20,3 +20,5 @@ export * from './blockdiagram';
 export * from './scene';
 export * from './minicheck';
 export * from './labels';
+export * from './exampleguard';
+export * from './exglyphs';
