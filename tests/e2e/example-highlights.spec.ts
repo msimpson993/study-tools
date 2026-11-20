@@ -18,13 +18,8 @@ const refsOf = (page: Page): Promise<{ id: string; at: string }[]> => page.evalu
 const refNode = (page: Page, id: string) => page.locator(`[data-testid=map-ref][data-ref="${id}"]`);
 const lit = (page: Page) => page.locator('.qm-node.u-hl');
 const visibleLinks = (page: Page) => page.locator('.qm-uselinks.u-on [data-testid=map-uselink]');
-/** reading order: depth-first from the root along the main lines, by rank, side paths last (same rule as core walkOrder) */
-const order = (m: M) => {
-  const seen = new Set<string>(), out: string[] = [];
-  const go = (id: string) => { if (seen.has(id)) return; seen.add(id); out.push(id);
-    m.edges.map((e, i) => ({ e, i })).filter(({ e }) => e.from === id && !e.dashed).sort((a, b) => (a.e.side ? 1 : 0) - (b.e.side ? 1 : 0) || (a.e.rank ?? 0) - (b.e.rank ?? 0) || a.i - b.i).forEach(({ e }) => go(e.to)); };
-  go('root'); return out;
-};
+/** the tutor's comes-back lists for the Big-picture map (usage.json; the unit test checks both maps against exampleComesBack) */
+const BACK: Record<string, string[]> = { earbud: ['STAB', 'WORK'], car: ['MODES', 'STAB', 'INOUT', 'WORK'] };
 const users = (m: M, ex: string) => m.nodes.filter((n) => n.examples?.includes(ex)).map((n) => n.id);
 
 test.describe('linear-systems: example highlights', () => {
@@ -71,13 +66,13 @@ test.describe('linear-systems: example highlights', () => {
     }
   });
 
-  for (const [W, H] of [[390, 844], [923, 1300], [1280, 900]] as const) test(`@${W}: tapping opens the introduction with its boxes lit; "Where this example comes back" lists them in path order and each link opens its box`, async ({ page }) => {
+  for (const [W, H] of [[390, 844], [923, 1300], [1280, 900]] as const) test(`@${W}: tapping opens the introduction with its boxes lit; "Where this example comes back" lists the tutor's boxes in path order and each link opens its box`, async ({ page }) => {
     const errs = trackErrors(page);
     await page.setViewportSize({ width: W, height: H });
     await open(page, LS);
-    const m = (await mapsOf(page))[0], refs = await refsOf(page), o = order(m);
+    const m = (await mapsOf(page))[0], refs = await refsOf(page);
     for (const r of refs) {
-      const us = users(m, r.id), back = o.filter((id) => id !== r.at && us.includes(id));
+      const us = users(m, r.id), back = BACK[r.id];
       await refNode(page, r.id).dispatchEvent('click');
       await expect(page.getByTestId('ref-question')).toBeVisible();
       await expect(lit(page)).toHaveCount(us.length); await expect(visibleLinks(page)).toHaveCount(us.length - 1);
@@ -87,6 +82,8 @@ test.describe('linear-systems: example highlights', () => {
       await expect(page.locator('[data-testid=map-panel] h4.ref-h').last()).toHaveText('Where this example comes back');
       const got = await list.getByTestId('ref-comesback-link').evaluateAll((as) => as.map((a) => (a as HTMLElement).dataset.node));
       expect(got).toEqual(back);
+      // each with its box's one-line why
+      await expect(list.getByTestId('ref-comesback-why')).toHaveCount(back.length);
       await list.screenshot({ path: path.join(OUT, `ls-${W}-comesback-${r.id}.png`) });
       if (W !== 923) await page.getByTestId('map-panel').screenshot({ path: path.join(OUT, `ls-${W}-intro-${r.id}.png`) });
       if (W >= 700) await page.getByTestId('concept-map').screenshot({ path: path.join(OUT, `ls-${W}-open-${r.id}.png`) });
