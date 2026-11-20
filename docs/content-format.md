@@ -113,7 +113,7 @@ The restated question comes from the incoming edge's `question` (the root's from
 **Guards** (`packages/build/test/content.test.ts`, per app; linear-systems is the reference):
 - every non-root pop-up node has an incoming question; the root label is a question;
 - figures need `figCaption`; multi-panel captions are labelled and walked through;
-- words: a soft cap of about 400 words of main body; go over only when the idea needs it to be coherent, never pad (main body only: no restated question, Next-question list, equations, captions or figure text); the guard prints the over-~400 list and fails only past 600 (`packages/build/test/wordcap.ts`, `tests/e2e/box-words.spec.ts`);
+- words: a soft cap of about 400 words of main body; go over only when the idea needs it to be coherent, never pad (main body only, a box's `short` or a line's `why`: no restated question, rough words, running-example row, Next-question list, equations, captions or figure text); the guard prints the over-~400 list and fails only past 600 (`packages/build/test/wordcap.ts`, `tests/e2e/box-words.spec.ts`);
 - every edge has `why`; main-chain lines have *Still open / Why it matters / What we want*, the same soft cap, and a caption on any figure;
 - dives: `level`, 2–3 checks, *The big idea*, *Worked example: on*, *What it can't do*, ≥ 1 interactive figure; *Full derivation* only on the listed dives;
 - glossary count and every term in a section.

@@ -2,9 +2,9 @@ import { test, expect, type Page } from '@playwright/test';
 
 /* The pop-up word rule (every course; see docs/design-principles.md and packages/build/test/wordcap.ts): a SOFT cap of
    about 400 words of MAIN BODY per box and per line pop-up, as the reader sees it. Main body = the elements core marks
-   data-body (a box's answer, "In rough words" and running-example text; a free-form box's answer, detail and callouts;
-   a line's "why ask it here" and its short answer). The restated question, Next-question / Look-across lists, equations,
-   keys, figures, captions, sound notes, buttons and navigation do not count. Over ~400 is printed as a warning; only
+   data-body (a box's answer; a free-form box's answer, detail and callouts; a line's "why ask it here", or its short answer
+   when it has no why). The restated question, rough words, running-example row, Next-question / Look-across lists,
+   equations, keys, figures, captions, sound notes, buttons and navigation do not count. Over ~400 is printed as a warning; only
    past 600 fails. */
 export const SOFT_CAP = 400, HARD_CAP = 600;
 const count = (page: Page) => page.evaluate(() => {

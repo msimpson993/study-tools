@@ -379,7 +379,7 @@ export function mountConceptMap(host: HTMLElement, content: AppContent, progress
     const qText = inc ? inc.question : n.label;
     out.push(h('p', { class: 'pop-question', dataset: { testid: 'pop-question', edge: inc ? edgeKey(inc.from, inc.to) : '' } }, h('span', { class: 'pq-lead' }, inc ? 'The question:' : 'The central question:'), ' ', h('span', { class: 'pq-text', html: qText })));
     out.push(h('div', { class: 'pop-answer', dataset: { testid: 'pop-answer', body: '' }, html: `<p>${n.short}</p>` }));
-    out.push(row('pop-rough', 'In rough words:', p.rough, 'pop-rough', true));
+    out.push(row('pop-rough', 'In rough words:', p.rough, 'pop-rough'));
     if (n.eqHtml || n.eq) out.push(n.eqHtml ? h('div', { class: 'st-eq', html: n.eqHtml }) : h('div', { class: 'st-eq' }, n.eq!));
     if (p.eqKey) out.push(h('p', { class: 'pop-key st-hint', dataset: { testid: 'pop-key' }, html: p.eqKey }));
     if (p.figures?.length) {
@@ -397,7 +397,7 @@ export function mountConceptMap(host: HTMLElement, content: AppContent, progress
       out.push(box);
     }
     const ex = p.example ?? n.addsToExample;
-    if (ex) out.push(row('pop-example', 'On the running example:', ex, 'adds-to-example', true));
+    if (ex) out.push(row('pop-example', 'On the running example:', ex, 'adds-to-example'));
     // the chain goes THROUGH the lines: each outgoing (solid) line's question is a link that opens that line's pop-up
     const outs = nextOrder(n.id, m), fork = outs.length > 1 && outs.some((e) => e.side);
     const link = (e: MapEdge, testid: string) => h('a', { href: '#', class: 'pop-next-link', dataset: { testid, edge: edgeKey(e.from, e.to), to: e.to }, onclick: (ev: Event) => { ev.preventDefault(); openEdge(edgeKey(e.from, e.to)); }, html: e.question });
@@ -497,7 +497,7 @@ export function mountConceptMap(host: HTMLElement, content: AppContent, progress
       panel.append(head, h('div', { class: 'st-hint' }, e.dashed ? 'Dashed: the same idea in another language' : 'Next step in the chain of questions'),
         h('aside', { class: 'callout c-predict' }, h('b', { class: 'lead' }, 'The question this line asks'), h('div', { class: 'cb', html: `<p>${e.question}</p>` })),
         ...(e.why ? [whyBox(e)] : []),
-        e.why ? h('div', { class: 'edge-idea', dataset: { testid: 'edge-idea' } }, h('b', { class: 'pop-lead' }, 'The answer, in short: '), h('span', { html: e.idea, dataset: { body: '' } })) : h('div', { html: `<p>${e.idea}</p>`, dataset: { body: '' } }));
+        e.why ? h('div', { class: 'edge-idea', dataset: { testid: 'edge-idea' } }, h('b', { class: 'pop-lead' }, 'The answer, in short: '), h('span', { html: e.idea })) : h('div', { html: `<p>${e.idea}</p>`, dataset: { body: '' } }));
       if (e.eq) panel.append(h('div', { class: 'st-eq' }, e.eq));
       const pl = mainPath(e.from, m); if (pl[pl.length - 1] !== e.to) pl.push(e.to);
       panel.append(pathChips(pl, m));
