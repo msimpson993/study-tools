@@ -56,7 +56,9 @@ for (const app of APPS) {
         await page.keyboard.press('Escape');
         await page.locator('[data-testid=map-edge]').first().dispatchEvent('click'); expect((await state(page)).edge).toBe(1);
         // the tap re-rendered the svg but the pan position stayed
-        const kept = await dims(page); expect(Math.abs(kept.st - after.st) + Math.abs(kept.sl - after.sl), 'position kept across re-render').toBeLessThan(3);
+        // (desktop: an open entry moves the map into its side column, a deliberate re-layout; map-split.spec covers that)
+        if (view === 'mobile') { const kept = await dims(page); expect(Math.abs(kept.st - after.st) + Math.abs(kept.sl - after.sl), 'position kept across re-render').toBeLessThan(3); }
+        else { await expect(page.getByTestId('map-wrap')).toHaveClass(/split/); expect(await page.evaluate(() => { const e = document.querySelector('.qm-edge.e-sel .dot')!.getBoundingClientRect(), b = document.querySelector('.cm-scroll')!.getBoundingClientRect(); return e.left >= b.left && e.right <= b.right && e.top >= b.top && e.bottom <= b.bottom; }), 'the open line is in view in the side map').toBe(true); }
         // wheel scrolls the map
         await page.keyboard.press('Escape'); await page.mouse.move(sx, sy); const w0 = (await dims(page)).st; await page.mouse.wheel(0, 200); await page.waitForTimeout(150);
         const w1 = await dims(page); expect(w1.st > w0 || w1.sh <= w1.ch, 'wheel scrolled (or nothing to scroll)').toBe(true);

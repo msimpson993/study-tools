@@ -35,6 +35,8 @@ for (const app of Object.keys(PICK)) for (const [view, vp] of [['desktop', { wid
     test('tapping a line: its hop arc stays on that line, highlight and dimming are unchanged', async ({ page }) => {
       await open(page, app);
       await selectMap(page, (await maps(page)).find((m) => m.id === PICK[app])!.title); await page.waitForTimeout(250);
+      // desktop: an open entry puts the map in its ~40% side column (a re-layout), so compare inside that layout: open a box first
+      if (view === 'desktop') { await page.locator('[data-testid=map-node]').first().dispatchEvent('click'); await page.waitForTimeout(250); }
       const a = await arcs(page);
       test.skip(a.length === 0, 'no hop on this map');
       const key = a[0].key;
