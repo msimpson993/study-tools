@@ -24,7 +24,7 @@ An LTI (linear, time-invariant) system is described completely by one measured r
 
 ### See it
 
-**One click first.** A single click (bar) makes the cone ring and die away; that ring is the impulse response h(t). Box 5 on the map then adds four such rings.
+**One click first.** A single click (bar) makes the cone ring and die away; that ring is the impulse response h(t). The map's *Pieces: sharp kicks* box then adds four such rings.
 
 ```picture:pic-one-click One click (bar) makes h(t), a ring that dies away.
 The earbud's impulse response: one click makes the cone ring and die away within a few milliseconds.

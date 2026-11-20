@@ -24,12 +24,12 @@ Before designing an actuator, check that it can do the job at all. A system is c
 
 ### See it
 
-**Picture it first.** Push the car's body up at one point. Does the push move both modes, or is one out of reach? Move the push point and switch cars below. The main car is the default; the symmetric car is the blind-spot case from Box 13.
+**Picture it first.** Push the car's body up at one point. Does the push move both modes, or is one out of reach? Move the push point and switch cars below. The main car is the default; the symmetric car is the blind-spot case from the map's *Do inside and outside match?* box.
 
 ```figure:ctrl
 ```
 
-**Second figure: what reachability does to the transfer function.** It opens on the symmetric car, the blind-spot case from Box 13, with push and sensor at the centre.
+**Second figure: what reachability does to the transfer function.** It opens on the symmetric car, the blind-spot case from the map's *Do inside and outside match?* box, with push and sensor at the centre.
 
 ```figure:kalman
 ```

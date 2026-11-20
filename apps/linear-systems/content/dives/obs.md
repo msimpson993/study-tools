@@ -33,7 +33,7 @@ Two states at the same heave but different pitch project onto the same reading.
 ```figure:obs
 ```
 
-**Second figure: what an unseen mode does to the transfer function.** This opens on the symmetric car, the blind-spot case from Box 13, with push and sensor at the centre.
+**Second figure: what an unseen mode does to the transfer function.** This opens on the symmetric car, the blind-spot case from the map's *Do inside and outside match?* box, with push and sensor at the centre.
 
 ```figure:kalman
 ```

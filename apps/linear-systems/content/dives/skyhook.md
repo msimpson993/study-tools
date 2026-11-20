@@ -53,7 +53,7 @@ One equal gain at both axles, 4,355 N·s/m, also gives bounce ζ 0.700, with pit
 
 ### What it can't do
 
-Feedback can only move the modes the actuators reach. A mode that is uncontrollable from these inputs keeps its poles whatever K is (Box 13), and a sensor that cannot see a mode cannot feed it back.
+Feedback can only move the modes the actuators reach. A mode that is uncontrollable from these inputs keeps its poles whatever K is (see the map's *Do inside and outside match?* box), and a sensor that cannot see a mode cannot feed it back.
 
 **Next question.** Moving poles costs actuator force. What is the least effort for one particular job? That is the Gramian and optimal-control dives.
 

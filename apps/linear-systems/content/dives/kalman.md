@@ -26,7 +26,7 @@ A model can have more states than its transfer function shows. Some modes cannot
 
 **Imagine it.** Wire every mode between the input and the output. A mode that is not wired at both ends is invisible to the transfer function.
 
-The first figure opens on the symmetric car: it is the blind-spot case from Box 13, where a push and a sensor at the centre miss pitch entirely. Switch to the main car to see the general case.
+The first figure opens on the symmetric car: it is the blind-spot case from the map's *Do inside and outside match?* box, where a push and a sensor at the centre miss pitch entirely. Switch to the main car to see the general case.
 
 ```figure:kalman
 ```
