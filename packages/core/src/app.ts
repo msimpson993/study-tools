@@ -237,8 +237,16 @@ export function mountApp(content: AppContent, hooks: AppHooks = {}): void {
       }
       main.append(dl);
     } else if (sec.kind === 'figures') {
-      const wrap = h('div', { class: 'prose fig-list', dataset: { testid: 'figure-list' } }, h('p', null, 'Live figures. Each is also reachable from a map box.'));
-      for (const f of content.figures) wrap.append(h('p', null, h('a', { class: 'tbtn on fig-link', href: `#/figure/${f.id}` }, f.title)));
+      // a figure counts as on the map when a box's live entry or a deep dive embeds it; the rest are listed apart, without claiming a map box reaches them
+      const refs = JSON.stringify({ m: content.maps, d: content.dives }), onMap = (id: string) => refs.includes(`figure:${id}`) || refs.includes(`data-figure=\\"${id}\\"`);
+      const on = content.figures.filter((f) => onMap(f.id)), extra = content.figures.filter((f) => !onMap(f.id));
+      const link = (f: FigureDef) => h('p', null, h('a', { class: 'tbtn on fig-link', href: `#/figure/${f.id}` }, f.title));
+      const wrap = h('div', { class: 'prose fig-list', dataset: { testid: 'figure-list' } }, h('p', null, extra.length ? 'Live figures. Each in this first list is also reachable from a map box.' : 'Live figures. Each is also reachable from a map box.'));
+      for (const f of on) wrap.append(link(f));
+      if (extra.length) {
+        wrap.append(h('h3', { dataset: { testid: 'figure-extras' } }, 'Extra tools (not on the map)'), h('p', null, 'These open only from here.'));
+        for (const f of extra) wrap.append(link(f));
+      }
       main.append(wrap);
     }
   }
