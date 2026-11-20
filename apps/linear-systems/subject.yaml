@@ -48,6 +48,7 @@ runningExample:
         - **Suspension:** compliance C_ms = 0.587 mm/N, a stiffness of k = 1/C_ms ≈ 1,704 N/m.
         - **Motor:** force factor Bl = 0.545 T·m (newtons per amp in the coil), coil resistance R_e = 7.47 Ω.
         - **Natural swing:** about 717 times a second (as the first box said); after a click it is still again within a few milliseconds.
+      comesBack: { big: [STAB, WORK], full: [RE, JOR, CH, STAB, WORK, FILT] }
     - id: car
       at: STATE
       label: the car suspension
@@ -66,6 +67,7 @@ runningExample:
         - **A bump:** 5 cm high; at 15 m/s it reaches the rear wheel 0.18 s after the front (2.7 m ÷ 15 m/s).
         - **Operating point:** motion is measured from ride height, springs already squeezed by the car's weight, so gravity drops out.
         - **Model:** small angles, linear springs and shocks, rigid tyres, no wheel mass.
+      comesBack: { big: [MODES, STAB, INOUT, WORK], full: [MODES, DIAG, PHI, CH, STAB, INOUT, CO, OBS, PBH, GRAM, WORK, OPT, FB] }
 # the Variables drawer opens at this glossary section for each box (Full-detail boxes inherit their main-path ancestor's)
 glossaryTopics:
   root: Systems and the eigen idea

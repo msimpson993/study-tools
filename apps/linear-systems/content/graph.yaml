@@ -12,7 +12,7 @@ maps:
   - Applications
   nodes:
   - id: root
-    examples: [earbud, car]
+    examples: [earbud]
     label: How do we predict the output for ANY input?
     detail: "Inputs in, outputs out"
     kind: terminal
@@ -26,7 +26,7 @@ maps:
       href: "#/s/central"
       label: Where this shows up
   - id: SYS
-    examples: [earbud, car]
+    examples: [earbud]
     label: "What's a system?"
     detail: "Input in, output out"
     kind: box
@@ -88,7 +88,7 @@ maps:
     live: "figure:lintest"
     quizTag: linsys
   - id: NEAR
-    examples: [earbud, car]
+    examples: [earbud]
     label: Never perfectly linear?
     detail: Linear up close
     kind: box
@@ -231,6 +231,7 @@ maps:
     dive: tf
   - id: STATE
     examples: [car]
+    exampleWhy: "The earbud's cone moves one way only; the car's heave and pitch push on each other, which is what the inside view is for."
     label: "State: what it remembers"
     detail: "ẋ = Ax + Bu, y = Cx + Du"
     kind: box
@@ -250,7 +251,8 @@ maps:
     accountsFor: "Why a bump under the front wheel makes the body both rise and pitch: the axles sit at different distances from the centre of gravity."
     dive: ss
   - id: MODES
-    examples: [earbud, car]
+    examples: [car]
+    exampleWhy: "The earbud has one pole pair, so one mode shape; the car has two shapes to compare."
     label: "Modes: untangle A"
     detail: Eigenvectors of A
     kind: box
@@ -278,6 +280,7 @@ maps:
     dive: eig
   - id: STAB
     examples: [earbud, car]
+    exampleWhy: "The car shows slow settling you can see (worn shocks); the earbud shows the pole test at a glance. Also points shortcut readers to where the car was met."
     label: Will it settle?
     detail: Every mode must fade
     kind: box
@@ -304,6 +307,7 @@ maps:
     dive: stab
   - id: INOUT
     examples: [car]
+    exampleWhy: "A mode can hide only while another still shows, so it takes the car's two modes; the earbud has one."
     label: Do inside and outside match?
     detail: Hidden modes
     kind: decision
@@ -321,7 +325,8 @@ maps:
     accountsFor: "Why that car's transfer function from push to height has only the bounce poles."
     dive: kalman
   - id: WORK
-    examples: [car]
+    examples: [earbud, car]
+    exampleWhy: "Obvious per route: the earbud's noise-cancelling filter, the car's skyhook feedback and least-energy levelling."
     label: Put it to work
     detail: Design with the tools
     kind: box
@@ -473,7 +478,7 @@ maps:
   seriesNames: *id001
   nodes:
   - id: root
-    examples: [earbud, car]
+    examples: [earbud]
     label: How do we predict the output for ANY input?
     detail: "Inputs in, outputs out"
     kind: terminal
@@ -482,7 +487,7 @@ maps:
     accountsFor: "Why the same handful of ideas predicts what a 717 Hz speaker resonance does to any sound."
     link: *id003
   - id: SYS
-    examples: [earbud, car]
+    examples: [earbud]
     label: "What's a system?"
     detail: "Input in, output out"
     kind: box
@@ -517,7 +522,7 @@ maps:
     live: "figure:lintest"
     quizTag: linsys
   - id: NEAR
-    examples: [earbud, car]
+    examples: [earbud]
     label: Never perfectly linear?
     detail: Linear up close
     kind: box
@@ -588,6 +593,7 @@ maps:
     dive: tf
   - id: STATE
     examples: [car]
+    exampleWhy: "The earbud's cone moves one way only; the car's heave and pitch push on each other, which is what the inside view is for."
     label: "State: what it remembers"
     detail: "ẋ = Ax + Bu, y = Cx + Du"
     kind: box
@@ -599,7 +605,8 @@ maps:
     accountsFor: "Why a bump under the front wheel makes the body both rise and pitch: the axles sit at different distances from the centre of gravity."
     dive: ss
   - id: MODES
-    examples: [earbud, car]
+    examples: [car]
+    exampleWhy: "The earbud has one pole pair, so one mode shape; the car has two shapes to compare."
     label: "Modes: untangle A"
     detail: Eigenvectors of A
     kind: box
@@ -612,6 +619,7 @@ maps:
     dive: eig
   - id: STAB
     examples: [earbud, car]
+    exampleWhy: "The car shows slow settling you can see (worn shocks); the earbud shows the pole test at a glance. Also points shortcut readers to where the car was met."
     label: Will it settle?
     detail: Every mode must fade
     kind: box
@@ -623,6 +631,7 @@ maps:
     dive: stab
   - id: INOUT
     examples: [car]
+    exampleWhy: "A mode can hide only while another still shows, so it takes the car's two modes; the earbud has one."
     label: Do inside and outside match?
     detail: Hidden modes
     kind: decision
@@ -633,7 +642,8 @@ maps:
     accountsFor: "Why that car's transfer function from push to height has only the bounce poles."
     dive: kalman
   - id: WORK
-    examples: [car]
+    examples: [earbud, car]
+    exampleWhy: "Obvious per route: the earbud's noise-cancelling filter, the car's skyhook feedback and least-energy levelling."
     label: Put it to work
     detail: Design with the tools
     kind: box
@@ -814,6 +824,7 @@ maps:
       label: See a generic ring on the six-domains board
   - id: RE
     examples: [earbud]
+    exampleWhy: "Its second-order H(s) is small enough to wire from integrators by hand; the car has four states and two inputs."
     label: Realization
     detail: "Build A, B, C; minimal?"
     series: 2
@@ -828,6 +839,7 @@ maps:
     quizTag: realize
   - id: DIAG
     examples: [car]
+    exampleWhy: "Four coupled states become two separate oscillators."
     label: Diagonalization
     detail: "A = VΛV⁻¹: separate modes"
     series: 2
@@ -841,6 +853,7 @@ maps:
     quizTag: diag
   - id: JOR
     examples: [earbud]
+    exampleWhy: "One knob, its damping, merges its two poles into a double pole."
     label: Jordan form
     detail: "Repeated λ, one eigenvector"
     series: 2
@@ -853,7 +866,8 @@ maps:
     dive: jordan
     quizTag: jordan
   - id: CH
-    examples: [car]
+    examples: [earbud, car]
+    exampleWhy: "Earbud for the 2x2 formula by hand; the car's 4x4 is where the shortcut pays."
     label: Cayley–Hamilton
     detail: "p(A) = 0: eᴬᵗ is a polynomial"
     series: 2
@@ -867,6 +881,7 @@ maps:
     quizTag: cayley
   - id: PHI
     examples: [car]
+    exampleWhy: "Released nose-down, both modes mix and fade."
     label: "e^(At): how it evolves"
     detail: Φ(t) = eᴬᵗ; h(t) = CΦ(t)B
     series: 2
@@ -881,6 +896,7 @@ maps:
     quizTag: expm
   - id: CO
     examples: [car]
+    exampleWhy: "Where you push decides the rank."
     label: Controllability
     detail: Can u reach every mode?
     kind: decision
@@ -895,6 +911,7 @@ maps:
     quizTag: ctrl
   - id: OBS
     examples: [car]
+    exampleWhy: "Where you look decides the rank."
     label: Observability
     detail: Does y show every mode?
     series: 3
@@ -908,6 +925,7 @@ maps:
     quizTag: obs
   - id: PBH
     examples: [car]
+    exampleWhy: "Mode shape at the push or sensor point."
     label: PBH test
     detail: "One mode at a time: wᵀB, Cv"
     series: 3
@@ -921,6 +939,7 @@ maps:
     quizTag: pbh
   - id: GRAM
     examples: [car]
+    exampleWhy: "Two actuators levelling the body."
     label: Gramians
     detail: Energy cost of each direction
     series: 3
@@ -934,6 +953,7 @@ maps:
     quizTag: gramian
   - id: OPT
     examples: [car]
+    exampleWhy: "The levelling job from GRAM."
     label: Optimal control
     detail: "Best u: Pontryagin, costate p"
     series: 4
@@ -947,6 +967,7 @@ maps:
     quizTag: optimal
   - id: FB
     examples: [car]
+    exampleWhy: "Skyhook damping on the car."
     label: "Feedback: active damping"
     detail: u = −Kx moves the poles
     series: 4
@@ -962,6 +983,7 @@ maps:
     live: "figure:skyhook"
   - id: FILT
     examples: [earbud]
+    exampleWhy: "The noise-cancelling filter runs on the earbud's chip."
     label: "Filters: noise cancelling"
     detail: Difference equations H(z)
     series: 4
