@@ -335,7 +335,7 @@ maps:
   - &id021
     from: SYS
     to: SUP
-    label: shortcut?
+    label: any trick?
     question: "There are infinitely many possible inputs, so is there a shortcut?"
     idea: "If the system is linear, yes: know the outputs of a few simple pieces and add them up for any input."
     why: "**Still open:** a system is a rule y = T{u}, but the rule has to cover every input: every song through the earbud, every road under the car.\n\n**Why it matters:**\n\n- There are infinitely many inputs, and we can't measure them all.\n- Simulating each one from scratch is slow, and teaches us nothing we can reuse.\n\n**What we want:** a shortcut that reuses work: build any output from a few responses we already know."
@@ -410,7 +410,7 @@ maps:
   - &id030
     from: PZ
     to: STAB
-    label: settle?
+    label: "shortcut: settle?"
     question: Will it settle?
     idea: A pole in the right half-plane is a rhythm that grows; the system settles only if every pole lies to the left.
     side: true
@@ -425,7 +425,7 @@ maps:
   - &id032
     from: TONE
     to: MODES
-    label: same trick
+    label: "look back: same trick"
     question: "Modes and tones: the same idea?"
     idea: "Same trick: find inputs (or states) that keep their shape. Tones are only scaled by H(jω); modes are only scaled by e^(λt)."
     dashed: true
