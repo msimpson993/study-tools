@@ -33,7 +33,7 @@ function parseHash(): Route {
   return { path: p.split('/').filter(Boolean), q: new URLSearchParams(qs ?? '') };
 }
 const go = (hash: string) => { location.hash = hash; };
-/** phone layout: a map entry opens as a near-full-screen card with a fixed "← Back to map" bar (core.css, max-width 699px) */
+/** phone layout: a map entry opens as a near-full-screen floating card, closed by its ✕ or the browser/OS Back (core.css, max-width 699px) */
 const PHONE = typeof matchMedia === 'function' ? matchMedia('(max-width: 699px)') : ({ matches: false } as MediaQueryList);
 
 export function mountApp(content: AppContent, hooks: AppHooks = {}): void {
@@ -103,6 +103,9 @@ export function mountApp(content: AppContent, hooks: AppHooks = {}): void {
     glossaryToTopic = () => {
       if (inp.value) return;
       const panel = document.querySelector<HTMLElement>('.cm-panel:not(.idle)');
+      // the subject says which section belongs to the open box (subject.glossaryTopics): use it, on every screen size
+      const said = panel?.dataset.gloss, saidHead = said ? [...dl.querySelectorAll<HTMLElement>('.gloss-sec')].find((e) => e.textContent === said) : undefined;
+      if (saidHead) { glossary.dataset.topic = said!; glossary.scrollTop = Math.max(0, saidHead.offsetTop - 8); return; }
       const page = ((panel?.innerText || '') + ' ' + (panel ? '' : main.innerText)).toLowerCase();
       const score = new Map<string, number>();
       for (const t of content.glossary) {
@@ -137,12 +140,19 @@ export function mountApp(content: AppContent, hooks: AppHooks = {}): void {
     openQuiz: (tags: string[], title: string) => go(`/quiz?tags=${encodeURIComponent(tags.join(','))}&title=${encodeURIComponent(title)}`),
     figures: hooks.quizFigures,
     audio: hooks.audio,
+    // an Example bubble that draws a live figure (runningExample.refs[].figure): the same mounter a dive's figure slot uses
+    mountFigure: (host: HTMLElement, id: string, preset?: string) => {
+      const def = content.figures.find((f) => f.id === id), mounter = hooks.figures?.[id];
+      if (!def || !mounter) return null;
+      const controls = new ControlSet(def.controls, def.presets); if (preset) controls.applyPreset(preset);
+      const stop = mounter(host, def, controls); return typeof stop === 'function' ? stop : () => {};
+    },
     onState: () => {
       if (!isMapHash(location.hash || '#/')) return;
       const prev = lastPick; lastPick = mapState.pick;
       const entry = !!(history.state && history.state.cmEntry);
       // phones: opening an entry pushes a history step, so the browser/Android Back returns to the map; closing it (✕, Esc,
-      // "← Back to map") steps back over that entry instead of leaving it in the history
+      // browser Back) steps back over that entry instead of leaving it in the history
       if (PHONE.matches && mapState.pick && !prev && !entry && !fullscreenActive()) { history.pushState({ ...(history.state ?? {}), cmEntry: 1 }, '', mapHashFor(mapState.pick)); return; }
       if (!mapState.pick && entry) { history.back(); return; }
       const want = mapHashFor(mapState.pick);
@@ -190,10 +200,10 @@ export function mountApp(content: AppContent, hooks: AppHooks = {}): void {
       return;
     }
     showMain();
-    if (!a || a === 'map' || a === 'node' || a === 'edge') {
+    if (!a || a === 'map' || a === 'node' || a === 'edge' || a === 'ref') {
       // #/node/<id> and #/edge/<from>__<to> select that box/line. Bare #/ keeps the in-memory pick so
       // Explore → quiz → back to the map restores the panel (mapState lives across routes).
-      const picked = (a === 'node' || a === 'edge') ? pickFromHash(content, path) : null;
+      const picked = (a === 'node' || a === 'edge' || a === 'ref') ? pickFromHash(content, path) : null;
       if (picked) { mapState.mapId = picked.mapId; mapState.pick = picked.pick; }
       renderSidebar('map');
       lastPick = mapState.pick;

@@ -12,7 +12,8 @@ export interface MapState {
   mapId: string;
   mode: 'explore' | 'review';
   recall: boolean;
-  pick: { kind: 'node' | 'edge'; id: string } | null;
+  /** the open entry: a box, a line, or an Example bubble (`ref`, runningExample.refs; outside the Next/Back chain) */
+  pick: { kind: 'node' | 'edge' | 'ref'; id: string } | null;
   /** colour family (node.series) whose boxes are lit via the legend chips, or null */
   series: number | null;
   revealed: Set<string>;
@@ -31,6 +32,8 @@ export interface MapNav {
   figures?: QuizFigureRegistry;
   /** opt-in sound players for `node.pop.audio` (see audio.ts: audioHook) */
   audio?: PopAudioHook;
+  /** mounts a live figures.yaml figure (an Example bubble's `figure`); returns its stop function, or null if the app has none */
+  mountFigure?(host: HTMLElement, id: string, preset?: string): (() => void) | null;
 }
 export interface PopAudioHook { mount(id: string): { el: HTMLElement; destroy(): void } }
 
@@ -56,7 +59,7 @@ export function mountConceptMap(host: HTMLElement, content: AppContent, progress
     h('button', { type: 'button', class: 'tbtn', title: 'Zoom out (or scroll the wheel / pinch on the map)', 'aria-label': 'Zoom out', dataset: { testid: 'map-zoom-out' }, onclick: () => zoomAtCentre(1 / 1.25) }, '−'),
     zoomPct,
     h('button', { type: 'button', class: 'tbtn', title: 'Zoom in (or scroll the wheel / pinch on the map)', 'aria-label': 'Zoom in', dataset: { testid: 'map-zoom-in' }, onclick: () => zoomAtCentre(1.25) }, '+'),
-    h('button', { type: 'button', class: 'tbtn', title: 'Back to the whole map in its column', dataset: { testid: 'map-zoom-reset' }, onclick: () => { zoomFit = true; setZoom(minZoom()); centerSel(); } }, 'Reset zoom'));
+    h('button', { type: 'button', class: 'tbtn', title: 'Back to the whole map in its column', dataset: { testid: 'map-zoom-reset' }, onclick: () => { zoomFit = true; setZoom(fitZoom()); centerSel(); } }, 'Reset zoom'));
   const mapCol = h('div', { class: 'cm-mapcol' }, scroll, zoomBar);
   const panel = h('aside', { class: 'cm-panel idle', 'aria-live': 'polite', dataset: { testid: 'map-panel' } });
   const wrap = h('div', { class: 'cm-wrap', dataset: { testid: 'map-wrap' } }, mapCol, panel);
@@ -64,24 +67,14 @@ export function mountConceptMap(host: HTMLElement, content: AppContent, progress
   const reviewBar = h('div', { class: 'cm-top', dataset: { testid: 'review-bar' } });
   const caption = h('div', { class: 'cm-caps' });
   const legend = h('div', { class: 'cm-legend', role: 'group', 'aria-label': 'How to read the lines and boxes', dataset: { testid: 'map-legend' } });
-  const heroScene = content.subject.runningExample?.scene;
-  const hero = h('div', { class: `cm-hero${heroScene ? ' has-scene' : ''}`, dataset: { testid: 'map-hero' } },
-    h('div', { class: 'cm-q', dataset: { testid: 'central-question' } }, content.subject.centralQuestion, h('small', null, 'Central question. Tap any box or line to open it.')));
-  const heroScenes = heroScene ? [heroScene, ...(content.subject.runningExample?.moreScenes ?? [])] : [];
-  // more than one running example: the picture sits in a box with a small switch above it
-  const heroBox = heroScenes.length > 1 ? h('div', { class: 'cm-hero-sc', dataset: { testid: 'hero-scenes' } }) : null;
-  if (heroBox) hero.append(heroBox);
-  let heroHandle = heroScene ? mountScene(heroBox ?? hero, { scene: heroScene.id, overlays: heroScene.overlays, params: heroScene.params, caption: heroScene.caption, diagram: heroScene.diagram, compact: true }) : null;
-  if (heroBox) {
-    const sw = h('div', { class: 'st-seg cm-hero-switch', role: 'group', 'aria-label': 'Running example', dataset: { testid: 'hero-switch' } });
-    const pickHero = (i: number) => {
-      const sc = heroScenes[i]; heroHandle?.destroy();
-      heroHandle = mountScene(heroBox, { scene: sc.id, overlays: sc.overlays, params: sc.params, caption: sc.caption, diagram: sc.diagram, compact: true });
-      [...sw.children].forEach((b, j) => { b.classList.toggle('on', i === j); b.setAttribute('aria-pressed', String(i === j)); });
-    };
-    heroScenes.forEach((sc, i) => sw.append(h('button', { type: 'button', class: i ? '' : 'on', 'aria-pressed': String(!i), dataset: { scene: sc.id }, onclick: () => pickHero(i) }, sc.title ?? sc.id)));
-    heroBox.prepend(sw);
-  }
+  // the running examples live in Example bubbles on the map (runningExample.refs), so the header is one slim line
+  const exRefs = content.subject.runningExample?.refs ?? [];
+  const hero = h('div', { class: 'cm-hero slim', dataset: { testid: 'map-hero' } },
+    h('div', { class: 'cm-q', dataset: { testid: 'central-question' } }, content.subject.centralQuestion, h('small', null, exRefs.length ? 'Central question. Tap any box or line to open it; a dashed Example bubble opens a running example.' : 'Central question. Tap any box or line to open it.')));
+  /** the bubbles on map m (each on its host box) */
+  const refsOn = (m: MapDef) => exRefs.filter((r) => m.nodes.some((n) => n.id === r.at));
+  /** px a host box grows at its foot to hold its bubble */
+  const REF_H = 30;
   root.append(
     hero,
     top, reviewBar, caption, legend,
@@ -97,7 +90,23 @@ export function mountConceptMap(host: HTMLElement, content: AppContent, progress
   ro.observe(scroll);
   width = Math.floor(scroll.clientWidth - 8) || 960;
 
-  const setPick = (p: MapState['pick']) => { st.pick = p; if (p) st.series = null; renderLegend(); renderSvg(); renderPanel(); nav.onState?.(); if (p && isSplit()) { revealSplit(); centerSel(); } };
+  const setPick = (p: MapState['pick']) => { const was = st.pick; st.pick = p; if (p) st.series = null; renderLegend(); renderSvg(); renderPanel(); nav.onState?.(); if (p && isSplit()) { revealSplit(); centerSel(); } if (!p && was && !wide?.matches) showWalkedTo(was); };
+  /** phone: closing the entry card returns to the map AT the box or line the reader walked to; if it is already in view
+   *  nothing moves (so a box opened and closed keeps the map exactly where it was) */
+  function showWalkedTo(was: NonNullable<MapState['pick']>) {
+    const find = () => scroll.querySelector(was.kind === 'node' ? `.qm-node[data-node="${was.id}"]` : was.kind === 'ref' ? `.qm-ref[data-ref="${was.id}"]` : `.qm-edge[data-edge="${was.id}"]`) as SVGGraphicsElement | null;
+    const el = find();
+    if (!el) return;
+    const a = el.getBoundingClientRect(), b = scroll.getBoundingClientRect(), top = Math.max(0, b.top), bot = Math.min(innerHeight, b.bottom);
+    const inView = a.top >= top && a.bottom <= bot && a.left >= Math.max(0, b.left) && a.right <= Math.min(innerWidth, b.right);
+    if (inView) return;
+    const show = () => { find()?.scrollIntoView({ block: 'center', inline: 'center', behavior: 'instant' as ScrollBehavior }); };
+    show();
+    // closing by ✕ steps the history back over the entry; the browser may then restore the old scroll position, so show it
+    // again once that step lands (a one-shot listener, dropped after half a second)
+    const again = () => { requestAnimationFrame(show); window.removeEventListener('hashchange', again); };
+    window.addEventListener('hashchange', again); setTimeout(() => window.removeEventListener('hashchange', again), 500);
+  }
   const isSplit = () => wrap.classList.contains('split');
   /** an entry opened while the header still fills the top: scroll the page so the map and entry start under the top bar
    *  (they are sticky there), giving them the screen's height; already in place = no scroll */
@@ -112,14 +121,18 @@ export function mountConceptMap(host: HTMLElement, content: AppContent, progress
     wrap.classList.toggle('split', on); if (!on) { zoom = 1; zoomFit = true; }
     width = Math.floor(scroll.clientWidth - 8) || width;
   }
-  const minZoom = () => (geom ? Math.min(1, (scroll.clientWidth - 8) / geom.width) : 1);
+  /** the side map's fit: 100%, or less when its column is narrower than the map (Reset zoom and a fresh split use it) */
+  const fitZoom = () => (geom ? Math.min(1, (scroll.clientWidth - 8) / geom.width) : 1);
+  /** how far the wheel / pinch may zoom out: to 60% (the whole map at a glance), or the fit if that is smaller */
+  const MIN_ZOOM = 0.6;
+  const minZoom = () => Math.min(MIN_ZOOM, fitZoom());
   /** zoom so the map point under (cx, cy) stays under it */
   function setZoom(z: number, cx?: number, cy?: number) {
     const svg = scroll.querySelector('svg'); if (!svg || !geom) return;
     z = Math.max(minZoom(), Math.min(4, z));
     const r0 = svg.getBoundingClientRect(), b = scroll.getBoundingClientRect();
     const x = cx ?? b.left + b.width / 2, y = cy ?? b.top + b.height / 2, px = (x - r0.left) / zoom, py = (y - r0.top) / zoom;
-    zoom = z; zoomFit = z <= minZoom() + 1e-3; svg.setAttribute('width', String(geom.width * z)); svg.setAttribute('height', String(geom.height * z));
+    zoom = z; zoomFit = Math.abs(z - fitZoom()) < 1e-3; svg.setAttribute('width', String(geom.width * z)); svg.setAttribute('height', String(geom.height * z));
     const r1 = svg.getBoundingClientRect();
     scroll.scrollLeft += r1.left + px * z - x; scroll.scrollTop += r1.top + py * z - y;
     zoomPct.textContent = `${Math.round(z * 100)}%`; wrap.dataset.zoom = z.toFixed(3);
@@ -127,7 +140,7 @@ export function mountConceptMap(host: HTMLElement, content: AppContent, progress
   const zoomAtCentre = (f: number) => setZoom(zoom * f);
   /** keep the open box or line in view in the side map */
   function centerSel() {
-    const sel = scroll.querySelector('.qm-node.n-sel, .qm-edge.e-sel') as SVGGraphicsElement | null; if (!sel) return;
+    const sel = scroll.querySelector('.qm-node.n-sel, .qm-edge.e-sel, .qm-ref.r-sel') as SVGGraphicsElement | null; if (!sel) return;
     const a = sel.getBoundingClientRect(), b = scroll.getBoundingClientRect();
     scroll.scrollLeft += a.left - b.left - (b.width - a.width) / 2; scroll.scrollTop += a.top - b.top - (b.height - a.height) / 2;
   }
@@ -190,6 +203,8 @@ export function mountConceptMap(host: HTMLElement, content: AppContent, progress
   /** the main-chain box a Full-detail branch hangs from: the last box on its path that is also on the first map */
   const mainAncestor = (id: string, m: MapDef) => { const first = new Set(content.maps[0]?.nodes.map((n) => n.id)); const up = mainPath(id, m).filter((x) => x !== id && first.has(x)); return up[up.length - 1]; };
   const openEdge = (key: string) => { setPick({ kind: 'edge', id: key }); panel.scrollTop = 0; };
+  /** an Example bubble opens its card in the panel (the phone card below 700 px); tapping it again closes it */
+  const toggleRef = (id: string) => setPick(st.pick?.kind === 'ref' && st.pick.id === id ? null : { kind: 'ref', id });
   const toggleEdge = (key: string) => setPick(st.pick?.kind === 'edge' && st.pick.id === key ? null : { kind: 'edge', id: key });
 
   function renderTop() {
@@ -244,6 +259,7 @@ export function mountConceptMap(host: HTMLElement, content: AppContent, progress
       sw.append(k === 'decision' ? s('path', { class: 'lg-shape', d: 'M 5 1 L 19 1 L 23 7 L 19 13 L 5 13 L 1 7 Z' }) : s('rect', { class: 'lg-shape', x: 1, y: 1, width: 22, height: 12, rx: k === 'terminal' ? 6 : 3 }));
       return sw;
     };
+    const exChip = () => { const sw = s('svg', { class: 'lg-sw', width: 30, height: 14, viewBox: '0 0 30 14', 'aria-hidden': 'true' }); sw.append(s('rect', { class: 'lg-ref', x: 1, y: 2, width: 28, height: 10, rx: 5 })); return sw; };
     const item = (key: string, icon: Element, text: string) => h('span', { class: 'lg-item', dataset: { legend: key } }, icon as unknown as Node, h('span', null, text));
     legend.append(
       item('solid', line(false), 'next question'),
@@ -251,6 +267,7 @@ export function mountConceptMap(host: HTMLElement, content: AppContent, progress
       ...(hasDashed ? [item('dashed', line(true), 'same idea, other view')] : []),
       ...(kinds.has('decision') ? [item('decision', shape('decision'), 'a fork: the answer picks the way')] : []),
       ...(kinds.has('terminal') ? [item('terminal', shape('terminal'), 'where the map starts')] : []),
+      ...(refsOn(m).length ? [item('example', exChip(), 'a running example (opens it live)')] : []),
     );
     // the coloured bar on the left of a box is its chapter (node.series): name it, and let a tap light that chapter up
     const used = [...new Set(m.nodes.map((n) => n.series).filter((x): x is number => x !== undefined))].sort();
@@ -309,16 +326,18 @@ export function mountConceptMap(host: HTMLElement, content: AppContent, progress
     applySplit();
     const m = map();
     const byId: Record<string, MapNode> = Object.fromEntries(m.nodes.map((n) => [n.id, n]));
-    geom = computeGeometry(m.nodes, m.edges, layoutWidth(view, width));
-    const pick = st.pick;
-    const hl = mapHighlight(pick, m.edges);
+    const hosts = new Set(refsOn(m).map((r) => r.at));
+    geom = computeGeometry(hosts.size ? m.nodes.map((n) => (hosts.has(n.id) ? { ...n, extra: REF_H } : n)) : m.nodes, m.edges, layoutWidth(view, width));
+    const pick = st.pick, openRef = pick?.kind === 'ref' ? exRefs.find((r) => r.id === pick.id) : undefined;
+    // an open bubble lights its host box's path like the box itself would (the box is not "selected": the bubble is)
+    const hl = mapHighlight(pick?.kind === 'ref' ? (openRef ? { kind: 'node', id: openRef.at } : null) : pick as { kind: 'node' | 'edge'; id: string } | null, m.edges);
     const ser = pick === null ? st.series : null;
-    const selNode = hl.selected, selEdgeKey = pick?.kind === 'edge' && hl.edges.size ? pick.id : null;
+    const selNode = openRef ? null : hl.selected, selEdgeKey = pick?.kind === 'edge' && hl.edges.size ? pick.id : null;
     const pathSet = hl.path, neigh = hl.neigh, pathKeys = hl.edges;
     labels = placeLabels(geom, m.edges, hl.priority);
     const recallHide = (id: string) => st.mode === 'review' && st.recall && !st.revealed.has(`${st.mapId}/${id}`);
 
-    if (isSplit() && zoomFit) { zoom = minZoom(); wrap.dataset.zoom = zoom.toFixed(3); zoomPct.textContent = `${Math.round(zoom * 100)}%`; }
+    if (isSplit() && zoomFit) { zoom = fitZoom(); wrap.dataset.zoom = zoom.toFixed(3); zoomPct.textContent = `${Math.round(zoom * 100)}%`; }
     const svg = s('svg', { width: geom.width * zoom, height: geom.height * zoom, viewBox: `0 0 ${geom.width} ${geom.height}`, role: 'group', 'aria-label': 'Question-chain map. Tap a box, a line, or a line’s dot for more.', 'data-testid': 'map-svg' });
     svg.append(s('rect', { x: 0, y: 0, width: geom.width, height: geom.height, fill: 'transparent', onclick: () => { if (st.pick) setPick(null); } }));
     const edgeData: Record<string, MapEdge> = Object.fromEntries(m.edges.map((e) => [edgeKey(e.from, e.to), e]));
@@ -367,11 +386,30 @@ export function mountConceptMap(host: HTMLElement, content: AppContent, progress
         ? s('path', { class: 'shape focus-ring', d: `M ${b.x + r} ${b.y} L ${b.x + b.w - r} ${b.y} L ${b.x + b.w} ${b.y + b.h / 2} L ${b.x + b.w - r} ${b.y + b.h} L ${b.x + r} ${b.y + b.h} L ${b.x} ${b.y + b.h / 2} Z` })
         : s('rect', { class: 'shape focus-ring', x: b.x, y: b.y, width: b.w, height: b.h, rx: b.kind === 'terminal' ? Math.min(24, b.h / 2) : 10 }));
       if (n.series !== undefined && b.kind === 'box') grp.append(s('rect', { class: 'qm-accent', x: b.x, y: b.y + 6, width: 4, height: b.h - 12, rx: 2, fill: SERIES[n.series] }));
-      const cx = b.x + b.w / 2, textH = b.lines.length * 15 + b.detailLines.length * 14, top0 = b.y + (b.h - textH) / 2 + 11;
+      const cx = b.x + b.w / 2, textH = b.lines.length * 15 + b.detailLines.length * 14, top0 = b.y + (b.h - b.extra - textH) / 2 + 11;
       b.lines.forEach((line, i) => grp.append(s('text', { x: cx, y: top0 + i * 15, 'text-anchor': 'middle', 'font-size': 12, 'font-weight': 600 }, line)));
       b.detailLines.forEach((line, i) => grp.append(s('text', { class: 'det', x: cx, y: top0 + b.lines.length * 15 + i * 14, 'text-anchor': 'middle', 'font-size': 11 }, line)));
       if (hide) grp.append(s('text', { class: 'qmark', x: cx, y: b.y + b.h / 2 + 6, 'text-anchor': 'middle', style: 'opacity:1' }, '?'));
       if (status) grp.append(s('circle', { class: 'st', cx: b.x + b.w - 9, cy: b.y + 9, r: 6 }));
+      svg.append(grp);
+    }
+    // Example bubbles: a dashed, tinted chip in the foot of the host box with a small "Example" tag on its border; its own
+    // tap target (not the box's), and never part of the Next/Back chain
+    for (const r of refsOn(m)) {
+      const b = geom.boxes[r.at]; if (!b) continue;
+      const on = openRef?.id === r.id, dim = pick !== null && !on && !pathSet.has(r.at) && selNode !== r.at;
+      const cw = b.w - 14, ch = 18, x = b.x + 7, y = b.y + b.h - ch - 5, fs = Math.max(8.5, Math.min(10.5, (cw - 10) / (r.label.length * 0.56)));
+      const act = () => toggleRef(r.id);
+      const grp = s('g', {
+        class: `qm-ref${on ? ' r-sel' : ''}${dim ? ' r-dim' : ''}`, role: 'button', tabindex: 0, 'aria-label': `Example: ${r.label}. Opens the live picture.`, 'aria-pressed': on,
+        'data-ref': r.id, 'data-at': r.at, 'data-testid': 'map-ref',
+        onclick: (ev: Event) => { ev.stopPropagation(); act(); },
+        onkeydown: (ev: KeyboardEvent) => { if (ev.key === 'Enter' || ev.key === ' ') { ev.preventDefault(); ev.stopPropagation(); act(); } },
+      });
+      grp.append(s('rect', { class: 'chip', x, y, width: cw, height: ch, rx: ch / 2 }),
+        s('rect', { class: 'tag-bg', x: x + 9, y: y - 5, width: 40, height: 9, rx: 3 }),
+        s('text', { class: 'tag', x: x + 29, y: y + 2, 'text-anchor': 'middle', 'font-size': 7.5 }, 'EXAMPLE'),
+        s('text', { class: 'lab', x: x + cw / 2, y: y + ch / 2 + fs * 0.36 + 0.5, 'text-anchor': 'middle', 'font-size': fs }, r.label));
       svg.append(grp);
     }
     const sl = scroll.scrollLeft, stp = scroll.scrollTop; // a re-render (a tap, a theme change) must not throw the reader back to the corner
@@ -484,13 +522,29 @@ export function mountConceptMap(host: HTMLElement, content: AppContent, progress
     const m = map();
     const pick = st.pick;
     panel.classList.toggle('idle', !pick);
+    // the glossary section the Variables drawer should open at for this entry (subject.glossaryTopics; inherited down the main path)
+    const gt = content.subject.glossaryTopics, at = pick?.kind === 'node' ? pick.id : pick?.kind === 'edge' ? m.edges.find((e) => edgeKey(e.from, e.to) === pick.id)?.to : pick?.kind === 'ref' ? exRefs.find((r) => r.id === pick.id)?.at : undefined;
+    panel.dataset.gloss = (gt && at ? [...mainPath(at, m)].reverse().map((id) => gt[id]).find(Boolean) : undefined) ?? '';
     if (!pick) {
       panel.append(h('p', { class: 'st-hint' }, 'Tap a box or a line. A box opens its short answer, key equation and a way into the deep dive; a line shows the question that leads from one idea to the next. Esc closes.'));
       return;
     }
     const close = h('button', { class: 'tbtn x', 'aria-label': 'Close', dataset: { testid: 'panel-close' }, onclick: () => setPick(null) }, '✕');
-    // phones (< 700 px): the entry is a near-full-screen card; this bar stays fixed at its foot (CSS shows it only there)
-    panel.append(h('div', { class: 'cm-backbar', dataset: { testid: 'map-backbar' } }, h('button', { class: 'tbtn on', dataset: { testid: 'back-to-map-fixed' }, onclick: () => setPick(null) }, '← Back to map')));
+    // phones (< 700 px): the entry is a floating card; it closes with its ✕ (kept in reach at the card's top) or the browser/OS Back
+    if (pick.kind === 'ref') {
+      const r = exRefs.find((x) => x.id === pick.id), host = r && m.nodes.find((x) => x.id === r.at);
+      if (!r) return;
+      // the reference card: the example live, then its specs; Close / Back return to the map (no Next/Back chain here)
+      panel.append(h('div', { class: 'cm-head' }, h('h3', null, h('span', { class: 'ref-tag' }, 'Example'), ' ', r.title), close),
+        h('div', { class: 'st-hint', dataset: { testid: 'ref-hint' } }, host ? `A running example, opened from “${host.label}”. Not a step in the chain: close it to carry on.` : 'A running example.'));
+      const live = h('div', { class: 'ref-live', dataset: { testid: 'ref-live' } });
+      panel.append(live);
+      if (r.scene) { const hd = mountScene(live, { scene: r.scene.id, overlays: r.scene.overlays, params: r.scene.params, caption: r.scene.caption, diagram: r.scene.diagram }); popStops.push(() => hd.destroy()); }
+      else if (r.figure) { const stop = nav.mountFigure?.(live, r.figure, r.preset); if (stop) popStops.push(stop); else live.append(h('p', { class: 'st-hint' }, `(figure ${r.figure} is not available)`)); }
+      if (r.specs) panel.append(h('div', { class: 'ref-specs', dataset: { testid: 'ref-specs' }, html: r.specs }));
+      if (host) panel.append(h('div', { class: 'chain-nav', dataset: { testid: 'ref-nav' } }, h('button', { class: 'tbtn', dataset: { testid: 'ref-host', to: host.id }, onclick: () => openNode(host.id) }, h('span', { class: 'ch-dir' }, 'Open the box it sits on'), h('span', { class: 'ch-name' }, host.label))));
+      return;
+    }
     if (pick.kind === 'node') {
       const n = m.nodes.find((x) => x.id === pick.id);
       if (!n) return;
@@ -550,7 +604,7 @@ export function mountConceptMap(host: HTMLElement, content: AppContent, progress
   const offPop = nav.onPop?.((p) => setPick(p)) ?? (() => {});
   const onKey = (ev: KeyboardEvent) => { if (ev.key === 'Escape' && (st.pick || st.series !== null) && !document.querySelector('.fig-overlay:not([hidden])')) { st.series = null; setPick(null); } };
   document.addEventListener('keydown', onKey);
-  return () => { offPop(); popStops.forEach((f) => f()); heroHandle?.destroy(); ro.disconnect(); off(); document.removeEventListener('keydown', onKey); wide?.removeEventListener?.('change', onWide); root.remove(); };
+  return () => { offPop(); popStops.forEach((f) => f()); ro.disconnect(); off(); document.removeEventListener('keydown', onKey); wide?.removeEventListener?.('change', onWide); root.remove(); };
 }
 
 /** Expose geometry+labels of the *current* render to tests. */

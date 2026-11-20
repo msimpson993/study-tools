@@ -158,7 +158,9 @@ export interface Subject {
   quizFigures?: string[];
   /** ids of the opt-in sound examples this app registers; pop.audio ids are validated against it */
   audio?: string[];
-  runningExample?: { title: string; summary: string; details?: string; /** which core example scene draws it (`cart`, `tine`) and the overlays of the small hero on the map page */ scene?: SceneRef; /** further scenes (more than one running example): the map hero switches between them, dives pick one with exampleScene.scene */ moreScenes?: SceneRef[] };
+  runningExample?: { title: string; summary: string; details?: string; /** which core example scene draws it (`cart`, `tine`) and the overlays of the small hero on the map page */ scene?: SceneRef; /** further scenes (more than one running example): the map hero switches between them, dives pick one with exampleScene.scene */ moreScenes?: SceneRef[]; /** Example bubbles on the map: each sits on its host box and opens its live scene (or figure) with brief specs; never part of the Next/Back chain */ refs?: ExampleRef[] };
+  /** box id → the glossary section the Variables drawer opens at (boxes without one inherit their nearest main-path ancestor's) */
+  glossaryTopics?: Record<string, string>;
   board?: { pairs: string[] };
   /** `chain`: the unfiltered, unshuffled quiz runs in map order (questions tagged to box 1 first, each box's own quick check leading), so it opens on an easy foundational question */
   quizOrder?: 'authored' | 'chain';
@@ -174,6 +176,23 @@ export interface AppContent {
   glossary: Term[];
   figures: FigureDef[];
   extra: Record<string, unknown>;
+}
+/** An Example bubble on the map (runningExample.refs): a reference card for one running example, attached to its host box. */
+export interface ExampleRef {
+  id: string;
+  /** the host box (node id); the bubble shows on every map that has this box */
+  at: string;
+  /** what the bubble says after "Example:" (e.g. "the earbud speaker") */
+  label: string;
+  /** the card's heading */
+  title: string;
+  /** a live core scene (one of scenedefs) ... */
+  scene?: SceneRef;
+  /** ... or a live figure from figures.yaml (with its play control), optionally on one preset */
+  figure?: string;
+  preset?: string;
+  /** brief specs under the picture (markdown; HTML after the build) */
+  specs?: string;
 }
 /** A subject-level scene reference (runningExample.scene / moreScenes). */
 export interface SceneRef { id: string; title?: string; overlays?: string[]; params?: Record<string, number>; caption?: string; diagram?: DiagramSpec | string | string[] }

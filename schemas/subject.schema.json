@@ -19,9 +19,31 @@
       "type": "string",
       "minLength": 3
     },
-    "quizSets": { "type": "array", "description": "practice sets that belong to no box: kept off the map, labelled on their quiz cards", "items": { "type": "object", "required": ["tag", "label"], "additionalProperties": false, "properties": { "tag": { "type": "string" }, "label": { "type": "string" } } } },
+    "quizSets": {
+      "type": "array",
+      "description": "practice sets that belong to no box: kept off the map, labelled on their quiz cards",
+      "items": {
+        "type": "object",
+        "required": [
+          "tag",
+          "label"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "tag": {
+            "type": "string"
+          },
+          "label": {
+            "type": "string"
+          }
+        }
+      }
+    },
     "quizOrder": {
-      "enum": ["authored", "chain"],
+      "enum": [
+        "authored",
+        "chain"
+      ],
       "description": "chain: the quiz runs in map order (box 1's questions first, each box's quick check leading), so it opens on an easy foundational question"
     },
     "centralQuestion": {
@@ -384,6 +406,152 @@
               }
             }
           }
+        },
+        "refs": {
+          "type": "array",
+          "description": "Example bubbles on the map: a dashed reference chip on its host box that opens a card with the example's live scene (or live figure) and brief specs. Not part of the Next/Back chain.",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "id",
+              "at",
+              "label",
+              "title"
+            ],
+            "properties": {
+              "id": {
+                "type": "string",
+                "pattern": "^[a-z][a-z0-9-]*$"
+              },
+              "at": {
+                "type": "string",
+                "description": "host box (node id)"
+              },
+              "label": {
+                "type": "string",
+                "minLength": 3,
+                "maxLength": 28,
+                "description": "shown after 'Example:' on the bubble"
+              },
+              "title": {
+                "type": "string",
+                "minLength": 3
+              },
+              "scene": {
+                "type": "object",
+                "required": [
+                  "id"
+                ],
+                "additionalProperties": false,
+                "description": "Which core example scene draws this running example (cart, tine) and, optionally, the overlays of the small hero picture on the map page.",
+                "properties": {
+                  "id": {
+                    "type": "string"
+                  },
+                  "overlays": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  },
+                  "params": {
+                    "type": "object",
+                    "additionalProperties": {
+                      "type": "number"
+                    },
+                    "description": "Closed-loop cart parameters (numbers): K, Ki, Kd, r, umax, d, td, noise, seed, delay, lag. Only valid with a closed-loop overlay (loop, pid, disturb, noise, limit, delay, lag); ranges are in docs/example-scenes.md and checked at build time."
+                  },
+                  "diagram": {
+                    "description": "Staged block diagram under the picture: a stage name or a list of stages (cart: ode, open, poles, states, loop, error, disturb, pid, noise, gain, sfb, observer, sep, refin; speaker: spk-chain, spk-model, spk-digital, anc-ff, anc-fb, anc-hybrid; house: house-open, house-modal, house-kalman, house-loop; validated against the scene at build time). Newly added parts at each stage are highlighted. See docs/example-scenes.md.",
+                    "oneOf": [
+                      {
+                        "type": "string",
+                        "enum": [
+                          "ode",
+                          "open",
+                          "poles",
+                          "states",
+                          "loop",
+                          "error",
+                          "disturb",
+                          "pid",
+                          "noise",
+                          "gain",
+                          "sfb",
+                          "observer",
+                          "sep",
+                          "refin",
+                          "spk-chain",
+                          "spk-model",
+                          "spk-digital",
+                          "anc-ff",
+                          "anc-fb",
+                          "anc-hybrid",
+                          "house-open",
+                          "house-modal",
+                          "house-kalman",
+                          "house-loop"
+                        ]
+                      },
+                      {
+                        "type": "array",
+                        "minItems": 1,
+                        "items": {
+                          "type": "string",
+                          "enum": [
+                            "ode",
+                            "open",
+                            "poles",
+                            "states",
+                            "loop",
+                            "error",
+                            "disturb",
+                            "pid",
+                            "noise",
+                            "gain",
+                            "sfb",
+                            "observer",
+                            "sep",
+                            "refin",
+                            "spk-chain",
+                            "spk-model",
+                            "spk-digital",
+                            "anc-ff",
+                            "anc-fb",
+                            "anc-hybrid",
+                            "house-open",
+                            "house-modal",
+                            "house-kalman",
+                            "house-loop"
+                          ]
+                        }
+                      }
+                    ]
+                  },
+                  "caption": {
+                    "type": "string",
+                    "description": "One line under the small hero picture on the map page."
+                  },
+                  "title": {
+                    "type": "string",
+                    "description": "Short name for the hero switch and the dive callout when there are moreScenes, e.g. 'Earbud speaker'."
+                  }
+                }
+              },
+              "figure": {
+                "type": "string",
+                "description": "a figures.yaml id (live figure) instead of a scene"
+              },
+              "preset": {
+                "type": "string"
+              },
+              "specs": {
+                "type": "string",
+                "description": "brief specs (markdown)"
+              }
+            }
+          }
         }
       }
     },
@@ -394,6 +562,13 @@
         "type": "string",
         "pattern": "^[A-Za-z0-9_-]+$"
       }
+    },
+    "glossaryTopics": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "string"
+      },
+      "description": "Which glossary section the Variables drawer opens at for a box (node id → glossary section). A box without an entry uses its nearest main-path ancestor's; with none, the drawer guesses from the open text."
     }
   }
 }

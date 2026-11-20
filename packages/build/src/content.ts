@@ -266,6 +266,22 @@ export function loadApp(appDir: string): { content: AppContent; warnings: string
   const more = (re as { moreScenes?: { id: string; overlays?: string[]; params?: Record<string, number>; diagram?: unknown }[] } | undefined)?.moreScenes ?? [];
   if (more.length && !sceneId) problems.push('subject.yaml runningExample.moreScenes needs runningExample.scene');
   more.forEach((m, i) => problems.push(...sceneProblems(m.id, m.overlays, `subject.yaml runningExample.moreScenes[${i}]`, m.params, m.diagram)));
+  // Example bubbles: each sits on a real box, and draws exactly one live thing (a core scene, or a figure the app registers)
+  const refs = (re as { refs?: { id: string; at: string; label: string; title: string; scene?: { id: string; overlays?: string[]; params?: Record<string, number>; diagram?: unknown }; figure?: string; preset?: string; specs?: string }[] } | undefined)?.refs ?? [];
+  const refsR = refs.map((r) => ({ ...r, specs: r.specs ? block(r.specs, `runningExample.refs.${r.id}`) : undefined }));
+  { const seenRef = new Set<string>();
+    refs.forEach((r, i) => {
+      const where = `subject.yaml runningExample.refs[${i}] (${r.id})`;
+      if (seenRef.has(r.id)) problems.push(`${where}: duplicate id`); seenRef.add(r.id);
+      if (!maps.some((m) => m.nodes.some((n) => n.id === r.at))) problems.push(`${where}: at "${r.at}" is not a box on any map`);
+      if (!!r.scene === !!r.figure) problems.push(`${where}: give exactly one of scene or figure`);
+      if (r.scene) problems.push(...sceneProblems(r.scene.id, r.scene.overlays, where, r.scene.params, r.scene.diagram as never));
+      if (r.figure) { const fd = figuresR.find((f: any) => f.id === r.figure) as any; if (!fd) problems.push(`${where}: figure "${r.figure}" is not in figures.yaml`); else if (r.preset && !(fd.presets ?? []).some((p: any) => p.id === r.preset)) problems.push(`${where}: figure "${r.figure}" has no preset "${r.preset}"`); }
+    }); }
+  for (const [id, sec] of Object.entries(subject.glossaryTopics ?? {})) {
+    if (!maps.some((m) => m.nodes.some((n) => n.id === id))) problems.push(`subject.yaml glossaryTopics: "${id}" is not a box`);
+    if (!glossary.some((t: any) => t.section === sec)) problems.push(`subject.yaml glossaryTopics.${id}: "${sec}" is not a glossary section`);
+  }
   const allowed = new Set([sceneId, ...more.map((m) => m.id)].filter(Boolean) as string[]);
   /** the scene a node/dive draws: its own `scene` (must be one of the subject's) or the subject's first */
   const sceneOf = (ref: { scene?: string }, where: string): string => { if (ref.scene && !allowed.has(ref.scene)) problems.push(`${where}: exampleScene.scene "${ref.scene}" is not one of the subject's scenes (${[...allowed].join(', ')})`); return ref.scene ?? sceneId!; };
@@ -345,7 +361,7 @@ export function loadApp(appDir: string): { content: AppContent; warnings: string
   if (problems.length) throw new ContentError(problems, appName);
 
   const content: AppContent = {
-    subject: { ...subject, sections: sectionsR as any, runningExample: re ? { title: re.title, summary: inline(re.summary, 'runningExample'), details: re.details ? block(re.details, 'runningExample.details') : undefined, scene: re.scene, moreScenes: (re as { moreScenes?: unknown[] }).moreScenes as never } : undefined },
+    subject: { ...subject, sections: sectionsR as any, runningExample: re ? { title: re.title, summary: inline(re.summary, 'runningExample'), details: re.details ? block(re.details, 'runningExample.details') : undefined, scene: re.scene, moreScenes: (re as { moreScenes?: unknown[] }).moreScenes as never, refs: refsR.length ? refsR as never : undefined } : undefined },
     maps, dives, review, quiz, glossary: glossaryR as Term[], figures: figuresR as FigureDef[], extra,
   };
   return { content, warnings };

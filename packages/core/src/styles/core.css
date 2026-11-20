@@ -127,13 +127,13 @@ details.fold>div{padding:0 .8rem .6rem}
 }
 .cm-pad{display:none}
 /* phones (< 700px): an open entry is a floating card over most of the screen (10px margins, rounded, the map faint at its
-   edges) with a fixed "← Back to map" bar at its foot; the card's bottom padding keeps the bar off the last content */
-.cm-backbar{display:none}
+   edges). It closes with its ✕ (the heading row stays pinned at the card's top, so the ✕ is always in reach) or the
+   browser/OS Back (opening pushes a history step); there is no bottom bar */
 @media (max-width:699px){
-  .cm-panel{align-self:stretch;justify-self:stretch;left:10px;right:10px;top:54px;bottom:calc(10px + env(safe-area-inset-bottom));max-height:none;border-radius:14px;padding-bottom:calc(4.4rem + env(safe-area-inset-bottom));box-shadow:0 0 0 100vmax rgba(0,0,0,.38),0 10px 34px rgba(0,0,0,.6)}
-  .cm-panel .cm-backbar{display:block;position:fixed;left:11px;right:11px;bottom:calc(11px + env(safe-area-inset-bottom));z-index:66;padding:.75rem .9rem calc(.6rem + env(safe-area-inset-bottom));border-radius:0 0 13px 13px;background:linear-gradient(to bottom,transparent,var(--panel) 38%)}
-  .cm-panel .cm-backbar button{display:block;width:100%;min-height:44px;font-size:.95rem}
-  .cm-panel :is(button,a,[tabindex]){scroll-margin-bottom:calc(5rem + env(safe-area-inset-bottom))}
+  .cm-panel{align-self:stretch;justify-self:stretch;left:10px;right:10px;top:54px;bottom:calc(10px + env(safe-area-inset-bottom));max-height:none;border-radius:14px;padding-bottom:calc(1.2rem + env(safe-area-inset-bottom));box-shadow:0 0 0 100vmax rgba(0,0,0,.38),0 10px 34px rgba(0,0,0,.6)}
+  .cm-panel .cm-head{position:sticky;top:-.7rem;z-index:3;margin:-.7rem -.2rem .3rem;padding:.7rem .2rem .35rem;background:var(--panel)}
+  .cm-panel .cm-head .x{min-width:44px;min-height:44px;font-size:1.05rem}
+  .cm-panel :is(button,a,[tabindex]){scroll-margin-top:4rem}
 }
 /* a figure scrolled into view clears the card's top edge */
 .pop-figs{scroll-margin-top:24px}
@@ -250,6 +250,24 @@ details.st-more .st-badge{display:inline-block;margin-left:.35rem;padding:0 .4re
 .qm-node.n-dim text{opacity:.55}
 .qm-node.recall-hidden text{opacity:.0}.qm-node .qmark{fill:var(--muted);font-size:18px;font-weight:700}
 .qm-node .st{fill:var(--panel);stroke:var(--border-strong);stroke-width:2}
+.qm-ref{cursor:pointer}
+/* Example bubble: dashed, tinted, with an "EXAMPLE" tag on its border: plainly not a box and not a line */
+.qm-ref .chip{fill:color-mix(in srgb,var(--warn,#e0b341) 13%,var(--elev));stroke:var(--warn,#e0b341);stroke-width:1.2;stroke-dasharray:4 3}
+.qm-ref .tag-bg{fill:var(--warn,#e0b341)}
+.qm-ref .tag{fill:var(--bg);font-weight:800;letter-spacing:.06em}
+.qm-ref .lab{fill:var(--text);font-weight:600}
+.qm-ref:hover .chip,.qm-ref:focus-visible .chip{stroke-width:2}
+.qm-ref.r-sel .chip{fill:color-mix(in srgb,var(--warn,#e0b341) 30%,var(--elev));stroke-width:2.2;stroke-dasharray:none}
+.qm-ref.r-dim{opacity:.55}
+.qm-ref:focus{outline:none}.qm-ref:focus-visible .chip{stroke:var(--accent)}
+.cm-legend .lg-ref{fill:color-mix(in srgb,var(--warn,#e0b341) 13%,var(--elev));stroke:var(--warn,#e0b341);stroke-width:1.2;stroke-dasharray:4 3}
+/* the Example card in the panel */
+.cm-panel .ref-tag{display:inline-block;font:800 .62rem/1 system-ui,sans-serif;letter-spacing:.07em;text-transform:uppercase;color:var(--warn,#e0b341);border:1px dashed var(--warn,#e0b341);border-radius:6px;padding:.2rem .35rem;vertical-align:.15rem}
+.cm-panel .ref-live{margin:.4rem 0 .6rem;min-width:0}
+/* a live figure in the card: one column, its panels stacked (the card is never wide enough for side-by-side) */
+.cm-panel .ref-live .fig-layout{grid-template-columns:minmax(0,1fr)}
+.cm-panel .ref-live .fig-grid{flex-direction:column}
+.cm-panel .ref-specs{font-size:.92rem}.cm-panel .ref-specs table{font-size:.84rem}.cm-panel .ref-specs ul{margin:.3rem 0;padding-left:1.2rem}
 .qm-node.st-seen .st{fill:var(--accent);stroke:var(--accent)}.qm-node.st-correct .st{fill:var(--ok);stroke:var(--ok)}.qm-node.st-missed .st{fill:var(--bad);stroke:var(--bad)}
 .cm,.cm-legend{--qm-dash:8 5}
 .qm-edge .line{fill:none;stroke:var(--border-strong);stroke-width:1.4;stroke-linejoin:round;pointer-events:none}
@@ -300,6 +318,8 @@ details.st-more .st-badge{display:inline-block;margin-left:.35rem;padding:0 .4re
 .ex-row>.callout{margin:0}
 @media (min-width:900px){.ex-row.has-scene{grid-template-columns:minmax(0,1fr) minmax(300px,430px)}}
 .cm-hero{display:grid;grid-template-columns:minmax(0,1fr);gap:.5rem;align-items:center}
+/* the slim header: just the central question (the running examples are bubbles on the map) */
+.cm-hero.slim{display:block;margin:0 0 .15rem}
 @media (min-width:760px){.cm-hero.has-scene{grid-template-columns:minmax(0,1fr) 340px}}
 .cm-hero-sc{display:flex;flex-direction:column;gap:.3rem;min-width:0}
 .cm-hero-switch{align-self:flex-start;max-width:100%}.cm-hero-switch button{font-size:.78rem;padding:.25rem .6rem}

@@ -127,7 +127,7 @@ export function diveContext(content: AppContent, dive: Dive): string {
   return dive.html;
 }
 
-export function pickFromHash(content: AppContent, path: string[]): { mapId: string; pick: { kind: 'node' | 'edge'; id: string } } | null {
+export function pickFromHash(content: AppContent, path: string[]): { mapId: string; pick: { kind: 'node' | 'edge' | 'ref'; id: string } } | null {
   const [a, b] = path;
   if (!b) return null;
   const id = decodeURIComponent(b);
@@ -139,17 +139,22 @@ export function pickFromHash(content: AppContent, path: string[]): { mapId: stri
     const m = content.maps.find((m) => m.edges.some((e) => edgeKey(e.from, e.to) === id));
     return m ? { mapId: m.id, pick: { kind: 'edge', id } } : null;
   }
+  if (a === 'ref') {
+    // an Example bubble: on the first map that has its host box
+    const r = content.subject.runningExample?.refs?.find((x) => x.id === id), m = r && content.maps.find((m) => m.nodes.some((n) => n.id === r.at));
+    return m ? { mapId: m.id, pick: { kind: 'ref', id } } : null;
+  }
   return null;
 }
 
-export function mapHashFor(pick: { kind: 'node' | 'edge'; id: string } | null): string {
+export function mapHashFor(pick: { kind: 'node' | 'edge' | 'ref'; id: string } | null): string {
   if (!pick) return '#/';
-  return pick.kind === 'node' ? `#/node/${encodeURIComponent(pick.id)}` : `#/edge/${encodeURIComponent(pick.id)}`;
+  return `#/${pick.kind}/${encodeURIComponent(pick.id)}`;
 }
 
 export function isMapHash(hash: string): boolean {
   const h = hash || '#/';
-  return h === '' || h === '#' || h === '#/' || h.startsWith('#/map') || h.startsWith('#/node/') || h.startsWith('#/edge/');
+  return h === '' || h === '#' || h === '#/' || h.startsWith('#/map') || h.startsWith('#/node/') || h.startsWith('#/edge/') || h.startsWith('#/ref/');
 }
 
 export function figureUrl(figId: string, query = ''): string {

@@ -1,9 +1,9 @@
 /** Pure geometry for the question map: auto-layout in staggered rows, orthogonal edges, collision-avoided labels. No DOM. */
 export interface Pt { x: number; y: number }
 export interface Rect { x: number; y: number; w: number; h: number }
-export interface InNode { id: string; label: string; detail?: string; kind?: string }
+export interface InNode { id: string; label: string; detail?: string; kind?: string; /** px reserved at the box's foot for an attached chip (an Example bubble) */ extra?: number }
 export interface InEdge { from: string; to: string; label?: string }
-export interface NodeBox extends Rect { id: string; row: number; lines: string[]; detailLines: string[]; kind: string }
+export interface NodeBox extends Rect { id: string; row: number; lines: string[]; detailLines: string[]; kind: string; /** px at the foot kept for an attached chip (0 if none) */ extra: number }
 export interface EdgeGeom { key: string; from: string; to: string; points: Pt[]; dot: Pt; gapTop: number; gapBottom: number; /** hop-overs: where this line's horizontal piece jumps over another line's vertical piece */ hops: Hop[] }
 export interface Label extends Rect { key: string; text: string }
 export interface Geometry { width: number; height: number; nodeW: number; boxes: Record<string, NodeBox>; order: string[]; edges: EdgeGeom[] }
@@ -79,7 +79,7 @@ const ORDERS = new Map<string, string[][]>();
 const MIN_LANE_SP = 4, LANE_SP = 8;
 
 function graphOf(nodes: InNode[], edges: InEdge[]): Graph {
-  const sig = `${nodes.map((n) => `${n.id}:${n.kind ?? ''}:${n.label}:${n.detail ?? ''}`).join('|')}#${edges.map((e) => `${e.from}>${e.to}`).join(',')}`;
+  const sig = `${nodes.map((n) => `${n.id}:${n.kind ?? ''}:${n.label}:${n.detail ?? ''}:${n.extra ?? 0}`).join('|')}#${edges.map((e) => `${e.from}>${e.to}`).join(',')}`;
   const hit = GRAPHS.get(sig); if (hit) return hit;
   const children: Record<string, string[]> = {}, parents: Record<string, string[]> = {};
   for (const n of nodes) { children[n.id] = []; parents[n.id] = []; }
@@ -103,7 +103,7 @@ function sizesFor(G: Graph, nodeW: number) {
     const kind = n.kind ?? 'box', inner = nodeW - (kind === 'decision' ? 44 : 26);
     const lines = wrapText(n.label, Math.max(8, Math.floor(inner / QM_TITLE_CHAR)), n.kind === 'terminal' ? 12 : 3); // the root (start) box is never truncated
     const detailLines = n.detail ? wrapText(n.detail, Math.max(8, Math.floor(inner / QM_DETAIL_CHAR)), 2) : [];
-    out[n.id] = { lines, detailLines, h: Math.max(kind === 'decision' ? 60 : 50, 20 + lines.length * 15 + detailLines.length * 14) };
+    out[n.id] = { lines, detailLines, h: Math.max(kind === 'decision' ? 60 : 50, 20 + lines.length * 15 + detailLines.length * 14) + (n.extra ?? 0) };
   }
   G.sized.set(nodeW, out); return out;
 }
@@ -160,7 +160,7 @@ function build(G: Graph, p: Params, order: string[][]): Built {
     gapH[i] = i === rows.length - 1 ? 16 : Math.max(52, 26 + gapCount[i] * QM_TRACK); y += gapH[i];
   });
   const height = y, boxes: Record<string, NodeBox> = {};
-  for (const u of topo) { const r = rowOf[u]; boxes[u] = { id: u, row: r, x: centerX[u] - nodeW / 2, y: rowTop[r], w: nodeW, h: sized[u].h, lines: sized[u].lines, detailLines: sized[u].detailLines, kind: G.byId[u].kind ?? 'box' }; }
+  for (const u of topo) { const r = rowOf[u]; boxes[u] = { id: u, row: r, x: centerX[u] - nodeW / 2, y: rowTop[r], w: nodeW, h: sized[u].h, lines: sized[u].lines, detailLines: sized[u].detailLines, kind: G.byId[u].kind ?? 'box', extra: G.byId[u].extra ?? 0 }; }
 
   // ---- lanes: every line that passes a row gets its own vertical lane in a free interval of that row
   const freeCache: Array<Array<[number, number]> | undefined> = [];
