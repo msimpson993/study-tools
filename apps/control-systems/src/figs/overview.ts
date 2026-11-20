@@ -36,7 +36,7 @@ const STAGE_ID = /^[HCA]\d+ [A-Z][A-Z, ]*: /;
 const panelFor = (id: 'house' | 'corner' | 'dish', title: string, key: string): FigurePanel => ({
   id, title, x: '', y: '',
   draw(g, w, h, v: V) {
-    g.clearRect(0, 0, w, h); const st = STAGES[id], k = Math.max(0, Math.min(st.length - 1, Math.round(num(v, key, st.length - 1)))), s = st[k], ph = h * 0.45;
+    g.clearRect(0, 0, w, h); const st = STAGES[id], k = Math.max(0, Math.min(st.length - 1, Math.round(num(v, key, st.length)) - 1)) /* the slider counts stages from 1, as the caption does (pass 2, R5) */, s = st[k], ph = h * 0.45;
     if (id === 'house') drawHouse(g, w * 0.2, 4, w * 0.6, ph - 8, { t1: 24.55, t2: 20.45, thermostat: k >= 4, sun: k >= 6, labels: false });
     else if (id === 'corner') drawCorner(g, w * 0.3, 2, w * 0.4, ph - 4, { actuator: k >= 4, ghostZ: k >= 5 ? 0.01 : undefined, labels: false });
     else drawDish(g, w * 0.25, 0, w * 0.5, ph, { theta: 0.3, ref: 0.5, wind: k >= 1, labels: false });
