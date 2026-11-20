@@ -319,16 +319,17 @@ export function mountConceptMap(host: HTMLElement, content: AppContent, progress
 
   let popStops: (() => void)[] = [];
   const askOpen = new Set<string>();
+  // data-body marks a pop-up's MAIN BODY (what the word cap counts: see packages/build/test/wordcap.ts)
   /** The opt-in fixed pop-up template (node.pop): answer, rough formula, figure strip, running example, next question, one intuition question. */
   function popTemplate(n: MapNode, m: MapDef): HTMLElement[] {
     const p = n.pop!, out: HTMLElement[] = [];
-    const row = (cls: string, lead: string, html: string, testid: string) => h('p', { class: `pop-row ${cls}`, dataset: { testid } }, h('b', { class: 'pop-lead' }, lead), ' ', h('span', { html }));
+    const row = (cls: string, lead: string, html: string, testid: string, body = false) => h('p', { class: `pop-row ${cls}`, dataset: { testid } }, h('b', { class: 'pop-lead' }, lead), ' ', h('span', { html, dataset: body ? { body: '' } : undefined }));
     // restate the question this box answers: the line the reader arrived by, else the main-chain incoming line; the root states the central question
     const inc = backOrder(n.id, m)[0];
     const qText = inc ? inc.question : n.label;
     out.push(h('p', { class: 'pop-question', dataset: { testid: 'pop-question', edge: inc ? edgeKey(inc.from, inc.to) : '' } }, h('span', { class: 'pq-lead' }, inc ? 'The question:' : 'The central question:'), ' ', h('span', { class: 'pq-text', html: qText })));
-    out.push(h('div', { class: 'pop-answer', dataset: { testid: 'pop-answer' }, html: `<p>${n.short}</p>` }));
-    out.push(row('pop-rough', 'In rough words:', p.rough, 'pop-rough'));
+    out.push(h('div', { class: 'pop-answer', dataset: { testid: 'pop-answer', body: '' }, html: `<p>${n.short}</p>` }));
+    out.push(row('pop-rough', 'In rough words:', p.rough, 'pop-rough', true));
     if (n.eqHtml || n.eq) out.push(n.eqHtml ? h('div', { class: 'st-eq', html: n.eqHtml }) : h('div', { class: 'st-eq' }, n.eq!));
     if (p.eqKey) out.push(h('p', { class: 'pop-key st-hint', dataset: { testid: 'pop-key' }, html: p.eqKey }));
     if (p.figures?.length) {
@@ -346,7 +347,7 @@ export function mountConceptMap(host: HTMLElement, content: AppContent, progress
       out.push(box);
     }
     const ex = p.example ?? n.addsToExample;
-    if (ex) out.push(row('pop-example', 'On the running example:', ex, 'adds-to-example'));
+    if (ex) out.push(row('pop-example', 'On the running example:', ex, 'adds-to-example', true));
     // the chain goes THROUGH the lines: each outgoing (solid) line's question is a link that opens that line's pop-up
     const outs = nextOrder(n.id, m), fork = outs.length > 1 && outs.some((e) => e.side);
     const link = (e: MapEdge, testid: string) => h('a', { href: '#', class: 'pop-next-link', dataset: { testid, edge: edgeKey(e.from, e.to), to: e.to }, onclick: (ev: Event) => { ev.preventDefault(); openEdge(edgeKey(e.from, e.to)); }, html: e.question });
@@ -390,7 +391,7 @@ export function mountConceptMap(host: HTMLElement, content: AppContent, progress
 
   /** the edge's "why ask it here": what the last box left open, why it matters, what answer we want; optional captioned figures */
   function whyBox(e: MapEdge): HTMLElement {
-    const cb = h('div', { class: 'cb', html: e.why! });
+    const cb = h('div', { class: 'cb', html: e.why!, dataset: { body: '' } }); // main body (its figures and caption are not counted)
     if (e.whyFigures?.length) {
       const strip = h('div', { class: `pop-figs n${e.whyFigures.length}`, dataset: { testid: 'edge-why-figures' } });
       for (const f of e.whyFigures) { const mf = mountQuizFigure(f, nav.figures); popStops.push(mf.destroy); strip.append(mf.el); }
@@ -416,13 +417,13 @@ export function mountConceptMap(host: HTMLElement, content: AppContent, progress
       if (!n) return;
       const head = h('div', { class: 'cm-head' }, h('h3', null, n.label), copyRefButton(() => nodeReference(content, n, m.id)), close);
       if (n.pop) panel.append(head, ...popTemplate(n, m));
-      else panel.append(head, ...(n.detail ? [h('div', { class: 'st-hint' }, n.detail)] : []), h('div', { html: `<p>${n.short}</p>` }));
+      else panel.append(head, ...(n.detail ? [h('div', { class: 'st-hint', dataset: { body: '' } }, n.detail)] : []), h('div', { html: `<p>${n.short}</p>`, dataset: { body: '' } }));
       if (n.pop) { /* template replaces the free-form rows */ } else if (n.eqHtml) panel.append(h('div', { class: 'st-eq', html: n.eqHtml })); else if (n.eq) panel.append(h('div', { class: 'st-eq' }, n.eq));
-      if (!n.pop && n.addsToExample) panel.append(h('aside', { class: 'callout c-example', dataset: { testid: 'adds-to-example' } }, h('b', { class: 'lead' }, 'Adds to the running example'), h('div', { class: 'cb', html: `<p>${n.addsToExample}</p>` })));
-      if (!n.pop && n.accountsFor) panel.append(h('aside', { class: 'callout c-account', dataset: { testid: 'accounts-for' } }, h('b', { class: 'lead' }, 'Lets us account for'), h('div', { class: 'cb', html: `<p>${n.accountsFor}</p>` })));
+      if (!n.pop && n.addsToExample) panel.append(h('aside', { class: 'callout c-example', dataset: { testid: 'adds-to-example' } }, h('b', { class: 'lead' }, 'Adds to the running example'), h('div', { class: 'cb', html: `<p>${n.addsToExample}</p>`, dataset: { body: '' } })));
+      if (!n.pop && n.accountsFor) panel.append(h('aside', { class: 'callout c-account', dataset: { testid: 'accounts-for' } }, h('b', { class: 'lead' }, 'Lets us account for'), h('div', { class: 'cb', html: `<p>${n.accountsFor}</p>`, dataset: { body: '' } })));
       for (const [k, lead] of [['why', 'Why it matters'], ['recognize', 'Recognize'], ['trap', 'Trap'], ['predict', 'Predict']] as const) {
         const v = n.pop ? undefined : n[k];
-        if (v) panel.append(h('aside', { class: `callout c-${k}` }, h('b', { class: 'lead' }, lead), h('div', { class: 'cb', html: `<p>${v}</p>` })));
+        if (v) panel.append(h('aside', { class: `callout c-${k}` }, h('b', { class: 'lead' }, lead), h('div', { class: 'cb', html: `<p>${v}</p>`, dataset: { body: '' } })));
       }
       panel.append(pathChips(mainPath(n.id, m), m));
       const acts = h('div', { class: 'acts' });
@@ -446,7 +447,7 @@ export function mountConceptMap(host: HTMLElement, content: AppContent, progress
       panel.append(head, h('div', { class: 'st-hint' }, e.dashed ? 'Dashed: the same idea in another language' : 'Next step in the chain of questions'),
         h('aside', { class: 'callout c-predict' }, h('b', { class: 'lead' }, 'The question this line asks'), h('div', { class: 'cb', html: `<p>${e.question}</p>` })),
         ...(e.why ? [whyBox(e)] : []),
-        e.why ? h('div', { class: 'edge-idea', dataset: { testid: 'edge-idea' } }, h('b', { class: 'pop-lead' }, 'The answer, in short: '), h('span', { html: e.idea })) : h('div', { html: `<p>${e.idea}</p>` }));
+        e.why ? h('div', { class: 'edge-idea', dataset: { testid: 'edge-idea' } }, h('b', { class: 'pop-lead' }, 'The answer, in short: '), h('span', { html: e.idea, dataset: { body: '' } })) : h('div', { html: `<p>${e.idea}</p>`, dataset: { body: '' } }));
       if (e.eq) panel.append(h('div', { class: 'st-eq' }, e.eq));
       const pl = mainPath(e.from, m); if (pl[pl.length - 1] !== e.to) pl.push(e.to);
       panel.append(pathChips(pl, m));
