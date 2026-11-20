@@ -22,6 +22,7 @@ maps:
         series: 0..4       # colour family (the bar on the box's left edge); name it in the map's seriesNames
         short: ≥20 chars. The popup answer. (required)
         eq: Unicode equation text   # stays text on the map; use KaTeX only in dives
+        examples: [earbud, car]   # optional: running examples (runningExample.refs ids) this box uses; opt-in, turns on the box glyphs, highlight and comes-back list (a host must list its own)
         addsToExample: ≥15 chars. What this box adds to the running example (required on non-root nodes when a runningExample exists)
         accountsFor: what it lets us account for (a behaviour of the example we could not explain before); strongly recommended
         why / recognize / trap / predict: optional extra popup rows
