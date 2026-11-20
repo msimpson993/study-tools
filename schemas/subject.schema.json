@@ -409,7 +409,7 @@
         },
         "refs": {
           "type": "array",
-          "description": "Example bubbles on the map: a dashed reference chip on its host box that opens a card with the example's live scene (or live figure) and brief specs. Not part of the Next/Back chain.",
+          "description": "Example nodes on the map: each running example is its own dashed node beside the box where it first appears (a side column), joined to it by a plain dotted link (no arrow, no label, not clickable). Its pop-up is the example's introduction: the restated question, the live scene (or figure), 'What it is and why we use it' bullets and the key numbers the path has introduced by then. Not part of the Next/Back chain.",
           "items": {
             "type": "object",
             "additionalProperties": false,
@@ -417,7 +417,9 @@
               "id",
               "at",
               "label",
-              "title"
+              "title",
+              "about",
+              "numbers"
             ],
             "properties": {
               "id": {
@@ -432,7 +434,7 @@
                 "type": "string",
                 "minLength": 3,
                 "maxLength": 28,
-                "description": "shown after 'Example:' on the bubble"
+                "description": "shown on the Example node"
               },
               "title": {
                 "type": "string",
@@ -546,9 +548,32 @@
               "preset": {
                 "type": "string"
               },
-              "specs": {
+              "question": {
                 "type": "string",
-                "description": "brief specs (markdown)"
+                "minLength": 5,
+                "description": "the restated question at the top of the pop-up (default: What's the running example?)"
+              },
+              "about": {
+                "type": "string",
+                "minLength": 20,
+                "description": "What it is and why we use it: a few markdown bullets (in, out, why it's a good example)"
+              },
+              "numbers": {
+                "type": "string",
+                "minLength": 10,
+                "description": "Key numbers: markdown bullets, ONLY numbers the path has introduced by the host box (no circularity)"
+              },
+              "panels": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                },
+                "minItems": 1,
+                "description": "a figure's panels to show (the animated picture); the introduction never shows the figure's controls or 'Look for'"
+              },
+              "caption": {
+                "type": "string",
+                "description": "the caption under a figure (a scene brings its own)"
               }
             }
           }

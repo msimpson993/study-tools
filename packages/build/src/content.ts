@@ -266,9 +266,9 @@ export function loadApp(appDir: string): { content: AppContent; warnings: string
   const more = (re as { moreScenes?: { id: string; overlays?: string[]; params?: Record<string, number>; diagram?: unknown }[] } | undefined)?.moreScenes ?? [];
   if (more.length && !sceneId) problems.push('subject.yaml runningExample.moreScenes needs runningExample.scene');
   more.forEach((m, i) => problems.push(...sceneProblems(m.id, m.overlays, `subject.yaml runningExample.moreScenes[${i}]`, m.params, m.diagram)));
-  // Example bubbles: each sits on a real box, and draws exactly one live thing (a core scene, or a figure the app registers)
-  const refs = (re as { refs?: { id: string; at: string; label: string; title: string; scene?: { id: string; overlays?: string[]; params?: Record<string, number>; diagram?: unknown }; figure?: string; preset?: string; specs?: string }[] } | undefined)?.refs ?? [];
-  const refsR = refs.map((r) => ({ ...r, specs: r.specs ? block(r.specs, `runningExample.refs.${r.id}`) : undefined }));
+  // Example nodes: each sits on a real box, and draws exactly one live thing (a core scene, or a figure the app registers)
+  const refs = (re as { refs?: { id: string; at: string; label: string; title: string; scene?: { id: string; overlays?: string[]; params?: Record<string, number>; diagram?: unknown }; figure?: string; preset?: string; panels?: string[]; caption?: string; question?: string; about: string; numbers: string }[] } | undefined)?.refs ?? [];
+  const refsR = refs.map((r) => ({ ...r, about: block(r.about, `runningExample.refs.${r.id}.about`), numbers: block(r.numbers, `runningExample.refs.${r.id}.numbers`), caption: r.caption ? inline(r.caption, `runningExample.refs.${r.id}.caption`) : undefined }));
   { const seenRef = new Set<string>();
     refs.forEach((r, i) => {
       const where = `subject.yaml runningExample.refs[${i}] (${r.id})`;
@@ -276,6 +276,10 @@ export function loadApp(appDir: string): { content: AppContent; warnings: string
       if (!maps.some((m) => m.nodes.some((n) => n.id === r.at))) problems.push(`${where}: at "${r.at}" is not a box on any map`);
       if (!!r.scene === !!r.figure) problems.push(`${where}: give exactly one of scene or figure`);
       if (r.scene) problems.push(...sceneProblems(r.scene.id, r.scene.overlays, where, r.scene.params, r.scene.diagram as never));
+      // the example's introduction follows the map's pop-up rules: under 400 words of body, bullets (no block paragraphs)
+      { const words = `${r.about} ${r.numbers}`.split(/\s+/).filter(Boolean).length; if (words > 400) problems.push(`${where}: about + numbers is ${words} words (keep the introduction under 400)`); }
+      for (const k of ['about', 'numbers'] as const) if (r[k] && !/^\s*- /.test(r[k])) problems.push(`${where}: ${k} should be markdown bullets ("- **Lead:** …")`);
+      if (r.panels && !r.figure) problems.push(`${where}: panels only apply to a figure`);
       if (r.figure) { const fd = figuresR.find((f: any) => f.id === r.figure) as any; if (!fd) problems.push(`${where}: figure "${r.figure}" is not in figures.yaml`); else if (r.preset && !(fd.presets ?? []).some((p: any) => p.id === r.preset)) problems.push(`${where}: figure "${r.figure}" has no preset "${r.preset}"`); }
     }); }
   for (const [id, sec] of Object.entries(subject.glossaryTopics ?? {})) {

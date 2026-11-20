@@ -158,7 +158,7 @@ export interface Subject {
   quizFigures?: string[];
   /** ids of the opt-in sound examples this app registers; pop.audio ids are validated against it */
   audio?: string[];
-  runningExample?: { title: string; summary: string; details?: string; /** which core example scene draws it (`cart`, `tine`) and the overlays of the small hero on the map page */ scene?: SceneRef; /** further scenes (more than one running example): the map hero switches between them, dives pick one with exampleScene.scene */ moreScenes?: SceneRef[]; /** Example bubbles on the map: each sits on its host box and opens its live scene (or figure) with brief specs; never part of the Next/Back chain */ refs?: ExampleRef[] };
+  runningExample?: { title: string; summary: string; details?: string; /** which core example scene draws it (`cart`, `tine`) and the overlays of the small hero on the map page */ scene?: SceneRef; /** further scenes (more than one running example): the map hero switches between them, dives pick one with exampleScene.scene */ moreScenes?: SceneRef[]; /** Example nodes on the map: each beside its host box, opening the example's introduction; never part of the Next/Back chain */ refs?: ExampleRef[] };
   /** box id → the glossary section the Variables drawer opens at (boxes without one inherit their nearest main-path ancestor's) */
   glossaryTopics?: Record<string, string>;
   board?: { pairs: string[] };
@@ -177,12 +177,13 @@ export interface AppContent {
   figures: FigureDef[];
   extra: Record<string, unknown>;
 }
-/** An Example bubble on the map (runningExample.refs): a reference card for one running example, attached to its host box. */
+/** An Example node on the map (runningExample.refs): one running example as its own dashed node beside its host box (a dotted link joins
+ *  them); its pop-up is the example's introduction. Never part of the Next/Back chain or the step count. */
 export interface ExampleRef {
   id: string;
-  /** the host box (node id); the bubble shows on every map that has this box */
+  /** the host box (node id); the node shows on every map that has this box */
   at: string;
-  /** what the bubble says after "Example:" (e.g. "the earbud speaker") */
+  /** what the node says after "Example:" (e.g. "the earbud speaker") */
   label: string;
   /** the card's heading */
   title: string;
@@ -191,8 +192,16 @@ export interface ExampleRef {
   /** ... or a live figure from figures.yaml (with its play control), optionally on one preset */
   figure?: string;
   preset?: string;
-  /** brief specs under the picture (markdown; HTML after the build) */
-  specs?: string;
+  /** a figure's panels to show (the animated picture); the introduction never shows the figure's controls or "Look for" */
+  panels?: string[];
+  /** the caption under a figure (a scene brings its own) */
+  caption?: string;
+  /** the restated question at the top of its pop-up (default "What's the running example?") */
+  question?: string;
+  /** "What it is and why we use it": a few bullets (markdown; HTML after the build) */
+  about: string;
+  /** key numbers: ONLY those the path has introduced by the host box (no circularity; markdown, HTML after the build) */
+  numbers: string;
 }
 /** A subject-level scene reference (runningExample.scene / moreScenes). */
 export interface SceneRef { id: string; title?: string; overlays?: string[]; params?: Record<string, number>; caption?: string; diagram?: DiagramSpec | string | string[] }
