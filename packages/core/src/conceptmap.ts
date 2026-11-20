@@ -61,7 +61,14 @@ export function mountConceptMap(host: HTMLElement, content: AppContent, progress
     h('button', { type: 'button', class: 'tbtn', title: 'Zoom out (or scroll the wheel / pinch on the map)', 'aria-label': 'Zoom out', dataset: { testid: 'map-zoom-out' }, onclick: () => zoomAtCentre(1 / 1.25) }, '−'),
     zoomPct,
     h('button', { type: 'button', class: 'tbtn', title: 'Zoom in (or scroll the wheel / pinch on the map)', 'aria-label': 'Zoom in', dataset: { testid: 'map-zoom-in' }, onclick: () => zoomAtCentre(1.25) }, '+'),
-    h('button', { type: 'button', class: 'tbtn', title: 'Back to the whole map in its column', dataset: { testid: 'map-zoom-reset' }, onclick: () => { zoomFit = true; setZoom(fitZoom()); centerSel(); } }, 'Reset zoom'));
+    // the map size: Fit to screen (the layout follows the screen; also "reset zoom") and Actual size (natural boxes, pan around),
+    // one control in the zoom bar (no second copy in the legend)
+    h('span', { class: 'cm-view', role: 'group', 'aria-label': 'Map size', dataset: { testid: 'map-view' } }));
+  const viewBtns = zoomBar.querySelector('.cm-view') as HTMLElement;
+  for (const [v, label, hint, tid] of [['fit', 'Fit to screen', 'The whole width of the map on screen (also resets the zoom)', 'map-zoom-reset'], ['actual', 'Actual size', 'Natural box size: drag, scroll or swipe to move around']] as const) {
+    viewBtns.append(h('button', { type: 'button', class: 'tbtn lg-vbtn', title: hint, dataset: { view: v, testid: tid }, onclick: () => setView(v) }, label));
+  }
+  const syncViewBtns = () => viewBtns.querySelectorAll('button').forEach((b) => { const on = (b as HTMLElement).dataset.view === view; b.classList.toggle('on', on); b.setAttribute('aria-pressed', String(on)); });
   const mapCol = h('div', { class: 'cm-mapcol' }, scroll, zoomBar);
   const panel = h('aside', { class: 'cm-panel idle', 'aria-live': 'polite', dataset: { testid: 'map-panel' } });
   const wrap = h('div', { class: 'cm-wrap', dataset: { testid: 'map-wrap' } }, mapCol, panel);
@@ -100,7 +107,15 @@ export function mountConceptMap(host: HTMLElement, content: AppContent, progress
   ro.observe(scroll);
   width = Math.floor(scroll.clientWidth - 8) || 960;
 
-  const setPick = (p: MapState['pick']) => { const was = st.pick; st.pick = p; if (p) st.series = null; renderLegend(); renderSvg(); renderPanel(); nav.onState?.({ endTrip: endingTrip }); if (p && isSplit()) { revealSplit(); centerSel(); } if (!p && was && !wide?.matches) showWalkedTo(was); };
+  const setPick = (p: MapState['pick']) => { const was = st.pick; st.pick = p; if (p) st.series = null; renderLegend(); renderSvg(); renderPanel(); nav.onState?.({ endTrip: endingTrip }); if (p && isSplit()) { revealSplit(); centerSel(); } if (!p && was) { if (wide?.matches) centerOn(was); else showWalkedTo(was); } };
+  /** desktop: closing an entry returns to the full-width map (at its own zoom) centred on the box or line it showed; only the
+   *  map's frame moves, not the page */
+  function centerOn(was: NonNullable<MapState['pick']>) {
+    const el = scroll.querySelector(was.kind === 'node' ? `.qm-node[data-node="${was.id}"]` : was.kind === 'ref' ? `.qm-ref[data-ref="${was.id}"]` : `.qm-edge[data-edge="${was.id}"]`) as SVGGraphicsElement | null;
+    if (!el) return;
+    const a = el.getBoundingClientRect(), b = scroll.getBoundingClientRect();
+    scroll.scrollLeft += a.left - b.left - (b.width - a.width) / 2; scroll.scrollTop += a.top - b.top - (b.height - a.height) / 2;
+  }
   /** phone: closing the entry card returns to the map AT the box or line the reader walked to; if it is already in view
    *  nothing moves (so a box opened and closed keeps the map exactly where it was) */
   function showWalkedTo(was: NonNullable<MapState['pick']>) {
@@ -129,18 +144,36 @@ export function mountConceptMap(host: HTMLElement, content: AppContent, progress
   function applySplit() {
     const on = !!st.pick && !!wide?.matches;
     if (on === isSplit()) return;
-    wrap.classList.toggle('split', on); if (!on) { zoom = 1; zoomFit = true; }
+    // opening: the full view's zoom is kept aside and the side map fits its column; closing: the full view comes back at it
+    if (on) { fullZoom = { zoom, fit: zoomFit }; zoomFit = true; } else { zoom = fullZoom.zoom; zoomFit = fullZoom.fit; }
+    wrap.classList.toggle('split', on);
     width = Math.floor(scroll.clientWidth - 8) || width;
+    sizeFrame();
   }
-  /** the side map's fit: 100%, or less when its column is narrower than the map (Reset zoom and a fresh split use it) */
-  const fitZoom = () => (geom ? Math.min(1, (scroll.clientWidth - 8) / geom.width) : 1);
-  /** how far the wheel / pinch may zoom out: to 60% (the whole map at a glance), or the fit if that is smaller */
-  const MIN_ZOOM = 0.6;
-  const minZoom = () => Math.min(MIN_ZOOM, fitZoom());
+  let fullZoom = { zoom: 1, fit: true };
+  /** the full-width map is a framed viewport filling the screen below the header (at least 60% of the screen's height);
+   *  the side map keeps its own height (CSS) */
+  function sizeFrame() {
+    // the zoom bar sits in the frame's top padding; it can wrap onto two rows in a narrow column, so the padding follows it
+    if (zoomBar.offsetHeight) scroll.style.paddingTop = `${zoomBar.offsetHeight + 14}px`;
+    if (isSplit()) { scroll.style.removeProperty('height'); return; }
+    const top = scroll.getBoundingClientRect().top + scrollY;
+    scroll.style.height = `${Math.round(Math.max(innerHeight * 0.6, innerHeight - top - 12))}px`;
+  }
+  window.addEventListener('resize', () => sizeFrame());
+  /** the fit: the map's width in its frame (100%, or less when the side column is narrower than the map). Fit to screen and a
+   *  fresh split use it; Actual size on the full-width map is 100% (natural boxes) */
+  const fitZoom = () => (!geom ? 1 : !isSplit() && view === 'actual' ? 1 : Math.min(1, (scroll.clientWidth - 8) / geom.width));
+  /** the whole map in its frame, width and height */
+  const wholeZoom = () => (!geom ? 1 : Math.min((scroll.clientWidth - 8) / geom.width, (scroll.clientHeight - (parseFloat(getComputedStyle(scroll).paddingTop) || 0) - 8) / geom.height));
+  /** how far the wheel / pinch may zoom: in to 3×; out, on the full-width map, to 60% or the whole map in the frame, whichever
+   *  is smaller; the side map as before: to 60% or its column fit, whichever is smaller */
+  const MIN_ZOOM = 0.6, MAX_ZOOM = 3;
+  const minZoom = () => Math.max(0.05, Math.min(MIN_ZOOM, fitZoom(), isSplit() ? Infinity : wholeZoom()));
   /** zoom so the map point under (cx, cy) stays under it */
   function setZoom(z: number, cx?: number, cy?: number) {
     const svg = scroll.querySelector('svg'); if (!svg || !geom) return;
-    z = Math.max(minZoom(), Math.min(4, z));
+    z = Math.max(minZoom(), Math.min(MAX_ZOOM, z));
     const r0 = svg.getBoundingClientRect(), b = scroll.getBoundingClientRect();
     const x = cx ?? b.left + b.width / 2, y = cy ?? b.top + b.height / 2, px = (x - r0.left) / zoom, py = (y - r0.top) / zoom;
     zoom = z; zoomFit = Math.abs(z - fitZoom()) < 1e-3; svg.setAttribute('width', String(geom.width * z)); svg.setAttribute('height', String(geom.height * z));
@@ -155,20 +188,19 @@ export function mountConceptMap(host: HTMLElement, content: AppContent, progress
     const a = sel.getBoundingClientRect(), b = scroll.getBoundingClientRect();
     scroll.scrollLeft += a.left - b.left - (b.width - a.width) / 2; scroll.scrollTop += a.top - b.top - (b.height - a.height) / 2;
   }
-  // the wheel zooms the side map about the cursor (only over the map, only in the split layout; elsewhere it scrolls as usual)
+  // the wheel zooms the map about the cursor, only over the map's frame (everywhere else the page scrolls as usual)
   scroll.addEventListener('wheel', (ev) => {
-    if (!isSplit()) return;
     ev.preventDefault();
     const dy = ev.deltaMode === 1 ? ev.deltaY * 16 : ev.deltaMode === 2 ? ev.deltaY * 400 : ev.deltaY;
     setZoom(zoom * Math.exp(-dy * 0.0015), ev.clientX, ev.clientY);
   }, { passive: false });
-  // touch (tablets): two fingers pinch-zoom the side map about their midpoint; one finger pans it natively (the scroll area
-  // contains its own overscroll, so the page only scrolls from outside the map)
+  // touch: two fingers pinch-zoom the map about their midpoint; one finger pans it natively (the frame contains its own
+  // overscroll, so the page only scrolls from outside the map)
   let pinch: { d0: number; z0: number } | null = null;
   const tdist = (t: TouchList) => Math.hypot(t[0].clientX - t[1].clientX, t[0].clientY - t[1].clientY);
-  scroll.addEventListener('touchstart', (ev) => { if (isSplit() && ev.touches.length === 2) pinch = { d0: tdist(ev.touches) || 1, z0: zoom }; }, { passive: true });
+  scroll.addEventListener('touchstart', (ev) => { if (ev.touches.length === 2) pinch = { d0: tdist(ev.touches) || 1, z0: zoom }; }, { passive: true });
   scroll.addEventListener('touchmove', (ev) => {
-    if (!pinch || ev.touches.length !== 2 || !isSplit()) return;
+    if (!pinch || ev.touches.length !== 2) return;
     ev.preventDefault();
     const t = ev.touches; setZoom(pinch.z0 * (tdist(t) / pinch.d0), (t[0].clientX + t[1].clientX) / 2, (t[0].clientY + t[1].clientY) / 2);
   }, { passive: false });
@@ -301,11 +333,7 @@ export function mountConceptMap(host: HTMLElement, content: AppContent, progress
       }
       legend.append(chips);
     }
-    const seg = h('span', { class: 'lg-view', role: 'group', 'aria-label': 'Map size', dataset: { testid: 'map-view' } });
-    for (const [v, label, hint] of [['fit', 'Fit to screen', 'Shrink the map to the screen width'], ['actual', 'Actual size', 'Natural box size: drag, scroll or swipe to move around']] as const) {
-      seg.append(h('button', { class: `lg-vbtn${view === v ? ' on' : ''}`, type: 'button', 'aria-pressed': String(view === v), title: hint, dataset: { view: v }, onclick: () => setView(v) }, label));
-    }
-    legend.append(seg);
+    syncViewBtns();
   }
   /** the map's boxes rarely span every column: start Actual size looking at them, not at the empty margin */
   function centerOnBoxes() {
@@ -313,10 +341,13 @@ export function mountConceptMap(host: HTMLElement, content: AppContent, progress
     const x0 = Math.min(...xs.map((b) => b.x)), x1 = Math.max(...xs.map((b) => b.x + b.w));
     scroll.scrollLeft = Math.max(0, (x0 + x1) / 2 - scroll.clientWidth / 2);
   }
+  /** Fit to screen / Actual size: the layout and the zoom (pressing the current one again resets its zoom) */
   function setView(v: MapView) {
-    if (v === view) return;
-    view = v; storeSet(MAP_VIEW_KEY, v); scroll.scrollLeft = 0; scroll.scrollTop = 0;
-    renderLegend(); renderSvg(); if (v === 'actual') centerOnBoxes();
+    const same = v === view;
+    view = v; storeSet(MAP_VIEW_KEY, v); zoomFit = true; zoom = 1;
+    if (!same) { scroll.scrollLeft = 0; scroll.scrollTop = 0; }
+    renderLegend(); renderSvg(); if (v === 'actual' && !same) centerOnBoxes();
+    if (same) centerSel();
     const sel = scroll.querySelector('.qm-node.n-sel, .qm-edge.e-sel') as SVGGraphicsElement | null; // keep the tapped thing in view
     if (sel && v === 'actual') { const a = sel.getBoundingClientRect(), b = scroll.getBoundingClientRect(); scroll.scrollLeft += a.left - b.left - (b.width - a.width) / 2; scroll.scrollTop += a.top - b.top - (b.height - a.height) / 2; }
   }
@@ -324,7 +355,7 @@ export function mountConceptMap(host: HTMLElement, content: AppContent, progress
   // drag-to-pan with a mouse or pen in Actual size (touch pans natively); a drag never counts as a tap
   let drag: { x: number; y: number; sl: number; st: number; id: number; moved: boolean } | null = null;
   scroll.addEventListener('pointerdown', (ev) => {
-    if ((view !== 'actual' && !isSplit()) || ev.pointerType === 'touch' || ev.button !== 0) return;
+    if (ev.pointerType === 'touch' || ev.button !== 0) return;
     drag = { x: ev.clientX, y: ev.clientY, sl: scroll.scrollLeft, st: scroll.scrollTop, id: ev.pointerId, moved: false };
   });
   scroll.addEventListener('pointermove', (ev) => {
@@ -345,7 +376,7 @@ export function mountConceptMap(host: HTMLElement, content: AppContent, progress
   let labels: Label[] = [];
   let sideNodes: SideNode[] = [];
   function renderSvg() {
-    applySplit();
+    applySplit(); sizeFrame();
     const m = map();
     const byId: Record<string, MapNode> = Object.fromEntries(m.nodes.map((n) => [n.id, n]));
     geom = computeGeometry(m.nodes, m.edges, layoutWidth(view, width));
@@ -361,7 +392,7 @@ export function mountConceptMap(host: HTMLElement, content: AppContent, progress
     labels = placeLabels(geom, m.edges, hl.priority, sideNodes);
     const recallHide = (id: string) => st.mode === 'review' && st.recall && !st.revealed.has(`${st.mapId}/${id}`);
 
-    if (isSplit() && zoomFit) { zoom = fitZoom(); wrap.dataset.zoom = zoom.toFixed(3); zoomPct.textContent = `${Math.round(zoom * 100)}%`; }
+    if (zoomFit) { zoom = fitZoom(); wrap.dataset.zoom = zoom.toFixed(3); zoomPct.textContent = `${Math.round(zoom * 100)}%`; }
     const svg = s('svg', { width: geom.width * zoom, height: geom.height * zoom, viewBox: `0 0 ${geom.width} ${geom.height}`, role: 'group', 'aria-label': 'Question-chain map. Tap a box, a line, or a line’s dot for more.', 'data-testid': 'map-svg' });
     svg.append(s('rect', { x: 0, y: 0, width: geom.width, height: geom.height, fill: 'transparent', onclick: () => { if (st.pick) setPick(null); } }));
     const edgeData: Record<string, MapEdge> = Object.fromEntries(m.edges.map((e) => [edgeKey(e.from, e.to), e]));
