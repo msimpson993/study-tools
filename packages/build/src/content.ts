@@ -283,7 +283,9 @@ export function loadApp(appDir: string): { content: AppContent; warnings: string
       if (r.figure) { const fd = figuresR.find((f: any) => f.id === r.figure) as any; if (!fd) problems.push(`${where}: figure "${r.figure}" is not in figures.yaml`); else if (r.preset && !(fd.presets ?? []).some((p: any) => p.id === r.preset)) problems.push(`${where}: figure "${r.figure}" has no preset "${r.preset}"`); }
     }); }
   // boxes' `examples` name real Example nodes, and a host box always uses its own example
-  for (const m of maps) for (const n of m.nodes) for (const x of n.examples ?? []) if (!refs.some((r) => r.id === x)) problems.push(`graph.yaml ${m.id}/${n.id}: examples: "${x}" is not a runningExample.refs id`);
+  // (with no Example nodes at all the field is ignored: a warning, as for the other running-example fields)
+  if (!refs.length) { const n = maps.reduce((k, m) => k + m.nodes.filter((x) => x.examples?.length).length, 0); if (n) warnings.push(`graph.yaml: ${n} boxes list examples, ignored: subject.yaml has no runningExample.refs`); }
+  else for (const m of maps) for (const n of m.nodes) for (const x of n.examples ?? []) if (!refs.some((r) => r.id === x)) problems.push(`graph.yaml ${m.id}/${n.id}: examples: "${x}" is not a runningExample.refs id`);
   if (maps.some((m) => m.nodes.some((n) => n.examples))) for (const r of refs) for (const m of maps) { const host = m.nodes.find((n) => n.id === r.at); if (host && !(host.examples ?? []).includes(r.id)) problems.push(`graph.yaml ${m.id}/${r.at}: host of Example node "${r.id}" must list it in examples`); }
   for (const [id, sec] of Object.entries(subject.glossaryTopics ?? {})) {
     if (!maps.some((m) => m.nodes.some((n) => n.id === id))) problems.push(`subject.yaml glossaryTopics: "${id}" is not a box`);

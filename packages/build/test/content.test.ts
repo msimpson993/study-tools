@@ -187,6 +187,12 @@ describe('running example (visual-first / central-example schema)', () => {
     const { warnings } = loadApp(dir);
     expect(warnings.join('\n')).toMatch(/no runningExample/);
   });
+  it('per-box examples must name an Example node, and a host must list its own', () => {
+    const dir = ls();
+    edit(path.join(dir, 'content/graph.yaml'), (y) => { y.maps[0].nodes[3].examples = ['bike']; const sys = y.maps[0].nodes.find((n: any) => n.id === 'SYS'); sys.examples = ['car']; });
+    const e = errorsOf(dir);
+    expect(e).toMatch(/examples: "bike" is not a runningExample\.refs id/); expect(e).toMatch(/big\/SYS: host of Example node "earbud" must list it/);
+  });
   it('rejects a too-short addsToExample (schema)', () => {
     const dir = ls();
     edit(path.join(dir, 'content/graph.yaml'), (y) => { y.maps[1].nodes[3].addsToExample = 'tiny'; });
