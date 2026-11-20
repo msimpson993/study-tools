@@ -1,6 +1,7 @@
 /** Small fixed pictures for the map pop-ups (quiz-figure renderers, no controls). Every number comes from ex.ts (earbud) or carModel.ts (car). */
 import { rangeFrame, graphAxes, curve, tline, text, dot, cross, col, linspace, type QuizFigureDef } from '@study/core';
 import { hImp, Hf, cabs, TAU, ltCompare, XMAX_UM, spk } from './ex';
+import { popExpandFigures } from './popexpand';
 import { CAR, CAR_SYM, worn, carA, roadB, forceB, carModes, sim, bumpInput, minEnergy, DEG } from './car';
 
 const P = (p: Record<string, number | string | boolean>, k: string, d: number) => (p[k] === undefined ? d : Number(p[k]));
@@ -159,5 +160,5 @@ const settle: QuizFigureDef = { aspect: 1.1, maxWidth: 150, draw(g, w, h, p) {
   title(g, sg < 0 ? 'Re p < 0: settles' : sg > 0 ? 'Re p > 0: grows' : 'Re p = 0: rings on', w, sg < 0 ? col.ok() : sg > 0 ? col.bad() : col.text());
 } };
 
-export const popFigures: Record<string, QuizFigureDef> = { 'pop-lintest': lintest, 'pop-linearize': linearize, 'pop-kick': kick, 'pop-gain': gain, 'pop-cone': cone, 'pop-fourier': fourier, 'pop-est': est, 'pop-pz': pz, 'pop-settle': settle, 'pop-carstate': carstate, 'pop-carmode': carmode, 'pop-bump': bump, 'pop-carsettle': carsettle, 'pop-carhidden': carhidden, 'pop-caropt': caropt };
+export const popFigures: Record<string, QuizFigureDef> = { ...popExpandFigures, 'pop-lintest': lintest, 'pop-linearize': linearize, 'pop-kick': kick, 'pop-gain': gain, 'pop-cone': cone, 'pop-fourier': fourier, 'pop-est': est, 'pop-pz': pz, 'pop-settle': settle, 'pop-carstate': carstate, 'pop-carmode': carmode, 'pop-bump': bump, 'pop-carsettle': carsettle, 'pop-carhidden': carhidden, 'pop-caropt': caropt };
 
