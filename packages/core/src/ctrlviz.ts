@@ -2,7 +2,7 @@ import { C, cabs, type Cx } from './dsp/complex';
 import { type TF, type StepMetrics, type Margins, type Bode, bode, margins, stepMetrics, tfEval, logspace, tfPoles, tfZeros, freqresp } from './dsp/tf';
 import { type RLocus, rlocusPolesAt, rlocusNearest } from './dsp/rlocus';
 import { col, planeFrame, rangeFrame, wipe, text, tline, polyline, dot, cross, graphAxes, curve, clipBox, heat, axes2, type Frame, type V2 } from './viz';
-import { withLabelRole } from './labels';
+import { withLabelRole, labelsOn } from './labels';
 import type { PanelPointer } from './figure';
 
 /**
@@ -58,12 +58,17 @@ export function drawStepResponse(g: CanvasRenderingContext2D, w: number, h: numb
     g.strokeStyle = col.e(); g.lineWidth = 2; g.beginPath(); g.moveTo(f.X(m.t10), f.Y(yr[0]) - 6); g.lineTo(f.X(m.t90), f.Y(yr[0]) - 6); g.stroke();
     lbl(`Tr ${fmtN(m.riseTime)} s`, f.X((m.t10 + m.t90) / 2), f.Y(yr[0]) - 15, col.e(), 'center');
   }
+  let osBox: { x0: number; x1: number; y: number } | null = null;
   if (show.overshoot && Number.isFinite(m.peak) && m.overshootPct > 0.05) {
     tline(g, f, [m.peakTime, m.peak], [m.peakTime, yr[0]], col.b(), 1, [2, 3]); dot(g, f, [m.peakTime, m.peak], col.b(), 4);
-    lbl(`${fmtN(m.overshootPct, 1)}% overshoot  (Tp ${fmtN(m.peakTime)} s)`, Math.min(f.X(m.peakTime) + 8, f.box.r - 4), f.Y(m.peak) - 8, col.b(), f.X(m.peakTime) > w * 0.6 ? 'right' : 'left');
+    const os = `${fmtN(m.overshootPct, 1)}% overshoot  (Tp ${fmtN(m.peakTime)} s)`, ox = Math.min(f.X(m.peakTime) + 8, f.box.r - 4), oy = f.Y(m.peak) - 8, right = f.X(m.peakTime) > w * 0.6;
+    lbl(os, ox, oy, col.b(), right ? 'right' : 'left');
+    g.font = '10.5px system-ui,sans-serif'; const ow = g.measureText(os).width; osBox = { x0: right ? ox - ow : ox, x1: right ? ox : ox + ow, y: oy };
   }
   if (show.settling && m.settled && Number.isFinite(m.settlingTime)) {
-    tline(g, f, [m.settlingTime, yr[0]], [m.settlingTime, yr[1]], col.c(), 1.5, [5, 4]);
+    // the dashed Ts line stops just under the overshoot label when it would run through it (it made "15.7 %" read "5.7 %")
+    const tx = f.X(m.settlingTime), cut = osBox && tx > osBox.x0 - 3 && tx < osBox.x1 + 3 ? Math.min(yr[1], f.iy(osBox.y + 8)) : yr[1];
+    tline(g, f, [m.settlingTime, yr[0]], [m.settlingTime, cut], col.c(), 1.5, [5, 4]);
     lbl(`Ts ${fmtN(m.settlingTime)} s`, f.X(m.settlingTime) + 4, f.box.b - 18, col.c());
   }
   if (show.ess && Number.isFinite(m.ess) && Math.abs(m.ess) > 1e-3 * Math.max(1, Math.abs(ref))) {
@@ -100,7 +105,7 @@ export function drawSPlane(g: CanvasRenderingContext2D, w: number, h: number, s:
   let st = niceStep(2 * s.range, 6); while (st * f.sx < 26) st = niceStep(st * 2.01, 1);
   g.save(); clipBox(g, f); g.strokeStyle = col.grid(); g.lineWidth = 1;
   withLabelRole('tick', () => {
-    for (let x = Math.ceil(f.ix(f.box.l) / st) * st; x <= f.ix(f.box.r); x += st) { g.beginPath(); g.moveTo(f.X(x), f.box.t); g.lineTo(f.X(x), f.box.b); g.stroke(); text(g, String(+x.toFixed(3)), f.X(x) + 2, f.box.b - 6, col.muted(), 'left', 9); }
+    for (let x = Math.ceil(f.ix(f.box.l) / st) * st; x <= f.ix(f.box.r); x += st) { g.beginPath(); g.moveTo(f.X(x), f.box.t); g.lineTo(f.X(x), f.box.b); g.stroke(); const lab = String(+x.toFixed(3)); if (f.X(x) + 2 + 5.6 * lab.length <= f.box.r) text(g, lab, f.X(x) + 2, f.box.b - 6, col.muted(), 'left', 9); /* a number that would run past the plot edge is left out, not cut */ }
     for (let y = Math.ceil(f.iy(f.box.b) / st) * st; y <= f.iy(f.box.t); y += st) { g.beginPath(); g.moveTo(f.box.l, f.Y(y)); g.lineTo(f.box.r, f.Y(y)); g.stroke(); if (Math.abs(y) > 1e-9) text(g, String(+y.toFixed(3)), f.box.l + 3, f.Y(y) - 6, col.muted(), 'left', 9); }
   });
   g.restore();
@@ -119,7 +124,10 @@ export function drawSPlane(g: CanvasRenderingContext2D, w: number, h: number, s:
   for (const z of s.zetaRays ?? []) {
     const th = Math.acos(Math.min(1, Math.max(0, z)));
     for (const sg of [1, -1]) tline(g, f, [0, 0], [-Math.cos(th) * R, sg * Math.sin(th) * R], col.e(), 1, [5, 4]);
-    const rl = Math.min(s.range * 0.9, R); text(g, `ζ ${fmtN(z)}`, f.X(-Math.cos(th) * rl) + 4, f.Y(Math.sin(th) * rl) + 2, col.e(), 'left', 10);
+    // the ζ name sits on the upper ray, part-way out, at the first distance along it that is clear of every pole and zero (it used to land on a pole)
+    const marks = [...(s.poles ?? []), ...(s.zeros ?? [])], clear = (q: number) => marks.every((p) => Math.hypot(f.X(-Math.cos(th) * q) + 14 - f.X(p.re), f.Y(Math.sin(th) * q) + 2 - f.Y(p.im)) > 22);
+    const rl = [0.45, 0.6, 0.3, 0.75, 0.9].map((k) => Math.min(s.range * k, R)).find(clear) ?? Math.min(s.range * 0.9, R);
+    text(g, `ζ ${fmtN(z)}`, f.X(-Math.cos(th) * rl) + 4, f.Y(Math.sin(th) * rl) + 2, col.e(), 'left', 10);
   }
   if (s.asymptotes) for (const a of s.asymptotes.anglesDeg) { const r = (a * Math.PI) / 180; tline(g, f, [s.asymptotes.centroid, 0], [s.asymptotes.centroid + Math.cos(r) * R, Math.sin(r) * R], col.muted(), 1.2, [6, 4]); }
   const pal = BRANCH_COLORS();
@@ -131,6 +139,12 @@ export function drawSPlane(g: CanvasRenderingContext2D, w: number, h: number, s:
   }
   for (const hd of s.handles ?? []) for (const sg of Math.abs(hd.im) < 1e-9 ? [1] : [1, -1]) { g.strokeStyle = col.accent(); g.globalAlpha = sg === 1 ? 0.9 : 0.4; g.lineWidth = 1.5; g.setLineDash([3, 3]); g.beginPath(); g.arc(f.X(hd.re), f.Y(sg * hd.im), 11, 0, 2 * Math.PI); g.stroke(); g.setLineDash([]); g.globalAlpha = 1; }
   for (const z of s.zeros ?? []) dot(g, f, [z.re, z.im], col.c(), 5, true);
+  // pole crosses and zero rings are recorded with the labels (role 'axis'), so notes drawn afterwards slide clear of them
+  const cv = g.canvas as HTMLCanvasElement | undefined, m = typeof g.getTransform === 'function' ? g.getTransform() : null;
+  if (cv && m && Math.abs(m.b) < 1e-9 && Math.abs(m.c) < 1e-9 && m.d > 0) for (const p of [...(s.poles ?? []), ...(s.zeros ?? [])]) {
+    const X = f.X(p.re), Y = f.Y(p.im); if (X < f.box.l || X > f.box.r || Y < f.box.t || Y > f.box.b) continue;
+    labelsOn(cv).push({ x0: m.a * (X - 7) + m.e, x1: m.a * (X + 7) + m.e, y0: m.d * (Y - 7) + m.f, y1: m.d * (Y + 7) + m.f, role: 'axis' });
+  }
   for (const p of s.poles ?? []) { cross(g, f, [p.re, p.im], col.b(), 6); if (s.labels && p.im >= -1e-9) text(g, fmtC(p), f.X(p.re) + 9, f.Y(p.im) + (p.im > 1e-9 ? 14 : -12), col.b(), 'left', 10); }
   g.restore();
   return f;
