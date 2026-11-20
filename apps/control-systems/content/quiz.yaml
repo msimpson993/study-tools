@@ -645,8 +645,8 @@
   tags:
     - lab
   kind: recall
-  q: "dm off, step 0.1 rad, Kd 200: what happens to the torque at t = 0?"
-  a: An impulse (kick), clipped at 200 N·m; with dm on it starts at Kp·0.1 = 200 N·m and no spike.
+  q: 'With "D on measurement" off (so D acts on the error), a 0.1 rad step and Kd 200: what happens to the torque at t = 0?'
+  a: An impulse (kick), clipped at 200 N·m; with "D on measurement" on it starts at Kp·0.1 = 200 N·m and no spike.
 - id: ck-zn-1
   tags:
     - methods
