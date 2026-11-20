@@ -62,7 +62,8 @@ export function drawSpeakerMain(g: G, r: Rect, P: Pal, ov: string[], tAnim: numb
     const a = sx + sr + 6, z1 = a + (mx - mw - a) * 0.42;
     line(g, [[sx, cy - sr], [sx, wy1 - 12], [a, wy1 - 12]], P.text, 1.3);
     const zz: [number, number][] = [[a, wy1 - 12]]; for (let i = 1; i <= 6; i++) zz.push([a + ((z1 - a) * i) / 7, wy1 - 12 + (i % 2 ? -4 : 4)]); zz.push([z1, wy1 - 12]); line(g, zz, P.warn, 1.6);
-    const z2 = z1 + 6, z3 = mx - mw - 4; g.save(); g.strokeStyle = P.warn; g.lineWidth = 1.6; g.beginPath(); for (let i = 0; i < 4; i++) g.arc(z2 + ((z3 - z2) * (i + 0.5)) / 4, wy1 - 12, (z3 - z2) / 8, Math.PI, 0); g.stroke(); g.restore();
+    // the coil's four loops: on a canvas too narrow to fit them (z3 < z2) the wire runs straight instead of drawing a negative-radius arc
+    const z2 = z1 + 6, z3 = Math.max(z2, mx - mw - 4), lr = (z3 - z2) / 8; g.save(); g.strokeStyle = P.warn; g.lineWidth = 1.6; g.beginPath(); if (lr >= 1) { for (let i = 0; i < 4; i++) g.arc(z2 + ((z3 - z2) * (i + 0.5)) / 4, wy1 - 12, lr, Math.PI, 0); } else { g.moveTo(z2, wy1 - 12); g.lineTo(z3, wy1 - 12); } g.stroke(); g.restore();
     line(g, [[z3, wy1 - 12], [coilX + 3, wy1 - 12], [coilX + 3, cy - coilH / 2]], P.text, 1.3);
     line(g, [[sx, cy + sr], [sx, wy2 + 12], [coilX + 3, wy2 + 12], [coilX + 3, cy + coilH / 2]], P.text, 1.3);
     text(g, 'Re', (a + z1) / 2, wy1 - 20, P.warn, { align: 'center', px, wt: 700 }); text(g, 'Le', (z2 + z3) / 2, wy1 - 20, P.warn, { align: 'center', px, wt: 700 });
