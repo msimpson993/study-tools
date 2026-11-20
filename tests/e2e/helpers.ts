@@ -73,3 +73,27 @@ export async function exampleNodeClashes(page: Page) {
     return { nodes: refs.length, links: links.length, clashes: out };
   });
 }
+
+/** Example glyphs (per-box `examples`): each must sit inside its box's outline, clear of every text line in that box and of every
+ *  line label on the map. Rendered boxes (getBBox in svg units), so it checks the real text, not the wrap's estimate. */
+export async function exampleGlyphClashes(page: Page) {
+  return page.evaluate(() => {
+    const out: string[] = []; let n = 0;
+    const svg = document.querySelector('[data-testid=map-svg]') as SVGSVGElement | null; if (!svg) return { glyphs: 0, clashes: ['no map'] };
+    const bb = (e: Element) => { const r = (e as SVGGraphicsElement).getBBox(); const m = (e as SVGGraphicsElement).getAttribute('transform'); if (!m) return r; const t = /translate\(([-\d.]+) ([-\d.]+)\) scale\(([-\d.]+)\)/.exec(m)!; const k = +t[3]; return { x: +t[1] + r.x * k, y: +t[2] + r.y * k, width: r.width * k, height: r.height * k }; };
+    const hit = (a: { x: number; y: number; width: number; height: number }, b: typeof a) => a.x < b.x + b.width && b.x < a.x + a.width && a.y < b.y + b.height && b.y < a.y + a.height;
+    const labels = [...svg.querySelectorAll('[data-testid=map-label] rect')].map((r) => bb(r));
+    for (const node of svg.querySelectorAll('.qm-node[data-uses]')) {
+      const id = (node as HTMLElement).dataset.node, shape = bb(node.querySelector('.shape')!), texts = [...node.querySelectorAll('text')].filter((t) => t.textContent?.trim()).map((t) => ({ t: t.textContent, r: bb(t) }));
+      const gs = [...node.querySelectorAll('[data-testid=map-exglyph]')];
+      if (gs.length !== ((node as HTMLElement).dataset.uses ?? '').split(' ').length) out.push(`${id}: ${gs.length} glyphs for uses "${(node as HTMLElement).dataset.uses}"`);
+      for (const g of gs) {
+        n++; const r = bb(g);
+        if (r.x < shape.x || r.y < shape.y || r.x + r.width > shape.x + shape.width || r.y + r.height > shape.y + shape.height) out.push(`${id}: glyph ${(g as SVGElement).dataset.ex} outside its box`);
+        for (const t of texts) if (hit(r, t.r)) out.push(`${id}: glyph ${(g as SVGElement).dataset.ex} on "${t.t}"`);
+        for (const l of labels) if (hit(r, l)) out.push(`${id}: glyph ${(g as SVGElement).dataset.ex} on a line label`);
+      }
+    }
+    return { glyphs: n, clashes: out };
+  });
+}

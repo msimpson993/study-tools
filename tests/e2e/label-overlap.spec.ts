@@ -1,6 +1,6 @@
 import { test, expect, type Page } from '@playwright/test';
 import fs from 'node:fs';
-import { open, exampleNodeClashes } from './helpers';
+import { open, exampleNodeClashes, exampleGlyphClashes } from './helpers';
 
 /** In-plot labels must not sit on each other: a note (or a legend row) on an axis name, a tick number or another note.
  * Core text() records every label it draws when window.__textLog is an array (packages/core/src/viz.ts); we keep each canvas's latest draw. */
@@ -131,4 +131,32 @@ for (const app of ['linear-systems', 'control-systems'] as const) test(`${app}: 
     }
   }
   expect(bad, bad.slice(0, 30).join('\n')).toEqual([]);
+});
+
+/** Example glyphs (Nov 20, linear-systems; control-systems has none): every box marker inside its box and clear of the label and
+ *  of every line label, on both maps, at phone, tablet and desktop widths, in Fit and Actual size and in the split side map. */
+for (const app of ['linear-systems', 'control-systems'] as const) test(`${app}: example glyphs clear of box labels and line labels`, async ({ page }) => {
+  test.setTimeout(120_000);
+  const bad: string[] = []; let total = 0;
+  for (const [W, H] of [[390, 844], [768, 1024], [923, 1300], [1024, 768], [1280, 900], [1600, 1000]] as const) {
+    await page.setViewportSize({ width: W, height: H });
+    await open(page, app);
+    const maps: string[] = await page.evaluate(() => (window as any).__study.content.maps.map((m: any) => m.id));
+    for (const view of ['fit', 'actual'] as const) {
+      await page.locator(`[data-testid=map-view] [data-view=${view}]`).click();
+      for (const m of maps) {
+        await page.locator(`button[role=tab][data-map="${m}"]`).first().click(); await page.waitForTimeout(80);
+        const c = await exampleGlyphClashes(page); total += c.glyphs;
+        bad.push(...c.clashes.map((s) => `@${W} ${view} ${m}: ${s}`));
+      }
+    }
+    if (W >= 700) {
+      await page.locator(`button[role=tab][data-map="${maps[0]}"]`).first().click();
+      await page.locator('[data-testid=map-node]').nth(1).dispatchEvent('click'); await page.waitForTimeout(150);
+      bad.push(...(await exampleGlyphClashes(page)).clashes.map((s) => `@${W} split: ${s}`));
+      await page.keyboard.press('Escape');
+    }
+  }
+  expect(bad, bad.slice(0, 30).join('\n')).toEqual([]);
+  if (app === 'linear-systems') expect(total).toBeGreaterThan(0); else expect(total).toBe(0);
 });
