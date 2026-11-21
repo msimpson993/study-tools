@@ -15,17 +15,19 @@ export const bodepidFigure = figureOf(() => {
   };
   return [
     { id: 'bode', title: 'Dish loop L = Gc·G with its margins', x: 'ω (rad/s)', y: 'dB · degrees', height: 300, draw: (g: CanvasRenderingContext2D, w: number, h: number, v: V) => {
-      drawBode(g, w, h, { L: loop(v).L, wmin: 0.1, wmax: 1000 });
+      const mg = drawBode(g, w, h, { L: loop(v).L, wmin: 0.1, wmax: 1000 });
       // the key on the plot itself: magnitude and phase curves, and the two margin bars (drawBode's split: top 52 % magnitude)
       const hTop = Math.round((h - 8) * 0.52), hb = { box: { l: 46, t: hTop + 8 + 6, r: w - 12, b: h - 38 } };
-      legend(g, { box: { l: 46, t: 8, r: w - 12, b: hTop - 6 } }, [{ label: '|L| (dB)', color: col.a() }, { label: 'gain margin (bar to 0 dB)', color: col.c() }], 'tr', 9.5);
+      legend(g, { box: { l: 46, t: 8, r: w - 12, b: hTop - 6 } }, [{ label: '|L| (dB)', color: col.a() }, { label: mg.wcg === null ? 'gain margin: ∞ (phase never crosses −180°), no bar' : 'gain margin (bar to 0 dB)', color: col.c() }], 'tr', 9.5);
       legend(g, hb, [{ label: 'phase of L', color: col.b() }, { label: 'phase margin (bar from −180°)', color: col.ok() }], 'bl', 9.5);
     } },
     {
       id: 'step', title: 'The 0.1 rad step this loop gives (D on the error)', x: 'time (s)', y: 'output / target', height: 300,
       draw: (g: CanvasRenderingContext2D, w: number, h: number, v: V) => {
         const T = loop(v).T, ok = isStable(T), r = step(T, 4, 2000);
-        drawStepResponse(g, w, h, { ...r, tEnd: 4, yRange: [-0.2, 2], xLabel: 'time (s)', yLabel: 'output / target', show: { overshoot: ok, settling: ok, band: ok } });
+        // %OS against the loop's true final value (T(0) = 1: an integrator in L), not the t = 4 s sample, which is still 1.0005 for the
+        // tuned set and made it read 15.7 % (pass 3; exact 15.811 %, numbers.py [PASS3]). Finer sampling alone does not change it.
+        drawStepResponse(g, w, h, { ...r, final: ok ? 1 : undefined, tEnd: 4, yRange: [-0.2, 2], xLabel: 'time (s)', yLabel: 'output / target', show: { overshoot: ok, settling: ok, band: ok } });
       },
     },
   ];

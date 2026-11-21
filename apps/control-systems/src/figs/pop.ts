@@ -80,6 +80,10 @@ export const popFigures: QuizFigureRegistry = {
     g.save(); g.fillStyle = 'rgba(110,226,110,.15)'; g.fillRect(F.box.l, F.Y(fin * 0.98), F.box.r - F.box.l, F.Y(fin * 1.02) - F.Y(fin * 0.98)); g.restore();
     curve(g, F, r.t, r.y, col.a(), 2.2); const pk = fin * (1 + m.OS / 100); dot(g, F, [m.Tp, pk], col.b(), 4);
     text(g, `${f(m.OS, 0)} % at Tp ${f(m.Tp)} s`, F.X(m.Tp) + 6, F.Y(pk) + 10, col.b(), 'left', 10); tline(g, F, [m.Ts, -6], [m.Ts, 0.4], col.ok(), 1, [3, 3]); text(g, `Ts ${f(m.Ts, 1)} s`, F.X(m.Ts) + 4, F.box.t + 10, col.ok(), 'left', 10);
+    // rise time (pass 3): dots at the 10 % and 90 % crossings, the label under the curve
+    const cross = (q: number) => r.t[Math.max(0, r.y.findIndex((y) => y / fin >= q))];
+    const t10 = cross(0.1), t90 = cross(0.9); dot(g, F, [t10, fin * 0.1], col.e(), 3.2); dot(g, F, [t90, fin * 0.9], col.e(), 3.2);
+    text(g, `Tr ${f(t90 - t10, 2)} s (10→90 %)`, F.X(t90) + 6, F.Y(fin * 0.9) + 14, col.e(), 'left', 10);
   }, 1.6, 360),
 
   'pop-loopcorner': mini((g, w, h, p) => {
@@ -118,7 +122,7 @@ export const popFigures: QuizFigureRegistry = {
 
   'pop-der': mini((g, w, h, p) => {
     if (panel(p) === 'a') {
-      const F = fr(g, w, h, [0, 1.5], [0, 10.5], 'time (s)', 'θ (°)'), runs = [[0, true, col.muted(), 'P: 73 %'], [120, false, col.b(), 'D on error: 15.6 %'], [120, true, col.a(), 'D on measurement: 4.6 %']] as [number, boolean, string, string][];
+      const F = fr(g, w, h, [0, 1.5], [0, 10.5], 'time (s)', 'θ (°)'), runs = [[0, true, col.muted(), 'P only: 73 %'], [120, false, col.b(), 'D on error, ideal D: 15.6 %'], [120, true, col.a(), 'D on measurement, ideal D: 4.6 %']] as [number, boolean, string, string][];
       // ideal derivative, as in the text (pass 2, R4): D on the measurement from an ideal-D run (4.6 %), D on the error from the exact closed-loop step (15.6 %)
       for (const [Kd, dm, c] of runs) {
         if (!dm) { const r = step(dishPid(1000, 0, Kd, true), 1.5, 1501); curve(g, F, r.t, degs(r.y.map((q) => q * DISH.step)), c, 2); continue; }
@@ -131,13 +135,13 @@ export const popFigures: QuizFigureRegistry = {
   }),
 
   'pop-tune': mini((g, w, h) => {
-    const F = fr(g, w, h, [0, 2], [0, 7], 'time (s)', 'θ (°)'), b = DISH_TUNED, runs = [[b.Kp, b.Ki, b.Kd, col.muted(), '(2000, 1000, 200)', true], [4000, b.Ki, b.Kd, col.b(), 'Kp 4000: 14 %', false], [b.Kp, 3000, b.Kd, col.d(), 'Ki 3000: 17 %', false], [b.Kp, b.Ki, 400, col.c(), 'Kd 400: sluggish', false]] as [number, number, number, string, string, boolean][];
-    for (const [Kp, Ki, Kd, c, , dash] of runs) { const s = dishSim({ Kp, Ki, Kd, T: 2, dt: 1e-4, every: 40, idealD: true }); /* ideal derivative, as in the text (pass 2, R4): 7.4 / 14.3 / 16.8 / 7.6 % */ curve(g, F, s.t, degs(s.y), c, dash ? 1.6 : 2, dash ? [5, 3] : []); }
+    const F = fr(g, w, h, [0, 2], [0, 7], 'time (s)', 'θ (°)'), b = DISH_TUNED, runs = [[b.Kp, b.Ki, b.Kd, col.muted(), 'start (2000, 1000, 200), ideal D: 7.4 %', true], [4000, b.Ki, b.Kd, col.b(), 'Kp 4000: 14.3 %', false], [b.Kp, 3000, b.Kd, col.d(), 'Ki 3000: 16.7 %', false], [b.Kp, b.Ki, 400, col.c(), 'Kd 400: 7.6 %, sluggish', false]] as [number, number, number, string, string, boolean][];
+    for (const [Kp, Ki, Kd, c, , dash] of runs) { const s = dishSim({ Kp, Ki, Kd, T: 2, dt: 1e-4, every: 40, idealD: true }); /* ideal derivative, as in the text (pass 2, R4): 7.4 / 14.3 / 16.7 / 7.6 % */ curve(g, F, s.t, degs(s.y), c, dash ? 1.6 : 2, dash ? [5, 3] : []); }
     legend(g, F, runs.map((r) => ({ label: r[4], color: r[3], dash: r[5] })), 'br', 9.5);
   }, 1.6, 360),
 
   'pop-coldfront': mini((g, w, h, p) => {
-    if (panel(p) === 'a') { g.clearRect(0, 0, w, h); drawHouse(g, 4, 4, w - 8, h * 0.62, { t1: 24, t2: 20, thermostat: true, labels: false }); drawLoop(g, 2, h * 0.66, w - 4, h * 0.34, { input: 'set point', output: 'bedroom', blocks: [{ label: 'thermostat', color: col.e() }, { label: 'house', color: col.a() }], feedback: true }, 9.5); return; }
+    if (panel(p) === 'a') { g.clearRect(0, 0, w, h); drawHouse(g, 4, 4, w - 8, h * 0.62, { t1: 24, t2: 20, thermostat: true, labels: false }); legend(g, { box: { l: 4, t: 4, r: w - 8, b: h * 0.62 } }, [{ label: 'heater', color: col.bad() }, { label: 'thermostat (sensor)', color: col.c() }], 'tr', 9); drawLoop(g, 2, h * 0.66, w - 4, h * 0.34, { input: 'set point', output: 'bedroom', blocks: [{ label: 'thermostat', color: col.e() }, { label: 'house', color: col.a() }], feedback: true }, 9.5); return; }
     const F = fr(g, w, h, [0, 24], [-5.4, 0.4], 'time (h)', 'K'), runs = [[0, 0, col.muted(), 'open loop: −5 K'], [1100, 0, col.b(), 'P: −0.5 K'], [1100, 200, col.a(), 'PI: back to 0']] as [number, number, string, string][];
     for (const [Kp, Ki, c] of runs) { const r = houseColdFront(Kp, Ki, -5, 24, 2e-3); const tt = r.t.filter((_, i) => i % 40 === 0), yy = Array.from(r.y).filter((_, i) => i % 40 === 0); curve(g, F, tt, yy, c, 2); }
     legend(g, F, runs.map((r) => ({ label: r[3], color: r[2] })), 'br', 9.5);
@@ -153,7 +157,7 @@ export const popFigures: QuizFigureRegistry = {
   'pop-sc': mini((g, w, h, p) => {
     if (panel(p) === 'a') {
       const ws = lin(-2, 1.5, 200), S = ws.map((e) => houseSC(1100, 10 ** e).S), Cm = ws.map((e) => houseSC(1100, 10 ** e).C), F = fr(g, w, h, [-2, 1.5], [0, 1.4], 'log₁₀ ω (rad/h)', '|S|, |C|');
-      curve(g, F, ws, S, col.c(), 2); curve(g, F, ws, Cm, col.d(), 2); legend(g, F, [{ label: '|S| weather through', color: col.c() }, { label: '|C| sensor error through', color: col.d() }], 'tl', 9.5); return;
+      curve(g, F, ws, S, col.c(), 2); curve(g, F, ws, Cm, col.d(), 2); legend(g, F, [{ label: '|S| weather through', color: col.c() }, { label: '|C| sensor error through', color: col.d() }], 'tl', 9.5); text(g, 'ω = 1 rad/h', F.X(0) + 3, F.box.t + 10, col.muted(), 'left', 9); return;
     }
     const F = fr(g, w, h, [0, 12], [-1.2, 0.3], 'time (h)', 'room (K)'), t = lin(0, 12, 241), k = houseG2().num[0], pp = housePoly();
     const P = step(tf([k * 1100], [1, pp[1], pp[2] + k * 1100]), t).y.map((q) => -q), PI = step(tf([k * 1100, k * 200], [1, pp[1], pp[2] + k * 1100, k * 200]), t).y.map((q) => -q);
@@ -205,12 +209,12 @@ export const popFigures: QuizFigureRegistry = {
     const r = cornerSep(0.01, CORNER_DESIGN.rideStep, 5, 1, 5e-5), F = fr(g, w, h, [0, 1], [0, 2.6], 'time (s)', 'z (cm)');
     g.save(); g.fillStyle = 'rgba(255,170,60,.3)'; g.beginPath(); r.t.forEach((t, i) => (i ? g.lineTo(F.X(t), F.Y(r.y[i] * 100)) : g.moveTo(F.X(t), F.Y(r.y[i] * 100)))); for (let i = r.t.length - 1; i >= 0; i--) g.lineTo(F.X(r.t[i]), F.Y(r.yf[i] * 100)); g.closePath(); g.fill(); g.restore();
     curve(g, F, r.t, r.yf.map((q) => q * 100), col.a(), 2.2); curve(g, F, r.t, r.y.map((q) => q * 100), col.b(), 2, [5, 3]);
-    legend(g, F, [{ label: 'true-state feedback', color: col.a() }, { label: 'estimate feedback', color: col.b(), dash: true }], 'br', 9.5);
+    legend(g, F, [{ label: 'true-state feedback', color: col.a() }, { label: 'estimate feedback', color: col.b(), dash: true }, { label: 'shaded: the gap, the cost of using the estimate', color: 'rgba(255,170,60,.6)' }], 'br', 9.5);
   }, 1.6, 360),
 
   'pop-ref': mini((g, w, h) => {
     const a = refRun({ r: 2, nbar: true }), b = refRun({ r: 2, nbar: false }), F = fr(g, w, h, [0, 1.5], [0, 2.5], 'time (s)', 'z (cm)');
     tline(g, F, [0, 2], [1.5, 2], col.e(), 1, [5, 4]); curve(g, F, a.t, a.y, col.a(), 2.2); curve(g, F, b.t, b.y, col.muted(), 1.8, [5, 3]);
-    legend(g, F, [{ label: 'with N̄: arrives at 2 cm', color: col.a() }, { label: `without N̄: stops at ${f(b.final, 2)} cm`, color: col.muted(), dash: true }], 'br', 9.5);
+    legend(g, F, [{ label: 'with N̄: arrives at 2 cm', color: col.a() }, { label: `without N̄: stops at ${f(b.final, 2)} cm`, color: col.muted(), dash: true }, { label: 'target: 2 cm', color: col.e(), dash: true }], 'br', 9.5);
   }, 1.6, 360),
 };

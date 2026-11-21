@@ -97,7 +97,7 @@ const CASES: Record<string, Case> = {
   noise: (v) => {
     const o = { ...TUNED, noise: (DISH.noiseDeg * Math.PI) / 180, seed: 7, T: 4, dt: 1e-4, every: 10 }, filt = on(v, 'filter'), a = dishSim({ ...o, Kd: n(v, 'Kd'), Nf: filt ? n(v, 'Nf') : 1 / o.dt }), b = dishSim({ ...o, Nf: DISH.Nf });
     const rms = (u: number[]) => { const tail = u.slice(Math.floor(u.length / 2)); const m = tail.reduce((s, x) => s + x, 0) / tail.length; return Math.sqrt(tail.reduce((s, x) => s + (x - m) ** 2, 0) / tail.length); };
-    return [{ title: 'Torque: chatter from differentiated sensor noise', y: 'torque (N·m)', xr: [0, 4], yr: fitY([a, b].map((r) => ({ t: r.t, y: r.u })), [0, 4], 0.08, [-250, 250]), series: [{ t: a.t, y: a.u, color: PB(), width: 1.2 }, { t: b.t, y: b.u, color: FX(), dash: true }], notes: [`solid: torque jitter ${rms(a.u).toFixed(0)} N·m rms (last 2 s)`, `dashed: Kd 200 with N_f = ${DISH.Nf} rad/s: ${rms(b.u).toFixed(0)} N·m rms`] },
+    return [{ title: 'Torque: chatter from differentiated sensor noise', y: 'torque (N·m)', xr: [0, 4], yr: fitY([a, b].map((r) => ({ t: r.t, y: r.u })), [0, 4], 0.08, [-250, 250]), series: [{ t: a.t, y: a.u, color: PB(), width: 1.2 }, { t: b.t, y: b.u, color: FX(), dash: true }], notes: [`solid: Kd ${n(v, 'Kd')}, ${filt ? `filtered D (N_f = ${n(v, 'Nf')} rad/s)` : 'ideal D (no filter)'}: torque jitter ${rms(a.u).toFixed(0)} N·m rms (last 2 s)`, `dashed: Kd 200, filtered D (N_f = ${DISH.Nf} rad/s): ${rms(b.u).toFixed(0)} N·m rms`] },
       { title: 'Angle ÷ target: the dish itself barely notices', y: 'angle ÷ target', xr: [0, 4], yr: [0, 1.4], series: [{ t: a.t, y: a.y.map((y) => y / R0), color: PB() }, { t: b.t, y: b.y.map((y) => y / R0), color: FX(), dash: true }], hl: [{ y: 1, label: 'target 0.1 rad' }] }];
   },
   windup: (v) => {
@@ -108,7 +108,7 @@ const CASES: Record<string, Case> = {
   kick: (v) => {
     const a = card({ ...TUNED, dm: !!v.dm, Nf: DISH.Nf, T: 5, umax: on(v, 'limit') ? DISH.Tmax : null }), b = card({ ...TUNED, dm: true, Nf: DISH.Nf, T: 5 }), ma = cardMet(a.t, a.y, R0), mb = cardMet(b.t, b.y, R0);
     const peak = (u: ArrayLike<number>) => Array.from(u).reduce((s, x) => Math.max(s, Math.abs(x)), 0), pa = thin(a), pb = thin(b);
-    return [{ title: 'Torque at the command step', y: 'torque (N·m)', xr: [0, 0.5], yr: [-300, Math.max(400, Math.ceil(peak(a.u) / 500) * 500 + 200)], series: [{ t: pa.t, y: pa.u, color: PB() }, { t: pb.t, y: pb.u, color: FX(), dash: true }], notes: [`solid: peak torque ${peak(a.u).toFixed(0)} N·m`, `dashed (D on measurement): ${peak(b.u).toFixed(0)} N·m`] },
+    return [{ title: 'Torque at the command step', y: 'torque (N·m)', xr: [0, 0.5], yr: [-300, Math.max(400, Math.ceil(peak(a.u) / 500) * 500 + 200)], series: [{ t: pa.t, y: pa.u, color: PB() }, { t: pb.t, y: pb.u, color: FX(), dash: true }], notes: [`solid (D on the error, filtered D N_f = 200): peak torque ${peak(a.u).toFixed(0)} N·m`, `dashed (D on the measurement, filtered D N_f = 200): ${peak(b.u).toFixed(0)} N·m`] },
       { title: 'Angle ÷ target', y: 'angle ÷ target', xr: [0, 3], yr: [0, 1.4], series: [{ t: pa.t, y: pa.y.map((y) => y / R0), color: PB() }, { t: pb.t, y: pb.y.map((y) => y / R0), color: FX(), dash: true }], hl: [{ y: 1, label: 'target 0.1 rad' }], notes: [`solid: ${mtxt(ma, 5)}`, `dashed: ${mtxt(mb, 5)}`] }];
   },
   limits: (v) => stepCard('Torque limit on a 2 rad slew (clamping on)', { ...TUNED, r: 2, T: 12, umax: n(v, 'umax'), aw: true }, { ...TUNED, r: 2, T: 12, umax: 1000, aw: true }, [0, 2], { r: 2, yr: [0, 1.3] }),

@@ -9,7 +9,7 @@ export const STAGES: Record<'house' | 'corner' | 'dish', { say: string; d: LoopD
     { say: 'H0 MODEL: two rooms, heater in room 1, heat-flow arrows', d: null },
     { say: 'H1 TF: one fraction from heater to bedroom', d: { input: 'u', output: 'x₂', sum: false, blocks: [{ label: 'G(s)', hi: true }] } },
     { say: 'H2 POLES: −0.2 and −2.2 /h', d: { input: 'u', output: 'x₂', sum: false, blocks: [{ label: '0.0036/((s + 0.2)(s + 2.2))', hi: true }] } },
-    { say: 'H3 FIRST: the warming trace, τ = 5 h', d: { input: 'u', output: 'x₂', sum: false, blocks: [{ label: '0.0036/((s + 0.2)(s + 2.2))' }] } },
+    { say: 'H3 FIRST: one pole stands in for two: 8.18 K per kW, τ = 5 h', d: { input: 'u', output: 'x₂', sum: false, blocks: [{ label: '0.00818/(5s + 1)', hi: true }] } },
     { say: 'H4 DIST: thermostat dial r, cold front d at the walls', d: { input: 'r', output: 'y', blocks: [{ label: 'Gc', hi: true }, { label: 'house' }], feedback: true, dist: 'd' } },
     { say: 'H5 SENS: thinner walls, G + ΔG', d: { input: 'r', output: 'y', blocks: [{ label: 'Gc' }, { label: 'G + ΔG', hi: true }], feedback: true, dist: 'd' } },
     { say: 'H6 NOISE: sun on the thermostat, sensor error n', d: { input: 'r', output: 'y', blocks: [{ label: 'Gc' }, { label: 'house' }], feedback: true, dist: 'd', noise: 'n', hiSum: true } },

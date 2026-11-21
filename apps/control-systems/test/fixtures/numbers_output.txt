@@ -435,5 +435,36 @@ P2 index, dish ISE = 1/(2 a1) + a1/200; d/da1 = -1/(2 a1^2) + 1/200 = 0 -> a1 = 
 P2 index, dish IAE optimum (numerical): a1 = 13.248 /s, K_r = 112.5 N m s/rad, zeta = 0.662, IAE = 0.1605 s
 P2 telescope side panel (LN2 s.26-28): a0 = 2.5, a1 = 0.5 K3: ISE optimum a1 = sqrt(2.5) -> K3 = sqrt(10) = 3.162, zeta = 0.50; IAE optimum K3 = 4.189, zeta = 0.662 (same zeta as the dish: time scaling moves the gain, not the damping)
 
+======== [PASS3] Pass 3: tuning figure vs table (exact), dish and house bubble scenes, index K_r = 120
+P3 tuning (2000, 1000, 200): exact %OS 7.365 % (one decimal: 7.4 %), Ts 2.198 s | gust on a dish at rest: peak 0.5557 deg, back in 0.05 deg 4.82 s | gust 10 s after the step: step error left at 10 s +0.0018 deg, peak 0.5572 deg, back in 0.05 deg 4.83 s
+P3 tuning (4000, 1000, 200): exact %OS 14.339 % (one decimal: 14.3 %), Ts 0.308 s | gust on a dish at rest: peak 0.3187 deg, back in 0.05 deg 7.00 s | gust 10 s after the step: step error left at 10 s +0.0064 deg, peak 0.3248 deg, back in 0.05 deg 7.08 s
+P3 tuning (2000, 3000, 200): exact %OS 16.746 % (one decimal: 16.7 %), Ts 1.447 s | gust on a dish at rest: peak 0.5179 deg, back in 0.05 deg 1.56 s | gust 10 s after the step: step error left at 10 s +0.0000 deg, peak 0.5179 deg, back in 0.05 deg 1.56 s
+P3 tuning (2000, 1000, 400): exact %OS 7.619 % (one decimal: 7.6 %), Ts 3.592 s | gust on a dish at rest: peak 0.4876 deg, back in 0.05 deg 4.77 s | gust 10 s after the step: step error left at 10 s +0.0030 deg, peak 0.4898 deg, back in 0.05 deg 4.78 s
+P3 dish bubble Kp 40: wn 2.00 rad/s, zeta 0.50, %OS 16.3 %, Ts 4.04 s; at t = 2 s: dish 6.61 deg, error -0.88 deg, torque Kp*e -0.6 N·m; first torque Kp*0.1 = 4 N·m
+P3 dish bubble Kp 1000: wn 10.00 rad/s, zeta 0.10, %OS 72.9 %, Ts 3.84 s; at t = 2 s: dish 5.28 deg, error +0.45 deg, torque Kp*e +7.9 N·m; first torque Kp*0.1 = 100 N·m
+P3 house bubble at t =  1.0 h: x1 = 5.90 K, x2 = 2.26 K above outdoors (outdoors 5 C: 10.9 C, 7.3 C); shared-wall flow (x1 - x2)·277.8 W/K = 1011 W
+P3 house bubble at t =  3.9 h: x1 = 14.23 K, x2 = 10.14 K above outdoors (outdoors 5 C: 19.2 C, 15.1 C); shared-wall flow (x1 - x2)·277.8 W/K = 1136 W
+P3 house bubble at t =  5.0 h: x1 = 16.27 K, x2 = 12.18 K above outdoors (outdoors 5 C: 21.3 C, 17.2 C); shared-wall flow (x1 - x2)·277.8 W/K = 1136 W
+P3 house bubble at t = 12.0 h: x1 = 22.50 K, x2 = 18.41 K above outdoors (outdoors 5 C: 27.5 C, 23.4 C); shared-wall flow (x1 - x2)·277.8 W/K = 1136 W
+P3 index K_r = 120 (= hand-tuned Kd): a1 = 14 /s, zeta = 0.70, ISE = 0.1057 s, IAE = 0.1610 s (IAE optimum 0.1605 s at K_r 112.5)
+P3 Lab recovery, P 1000: window 16 s: not back (offset at end -1.149 deg); window 21 s: not back (offset at end -1.146 deg); window 40 s: not back (offset at end -1.146 deg)
+P3 Lab recovery, PD (1000, 0, 120): window 16 s: not back (offset at end -1.146 deg); window 21 s: not back (offset at end -1.146 deg); window 40 s: not back (offset at end -1.146 deg)
+P3 Lab recovery, tuned (2000, 1000, 200): window 16 s: 4.83 s; window 21 s: 4.83 s; window 40 s: 4.83 s
+P3 Lab recovery, too much I (2000, 3000, 200): window 16 s: 1.56 s; window 21 s: 1.56 s; window 40 s: 1.56 s
+P3 Lab recovery, too much Kd (2000, 1000, 400): window 16 s: 4.78 s; window 21 s: 4.78 s; window 40 s: 4.78 s
+P3 Lab recovery, derivative kick (D on the error): window 16 s: 4.82 s; window 21 s: 4.82 s; window 40 s: 4.82 s
+P3 Lab recovery, windup 2 rad, no anti-windup: window 16 s: 5.18 s; window 21 s: 5.18 s; window 40 s: 5.18 s
+P3 Lab recovery, windup 2 rad, clamping: window 16 s: 4.84 s; window 21 s: 4.84 s; window 40 s: 4.84 s
+P3 Lab recovery, ZN + lag (264, 531.5, 32.8): window 16 s: 4.85 s; window 21 s: 4.85 s; window 40 s: 4.85 s
+P3 Lab recovery, worked example (2000, 500, 200): window 16 s: not back (offset at end -0.132 deg); window 21 s: 9.78 s; window 40 s: 9.78 s
+P3 recovery with ideal D (text convention), (2000, 1000, 200), window 40 s: 4.83 s
+P3 recovery with ideal D (text convention), (4000, 1000, 200), window 40 s: 7.09 s
+P3 recovery with ideal D (text convention), (2000, 3000, 200), window 40 s: 1.56 s
+P3 recovery with ideal D (text convention), (2000, 1000, 400), window 40 s: 4.78 s
+P3 recovery with ideal D (text convention), (2000, 500, 200), window 40 s: 9.78 s
+P3 Lab lag plant, P 440: poles [-22.+0.j     -0.+6.325j  -0.-6.325j] (max Re -0.0000); theta_r - theta at 9.9 s = +4.858 deg, at 16 s = +5.104 deg (still oscillating)
+P3 tuned (2000, 1000, 200), D on the error, ideal: exact %OS 15.811 % (one decimal 15.8 %)
+P3 Ackermann, 1/s^2 with poles -1 +/- j (q = s^2 + 2s + 2): K = [2. 2.], eig(A - BK) = [-1.+1.j -1.-1.j]
+
 All numbers recomputed.
 EXIT 0

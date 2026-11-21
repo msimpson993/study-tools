@@ -1169,7 +1169,7 @@
       color: var(--org)
       dash: true
   howToRead: The corner under its state feedback takes a 1 kN load while an observer, fed only the height, estimates height and speed. The estimate starts off by the chosen error. L is printed for the chosen observer speed.
-  lookFor: At 5× (L = [76, 2132]) the estimate locks on within about 0.15 s and stays smooth. At 10× (L = [156, 9312]) it locks on sooner but copies far more sensor noise into the velocity estimate.
+  lookFor: At 5× (L_o = [76, 2132]) the estimate locks on within about 0.15 s and stays smooth. At 10× (L_o = [156, 9312]) it locks on sooner but copies far more sensor noise into the velocity estimate.
   controls:
     - id: speed
       label: observer speed (× controller poles)
@@ -1203,7 +1203,7 @@
       set:
         speed: "2"
     - id: x5
-      label: ×5 (L = [76, 2132])
+      label: ×5 (L_o = [76, 2132])
       set:
         speed: "5"
     - id: x10
@@ -1862,7 +1862,7 @@
     - label: previous run
       color: var(--muted)
       dash: true
-  howToRead: "The dish (0.1/(s(s + 2)), 0.1 rad step, 200 N·m limit, D on measurement) under your PID. Wind adds 20 N·m at 10 s, after the step has settled. Readouts check the specs: %OS < 10 %, wind peak < 0.6°, zero steady error, torque within the limit. Readouts include the derivative filter N_f, so they sit slightly below the ideal-derivative numbers quoted in the text (tuned: 6.3 % vs 7.4 %). With the wind on, the no-anti-windup preset fails the steady-error check (about 0.14° off at 9.9 s): the overfilled integrator is still bleeding off when the gust arrives. Switch to the clamping preset and it passes. Offset at end (t = T): θ_r − θ at the last sample of the window, in degrees. It appears only when wind is on. Pass mark: |offset| < 0.05°."
+  howToRead: 'The dish (0.1/(s(s + 2)), 0.1 rad step, 200 N·m limit, D on measurement) under your PID. Wind adds 20 N·m at 10 s, after the step has settled. Readouts check the specs: %OS < 10 %, wind peak < 0.6°, zero steady error, torque within the limit. Readouts include the derivative filter N_f, so they sit slightly below the ideal-derivative numbers quoted in the text (tuned: 6.3 % vs 7.4 %). With the wind on, the no-anti-windup preset fails the steady-error check (about 0.14° off at 9.9 s): the overfilled integrator is still bleeding off when the gust arrives. Switch to the clamping preset and it passes. Offset at end (t = T): θ_r − θ at the last sample of the window, in degrees. It appears only when wind is on. Pass mark: |offset| < 0.05°. Recovery to ±0.05°: seconds from the 10 s gust until the error stays inside ±0.05° for the rest of the window; pass < 10 s. Widen the window if it reads "not back by t = T s".'
   lookFor: Start at P 1000 (73 % ring), add Kd until it stops ringing, then just enough Ki to clear the wind.
   controls:
     - id: plant

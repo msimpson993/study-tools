@@ -241,7 +241,7 @@ export const obsFigure = figureOf(() => [
     id: 'z', title: 'Height: real body vs the observer\'s estimate', x: 'time (s)', y: 'z (cm)',
     draw(g, w, h, v) {
       const r = obsRun(v), fr = plotFrame(g, w, h, [0, 1.5], range([r.z, r.zh], 0.1), 'time (s)', 'z (cm)'); curve(g, fr, r.t, r.z, col.a(), 2.4); curve(g, fr, r.t, r.zh, col.b(), 2, [6, 4]);
-      legend(g, fr, [{ label: 'real body z (measured)', color: col.a() }, { label: 'estimate ẑ', color: col.b(), dash: true }, { label: `L = [${k3(r.L[0])}, ${k3(r.L[1])}] (×${r.speed} the controller poles)`, color: col.muted() }], 'br');
+      legend(g, fr, [{ label: 'real body z (measured)', color: col.a() }, { label: 'estimate ẑ', color: col.b(), dash: true }, { label: `L_o = [${k3(r.L[0])}, ${k3(r.L[1])}] (×${r.speed} the controller poles)`, color: col.muted() }], 'br');
     },
   },
   {

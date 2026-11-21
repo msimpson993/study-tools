@@ -26,6 +26,7 @@ export const antennaPanels = (): FigurePanel[] => [
       g.clearRect(0, 0, w, h); const Kp = num(v, 'Kp', 40), r = num(v, 'step', 0.1), tt = num(v, 't', 2), s = dishSim({ Kp, r: () => r, T: 6, dt: 1e-3 }), th = at(s.t, s.y, tt), u = Kp * (r - th);
       drawDish(g, 0, 0, w * 0.6, h, { theta: th, ref: r, torque: u, scale: 4 });
       const x = w * 0.6, mw = w * 0.4 - 6; let y = 16;
+      y = para(g, `Kp = ${f(Kp, 0)} N·m/rad`, x, y, mw, col.text(), 10.5);
       y = para(g, `t = ${f(tt, 2)} s`, x, y, mw, col.text(), 10.5); y = para(g, `target ${f(deg(r), 1)}°, dish ${f(deg(th), 2)}°`, x, y, mw, col.text(), 10);
       y = para(g, `error ${f(deg(r - th), 2)}° → torque Kp·e = ${f(u, 1)} N·m`, x, y + 2, mw, col.b(), 10);
       para(g, '(angles drawn 4× larger)', x, y + 4, mw, col.muted(), 9.5);
@@ -138,7 +139,7 @@ export const derivativeFigure = figureOf(() => {
       draw(g, w, h, v) {
         const r = run(v), y = degs(r.s.y), m = dishMetrics(r.s.t, r.s.y, DISH.step), fr = angleFrame(g, w, h, 2, [y], deg(DISH.step));
         hline(g, fr, deg(DISH.step), [0, 2], 'target', col.e()); curve(g, fr, r.s.t, y, col.a(), 2.2);
-        legend(g, fr, [{ label: `${r.dm ? 'D on measurement' : 'D on error'}: %OS ${f(m.OS, 1)} %, ζ = ${f((DISH.B + r.Kd) / (2 * Math.sqrt(r.Kp * DISH.J)), 2)}`, color: col.a() }, ...(r.dm ? [] : [{ label: `zero at −Kp/Kd = ${f(-r.Kp / Math.max(r.Kd, 1e-9), 2)}`, color: col.b() }])], 'br');
+        legend(g, fr, [{ label: `${r.dm ? 'D on measurement' : 'D on error'}, filtered D (N_f = ${f(DISH.Nf, 0)} rad/s): %OS ${f(m.OS, 1)} %, ζ = ${f((DISH.B + r.Kd) / (2 * Math.sqrt(r.Kp * DISH.J)), 2)}`, color: col.a() }, ...(r.dm ? [] : [{ label: `zero at −Kp/Kd = ${f(-r.Kp / Math.max(r.Kd, 1e-9), 2)}`, color: col.b() }])], 'br');
       },
     },
     {
@@ -166,27 +167,27 @@ const gainPanel = (id: 'Kp' | 'Ki' | 'Kd', title: string): FigurePanel => ({
     const val = num(v, id, base[id]), gs = { ...base, [id]: val }, a = gainRun(gs.Kp, gs.Ki, gs.Kd), b0 = gainRun(base.Kp, base.Ki, base.Kd), T = 20;
     const fr = plotFrame(g, w, h, [0, T], [0, 7], 'time (s)', 'θ (°)'); hline(g, fr, deg(DISH.step), [0, T], '', col.e());
     curve(g, fr, b0.s.t, degs(b0.s.y), col.muted(), 1.6, [6, 4]); curve(g, fr, a.s.t, degs(a.s.y), col.a(), 2.2);
-    legend(g, fr, [{ label: `(${gs.Kp}, ${gs.Ki}, ${gs.Kd}): %OS ${f(a.m.OS, 1)} %, Ts ${f(a.m.Ts, 2)} s`, color: col.a() }, { label: `wind peak ${f(a.w.peak, 3)}°, back in 0.05° after ${f(a.w.recover, 1)} s`, color: col.d() }, { label: 'start (2000, 1000, 200)', color: col.muted(), dash: true }], 'br');
+    legend(g, fr, [{ label: `(${gs.Kp}, ${gs.Ki}, ${gs.Kd}), ideal D: %OS ${f(a.m.OS, 1)} %, Ts ${f(a.m.Ts, 2)} s`, color: col.a() }, { label: `wind peak ${f(a.w.peak, 3)}°, back in 0.05° after ${f(a.w.recover, 1)} s`, color: col.d() }, { label: 'start (2000, 1000, 200), ideal D', color: col.muted(), dash: true }], 'br');
   },
 });
 export const gainsFigure = figureOf(() => [gainPanel('Kp', 'Raise Kp'), gainPanel('Ki', 'Raise Ki'), gainPanel('Kd', 'Raise Kd')]);
 
 /* ── TUNE · figure:tunetable ── */
 export const TUNE_ROWS: [string, string, string, string, string, string, string][] = [
-  ['raise Kp 2000→4000', 'faster (0.16→0.09 s)', '↑ 7.4→14.3 %', '↓ 2.2→0.31 s', '↓ 0.556→0.319°', '↑ 4.8→7.0 s', '↑ more chatter'],
-  ['raise Ki 1000→3000', '~ (0.16→0.14 s)', '↑ 7.4→16.8 %', '↓ 2.2→1.45 s', '~ 0.556→0.518°', '↓ 4.8→1.6 s', '– no change'],
-  ['raise Kd 200→400', 'slower (0.16→0.33 s)', '~ 7.4→7.6 %', '↑ 2.2→3.6 s', '↓ 0.556→0.488°', '~ 4.8→4.8 s', '↑ much more chatter'],
+  ['raise Kp 2000→4000', 'faster (0.16→0.09 s)', '↑ 7.4→14.3 %', '↓ 2.2→0.31 s', '↓ 0.557→0.325°', '↑ 4.8→7.1 s', '↑ more chatter'],
+  ['raise Ki 1000→3000', '~ (0.16→0.14 s)', '↑ 7.4→16.7 %', '↓ 2.2→1.45 s', '~ 0.557→0.518°', '↓ 4.8→1.6 s', '– no change'],
+  ['raise Kd 200→400', 'slower (0.16→0.33 s)', '~ 7.4→7.6 %', '↑ 2.2→3.59 s', '↓ 0.557→0.490°', '~ 4.8→4.8 s', '↑ much more chatter'],
 ];
-/** The table's overshoot, settling and wind-peak numbers [P10], for the bar panel (the noise column is qualitative and left out). */
-export const TUNE_START = { os: 7.4, ts: 2.2, wind: 0.556 };
-export const TUNE_NUM = [{ id: 'Kp', os: 14.3, ts: 0.31, wind: 0.319 }, { id: 'Ki', os: 16.8, ts: 1.45, wind: 0.518 }, { id: 'Kd', os: 7.6, ts: 3.6, wind: 0.488 }];
+/** The table's overshoot, settling and wind-peak numbers (numbers.py [PASS3]: exact step; wind from a gust 10 s after the step), for the bar panel (the noise column is qualitative and left out). */
+export const TUNE_START = { os: 7.4, ts: 2.2, wind: 0.557 };
+export const TUNE_NUM = [{ id: 'Kp', os: 14.3, ts: 0.31, wind: 0.325 }, { id: 'Ki', os: 16.7, ts: 1.45, wind: 0.518 }, { id: 'Kd', os: 7.6, ts: 3.59, wind: 0.490 }];
 export const tunetableFigure = figureOf(() => [
   {
     id: 'table', title: 'Raise one gain from (2000, 1000, 200): what changes', x: '', y: '', height: 340,
     draw(g, w, h, v) {
       g.clearRect(0, 0, w, h); const cols = ['rise 10–90 %', 'overshoot', 'settling', 'wind peak', 'wind recovery', 'noise in torque'];
       const pick = str(v, 'row');
-      let y = 14; text(g, 'measured on the dish, D on measurement [P10]', 8, y, col.muted(), 'left', 10); y += 18;
+      let y = 14; text(g, 'measured on the dish: ideal D on the measurement, gust 10 s after the step (as in the panels above and the Lab)', 8, y, col.muted(), 'left', 10); y += 18;
       for (const r of TUNE_ROWS.filter((r) => pick === 'all' || !pick || r[0].includes(pick))) { text(g, r[0], 8, y, col.e(), 'left', 11); y += 15; for (let i = 0; i < cols.length; i++) { text(g, cols[i], 16, y, col.muted(), 'left', 10); text(g, r[i + 1], w - 8, y, col.text(), 'right', 10); y += 13; } y += 6; }
     },
   },

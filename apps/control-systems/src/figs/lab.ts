@@ -13,7 +13,7 @@ export type LabPlant = 'dish' | 'lag' | PlantId;
 /** The legacy presets per lag plant ([Kp, Ki, Kd], PI used when switching plant). */
 export const LEGACY_PI: Record<PlantId, [number, number, number]> = { p1: [2, 4, 0], p2: [2, 2, 0], p3: [1, 0.4, 0] };
 const LEG = { dist: -0.5, umax: 1.2, noise: 0.01, seed: 99 };
-interface Run { plant: LabPlant; t: number[]; y: number[]; u: number[]; r: number; T: number; windAt: number | null; umax: number | null; OS: number; Ts: number; ess: number; peakU: number; poles: Cx[]; windPeak: number; /** θ_r − θ at the last sample (rad) */ offEnd: number; unstable: boolean; windOn: boolean }
+interface Run { plant: LabPlant; t: number[]; y: number[]; u: number[]; r: number; T: number; windAt: number | null; umax: number | null; OS: number; Ts: number; ess: number; peakU: number; poles: Cx[]; windPeak: number; /** θ_r − θ at the last sample (rad) */ offEnd: number; /** s after the gust of the last sample outside ±0.05° (pass 3, item 12) */ rec: number; /** inside the band at the window's end */ back: boolean; /** derivative filter (rad/s; dish plants) and Kd, for the legend */ Nf: number; Kd: number; unstable: boolean; windOn: boolean }
 export function labRun(v: V): Run {
   const plant = str(v, 'plant', 'dish') as LabPlant, Kp = num(v, 'Kp', 1000), Ki = num(v, 'Ki', 0), Kd = num(v, 'Kd', 0), dm = v.dm === undefined ? true : on(v, 'dm'), aw = str(v, 'aw', 'none') as AntiWindup, wind = on(v, 'wind'), noise = on(v, 'noise');
   if (plant === 'dish' || plant === 'lag') {
@@ -24,14 +24,17 @@ export function labRun(v: V): Run {
     // steady error: with wind on, read just before the gust (t = windAt − 0.1 s); with wind off, at the window end (tutor build 4c follow-up)
     let essIdx = s.y.length - 1; if (gust) { const tq = DISH.windAt - 0.1; for (let i = 0; i < s.t.length && s.t[i] <= tq + 1e-9; i++) essIdx = i; }
     let wp = 0; if (gust) s.t.forEach((t, i) => { if (t >= DISH.windAt) wp = Math.max(wp, Math.abs(deg(s.y[i] - r))); });
+    // recovery (pass 3, item 12): from the gust to the last sample outside ±0.05°, after which the error stays inside to the window's end
+    let last = -1; if (gust) s.t.forEach((t, i) => { if (t >= DISH.windAt && Math.abs(deg(r - s.y[i])) > 0.05) last = i; });
+    const back = gust && last < s.t.length - 1, rec = !gust ? NaN : last < 0 ? 0 : s.t[last] - DISH.windAt;
     const den = lag ? [DISH.J * lag, DISH.J + DISH.B * lag, DISH.B + Kd, Kp, Ki] : [DISH.J, DISH.B + Kd, Kp, Ki];
     const poles = roots(Ki ? den : den.slice(0, -1)).filter((p) => Number.isFinite(p.re));
-    return { plant, t: s.t, y: s.y, u: s.u, r, T, windAt: gust ? DISH.windAt : null, windOn: wind, umax, OS: m.OS, Ts: m.Ts, ess: r - s.y[essIdx], peakU: Math.max(...s.u.map(Math.abs)), poles, windPeak: wp, offEnd: r - s.y[s.y.length - 1], unstable: s.unstable };
+    return { plant, t: s.t, y: s.y, u: s.u, r, T, windAt: gust ? DISH.windAt : null, windOn: wind, umax, OS: m.OS, Ts: m.Ts, ess: r - s.y[essIdx], peakU: Math.max(...s.u.map(Math.abs)), poles, windPeak: wp, offEnd: r - s.y[s.y.length - 1], rec, back, Nf, Kd, unstable: s.unstable };
   }
   const T = num(v, 'T', plant === 'p3' ? 30 : 10), sat = num(v, 'sat', DISH.Tmax) < 1000;
   const sim = simulatePid({ plant, Kp, Ki, Kd, N: 20, T, dt: 0.01, dist: wind ? { t: T / 2, amp: LEG.dist } : null, noise: noise ? LEG.noise : 0, umax: sat ? LEG.umax : null, aw, dOnMeasurement: dm, seed: LEG.seed });
   const m = pidMetrics(sim, { tEnd: wind ? T / 2 : undefined }); let poles: Cx[] = []; try { if (Kp || Ki || Kd) poles = pidClosedLoopPoles(plant, { Kp, Ki, Kd, N: 20 }); } catch { poles = []; }
-  return { plant, t: sim.t, y: sim.y, u: sim.u, r: 1, T, windAt: wind ? T / 2 : null, umax: sat ? LEG.umax : null, OS: m.overshootPct, Ts: m.settlingTime, ess: m.ess, peakU: m.peakU, poles, windPeak: NaN, offEnd: NaN, unstable: sim.unstable, windOn: wind };
+  return { plant, t: sim.t, y: sim.y, u: sim.u, r: 1, T, windAt: wind ? T / 2 : null, umax: sat ? LEG.umax : null, OS: m.overshootPct, Ts: m.settlingTime, ess: m.ess, peakU: m.peakU, poles, windPeak: NaN, offEnd: NaN, rec: NaN, back: false, Nf: NaN, Kd, unstable: sim.unstable, windOn: wind };
 }
 const isDish = (p: LabPlant) => p === 'dish' || p === 'lag';
 export const labFigure = figureOf((c) => {
@@ -52,7 +55,7 @@ export const labFigure = figureOf((c) => {
         const fr = plotFrame(g, w, h, [0, r.T], [Math.max(-1, Math.min(0, ...ys)), Math.min(3, Math.max(1.3, ...ys, ...gy) * 1.05)], 'time (s)', isDish(r.plant) ? 'θ / target' : 'y (r = 1)');
         tline(g, fr, [0, 1], [r.T, 1], col.muted(), 1, [5, 4]); if (r.windAt !== null) { tline(g, fr, [r.windAt, fr.iy(fr.box.b)], [r.windAt, fr.iy(fr.box.t)], col.d(), 1, [3, 3]); text(g, isDish(r.plant) ? 'wind 20 N·m' : 'load −0.5', fr.X(r.windAt) + 4, fr.box.t + 10, col.d(), 'left', 10); }
         if (G) curve(g, fr, G.t, gy, col.muted(), 1.6, [5, 4]); curve(g, fr, r.t, ys, col.a(), 2.3);
-        legend(g, fr, [{ label: r.unstable ? 'diverges' : `%OS ${f(r.OS, 1)} %, Ts ${f(r.Ts, 2)} s${isDish(r.plant) ? `, target ${f(deg(r.r), 1)}°` : ''}`, color: r.unstable ? col.bad() : col.a() }, ...(G ? [{ label: 'previous run', color: col.muted(), dash: true }] : [])], 'br');
+        legend(g, fr, [{ label: r.unstable ? 'diverges' : `${isDish(r.plant) && r.Kd > 0 ? `filtered D (N_f = ${f(r.Nf, 0)}): ` : ''}%OS ${f(r.OS, 1)} %, Ts ${f(r.Ts, 2)} s${isDish(r.plant) ? `, target ${f(deg(r.r), 1)}°` : ''}`, color: r.unstable ? col.bad() : col.a() }, ...(G ? [{ label: 'previous run', color: col.muted(), dash: true }] : [])], 'br');
       },
     },
     {
@@ -76,13 +79,18 @@ export const labFigure = figureOf((c) => {
       draw(g, w, h, v) {
         g.clearRect(0, 0, w, h); const r = run(v), maxRe = r.poles.length ? Math.max(...r.poles.map((p) => p.re)) : -1, d = isDish(r.plant);
         const c = (ok: boolean | null) => (ok === null ? col.text() : ok ? col.ok() : col.bad()), gust = r.windAt !== null && d;
+        // a loop with no settled value (e.g. the lag plant at P 440, poles on the jω axis): a neutral dash in every final-value row (pass 3, item 9)
+        const settles = !r.unstable && maxRe < -1e-3, ns = '— (never settles)';
         const rows: [string, string, string][] = [
           ['Overshoot (spec < 10 %)', r.unstable ? '—' : `${f(r.OS, 1)} %`, c(d ? r.OS < 10 : null)],
-          ['Settling 2 %', r.unstable || !Number.isFinite(r.Ts) ? 'not settled' : `${f(r.Ts, 2)} s`, c(null)],
-          [gust ? `Steady error (t = ${f(DISH.windAt - 0.1, 1)} s, before gust)` : 'Steady error', d ? `${f(deg(r.ess), 3)}°` : f(r.ess, 3), c(Math.abs(r.ess) < 1e-3 * r.r)],
-          ['Wind peak (spec < 0.6°)', !d || !r.windOn ? 'wind off' : gust ? `${f(r.windPeak, 3)}°` : '— (no gust in window)', c(gust ? r.windPeak < 0.6 : null)],
-          // θ_r − θ at the window's last sample, wind on only; passes below 0.05°, the page's "back on target" band (pass 2, R2)
-          ...(d && r.windOn ? [[`Offset at end (t = ${f(r.T, 0)} s)`, gust ? `${f(deg(r.offEnd), 3)}°` : '— (no gust in window)', c(gust ? Math.abs(deg(r.offEnd)) < 0.05 : null)] as [string, string, string]] : []),
+          ['Settling 2 %', !settles || !Number.isFinite(r.Ts) ? 'not settled' : `${f(r.Ts, 2)} s`, c(null)],
+          [gust ? `Steady error (t = ${f(DISH.windAt - 0.1, 1)} s, before gust)` : 'Steady error', !settles ? ns : d ? `${f(deg(r.ess), 3)}°` : f(r.ess, 3), c(settles ? Math.abs(r.ess) < 1e-3 * r.r : null)],
+          ['Wind peak (spec < 0.6°)', !d || !r.windOn ? 'wind off' : !gust ? '— (no gust in window)' : !settles ? ns : `${f(r.windPeak, 3)}°`, c(gust && settles ? r.windPeak < 0.6 : null)],
+          // recovery (pass 3, item 12): 'not back by t = T s' is a failure (red) at any window (Malcolm, Nov 21)
+          ...(d && r.windOn ? [['Recovery to ±0.05° (spec < 10 s)', !gust ? '— (no gust in window)' : !settles ? ns : r.back ? `${f(r.rec, 2)} s` : `not back by t = ${f(r.T, 0)} s`,
+            c(!gust || !settles ? null : r.back ? r.rec < 10 : false)] as [string, string, string]] : []),
+          // θ_r − θ at the window's last sample, wind on only; passes below 0.05°, the page's "back on target" band (pass 2, R2; label pass 3, item 7)
+          ...(d && r.windOn ? [[`Offset at end, t = ${f(r.T, 0)} s (spec < 0.05°)`, !gust ? '— (no gust in window)' : !settles ? ns : `${f(deg(r.offEnd), 3)}°`, c(gust && settles ? Math.abs(deg(r.offEnd)) < 0.05 : null)] as [string, string, string]] : []),
           ['Peak torque (limit 200 N·m)', d ? `${k3(r.peakU)} N·m` : f(r.peakU), c(d ? r.peakU <= DISH.Tmax + 1e-6 : null)],
           ['Stability', maxRe < -1e-3 ? 'all poles left' : maxRe < 1e-3 ? 'on the jω axis' : 'unstable pole', c(maxRe < -1e-3)],
         ];
