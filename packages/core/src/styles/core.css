@@ -453,3 +453,21 @@ details.derivation{margin:.7rem 0}details.derivation>summary{font-weight:650}
   .cm-top:not([data-testid=review-bar]){margin:.2rem 0 .35rem}
   .cm-caps summary{padding:.3rem .55rem}
 }
+
+/* Links in a pop-up that point to another item (Malcolm, Nov 21): Meet the example, Where this example comes back, look-back and
+   see-also lines, a branch end's Back / Return links and an introduction's Back to its box. Smaller (≈0.85em), compact and quieter
+   than the text, but still easy to tap (≥ 32 px tall on a phone, from vertical padding so the lines stay tight). The chain
+   controls (Next question, Next / Back buttons) are unchanged. */
+#app .pop-meet a, #app .ref-back a, #app .pop-side a.pop-next-link, #app .pop-end a {
+  font-size: .85em; font-weight: 500; line-height: 1.35; text-decoration: underline; text-decoration-color: color-mix(in srgb, currentColor 40%, transparent); text-underline-offset: 2px;
+  padding: .2rem .1rem; border-radius: 5px; box-decoration-break: clone; -webkit-box-decoration-break: clone;
+}
+#app .pop-meet a:hover, #app .ref-back a:hover, #app .pop-side a.pop-next-link:hover, #app .pop-end a:hover { text-decoration-color: currentColor; background: color-mix(in srgb, currentColor 8%, transparent); }
+#app .pop-meet { margin: .3rem 0 .45rem; }
+#app .ref-back .ref-why { font-size: .85em; }
+#app .pop-side .pop-lead { font-size: .85em; }
+#app [data-testid=ref-nav] [data-testid=ref-host] { padding: .3rem .65rem; min-height: 32px; }
+#app [data-testid=ref-nav] [data-testid=ref-host] .ch-name { font-size: .85em; font-weight: 500; }
+@media (max-width: 699px) {
+  #app .pop-meet a, #app .ref-back a, #app .pop-side a.pop-next-link, #app .pop-end a { padding: .5rem .1rem; }
+}
