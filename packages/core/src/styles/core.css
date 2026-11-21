@@ -467,8 +467,8 @@ details.derivation{margin:.7rem 0}details.derivation>summary{font-weight:650}
 #app .pop-meet { margin: .3rem 0 .45rem; }
 #app .ref-back .ref-why { font-size: .85em; }
 #app .pop-side .pop-lead { font-size: .85em; }
-#app [data-testid=ref-nav] [data-testid=ref-host] { padding: .3rem .65rem; min-height: 32px; }
+#app [data-testid=ref-nav] [data-testid=ref-host] { padding: .3rem .65rem; min-height: 32px; box-sizing: border-box; }
 #app [data-testid=ref-nav] [data-testid=ref-host] .ch-name { font-size: .85em; font-weight: 500; }
 @media (max-width: 699px) {
-  #app .pop-meet a, #app .ref-back a, #app .pop-side a.pop-next-link, #app .pop-end a { padding: .5rem .1rem; }
+  #app .pop-meet a, #app .ref-back a, #app .pop-side a.pop-next-link, #app .pop-end a { padding: max(.5rem, calc(17.5px - .6em)) .1rem; }
 }
