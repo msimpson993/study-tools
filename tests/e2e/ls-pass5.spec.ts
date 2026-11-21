@@ -27,7 +27,7 @@ test.describe('linear-systems pass 5: map links', () => {
     await open(page, 'linear-systems');
     await node(page, 'PZ').dispatchEvent('click');
     await page.locator('[data-testid=pop-next-link][data-to="STAB"]').click();
-    await expect(page.getByTestId('edge-kind')).toContainText('Shortcut');
+    await expect(page.getByTestId('edge-kind')).toContainText('Side path (shortcut)');
     await page.getByTestId('edge-next').click();
     await expect(page.getByTestId('pop-question')).toHaveAttribute('data-edge', 'PZ__STAB');
     await expect(page.getByTestId('pop-question')).toContainText('Will it settle?');

@@ -241,6 +241,11 @@ export function mountConceptMap(host: HTMLElement, content: AppContent, progress
   };
   /** a side line is a shortcut when its box leads on; a branch that ends there (a Full-detail side box) is a detour you come back from */
   const sideTag = (e: MapEdge, m: MapDef) => (m.edges.some((x) => x.from === e.to && !x.dashed) ? 'Side path (shortcut)' : 'Side path (a detour; come back here)');
+  /** a side line's header uses the same words as its box's tag and the legend: a detour you come back from, or a shortcut that
+   *  leads on (pass 3: never call a detour a shortcut or a quicker way) */
+  const sideHeader = (e: MapEdge, m: MapDef) => (sideTag(e, m) === 'Side path (shortcut)' ? 'Side path (shortcut): it skips ahead to a later box; the main path gets there too' : 'Side path (a detour; come back here): a side box off the main path, which goes on without it');
+  /** the legend names the side lines this map actually has: detours, shortcuts or both */
+  const sideLegend = (m: MapDef) => { const t = new Set(m.edges.filter((e) => e.side).map((e) => sideTag(e, m))), sc = t.has('Side path (shortcut)'), dt = t.size > (sc ? 1 : 0); return sc && dt ? 'side path (a shortcut or a detour)' : sc ? 'side path (shortcut)' : 'side path (a detour; come back here)'; };
   /** Next order: main path first, side paths after */
   const nextOrder = (id: string, m: MapDef) => m.edges.filter((e) => e.from === id && !e.dashed).sort((a, b) => Number(!!a.side) - Number(!!b.side) || (a.rank ?? 0) - (b.rank ?? 0));
   /** the main-chain box a Full-detail branch hangs from: the last box on its path that is also on the first map */
@@ -315,7 +320,7 @@ export function mountConceptMap(host: HTMLElement, content: AppContent, progress
     const item = (key: string, icon: Element, text: string) => h('span', { class: 'lg-item', dataset: { legend: key } }, icon as unknown as Node, h('span', null, text));
     legend.append(
       item('solid', line(false), 'next question'),
-      ...(hasSide ? [item('side', line(false, true), 'shortcut (side path)')] : []),
+      ...(hasSide ? [item('side', line(false, true), sideLegend(m))] : []),
       ...(hasDashed ? [item('dashed', line(true), 'same idea, other view')] : []),
       ...(kinds.has('decision') ? [item('decision', shape('decision'), 'a fork: the answer picks the way')] : []),
       ...(kinds.has('terminal') ? [item('terminal', shape('terminal'), 'where the map starts')] : []),
@@ -668,7 +673,7 @@ export function mountConceptMap(host: HTMLElement, content: AppContent, progress
       if (!e) return;
       const f = m.nodes.find((x) => x.id === e.from)!, t = m.nodes.find((x) => x.id === e.to)!;
       const head = h('div', { class: 'cm-head' }, h('h3', null, e.reverse ? `${t.label} ⇢ ${f.label}` : `${f.label} → ${t.label}`), copyRefButton(() => edgeReference(content, e, f, t, m.id)), close);
-      panel.append(head, h('div', { class: 'st-hint', dataset: { testid: 'edge-kind' } }, e.dashed ? (e.reverse ? `Look-back (dashed): ${t.label} looks back at the same idea in ${f.label}` : 'Dashed: the same idea in another language') : e.side ? 'Shortcut (side path): a quicker way to the next box; the main path gets there too' : 'Next step in the chain of questions'),
+      panel.append(head, h('div', { class: 'st-hint', dataset: { testid: 'edge-kind' } }, e.dashed ? (e.reverse ? `Look-back (dashed): ${t.label} looks back at the same idea in ${f.label}` : 'Dashed: the same idea in another language') : e.side ? sideHeader(e, m) : 'Next step in the chain of questions'),
         h('aside', { class: 'callout c-predict' }, h('b', { class: 'lead' }, 'The question this line asks'), h('div', { class: 'cb', html: `<p>${e.question}</p>` })),
         ...(e.why ? [whyBox(e)] : []),
         e.why ? h('div', { class: 'edge-idea', dataset: { testid: 'edge-idea' } }, h('b', { class: 'pop-lead' }, 'The answer, in short: '), h('span', { html: e.idea })) : h('div', { html: `<p>${e.idea}</p>`, dataset: { body: '' } }));
