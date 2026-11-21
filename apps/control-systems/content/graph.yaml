@@ -83,7 +83,7 @@ maps:
         alt: The fraction, with matching colours.
         caption: (c)
       figCaption: '<b>(a)</b> Two first-order heat balances. <b>(b)</b> Substituting room 1 into room 2 gives one second-order equation. <b>(c)</b> Laplace turns it into a fraction: each coefficient lands in one place.'
-      example: G(0) = 0.0036/0.44 = 8.18 K per kW, so 2.5 kW gives 20.45 K, the same as Box 1, now in one line.
+      example: G(0) = 0.0036/0.44 = 8.18 K per kW, so 2.5 kW gives 20.45 K, the same as *Write the plant down*, now in one line.
       ask: q-tf
   - id: POLES
     label: Poles and zeros
@@ -319,7 +319,7 @@ maps:
     label: Derivative action
     detail: brake before you arrive
     series: 2
-    short: 'A torque against the angle''s rate of change, so the dish brakes before it arrives: *derivative (D) action*, extra friction like a car''s shock absorber. Taking it from the measured angle (a *tachometer*), not the error, avoids extra overshoot. I is set aside here; P, I and D return together as *PID control* in Box 12.'
+    short: 'A torque against the angle''s rate of change, so the dish brakes before it arrives: *derivative (D) action*, extra friction like a car''s shock absorber. Taking it from the measured angle (a *tachometer*), not the error, avoids extra overshoot. I is set aside here; P, I and D return together as *PID control* in *Choosing the three gains*.'
     eq: Js² + (B + Kd)s + Kp = 0,  ζ = (B + Kd)/(2√(KpJ))
     dive: derivative
     live: figure:derivative
@@ -377,7 +377,7 @@ maps:
     live: figure:regulate
     quizTag: dist
     examples: [house]
-    exampleWhy: "**Back to the house, now with a thermostat.** Holding steady against the weather is a thermostat's whole job, so the house shows plainly what feedback buys. Its open-loop model from Boxes 1–4 makes the before-and-after comparison exact."
+    exampleWhy: "**Back to the house, now with a thermostat.** Holding steady against the weather is a thermostat's whole job, so the house shows plainly what feedback buys. Its open-loop model from *Write the plant down* through *One pole: the yardstick* makes the before-and-after comparison exact."
     addsToExample: Closes the thermostat loop and sends in a cold front.
     accountsFor: Why a simple proportional thermostat lets the house run a little cold in cold weather, and a PI one doesn't.
     pop:
@@ -587,7 +587,7 @@ maps:
     label: Follow a command
     detail: the reference gain N̄
     series: 4
-    short: 'Add the command into the force, scaled so the final height equals it. Without it the design is a *regulator*, returning every state to zero; with u = −Kx̂ + N̄r it is a *tracker*. N̄ is one over the closed loop''s DC gain: the same s → 0 reading that gave the house''s final temperature in Box 4.'
+    short: 'Add the command into the force, scaled so the final height equals it. Without it the design is a *regulator*, returning every state to zero; with u = −Kx̂ + N̄r it is a *tracker*. N̄ is one over the closed loop''s DC gain: the same s → 0 reading that gave the house''s final temperature in *One pole: the yardstick*.'
     eq: N̄ = 1/(−C(A − BK)⁻¹B) = k + k₁ = 40 000 N/m
     dive: refin
     live: figure:refin
@@ -623,7 +623,7 @@ maps:
     question: Solving ODEs for every input and every controller is slow. Is there an easier form?
     idea: 'Yes: the Laplace transform turns derivatives into powers of s, so the ODEs become one fraction, G(s).'
     why: |-
-      **Still open:** Box 1 gave two coupled equations. Predicting the bedroom for a given heater schedule still means solving them, and adding a thermostat changes the equations themselves.
+      **Still open:** *Write the plant down* gave two coupled equations. Predicting the bedroom for a given heater schedule still means solving them, and adding a thermostat changes the equations themselves.
 
       **Why it matters:** design means trying many controllers. If each try means solving new ODEs, design is slow, and we can't see *why* one controller beats another.
 
@@ -634,7 +634,7 @@ maps:
     question: G(s) is a fraction of polynomials. What do its roots mean?
     idea: The denominator's roots (poles) are the plant's built-in motions; the numerator's roots (zeros) set how strongly each one is excited.
     why: |-
-      **Still open:** Box 2 rewrote the house as 0.0036/(s² + 2.4s + 0.44), but a fraction is not yet a picture of warming.
+      **Still open:** *Transfer function G(s)* rewrote the house as 0.0036/(s² + 2.4s + 0.44), but a fraction is not yet a picture of warming.
 
       **Why it matters:** if those roots tell us how the house behaves, we can predict its response, and later steer it, by watching where the roots go instead of simulating.
 
@@ -645,7 +645,7 @@ maps:
     question: What does the simplest plant, with one pole, do? We need a yardstick.
     idea: It rises smoothly to its final value, 63 % of the way in one time constant τ; the house nearly is one, because its slow pole dominates.
     why: |-
-      **Still open:** Box 3 said each pole is a motion, but the house has two of them mixed together.
+      **Still open:** *Poles and zeros* said each pole is a motion, but the house has two of them mixed together.
 
       **Why it matters:** one pole gives two numbers anyone can read off a graph, the final value and τ, and they become the yardstick for every later response.
 
@@ -656,7 +656,7 @@ maps:
     question: The house can't overshoot. What does a plant that swings past its target do?
     idea: 'We need two energy stores that can pass energy back and forth, one holding it as motion and one as stretch. That is the simplest plant that rings.'
     why: |-
-      **Still open:** real poles only gave smooth rises. Box 3 showed that complex poles mean oscillation, but no plant so far has them.
+      **Still open:** real poles only gave smooth rises. *Poles and zeros* showed that complex poles mean oscillation, but no plant so far has them.
 
       **Why it matters:** most systems worth controlling can overshoot, and the choice between a soft, floating response and a firm, jolting one is a design decision.
 
@@ -667,7 +667,7 @@ maps:
     question: '"Bouncy" isn''t a spec. What numbers describe the response?'
     idea: 'Overshoot depends on ζ alone, settling on ζωₙ, peak time on ω_d: each spec is a region of the s-plane.'
     why: |-
-      **Still open:** Box 5 showed that ζ = 0.25 bounces, but not how much, or for how long.
+      **Still open:** *Two poles: ζ and ωₙ* showed that ζ = 0.25 bounces, but not how much, or for how long.
 
       **Why it matters:** a design brief says "overshoot < 10 %, settle in 1 s", not "less bouncy". We need to turn that into pole positions.
 
@@ -678,7 +678,7 @@ maps:
     question: So far we have only predicted. How does a system correct itself?
     idea: 'Feedback: measure, compare, act on the error. The car corner was doing it all along, following the road.'
     why: |-
-      **Still open:** Boxes 1–6 predict what a plant does by itself, but the central question asks how to make it do what we want, despite unknowns.
+      **Still open:** *Write the plant down* through *Specs: overshoot, settling, peak time* predict what a plant does by itself, but the central question asks how to make it do what we want, despite unknowns.
 
       **Why it matters:** a fixed plan fails the moment the plant or the world differs from the model. Feedback corrects for that.
 
@@ -689,7 +689,7 @@ maps:
     question: What is the simplest controller that makes a plant follow a command we choose?
     idea: 'So far the "command" was the road, which nobody chooses. We need a plant whose input we drive toward a target we pick, and the simplest rule for driving it: push in proportion to the error.'
     why: |-
-      **Still open:** in Box 7 the "command" was the road. Nobody chooses it, and the passive corner has nothing that could obey anything else.
+      **Still open:** in *Close the loop* the "command" was the road. Nobody chooses it, and the passive corner has nothing that could obey anything else.
 
       **Why it matters:** P, I and D are rules for driving an actuator toward a target we choose, so they need a plant that has one.
 
@@ -700,7 +700,7 @@ maps:
     question: The dish reaches the satellite in still air. What could still leave it pointing off?
     idea: 'A steady push P must hold: wind torque T_d leaves e_ss = −T_d/Kp.'
     why: |-
-      **Still open:** Box 8 showed speed and bounce rising with Kp, but in still air the angle ends exactly on target.
+      **Still open:** *Turn up the gain (P)* showed speed and bounce rising with Kp, but in still air the angle ends exactly on target.
 
       **Why it matters:** a 1.2 m satellite dish at 12 GHz has a beam only 1.46° wide, so a 1° error loses most of the signal.
 
@@ -711,7 +711,7 @@ maps:
     question: Can we cancel the wind error without an enormous Kp?
     idea: 'Add a term that keeps growing until the error is exactly zero: integral action.'
     why: |-
-      **Still open:** Box 9 needed Kp ≈ 11 500 for 0.1°, which drops ζ to 0.03.
+      **Still open:** *Why it stops short* needed Kp ≈ 11 500 for 0.1°, which drops ζ to 0.03.
 
       **Why it matters:** raising gain trades accuracy for bounce. We need accuracy that doesn't depend on gain.
 
@@ -722,7 +722,7 @@ maps:
     question: 'Integral action made the bounce worse. What adds damping?'
     idea: 'A torque against the rate of turn: derivative action, best taken from the tachometer.'
     why: |-
-      **Still open:** Box 10's dish overshoots 80 %, and the friction B is fixed.
+      **Still open:** *Integral action*'s dish overshoots 80 %, and the friction B is fixed.
 
       **Why it matters:** a dish that overshoots 80 % sweeps past the satellite on every move.
 
@@ -733,7 +733,7 @@ maps:
     question: Each gain fixes one thing and costs another. How do we choose all three?
     idea: 'A cause-and-effect table plus the specs: raise Kp for stiffness, Kd to keep ζ ≈ 0.75, just enough Ki.'
     why: |-
-      **Still open:** Boxes 8–11 tuned one gain at a time; Kd = 120 still leaves the 1.15° wind error, and Ki alone rings.
+      **Still open:** *Turn up the gain (P)* through *Derivative action* tuned one gain at a time; Kd = 120 still leaves the 1.15° wind error, and Ki alone rings.
 
       **Why it matters:** the gains interact, and the motor has only 200 N·m to give.
 
@@ -746,7 +746,7 @@ maps:
     why: |-
       **Still open:** the wind on the dish was one example. In general, what does feedback buy: rejection of outside pushes, tolerance of a wrong model, speed?
 
-      **Why it matters:** the house's open-loop model from Boxes 1–4 makes the before/after comparison exact.
+      **Why it matters:** the house's open-loop model from *Write the plant down* through *One pole: the yardstick* makes the before/after comparison exact.
 
       **What we want:** the disturbance's effect with and without feedback, on a plant whose only job is regulation.
   - from: DIST
@@ -755,7 +755,7 @@ maps:
     question: The disturbance was outside. What if the error is in the model itself?
     idea: 'Feedback divides plant errors too: sensitivity S = 1/(1 + L).'
     why: |-
-      **Still open:** Box 13 assumed we know the walls exactly. In fact nobody measured the insulation.
+      **Still open:** *A push we didn't command* assumed we know the walls exactly. In fact nobody measured the insulation.
 
       **Why it matters:** "approximately known" plants are the central question's premise.
 
@@ -766,7 +766,7 @@ maps:
     question: If gain shrinks disturbances and model errors, why not make it huge?
     idea: 'S + C = 1: whatever share of the weather the loop keeps out, the same share of sensor error gets in.'
     why: |-
-      **Still open:** Boxes 13–14 both said "more L is better".
+      **Still open:** *A push we didn't command* and *What if the model is wrong?* both said "more L is better".
 
       **Why it matters:** if that were the whole story, design would be trivial. The sensor is the limit.
 
@@ -788,7 +788,7 @@ maps:
     question: Can the actuator steer every state, and can the sensor reveal every state?
     idea: 'Check Pc = [B AB] and Po = [C; CA]: invertible means yes.'
     why: |-
-      **Still open:** Box 16 has two states and one actuator, one sensor.
+      **Still open:** *Look inside: state space* has two states and one actuator, one sensor.
 
       **Why it matters:** a design that relies on an unreachable or invisible state can't work, however good its algebra.
 
@@ -799,7 +799,7 @@ maps:
     question: Both states are reachable. Can we now put the poles exactly where we want?
     idea: 'Yes: u = −Kx, match the characteristic polynomial; the actuator adds k₁ to the spring and k₂ to the shock.'
     why: |-
-      **Still open:** Box 17 said the corner is controllable, but not how to use it.
+      **Still open:** *Can we reach and see every state?* said the corner is controllable, but not how to use it.
 
       **Why it matters:** a soft, comfortable spring with a quick settle is impossible passively.
 
@@ -810,7 +810,7 @@ maps:
     question: The car measures only height. Where does the velocity in u = −Kx come from?
     idea: 'An observer: a software copy of the corner, corrected by the measured height.'
     why: |-
-      **Still open:** Box 18 assumed both states are measured.
+      **Still open:** *Feed back every state* assumed both states are measured.
 
       **Why it matters:** differentiating a noisy height sensor is a bad velocity sensor; adding a real one costs money.
 
@@ -818,10 +818,10 @@ maps:
   - from: OBS
     to: SEP
     label: use the estimate?
-    question: If we feed back the estimate, does Box 18's design still hold?
+    question: If we feed back the estimate, does *Feed back every state*'s design still hold?
     idea: 'Yes: the separation principle. The poles are the controller''s plus the observer''s.'
     why: |-
-      **Still open:** Boxes 18 and 19 were designed apart.
+      **Still open:** *Feed back every state* and *Estimate what we can't measure* were designed apart.
 
       **Why it matters:** if they interacted, every change would mean redesigning both.
 
@@ -832,7 +832,7 @@ maps:
     question: The corner now returns to zero. How do we command a new ride height?
     idea: Add N̄r to the force, with N̄ = 1/(DC gain) = 40 000 N/m.
     why: |-
-      **Still open:** Boxes 18–20 built a *regulator*. There is no r anywhere in u = −Kx̂.
+      **Still open:** *Feed back every state*, *Estimate what we can't measure* and *Use the estimate (separation)* built a *regulator*. There is no r anywhere in u = −Kx̂.
 
       **Why it matters:** the central question is about doing what we *command*: raise the car for a rough road.
 
@@ -844,7 +844,7 @@ maps:
     question: The car's shock absorber pushes against velocity. Isn't that derivative action?
     idea: 'Yes: c·ż is D on the measurement, and the spring k·(w − z) is P. A passive suspension is a PD loop.'
     why: |-
-      **Still open:** Box 11 added Kd to B on the dish; Box 7's corner already had c.
+      **Still open:** *Derivative action* added Kd to B on the dish; *Close the loop*'s corner already had c.
 
       **Why it matters:** it shows D is a physical damper, not just a formula, and why D on the measurement avoids the zero the road brings in.
 
@@ -861,7 +861,7 @@ maps:
       alt: 'One s-plane in rad/s: the dish''s P path rises straight up at −1; the corner''s poles move from −2 ± 7.75j to −8 ± 6j.'
     whyFigCaption: 'P can only slide the dish''s poles along one fixed path; its decay rate stays at 1 /s whatever Kp. Feeding back both states puts the corner''s poles exactly where we chose.'
     why: |-
-      **Still open:** Box 8's poles could only climb at −1 ± jω; Box 18 puts the corner's at −8 ± 6j. Both "move the poles", so how do they differ?
+      **Still open:** *Turn up the gain (P)*'s poles could only climb at −1 ± jω; *Feed back every state* puts the corner's at −8 ± 6j. Both "move the poles", so how do they differ?
 
       **Why it matters:** side by side, they show what the state-space detour bought: the decay rate is no longer fixed by the friction.
 
@@ -874,7 +874,7 @@ maps:
     question: Why is the reference gain the same idea as the final value of the house?
     idea: Both read the DC gain (s → 0). N̄ divides by it so the final value equals the command.
     why: |-
-      **Still open:** Box 4 read the house's final rise, 20.45 K, from G(0). Box 21 needs the actuated corner's DC gain, 1/40 000 m/N.
+      **Still open:** *One pole: the yardstick* read the house's final rise, 20.45 K, from G(0). *Follow a command* needs the actuated corner's DC gain, 1/40 000 m/N.
 
       **Why it matters:** seeing the s → 0 reading as one tool makes both boxes easier. It also shows N̄'s weakness: like the P thermostat's droop, it depends on the model being right.
 
@@ -962,7 +962,7 @@ maps:
         alt: The fraction, with matching colours.
         caption: (c)
       figCaption: '<b>(a)</b> Two first-order heat balances. <b>(b)</b> Substituting room 1 into room 2 gives one second-order equation. <b>(c)</b> Laplace turns it into a fraction: each coefficient lands in one place.'
-      example: G(0) = 0.0036/0.44 = 8.18 K per kW, so 2.5 kW gives 20.45 K, the same as Box 1, now in one line.
+      example: G(0) = 0.0036/0.44 = 8.18 K per kW, so 2.5 kW gives 20.45 K, the same as *Write the plant down*, now in one line.
       ask: q-tf
   - id: POLES
     label: Poles and zeros
@@ -1198,7 +1198,7 @@ maps:
     label: Derivative action
     detail: brake before you arrive
     series: 2
-    short: 'A torque against the angle''s rate of change, so the dish brakes before it arrives: *derivative (D) action*, extra friction like a car''s shock absorber. Taking it from the measured angle (a *tachometer*), not the error, avoids extra overshoot. I is set aside here; P, I and D return together as *PID control* in Box 12.'
+    short: 'A torque against the angle''s rate of change, so the dish brakes before it arrives: *derivative (D) action*, extra friction like a car''s shock absorber. Taking it from the measured angle (a *tachometer*), not the error, avoids extra overshoot. I is set aside here; P, I and D return together as *PID control* in *Choosing the three gains*.'
     eq: Js² + (B + Kd)s + Kp = 0,  ζ = (B + Kd)/(2√(KpJ))
     dive: derivative
     live: figure:derivative
@@ -1256,7 +1256,7 @@ maps:
     live: figure:regulate
     quizTag: dist
     examples: [house]
-    exampleWhy: "**Back to the house, now with a thermostat.** Holding steady against the weather is a thermostat's whole job, so the house shows plainly what feedback buys. Its open-loop model from Boxes 1–4 makes the before-and-after comparison exact."
+    exampleWhy: "**Back to the house, now with a thermostat.** Holding steady against the weather is a thermostat's whole job, so the house shows plainly what feedback buys. Its open-loop model from *Write the plant down* through *One pole: the yardstick* makes the before-and-after comparison exact."
     addsToExample: Closes the thermostat loop and sends in a cold front.
     accountsFor: Why a simple proportional thermostat lets the house run a little cold in cold weather, and a PI one doesn't.
     pop:
@@ -1466,7 +1466,7 @@ maps:
     label: Follow a command
     detail: the reference gain N̄
     series: 4
-    short: 'Add the command into the force, scaled so the final height equals it. Without it the design is a *regulator*, returning every state to zero; with u = −Kx̂ + N̄r it is a *tracker*. N̄ is one over the closed loop''s DC gain: the same s → 0 reading that gave the house''s final temperature in Box 4.'
+    short: 'Add the command into the force, scaled so the final height equals it. Without it the design is a *regulator*, returning every state to zero; with u = −Kx̂ + N̄r it is a *tracker*. N̄ is one over the closed loop''s DC gain: the same s → 0 reading that gave the house''s final temperature in *One pole: the yardstick*.'
     eq: N̄ = 1/(−C(A − BK)⁻¹B) = k + k₁ = 40 000 N/m
     dive: refin
     live: figure:refin
@@ -1572,7 +1572,7 @@ maps:
     addsToExample: Puts the wheel back for one box, and shows why we may leave it out.
     pop:
       rough: slowest pair rules if the rest decay ≥ 5–10× faster
-      eqKey: wheel mass 40 kg, tyre stiffness 200 kN/m (the wheel Box 5 left out).
+      eqKey: 'wheel mass 40 kg, tyre stiffness 200 kN/m (the wheel *Two poles: ζ and ωₙ* left out).'
       example: 'Wheel hop at 11.8 Hz decays 12.8× faster than the body. The four-pole corner overshoots 51 % (vs 44 %) and settles in 2.25 s (vs 1.77): close, not identical.'
       ask: q-dom
   - id: BLOCKALG
@@ -1669,7 +1669,7 @@ maps:
     pop:
       rough: move a gain and watch the angle, the torque and the numbers change live
       eqKey: N_f = derivative filter bandwidth (rad/s); not the sensor noise N.
-      example: "Start at P 1000 (73 % overshoot), add Kd = 120 (3.8 %), then go to (2000, 1000, 200) (6.3 %): Boxes 8–12 replay, slightly lower because the Lab filters D (the boxes' ideal D gives 4.6 % and 7.4 %). A 0.1 rad step starts at exactly the 200 N·m limit."
+      example: "Start at P 1000 (73 % overshoot), add Kd = 120 (3.8 %), then go to (2000, 1000, 200) (6.3 %): *Turn up the gain (P)* through *Choosing the three gains* replay, slightly lower because the Lab filters D (the boxes' ideal D gives 4.6 % and 7.4 %). A 0.1 rad step starts at exactly the 200 N·m limit."
       ask: q-lab
   - id: METHODS
     label: 'Recipes: by hand, Ziegler–Nichols, PID Tuner'
@@ -1769,7 +1769,7 @@ maps:
     question: Solving ODEs for every input and every controller is slow. Is there an easier form?
     idea: 'Yes: the Laplace transform turns derivatives into powers of s, so the ODEs become one fraction, G(s).'
     why: |-
-      **Still open:** Box 1 gave two coupled equations. Predicting the bedroom for a given heater schedule still means solving them, and adding a thermostat changes the equations themselves.
+      **Still open:** *Write the plant down* gave two coupled equations. Predicting the bedroom for a given heater schedule still means solving them, and adding a thermostat changes the equations themselves.
 
       **Why it matters:** design means trying many controllers. If each try means solving new ODEs, design is slow, and we can't see *why* one controller beats another.
 
@@ -1780,7 +1780,7 @@ maps:
     question: G(s) is a fraction of polynomials. What do its roots mean?
     idea: The denominator's roots (poles) are the plant's built-in motions; the numerator's roots (zeros) set how strongly each one is excited.
     why: |-
-      **Still open:** Box 2 rewrote the house as 0.0036/(s² + 2.4s + 0.44), but a fraction is not yet a picture of warming.
+      **Still open:** *Transfer function G(s)* rewrote the house as 0.0036/(s² + 2.4s + 0.44), but a fraction is not yet a picture of warming.
 
       **Why it matters:** if those roots tell us how the house behaves, we can predict its response, and later steer it, by watching where the roots go instead of simulating.
 
@@ -1791,7 +1791,7 @@ maps:
     question: What does the simplest plant, with one pole, do? We need a yardstick.
     idea: It rises smoothly to its final value, 63 % of the way in one time constant τ; the house nearly is one, because its slow pole dominates.
     why: |-
-      **Still open:** Box 3 said each pole is a motion, but the house has two of them mixed together.
+      **Still open:** *Poles and zeros* said each pole is a motion, but the house has two of them mixed together.
 
       **Why it matters:** one pole gives two numbers anyone can read off a graph, the final value and τ, and they become the yardstick for every later response.
 
@@ -1802,7 +1802,7 @@ maps:
     question: The house can't overshoot. What does a plant that swings past its target do?
     idea: 'We need two energy stores that can pass energy back and forth, one holding it as motion and one as stretch. That is the simplest plant that rings.'
     why: |-
-      **Still open:** real poles only gave smooth rises. Box 3 showed that complex poles mean oscillation, but no plant so far has them.
+      **Still open:** real poles only gave smooth rises. *Poles and zeros* showed that complex poles mean oscillation, but no plant so far has them.
 
       **Why it matters:** most systems worth controlling can overshoot, and the choice between a soft, floating response and a firm, jolting one is a design decision.
 
@@ -1813,7 +1813,7 @@ maps:
     question: '"Bouncy" isn''t a spec. What numbers describe the response?'
     idea: 'Overshoot depends on ζ alone, settling on ζωₙ, peak time on ω_d: each spec is a region of the s-plane.'
     why: |-
-      **Still open:** Box 5 showed that ζ = 0.25 bounces, but not how much, or for how long.
+      **Still open:** *Two poles: ζ and ωₙ* showed that ζ = 0.25 bounces, but not how much, or for how long.
 
       **Why it matters:** a design brief says "overshoot < 10 %, settle in 1 s", not "less bouncy". We need to turn that into pole positions.
 
@@ -1824,7 +1824,7 @@ maps:
     question: So far we have only predicted. How does a system correct itself?
     idea: 'Feedback: measure, compare, act on the error. The car corner was doing it all along, following the road.'
     why: |-
-      **Still open:** Boxes 1–6 predict what a plant does by itself, but the central question asks how to make it do what we want, despite unknowns.
+      **Still open:** *Write the plant down* through *Specs: overshoot, settling, peak time* predict what a plant does by itself, but the central question asks how to make it do what we want, despite unknowns.
 
       **Why it matters:** a fixed plan fails the moment the plant or the world differs from the model. Feedback corrects for that.
 
@@ -1835,7 +1835,7 @@ maps:
     question: What is the simplest controller that makes a plant follow a command we choose?
     idea: 'So far the "command" was the road, which nobody chooses. We need a plant whose input we drive toward a target we pick, and the simplest rule for driving it: push in proportion to the error.'
     why: |-
-      **Still open:** in Box 7 the "command" was the road. Nobody chooses it, and the passive corner has nothing that could obey anything else.
+      **Still open:** in *Close the loop* the "command" was the road. Nobody chooses it, and the passive corner has nothing that could obey anything else.
 
       **Why it matters:** P, I and D are rules for driving an actuator toward a target we choose, so they need a plant that has one.
 
@@ -1846,7 +1846,7 @@ maps:
     question: The dish reaches the satellite in still air. What could still leave it pointing off?
     idea: 'A steady push P must hold: wind torque T_d leaves e_ss = −T_d/Kp.'
     why: |-
-      **Still open:** Box 8 showed speed and bounce rising with Kp, but in still air the angle ends exactly on target.
+      **Still open:** *Turn up the gain (P)* showed speed and bounce rising with Kp, but in still air the angle ends exactly on target.
 
       **Why it matters:** a 1.2 m satellite dish at 12 GHz has a beam only 1.46° wide, so a 1° error loses most of the signal.
 
@@ -1857,7 +1857,7 @@ maps:
     question: Can we cancel the wind error without an enormous Kp?
     idea: 'Add a term that keeps growing until the error is exactly zero: integral action.'
     why: |-
-      **Still open:** Box 9 needed Kp ≈ 11 500 for 0.1°, which drops ζ to 0.03.
+      **Still open:** *Why it stops short* needed Kp ≈ 11 500 for 0.1°, which drops ζ to 0.03.
 
       **Why it matters:** raising gain trades accuracy for bounce. We need accuracy that doesn't depend on gain.
 
@@ -1868,7 +1868,7 @@ maps:
     question: 'Integral action made the bounce worse. What adds damping?'
     idea: 'A torque against the rate of turn: derivative action, best taken from the tachometer.'
     why: |-
-      **Still open:** Box 10's dish overshoots 80 %, and the friction B is fixed.
+      **Still open:** *Integral action*'s dish overshoots 80 %, and the friction B is fixed.
 
       **Why it matters:** a dish that overshoots 80 % sweeps past the satellite on every move.
 
@@ -1879,7 +1879,7 @@ maps:
     question: Each gain fixes one thing and costs another. How do we choose all three?
     idea: 'A cause-and-effect table plus the specs: raise Kp for stiffness, Kd to keep ζ ≈ 0.75, just enough Ki.'
     why: |-
-      **Still open:** Boxes 8–11 tuned one gain at a time; Kd = 120 still leaves the 1.15° wind error, and Ki alone rings.
+      **Still open:** *Turn up the gain (P)* through *Derivative action* tuned one gain at a time; Kd = 120 still leaves the 1.15° wind error, and Ki alone rings.
 
       **Why it matters:** the gains interact, and the motor has only 200 N·m to give.
 
@@ -1892,7 +1892,7 @@ maps:
     why: |-
       **Still open:** the wind on the dish was one example. In general, what does feedback buy: rejection of outside pushes, tolerance of a wrong model, speed?
 
-      **Why it matters:** the house's open-loop model from Boxes 1–4 makes the before/after comparison exact.
+      **Why it matters:** the house's open-loop model from *Write the plant down* through *One pole: the yardstick* makes the before/after comparison exact.
 
       **What we want:** the disturbance's effect with and without feedback, on a plant whose only job is regulation.
   - from: DIST
@@ -1901,7 +1901,7 @@ maps:
     question: The disturbance was outside. What if the error is in the model itself?
     idea: 'Feedback divides plant errors too: sensitivity S = 1/(1 + L).'
     why: |-
-      **Still open:** Box 13 assumed we know the walls exactly. In fact nobody measured the insulation.
+      **Still open:** *A push we didn't command* assumed we know the walls exactly. In fact nobody measured the insulation.
 
       **Why it matters:** "approximately known" plants are the central question's premise.
 
@@ -1912,7 +1912,7 @@ maps:
     question: If gain shrinks disturbances and model errors, why not make it huge?
     idea: 'S + C = 1: whatever share of the weather the loop keeps out, the same share of sensor error gets in.'
     why: |-
-      **Still open:** Boxes 13–14 both said "more L is better".
+      **Still open:** *A push we didn't command* and *What if the model is wrong?* both said "more L is better".
 
       **Why it matters:** if that were the whole story, design would be trivial. The sensor is the limit.
 
@@ -1934,7 +1934,7 @@ maps:
     question: Can the actuator steer every state, and can the sensor reveal every state?
     idea: 'Check Pc = [B AB] and Po = [C; CA]: invertible means yes.'
     why: |-
-      **Still open:** Box 16 has two states and one actuator, one sensor.
+      **Still open:** *Look inside: state space* has two states and one actuator, one sensor.
 
       **Why it matters:** a design that relies on an unreachable or invisible state can't work, however good its algebra.
 
@@ -1945,7 +1945,7 @@ maps:
     question: Both states are reachable. Can we now put the poles exactly where we want?
     idea: 'Yes: u = −Kx, match the characteristic polynomial; the actuator adds k₁ to the spring and k₂ to the shock.'
     why: |-
-      **Still open:** Box 17 said the corner is controllable, but not how to use it.
+      **Still open:** *Can we reach and see every state?* said the corner is controllable, but not how to use it.
 
       **Why it matters:** a soft, comfortable spring with a quick settle is impossible passively.
 
@@ -1956,7 +1956,7 @@ maps:
     question: The car measures only height. Where does the velocity in u = −Kx come from?
     idea: 'An observer: a software copy of the corner, corrected by the measured height.'
     why: |-
-      **Still open:** Box 18 assumed both states are measured.
+      **Still open:** *Feed back every state* assumed both states are measured.
 
       **Why it matters:** differentiating a noisy height sensor is a bad velocity sensor; adding a real one costs money.
 
@@ -1964,10 +1964,10 @@ maps:
   - from: OBS
     to: SEP
     label: use the estimate?
-    question: If we feed back the estimate, does Box 18's design still hold?
+    question: If we feed back the estimate, does *Feed back every state*'s design still hold?
     idea: 'Yes: the separation principle. The poles are the controller''s plus the observer''s.'
     why: |-
-      **Still open:** Boxes 18 and 19 were designed apart.
+      **Still open:** *Feed back every state* and *Estimate what we can't measure* were designed apart.
 
       **Why it matters:** if they interacted, every change would mean redesigning both.
 
@@ -1978,7 +1978,7 @@ maps:
     question: The corner now returns to zero. How do we command a new ride height?
     idea: Add N̄r to the force, with N̄ = 1/(DC gain) = 40 000 N/m.
     why: |-
-      **Still open:** Boxes 18–20 built a *regulator*. There is no r anywhere in u = −Kx̂.
+      **Still open:** *Feed back every state*, *Estimate what we can't measure* and *Use the estimate (separation)* built a *regulator*. There is no r anywhere in u = −Kx̂.
 
       **Why it matters:** the central question is about doing what we *command*: raise the car for a rough road.
 
@@ -1990,7 +1990,7 @@ maps:
     question: The car's shock absorber pushes against velocity. Isn't that derivative action?
     idea: 'Yes: c·ż is D on the measurement, and the spring k·(w − z) is P. A passive suspension is a PD loop.'
     why: |-
-      **Still open:** Box 11 added Kd to B on the dish; Box 7's corner already had c.
+      **Still open:** *Derivative action* added Kd to B on the dish; *Close the loop*'s corner already had c.
 
       **Why it matters:** it shows D is a physical damper, not just a formula, and why D on the measurement avoids the zero the road brings in.
 
@@ -2007,7 +2007,7 @@ maps:
       alt: 'One s-plane in rad/s: the dish''s P path rises straight up at −1; the corner''s poles move from −2 ± 7.75j to −8 ± 6j.'
     whyFigCaption: 'P can only slide the dish''s poles along one fixed path; its decay rate stays at 1 /s whatever Kp. Feeding back both states puts the corner''s poles exactly where we chose.'
     why: |-
-      **Still open:** Box 8's poles could only climb at −1 ± jω; Box 18 puts the corner's at −8 ± 6j. Both "move the poles", so how do they differ?
+      **Still open:** *Turn up the gain (P)*'s poles could only climb at −1 ± jω; *Feed back every state* puts the corner's at −8 ± 6j. Both "move the poles", so how do they differ?
 
       **Why it matters:** side by side, they show what the state-space detour bought: the decay rate is no longer fixed by the friction.
 
@@ -2020,7 +2020,7 @@ maps:
     question: Why is the reference gain the same idea as the final value of the house?
     idea: Both read the DC gain (s → 0). N̄ divides by it so the final value equals the command.
     why: |-
-      **Still open:** Box 4 read the house's final rise, 20.45 K, from G(0). Box 21 needs the actuated corner's DC gain, 1/40 000 m/N.
+      **Still open:** *One pole: the yardstick* read the house's final rise, 20.45 K, from G(0). *Follow a command* needs the actuated corner's DC gain, 1/40 000 m/N.
 
       **Why it matters:** seeing the s → 0 reading as one tool makes both boxes easier. It also shows N̄'s weakness: like the P thermostat's droop, it depends on the model being right.
 
@@ -2033,7 +2033,7 @@ maps:
     question: Why does the house have exactly two poles?
     idea: 'One pole per independent energy store: two rooms.'
     why: |-
-      **Still open:** Box 1 wrote two heat balances, one per room, without saying why two, and not one or three.
+      **Still open:** *Write the plant down* wrote two heat balances, one per room, without saying why two, and not one or three.
 
       **Why it matters:** the number of equations fixes how many poles the model can have, so a miscount changes every prediction downstream: one store can never ring, two can.
 
@@ -2057,9 +2057,9 @@ maps:
     question: How do we get y(t) back from Y(s)?
     idea: 'Partial fractions: one term per pole, each a known motion.'
     why: |-
-      **Still open:** Box 3 said each pole contributes one motion, but not how much of each appears in a given response.
+      **Still open:** *Poles and zeros* said each pole contributes one motion, but not how much of each appears in a given response.
 
-      **Why it matters:** two plants with the same poles can respond very differently. The house's fast motion starts at only a tenth of the final rise, and that's why the one-pole stand-in in Box 4 works.
+      **Why it matters:** two plants with the same poles can respond very differently. The house's fast motion starts at only a tenth of the final rise, and that's why the one-pole stand-in in *One pole: the yardstick* works.
 
       **What we want:** a mechanical way to split Y(s) into one term per pole and read off each weight.
   - from: POLES
@@ -2081,7 +2081,7 @@ maps:
     question: Can we replace a high-order model with a smaller one that behaves the same?
     idea: 'Drop far poles but keep the DC gain, or choose the smaller model whose response to slow sines matches the original''s.'
     why: |-
-      **Still open:** Box 4 replaced the two-pole house by a one-pole stand-in without saying how to choose it or when it is safe.
+      **Still open:** *One pole: the yardstick* replaced the two-pole house by a one-pole stand-in without saying how to choose it or when it is safe.
 
       **Why it matters:** smaller models are quicker to analyse and to tune against. A careless cut changes the final value, or the speed, or both.
 
@@ -2093,7 +2093,7 @@ maps:
     question: Real plants have more poles. When do the formulas still work?
     idea: 'When one pair is much slower: the wheel hops 12.8× faster than the body.'
     why: |-
-      **Still open:** Box 6's formulas assume exactly two poles, and we left the 40 kg wheel out of the corner.
+      **Still open:** *Specs: overshoot, settling, peak time*'s formulas assume exactly two poles, and we left the 40 kg wheel out of the corner.
 
       **Why it matters:** every real plant has extra poles. If they are too slow, the overshoot and settling numbers are simply wrong (with the wheel: 50.8 % instead of 44.4 %).
 
@@ -2105,7 +2105,7 @@ maps:
     question: The diagram has several loops and inputs. How do we get one transfer function?
     idea: Series ×, parallel +, loop = forward/(1 + loop), one input at a time.
     why: |-
-      **Still open:** Box 7 handled one loop with one input.
+      **Still open:** *Close the loop* handled one loop with one input.
 
       **Why it matters:** a real loop has a controller, plant, sensor and disturbance in it, sometimes nested loops. One wrong reduction step gives the wrong closed-loop poles.
 
@@ -2117,7 +2117,7 @@ maps:
     question: What can the controller box be?
     idea: On/off, P, I, PI, PD or PID, written with Kp, Ti, T_D in the notes.
     why: |-
-      **Still open:** Box 8 used P only.
+      **Still open:** *Turn up the gain (P)* used P only.
 
       **Why it matters:** the controller box can hold other laws, from on/off to PID. The notes write them with Kp, Ti and T_D, which is a different notation from our Kp, Ki and Kd.
 
@@ -2129,7 +2129,7 @@ maps:
     question: Besides accuracy, does closing the loop change how fast the plant responds?
     idea: 'Yes: τ shrinks by 1 + loop gain (dish speed 0.5 → 0.1 s).'
     why: |-
-      **Still open:** Box 8 showed P making the dish ring faster, not a general speed-up.
+      **Still open:** *Turn up the gain (P)* showed P making the dish ring faster, not a general speed-up.
 
       **Why it matters:** speed is one of feedback's main benefits besides accuracy. It explains why a slow plant can be made quick without a bigger motor, up to the actuator's limit.
 
@@ -2141,7 +2141,7 @@ maps:
     question: What about tracking a moving satellite, and is there a shortcut by counting integrators?
     idea: System type = integrators in L; type 1 leaves ramp error ω/K_v.
     why: |-
-      **Still open:** Box 9 handled a steady push. A satellite crossing the sky is a target moving at constant speed.
+      **Still open:** *Why it stops short* handled a steady push. A satellite crossing the sky is a target moving at constant speed.
 
       **Why it matters:** a loop with no error in still air can still lag a moving target. Counting integrators predicts which inputs leave an error, without solving anything.
 
@@ -2153,7 +2153,7 @@ maps:
     question: What if the motor can't give the torque the controller asks for?
     idea: The integrator winds up while the torque is clipped; anti-windup stops it.
     why: |-
-      **Still open:** Box 10 assumed the motor gives whatever torque the controller asks for.
+      **Still open:** *Integral action* assumed the motor gives whatever torque the controller asks for.
 
       **Why it matters:** the dish motor stops at 200 N·m. While the torque is clipped the integrator keeps adding up error, and on a long slew that stored-up push overshoots badly (21.6 % at 2 rad).
 
@@ -2165,7 +2165,7 @@ maps:
     question: Can I feel the trade-offs myself?
     idea: 'The PID Lab: sliders on the dish, with wind, noise and a torque limit.'
     why: |-
-      **Still open:** Box 12 described the trade-offs in words and three fixed panels.
+      **Still open:** *Choosing the three gains* described the trade-offs in words and three fixed panels.
 
       **Why it matters:** gains interact. Seeing overshoot, wind error and torque move together as you drag one slider shows which knob to turn next far better than a table does.
 
@@ -2177,7 +2177,7 @@ maps:
     question: Is there a systematic way to find the gains?
     idea: By hand, Ziegler–Nichols, or the PID Tuner, all as starting points.
     why: |-
-      **Still open:** Box 12 gave a cause-and-effect table, not a procedure.
+      **Still open:** *Choosing the three gains* gave a cause-and-effect table, not a procedure.
 
       **Why it matters:** tuning three interacting gains by trial is slow. A recipe gives a sensible starting point, and knowing its limits tells you how far to trust it.
 
@@ -2189,7 +2189,7 @@ maps:
     question: The loop misbehaves. How do I tell what's wrong and which knob fixes it?
     idea: Match the picture to one of 14 symptom cards.
     why: |-
-      **Still open:** Box 12 assumed an ideal loop: no delay, no lag, no friction, no torque limit.
+      **Still open:** *Choosing the three gains* assumed an ideal loop: no delay, no lag, no friction, no torque limit.
 
       **Why it matters:** on real hardware the response often looks wrong in a recognisable way, and the right fix is often not a gain.
 
@@ -2201,7 +2201,7 @@ maps:
     question: Can one number say which gain is best?
     idea: Minimise ISE, IAE or ITAE; each prefers different damping.
     why: |-
-      **Still open:** Box 12 traded overshoot against speed by eye.
+      **Still open:** *Choosing the three gains* traded overshoot against speed by eye.
 
       **Why it matters:** "best" depends on what you penalise. A single score turns the choice into a minimum you can compute, and different scores favour different damping.
 
@@ -2213,7 +2213,7 @@ maps:
     question: How do state space and the transfer function connect?
     idea: G = C(sI − A)⁻¹B + D, and the poles are eig(A).
     why: |-
-      **Still open:** Box 16 introduced a second description of the same plant beside G(s).
+      **Still open:** *Look inside: state space* introduced a second description of the same plant beside G(s).
 
       **Why it matters:** each answers different questions. Moving between them shows that A's eigenvalues are G's poles, and catches modes that G hides.
 

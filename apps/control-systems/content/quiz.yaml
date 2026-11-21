@@ -639,7 +639,7 @@
     - tuning
   kind: recall
   q: Why tune D before I?
-  a: D sets the damping I will erode; adding I to an underdamped loop makes overshoot worse (Box 10's
+  a: D sets the damping I will erode; adding I to an underdamped loop makes overshoot worse (*Integral action*'s
     80 %).
 - id: ck-lab-1
   tags:
