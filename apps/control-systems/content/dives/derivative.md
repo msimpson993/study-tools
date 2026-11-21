@@ -12,7 +12,7 @@ check: [q-der, ck-der-1, ck-der-2]
 
 ### The big idea
 
-Derivative action opposes motion, so the dish brakes before it arrives. Mathematically it adds Kd to the friction B, exactly like a stiffer shock absorber on the car. Taking the derivative of the error adds a zero (more overshoot, plus a spike when the command steps); taking it from the measured angle (a tachometer) gives the damping without the zero.
+Derivative action opposes motion, so the dish brakes before it arrives. Mathematically it adds Kd to the friction B, exactly like a stiffer shock absorber on the car. Taking the derivative of the error adds a zero (more overshoot, plus a spike when the command steps); taking it from the measured rate of turn (a tachometer, which measures how fast the dish turns) gives the damping without the zero.
 
 ### See it
 

@@ -43,6 +43,6 @@ With Kp = 1000: Ki = 200 gives 75.9 % overshoot; 500 gives 80.2 % (Tₛ 5.1 s); 
 
 ### What it can't do
 
-It removes steady error but adds no damping; on a lightly damped plant it makes things worse. It also winds up when the motor saturates (*When the push hits its limit*).
+It removes steady error but adds no damping; on a lightly damped plant it makes things worse. It can also wind up when the motor saturates, which comes after the gains are tuned (*When the push hits its limit*).
 
 <p class="src">Sources: LN1 s.62–64, 67–68. Not in lecture notes: the Routh test (Ki < 2Kp).</p>

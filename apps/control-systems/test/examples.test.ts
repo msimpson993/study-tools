@@ -21,14 +21,14 @@ const AFTER: Record<string, string[]> = {
   STATE: ['corner'], SS2TF: ['house', 'corner'], CC: ['house', 'corner'], SF: ['corner'], ACK: ['corner'], OBS: ['corner'], SEP: ['corner'], REF: ['corner'],
 };
 const COMES_BACK: Record<string, Record<string, string[]>> = {
-  house: { big: ['DIST', 'SENS', 'NOISE', 'CC'], detail: ['DIST', 'SENS', 'NOISE', 'SS2TF', 'CC'] },
+  house: { big: ['DIST', 'SENS', 'NOISE', 'CC'], detail: ['DIST', 'SENS', 'NOISE', 'REDUCE', 'SS2TF', 'CC'] },
   corner: { big: ['STATE', 'CC', 'SF', 'OBS', 'SEP', 'REF'], detail: ['STATE', 'SS2TF', 'CC', 'SF', 'ACK', 'OBS', 'SEP', 'REF'] },
-  dish: { big: ['SSE', 'INT', 'DER', 'TUNE'], detail: ['MENU', 'SPEED', 'SSE', 'TYPE', 'INT', 'WINDUP', 'DER', 'TUNE', 'LAB', 'METHODS', 'FAIL', 'INDEX'] },
+  dish: { big: ['SSE', 'INT', 'DER', 'TUNE'], detail: ['SPEED', 'SSE', 'TYPE', 'INT', 'DER', 'TUNE', 'MENU', 'WINDUP', 'LAB', 'METHODS', 'FAIL', 'INDEX'] },
 };
 /** side boxes the derived rule counts as "coming back" because its first-stretch walk follows main lines only; the explicit
  *  comesBack lists leave them out (they hang off the host's own stretch) */
 const DERIVED_EXTRA: Record<string, Record<string, string[]>> = {
-  house: { big: [], detail: ['REDUCE', 'INV', 'PLANE', 'ORDER', 'CIRC'] },
+  house: { big: [], detail: ['INV', 'PLANE', 'ORDER', 'CIRC'] },
   corner: { big: [], detail: ['BLOCKALG', 'DOM'] },
   dish: { big: [], detail: [] },
 };

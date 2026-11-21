@@ -13,6 +13,9 @@
 - term: p, z
   meaning: Pole (root of denominator → mode <i>e</i><sup><i>pt</i></sup>) and zero (root of numerator).
   section: Transfer functions & loop
+- term: mode
+  meaning: 'One pole''s own motion, e^(pt); a complex pair σ ± jω together makes one decaying swing. Every free response is a weighted sum of modes (house: the slow "warm together" mode, τ = 5 h, and the fast "even out" mode, 27 min).'
+  section: Transfer functions & loop
 - term: u, U(s)
   meaning: Plant input / actuator command (e.g. voltage <i>e</i><sub>i</sub>, throttle).
   section: Signals
@@ -239,14 +242,14 @@
   meaning: 'The SISO formula K = [0 … 0 1] Pc<sup>−1</sup> q(A) that places the eigenvalues of A − BK at the roots of the desired polynomial q(s). Requires Pc invertible. On the corner, q(s) = s² + 16s + 100 gives K = [14 400 N/m, 4 800 N·s/m].'
   section: State feedback
 - term: observer (Luenberger)
-  meaning: 'A copy of the plant, corrected by the output error, x̂'' = A x̂ + Bu + L(y − C x̂). The error obeys e'' = (A − LC)e. For observer poles −40 ± 30j on the corner, L = [76, 2132].'
+  meaning: 'A copy of the plant, corrected by the output error, x̂'' = A x̂ + Bu + L_o(y − C x̂). The error obeys e'' = (A − L_oC)e. For observer poles −40 ± 30j on the corner, L_o = [76, 2132].'
   section: State feedback
 - term: separation principle
-  meaning: With u = −K x̂ the closed-loop poles are exactly those of A − BK and of A − LC, so K and L can be
+  meaning: With u = −K x̂ the closed-loop poles are exactly those of A − BK and of A − L_oC, so K and L_o can be
     designed independently.
   section: State feedback
 - term: compensator
-  meaning: The transfer function from y to u after eliminating the estimate, U(s) = −K(sI − (A − BK − LC))⁻¹ L
+  meaning: The transfer function from y to u after eliminating the estimate, U(s) = −K(sI − (A − BK − L_oC))⁻¹ L_o
     Y(s). It need not be stable on its own, even when the loop is.
   section: State feedback
 - term: reference gain
@@ -373,8 +376,8 @@
 - term: k₁, k₂
   meaning: State-feedback gains, K = [k₁, k₂]. On the corner k₁ adds to the spring (N/m) and k₂ to the shock (N·s/m).
   section: State feedback
-- term: L (observer)
-  meaning: "Observer gain column [l₁, l₂]ᵀ, not the loop gain L(s). Corner (×5): L = [76, 2132]."
+- term: L_o (observer)
+  meaning: "Observer gain column [l₁, l₂]ᵀ, not the loop gain L(s). The lecture notes write this as L; we use L_o so it isn't confused with the loop gain L. Corner (×5): L_o = [76, 2132]."
   section: State feedback
 - term: K_pos
   meaning: Position error constant, L(0); step error 1/(1 + K_pos). Written K_pos so it doesn't clash with the P

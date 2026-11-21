@@ -220,7 +220,7 @@
     - It becomes unstable
     - It needs a second sensor
   answer: 0
-  why: Already at 10× L = [156, 9312].
+  why: Already at 10× L_o = [156, 9312].
 - id: q-sep
   tags:
     - sep
@@ -763,7 +763,7 @@
     - obs
   kind: recall
   q: Why must the plant be observable?
-  a: Otherwise some error mode isn't affected by L and never decays.
+  a: Otherwise some error mode isn't affected by L_o and never decays.
 - id: ck-sep-1
   tags:
     - sep
@@ -2539,23 +2539,23 @@
   kind: recognize
   q: A Luenberger observer for ẋ = Ax + Bu, y = Cx is
   choices:
-    - x̂' = A x̂ + L(y − C x̂), with no copy of the input
-    - x̂' = (A − BK) x̂ + L y
-    - x̂' = A x̂ + Bu + L(y − C x̂), and the error obeys e' = (A − LC)e
+    - x̂' = A x̂ + L_o(y − C x̂), with no copy of the input
+    - x̂' = (A − BK) x̂ + L_o y
+    - x̂' = A x̂ + Bu + L_o(y − C x̂), and the error obeys e' = (A − L_oC)e
     - x̂ = C⁺ y, a static inverse of the sensor
   answer: 2
-  why: The observer is a copy of the plant (A x̂ + Bu) plus a correction L(y − C x̂). Subtracting the
-    plant from this copy produces e' = (A − LC)e, so the error dies out if those poles are stable.
+  why: The observer is a copy of the plant (A x̂ + Bu) plus a correction L_o(y − C x̂). Subtracting the
+    plant from this copy produces e' = (A − L_oC)e, so the error dies out if those poles are stable.
 - id: cs-76
   tags:
   - obs
   kind: compute
-  q: The corner's observer is designed with poles −40 ± 30j (5× the controller's −8 ± 6j). A − LC has characteristic polynomial s² + (4 + ℓ₁)s + (64 + 4ℓ₁ + ℓ₂). What is L?
+  q: The corner's observer is designed with poles −40 ± 30j (5× the controller's −8 ± 6j). A − L_oC has characteristic polynomial s² + (4 + ℓ₁)s + (64 + 4ℓ₁ + ℓ₂). What is L_o?
   choices:
-  - L = [80, 2500]
-  - L = [14 400, 4 800], the same as K
-  - L = [76, 2436]
-  - L = [76, 2132]
+  - L_o = [80, 2500]
+  - L_o = [14 400, 4 800], the same as K
+  - L_o = [76, 2436]
+  - L_o = [76, 2132]
   answer: 3
   why: The desired polynomial is s² + 80s + 2500. Then 4 + ℓ₁ = 80 ⇒ ℓ₁ = 76, and 64 + 4·76 + ℓ₂ = 2500 ⇒ ℓ₂ = 2132. [80, 2500] ignores the plant's own A; [76, 2436] drops the 4ℓ₁ term. Ackermann on the dual plant (Aᵀ, Cᵀ) returns the same L.
 - id: cs-77
@@ -2564,47 +2564,47 @@
   kind: action
   q: Why are observer poles usually placed only 2–10× faster than the controller poles, not 100×?
   choices:
-  - A larger L makes the estimate track sooner, but it also amplifies sensor noise; 2–10× is a working compromise
+  - A larger L_o makes the estimate track sooner, but it also amplifies sensor noise; 2–10× is a working compromise
   - Faster poles would violate the separation principle
   - The observer cannot be faster than the plant's open-loop poles
-  - At 100× the matrix A − LC is always unstable
+  - At 100× the matrix A − L_oC is always unstable
   answer: 0
-  why: The correction term is L(y − C x̂). A large L (fast poles) tightens the error loop and also multiplies whatever noise is in y. 2–10× faster than the controller is a common rule of thumb (not in lecture notes); the figure's noise slider makes the trade visible.
+  why: The correction term is L_o(y − C x̂). A large L_o (fast poles) tightens the error loop and also multiplies whatever noise is in y. 2–10× faster than the controller is a common rule of thumb (not in lecture notes); the figure's noise slider makes the trade visible.
 - id: cs-78
   tags:
     - sep
   kind: recognize
   q: The separation principle says that with u = −K x̂ the closed-loop characteristic polynomial is
   choices:
-    - det(sI − (A − BK − LC)) only
-    - det(sI − (A − BK)) · det(sI − (A − LC))
-    - det(sI − A) · det(sI − (A − BK − LC))
+    - det(sI − (A − BK − L_oC)) only
+    - det(sI − (A − BK)) · det(sI − (A − L_oC))
+    - det(sI − A) · det(sI − (A − BK − L_oC))
     - det(sI − (A − BK)) only; the observer poles cancel
   answer: 1
   why: A change of coordinates to (x, e) with e = x − x̂ block-triangularizes the closed-loop matrix,
-    so the characteristic polynomial factors into the controller part and the observer part. K and L
+    so the characteristic polynomial factors into the controller part and the observer part. K and L_o
     can be designed independently.
 - id: cs-79
   tags:
     - sep
   kind: trap
-  q: The compensator U(s) = −K(sI − (A − BK − LC))⁻¹ L Y(s) is found to have a right-half-plane pole,
-    even though A − BK and A − LC are both stable. What is true?
+  q: The compensator U(s) = −K(sI − (A − BK − L_oC))⁻¹ L_o Y(s) is found to have a right-half-plane pole,
+    even though A − BK and A − L_oC are both stable. What is true?
   choices:
-    - The design is wrong; A − BK − LC must be stable if the two factors are
-    - Separation has failed, so K and L must be redesigned together
+    - The design is wrong; A − BK − L_oC must be stable if the two factors are
+    - Separation has failed, so K and L_o must be redesigned together
     - The compensator need not be stable on its own; the overall closed loop can still be stable (it
       is a stabilizing controller)
-    - The observer gain L is too small
+    - The observer gain L_o is too small
   answer: 2
-  why: A − BK − LC is not the closed-loop matrix. Stability of A − BK and of A − LC is what the loop
+  why: A − BK − L_oC is not the closed-loop matrix. Stability of A − BK and of A − L_oC is what the loop
     needs. The compensator, viewed as a system from y to u, may itself be unstable; the notes call
     this a stabilizing controller.
 - id: cs-80
   tags:
   - sep
   kind: compute
-  q: On the corner with K = [14 400, 4 800], L = [76, 2132] and N̄ = 40 000 N/m, the ride height is raised 2 cm while the height estimate starts 1 cm off. Compared with feeding back the true state, the response with u = −K x̂ + N̄r…
+  q: On the corner with K = [14 400, 4 800], L_o = [76, 2132] and N̄ = 40 000 N/m, the ride height is raised 2 cm while the height estimate starts 1 cm off. Compared with feeding back the true state, the response with u = −K x̂ + N̄r…
   choices:
   - is identical from t = 0, because of separation
   - never settles, because the estimate never catches up
@@ -2638,19 +2638,19 @@
   answer: 1
   why: "u = −Kx was designed to send every state to the origin. A command r has to enter somehow: the
     simplest is the reference gain N̄, and the notes also describe feeding y − r to the observer (M
-    = −L, N = 0)."
+    = −L_o, N = 0)."
 - id: cs-83
   tags:
   - refin
   kind: action
   q: The notes also allow a more general input of r into both the control law and the observer (gains N and M). Which choice makes the estimation error independent of r, so N̄ can be designed from the DC gain alone?
   choices:
-  - N = 0 and M = −L (feed y − r to the observer)
+  - N = 0 and M = −L_o (feed y − r to the observer)
   - M = 0 with N = N̄ (r enters the control law only)
   - M = BN (on the corner, M = B N̄ = (0, 100)<sup>T</sup>)
-  - N = K and M = L
+  - N = K and M = L_o
   answer: 2
-  why: 'With M = BN the r terms cancel in the error equation e'' = (A − LC)e, so the observer does not ''see'' the command. N̄ is then chosen so the DC gain from r to y is 1. The other listed choice, M = −L and N = 0, is the alternative of feeding the tracking error to the observer. r enters the error equation through (BN − M)r, so only M = BN cancels it while still letting r drive the plant. (LN4 s.41–44: M = BN on s.43, the y − r alternative M = −L, N = 0 on s.44)'
+  why: 'With M = BN the r terms cancel in the error equation e'' = (A − L_oC)e, so the observer does not ''see'' the command. N̄ is then chosen so the DC gain from r to y is 1. The other listed choice, M = −L and N = 0, is the alternative of feeding the tracking error to the observer. r enters the error equation through (BN − M)r, so only M = BN cancels it while still letting r drive the plant. (LN4 s.41–44: M = BN on s.43, the y − r alternative M = −L, N = 0 on s.44)'
 - id: me2-1
   tags:
     - mini-exam-2

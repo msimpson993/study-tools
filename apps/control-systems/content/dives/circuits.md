@@ -3,12 +3,12 @@ id: circuits
 order: 7
 title: "G(s) for circuits and op-amps"
 category: describe
-neighbors: [model, tf, order]
+neighbors: [tf, model, order]
 level: Some algebra
 check: [q-circ, ck-circ-1]
 ---
 
-**The question:** how do we get G(s) for a circuit or an op-amp stage? This is the side box *G(s) for circuits and op-amps*, under *Write the plant down*.
+**The question:** how do we get G(s) for a circuit or an op-amp stage? This is the side box *G(s) for circuits and op-amps*, under *Transfer function G(s)*.
 
 ### The big idea
 

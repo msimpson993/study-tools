@@ -24,7 +24,7 @@ The shaded area is the index; the lower curve is the index against the gain, wit
 ### The math
 
 ```eq
-ISE = ∫e² dt,   IAE = ∫|e| dt,   ITAE = ∫t|e| dt
+ISE = ∫e² dt,   IAE = ∫|e| dt,   ITAE = ∫t|e| dt,   ITSE = ∫t·e² dt
 ```
 
 **The loop.** The dish with Kp = 1000 and a rate (tachometer) gain K_r closes to Θ/R = 100/(s² + a₁s + 100), with a₁ = 2 + 0.1K_r. For a unit step the error is
@@ -45,6 +45,7 @@ ISE = 1/(2a₁) + a₁/200
 - **a₁ = (B + K_r)/J**: total damping over inertia (1/s).
 - **K_r**: the rate gain, N·m·s/rad. It is written K_r, not K_v, so it doesn't clash with the velocity constant of *System type*.
 - **ζ = a₁/(2√a₀)**: the damping ratio.
+- **ITSE = ∫t·e² dt**: like ISE, but late errors weigh more; the lecture notes list it beside the others; not used on the dish here.
 - The best gain is where the index stops falling: dI/dK_r = 0.
 
 ````callout:derivation Full derivation: the ISE optimum on the dish
@@ -69,7 +70,7 @@ The full problem is in Review › Mini exam 2, Problem 4.
 - **ISE:** K_r = 80 (ζ 0.5, ISE 0.1).
 - **IAE:** K_r = 112.5 (ζ 0.662).
 - **ITAE:** K_r = 130.5 (ζ 0.752).
-- **Hand tuning:** Kd = 120 (ζ 0.7) sits between the IAE and ITAE optima.
+- **Hand tuning:** the rate gain K_r = 120 is the Kd = 120 of *Derivative action* (the same loop: ζ 0.70, ISE 0.1057, IAE 0.1610). It sits between the IAE (112.5) and ITAE (130.5) optima.
 - **At Kp = 2000:** the optima are 121.4 (ISE), 167.4 (IAE) and 192.8 (ITAE), against the tuned 200.
 
 ### What it can't do

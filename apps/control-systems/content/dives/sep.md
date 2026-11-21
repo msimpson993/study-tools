@@ -12,7 +12,7 @@ check: [q-sep, ck-sep-1]
 
 ### The big idea
 
-Feeding back the estimate seems to couple the designs. It doesn't: the estimation error evolves on its own, so the closed loop's poles are simply the controller's and the observer's together. Design K and L separately.
+Feeding back the estimate seems to couple the designs. It doesn't: the estimation error evolves on its own, so the closed loop's poles are simply the controller's and the observer's together. Design K and L_o separately.
 
 ### See it
 
@@ -24,13 +24,13 @@ True-state feedback against estimate feedback on a ride-height step, with the di
 ### The math
 
 ```eq
-u = −Kx̂:   poles = eig(A − BK) ∪ eig(A − LC)
+u = −Kx̂:   poles = eig(A − BK) ∪ eig(A − L_oC)
 ```
 
-**What each symbol means.** x̂ = x − e: the estimate; K: the controller gains; L: the observer gains.
+**What each symbol means.** x̂ = x − e: the estimate; K: the controller gains; L_o: the observer gains.
 
 ````callout:derivation Full derivation
-u = −K(x − e), so ẋ = (A − BK)x + BKe, and ė = (A − LC)e. Stacked: [[A − BK, BK], [0, A − LC]]. The determinant of a block-triangular matrix is the product of the diagonal blocks' determinants.
+u = −K(x − e), so ẋ = (A − BK)x + BKe, and ė = (A − L_oC)e. Stacked: [[A − BK, BK], [0, A − L_oC]]. The determinant of a block-triangular matrix is the product of the diagonal blocks' determinants.
 ````
 
 ### Worked example: on the corner

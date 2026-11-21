@@ -38,7 +38,7 @@ U = Kp(R − X₂)  ⇒  X₂/D = G_d/(1 + KpG₂);   droop = D·G_d(0)/(1 + L(0
 - Steady extra heat = (5 K − droop) ÷ G₂(0). PI: 5 ÷ 8.18 K/kW = 611 W. P: 4.5 ÷ 8.18 = 550 W, which is also Kp × 0.5 K.
 - Where PI's 611 W goes: the bedroom, 5 K further above outdoors, leaks 55.56 × 5 = 278 W more. That 278 W has to cross the inner wall, which needs the living room 1 K warmer (278 W ÷ 277.8 W/K), so 6 K further above outdoors. 55.56 × (6 + 5) = 611 W.
 
-**What each symbol means.** **D**: the outdoor temperature change (K; D(s) is its transform); Kp (W/K); Ki (W/(K·h)); L(0) = Kp·G₂(0). The thermostat here is Kp = 1100 W per K of error and, for PI, Ki = 200 W per K·h.
+**What each symbol means.** **R** command (set point); **Y** output (the bedroom); **E = R − Y** tracking error; **D** disturbance (outdoor change, K; the lecture notes' T_d enters at the plant input, where G_d = G); **G_d** the path from D to Y; **N** sensor noise or error added to the reading. Kp (W/K); Ki (W/(K·h)); L(0) = Kp·G₂(0). The thermostat here is Kp = 1100 W per K of error and, for PI, Ki = 200 W per K·h.
 
 ### Worked example: on the house, −5 K cold front
 

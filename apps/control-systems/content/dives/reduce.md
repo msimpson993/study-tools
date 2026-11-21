@@ -3,16 +3,16 @@ id: reduce
 order: 5
 title: "Shrink the model, keep the behaviour"
 category: predict
-neighbors: [first, dominant]
+neighbors: [fb, first, dominant]
 level: Worked calculation
 check: [q-reduce, ck-reduce-1, ck-reduce-2]
 ---
 
-**The question:** can a big model be replaced by a smaller one that behaves the same? This is the side box *Shrink the model*, under *One pole: the yardstick*.
+**The question:** can a big model be replaced by a smaller one that behaves the same? This is the side box *Shrink the model*, under *Why not infinite gain?*.
 
 ### The big idea
 
-A smaller model is easier to design with. The crude way drops fast poles and rescales so the DC gain is unchanged. The notes' way matches the frequency response at low frequency term by term, which fixes the small model's coefficients.
+A smaller model is easier to design with. The crude way drops fast poles and rescales so the DC gain is unchanged. The lecture notes' way matches the frequency response (met in *Why not infinite gain?*) at low frequency term by term, which fixes the small model's coefficients.
 
 ### See it
 

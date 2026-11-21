@@ -352,7 +352,7 @@ The state-space examples from Lecture Notes 4, moved here from the *Feed back ev
 
 - **Pole placement (LN4 s.17–18):** y‴ + 5ÿ + 3ẏ + 2y = u with poles from (s² + 9.6s + 36)(s + 4.8) = s³ + 14.4s² + 82.08s + 172.8, giving K = [170.8, 79.08, 9.4].
 - **Ackermann (LN4 s.19–21):** on 1/s² with poles −1 ± j: K = [2, 2].
-- **Observer (LN4 s.22–29):** A = [[2, 3], [−1, 4]], C = [1, 0], ζ 0.8, ωₙ 10 give L = [22, 59].
+- **Observer (LN4 s.22–29):** A = [[2, 3], [−1, 4]], C = [1, 0], ζ 0.8, ωₙ 10 give L_o = [22, 59].
 - **Inverted pendulum (LN4 s.30–40):** the separation principle on a four-state unstable plant; work it from the slides.
 
 ### Self-test

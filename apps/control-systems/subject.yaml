@@ -24,7 +24,7 @@ quizFigures: [pid-step, hero-three, pop-heatflow, pop-ode2tf, pop-housemodes, po
 board:
   pairs: [overview, s1, splane, sp1, sp-meaning, sp2, sp3, sp4, sp5, sp6, sp7, sp8, s2, s3, s4, s5, s6, s7, s8, s9, s10, s11, s12, s13, cheatsec, glossary]
 runningExample:
-  title: A house, a car corner and an antenna dish
+  title: 'Three running examples, met in order: a house, a car corner, an antenna dish'
   summary: "Three plants, each where it teaches best: the **house** (two rooms, a heater, a thermostat), the **car corner** (a body on a spring and a shock) and the **antenna dish** (a motor turning a satellite dish). Each is its own dashed Example node on the map, beside the box where it first appears."
   # Example nodes on the map (Nov 20): each running example is its own dashed node beside the box where it first appears,
   # joined by a plain dotted link; its pop-up is the example's introduction. Numbers: only those the path has introduced
@@ -35,17 +35,18 @@ runningExample:
       label: the house thermostat
       title: The two-room house and its thermostat
       question: What's the running example?
-      scene: { id: house, overlays: [heat, flows], caption: "The heater in room 1 switches on; room 2 follows through the shared wall." }
+      scene: { id: house, overlays: [heat, flows], caption: "The heater in room 1 switches on; room 2 follows through the shared wall. Temperatures are shown above outdoors (5 °C), in K." }
       about: |
         - **In:** the heater power u, in room 1 (the living room).
         - **Out:** the two room temperatures x₁, x₂ above outdoors; the thermostat reads room 2 (the bedroom).
         - **Inside:** two heat stores (the rooms) and three heat paths: the shared wall and each room's outside wall.
-        - **Why first:** everyone knows how a house warms, so every answer can be checked against common sense; and it is slow and can't overshoot, so nothing hides the method.
+        - **Why first:** everyone knows how a house warms, so every answer can be checked against common sense; and it warms smoothly, never swinging past where it settles, so nothing hides the method.
+        - **Not yet:** the thermostat stays switched off (the heater just runs) until *A push we didn't command*.
       numbers: |
         - **Rooms:** each stores C_th = 1 MJ/K (the heat to warm it 1 K).
         - **Walls:** the shared wall passes 277.8 W/K; each room leaks 55.6 W/K outdoors.
         - **Heater:** 2.5 kW left on, the bedroom settles 20.45 K above outdoors and the living room 24.55 K.
-      comesBack: { big: [DIST, SENS, NOISE, CC], detail: [DIST, SENS, NOISE, SS2TF, CC] }
+      comesBack: { big: [DIST, SENS, NOISE, CC], detail: [DIST, SENS, NOISE, REDUCE, SS2TF, CC] }
     - id: corner
       at: SECOND
       label: the car suspension
@@ -70,18 +71,19 @@ runningExample:
       title: The antenna dish with P control
       question: Meet the third running example
       figure: antenna
+      preset: k1000
       panels: [scene]
-      caption: "<b>The antenna dish</b>, seen from above, turning toward the satellite (angles drawn 4× larger); the motor pushes with torque Kp × error."
+      caption: "<b>The antenna dish</b>, seen from above, turning toward the satellite (angles drawn 4× larger). Here Kp = 1000 N·m/rad: the first push is 100 N·m, and the dish swings 73 % past the target before settling."
       about: |
         - **In:** the motor torque T; the controller turns the pointing error into torque.
         - **Out:** the dish angle θ, which should follow the satellite.
         - **Inside:** the dish's inertia, the bearing friction and a motor with a torque limit.
-        - **Why now:** P, I and D need a command we choose and an actuator that obeys it; the passive corner has neither. A servo must go to a target and stop there, so P's trade of speed for overshoot shows at a glance.
+        - **Why now:** a controller needs a command we choose and an actuator that obeys it; the passive corner has neither. The dish is a *servo* (a machine driven to a commanded position and held there), so P's trade of speed for overshoot shows at a glance.
         - Press play to watch the dish turn.
       numbers: |
         - **Parts:** J = 10 kg·m², B = 20 N·m·s/rad, motor ±200 N·m, so Θ/T = 0.1/(s(s + 2)).
         - **With P control:** the closed loop is s² + 2s + Kp/10; Kp = 1000 gives ωₙ = 10 rad/s but ζ = 0.1.
-      comesBack: { big: [SSE, INT, DER, TUNE], detail: [MENU, SPEED, SSE, TYPE, INT, WINDUP, DER, TUNE, LAB, METHODS, FAIL, INDEX] }
+      comesBack: { big: [SSE, INT, DER, TUNE], detail: [SPEED, SSE, TYPE, INT, DER, TUNE, MENU, WINDUP, LAB, METHODS, FAIL, INDEX] }
 hub:
   order: 3
 # Porting guard (rebuilt Nov 2026, question-chain format; pid-tuning folded in): 2 maps (Big picture 22 boxes / 24 lines,

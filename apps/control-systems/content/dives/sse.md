@@ -43,7 +43,10 @@ Ramp θ_r = ωt: e_ss = Bω/Kp = ω/K_v,  K_v = Kp/B
 <a id="type"></a>**System type**. The type is the number of integrators in L. Step error 1/(1 + K_pos); ramp error ω/K_v; type 2 tracks ramps.
 
 ````callout:derivation Full derivation
-E(s) = R − Θ. With R = 1/s and P: E = (Js² + Bs)/(Js² + Bs + Kp)·(1/s), so sE → 0. With a wind step T_d/s: sE → −T_d/Kp. With a ramp R = ω/s²: sE → ω·B/Kp.
+E(s) = R − Θ, and the final-value theorem gives e_ss = lim sE(s) as s → 0 (the loop must be stable):
+- **Step command**, R = 1/s: E = (Js² + Bs)/(Js² + Bs + Kp)·(1/s), so sE → **0**.
+- **Wind step**, T_d/s: sE → **−T_d/Kp**.
+- **Ramp command** (a target moving at ω rad/s), R = ω/s²: sE → **ω·B/Kp**.
 ````
 
 ### Worked example: on the dish

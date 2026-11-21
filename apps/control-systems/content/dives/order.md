@@ -3,12 +3,12 @@ id: order
 order: 6
 title: "Why two poles? One state per energy store"
 category: describe
-neighbors: [model, ss]
+neighbors: [splane, model, ss]
 level: Conceptual
 check: [q-order, ck-order-1]
 ---
 
-**The question:** why is the house second order, and what sets the order of any plant? This is the side box *Why two poles?*, under *Write the plant down*.
+**The question:** why is the house second order, and what sets the order of any plant? This is the side box *Why two poles?*, under *Poles and zeros*.
 
 ### The big idea
 

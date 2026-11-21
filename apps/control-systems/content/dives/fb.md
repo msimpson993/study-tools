@@ -35,7 +35,7 @@ E = S·R − S·G_d·D + C·N   (sign convention as in the lecture notes)
 S + C = 1,   C = L/(1 + L)
 ```
 
-**What each symbol means.** N: the sensor error (K); C(0) = 0.9 under P 1100 and 1 under PI.
+**What each symbol means.** **R** command (set point); **Y** output (the bedroom); **E = R − Y** tracking error; **D** disturbance (outdoor change, K; the lecture notes' T_d enters at the plant input, where G_d = G); **G_d** the path from D to Y; **N** sensor noise or error added to the reading. C(0) = 0.9 under P 1100 and 1 under PI.
 
 ### Worked example: on the house, sun on the thermostat (+1 K reading)
 

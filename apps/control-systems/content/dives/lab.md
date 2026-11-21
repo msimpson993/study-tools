@@ -12,7 +12,10 @@ check: [q-lab, ck-lab-1]
 
 ### The big idea
 
-Every claim in the PID series can be reproduced here: the dish in a loop with a real motor (torque limit), a real sensor (noise) and real wind. The Lab filters the derivative (N_f = 200 rad/s), as a real loop must, so overshoots where D matters read a little lower than the text's ideal-derivative values (PD 3.8 % vs 4.6 %; tuned 6.3 % vs 7.4 %).
+Every claim in the PID series can be reproduced here: the dish in a loop with a real motor (torque limit), a real sensor (noise) and real wind.
+- **Filtered D:** the Lab filters the derivative (N_f = 200 rad/s), as a real loop must.
+- **So overshoots read a little lower** than the text's ideal-derivative values where D matters: PD 3.8 % vs 4.6 %; tuned 6.3 % vs 7.4 %.
+- **Wind numbers hardly move:** the tuned loop is back inside 0.05° 4.83 s after the gust either way.
 
 ### See it
 
@@ -27,6 +30,8 @@ The default plant is the dish, 0.1/(s(s + 2)). The alternate adds the motor ampl
 - Step 0.02–2 rad (default 0.1); wind toggle (20 N·m at t = 10 s); noise toggle (0.01° rms).
 - Torque limit |T| 50–1000 N·m (default 200) and anti-windup {none, clamp, back-calculation}.
 - D on measurement (default on); ghost toggle to keep the last run.
+- Window 4–40 s (default 16 s): how long each run lasts. The gust comes at 10 s, so windows of 10 s or less have no gust.
+- **Readouts** (green = passes, red = fails, grey = no spec): overshoot (< 10 %); settling to ±2 %; steady error (θ_r − θ just before the gust; zero passes); wind peak (< 0.6°); recovery to ±0.05° (spec < 10 s): seconds from the 10 s gust until the error stays inside ±0.05° to the window's end; "not back by t = T s" means it hadn't settled back when the window ended (widen the window); offset at end, θ_r − θ at the last sample, wind on only (< 0.05°, the page's back-on-target band; PD stays −T_d/Kp off, so it fails); peak torque (≤ 200 N·m); stability.
 
 ### Presets that reproduce the chain
 
@@ -37,7 +42,11 @@ PD has no integrator, so the motor can hold the 20 N·m wind only by sitting off
 ### Worked example: on the dish
 
 1. Reproduce the three *Choosing the three gains* panels.
-2. Make the dish meet "OS < 5 %, wind peak < 0.6°, recover < 10 s" within 200 N·m. One answer: (2000, 500, 200). The Lab (derivative filtered at N_f = 200) reads **3.8 %** overshoot and a **0.574°** wind peak, and the dish is back inside 0.05° **9.78 s** after the gust. Widen the window to 21 s to see that: the offset at 21 s is **−0.037°**. Its slow integrator is still **−0.013°** off when the gust arrives at 10 s, so the steady-error check fails. That is the price of a small Ki.
+2. Make the dish meet "OS < 5 %, wind peak < 0.6°, recover < 10 s" within 200 N·m.
+   - **One answer:** (2000, 500, 200).
+   - **What the Lab reads** (derivative filtered at N_f = 200): **3.8 %** overshoot, a **0.574°** wind peak.
+   - **Recovery:** at the default 16 s window the Recovery row reads "not back by t = 16 s". Widen the window to 21 s: it reads **9.78 s**, and the offset at 21 s is **−0.037°**.
+   - **Why the steady-error check fails:** the slow integrator is still **−0.013°** off when the gust arrives at 10 s. That is the price of a small Ki.
 
 ### Frequency view (not in lecture notes)
 
@@ -46,6 +55,8 @@ Bode plots are not in the lecture notes; this panel shows how the gains shape th
 - P 1000: crossover 9.90 rad/s, 11.4°, matching its 73 % overshoot;
 - PD (1000, 0, 120): 13.86 rad/s, 67.2°;
 - the tuned PID: 21.73 rad/s, 70.3°.
+
+The step panel beside it uses D on the error, because one loop function L = Gc·G can only describe that form. That is why it reads 15.8 % for the tuned gains (the D-on-error value in *Choosing the three gains*, step 7) rather than the Lab's 6.3 % with D on the measurement.
 
 ```figure:bodepid
 ```
@@ -63,6 +74,8 @@ Bode plots are not in the lecture notes; this panel shows how the gains shape th
 - **Noise**: sensor noise, 0.01° rms.
 - **Anti-windup**: what the integrator does while the torque is clipped. *Clamp* stops it; *back-calculation* bleeds it off.
 - **D on measurement / on error**: whether the derivative acts on −θ (no kick at a step) or on e.
+- **Offset at end**: θ_r − θ at the window's last sample (°), shown only with the wind on; passes when |offset| < 0.05°.
+- **Recovery**: time after the gust (s) until |θ_r − θ| stays below 0.05°; wind on only.
 
 ### What it can't do
 

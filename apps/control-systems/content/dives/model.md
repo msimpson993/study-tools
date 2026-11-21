@@ -6,7 +6,7 @@ category: describe
 neighbors: [tf, order, circuits, overview]
 level: Conceptual
 check: [q-model, ck-model-1, ck-model-2]
-addsToExample: "Stage H0: two rooms, a heater in room 1, heat flowing through the shared wall and out to the weather; one heat balance per room."
+addsToExample: "Two rooms, a heater in room 1, heat flowing through the shared wall and out to the weather; one heat balance per room."
 ---
 
 **The question:** how do we get from the physical plant to an equation we can calculate with? This is the box *Write the plant down*, the first step under the root question.

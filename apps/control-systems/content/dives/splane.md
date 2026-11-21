@@ -6,7 +6,7 @@ category: describe
 neighbors: [tf, first, plane, inverse]
 level: Conceptual
 check: [q-poles, ck-poles-1, ck-poles-2]
-addsToExample: "Stage H2: the two poles, −0.2 and −2.2 per hour, are the house's two natural motions (rooms cooling together, rooms evening out)."
+addsToExample: "The two poles, −0.2 and −2.2 per hour, are the house's two natural motions (rooms cooling together, rooms evening out)."
 ---
 
 **The question:** what do the roots of G(s)'s denominator tell us about how the house moves? This is the box *Poles and zeros*, after *Transfer function G(s)*.

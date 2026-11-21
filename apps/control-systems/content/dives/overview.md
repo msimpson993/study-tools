@@ -5,7 +5,7 @@ title: "The course in one picture: three plants, one question"
 category: describe
 neighbors: [model, second, ctrl, dist, ss]
 level: Conceptual
-check: [q-root, q-loop]
+check: [q-root, q-model]
 addsToExample: "The house's finished loop, rebuilt box by box in the overview figure."
 ---
 

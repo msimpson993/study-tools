@@ -1,14 +1,14 @@
 ---
 id: ctrl
 order: 13
-title: "Turn up the gain (P), the controller menu, and faster loops"
+title: "Turn up the gain (P) and faster loops"
 category: pid
 neighbors: [blocks, sse, integral, derivative]
 level: Some algebra
 check: [q-pgain, q-speed, ck-pgain-1]
 ---
 
-**The question:** a car corner only follows the road; what happens when a motor we command pushes in proportion to the error? This is the box *Turn up the gain (P)*, with its side boxes *The controller menu* and *Feedback makes it faster*, after *Close the loop*.
+**The question:** a car corner only follows the road; what happens when a motor we command pushes in proportion to the error? This is the box *Turn up the gain (P)*, with its side box *Feedback makes it faster*, after *Close the loop*.
 
 ### The big idea
 
@@ -39,8 +39,6 @@ Js² + Bs + Kp = 0  ⇒  s² + 2s + 0.1Kp = 0
 ```
 
 **What each symbol means.** θ: pointing angle (rad); T: motor torque (N·m); J: inertia (kg·m²); B: viscous friction (N·m·s/rad); Kp: proportional gain (N·m/rad).
-
-<a id="menu"></a>**The controller menu.** On/off, P, I, PI, PD and PID, each with its op-amp circuit. The standard form is Gc = Kp(1 + 1/(Ti s) + T_D s), with Ki = Kp/Ti and Kd = Kp·T_D. The slides write the derivative time Td; here it is T_D, because T_d is the wind torque.
 
 <a id="speed"></a>**Feedback makes it faster.** Around a first-order plant, feedback divides the time constant: τ_cl = τ/(1 + loop gain). The dish's speed is Ω/T = 1/(Js + B); with a speed loop K_ω the time constant becomes J/(B + K_ω).
 
