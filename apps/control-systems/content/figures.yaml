@@ -50,12 +50,12 @@
         as: 5
 - id: overview-house
   title: "The house and its loop: built one box at a time"
-  x: picture and block diagram
+  x: picture · block diagram
   y: stage
   legend:
     - label: "highlighted block: what this stage adds"
       color: var(--yel)
-  howToRead: The slider steps through the house's stages (H0–H6); the block a stage adds is outlined in yellow and named underneath.
+  howToRead: One panel shows the house, the other its block diagram. The slider steps through the house's stages (H0–H6); the block a stage adds is outlined in yellow, and the stage is named under the house.
   lookFor: "The loop ends the same way every later example's does: command → controller → plant → output, measured and fed back."
   controls:
     - id: hs

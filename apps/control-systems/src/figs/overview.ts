@@ -33,18 +33,23 @@ export const STAGES: Record<'house' | 'corner' | 'dish', { say: string; d: LoopD
 };
 /** the batch-1 stage code in front of each line ("H6 NOISE: ") is for the builders, not the reader */
 const STAGE_ID = /^[HCA]\d+ [A-Z][A-Z, ]*: /;
-const panelFor = (id: 'house' | 'corner' | 'dish', title: string, key: string): FigurePanel => ({
-  id, title, x: '', y: '',
+/** part: both halves in one panel (the three-plant figure), or only the picture / only the loop (the house-only figure, two panels) */
+const panelFor = (id: 'house' | 'corner' | 'dish', title: string, key: string, part: 'both' | 'picture' | 'loop' = 'both'): FigurePanel => ({
+  id: part === 'loop' ? `${id}-loop` : id, title, x: '', y: '',
   draw(g, w, h, v: V) {
-    g.clearRect(0, 0, w, h); const st = STAGES[id], k = Math.max(0, Math.min(st.length - 1, Math.round(num(v, key, st.length)) - 1)) /* the slider counts stages from 1, as the caption does (pass 2, R5) */, s = st[k], ph = h * 0.45;
-    if (id === 'house') drawHouse(g, w * 0.2, 4, w * 0.6, ph - 8, { t1: 24.55, t2: 20.45, thermostat: k >= 4, sun: k >= 6, labels: false });
+    g.clearRect(0, 0, w, h); const st = STAGES[id], k = Math.max(0, Math.min(st.length - 1, Math.round(num(v, key, st.length)) - 1)) /* the slider counts stages from 1, as the caption does (pass 2, R5) */, s = st[k];
+    if (part === 'picture') { drawHouse(g, w * 0.15, 4, w * 0.7, h - 40, { t1: 24.55, t2: 20.45, thermostat: k >= 4, sun: k >= 6, labels: false }); }
+    else if (part === 'loop') { if (s.d) drawLoop(g, 2, 8, w - 4, h - 16, s.d, 10); else text(g, '(no loop yet)', w / 2, h / 2, col.muted(), 'center', 10.5); return; }
+    const ph = part === 'picture' ? h : h * 0.45;
+    if (part === 'picture') { /* drawn above */ }
+    else if (id === 'house') drawHouse(g, w * 0.2, 4, w * 0.6, ph - 8, { t1: 24.55, t2: 20.45, thermostat: k >= 4, sun: k >= 6, labels: false });
     else if (id === 'corner') drawCorner(g, w * 0.3, 2, w * 0.4, ph - 4, { actuator: k >= 4, ghostZ: k >= 5 ? 0.01 : undefined, labels: false });
     else drawDish(g, w * 0.25, 0, w * 0.5, ph, { theta: 0.3, ref: 0.5, wind: k >= 1, labels: false });
-    if (s.d) drawLoop(g, 2, ph + 2, w - 4, h - ph - 26, s.d, 10); else text(g, '(no loop yet)', w / 2, ph + (h - ph) / 2 - 10, col.muted(), 'center', 10.5);
+    if (part === 'picture') { /* the loop has its own panel */ } else if (s.d) drawLoop(g, 2, ph + 2, w - 4, h - ph - 26, s.d, 10); else text(g, '(no loop yet)', w / 2, ph + (h - ph) / 2 - 10, col.muted(), 'center', 10.5);
     const say = `Stage ${k + 1} of ${st.length}: ${s.say.replace(STAGE_ID, '')}`, nl = wrap(g, say, w - 16, 10).length;
     para(g, say, 8, h - 8 - (nl - 1) * 13, w - 16, col.e(), 10);
   },
 });
 export const overviewFigure = figureOf(() => [panelFor('house', 'House', 'hs'), panelFor('corner', 'Car corner', 'cs'), panelFor('dish', 'Antenna dish', 'as')]);
 /** The root dive shows the house alone: the other examples join later, each in its own Example pop-up (stage-pass2 c8). */
-export const overviewHouseFigure = figureOf(() => [panelFor('house', 'House', 'hs')]);
+export const overviewHouseFigure = figureOf(() => [panelFor('house', 'The house', 'hs', 'picture'), panelFor('house', 'Its block diagram', 'hs', 'loop')]);

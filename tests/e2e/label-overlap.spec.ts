@@ -133,7 +133,7 @@ for (const app of ['linear-systems', 'control-systems'] as const) test(`${app}: 
   expect(bad, bad.slice(0, 30).join('\n')).toEqual([]);
 });
 
-/** Example glyphs (Nov 20, linear-systems; control-systems has none): every box marker inside its box and clear of the label and
+/** Example glyphs (Nov 20, linear-systems; control-systems since Nov 21): every box marker inside its box and clear of the label and
  *  of every line label, on both maps, at phone, tablet and desktop widths, in Fit and Actual size and in the split side map. */
 for (const app of ['linear-systems', 'control-systems'] as const) test(`${app}: example glyphs clear of box labels and line labels`, async ({ page }) => {
   test.setTimeout(120_000);
@@ -158,5 +158,5 @@ for (const app of ['linear-systems', 'control-systems'] as const) test(`${app}: 
     }
   }
   expect(bad, bad.slice(0, 30).join('\n')).toEqual([]);
-  if (app === 'linear-systems') expect(total).toBeGreaterThan(0); else expect(total).toBe(0);
+  expect(total).toBeGreaterThan(0); // both apps list per-box examples (control-systems since stage-pass2, Nov 21)
 });
