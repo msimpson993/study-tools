@@ -6,7 +6,7 @@ import { houseG2, houseColdFront, houseSC, cornerOf, cornerGu, cornerNumbers, co
 import { houseRun } from './house';
 import { obsRun, refRun } from './corner';
 import { dishPoles } from './dish';
-import { dishSim } from '../model/plants';
+import { dishSim, dishPid } from '../model/plants';
 import { drawHouse, drawCorner, drawDish, drawLoop, arrowPx } from './draw';
 import { legend, lin, para, f, range, wrap } from './util';
 import { quizFigures as pidQuiz } from './pidquiz';
@@ -119,7 +119,11 @@ export const popFigures: QuizFigureRegistry = {
   'pop-der': mini((g, w, h, p) => {
     if (panel(p) === 'a') {
       const F = fr(g, w, h, [0, 1.5], [0, 10.5], 'time (s)', 'θ (°)'), runs = [[0, true, col.muted(), 'P: 73 %'], [120, false, col.b(), 'D on error: 15.6 %'], [120, true, col.a(), 'D on measurement: 4.6 %']] as [number, boolean, string, string][];
-      for (const [Kd, dm, c] of runs) { const s = dishSim({ Kp: 1000, Kd, dm, T: 1.5, dt: 1e-4, every: 20 }); curve(g, F, s.t, degs(s.y), c, 2); }
+      // ideal derivative, as in the text (pass 2, R4): D on the measurement from an ideal-D run (4.6 %), D on the error from the exact closed-loop step (15.6 %)
+      for (const [Kd, dm, c] of runs) {
+        if (!dm) { const r = step(dishPid(1000, 0, Kd, true), 1.5, 1501); curve(g, F, r.t, degs(r.y.map((q) => q * DISH.step)), c, 2); continue; }
+        const s = dishSim({ Kp: 1000, Kd, dm, T: 1.5, dt: 1e-4, every: 20, idealD: true }); curve(g, F, s.t, degs(s.y), c, 2);
+      }
       legend(g, F, runs.map((r) => ({ label: r[3], color: r[2] })), 'br', 9.5); return;
     }
     const F = drawSPlane(g, w, h, { range: 12, reCenter: -4, poles: dishPoles(1000, 0, 120), labels: false, marks: dishPoles(1000, 0, 0).map((s) => ({ s, shape: 'ring' as const, color: col.muted() })), zetaRays: [0.1, 0.7] });
@@ -129,7 +133,7 @@ export const popFigures: QuizFigureRegistry = {
 
   'pop-tune': mini((g, w, h) => {
     const F = fr(g, w, h, [0, 2], [0, 7], 'time (s)', 'θ (°)'), b = DISH_TUNED, runs = [[b.Kp, b.Ki, b.Kd, col.muted(), '(2000, 1000, 200)', true], [4000, b.Ki, b.Kd, col.b(), 'Kp 4000: 14 %', false], [b.Kp, 3000, b.Kd, col.d(), 'Ki 3000: 17 %', false], [b.Kp, b.Ki, 400, col.c(), 'Kd 400: sluggish', false]] as [number, number, number, string, string, boolean][];
-    for (const [Kp, Ki, Kd, c, , dash] of runs) { const s = dishSim({ Kp, Ki, Kd, T: 2, dt: 2e-4, every: 20 }); curve(g, F, s.t, degs(s.y), c, dash ? 1.6 : 2, dash ? [5, 3] : []); }
+    for (const [Kp, Ki, Kd, c, , dash] of runs) { const s = dishSim({ Kp, Ki, Kd, T: 2, dt: 1e-4, every: 40, idealD: true }); /* ideal derivative, as in the text (pass 2, R4): 7.4 / 14.3 / 16.8 / 7.6 % */ curve(g, F, s.t, degs(s.y), c, dash ? 1.6 : 2, dash ? [5, 3] : []); }
     legend(g, F, runs.map((r) => ({ label: r[4], color: r[3], dash: r[5] })), 'br', 9.5);
   }, 1.6, 360),
 

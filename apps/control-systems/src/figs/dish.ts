@@ -2,7 +2,7 @@
 import { figureOf, drawSPlane, drawRootLocus, rangeFrame, graphAxes, withLabelRole, curve, tline, dot, text, col, type FigurePanel, type V2 } from '@study/core';
 import { C, rlocus, type Cx } from '@study/core/dsp';
 import { DISH, DISH_TUNED, BEAM } from '../model/params';
-import { dishG, dishP, dishSim, dishMetrics, dishZN, iseClosed, iaeOf, telescopeISE, telescopeIAE, roots, deg, type DishSimOpts } from '../model/plants';
+import { dishG, dishP, dishSim, dishMetrics, dishPid, stepMetrics, dishZN, iseClosed, iaeOf, telescopeISE, telescopeIAE, roots, deg, type DishSimOpts } from '../model/plants';
 import { type V, num, str, on, f, k3, legend, plotFrame, hline, range, lin, para } from './util';
 import { drawDish } from './draw';
 
@@ -154,7 +154,12 @@ export const derivativeFigure = figureOf(() => {
 
 /* ── TUNE · figure:gains (raise one gain at a time from the tuned set) ── */
 const base = DISH_TUNED;
-function gainRun(Kp: number, Ki: number, Kd: number) { const s = dishSim({ Kp, Ki, Kd, T: 20, dt: 2e-4, d: (t) => (t >= W ? DISH.wind : 0) }), m = dishMetrics(s.t.filter((t) => t < W), s.y.slice(0, s.t.filter((t) => t < W).length), DISH.step); return { s, m, w: windStats(s.t, s.y, DISH.step) }; }
+// ideal derivative, as in the text (pass 2, R4): %OS and Tₛ from the exact closed-loop step (as [P10]), the curve and the wind
+// readouts from an ideal-D run with the gust 10 s after the step ([PASS2])
+function gainRun(Kp: number, Ki: number, Kd: number) {
+  const s = dishSim({ Kp, Ki, Kd, T: 20, dt: 1e-4, every: 2, idealD: true, d: (t) => (t >= W ? DISH.wind : 0) }), sm = stepMetrics(dishPid(Kp, Ki, Kd), 20);
+  return { s, m: sm, w: windStats(s.t, s.y, DISH.step) };
+}
 const gainPanel = (id: 'Kp' | 'Ki' | 'Kd', title: string): FigurePanel => ({
   id, title, x: 'time (s)', y: 'θ (°)',
   draw(g, w, h, v) {

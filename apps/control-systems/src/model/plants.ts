@@ -146,9 +146,10 @@ export function dishP(Kp: number) {
   return { wn, zeta, poles: roots(den), m: stepMetrics(tf([Kp / DISH.J], den), 15) };
 }
 /** General dish loop (Euler, dt): PID with derivative filter N_f, D on measurement or error, torque limit and anti-windup, reference r(t), wind d(t) (N·m), seeded sensor noise (rad rms). */
-export interface DishSimOpts { Kp: number; Ki?: number; Kd?: number; Nf?: number; dm?: boolean; r?: (t: number) => number; d?: (t: number) => number; umax?: number | null; aw?: 'none' | 'clamp' | 'backcalc'; noise?: number; seed?: number; T?: number; dt?: number; every?: number; lag?: number }
+export interface DishSimOpts { Kp: number; Ki?: number; Kd?: number; Nf?: number; dm?: boolean; r?: (t: number) => number; d?: (t: number) => number; umax?: number | null; aw?: 'none' | 'clamp' | 'backcalc'; noise?: number; seed?: number; T?: number; dt?: number; every?: number; lag?: number; /** ideal derivative (no filter): D on the measurement is exactly −Kd·ω; D on the error has no finite ideal on a step, so use the closed form (dishPid) instead (pass 2, R4) */ idealD?: boolean }
 export function dishSim(o: DishSimOpts) {
   const Kp = o.Kp, Ki = o.Ki ?? 0, Kd = o.Kd ?? 0, Nf = o.Nf ?? DISH.Nf, dm = o.dm ?? true, r = o.r ?? (() => DISH.step), d = o.d ?? (() => 0), umax = o.umax ?? Infinity, aw = o.aw ?? 'none';
+  if (o.idealD && !(o.dm ?? true) && (o.Kd ?? 0)) throw new Error('dishSim: ideal D on the error has no finite step response; use dishPid(Kp, Ki, Kd, true)');
   const T = o.T ?? 12, dt = o.dt ?? 2e-4, n = Math.round(T / dt), every = o.every ?? Math.max(1, Math.round(0.01 / dt)), lag = o.lag ?? 0;
   let th = 0, om = 0, xi = 0, xf = 0, ua = 0, nz = 0, seed = (o.seed ?? 99) >>> 0 || 1;
   const rnd = () => { seed ^= seed << 13; seed >>>= 0; seed ^= seed >>> 17; seed ^= seed << 5; seed >>>= 0; return seed / 4294967296; };
@@ -158,11 +159,11 @@ export function dishSim(o: DishSimOpts) {
   for (let i = 0; i <= n; i++) {
     const t = i * dt; if (o.noise && i % nEvery === 0) nz = o.noise * gauss();
     const ym = th + nz, rr = r(t), e = rr - ym, ed = dm ? -ym : e;
-    const ud = Kd ? Kd * Nf * (ed - xf) : 0, un = Kp * e + Ki * xi + ud, us = Math.max(-umax, Math.min(umax, un));
+    const ud = !Kd ? 0 : o.idealD ? -Kd * om : Kd * Nf * (ed - xf), un = Kp * e + Ki * xi + ud, us = Math.max(-umax, Math.min(umax, un));
     if (i % every === 0) { out.t.push(t); out.y.push(th); out.u.push(us); out.ui.push(Ki * xi); out.r.push(rr); out.sat.push(us !== un); }
     if (!Number.isFinite(th) || Math.abs(th) > 1e3) { out.unstable = true; break; }
     let integ = e; if (Ki && umax < Infinity) { if (aw === 'clamp' && un !== us && (un - us) * e > 0) integ = 0; else if (aw === 'backcalc') integ = e + (us - un) / Math.max(Kp, 1e-9); }
-    if (Ki) xi += dt * integ; if (Kd) xf += dt * Nf * (ed - xf);
+    if (Ki) xi += dt * integ; if (Kd && !o.idealD) xf += dt * Nf * (ed - xf);
     const torque = lag ? ua : us; if (lag) ua += (dt * (us - ua)) / lag;
     om += (dt * (torque + d(t) - DISH.B * om)) / DISH.J; th += dt * om;
   }

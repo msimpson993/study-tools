@@ -1578,8 +1578,8 @@
     - label: start (2000, 1000, 200)
       color: var(--muted)
       dash: true
-  howToRead: "Three panels from the tuned (2000, 1000, 200); each raises one gain to its slider. Step at 0 s, 20 N·m gust at 10 s. Readouts: %OS, Tₛ, wind peak and time back inside 0.05°."
-  lookFor: Kp 4000 nearly halves the wind peak, but the slow integrator pole takes longer to clear it (7 s).
+  howToRead: "Three panels from the tuned (2000, 1000, 200); each raises one gain to its slider. Step at 0 s, 20 N·m gust at 10 s. Readouts: %OS, Tₛ, wind peak and time back inside 0.05°. Ideal derivative, as in the text."
+  lookFor: Kp 4000 nearly halves the wind peak, but the slow integrator pole takes longer to clear it (7.1 s).
   controls:
     - id: Kp
       label: Kp
@@ -1835,7 +1835,7 @@
     - label: previous run
       color: var(--muted)
       dash: true
-  howToRead: "The dish (0.1/(s(s + 2)), 0.1 rad step, 200 N·m limit, D on measurement) under your PID. Wind adds 20 N·m at 10 s, after the step has settled. Readouts check the specs: %OS < 10 %, wind peak < 0.6°, zero steady error, torque within the limit. Readouts include the derivative filter N_f, so they sit slightly below the ideal-derivative numbers quoted in the text (tuned: 6.3 % vs 7.4 %). With the wind on, the no-anti-windup preset fails the steady-error check (about 0.14° off at 9.9 s): the overfilled integrator is still bleeding off when the gust arrives. Switch to the clamping preset and it passes."
+  howToRead: "The dish (0.1/(s(s + 2)), 0.1 rad step, 200 N·m limit, D on measurement) under your PID. Wind adds 20 N·m at 10 s, after the step has settled. Readouts check the specs: %OS < 10 %, wind peak < 0.6°, zero steady error, torque within the limit. Readouts include the derivative filter N_f, so they sit slightly below the ideal-derivative numbers quoted in the text (tuned: 6.3 % vs 7.4 %). With the wind on, the no-anti-windup preset fails the steady-error check (about 0.14° off at 9.9 s): the overfilled integrator is still bleeding off when the gust arrives. Switch to the clamping preset and it passes. Offset at end (t = T): θ_r − θ at the last sample of the window, in degrees. It appears only when wind is on. Pass mark: |offset| < 0.05°."
   lookFor: Start at P 1000 (73 % ring), add Kd until it stops ringing, then just enough Ki to clear the wind.
   controls:
     - id: plant

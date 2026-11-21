@@ -400,5 +400,40 @@ B4c gains figure gust 10 s / window 20 s, (2000, 1000, 500): OS 8.7 %, Ts 4.06 s
 B4c integral figure PI (1000, 500), gust 3 s / window 12 s: wind alone peaks 1.910 deg; |angle - target| after the gust peaks 1.938 deg
 B4c integral figure PI (1000, 500), gust 10 s / window 20 s: wind alone peaks 1.910 deg; |angle - target| after the gust peaks 1.911 deg
 
+======== [PASS2] Pass 2: ideal-D figures (R4), the Lab with a post-gust offset readout (R2), the index optimum on the dish
+P2 gains figure (2000, 1000, 200): ideal D OS 7.4 %, Ts 2.20 s, wind peak 0.557 deg, back in 0.05 deg 4.8 s | filtered N_f 200 (now on the page) OS 6.3 %, Ts 2.21 s, wind peak 0.550 deg, back 4.8 s
+P2 gains figure (4000, 1000, 200): ideal D OS 14.3 %, Ts 0.31 s, wind peak 0.325 deg, back in 0.05 deg 7.1 s | filtered N_f 200 (now on the page) OS 12.5 %, Ts 0.30 s, wind peak 0.320 deg, back 7.1 s
+P2 gains figure (2000, 3000, 200): ideal D OS 16.7 %, Ts 1.45 s, wind peak 0.518 deg, back in 0.05 deg 1.6 s | filtered N_f 200 (now on the page) OS 15.4 %, Ts 1.46 s, wind peak 0.511 deg, back 1.6 s
+P2 gains figure (2000, 1000, 400): ideal D OS 7.6 %, Ts 3.60 s, wind peak 0.490 deg, back in 0.05 deg 4.8 s | filtered N_f 200 (now on the page) OS 7.5 %, Ts 3.60 s, wind peak 0.487 deg, back 4.8 s
+P2 Box 11 figure PD (1000, 0, 120), D on measurement: ideal D OS 4.6 % (Ts 0.60 s); with N_f 200 OS 3.8 % (Ts 0.58 s); D on the error (ideal, [P5]) 15.6 %
+P2 Lab P 1000, wind off, window 16 s: OS 72.9 %, Ts 3.84 s; steady error at 16 s -0.0000 deg; peak torque 100 N·m
+P2 Lab PD (1000, 0, 120), wind off, window 16 s: OS 3.8 %, Ts 0.58 s; steady error at 16 s +0.0000 deg; peak torque 100 N·m
+P2 Lab tuned (2000, 1000, 200), wind off, window 16 s: OS 6.3 %, Ts 2.21 s; steady error at 16 s -0.0001 deg; peak torque 200 N·m
+P2 Lab too much I (2000, 3000, 200), wind off, window 16 s: OS 15.4 %, Ts 1.46 s; steady error at 16 s -0.0000 deg; peak torque 200 N·m
+P2 Lab too much Kd (2000, 1000, 400), wind off, window 16 s: OS 7.5 %, Ts 3.60 s; steady error at 16 s -0.0001 deg; peak torque 200 N·m
+P2 Lab derivative kick (D on error), wind off, window 16 s: OS 6.1 %, Ts 2.13 s; steady error at 16 s -0.0001 deg; peak torque 200 N·m
+P2 Lab windup 2 rad, none, wind off, window 16 s: OS 21.2 %, Ts 4.65 s; steady error at 16 s -0.0056 deg; peak torque 200 N·m
+P2 Lab windup 2 rad, clamp, wind off, window 16 s: OS 3.4 %, Ts 0.80 s; steady error at 16 s -0.0003 deg; peak torque 200 N·m
+P2 Lab ZN + lag (264, 531.5, 32.8), wind off, window 16 s: OS 67.0 %, Ts 4.22 s; steady error at 16 s +0.0000 deg; peak torque 200 N·m
+P2 Lab worked example (2000, 500, 200), wind off, window 16 s: OS 3.8 %, Ts 1.54 s; steady error at 16 s -0.0028 deg; peak torque 200 N·m
+P2 Lab stiff PD (2000, 0, 200), wind off, window 16 s: OS 1.1 %, Ts 0.27 s; steady error at 16 s +0.0000 deg; peak torque 200 N·m
+P2 Lab P 1000, wind on, window 16 s: OS 72.9 %, Ts 3.84 s; steady error at 9.9 s -0.000 deg (pass); wind peak 1.981 deg (fail); offset at 16 s -1.149 deg (fail < 0.05); not back inside 0.05 deg; peak torque 100 N·m
+P2 Lab PD (1000, 0, 120), wind on, window 16 s: OS 3.8 %, Ts 0.58 s; steady error at 9.9 s +0.000 deg (pass); wind peak 1.189 deg (fail); offset at 16 s -1.146 deg (fail < 0.05); not back inside 0.05 deg; peak torque 100 N·m
+P2 Lab tuned (2000, 1000, 200), wind on, window 16 s: OS 6.3 %, Ts 2.21 s; steady error at 9.9 s -0.002 deg (pass); wind peak 0.550 deg (pass); offset at 16 s -0.027 deg (pass < 0.05); back inside 0.05 deg 4.83 s after the gust; peak torque 200 N·m
+P2 Lab too much I (2000, 3000, 200), wind on, window 16 s: OS 15.4 %, Ts 1.46 s; steady error at 9.9 s -0.000 deg (pass); wind peak 0.511 deg (pass); offset at 16 s -0.000 deg (pass < 0.05); back inside 0.05 deg 1.56 s after the gust; peak torque 200 N·m
+P2 Lab too much Kd (2000, 1000, 400), wind on, window 16 s: OS 7.5 %, Ts 3.60 s; steady error at 9.9 s -0.003 deg (pass); wind peak 0.487 deg (pass); offset at 16 s -0.025 deg (pass < 0.05); back inside 0.05 deg 4.78 s after the gust; peak torque 200 N·m
+P2 Lab derivative kick (D on error), wind on, window 16 s: OS 6.1 %, Ts 2.13 s; steady error at 9.9 s -0.002 deg (pass); wind peak 0.550 deg (pass); offset at 16 s -0.027 deg (pass < 0.05); back inside 0.05 deg 4.82 s after the gust; peak torque 200 N·m
+P2 Lab windup 2 rad, none, wind on, window 16 s: OS 21.2 %, Ts 4.65 s; steady error at 9.9 s -0.142 deg (fail); wind peak 0.664 deg (fail); offset at 16 s -0.032 deg (pass < 0.05); back inside 0.05 deg 5.18 s after the gust; peak torque 200 N·m
+P2 Lab windup 2 rad, clamp, wind on, window 16 s: OS 3.4 %, Ts 0.80 s; steady error at 9.9 s -0.009 deg (pass); wind peak 0.556 deg (pass); offset at 16 s -0.027 deg (pass < 0.05); back inside 0.05 deg 4.84 s after the gust; peak torque 200 N·m
+P2 Lab ZN + lag (264, 531.5, 32.8), wind on, window 16 s: OS 67.0 %, Ts 4.22 s; steady error at 9.9 s -0.000 deg (pass); wind peak 4.645 deg (fail); offset at 16 s -0.027 deg (pass < 0.05); back inside 0.05 deg 4.85 s after the gust; peak torque 200 N·m
+P2 Lab worked example (2000, 500, 200), wind on, window 16 s: OS 3.8 %, Ts 1.54 s; steady error at 9.9 s -0.013 deg (fail); wind peak 0.574 deg (pass); offset at 16 s -0.132 deg (fail < 0.05); not back inside 0.05 deg; peak torque 200 N·m
+P2 Lab stiff PD (2000, 0, 200), wind on, window 16 s: OS 1.1 %, Ts 0.27 s; steady error at 9.9 s +0.000 deg (pass); wind peak 0.579 deg (pass); offset at 16 s -0.573 deg (fail < 0.05); not back inside 0.05 deg; peak torque 200 N·m
+P2 Lab worked example (2000, 500, 200), window 24 s, wind on, window 24 s: OS 3.8 %, Ts 1.54 s; steady error at 9.9 s -0.013 deg (fail); wind peak 0.574 deg (pass); offset at 24 s -0.017 deg (pass < 0.05); back inside 0.05 deg 9.78 s after the gust; peak torque 200 N·m
+P2 Lab worked example (2000, 500, 200), window 21 s, wind on, window 21 s: OS 3.8 %, Ts 1.54 s; steady error at 9.9 s -0.013 deg (fail); wind peak 0.574 deg (pass); offset at 21 s -0.037 deg (pass < 0.05); back inside 0.05 deg 9.78 s after the gust; peak torque 200 N·m
+P2 PD offset check: T_d/Kp = 20/1000 rad = 1.146 deg; 20/2000 rad = 0.573 deg; pass mark 0.05 deg on the 1.46 deg beam costs 12 (0.05/1.46)^2 = 0.014 dB
+P2 index, dish ISE = 1/(2 a1) + a1/200; d/da1 = -1/(2 a1^2) + 1/200 = 0 -> a1 = sqrt(a0) = 10 /s, K_r = 10 (a1 - 2) = 80 N m s/rad, zeta = a1/(2 sqrt(a0)) = 0.50, ISE_min = 1/sqrt(a0) = 0.100 s per unit step (x 0.01 rad^2 for the 0.1 rad step = 0.0010 rad^2 s)
+P2 index, dish IAE optimum (numerical): a1 = 13.248 /s, K_r = 112.5 N m s/rad, zeta = 0.662, IAE = 0.1605 s
+P2 telescope side panel (LN2 s.26-28): a0 = 2.5, a1 = 0.5 K3: ISE optimum a1 = sqrt(2.5) -> K3 = sqrt(10) = 3.162, zeta = 0.50; IAE optimum K3 = 4.189, zeta = 0.662 (same zeta as the dish: time scaling moves the gain, not the damping)
+
 All numbers recomputed.
 EXIT 0

@@ -13,7 +13,7 @@ export type LabPlant = 'dish' | 'lag' | PlantId;
 /** The legacy presets per lag plant ([Kp, Ki, Kd], PI used when switching plant). */
 export const LEGACY_PI: Record<PlantId, [number, number, number]> = { p1: [2, 4, 0], p2: [2, 2, 0], p3: [1, 0.4, 0] };
 const LEG = { dist: -0.5, umax: 1.2, noise: 0.01, seed: 99 };
-interface Run { plant: LabPlant; t: number[]; y: number[]; u: number[]; r: number; T: number; windAt: number | null; umax: number | null; OS: number; Ts: number; ess: number; peakU: number; poles: Cx[]; windPeak: number; unstable: boolean; windOn: boolean }
+interface Run { plant: LabPlant; t: number[]; y: number[]; u: number[]; r: number; T: number; windAt: number | null; umax: number | null; OS: number; Ts: number; ess: number; peakU: number; poles: Cx[]; windPeak: number; /** θ_r − θ at the last sample (rad) */ offEnd: number; unstable: boolean; windOn: boolean }
 export function labRun(v: V): Run {
   const plant = str(v, 'plant', 'dish') as LabPlant, Kp = num(v, 'Kp', 1000), Ki = num(v, 'Ki', 0), Kd = num(v, 'Kd', 0), dm = v.dm === undefined ? true : on(v, 'dm'), aw = str(v, 'aw', 'none') as AntiWindup, wind = on(v, 'wind'), noise = on(v, 'noise');
   if (plant === 'dish' || plant === 'lag') {
@@ -26,12 +26,12 @@ export function labRun(v: V): Run {
     let wp = 0; if (gust) s.t.forEach((t, i) => { if (t >= DISH.windAt) wp = Math.max(wp, Math.abs(deg(s.y[i] - r))); });
     const den = lag ? [DISH.J * lag, DISH.J + DISH.B * lag, DISH.B + Kd, Kp, Ki] : [DISH.J, DISH.B + Kd, Kp, Ki];
     const poles = roots(Ki ? den : den.slice(0, -1)).filter((p) => Number.isFinite(p.re));
-    return { plant, t: s.t, y: s.y, u: s.u, r, T, windAt: gust ? DISH.windAt : null, windOn: wind, umax, OS: m.OS, Ts: m.Ts, ess: r - s.y[essIdx], peakU: Math.max(...s.u.map(Math.abs)), poles, windPeak: wp, unstable: s.unstable };
+    return { plant, t: s.t, y: s.y, u: s.u, r, T, windAt: gust ? DISH.windAt : null, windOn: wind, umax, OS: m.OS, Ts: m.Ts, ess: r - s.y[essIdx], peakU: Math.max(...s.u.map(Math.abs)), poles, windPeak: wp, offEnd: r - s.y[s.y.length - 1], unstable: s.unstable };
   }
   const T = num(v, 'T', plant === 'p3' ? 30 : 10), sat = num(v, 'sat', DISH.Tmax) < 1000;
   const sim = simulatePid({ plant, Kp, Ki, Kd, N: 20, T, dt: 0.01, dist: wind ? { t: T / 2, amp: LEG.dist } : null, noise: noise ? LEG.noise : 0, umax: sat ? LEG.umax : null, aw, dOnMeasurement: dm, seed: LEG.seed });
   const m = pidMetrics(sim, { tEnd: wind ? T / 2 : undefined }); let poles: Cx[] = []; try { if (Kp || Ki || Kd) poles = pidClosedLoopPoles(plant, { Kp, Ki, Kd, N: 20 }); } catch { poles = []; }
-  return { plant, t: sim.t, y: sim.y, u: sim.u, r: 1, T, windAt: wind ? T / 2 : null, umax: sat ? LEG.umax : null, OS: m.overshootPct, Ts: m.settlingTime, ess: m.ess, peakU: m.peakU, poles, windPeak: NaN, unstable: sim.unstable, windOn: wind };
+  return { plant, t: sim.t, y: sim.y, u: sim.u, r: 1, T, windAt: wind ? T / 2 : null, umax: sat ? LEG.umax : null, OS: m.overshootPct, Ts: m.settlingTime, ess: m.ess, peakU: m.peakU, poles, windPeak: NaN, offEnd: NaN, unstable: sim.unstable, windOn: wind };
 }
 const isDish = (p: LabPlant) => p === 'dish' || p === 'lag';
 export const labFigure = figureOf((c) => {
@@ -81,6 +81,8 @@ export const labFigure = figureOf((c) => {
           ['Settling 2 %', r.unstable || !Number.isFinite(r.Ts) ? 'not settled' : `${f(r.Ts, 2)} s`, c(null)],
           [gust ? `Steady error (t = ${f(DISH.windAt - 0.1, 1)} s, before gust)` : 'Steady error', d ? `${f(deg(r.ess), 3)}°` : f(r.ess, 3), c(Math.abs(r.ess) < 1e-3 * r.r)],
           ['Wind peak (spec < 0.6°)', !d || !r.windOn ? 'wind off' : gust ? `${f(r.windPeak, 3)}°` : '— (no gust in window)', c(gust ? r.windPeak < 0.6 : null)],
+          // θ_r − θ at the window's last sample, wind on only; passes below 0.05°, the page's "back on target" band (pass 2, R2)
+          ...(d && r.windOn ? [[`Offset at end (t = ${f(r.T, 0)} s)`, gust ? `${f(deg(r.offEnd), 3)}°` : '— (no gust in window)', c(gust ? Math.abs(deg(r.offEnd)) < 0.05 : null)] as [string, string, string]] : []),
           ['Peak torque (limit 200 N·m)', d ? `${k3(r.peakU)} N·m` : f(r.peakU), c(d ? r.peakU <= DISH.Tmax + 1e-6 : null)],
           ['Stability', maxRe < -1e-3 ? 'all poles left' : maxRe < 1e-3 ? 'on the jω axis' : 'unstable pole', c(maxRe < -1e-3)],
         ];
