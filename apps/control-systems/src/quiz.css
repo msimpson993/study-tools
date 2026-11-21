@@ -12,3 +12,7 @@ svg.scope{display:block;width:100%;max-width:440px;margin:.1rem auto .8rem;backg
 svg.scope .tk{fill:var(--muted);font:9.5px system-ui,sans-serif}svg.scope .lb{fill:var(--muted);font:600 10px system-ui,sans-serif}
 a.rev{display:inline-block;margin-top:.2rem;font:600 .8rem system-ui,sans-serif}
 .eqbox{margin:.5rem 0 .8rem;padding:.55rem .8rem;border:1px solid var(--border);border-radius:10px;background:var(--panel2);line-height:2.1;overflow-x:auto}
+
+/* CS pass 3 (Nov 21): on a phone the box pop-ups' figures stack one per row, so each plot gets the card's full width and its
+   legend and labels have room off the curves (two side by side were ~170 px wide) */
+@media (max-width: 699px) { #app .pop-figs.n2, #app .pop-figs.n3, #app .pop-figs.n4 { grid-template-columns: 1fr; } #app .pop-figs.n4 > :first-child { grid-column: auto; } }

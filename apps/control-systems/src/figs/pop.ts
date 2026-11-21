@@ -127,8 +127,7 @@ export const popFigures: QuizFigureRegistry = {
       legend(g, F, runs.map((r) => ({ label: r[3], color: r[2] })), 'br', 9.5); return;
     }
     const F = drawSPlane(g, w, h, { range: 12, reCenter: -4, poles: dishPoles(1000, 0, 120), labels: false, marks: dishPoles(1000, 0, 0).map((s) => ({ s, shape: 'ring' as const, color: col.muted() })), zetaRays: [0.1, 0.7] });
-    // the pole value goes under the upper pole, off both ζ rays and their names (pass 2, N5)
-    const up = dishPoles(1000, 0, 120).find((q) => q.im > 0); if (up) text(g, `${f(up.re, 0)} ± j${f(up.im, 2)}`, F.X(up.re), F.Y(up.im) + 20, col.b(), 'center', 10);
+    const up = dishPoles(1000, 0, 120).find((q) => q.im > 0); if (up) text(g, `${f(up.re, 0)} ± j${f(up.im, 2)}`, F.X(up.re) - 10, F.Y(up.im) + 16, col.b(), 'right', 10); /* left of and below the pole: the ζ 0.7 ray runs through the pole up-left and down-right (pass 3) */
   }),
 
   'pop-tune': mini((g, w, h) => {
@@ -194,7 +193,7 @@ export const popFigures: QuizFigureRegistry = {
       marks: [...roots([corner.m, corner.c, corner.k]).map((s) => ({ s, shape: 'ring' as const, color: col.muted() })), { s: C(-8, 6), shape: 'dot' as const, color: col.a() }, { s: C(-8, -6), shape: 'dot' as const, color: col.a() }] });
     for (const sg of [1, -1]) arrowPx(g, F.X(-2.3), F.Y(sg * 7.6), F.X(-7.6), F.Y(sg * 6.2), col.a(), 1.6, 6);
     text(g, 'P: decay stuck at 1 /s', F.X(-1) + 6, F.Y(10.2), col.muted(), 'left', 10);
-    text(g, 'state feedback: K = [14 400, 4 800]', F.X(-8), F.Y(-6) + 16, col.a(), 'center', 10);
+    text(g, 'state feedback: K = [14 400, 4 800]', F.X(-8), F.Y(-6) - 12, col.a(), 'center', 10); // above the placed pole, clear of the corner's ring at −2 − 7.75j (pass 3)
   }, 1.4, 340),
 
   'pop-obs': mini((g, w, h) => {

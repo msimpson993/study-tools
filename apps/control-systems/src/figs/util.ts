@@ -25,12 +25,20 @@ export function para(g: CanvasRenderingContext2D, s: string, x: number, y: numbe
 }
 /** A legend drawn INSIDE the plot (top-left by default), one row per item, wrapping when the plot is narrow. */
 /** How much curve ink (saturated, opaque pixels: the coloured curves, not grey grid, axes or text) lies in a user-space box. */
+/** a CSS colour as [r, g, b], through the canvas's own parser */
+function rgbOf(g: CanvasRenderingContext2D, c: string): [number, number, number] | null {
+  const prev = g.fillStyle; g.fillStyle = '#000'; g.fillStyle = c; const v = String(g.fillStyle); g.fillStyle = prev;
+  const hx = /^#([0-9a-f]{2})([0-9a-f]{2})([0-9a-f]{2})/i.exec(v); if (hx) return [parseInt(hx[1], 16), parseInt(hx[2], 16), parseInt(hx[3], 16)];
+  const rg = /rgba?\((\d+),\s*(\d+),\s*(\d+)/.exec(v); return rg ? [+rg[1], +rg[2], +rg[3]] : null;
+}
 function inkIn(g: CanvasRenderingContext2D, x0: number, y0: number, x1: number, y1: number): number {
   const m = typeof g.getTransform === 'function' ? g.getTransform() : null; if (!m || typeof g.getImageData !== 'function') return 0;
   const X0 = Math.max(0, Math.floor(m.a * x0 + m.e)), Y0 = Math.max(0, Math.floor(m.d * y0 + m.f)), X1 = Math.min(g.canvas.width, Math.ceil(m.a * x1 + m.e)), Y1 = Math.min(g.canvas.height, Math.ceil(m.d * y1 + m.f));
   if (X1 - X0 < 2 || Y1 - Y0 < 2) return 0;
   let d: Uint8ClampedArray; try { d = g.getImageData(X0, Y0, X1 - X0, Y1 - Y0).data; } catch { return 0; }
-  let n = 0; for (let i = 0; i < d.length; i += 8) { if (d[i + 3] < 140) continue; const mx = Math.max(d[i], d[i + 1], d[i + 2]), mn = Math.min(d[i], d[i + 1], d[i + 2]); if (mx - mn > 60) n++; }
+  // grey curves count too (pass 3: the grey open-loop curve ran under 'PI: back to 0'): a pixel close to the muted curve colour
+  const mu = rgbOf(g, col.muted());
+  let n = 0; for (let i = 0; i < d.length; i += 8) { if (d[i + 3] < 140) continue; const mx = Math.max(d[i], d[i + 1], d[i + 2]), mn = Math.min(d[i], d[i + 1], d[i + 2]); if (mx - mn > 60 || (mu && Math.abs(d[i] - mu[0]) + Math.abs(d[i + 1] - mu[1]) + Math.abs(d[i + 2] - mu[2]) < 45)) n++; }
   return n;
 }
 /** The colour the canvas shows through to (it is transparent): the first opaque background up its parents. */

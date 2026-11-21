@@ -46,7 +46,7 @@ export function drawStepResponse(g: CanvasRenderingContext2D, w: number, h: numb
   graphAxes(g, f, [0, tEnd], yr, s.xLabel ?? 'time (s)', s.yLabel ?? 'output');
   const m = stepMetrics(t, y, { ref, final: s.final, band });
   const yf = m.yFinal;
-  if (show.band && Number.isFinite(yf)) { g.save(); clipBox(g, f); g.fillStyle = col.ok(); g.globalAlpha = 0.14; g.fillRect(f.box.l, f.Y(yf * (1 + band)), f.box.r - f.box.l, f.Y(yf * (1 - band)) - f.Y(yf * (1 + band))); g.restore(); text(g, `±${fmtN(band * 100, 0)}%`, f.box.l + 4, f.Y(yf * (1 - band)) + 9, col.ok(), 'left', 10); }
+  if (show.band && Number.isFinite(yf)) { g.save(); clipBox(g, f); g.fillStyle = col.ok(); g.globalAlpha = 0.14; g.fillRect(f.box.l, f.Y(yf * (1 + band)), f.box.r - f.box.l, f.Y(yf * (1 - band)) - f.Y(yf * (1 + band))); g.restore(); text(g, `±${fmtN(band * 100, 0)}%`, f.box.r - 4, f.Y(yf * (1 - band)) + 12, col.ok(), 'right', 10) /* at the right end, where the response has settled inside the band (pass 3: at the left it sat on the rising curve) */; }
   tline(g, f, [0, ref], [tEnd, ref], col.muted(), 1, [5, 4]);
   if (s.ghost) curve(g, f, Array.from(s.ghost.t), Array.from(s.ghost.y), col.muted(), 2, [6, 4]);
   curve(g, f, t, y, s.color ?? col.a(), 2.4);
@@ -109,7 +109,8 @@ export function drawSPlane(g: CanvasRenderingContext2D, w: number, h: number, s:
     for (let y = Math.ceil(f.iy(f.box.b) / st) * st; y <= f.iy(f.box.t); y += st) { g.beginPath(); g.moveTo(f.box.l, f.Y(y)); g.lineTo(f.box.r, f.Y(y)); g.stroke(); if (Math.abs(y) > 1e-9) text(g, String(+y.toFixed(3)), f.box.l + 3, f.Y(y) - 6, col.muted(), 'left', 9); }
   });
   g.restore();
-  if (s.shadeUnstable !== false && x0 < f.box.r - 70) text(g, 'unstable', f.box.r - 5, f.box.t + 10, col.bad(), 'right', 10);
+  // one row below the jω axis name, so the two never touch on a narrow panel (pass 3)
+  if (s.shadeUnstable !== false && x0 < f.box.r - 70) text(g, 'unstable', f.box.r - 5, f.box.t + 24, col.bad(), 'right', 10);
   // allowed region
   if (s.region) {
     const r = s.region; g.save(); clipBox(g, f);
@@ -121,13 +122,24 @@ export function drawSPlane(g: CanvasRenderingContext2D, w: number, h: number, s:
   g.save(); clipBox(g, f);
   g.strokeStyle = col.strong(); g.lineWidth = 1.5; g.beginPath(); g.moveTo(x0, f.box.t); g.lineTo(x0, f.box.b); g.stroke(); // the jω axis: the edge of stability
   for (const wn of s.wnCircles ?? []) { g.strokeStyle = col.d(); g.globalAlpha = 0.7; g.lineWidth = 1; g.setLineDash([3, 4]); g.beginPath(); g.arc(x0, y0, wn * f.sx, Math.PI / 2, (3 * Math.PI) / 2); g.stroke(); g.setLineDash([]); g.globalAlpha = 1; text(g, `ωn ${fmtN(wn)}`, x0 - wn * f.sx + 3, y0 + 10, col.d(), 'left', 10); }
+  const zetaNames: (() => void)[] = [], taken: { x0: number; x1: number; y0: number; y1: number }[] = [];
   for (const z of s.zetaRays ?? []) {
     const th = Math.acos(Math.min(1, Math.max(0, z)));
     for (const sg of [1, -1]) tline(g, f, [0, 0], [-Math.cos(th) * R, sg * Math.sin(th) * R], col.e(), 1, [5, 4]);
-    // the ζ name sits on the upper ray, part-way out, at the first distance along it that is clear of every pole and zero (it used to land on a pole)
-    const marks = [...(s.poles ?? []), ...(s.zeros ?? [])], clear = (q: number) => marks.every((p) => Math.hypot(f.X(-Math.cos(th) * q) + 14 - f.X(p.re), f.Y(Math.sin(th) * q) + 2 - f.Y(p.im)) > 22);
-    const rl = [0.45, 0.6, 0.3, 0.75, 0.9].map((k) => Math.min(s.range * k, R)).find(clear) ?? Math.min(s.range * 0.9, R);
-    text(g, `ζ ${fmtN(z)}`, f.X(-Math.cos(th) * rl) + 4, f.Y(Math.sin(th) * rl) + 2, col.e(), 'left', 10);
+    zetaNames.push(() => {
+      // (drawn after the pole values, below, so it can keep clear of them too) the ζ name sits beside the upper ray, part-way out, at the first spot whose text is clear of every pole and zero and of every
+      // ζ ray, its own included (pass 3: the names sat on the rays at phone width); tried right of the ray first, then left
+      const marks = [...(s.poles ?? []), ...(s.zeros ?? []), ...(s.marks ?? []).map((mk) => mk.s)], name = `ζ ${fmtN(z)}`;
+      g.font = '10px system-ui, sans-serif'; const tw = g.measureText(name).width;
+      const rays = (s.zetaRays ?? []).map((zz) => Math.acos(Math.min(1, Math.max(0, zz))));
+      const boxAt = (q: number, side: 1 | -1) => { const X = f.X(-Math.cos(th) * q), Y = f.Y(Math.sin(th) * q); return side === 1 ? { x0: X + 5, x1: X + 5 + tw, y0: Y - 14, y1: Y - 3 } : { x0: X - 5 - tw, x1: X - 5, y0: Y + 3, y1: Y + 14 }; };
+      const hitsRay = (b: { x0: number; x1: number; y0: number; y1: number }) => rays.some((t2) => [1, -1].some((sg) => { for (let k = 0; k <= 80; k++) { const q = (k / 80) * R, X = f.X(-Math.cos(t2) * q), Y = f.Y(sg * Math.sin(t2) * q); if (X > b.x0 - 2 && X < b.x1 + 2 && Y > b.y0 - 2 && Y < b.y1 + 2) return true; } return false; }));
+      const okBox = (b: { x0: number; x1: number; y0: number; y1: number }) => b.x0 > f.box.l + 2 && b.x1 < f.box.r - 2 && b.y0 > f.box.t + 2 && b.y1 < f.box.b - 2 && marks.every((p) => { const X = f.X(p.re), Y = f.Y(p.im); return X < b.x0 - 9 || X > b.x1 + 9 || Y < b.y0 - 9 || Y > b.y1 + 9; }) && !hitsRay(b) && taken.every((t) => b.x1 < t.x0 - 2 || b.x0 > t.x1 + 2 || b.y1 < t.y0 - 2 || b.y0 > t.y1 + 2) && !(b.x0 < x0 + 3 && b.x1 > x0 - 3);
+      let spot: { x0: number; y1: number } | null = null;
+      for (const k of [0.45, 0.6, 0.3, 0.75, 0.9, 0.2]) { for (const side of [1, -1] as const) { const b = boxAt(Math.min(s.range * k, R), side); if (okBox(b)) { spot = b; break; } } if (spot) break; }
+      if (!spot) { const rl = Math.min(s.range * 0.45, R); spot = { x0: f.X(-Math.cos(th) * rl) + 4, y1: f.Y(Math.sin(th) * rl) + 2 + 3 }; }
+      text(g, name, spot.x0, spot.y1 - 3, col.e(), 'left', 10);
+    });
   }
   if (s.asymptotes) for (const a of s.asymptotes.anglesDeg) { const r = (a * Math.PI) / 180; tline(g, f, [s.asymptotes.centroid, 0], [s.asymptotes.centroid + Math.cos(r) * R, Math.sin(r) * R], col.muted(), 1.2, [6, 4]); }
   const pal = BRANCH_COLORS();
@@ -145,7 +157,22 @@ export function drawSPlane(g: CanvasRenderingContext2D, w: number, h: number, s:
     const X = f.X(p.re), Y = f.Y(p.im); if (X < f.box.l || X > f.box.r || Y < f.box.t || Y > f.box.b) continue;
     labelsOn(cv).push({ x0: m.a * (X - 7) + m.e, x1: m.a * (X + 7) + m.e, y0: m.d * (Y - 7) + m.f, y1: m.d * (Y + 7) + m.f, role: 'axis' });
   }
-  for (const p of s.poles ?? []) { cross(g, f, [p.re, p.im], col.b(), 6); if (s.labels && p.im >= -1e-9) text(g, fmtC(p), f.X(p.re) + 9, f.Y(p.im) + (p.im > 1e-9 ? 14 : -12), col.b(), 'left', 10); }
+  // a pole's value goes right of it, or left when a ζ ray runs through that spot (pass 3: a pole on a ray had its value on the ray)
+  const zr = (s.zetaRays ?? []).map((zz) => Math.acos(Math.min(1, Math.max(0, zz))));
+  const onRay = (x0b: number, x1b: number, y0b: number, y1b: number) => zr.some((t2) => [1, -1].some((sg) => { for (let k = 0; k <= 80; k++) { const q = (k / 80) * R, X = f.X(-Math.cos(t2) * q), Y = f.Y(sg * Math.sin(t2) * q); if (X > x0b - 2 && X < x1b + 2 && Y > y0b - 2 && Y < y1b + 2) return true; } return false; }));
+  for (const p of s.poles ?? []) {
+    cross(g, f, [p.re, p.im], col.b(), 6);
+    if (!(s.labels && p.im >= -1e-9)) continue;
+    const lab = fmtC(p), X = f.X(p.re), Y = f.Y(p.im) + (p.im > 1e-9 ? 14 : -12); g.font = '10px system-ui, sans-serif'; const tw = g.measureText(lab).width;
+    // …and clear of the σ axis name at the right end of the real axis (pass 3: "0+j6.32" sat on "σ (1/s)")
+    g.font = '11px system-ui, sans-serif'; const sw = g.measureText(s.xLabel ?? 'σ (1/s)').width; g.font = '10px system-ui, sans-serif';
+    const onSigma = (a: number, b2: number, c: number, d: number) => b2 > f.box.r - 2 - sw - 3 && a < f.box.r && d > y0 - 8 - 12 && c < y0 - 8 + 4;
+    const blockedR = onRay(X + 9, X + 9 + tw, Y - 9, Y + 2) || onSigma(X + 9, X + 9 + tw, Y - 9, Y + 2), blockedL = onRay(X - 9 - tw, X - 9, Y - 9, Y + 2) || X - 9 - tw < f.box.l + 2;
+    const right = !blockedR || blockedL;
+    text(g, lab, right ? X + 9 : X - 9, Y, col.b(), right ? 'left' : 'right', 10);
+    taken.push(right ? { x0: X + 9, x1: X + 9 + tw, y0: Y - 9, y1: Y + 2 } : { x0: X - 9 - tw, x1: X - 9, y0: Y - 9, y1: Y + 2 });
+  }
+  for (const zn of zetaNames) zn();
   g.restore();
   return f;
 }
