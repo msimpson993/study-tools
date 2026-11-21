@@ -217,7 +217,9 @@ function houseScenario(ov: string[]) {
 const hAt = (S: HouseSim, th: number) => { const i = Math.max(0, Math.min(S.n - 1, Math.round(th / S.dt))); return { a: S.x1[i], b: S.x2[i], u1: S.u1[i], u2: S.u2[i], i }; };
 
 export function drawHouseMain(g: G, r: Rect, P: Pal, ov: string[], tAnim: number, small: boolean) {
-  const S = houseScenario(ov), th = (tAnim / HOUSE_ANIM) * S.T, st = hAt(S, th), px = small ? 9.5 : 10.5, out = HOUSE.outdoor;
+  // the frame snaps to the 0.1 h its clock shows, so the live x₁, x₂ are the values at that time (they read 0.1 low when the
+  // clock rounded 0.96 h up to 1.0 h; CS pass 3)
+  const S = houseScenario(ov), th = Math.round((tAnim / HOUSE_ANIM) * S.T * 10) / 10, st = hAt(S, th), px = small ? 9.5 : 10.5, out = HOUSE.outdoor;
   const w = r.w, hh = r.h, gx0 = r.x + Math.max(30, w * 0.12), gx1 = r.x + w - Math.max(30, w * 0.12), base = r.y + hh - 16, roofH = hh * 0.2, top = r.y + roofH + 10, mid = (gx0 + gx1) / 2;
   const room1: Rect = { x: gx0, y: top, w: mid - gx0, h: base - top }, room2: Rect = { x: mid, y: top, w: gx1 - mid, h: base - top };
   for (const [rm, T] of [[room1, st.a], [room2, st.b]] as [Rect, number][]) { mix(g, rm, P.s0, 0.22 * Math.max(0, 1 - T / 12)); mix(g, rm, P.bad, 0.5 * Math.min(1, Math.max(0, T) / 16)); }
@@ -225,9 +227,9 @@ export function drawHouseMain(g: G, r: Rect, P: Pal, ov: string[], tAnim: number
   line(g, [[gx0, top], [gx1, top]], P.strong, 1.6);
   // shared wall with a door gap
   line(g, [[mid, top], [mid, base - (base - top) * 0.45]], P.strong, 2.4);
-  text(g, `T₁ = ${fmt(out + st.a, 1)} °C`, room1.x + room1.w / 2, top + 16, P.text, { align: 'center', px: px + 1, wt: 800 });
-  text(g, `T₂ = ${fmt(out + st.b, 1)} °C`, room2.x + room2.w / 2, top + 16, P.text, { align: 'center', px: px + 1, wt: 800 });
-  text(g, `outside ${out} °C`, r.x + 4, r.y + 12, P.s0, { px, wt: 700 });
+  text(g, `x₁ = ${fmt(st.a, 1)} K`, room1.x + room1.w / 2, top + 16, P.text, { align: 'center', px: px + 1, wt: 800 });
+  text(g, `x₂ = ${fmt(st.b, 1)} K`, room2.x + room2.w / 2, top + 16, P.text, { align: 'center', px: px + 1, wt: 800 });
+  text(g, `outdoors ${out} °C; x = K above outdoors`, r.x + 4, r.y + 12, P.s0, { px, wt: 700 });
   text(g, `t = ${fmt(th, 1)} h`, r.x + w - 4, r.y + 12, P.muted, { align: 'right', px, wt: 600 });
   // heaters
   const heater = (rm: Rect, pw: number, label: string) => { const hx = rm.x + 10, hy = base - 24, on = pw > 1; g.fillStyle = on ? P.warn : P.elev; g.fillRect(hx, hy, 26, 16); g.strokeStyle = P.strong; g.lineWidth = 1; g.strokeRect(hx, hy, 26, 16); for (let i = 1; i < 4; i++) line(g, [[hx + i * 6.5, hy + 2], [hx + i * 6.5, hy + 14]], P.panel, 1); text(g, label, hx + 30, hy + 12, on ? P.warn : P.muted, { px: px - 0.5, wt: 700, optional: true }); };
@@ -236,34 +238,34 @@ export function drawHouseMain(g: G, r: Rect, P: Pal, ov: string[], tAnim: number
   if (ov.includes('thermo') || ov.includes('avg')) {
     const avg = ov.includes('avg'), tx = avg ? mid : gx0, ty = top + (base - top) * 0.5;
     g.fillStyle = P.panel; g.strokeStyle = P.ok; g.lineWidth = 2; g.beginPath(); if (typeof g.roundRect === 'function') g.roundRect(tx - 9, ty - 9, 18, 18, 4); else g.rect(tx - 9, ty - 9, 18, 18); g.fill(); g.stroke();
-    text(g, avg ? `reads ½(T₁+T₂) = ${fmt(out + (st.a + st.b) / 2, 1)} °C` : `reads T₁ = ${fmt(out + st.a, 1)} °C`, avg ? mid : room1.x + room1.w / 2, ty + 24, P.ok, { align: 'center', px: px - 0.5, wt: 700 });
+    text(g, avg ? `reads ½(x₁ + x₂) = ${fmt((st.a + st.b) / 2, 1)} K` : `reads x₁ = ${fmt(st.a, 1)} K`, avg ? mid : room1.x + room1.w / 2, ty + 24, P.ok, { align: 'center', px: px - 0.5, wt: 700 });
   }
   // heat flows
   if (ov.includes('flows')) {
     const q = st.a - st.b, L = Math.min(34, w * 0.08), ay = base - (base - top) * 0.25;
     if (Math.abs(q) > 0.05) arrow(g, mid - (Math.sign(q) * L) / 2, ay, mid + (Math.sign(q) * L) / 2 * Math.min(1, Math.abs(q) / 4 + 0.3), ay, P.bad, 2.6);
     for (const [x0, T, sgn] of [[gx0, st.a, -1], [gx1, st.b, 1]] as [number, number, number][]) if (T > 0.3) arrow(g, x0, ay - 16, x0 + sgn * Math.min(26, 6 + T * 1.4), ay - 16, P.s0, 2.2);
-    text(g, 'wall: (T₁ − T₂)·1/h', mid, base + 12, P.bad, { align: 'center', px: px - 0.5, wt: 700, optional: true });
+    text(g, 'wall: (x₁ − x₂)·1/h', mid, base + 12, P.bad, { align: 'center', px: px - 0.5, wt: 700, optional: true });
   }
 }
 
 export function drawHouseTrace(g: G, r: Rect, P: Pal, ov: string[], tAnim: number) {
-  const S = houseScenario(ov), th = (tAnim / HOUSE_ANIM) * S.T, out = HOUSE.outdoor;
+  const S = houseScenario(ov), th = (tAnim / HOUSE_ANIM) * S.T;
   let hi = 4; for (let i = 0; i < S.n; i += 5) hi = Math.max(hi, S.x1[i], S.x2[i]);
   const lo = ov.includes('modes') ? -Math.max(2, hi * 0.4) : 0, step = S.T <= 3 ? 1 : 3;
-  const { X, Y } = axes(g, r, P, [0, S.T], [out + lo, out + hi * 1.12], 't (h)', '°C', { pad: [30, 14, 8, 24], xTicks: Array.from({ length: Math.floor(S.T / step) + 1 }, (_, i) => i * step) });
-  const path = (f: (i: number) => number, to: number) => { const q: [number, number][] = []; for (let i = 0; i * S.dt <= to && i < S.n; i += 3) q.push([X(i * S.dt), Y(out + f(i))]); return q; };
+  const { X, Y } = axes(g, r, P, [0, S.T], [lo, hi * 1.12], 't (h)', 'K above outdoors', { pad: [30, 14, 8, 24], xTicks: Array.from({ length: Math.floor(S.T / step) + 1 }, (_, i) => i * step) });
+  const path = (f: (i: number) => number, to: number) => { const q: [number, number][] = []; for (let i = 0; i * S.dt <= to && i < S.n; i += 3) q.push([X(i * S.dt), Y(f(i))]); return q; };
   g.save(); clip(g, { x: r.x + 28, y: r.y, w: r.w - 34, h: r.h });
   line(g, path((i) => S.x1[i], S.T), P.s1, 1.4, [], 0.18); line(g, path((i) => S.x2[i], S.T), P.s2, 1.4, [], 0.18);
   if (ov.includes('modes')) { line(g, path((i) => (S.x1[i] + S.x2[i]) / 2, th), P.s3, 1.6, [5, 3]); line(g, path((i) => (S.x1[i] - S.x2[i]) / 2, th), P.muted, 1.6, [2, 3]); }
   line(g, path((i) => S.x1[i], th), P.s1, 2.4); line(g, path((i) => S.x2[i], th), P.s2, 2.4);
-  if (S.kind === 'optimal') for (const [v, c] of [[OPT_TARGET[0], P.s1], [OPT_TARGET[1], P.s2]] as [number, string][]) { g.save(); g.strokeStyle = c; g.lineWidth = 2; g.beginPath(); g.arc(X(S.T) - 3, Y(out + v), 5, 0, 7); g.stroke(); g.restore(); }
+  if (S.kind === 'optimal') for (const [v, c] of [[OPT_TARGET[0], P.s1], [OPT_TARGET[1], P.s2]] as [number, string][]) { g.save(); g.strokeStyle = c; g.lineWidth = 2; g.beginPath(); g.arc(X(S.T) - 3, Y(v), 5, 0, 7); g.stroke(); g.restore(); }
   g.restore();
-  // end labels: T₂ goes under its curve unless that runs into the time axis, then it stacks above T₁
-  const y1 = Y(out + S.x1[S.n - 1]) - 4; let y2 = Y(out + S.x2[S.n - 1]) + 12; if (y2 > Y(out + lo) - 4) y2 = Math.min(y1, Y(out + S.x2[S.n - 1]) - 4) - 12;
-  text(g, 'T₁', r.x + r.w - 10, y1, P.s1, { align: 'right', px: 10, wt: 800 });
-  text(g, 'T₂', r.x + r.w - 10, y2, P.s2, { align: 'right', px: 10, wt: 800 });
-  if (ov.includes('modes')) text(g, 'dashed: average and half-difference (above 5 °C)', r.x + 34, r.y + 12, P.s3, { px: 9.5, wt: 700, optional: true });
+  // end labels: x₂ goes under its curve unless that runs into the time axis, then it stacks above x₁
+  const y1 = Y(S.x1[S.n - 1]) - 4; let y2 = Y(S.x2[S.n - 1]) + 12; if (y2 > Y(lo) - 4) y2 = Math.min(y1, Y(S.x2[S.n - 1]) - 4) - 12;
+  text(g, 'x₁', r.x + r.w - 10, y1, P.s1, { align: 'right', px: 10, wt: 800 });
+  text(g, 'x₂', r.x + r.w - 10, y2, P.s2, { align: 'right', px: 10, wt: 800 });
+  if (ov.includes('modes')) text(g, 'dashed: average and half-difference (K above outdoors)', r.x + 34, r.y + 12, P.s3, { px: 9.5, wt: 700, optional: true });
   if (S.kind === 'optimal') text(g, 'circles: illustrative 3 h target', r.x + 34, r.y + 12, P.muted, { px: 9.5, wt: 700, optional: true });
 }
 
