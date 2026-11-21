@@ -35,7 +35,7 @@ Wind: E/T_d = −1/(Js² + Bs + Kp)  ⇒  e_ss = −T_d/Kp
 Ramp θ_r = ωt: e_ss = Bω/Kp = ω/K_v,  K_v = Kp/B
 ```
 
-**What each symbol means.** E: the error r − θ; T_d: wind torque at the motor (N·m); ω: the command's slew rate (rad/s); K_v: velocity constant (1/s). LN1 slides 65–66 and 72.
+**What each symbol means.** E: the error r − θ; T_d: wind torque at the motor (N·m); ω: the command's slew rate (rad/s); K_v: velocity constant (1/s).
 
 <a id="type"></a>**System type**. The type is the number of integrators in L. Step error 1/(1 + K_pos); ramp error ω/K_v; type 2 tracks ramps.
 

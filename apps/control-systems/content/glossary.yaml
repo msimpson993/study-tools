@@ -94,7 +94,7 @@
     <i>L</i> is not loop gain.)
   section: Physical / circuit
 - term: eᵢ, e_o
-  meaning: Input / output voltage of the LRC example (slide 40).
+  meaning: Input / output voltage of the LRC example.
   section: Physical / circuit
 - term: m, b, k
   meaning: "Mass, damping, spring constant. Analog: <i>m</i>↔<i>L</i>, <i>b</i>↔<i>R</i>, <i>k</i>↔1/<i>C</i>."
@@ -114,7 +114,7 @@
 - term: Tᵢ, T_D
   meaning: Integral time and derivative time (standard form). Bigger <i>T</i><sub>i</sub> = weaker I. This
     <i>T</i><sub>d</sub> is not the disturbance. Here the derivative time is written T_D, because T_d is the
-    wind torque on the dish (the slides write Td).
+    wind torque on the dish (the lecture notes write Td).
   section: Controller
 - term: T (τ)
   meaning: "Time constant (s) of <i>K</i>/(<i>Ts</i>+1): 63.2% at <i>t</i> = <i>T</i>."
@@ -365,7 +365,7 @@
   meaning: Motor torque at the axis (N·m, limit ±200) and wind (disturbance) torque (N·m, 20 in the examples).
   section: Running examples
 - term: N_f
-  meaning: "Derivative filter bandwidth (rad/s): K_d·N_f·s/(s + N_f); 200 on the dish. The legacy PID pages wrote N."
+  meaning: "Derivative filter bandwidth (rad/s): the D term is K_d·N_f·s/(s + N_f), so D ignores changes faster than about N_f. 200 rad/s on the dish. Written N_f so it isn't confused with the sensor noise N."
   section: Controller
 - term: N̄
   meaning: "Reference gain for state feedback, u = −Kx̂ + N̄r; the slides write N. Corner: N̄ = k + k₁ = 40 000 N/m."

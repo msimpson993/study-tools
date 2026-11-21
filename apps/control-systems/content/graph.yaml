@@ -651,15 +651,15 @@ maps:
       **What we want:** the feedback loop as a picture and as one formula, seen on a loop we already understand.
   - from: LOOP
     to: PGAIN
-    label: simplest controller → dish
+    label: simplest controller
     question: What is the simplest controller that makes a plant follow a command we choose?
-    idea: 'A car corner only follows the road; to follow our command we need a motor: enter the antenna positioner, LN1''s own servo.'
+    idea: 'So far the "command" was the road, which nobody chooses. We need a plant whose input we drive toward a target we pick, and the simplest rule for driving it: push in proportion to the error.'
     why: |-
-      **Still open:** in Box 7 the "command" was the road. Nobody chooses it, and the passive corner has no motor to obey anything else.
+      **Still open:** in Box 7 the "command" was the road. Nobody chooses it, and the passive corner has nothing that could obey anything else.
 
-      **Why it matters:** P, I and D are about commanding a motor, and LN1 slides 62–72 build all three on a servo with inertia J and friction B.
+      **Why it matters:** P, I and D are rules for driving an actuator toward a target we choose, so they need a plant that has one.
 
-      **What we want:** a motor-driven plant with a command we pick (an antenna angle) and the simplest rule that drives it there.
+      **What we want:** a plant whose input we drive and whose target we choose, and the simplest rule that drives it there.
   - from: PGAIN
     to: SSE
     label: why short?
@@ -710,7 +710,7 @@ maps:
     question: How much does feedback really protect a system from the outside world?
     idea: 'Back to the house: a thermostat''s whole job is holding steady against the weather, so it shows feedback''s benefits most plainly.'
     why: |-
-      **Still open:** the wind on the dish was one example; LN2 asks in general what feedback buys: rejection, insensitivity, speed.
+      **Still open:** the wind on the dish was one example. In general, what does feedback buy: rejection of outside pushes, tolerance of a wrong model, speed?
 
       **Why it matters:** the house's open-loop model from Boxes 1–4 makes the before/after comparison exact.
 
@@ -830,7 +830,8 @@ maps:
 
       **Why it matters:** side by side, they show what the state-space detour bought: the decay rate is no longer fixed by the friction.
 
-      **What we want:** one s-plane picture, in rad/s with no normalising: the dish's P path rising straight up at −1, and the corner's poles moved from −2 ± 7.75j to −8 ± 6j.
+      **What we want:** both plants on one s-plane, on the same axes (rad/s): the dish's P path rising straight up from −1, and the corner's poles moved from −2 ± 7.75j to −8 ± 6j.
+    reverse: true
   - from: FIRST
     to: REF
     label: DC gain, again
@@ -1472,15 +1473,15 @@ maps:
   - id: REDUCE
     label: Shrink the model, keep the behaviour
     series: 1
-    short: 'Yes, in two ways. Drop a far pole and keep the DC gain. Or choose the smaller model''s coefficients so its frequency response matches the big one''s at low frequency: the notes'' *frequency-matching* method, which solves M₂q = Δ₂q, one equation per unknown coefficient.'
-    eq: 6/((s+1)(s+2)(s+3)) ≈ 1.60/(s² + 2.59s + 1.60)  (LN2's example)
+    short: 'Yes, in two ways. Drop a far pole and keep the DC gain. Or use the notes'' *frequency matching*: pick the small model''s coefficients so its frequency response matches the big one''s at low frequency. The matching equations M₂q = Δ₂q are written for q = 1, 2, … until every unknown coefficient is fixed.'
+    eq: 6/((s+1)(s+2)(s+3)) ≈ 1.60/(s² + 2.59s + 1.60)  (the notes' example)
     dive: reduce
     live: figure:reduce
     quizTag: reduce
     addsToExample: Gives the house its best one-pole stand-in, τ = 5.02 h.
     pop:
       rough: small model = same DC gain + same low-frequency shape
-      eqKey: M₂q, Δ₂q = sums built from the derivatives of the numerator and denominator at s = 0 (LN2 slide 31).
+      eqKey: M₂q, Δ₂q = sums of derivatives at s = 0 of the numerator (M) and denominator (Δ) of the full model divided by the reduced one.
       example: 'House to first order: frequency matching gives 20.45/(5.02s + 1), within 1.45 K of the true warm-up; dropping −2.2 gives τ = 5 h, within 1.46 K. With an 11:1 pole ratio, both are fine.'
       ask: q-reduce
   - id: DOM
@@ -1508,7 +1509,7 @@ maps:
     addsToExample: Derives the corner's two transfer functions from one diagram.
     pop:
       rough: series ×, parallel +, loop = forward/(1 + loop)
-      eqKey: C = output (the slides' letter); R = command; D = disturbance input.
+      eqKey: C = output (the lecture notes' letter); R = command; D = disturbance input.
       example: 'Corner: road to body is (cs + k)/(ms² + cs + k); actuator force to body is 1/(ms² + cs + k). Different numerators, same poles.'
       ask: q-blockalg
   - id: MENU
@@ -1519,10 +1520,10 @@ maps:
     dive: ctrl
     live: board:s5
     quizTag: ctrl
-    addsToExample: Names the dish's controller in the slides' notation.
+    addsToExample: Names the dish's controller in the lecture notes' notation.
     pop:
       rough: controller = some mix of the error now, its total so far, and its trend
-      eqKey: Ti = integral (reset) time; T_D = derivative time (the slides' Td; renamed so it can't be confused with wind torque).
+      eqKey: Ti = integral (reset) time; T_D = derivative time (the notes write Td; renamed so it can't be confused with wind torque).
       example: 'The tuned positioner (2000, 1000, 200) in the notes'' form: Kp = 2000 N·m/rad, Ti = 2 s, T_D = 0.1 s.'
       ask: q-menu
   - id: SPEED
@@ -1578,8 +1579,8 @@ maps:
     addsToExample: Puts the whole tuning story on sliders.
     pop:
       rough: move a gain and watch the angle, the torque and the numbers change live
-      eqKey: N_f = derivative filter bandwidth (rad/s; not LN2's noise N).
-      example: Start at P 1000 (73 % overshoot), add Kd = 120, then go to (2000, 1000, 200), and watch Boxes 8–12 replay. A 0.1 rad step starts at exactly the 200 N·m limit.
+      eqKey: N_f = derivative filter bandwidth (rad/s); not the sensor noise N.
+      example: "Start at P 1000 (73 % overshoot), add Kd = 120 (3.8 %), then go to (2000, 1000, 200) (6.3 %): Boxes 8–12 replay, slightly lower because the Lab filters D (the boxes' ideal D gives 4.6 % and 7.4 %). A 0.1 rad step starts at exactly the 200 N·m limit."
       ask: q-lab
   - id: METHODS
     label: 'Recipes: by hand, Ziegler–Nichols, PID Tuner'
@@ -1731,15 +1732,15 @@ maps:
       **What we want:** the feedback loop as a picture and as one formula, seen on a loop we already understand.
   - from: LOOP
     to: PGAIN
-    label: simplest controller → dish
+    label: simplest controller
     question: What is the simplest controller that makes a plant follow a command we choose?
-    idea: 'A car corner only follows the road; to follow our command we need a motor: enter the antenna positioner, LN1''s own servo.'
+    idea: 'So far the "command" was the road, which nobody chooses. We need a plant whose input we drive toward a target we pick, and the simplest rule for driving it: push in proportion to the error.'
     why: |-
-      **Still open:** in Box 7 the "command" was the road. Nobody chooses it, and the passive corner has no motor to obey anything else.
+      **Still open:** in Box 7 the "command" was the road. Nobody chooses it, and the passive corner has nothing that could obey anything else.
 
-      **Why it matters:** P, I and D are about commanding a motor, and LN1 slides 62–72 build all three on a servo with inertia J and friction B.
+      **Why it matters:** P, I and D are rules for driving an actuator toward a target we choose, so they need a plant that has one.
 
-      **What we want:** a motor-driven plant with a command we pick (an antenna angle) and the simplest rule that drives it there.
+      **What we want:** a plant whose input we drive and whose target we choose, and the simplest rule that drives it there.
   - from: PGAIN
     to: SSE
     label: why short?
@@ -1790,7 +1791,7 @@ maps:
     question: How much does feedback really protect a system from the outside world?
     idea: 'Back to the house: a thermostat''s whole job is holding steady against the weather, so it shows feedback''s benefits most plainly.'
     why: |-
-      **Still open:** the wind on the dish was one example; LN2 asks in general what feedback buys: rejection, insensitivity, speed.
+      **Still open:** the wind on the dish was one example. In general, what does feedback buy: rejection of outside pushes, tolerance of a wrong model, speed?
 
       **Why it matters:** the house's open-loop model from Boxes 1–4 makes the before/after comparison exact.
 
@@ -1910,7 +1911,8 @@ maps:
 
       **Why it matters:** side by side, they show what the state-space detour bought: the decay rate is no longer fixed by the friction.
 
-      **What we want:** one s-plane picture, in rad/s with no normalising: the dish's P path rising straight up at −1, and the corner's poles moved from −2 ± 7.75j to −8 ± 6j.
+      **What we want:** both plants on one s-plane, on the same axes (rad/s): the dish's P path rising straight up from −1, and the corner's poles moved from −2 ± 7.75j to −8 ± 6j.
+    reverse: true
   - from: FIRST
     to: REF
     label: DC gain, again

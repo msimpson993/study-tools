@@ -40,7 +40,7 @@ Js² + Bs + Kp = 0  ⇒  s² + 2s + 0.1Kp = 0
 
 **What each symbol means.** θ: pointing angle (rad); T: motor torque (N·m); J: inertia (kg·m²); B: viscous friction (N·m·s/rad); Kp: proportional gain (N·m/rad).
 
-<a id="menu"></a>**The controller menu.** On/off, P, I, PI, PD and PID, each with its op-amp circuit. The standard form is Gc = Kp(1 + 1/(Ti s) + T_D s), with Ki = Kp/Ti and Kd = Kp·T_D (LN1 slides 10–17). The slides write the derivative time Td; here it is T_D, because T_d is the wind torque.
+<a id="menu"></a>**The controller menu.** On/off, P, I, PI, PD and PID, each with its op-amp circuit. The standard form is Gc = Kp(1 + 1/(Ti s) + T_D s), with Ki = Kp/Ti and Kd = Kp·T_D. The slides write the derivative time Td; here it is T_D, because T_d is the wind torque.
 
 <a id="speed"></a>**Feedback makes it faster.** Around a first-order plant, feedback divides the time constant: τ_cl = τ/(1 + loop gain). The dish's speed is Ω/T = 1/(Js + B); with a speed loop K_ω the time constant becomes J/(B + K_ω).
 
@@ -62,4 +62,4 @@ Settling barely changes (σ = 1 fixed); overshoot explodes. Speed loop: K_ω = 8
 
 One knob can't set speed and damping separately; with a steady wind it also leaves an error (*Why it stops short*).
 
-<p class="src">Sources: LN1 s.10–17 (controller types and op-amp circuits), s.50–51 and 62 (the servo); LN2 s.15–18 (feedback speeds the loop up). Not in lecture notes: root locus. Exam practice: Review › Mini exam 2, Problem 7 (tachometer) and LN1 carry-over problems 2 and 4.</p>
+<p class="src">Sources: LN1 s.10–17 (controller types and op-amp circuits), s.50–51, 62–72 (the servo); LN2 s.15–18 (feedback speeds the loop up). Not in lecture notes: root locus. Exam practice: Review › Mini exam 2, Problem 7 (tachometer) and LN1 carry-over problems 2 and 4.</p>

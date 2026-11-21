@@ -12,7 +12,7 @@ check: [q-lab, ck-lab-1]
 
 ### The big idea
 
-Every claim in the PID series can be reproduced here: the dish in a loop with a real motor (torque limit), a real sensor (noise) and real wind.
+Every claim in the PID series can be reproduced here: the dish in a loop with a real motor (torque limit), a real sensor (noise) and real wind. The Lab filters the derivative (N_f = 200 rad/s), as a real loop must, so overshoots where D matters read a little lower than the text's ideal-derivative values (PD 3.8 % vs 4.6 %; tuned 6.3 % vs 7.4 %).
 
 ### See it
 
@@ -32,10 +32,12 @@ The default plant is the dish, 0.1/(s(s + 2)). The alternate adds the motor ampl
 
 P 1000; PD (1000, 0, 120); tuned (2000, 1000, 200); too much I (2000, 3000, 200); too much Kd (2000, 1000, 400); derivative kick (D on the error); windup on a 2 rad slew, without and with integrator clamping; Ziegler–Nichols on the dish with its amplifier lag (264, 531.5, 32.8).
 
+PD has no integrator, so the motor can hold the 20 N·m wind only by sitting off target: Kp·e = T_d, so the offset is −T_d/Kp = −20/1000 rad = **−1.146°**. Kd does nothing at rest.
+
 ### Worked example: on the dish
 
 1. Reproduce the three *Choosing the three gains* panels.
-2. Make the dish meet "OS < 5 %, wind peak < 0.6°, recover < 10 s" within 200 N·m. One answer: (2000, 500, 200), giving 4.8 %, 0.57° and 9.7 s.
+2. Make the dish meet "OS < 5 %, wind peak < 0.6°, recover < 10 s" within 200 N·m. One answer: (2000, 500, 200). The Lab (derivative filtered at N_f = 200) reads **3.8 %** overshoot and a **0.574°** wind peak, and the dish is back inside 0.05° **9.78 s** after the gust. Widen the window to 21 s to see that: the offset at 21 s is **−0.037°**. Its slow integrator is still **−0.013°** off when the gust arrives at 10 s, so the steady-error check fails. That is the price of a small Ki.
 
 ### Frequency view (not in lecture notes)
 

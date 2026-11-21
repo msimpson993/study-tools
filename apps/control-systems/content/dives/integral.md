@@ -35,7 +35,7 @@ Routh test (a coefficient sign check; for s³ + a₂s² + a₁s + a₀ with posi
 
 **What each symbol means.** Ki: integral gain (N·m per rad·s); Ti = Kp/Ki: integral time (s).
 
-LN1 s.67–68: PI on the torque-disturbed servo is third order and "may become unstable". The bound above makes that remark exact.
+The lecture notes say PI on this kind of servo is third order and "may become unstable"; the bound above says exactly when.
 
 ### Worked example: on the dish
 

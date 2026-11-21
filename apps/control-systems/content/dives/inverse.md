@@ -25,7 +25,7 @@ Move the poles and watch each term change. The solid curve is always their sum. 
 
 - Distinct real poles: Y(s) = Σ A_k/(s − p_k), so y(t) = Σ A_k e^(p_k t).
 - Residue (cover-up rule): A_k = [(s − p_k)·Y(s)] evaluated at s = p_k.
-- Complex pair: complete the square, (s + σ)² + ω_d², to get e^(−σt)(cos ω_d t, sin ω_d t) terms (LN1 slides 51–53).
+- Complex pair: complete the square, (s + σ)² + ω_d², to get e^(−σt)(cos ω_d t, sin ω_d t) terms.
 - For a step from rest, y(0) = 0, so the residues sum to zero.
 
 **What each symbol means.**

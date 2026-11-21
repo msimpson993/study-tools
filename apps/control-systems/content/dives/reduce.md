@@ -27,7 +27,7 @@ On the house the two first-order models differ by at most 0.03 K, because the po
 G(s) = 1/(1 + a₁s + a₂s²) ≈ 1/(1 + d₁s),   d₁² = a₁² − 2a₂
 ```
 
-This matches |G(jω)|² up to ω² (the notes' Δ₂ condition, LN2 slide 31).
+This matches |G(jω)|² up to ω²: the first matching equation, M₂ = Δ₂.
 
 **What each symbol means.** a_i: the full model's denominator coefficients, normalised so a₀ = 1; d_i: the reduced model's. House: a₁ = 5.4545 h, a₂ = 2.2727 h², so Δ₂ = 25.207 and d₁ = 5.0206 h.
 

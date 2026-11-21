@@ -16,7 +16,7 @@ Each gain moves one thing you want and one you don't. Tuning is walking that tra
 
 ### See it
 
-Three panels start from (2000, 1000, 200); each raises one gain against a dashed ghost of the start. Kp 4000 nearly halves the wind peak, but the slow integrator pole takes longer to clear it (7 s).
+Three panels start from (2000, 1000, 200); each raises one gain against a dashed ghost of the start. Kp 4000 nearly halves the wind peak, but the slow integrator pole takes longer to clear it (7.1 s).
 
 ```figure:gains
 ```
@@ -41,7 +41,7 @@ Gc = Kp + Ki/s + Kd·s  (D on measurement):  s³ + (2 + 0.1Kd)s² + 0.1Kp s + 0.
 3. Stiffer PD (2000, 0, 200): ζ 0.78, 2.0 %, Tₛ 0.37 s, wind 0.57°.
 4. Add Ki: 500 gives 4.8 % and clears the wind in 9.7 s; 1000 gives 7.4 %, wind peak 0.56°, cleared (< 0.05°) in 4.8 s, poles −10.7 ± 8.6j and −0.53; 2000 gives 12.3 %. Choose (2000, 1000, 200).
 5. Torque check: a 0.1 rad step asks Kp·0.1 = 200 N·m, exactly the limit.
-6. Sensitivity: Kp 4000 gives 14.3 % and wind 0.32° but 7 s to clear; Ki 3000 gives 16.8 %, cleared in 1.6 s; Kd 400 gives 7.6 %, Tₛ 3.6 s.
+6. Sensitivity: Kp 4000 gives 14.3 % and a wind peak of 0.325° but takes 7.1 s to clear; Ki 3000 gives 16.8 %, cleared in 1.6 s; Kd 400 gives 7.6 %, Tₛ 3.6 s (the panels above, ideal derivative).
 7. With D on error instead: 15.8 % (the zero again).
 
 ### Where next

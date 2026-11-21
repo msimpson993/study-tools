@@ -40,7 +40,7 @@ Z/W = (cs + k)/(ms² + cs + k),   Z/U = 1/(ms² + cs + k)
 C/R = GcG/(1 + GcGH),   C/D = G/(1 + GcGH)
 ```
 
-**What each symbol means.** G_f: the forward path from that input; L: the loop gain (everything around the loop); W: road height; U: an active force; R, C, D, H: the slides' command, output, disturbance and sensor (LN1 slides 18–20).
+**What each symbol means.** G_f: the forward path from that input; L: the loop gain (everything around the loop); W: road height; U: an active force; R, C, D, H: the slides' command, output, disturbance and sensor.
 
 <a id="blockalg"></a>**Reduction rules.** Series blocks multiply, parallel blocks add, a loop becomes forward/(1 + loop); summing and branch points can be moved past blocks; take one input at a time (superposition). The *Reducing a block diagram* box shows one reduction step by step.
 

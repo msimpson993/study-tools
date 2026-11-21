@@ -24,7 +24,7 @@ Switch between D on error and D on measurement: same poles, two overshoots, 15.6
 ### The math
 
 ```eq
-Js² + (B + Kd)s + Kp = 0,   ζ = (B + Kd)/(2√(KpJ))   (LN1 slide 72)
+Js² + (B + Kd)s + Kp = 0,   ζ = (B + Kd)/(2√(KpJ))
 ```
 
 ```eq

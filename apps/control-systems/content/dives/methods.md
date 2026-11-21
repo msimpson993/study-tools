@@ -16,7 +16,7 @@ A recipe turns two measurements into three gains. Ziegler–Nichols (ZN) pushes 
 
 ### See it
 
-The default plant is the dish with a 0.05 s amplifier lag. Press "find Ku", then apply ZN. On the ideal dish there is no ultimate gain: s² + 2s + 0.1K is stable for every K. ZN's 64 % overshoot against hand tuning's 7 %: ZN aims at fast disturbance rejection.
+The default plant is the dish with a 0.05 s amplifier lag. Press "find Ku", then apply ZN. On the ideal dish there is no ultimate gain: s² + 2s + 0.1K is stable for every K. ZN's 64 % overshoot against hand tuning's 7 %: ZN aims at fast disturbance rejection. (The Lab's ZN preset filters D at N_f = 200 and reads 67.0 %.)
 
 ```figure:zn
 ```

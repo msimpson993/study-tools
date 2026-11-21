@@ -24,7 +24,7 @@ Put the sun on the thermostat (a sensor bias) or add fast flicker. Slow bias: C 
 ### The math
 
 ```eq
-E = S·R − S·G_d·D + C·N   (LN2 slide 14, its sign convention)
+E = S·R − S·G_d·D + C·N   (sign convention as in the lecture notes)
 ```
 
 ```eq

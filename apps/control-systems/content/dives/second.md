@@ -42,12 +42,12 @@ m z̈ + c ż + k z = u  ⇒  Z/U = (1/m)/(s² + (c/m)s + k/m)
 %OS = 100e^(−ζπ/√(1−ζ²)),  Tₚ = π/ω_d,  Tₛ = 4/σ,  T_r1 = (2.16ζ + 0.6)/ωₙ (0.3 ≤ ζ ≤ 0.8)
 ```
 
-**What each symbol means.** z: body height from rest (m); u: force on the body (N); m (kg), c (N·s/m), k (N/m). Tₛ = 4/σ is LN1 slide 59; the rise-time fit is slide 60.
+**What each symbol means.** z: body height from rest (m); u: force on the body (N); m (kg), c (N·s/m), k (N/m).
 
-Below ζ = 1 the poles are complex, −σ ± jω_d: the body overshoots and rings (*underdamped*). Rise time: the notes use 0–100 % when underdamped and 10–90 % (T_r1) otherwise (LN1 slide 60).
+Below ζ = 1 the poles are complex, −σ ± jω_d: the body overshoots and rings (*underdamped*). Rise time: the notes use 0–100 % when underdamped and 10–90 % (T_r1) otherwise.
 
 ````callout:derivation Full derivation
-Y(s) = ωₙ²/(s(s² + 2ζωₙs + ωₙ²)). Partial fractions with the completed square (s + ζωₙ)² + ω_d² give y = 1 − (e^(−ζωₙt)/√(1−ζ²)) sin(ω_d t + θ), with θ = cos⁻¹ζ. The peak is where ẏ = 0: sin ω_d t = 0, so Tₚ = π/ω_d; substitute into y for %OS. (LN1 slides 51–57.)
+Y(s) = ωₙ²/(s(s² + 2ζωₙs + ωₙ²)). Partial fractions with the completed square (s + ζωₙ)² + ω_d² give y = 1 − (e^(−ζωₙt)/√(1−ζ²)) sin(ω_d t + θ), with θ = cos⁻¹ζ. The peak is where ẏ = 0: sin ω_d t = 0, so Tₚ = π/ω_d; substitute into y for %OS.
 ````
 
 ### Worked example: on the corner
@@ -62,4 +62,4 @@ Y(s) = ωₙ²/(s(s² + 2ζωₙs + ωₙ²)). Partial fractions with the comple
 
 The formulas are exact for two poles and no zeros. The road input has a zero at −16 (the shock pushes on the body when the road moves), so a road step overshoots 50.6 %, not 44.4 %. A third pole (the wheel) changes things a little (*Which poles matter?*).
 
-<p class="src">Sources: LN1 s.50–60 (Tₛ = 4/σ: s.59; rise-time fit: s.60).</p>
+<p class="src">Sources: LN1 s.50–60 (Tₛ = 4/σ: s.59; rise-time fit: s.60), s.61 (allowed pole region).</p>

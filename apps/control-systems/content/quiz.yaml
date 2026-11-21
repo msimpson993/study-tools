@@ -3514,7 +3514,7 @@
   tags:
   - failures
   kind: action
-  q: The dish's PID with Kp = 2000 and Kd = 200 is given Ki = 3000 instead of the tuned 1000. The step response below overshoots about 15 % at 0.36 s, then settles exactly on the target. With Ki = 1000 it overshoots about 6 %. What is going on?
+  q: The dish's PID with Kp = 2000 and Kd = 200 is given Ki = 3000 instead of the tuned 1000. The step response below (PID Lab, derivative filtered at N_f = 200 rad/s) overshoots about 15 % at 0.36 s, then settles exactly on the target. With Ki = 1000 it overshoots about 6 %. What is going on?
   figure:
     id: pid-step
     params:
@@ -3764,7 +3764,7 @@
   tags:
   - failures
   kind: action
-  q: 'On the dish with Kp = 2000 and Kd = 200, raising Ki from 1000 (tuned) to 3000 makes the dish recover from the 20 N·m gust at 10 s much faster: it is back within 0.05° about 1.6 s after the gust, instead of about 5 s. But the 0.1 rad set-point step now overshoots about 15 % instead of about 6 %. Going back to Ki = 1000 fixes the overshoot but brings the slow recovery back. What is the underlying issue?'
+  q: 'On the dish with Kp = 2000 and Kd = 200 (PID Lab, derivative filtered at N_f = 200 rad/s), raising Ki from 1000 (tuned) to 3000 makes the dish recover from the 20 N·m gust at 10 s much faster: it is back within 0.05° about 1.6 s after the gust, instead of about 5 s. But the 0.1 rad set-point step now overshoots about 15 % instead of about 6 %. Going back to Ki = 1000 fixes the overshoot but brings the slow recovery back. What is the underlying issue?'
   figure:
     id: pid-step
     params:

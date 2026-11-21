@@ -283,7 +283,7 @@
         - value: house
           label: house
         - value: ln2
-          label: LN2 6/((s+1)(s+2)(s+3))
+          label: notes' example 6/((s+1)(s+2)(s+3))
       default: house
       group: primary
     - id: method
@@ -297,7 +297,7 @@
       default: match
       group: primary
     - id: order
-      label: order (LN2)
+      label: order (notes' example)
       type: seg
       options:
         - value: "1"
@@ -320,13 +320,13 @@
         method: drop
         order: "1"
     - id: ln2
-      label: LN2 example to 2nd order
+      label: notes' example to 2nd order
       set:
         plant: ln2
         method: match
         order: "2"
     - id: ln2d
-      label: LN2 example, drop far pole
+      label: notes' example, drop far pole
       set:
         plant: ln2
         method: drop
@@ -804,7 +804,7 @@
       color: var(--ok)
     - label: the corner's poles
       color: var(--cyan)
-  howToRead: "Left: %OS ≤ gives a ζ ray, Tₛ ≤ gives σ ≥ 4/Tₛ; the allowed region is shaded (pole location, LN1 slide 61). Drag the pole (or the shock slider) to move the corner's poles. Right: the 1 kN load step with the measured %OS and Tₛ against the limits."
+  howToRead: "Left: %OS ≤ gives a ζ ray, Tₛ ≤ gives σ ≥ 4/Tₛ; the allowed region is shaded. Drag the pole (or the shock slider) to move the corner's poles. Right: the 1 kN load step with the measured %OS and Tₛ against the limits."
   lookFor: Tₛ ≤ 1 s needs c = 3200 N·s/m by the formula; %OS ≤ 10 % needs 3783.
   controls:
     - id: os

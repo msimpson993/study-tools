@@ -32,7 +32,7 @@ x = [z, ż]ᵀ:   ẋ = [[0, 1], [−k/m, −c/m]]x + [0, 1/m]ᵀu,   y = [1, 0]
 
 Corner: A = [[0, 1], [−64, −4]], B = [0, 0.0025]ᵀ, C = [1, 0], D = 0; eig(A) = −2 ± 7.75j.
 
-**Phase-variable form** (LN1 slides 33–38): for G = b₀/(sⁿ + aₙ₋₁sⁿ⁻¹ + … + a₀), A has 1s on the superdiagonal and −a_i on the last row; the corner already is in it.
+**Phase-variable form**: for G = b₀/(sⁿ + aₙ₋₁sⁿ⁻¹ + … + a₀), A has 1s on the superdiagonal and −a_i on the last row; the corner already is in it.
 
 **What each symbol means.** x: the state vector; A: how the states drive each other; B: how the input enters; C: what the sensor reads; D: direct feedthrough.
 
@@ -44,4 +44,4 @@ The body swings to −2.22 cm at 0.41 s, then spirals in. G(s) can't describe th
 
 It's still a linear model, and the choice of states isn't unique (any invertible change of variables works).
 
-<p class="src">Sources: LN1 s.21–27, 33–37. Exam practice: Review › Mini exam 1.</p>
+<p class="src">Sources: LN1 s.21–27, 33–38. Exam practice: Review › Mini exam 1.</p>

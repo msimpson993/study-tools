@@ -24,10 +24,8 @@ Make the walls leakier and compare the nominal (dashed) and perturbed (solid) re
 ### The math
 
 ```eq
-S_G^T = (∂T/T)/(∂G/G) = 1/(1 + GcGH) = S   (LN2 slides 5–9)
+S_G^T = (∂T/T)/(∂G/G) = 1/(1 + GcGH) = S
 ```
-
-S is the fraction of a plant error that reaches the output (LN2 slides 5–9).
 
 ````callout:derivation Full derivation
 T = GcG/(1 + GcGH), so ∂T/∂G = Gc/(1 + GcGH)², and (G/T)(∂T/∂G) = 1/(1 + GcGH).

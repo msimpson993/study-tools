@@ -29,7 +29,7 @@ A − BK = [[0, 1], [−(k + k₁)/m, −(c + k₂)/m]]
 
 Target ζ = 0.8, ωₙ = 10: s² + 16s + 100, so (k + k₁)/m = 100 and (c + k₂)/m = 16.
 
-<a id="ack"></a>**Ackermann** (LN4 slides 19–21): K = [0 … 0 1]P_c⁻¹q(A), where q is the target polynomial.
+<a id="ack"></a>**Ackermann**: K = [0 … 0 1]P_c⁻¹q(A), where q is the target polynomial.
 
 **What each symbol means.** K = [k₁, k₂]: the state-feedback gains, k₁ in N/m and k₂ in N·s/m; q(A): the target polynomial evaluated at the matrix A.
 

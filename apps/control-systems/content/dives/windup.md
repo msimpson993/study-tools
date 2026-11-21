@@ -35,6 +35,8 @@ The shaded stretch is where the motor is pinned at its limit. At 0.2 rad windup 
 | 0.2 rad | 7.4 % (Tₛ 2.2 s) | 7.9 % (2.4 s) | 5.9 % (1.6 s) |
 | 2 rad | 7.4 % (2.2 s; asks 4000 N·m) | 21.6 % (4.6 s) | 3.8 % (0.8 s) |
 
+In the PID Lab (derivative filtered at N_f = 200 rad/s) the two windup presets read **21.2 %** (none) and **3.4 %** (clamp).
+
 ### What it can't do
 
 Anti-windup can't make the motor stronger: the slew still takes as long as the torque allows.

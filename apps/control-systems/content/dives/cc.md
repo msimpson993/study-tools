@@ -30,7 +30,7 @@ The corner passes both tests, so to see a failure we go back to the house. Put a
 P_c = [B, AB],   P_o = [C; CA]   (n = 2)
 ```
 
-Full rank ⇔ controllable / observable (LN4 slides 4–12).
+Full rank ⇔ controllable / observable.
 
 **What each symbol means.** P_c: the controllability matrix; P_o: the observability matrix; full rank means det ≠ 0 for n = 2.
 
