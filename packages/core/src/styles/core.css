@@ -93,7 +93,7 @@ details.fold>div{padding:0 .8rem .6rem}
 .fig-layout .st-seg button{flex:1 1 auto}
 .cm-wrap{display:grid;grid-template-columns:minmax(0,1fr);gap:.8rem}
 /* tablets and desktops (≥ 700px): no entry open = the map alone, full width; an entry open = map left ~40% (sticky, shrunk to fit;
-   wheel or pinch zoom, drag or one-finger pan), entry right ~60%. Phones (< 700px) get the floating entry card below. */
+   wheel scroll, Ctrl/Cmd+wheel or pinch zoom, drag or one-finger pan), entry right ~60%. Phones (< 700px) get the floating entry card below. */
 .cm-mapcol{position:relative;min-width:0}
 .cm-zoom{display:flex;align-items:center;gap:.25rem;position:absolute;top:.45rem;right:.6rem;z-index:3;background:color-mix(in srgb,var(--panel) 88%,transparent);border:1px solid var(--border);border-radius:10px;padding:.15rem .25rem;font:600 .72rem system-ui,sans-serif;max-width:calc(100% - 1.2rem);flex-wrap:wrap;justify-content:flex-end}
 .cm-zoom .tbtn{padding:.15rem .5rem;min-width:1.9rem}
@@ -107,7 +107,8 @@ details.fold>div{padding:0 .8rem .6rem}
   .cm-wrap.split .cm-scroll{overflow:auto;max-height:calc(100vh - 64px);padding-top:2.4rem;cursor:grab;overscroll-behavior:contain;touch-action:pan-x pan-y}
   .cm-wrap.split .cm-scroll.panning{cursor:grabbing;user-select:none}.cm-wrap.split .cm-scroll.panning *{cursor:grabbing!important}
 }
-/* the map is one framed, zoomable viewport in every layout: wheel zooms over it (only over it), drag or one finger pans,
+/* the map is one framed, zoomable viewport in every layout: the wheel scrolls it (then the page at its edges), Ctrl/Cmd+wheel
+   or a pinch zooms it, drag or one finger pans,
    two fingers pinch; its height is set by the app to fill the screen under the header (the side map: below) */
 .cm-scroll{overflow:auto;-webkit-overflow-scrolling:touch;border:1px solid var(--border);border-radius:14px;background:var(--board);padding:.3rem;padding-top:2.4rem;cursor:grab;overscroll-behavior:contain;touch-action:pan-x pan-y}
 .cm-scroll.panning{cursor:grabbing;user-select:none}.cm-scroll.panning *{cursor:grabbing!important}

@@ -2,7 +2,7 @@ import { test, expect, type Page } from '@playwright/test';
 import { APPS, open } from './helpers';
 
 /* Desktop reading layout (Nov 19): with a box or line pop-up open, the map takes the left ~40% and the entry the right
-   ~60%; the side map shrinks to fit its column and the mouse wheel zooms it about the cursor (drag pans, Reset zoom
+   ~60%; the side map shrinks to fit its column; a plain mouse wheel scrolls it and Ctrl/Cmd+wheel (or a trackpad pinch) zooms it about the cursor (drag pans, Reset zoom
    restores it). With nothing open the map is alone, full width. Since Nov 19 (9:29 PM) tablets get the same split from
    700 px (portrait 768/923, landscape 1024/1280) and touch pinch-zooms the side map; phones get the entry card (phone-entry.spec). */
 const widths = (page: Page) => page.evaluate(() => {
@@ -49,12 +49,12 @@ for (const app of APPS) for (const [vw, vh] of VPS) {
       const deep = await widths(page); expect(deep.split).toBe(true); expect(deep.map / (deep.map + deep.panel)).toBeLessThan(0.43);
     });
 
-    if (vw >= 1366) test('the wheel zooms the side map about the cursor; drag pans; Reset zoom restores; the page does not scroll; no zoom outside the map', async ({ page }) => {
+    if (vw >= 1366) test('a plain wheel scrolls the side map; Ctrl+wheel zooms it about the cursor; drag pans; Reset zoom restores; the page does not scroll; no zoom outside the map', async ({ page }) => {
       await open(page, app);
       // (with nothing open the full-width map zooms too: full-map-zoom.spec; here Fit to screen puts it back at 100%)
       const sc = page.locator('.cm-scroll');
       let bb = (await sc.boundingBox())!;
-      await page.mouse.move(bb.x + bb.width / 2, Math.min(bb.y + 60, 850)); await page.mouse.wheel(0, 300); await page.waitForTimeout(200);
+      await page.mouse.move(bb.x + bb.width / 2, Math.min(bb.y + 60, 850)); await page.keyboard.down('Control'); await page.mouse.wheel(0, 300); await page.keyboard.up('Control'); await page.waitForTimeout(200);
       await page.getByTestId('map-zoom-reset').click(); expect(await zoomOf(page), 'Fit to screen: 100%').toBe(1);
       await page.evaluate(() => scrollTo(0, 0));
       await page.locator('[data-testid=map-node]').nth(3).dispatchEvent('click');
@@ -63,26 +63,41 @@ for (const app of APPS) for (const [vw, vh] of VPS) {
       const cx = bb.x + bb.width * 0.5, cy = bb.y + Math.min(bb.height, 600) * 0.4;
       // the map point under the cursor, in map (viewBox) units, before and after: zoom about the cursor keeps it put
       const under = () => page.evaluate(([x, y]) => { const s = document.querySelector('[data-testid=map-svg]') as SVGSVGElement, r = s.getBoundingClientRect(), vb = s.viewBox.baseVal; return { x: ((x - r.left) / r.width) * vb.width, y: ((y - r.top) / r.height) * vb.height }; }, [cx, cy]);
-      const p0 = await under(), y0 = await page.evaluate(() => scrollY);
       await page.mouse.move(cx, cy);
+      // a plain wheel does not zoom (it scrolls the map: below, once zoomed in)
+      await page.mouse.wheel(0, -120); await page.waitForTimeout(120); expect(await zoomOf(page), 'plain wheel: no zoom').toBe(1);
+      const p0 = await under(), y0 = await page.evaluate(() => scrollY);
+      await page.keyboard.down('Control');
       for (let i = 0; i < 3; i++) { await page.mouse.wheel(0, -120); await page.waitForTimeout(80); }
+      await page.keyboard.up('Control');
       const z1 = await zoomOf(page);
-      expect(z1, 'wheel up zooms in').toBeGreaterThan(1.3);
+      expect(z1, 'Ctrl+wheel up zooms in').toBeGreaterThan(1.3);
       const p1 = await under();
       expect(Math.hypot(p1.x - p0.x, p1.y - p0.y), `zoom about the cursor (${JSON.stringify(p0)} → ${JSON.stringify(p1)})`).toBeLessThan(6);
       expect(await page.evaluate(() => scrollY), 'the page did not scroll').toBe(y0);
       await expect(page.getByTestId('map-zoom-pct')).toHaveText(`${Math.round(z1 * 100)}%`);
+      // a plain wheel scrolls the zoomed map down, shift+wheel sideways, and neither zooms
+      const w0 = await sc.evaluate((e) => [e.scrollLeft, e.scrollTop]);
+      await page.mouse.wheel(0, 120); await page.waitForTimeout(150);
+      const w1 = await sc.evaluate((e) => [e.scrollLeft, e.scrollTop]);
+      expect(w1[1], 'plain wheel scrolls the map down').toBeGreaterThan(w0[1]);
+      await page.keyboard.down('Shift'); await page.mouse.wheel(0, 120); await page.keyboard.up('Shift'); await page.waitForTimeout(150);
+      const w2 = await sc.evaluate((e) => [e.scrollLeft, e.scrollTop]);
+      expect(w2[0], 'shift+wheel scrolls sideways').toBeGreaterThan(w1[0]);
+      expect(await zoomOf(page), 'scrolling does not zoom').toBeCloseTo(z1, 3);
       // drag pans the zoomed map and is not a tap
       const s0 = await sc.evaluate((e) => [e.scrollLeft, e.scrollTop]);
       await page.mouse.down(); await page.mouse.move(cx - 40, cy - 60, { steps: 5 }); await page.mouse.move(cx - 80, cy - 120, { steps: 5 }); await page.mouse.up();
       const s1 = await sc.evaluate((e) => [e.scrollLeft, e.scrollTop]);
       expect(s1[0] > s0[0] || s1[1] > s0[1], `dragged (${s0} → ${s1})`).toBe(true);
       expect(await page.locator('.qm-node.n-sel').count(), 'a drag does not change the open box').toBe(1);
-      // wheel down zooms out past 100%, to 60% at most (pass 5: the whole map at a glance), and stays there
+      // Ctrl+wheel down zooms out past 100%, to 60% at most (pass 5: the whole map at a glance), and stays there
+      await page.keyboard.down('Control');
       for (let i = 0; i < 16; i++) await page.mouse.wheel(0, 240);
+      await page.keyboard.up('Control');
       await page.waitForTimeout(150);
       const zOut = await zoomOf(page);
-      expect(zOut, 'wheel zooms out below 100%').toBeLessThan(0.95); expect(zOut, 'never below 60%').toBeGreaterThanOrEqual(0.599);
+      expect(zOut, 'Ctrl+wheel zooms out below 100%').toBeLessThan(0.95); expect(zOut, 'never below 60%').toBeGreaterThanOrEqual(0.599);
       await expect(page.getByTestId('map-zoom-pct')).toHaveText(`${Math.round(zOut * 100)}%`);
       expect(await page.locator('.qm-node.n-sel').count(), 'still open after zooming out').toBe(1);
       // + then Reset zoom

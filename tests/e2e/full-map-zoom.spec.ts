@@ -4,7 +4,8 @@ import path from 'node:path';
 import { APPS, open, trackErrors } from './helpers';
 
 /* Full-map zoom (Nov 20, both apps): with nothing open the map is the same zoomable viewport as the side map: a frame filling the
-   screen under the header; the wheel zooms about the cursor (only over the frame), a drag pans, two fingers pinch, one finger
+   screen under the header; a plain wheel scrolls it (shift+wheel sideways; at its top or bottom edge the page scrolls on),
+   Ctrl/Cmd+wheel or a trackpad pinch zooms about the cursor (only over the frame), a drag pans, two fingers pinch, one finger
    pans; from min(60%, the whole map) to 3×; the −/%/+ bar carries the one Fit to screen / Actual size control. The page still
    scrolls from outside the frame. Opening an entry shrinks the map to the side column at its fit, centred on the box; closing
    returns to the full view at its own zoom, centred on that box. */
@@ -39,14 +40,17 @@ for (const app of APPS) for (const [W, H] of W3) test.describe(`${app} @${W}: fu
     expect(errs).toEqual([]);
   });
 
-  if (W >= 923) test('the wheel zooms about the cursor over the frame only; drag pans; range min(60%, whole map) to 3×; the page scrolls from outside', async ({ page }) => {
+  if (W >= 923) test('Ctrl+wheel zooms about the cursor over the frame only (a plain wheel does not); drag pans; range min(60%, whole map) to 3×; the page scrolls from outside', async ({ page }) => {
     await page.setViewportSize({ width: W, height: H });
     await open(page, app);
     const f = await frame(page), cx = Math.round(f.w / 2 + (await page.locator('.cm-scroll').boundingBox())!.x), cy = Math.round(f.top + Math.min(f.h, 500) * 0.5);
     const p0 = await under(page, cx, cy), y0 = await page.evaluate(() => scrollY);
     await page.mouse.move(cx, cy);
+    await page.mouse.wheel(0, -120); await page.waitForTimeout(100); expect(await zoomOf(page), 'a plain wheel does not zoom').toBe(1);
+    await page.keyboard.down('Control');
     for (let i = 0; i < 3; i++) { await page.mouse.wheel(0, -120); await page.waitForTimeout(60); }
-    const z1 = await zoomOf(page); expect(z1, 'wheel up zooms in').toBeGreaterThan(1.3);
+    await page.keyboard.up('Control');
+    const z1 = await zoomOf(page); expect(z1, 'Ctrl+wheel up zooms in').toBeGreaterThan(1.3);
     const p1 = await under(page, cx, cy), fz = await frame(page);
     // the point under the cursor stays put on each axis the frame can scroll (a map still shorter than a tall frame cannot move up)
     if (fz.sw > fz.cw + 2) expect(Math.abs(p1.x - p0.x), 'zoom about the cursor (x)').toBeLessThan(4);
@@ -60,10 +64,12 @@ for (const app of APPS) for (const [W, H] of W3) test.describe(`${app} @${W}: fu
     const s1 = await frame(page); expect(s1.sl > s0.sl || s1.st > s0.st, 'dragged').toBe(true);
     await expect(page.getByTestId('map-panel')).toHaveClass(/idle/);
     // in to about 3× at most
+    await page.keyboard.down('Control');
     for (let i = 0; i < 20; i++) await page.mouse.wheel(0, -240);
     await page.waitForTimeout(100); expect(await zoomOf(page)).toBeLessThanOrEqual(3.001); expect(await zoomOf(page)).toBeGreaterThan(2.9);
     // out to 60% or the whole map in the frame, whichever is smaller
     for (let i = 0; i < 40; i++) await page.mouse.wheel(0, 240);
+    await page.keyboard.up('Control');
     await page.waitForTimeout(100);
     const zOut = await zoomOf(page), lim = await page.evaluate(() => { const s = document.querySelector('.cm-scroll') as HTMLElement, vb = (document.querySelector('[data-testid=map-svg]') as SVGSVGElement).viewBox.baseVal; return Math.min(0.6, (s.clientWidth - 8) / vb.width, (s.clientHeight - parseFloat(getComputedStyle(s).paddingTop) - 8) / vb.height); });
     expect(zOut).toBeCloseTo(lim, 2);
@@ -80,6 +86,36 @@ for (const app of APPS) for (const [W, H] of W3) test.describe(`${app} @${W}: fu
     await page.evaluate(() => scrollTo(0, 0)); const lg = (await page.getByTestId('map-legend').boundingBox())!;
     await page.mouse.move(lg.x + 20, lg.y + lg.height / 2); await page.mouse.wheel(0, 150); await page.waitForTimeout(200);
     expect(await zoomOf(page), 'no zoom from the legend').toBe(1);
+  });
+
+  if (W >= 923) test('a plain wheel scrolls the map (shift+wheel sideways), never zooms; at the frame\'s top or bottom edge the page scrolls on', async ({ page }) => {
+    await page.setViewportSize({ width: W, height: H });
+    await open(page, app);
+    const sc = page.locator('.cm-scroll'), bb = (await sc.boundingBox())!;
+    const cx = Math.round(bb.x + bb.width / 2), cy = Math.round(bb.y + Math.min(bb.height, 500) * 0.5);
+    await page.mouse.move(cx, cy);
+    // zoom in (Ctrl+wheel) so the map scrolls both ways inside its frame
+    await page.keyboard.down('Control'); for (let i = 0; i < 4; i++) await page.mouse.wheel(0, -120); await page.keyboard.up('Control'); await page.waitForTimeout(120);
+    const z = await zoomOf(page); expect(z).toBeGreaterThan(1.3);
+    await sc.evaluate((e) => { e.scrollTop = 0; e.scrollLeft = 0; });
+    const y0 = await page.evaluate(() => scrollY);
+    await page.mouse.wheel(0, 150); await page.waitForTimeout(150);
+    let f = await frame(page); expect(f.st, 'plain wheel scrolls the map down').toBeGreaterThan(50);
+    expect(await page.evaluate(() => scrollY), 'the page stays while the map can scroll').toBe(y0);
+    await page.keyboard.down('Shift'); await page.mouse.wheel(0, 150); await page.keyboard.up('Shift'); await page.waitForTimeout(150);
+    f = await frame(page); expect(f.sl, 'shift+wheel scrolls sideways').toBeGreaterThan(50);
+    expect(await zoomOf(page), 'scrolling never zooms').toBeCloseTo(z, 3);
+    // at the bottom edge the wheel carries on scrolling the page; at the top edge, back up
+    await sc.evaluate((e) => { e.scrollTop = e.scrollHeight; });
+    const canScroll = await page.evaluate(() => document.documentElement.scrollHeight > innerHeight + scrollY + 40);
+    const ya = await page.evaluate(() => scrollY);
+    await page.mouse.wheel(0, 200); await page.waitForTimeout(200);
+    if (canScroll) expect(await page.evaluate(() => scrollY), 'page scrolls on at the bottom edge').toBeGreaterThan(ya);
+    const yb = await page.evaluate(() => scrollY);
+    await sc.evaluate((e) => { e.scrollTop = 0; });
+    const over = await page.evaluate(([x, y]) => !!document.elementFromPoint(x, y)?.closest('.cm-scroll'), [cx, cy]);
+    if (yb > 0 && over) { await page.mouse.wheel(0, -100); await page.waitForTimeout(200); expect(await page.evaluate(() => scrollY), 'page scrolls back up at the top edge').toBeLessThan(yb); }
+    expect(await zoomOf(page)).toBeCloseTo(z, 3);
   });
 
   test('open an entry: the side map fits its column, centred on the box; close: the full view at its own zoom, centred on that box', async ({ page }) => {

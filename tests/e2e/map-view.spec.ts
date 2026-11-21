@@ -35,7 +35,7 @@ for (const app of APPS) {
         await pick(page, 'fit'); expect(await page.evaluate((k) => localStorage.getItem(k), KEY)).toBe('"fit"'); expect((await dims(page)).actual).toBe(false);
       });
 
-      test('a mouse drag pans and is not a tap; a plain click still opens a box and a line; the wheel zooms; re-render keeps the position', async ({ page }) => {
+      test('a mouse drag pans and is not a tap; a plain click still opens a box and a line; Ctrl+wheel zooms (a plain wheel scrolls); re-render keeps the position', async ({ page }) => {
         await open(page, app); await pick(page, 'actual');
         await page.evaluate(() => (document.querySelector('.cm-scroll') as HTMLElement).scrollIntoView({ block: 'start' }));
         const sc = page.locator('.cm-scroll'), bb = (await sc.boundingBox())!;
@@ -62,12 +62,14 @@ for (const app of APPS) {
         // (desktop: an open entry moves the map into its side column, a deliberate re-layout; map-split.spec covers that)
         if (view === 'mobile') { const kept = await dims(page); expect(Math.abs(kept.st - atTap.st) + Math.abs(kept.sl - atTap.sl), 'position kept across re-render').toBeLessThan(3); }
         else { await expect(page.getByTestId('map-wrap')).toHaveClass(/split/); expect(await page.evaluate(() => { const e = document.querySelector('.qm-edge.e-sel .dot')!.getBoundingClientRect(), b = document.querySelector('.cm-scroll')!.getBoundingClientRect(); return e.left >= b.left && e.right <= b.right && e.top >= b.top && e.bottom <= b.bottom; }), 'the open line is in view in the side map').toBe(true); }
-        // the wheel over the map zooms it (the full-width map is a zoomable viewport too; full-map-zoom.spec)
+        // Ctrl+wheel over the map zooms it, a plain wheel does not (the full-width map is a zoomable viewport too; full-map-zoom.spec)
         await page.keyboard.press('Escape'); await page.mouse.move(sx, sy);
         const z0 = await page.evaluate(() => Number((document.querySelector('[data-testid=map-wrap]') as HTMLElement).dataset.zoom ?? '1'));
         await page.mouse.wheel(0, 200); await page.waitForTimeout(150);
+        expect(await page.evaluate(() => Number((document.querySelector('[data-testid=map-wrap]') as HTMLElement).dataset.zoom ?? '1')), 'a plain wheel does not zoom').toBe(z0);
+        await page.keyboard.down('Control'); await page.mouse.wheel(0, 200); await page.keyboard.up('Control'); await page.waitForTimeout(150);
         const z1 = await page.evaluate(() => Number((document.querySelector('[data-testid=map-wrap]') as HTMLElement).dataset.zoom ?? '1'));
-        expect(z1, 'wheel down zooms out').toBeLessThan(z0);
+        expect(z1, 'Ctrl+wheel down zooms out').toBeLessThan(z0);
       });
 
       test('a real click on a box and on a line dot works in both modes', async ({ page }) => {

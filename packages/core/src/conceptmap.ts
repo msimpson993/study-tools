@@ -52,15 +52,15 @@ export function mountConceptMap(host: HTMLElement, content: AppContent, progress
   let view: MapView = readMapView();
   const root = h('div', { class: 'cm', dataset: { testid: 'concept-map' } });
   const scroll = h('div', { class: 'cm-scroll' });
-  // desktop reading layout: with an entry open the map takes the left ~40% (shrunk to fit, wheel-zoomable) and the entry the right ~60%
+  // desktop reading layout: with an entry open the map takes the left ~40% (shrunk to fit; the wheel scrolls it, Ctrl/Cmd+wheel or pinch zooms) and the entry the right ~60%
   const WIDE = '(min-width: 700px)'; // tablets and desktops share the split; phones get the entry card
   const wide = typeof window.matchMedia === 'function' ? window.matchMedia(WIDE) : null;
   let zoom = 1, zoomFit = true; // zoomFit: the side map follows its column's fit (a narrow tablet column can be a little narrower than the map)
   const zoomPct = h('span', { class: 'cm-zoom-pct', dataset: { testid: 'map-zoom-pct' } }, '100%');
   const zoomBar = h('div', { class: 'cm-zoom', role: 'group', 'aria-label': 'Map zoom', dataset: { testid: 'map-zoom' } },
-    h('button', { type: 'button', class: 'tbtn', title: 'Zoom out (or scroll the wheel / pinch on the map)', 'aria-label': 'Zoom out', dataset: { testid: 'map-zoom-out' }, onclick: () => zoomAtCentre(1 / 1.25) }, '−'),
+    h('button', { type: 'button', class: 'tbtn', title: 'Zoom out (or Ctrl/Cmd + wheel / pinch on the map)', 'aria-label': 'Zoom out', dataset: { testid: 'map-zoom-out' }, onclick: () => zoomAtCentre(1 / 1.25) }, '−'),
     zoomPct,
-    h('button', { type: 'button', class: 'tbtn', title: 'Zoom in (or scroll the wheel / pinch on the map)', 'aria-label': 'Zoom in', dataset: { testid: 'map-zoom-in' }, onclick: () => zoomAtCentre(1.25) }, '+'),
+    h('button', { type: 'button', class: 'tbtn', title: 'Zoom in (or Ctrl/Cmd + wheel / pinch on the map)', 'aria-label': 'Zoom in', dataset: { testid: 'map-zoom-in' }, onclick: () => zoomAtCentre(1.25) }, '+'),
     // the map size: Fit to screen (the layout follows the screen; also "reset zoom") and Actual size (natural boxes, pan around),
     // one control in the zoom bar (no second copy in the legend)
     h('span', { class: 'cm-view', role: 'group', 'aria-label': 'Map size', dataset: { testid: 'map-view' } }));
@@ -192,11 +192,30 @@ export function mountConceptMap(host: HTMLElement, content: AppContent, progress
     const a = sel.getBoundingClientRect(), b = scroll.getBoundingClientRect();
     scroll.scrollLeft += a.left - b.left - (b.width - a.width) / 2; scroll.scrollTop += a.top - b.top - (b.height - a.height) / 2;
   }
-  // the wheel zooms the map about the cursor, only over the map's frame (everywhere else the page scrolls as usual)
+  // the wheel over the map's frame (Malcolm, Nov 21, both maps): a plain wheel or two-finger trackpad scroll SCROLLS the map
+  // (shift+wheel sideways); Ctrl/Cmd+wheel zooms about the cursor, and so does a trackpad pinch (browsers send it as a wheel
+  // with ctrlKey). At the frame's top or bottom edge the wheel carries on scrolling the page (the frame's overscroll is
+  // contained for touch, so the hand-off is done here).
   scroll.addEventListener('wheel', (ev) => {
+    const k = ev.deltaMode === 1 ? 16 : ev.deltaMode === 2 ? 400 : 1;
+    if (ev.ctrlKey || ev.metaKey) {
+      ev.preventDefault();
+      // a pinch sends many small steps, a ctrl+wheel notch a few big ones: scale so both feel alike
+      const dy = ev.deltaY * k, rate = ev.deltaMode === 0 && Math.abs(dy) < 40 ? 0.01 : 0.0015;
+      setZoom(zoom * Math.exp(-dy * rate), ev.clientX, ev.clientY);
+      return;
+    }
+    let dx = ev.deltaX * k, dy = ev.deltaY * k;
+    const remap = ev.shiftKey && !dx && dy; if (remap) { dx = dy; dy = 0; }
+    const maxT = scroll.scrollHeight - scroll.clientHeight, maxL = scroll.scrollWidth - scroll.clientWidth;
+    const canY = dy < 0 ? scroll.scrollTop > 0.5 : dy > 0 ? scroll.scrollTop < maxT - 0.5 : false;
+    const canX = dx < 0 ? scroll.scrollLeft > 0.5 : dx > 0 ? scroll.scrollLeft < maxL - 0.5 : false;
+    if (!remap && (canY || !dy) && (canX || !dx)) return; // the frame scrolls natively (smooth)
     ev.preventDefault();
-    const dy = ev.deltaMode === 1 ? ev.deltaY * 16 : ev.deltaMode === 2 ? ev.deltaY * 400 : ev.deltaY;
-    setZoom(zoom * Math.exp(-dy * 0.0015), ev.clientX, ev.clientY);
+    const t0 = scroll.scrollTop, l0 = scroll.scrollLeft;
+    scroll.scrollTop = Math.max(0, Math.min(maxT, t0 + dy)); scroll.scrollLeft = Math.max(0, Math.min(maxL, l0 + dx));
+    const restY = dy - (scroll.scrollTop - t0), restX = dx - (scroll.scrollLeft - l0);
+    if (Math.abs(restY) > 0.5 || Math.abs(restX) > 0.5) window.scrollBy(Math.abs(restX) > 0.5 && !remap ? restX : 0, restY);
   }, { passive: false });
   // touch: two fingers pinch-zoom the map about their midpoint; one finger pans it natively (the frame contains its own
   // overscroll, so the page only scrolls from outside the map)
