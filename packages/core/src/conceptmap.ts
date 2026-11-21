@@ -266,7 +266,7 @@ export function mountConceptMap(host: HTMLElement, content: AppContent, progress
   const sideTag = (e: MapEdge, m: MapDef) => (m.edges.some((x) => x.from === e.to && !x.dashed) ? 'Side path (shortcut)' : 'Side path (a detour; come back here)');
   /** a side line's header uses the same words as its box's tag and the legend: a detour you come back from, or a shortcut that
    *  leads on (pass 3: never call a detour a shortcut or a quicker way) */
-  const sideHeader = (e: MapEdge, m: MapDef) => (sideTag(e, m) === 'Side path (shortcut)' ? 'Side path (shortcut): it skips ahead to a later box; the main path gets there too' : 'Side path (a detour; come back here): a side box off the main path, which goes on without it');
+  const sideHeader = (e: MapEdge, m: MapDef) => `${sideTag(e, m)}: an extra question off the main path`; // tutor pass 3 L1
   /** the legend names the side lines this map actually has: detours, shortcuts or both */
   const sideLegend = (m: MapDef) => { const t = new Set(m.edges.filter((e) => e.side).map((e) => sideTag(e, m))), sc = t.has('Side path (shortcut)'), dt = t.size > (sc ? 1 : 0); return sc && dt ? 'side path (a shortcut or a detour)' : sc ? 'side path (shortcut)' : 'side path (a detour; come back here)'; };
   /** Next order: main path first, side paths after */
