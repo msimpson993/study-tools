@@ -158,8 +158,14 @@ export function mountApp(content: AppContent, hooks: AppHooks = {}): void {
       if (trip && mapState.pick?.kind !== 'ref') {
         if (o?.endTrip) { history.back(); return; }
         // left the trip another way (its "Back to" button, a box tapped on the map): keep the step, drop its mark
-        const { cmRef: _drop, ...rest } = history.state; history.replaceState(rest, '', mapHashFor(mapState.pick)); return;
+        const { cmRef: _drop, ...rest } = history.state; if (!PHONE.matches && mapState.pick) rest.cmDepth = Number(rest.cmDepth ?? 0) + 1; history.replaceState(rest, '', mapHashFor(mapState.pick)); return;
       }
+      // 700 px and up (pass 3): every box or line opened adds a history step (cmDepth counts them), so browser Back walks back
+      // up the chain and finally closes the entry onto the map instead of leaving the site; closing (✕, Esc) steps back over
+      // all of them at once
+      const depth = Number(history.state?.cmDepth ?? 0), pk = (q: MapState['pick']) => (q ? `${q.kind}:${q.id}` : '');
+      if (!PHONE.matches && !fullscreenActive() && mapState.pick && mapState.pick.kind !== 'ref' && pk(prev) !== pk(mapState.pick)) { history.pushState({ ...(history.state ?? {}), cmDepth: depth + 1 }, '', mapHashFor(mapState.pick)); return; }
+      if (!PHONE.matches && !mapState.pick && depth > 0) { history.go(-depth); return; }
       // phones: opening an entry pushes a history step, so the browser/Android Back returns to the map; closing it (✕, Esc,
       // browser Back) steps back over that entry instead of leaving it in the history
       if (PHONE.matches && mapState.pick && !prev && !entry && !fullscreenActive()) { history.pushState({ ...(history.state ?? {}), cmEntry: 1 }, '', mapHashFor(mapState.pick)); return; }

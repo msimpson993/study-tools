@@ -101,12 +101,12 @@ for (const app of APPS) test.describe(`${app} @390: map entry card`, () => {
   });
 });
 
-for (const app of APPS) test(`${app} @1366: desktop keeps the 40/60 split, no Back bar and no extra history step`, async ({ page }) => {
+for (const app of APPS) test(`${app} @1366: desktop keeps the 40/60 split and no Back bar; opening an entry adds one history step (pass 3, back-wide.spec.ts)`, async ({ page }) => {
   await page.setViewportSize({ width: 1366, height: 900 });
   await open(page, app);
   const len = await page.evaluate(() => history.length);
   await page.locator('[data-testid=map-node]').nth(3).dispatchEvent('click');
   await expect(page.getByTestId('map-wrap')).toHaveClass(/split/);
   expect((await card(page)).bars).toBe(0);
-  expect(await page.evaluate(() => history.length)).toBe(len);
+  expect(await page.evaluate(() => history.length)).toBe(len + 1);
 });
