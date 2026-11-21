@@ -82,6 +82,10 @@ export function mountConceptMap(host: HTMLElement, content: AppContent, progress
     h('div', { class: 'cm-q', dataset: { testid: 'central-question' } }, content.subject.centralQuestion, h('small', null, exRefs.length ? 'Central question. Tap any box or line to open it; a dashed Example node beside a box introduces a running example.' : 'Central question. Tap any box or line to open it.')));
   /** the Example nodes on map m (each beside its host box) */
   const refsOn = (m: MapDef) => exRefs.filter((r) => m.nodes.some((n) => n.id === r.at));
+  /** the box an Example node hangs from links to that example's introduction (Malcolm, Nov 21): one quiet link per example,
+   *  near the running-example line and before Next; it opens the introduction as a side trip (a history step; Back returns here) */
+  const meetLinks = (n: { id: string }, m: MapDef): HTMLElement[] => refsOn(m).filter((r) => r.at === n.id).map((r) => h('p', { class: 'pop-row pop-meet', dataset: { testid: 'pop-meet' } },
+    h('a', { href: '#', class: 'item-link', dataset: { testid: 'meet-example', ref: r.id }, onclick: (ev: Event) => { ev.preventDefault(); toggleRef(r.id); } }, `Meet the example: ${r.label} →`)));
   /** example usage is opt-in: only a map whose boxes carry `examples` gets the box glyphs, the highlight and the comes-back list */
   const usesOn = (m: MapDef) => exRefs.length > 0 && m.nodes.some((n) => n.examples?.length);
   /** light (or unlight) the boxes that use example `id` and its faint links; an open introduction keeps its own lit */
@@ -539,6 +543,7 @@ export function mountConceptMap(host: HTMLElement, content: AppContent, progress
     }
     const ex = p.example ?? n.addsToExample;
     if (ex) out.push(row('pop-example', 'On the running example:', ex, 'adds-to-example'));
+    out.push(...meetLinks(n, m));
     // the chain goes THROUGH the lines: each outgoing (solid) line's question is a link that opens that line's pop-up
     const outs = nextOrder(n.id, m), fork = outs.length > 1 && outs.some((e) => e.side);
     const link = (e: MapEdge, testid: string) => h('a', { href: '#', class: 'pop-next-link', dataset: { testid, edge: edgeKey(e.from, e.to), to: e.to }, onclick: (ev: Event) => { ev.preventDefault(); openEdge(edgeKey(e.from, e.to)); }, html: e.question });
@@ -649,6 +654,7 @@ export function mountConceptMap(host: HTMLElement, content: AppContent, progress
       else panel.append(head, ...(n.detail ? [h('div', { class: 'st-hint', dataset: { body: '' } }, n.detail)] : []), h('div', { html: `<p>${n.short}</p>`, dataset: { body: '' } }));
       if (n.pop) { /* template replaces the free-form rows */ } else if (n.eqHtml) panel.append(h('div', { class: 'st-eq', html: n.eqHtml })); else if (n.eq) panel.append(h('div', { class: 'st-eq' }, n.eq));
       if (!n.pop && n.addsToExample) panel.append(h('aside', { class: 'callout c-example', dataset: { testid: 'adds-to-example' } }, h('b', { class: 'lead' }, 'Adds to the running example'), h('div', { class: 'cb', html: `<p>${n.addsToExample}</p>`, dataset: { body: '' } })));
+      if (!n.pop) panel.append(...meetLinks(n, m));
       if (!n.pop && n.accountsFor) panel.append(h('aside', { class: 'callout c-account', dataset: { testid: 'accounts-for' } }, h('b', { class: 'lead' }, 'Lets us account for'), h('div', { class: 'cb', html: `<p>${n.accountsFor}</p>`, dataset: { body: '' } })));
       for (const [k, lead] of [['why', 'Why it matters'], ['recognize', 'Recognize'], ['trap', 'Trap'], ['predict', 'Predict']] as const) {
         const v = n.pop ? undefined : n[k];
