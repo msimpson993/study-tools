@@ -12,7 +12,10 @@ check: [q-order, ck-order-1]
 
 ### The big idea
 
-Count the places where the plant can store energy independently. Each one needs its own number to describe it, its own state, and each state adds one power of s to the denominator. So the *order* (the highest power of s in G's denominator) equals the number of independent energy stores. Parts that only pass energy along or turn it into heat (walls, shock absorbers, resistors) store nothing and add no order.
+- **Count the stores:** count the places where the plant can store energy independently.
+- **One state each:** each store needs its own number to describe it, its *state*, and each state adds one power of s to the denominator.
+- **Order** (the highest power of s in G's denominator) = the number of independent energy stores.
+- **Paths store nothing:** parts that only pass energy along or turn it into heat (walls, resistors) add no order.
 
 ### See it
 
@@ -45,6 +48,8 @@ lookFor: Turn on the heat-stored bars. The two bars rise at different rates: two
 
 ### What it can't do
 
-It counts the states; it doesn't say where the poles are or which ones matter. A model can also have more stores than you care to keep: the wheel's two are real but fast, and we leave them out on purpose. And it applies to lumped models only: a wall with a temperature gradient through it really has infinitely many stores, and we chose to treat it as one heat path.
+- **It counts; it doesn't place.** It gives the number of states, not where the poles are or which ones matter.
+- **You may leave stores out:** a model can have more stores than you care to keep, if they are fast. *Which poles matter?* shows one.
+- **Lumped models only:** a wall with a temperature gradient through it really has infinitely many stores; we chose to treat it as one heat path.
 
 <p class="src">Sources: LN1 s.21–27 (states of a mass–spring system), s.38–41 (one state per energy store).</p>

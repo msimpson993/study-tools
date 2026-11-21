@@ -12,7 +12,10 @@ check: [q-sse, q-type, ck-sse-1]
 
 ### The big idea
 
-Steady-state error is what's left once the motion stops. The final-value theorem (FVT) reads it from s → 0 without solving anything. The dish's angle is the integral of its speed, so with no load it always reaches the target exactly. But a steady wind torque must be held by an equal motor torque, and P makes torque only from error, so an error remains.
+- **Steady-state error:** what's left once the motion stops.
+- **Final-value theorem (FVT):** reads it from s → 0 without solving anything.
+- **No load:** the dish's angle is the integral of its speed, so it always reaches the target exactly.
+- **Steady wind:** it must be held by an equal motor torque, and P makes torque only from error, so an error remains.
 
 ### See it
 

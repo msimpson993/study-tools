@@ -12,11 +12,14 @@ check: [q-plane, ck-plane-1]
 
 ### The big idea
 
-G(s) gives a number at every point of the plane, so plot its size |G| as a height. Poles become infinitely tall peaks and zeros become pits where the surface touches the floor. Walking up the vertical axis, s = jω, gives the plant's response to a sine wave at frequency ω, its *frequency response*. The picture explains at a glance why a plant amplifies some frequencies and ignores others.
+- **A height for every point:** G(s) gives a number at every point of the plane, so plot its size |G| as a height.
+- **Peaks and pits:** poles are infinitely tall peaks; zeros are pits where the surface touches the floor.
+- **Frequency response:** walking up the vertical axis, s = jω, gives the plant's response to a sine wave at frequency ω.
+- **Why it helps:** it shows at a glance why a plant passes some frequencies and smooths out others.
 
 ### See it
 
-Drag the probe. With the house preset, the peaks sit at −0.2 and −2.2 /h; the living-room G₁ adds a pit at −1.2. The corner preset shows two peaks at −2 ± 7.75j and a ridge along the jω axis, highest near 7.5 rad/s: the body's resonance.
+Drag the probe. With the house preset, the peaks sit at −0.2 and −2.2 /h; the living-room G₁ adds a pit at −1.2. The *ringing* preset puts two peaks at −2 ± 7.75j: a ridge runs along the jω axis, highest near 7.5 rad/s, a resonance.
 
 ```figure:plane
 ```
@@ -29,12 +32,11 @@ Drag the probe. With the house preset, the peaks sit at −0.2 and −2.2 /h; th
 
 **What each symbol means.**
 
-- **s = σ + jω**: a point on the plane. σ (real part) is a decay or growth rate; ω (imaginary part) is a ringing frequency. Units: 1/h and rad/h for the house; 1/s and rad/s for the corner.
+- **s = σ + jω**: a point on the plane. σ (real part) is a decay or growth rate; ω (imaginary part) is a ringing frequency. Units: 1/h and rad/h for the house; 1/s and rad/s for the ringing preset.
 - **G(s)**: the plant's fraction; **|G|** is its size, drawn as height (output per input, e.g. K/kW).
 - **s₀**: the probe point.
 - **ω**: the frequency of a sine input (rad/h or rad/s).
 - **G₁, G₂**: heater → living room and heater → bedroom (K/W).
-- **T(s)**: the closed loop's fraction, if you redraw the landscape for the loop.
 
 ### Worked example: on the house
 
@@ -43,6 +45,6 @@ Drag the probe. With the house preset, the peaks sit at −0.2 and −2.2 /h; th
 
 ### What it can't do
 
-Height alone loses the phase (the delay of the response), which frequency-response design also needs. And the landscape describes the plant, not the closed loop, unless you redraw it for T(s).
+Height alone loses the phase (the delay of the response), which frequency-response design also needs. And the landscape describes the plant alone; adding a controller changes it.
 
 <p class="src">Sources: LN1 s.61 (pole location). Not in lecture notes: the |G| landscape and the frequency response.</p>

@@ -12,7 +12,10 @@ check: [q-dist, ck-dist-1, ck-dist-2]
 
 ### The big idea
 
-A disturbance is an input we didn't choose. A cold front pulls heat out of both rooms. Without feedback the bedroom simply follows the weather. With a thermostat, the drop is seen and the heater turns up, so the effect shrinks by 1 + L. Proportional control leaves a small droop, because extra heat needs a standing error; PI's integrator keeps raising the heater until the error is zero.
+- **Disturbance:** an input we didn't choose. A cold front pulls heat out of both rooms.
+- **Open loop:** the bedroom simply follows the weather.
+- **With a thermostat:** the drop is seen and the heater turns up, so the effect shrinks by 1 + L.
+- **P vs PI:** P leaves a small *droop*, because extra heat needs a standing error. PI's integrator keeps raising the heater until the error is zero.
 
 ### See it
 

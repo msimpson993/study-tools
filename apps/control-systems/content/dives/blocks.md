@@ -12,7 +12,9 @@ check: [q-loop, q-blockalg, ck-loop-1]
 
 ### The big idea
 
-Feedback means measuring the output, comparing it with what you want, and acting on the difference. A car corner is a feedback loop with no electronics: the spring and shock push on the gap between road and body, so the body follows the road. Any loop collapses to one block, forward/(1 + loop gain), and every input to that loop shares the same 1 + L, so the same poles.
+- **Feedback:** measure the output, compare it with what you want, and act on the difference.
+- **A loop with no electronics:** in a car corner the spring and shock push on the gap between road and body, so the body follows the road.
+- **One block:** any loop collapses to forward/(1 + loop gain). Every input to that loop shares the same 1 + L, so the same poles.
 
 ### See it
 

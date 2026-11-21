@@ -12,7 +12,7 @@ check: [q-tf, ck-tf-1, ck-tf-2]
 
 ### The big idea
 
-With everything starting at rest, the Laplace transform turns each derivative into a factor s. The ODEs become algebra, and the plant becomes one fraction, G(s): output over input for any input. Series blocks multiply, so building loops becomes algebra too. The price: initial conditions are assumed zero (state space keeps them).
+With everything starting at rest, the Laplace transform turns each derivative into a factor s. The ODEs become algebra, and the plant becomes one fraction, G(s): output over input for any input. Series blocks multiply, so building loops becomes algebra too. The price: initial conditions are assumed zero.
 
 ### See it
 
@@ -45,7 +45,7 @@ The living room's G₁ has a zero at −1.2 that the bedroom's G₂ doesn't: hea
 
 ### Worked example: on the house
 
-Take the outdoor temperature as the input instead. Both rooms leak to it equally, so X₂/D = 0.2/(s + 0.2) = 1/(5s + 1): first order, DC gain 1. A 5 K cold front reaches the bedroom with a 5 h time constant (DIST uses this).
+Take the outdoor temperature as the input instead. Both rooms leak to it equally, so X₂/D = 0.2/(s + 0.2) = 1/(5s + 1): first order, DC gain 1. A 5 K cold front reaches the bedroom with a 5 h time constant. (This weather input comes back when a cold front hits the house.)
 
 ### What it can't do
 

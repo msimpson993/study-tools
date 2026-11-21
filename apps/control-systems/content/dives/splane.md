@@ -13,7 +13,10 @@ addsToExample: "Stage H2: the two poles, −0.2 and −2.2 per hour, are the hou
 
 ### The big idea
 
-Factor the denominator and each root is one of the plant's natural motions. Its real part says how fast it dies (or grows); its imaginary part says how fast it swings. The house's two poles are both real and negative, two smooth decays, so on its own the house can never overshoot. The poles have physical meaning: −0.2 /h is both rooms cooling together through the outer walls (τ = 5 h), −2.2 /h is the two rooms evening out through the inner wall (27 min).
+- **Each root is a motion:** factor the denominator, and each root is one of the plant's natural motions.
+- **Real part:** how fast the motion dies (or grows). **Imaginary part:** how fast it swings.
+- **The house:** both poles are real and negative, two smooth decays, so on its own the house can never overshoot.
+- **What they mean physically:** −0.2 /h is both rooms cooling together through the outer walls (τ = 5 h); −2.2 /h is the two rooms evening out through the inner wall (27 min).
 
 ### See it
 

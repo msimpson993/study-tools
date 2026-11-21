@@ -21,7 +21,9 @@ Step the ride height and make the real spring stiffer or softer than modelled. M
 ```figure:refin
 ```
 
-With N̄ off, the command enters only as a height error, u = −k₁(z − r) − k₂ż. The body then stops at k₁/(k + k₁) = 36 % of the command (0.72 cm of a 2 cm step), because the passive spring keeps pulling it back while k₁ alone does the pushing. N̄ = k + k₁ = 40 000 N/m scales the command so the body lands exactly on it.
+- **N̄ off:** the command enters only as a height error, u = −k₁(z − r) − k₂ż.
+- **Result:** the body stops at k₁/(k + k₁) = 36 % of the command (0.72 cm of a 2 cm step). The passive spring keeps pulling it back while k₁ alone does the pushing.
+- **N̄ on:** N̄ = k + k₁ = 40 000 N/m scales the command so the body lands exactly on it.
 
 ### The math
 
@@ -35,7 +37,7 @@ DC gain −C(A − BK)⁻¹B·N̄ = 1  ⇒  N̄ = 1/(−C(A − BK)⁻¹B)
 
 Corner: −C(A − BK)⁻¹B = (1/m)/((k + k₁)/m) = 1/(k + k₁), so N̄ = 40 000 N/m.
 
-The notes (LN4 slides 41–44) write M = BN̄; the alternative M = −L feeds y − r to the observer.
+The command must also reach the observer, through a matrix M, or the estimate lags. The usual choice is M = BN̄; the alternative M = −L feeds y − r to the observer.
 
 **What each symbol means.** r: the commanded height (m); N̄: the reference gain (N/m); M: how the command enters the observer.
 

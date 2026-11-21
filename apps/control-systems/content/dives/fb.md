@@ -12,7 +12,11 @@ check: [q-noise, ck-noise-1, ck-noise-2]
 
 ### The big idea
 
-The loop drives the *reading* to the set point, not the room. S = 1/(1 + L) is the share of a disturbance or model error that still gets through; C = L/(1 + L) is the share of the command, and of any sensor error, that reaches the output. S + C = 1. Make L big and S small, and C ≈ 1: sensor errors go straight into the room. High gain also costs heater effort and damping (11 % overshoot at Kp = 1100, 1.5 % at 500).
+- **The catch:** the loop drives the *reading* to the set point, not the room.
+- **S = 1/(1 + L):** the share of a disturbance or model error that still gets through.
+- **C = L/(1 + L):** the share of the command, and of any sensor error, that reaches the output. S + C = 1.
+- **So:** make L big and S small, and C ≈ 1: sensor errors go straight into the room.
+- **Other costs:** heater effort and damping (11 % overshoot at Kp = 1100, 1.5 % at 500).
 
 ### See it
 

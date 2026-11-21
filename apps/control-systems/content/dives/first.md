@@ -12,7 +12,9 @@ check: [q-first, ck-first-1, ck-first-2]
 
 ### The big idea
 
-A one-pole plant rises smoothly with no overshoot. Its final value is K × input, and it covers 63 % of the way in one time constant τ. The house's step response almost looks like this, because its fast pole has died out after the first couple of hours. So "τ ≈ 5 h, 8.2 K per kW" is a good one-line summary of the whole house.
+- **Shape:** a one-pole plant rises smoothly with no overshoot.
+- **Two numbers:** its final value is K × input, and it covers 63 % of the way in one time constant τ.
+- **The house:** its fast pole has died out after the first couple of hours, so its step response looks almost like this. "τ ≈ 5 h, 8.2 K per kW" sums up the whole house.
 
 ### See it
 

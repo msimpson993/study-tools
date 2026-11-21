@@ -220,9 +220,9 @@ const planeG = (v: V): { G: TF; range: number; re: number; wmax: number; unit: s
   return { G: p === 'living' ? tf([0.44 / 1.2, 0.44], housePoly()) : tf([0.44], housePoly()), range: 2.6, re: -1.2, wmax: 2, unit: 'rad/h' };
 };
 export const planeFigure = figureOf(() => [
-  { id: 'map', title: '|G(s)| over the s-plane: poles are peaks, zeros are pits', x: 'σ (1/h; 1/s for the corner)', y: 'jω (rad/h; rad/s for the corner)', draw: (g, w, h, v) => { const P = planeG(v); drawHeightMap(g, w, h, { G: P.G, range: P.range, reCenter: P.re, omega: num(v, 'omega', 0.262), xLabel: `σ (${P.unit === 'rad/h' ? '1/h' : '1/s'})`, yLabel: `jω (${P.unit})`, scale: true }); } },
+  { id: 'map', title: '|G(s)| over the s-plane: poles are peaks, zeros are pits', x: 'σ (1/h; 1/s for the ringing preset)', y: 'jω (rad/h; rad/s for the ringing preset)', draw: (g, w, h, v) => { const P = planeG(v); drawHeightMap(g, w, h, { G: P.G, range: P.range, reCenter: P.re, omega: num(v, 'omega', 0.262), xLabel: `σ (${P.unit === 'rad/h' ? '1/h' : '1/s'})`, yLabel: `jω (${P.unit})`, scale: true }); } },
   {
-    id: 'slice', title: '|G(jω)| along the jω axis (frequency response; not in lecture notes)', x: 'ω (rad/h; rad/s for the corner)', y: '|G(jω)| / G(0)',
+    id: 'slice', title: '|G(jω)| along the jω axis (frequency response; not in lecture notes)', x: 'ω (rad/h; rad/s for the ringing preset)', y: '|G(jω)| / G(0)',
     draw(g, w, h, v) {
       const P = planeG(v); drawJwSlice(g, w, h, { G: P.G, wmax: P.wmax, omega: num(v, 'omega', 0.262), xLabel: `ω (${P.unit}) along the jω axis` });
       if (str(v, 'plant', 'bed') !== 'corner') text(g, `daily heater cycle ω = 0.262 rad/h: |G₂| = ${f(houseG2mag(0.262) * 1000)} K/kW vs ${f(dc(houseG2()) * 1000)} at DC`, 8, 12, col.muted(), 'left', 9.5);

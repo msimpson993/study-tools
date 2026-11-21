@@ -12,7 +12,10 @@ check: [q-inv, ck-inv-1]
 
 ### The big idea
 
-A Laplace-domain response is a fraction we can't read directly. Split it into one simple fraction per pole, *partial fractions*, and each piece is a motion we already know: a step, a decaying exponential, or a decaying sine. The weight of each piece, its *residue*, is set by the zeros and by the input. So the poles say which motions appear, and the residues say how much of each.
+- **The problem:** a Laplace-domain response is a fraction we can't read directly.
+- **Partial fractions:** split it into one simple fraction per pole. Each piece is a motion we already know: a step, a decaying exponential or a decaying sine.
+- **Residue:** each piece's weight, set by the zeros and by the input.
+- **So:** the poles say which motions appear, and the residues say how much of each.
 
 ### See it
 

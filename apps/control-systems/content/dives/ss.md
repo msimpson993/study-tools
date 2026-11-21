@@ -16,7 +16,7 @@ To predict the corner's future you need its height *and* its velocity now; heigh
 
 ### See it
 
-The two-integrator diagram (force/m → acceleration → ∫ → velocity → ∫ → height, with −64 and −4 fed back) and the phase portrait (z, ż). Every start spirals into the origin along the same shape: the eigenvalues set it.
+The two-integrator diagram (force/m → acceleration → ∫ → velocity → ∫ → height, with −64 and −4 fed back) and the phase portrait (z, ż). Every start spirals into the origin along the same shape, set by A's eigenvalues: the numbers λ with det(λI − A) = 0, here −2 ± 7.75j, the same as G's poles.
 
 ```figure:ssblock
 ```

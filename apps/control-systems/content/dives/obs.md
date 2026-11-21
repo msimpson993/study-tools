@@ -16,7 +16,7 @@ Run the corner's model in software with the same actuator force, compare its pre
 
 ### See it
 
-The real body and the ghost estimate start apart and lock on. ×10 locks on faster but the velocity estimate gets noisy: L = [156, 9312] multiplies the sensor noise.
+The real body and the ghost estimate start apart and lock on. Observer poles 10× faster than the controller's lock on faster, but the velocity estimate gets noisy: L = [156, 9312] multiplies the sensor noise.
 
 ```figure:obs
 ```
@@ -31,7 +31,7 @@ x̂̇ = Ax̂ + Bu + L(y − Cx̂);   e = x − x̂  ⇒  ė = (A − LC)e
 det(sI − (A − LC)) = s² + (4 + l₁)s + (64 + 4l₁ + l₂)
 ```
 
-Choosing L is pole placement on Aᵀ, Cᵀ (duality).
+Choosing L is the same problem as choosing K, with A and C transposed (Aᵀ, Cᵀ); this mirror image is called *duality*.
 
 **What each symbol means.** x̂: the estimate; e: the estimation error; L = [l₁, l₂]ᵀ, in 1/s and 1/s².
 

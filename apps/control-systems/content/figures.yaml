@@ -499,7 +499,7 @@
         - value: living
           label: house G₁ (zero)
         - value: corner
-          label: corner
+          label: ringing
       default: bed
       group: primary
     - id: omega
@@ -522,7 +522,7 @@
         plant: living
         omega: 0.262
     - id: corner
-      label: corner (resonance ridge)
+      label: ringing (resonance ridge)
       set:
         plant: corner
         omega: 7.5

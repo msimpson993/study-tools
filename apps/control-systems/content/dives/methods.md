@@ -38,7 +38,7 @@ Kp = 0.6K_u,   Ti = T_u/2,   T_D = T_u/8;   Ki = Kp/Ti,   Kd = Kp·T_D
 
 ### MATLAB's PID Tuner
 
-- Response time slider to the left: slower, lower bandwidth, less overshoot. Transient behaviour toward Robust: more phase margin, less overshoot.
+- Response time slider to the left: slower, lower bandwidth, less overshoot. Transient behaviour toward Robust: more phase margin (a robustness measure read from Bode plots; not in lecture notes), less overshoot.
 - *Update Block*, then verify on the nonlinear model.
 
 ### Writing it up

@@ -13,7 +13,10 @@ addsToExample: "Stage H0: two rooms, a heater in room 1, heat flowing through th
 
 ### The big idea
 
-Physical laws state rates. Energy balance says net heat flow sets how fast a room warms; Newton says force sets acceleration. Write one law per energy store and you get differential equations. Every later tool (G(s), poles, state space) is the same equations rearranged so a different question is easy. **Why the ODE is the default:** it is what the physics gives, and it holds for any input and any starting temperature.
+- **Laws state rates:** energy balance says net heat flow sets how fast a room warms; Newton says force sets acceleration.
+- **One law per energy store** gives differential equations.
+- **Every later tool** is the same equations rearranged so that a different question is easy.
+- **Why the ODE is the default:** it is what the physics gives, and it holds for any input and any starting temperature.
 
 ### See it
 
@@ -53,6 +56,6 @@ Dividing by C_th and timing in hours:
 
 ### What it can't do
 
-Real rooms have stratified air, sun through windows, people and doors opening (nonlinear and time-varying, the "approximately" in the central question). The model also has no heater limit; limits come back with windup later.
+Real rooms have stratified air, sun through windows, people and doors opening (nonlinear and time-varying, the "approximately" in the central question). The model also has no heater limit. Real actuators have one, and it matters once a controller pushes hard.
 
 <p class="src">Sources: LN1 s.3–5 (transfer functions and why we model). The two-room heat balance is this site's example.</p>

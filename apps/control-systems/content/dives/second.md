@@ -12,7 +12,9 @@ check: [q-second, q-specs, ck-second-1]
 
 ### The big idea
 
-A mass on a spring with a shock absorber is the standard plant that rings. Two numbers describe it: the natural frequency ωₙ (how fast it would swing with no shock) and the damping ratio ζ (how much the shock calms it). Overshoot depends on ζ alone; settling on the decay rate σ = ζωₙ; peak time on the ringing frequency ω_d. Car makers choose ζ ≈ 0.2–0.4: low enough that bumps are soaked up softly, high enough that the body doesn't keep bouncing.
+- **The standard plant that rings:** a mass on a spring with a shock absorber.
+- **Two numbers:** the natural frequency ωₙ (how fast it would swing with no shock) and the damping ratio ζ (how much the shock calms it).
+- **What each spec depends on:** overshoot on ζ alone, settling on the decay rate σ = ζωₙ, and peak time on the ringing frequency ω_d.
 
 **Model note:** this is a *single-mass quarter car*: one corner's share of the body (400 kg) on its spring and shock, tyre rigid, wheel mass ignored. The wheel comes back once in *Which poles matter?*.
 

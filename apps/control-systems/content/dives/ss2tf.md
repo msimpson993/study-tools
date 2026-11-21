@@ -12,7 +12,9 @@ check: [q-ss2tf, ck-ss2tf-1]
 
 ### The big idea
 
-The two descriptions are the same plant seen two ways. Laplace-transform the state equations, eliminate the states, and the transfer function falls out. Its denominator is det(sI − A), so G's poles are A's eigenvalues, unless a mode can't be reached or seen, in which case it cancels and vanishes from G. Going the other way, any G(s) can be written in *phase-variable (companion) form*, though that is only one of many valid A, B, C.
+- **Same plant, two views:** Laplace-transform the state equations, eliminate the states, and the transfer function falls out.
+- **Poles = eigenvalues:** G's denominator is det(sI − A), so G's poles are A's eigenvalues. The exception is a mode that can't be reached or seen: it cancels and vanishes from G.
+- **The other way:** any G(s) can be written in *phase-variable (companion) form*, which is only one of many valid A, B, C.
 
 ### See it
 

@@ -16,7 +16,12 @@ Derivative action opposes motion, so the dish brakes before it arrives. Mathemat
 
 ### See it
 
-Switch between D on error and D on measurement: same poles, two overshoots, 15.6 % against 4.6 %. The figure filters D at N_f = 200 rad/s, as a real loop must, so it reads 3.8 % (on the measurement) and 16.1 % (on the error); the unfiltered values are 4.6 % and 15.6 %. The difference is the zero at −Kp/Kd. Turn noise on to see what D does to the torque.
+Switch between D on error and D on measurement: same poles, two overshoots.
+- **Ideal D (the numbers in the text):** 15.6 % on the error, 4.6 % on the measurement.
+- **This figure** filters D at N_f = 200 rad/s, as a real loop must: 16.1 % and 3.8 %.
+- **Why the two differ:** D on the error adds a zero at −Kp/Kd.
+
+Turn noise on to see what D does to the torque.
 
 ```figure:derivative
 ```

@@ -260,7 +260,7 @@ maps:
     label: Why it stops short
     detail: steady-state error
     series: 2
-    short: 'A steady push. In still air the dish ends exactly on target, because its angle keeps integrating the motor''s speed: one integrator in the loop makes it *type 1*. But a steady wind torque must be held by an equal motor torque, and P makes torque only from an error, so some *steady-state error* e_ss remains. The *final-value theorem* reads it off at s → 0, if the loop is stable.'
+    short: 'A steady push. In still air the dish ends exactly on target, because its angle integrates the motor''s speed: one integrator in the loop, *type 1*. Wind is different: P makes torque only from error, so holding a steady wind torque leaves a *steady-state error* e_ss. The *final-value theorem* reads it at s → 0, if the loop is stable.'
     eq: e_ss(step) = 0,  e_ss(wind) = −T_d/Kp,  e_ss(ramp ω) = Bω/Kp
     dive: sse
     live: figure:sse
@@ -424,7 +424,7 @@ maps:
     label: Why not infinite gain?
     detail: S + C = 1
     series: 3
-    short: 'Because the loop trusts its sensor: it drives the *reading*, not the room, to the set point. S is the share of weather and model error that gets through; C = L/(1 + L), the *complementary sensitivity*, is the share of command and sensor error reaching the room. They add to one, so large L makes C ≈ 1: sensor errors go straight in.'
+    short: 'Because the loop trusts its sensor: it drives the *reading*, not the room, to the set point. S is the share of weather and model error that gets through. C = L/(1 + L), the *complementary sensitivity*, is the share of sensor error that gets in. S + C = 1, so large L makes C ≈ 1.'
     eq: E = S·R − S·G_d·D + C·N,  S + C = 1
     dive: fb
     live: figure:sc
@@ -465,7 +465,7 @@ maps:
     accountsFor: Why the poles of G and the eigenvalues of A are the same numbers.
     pop:
       rough: rate of state = A·state + B·force; output = C·state
-      eqKey: x₁ = height z (m), x₂ = velocity ż (m/s).
+      eqKey: x₁ = height z (m), x₂ = velocity ż (m/s); A's eigenvalues = the poles.
       figures:
       - id: pop-states
         params:
@@ -703,7 +703,7 @@ maps:
     why: |-
       **Still open:** Box 8 showed speed and bounce rising with Kp, but in still air the angle ends exactly on target.
 
-      **Why it matters:** a 1.2 m Ku-band beam is only 1.46° wide, so a 1° error loses most of the signal.
+      **Why it matters:** a 1.2 m satellite dish at 12 GHz has a beam only 1.46° wide, so a 1° error loses most of the signal.
 
       **What we want:** the leftover error under a steady disturbance, and what sets it.
   - from: SSE
@@ -1140,7 +1140,7 @@ maps:
     label: Why it stops short
     detail: steady-state error
     series: 2
-    short: 'A steady push. In still air the dish ends exactly on target, because its angle keeps integrating the motor''s speed: one integrator in the loop makes it *type 1*. But a steady wind torque must be held by an equal motor torque, and P makes torque only from an error, so some *steady-state error* e_ss remains. The *final-value theorem* reads it off at s → 0, if the loop is stable.'
+    short: 'A steady push. In still air the dish ends exactly on target, because its angle integrates the motor''s speed: one integrator in the loop, *type 1*. Wind is different: P makes torque only from error, so holding a steady wind torque leaves a *steady-state error* e_ss. The *final-value theorem* reads it at s → 0, if the loop is stable.'
     eq: e_ss(step) = 0,  e_ss(wind) = −T_d/Kp,  e_ss(ramp ω) = Bω/Kp
     dive: sse
     live: figure:sse
@@ -1304,7 +1304,7 @@ maps:
     label: Why not infinite gain?
     detail: S + C = 1
     series: 3
-    short: 'Because the loop trusts its sensor: it drives the *reading*, not the room, to the set point. S is the share of weather and model error that gets through; C = L/(1 + L), the *complementary sensitivity*, is the share of command and sensor error reaching the room. They add to one, so large L makes C ≈ 1: sensor errors go straight in.'
+    short: 'Because the loop trusts its sensor: it drives the *reading*, not the room, to the set point. S is the share of weather and model error that gets through. C = L/(1 + L), the *complementary sensitivity*, is the share of sensor error that gets in. S + C = 1, so large L makes C ≈ 1.'
     eq: E = S·R − S·G_d·D + C·N,  S + C = 1
     dive: fb
     live: figure:sc
@@ -1345,7 +1345,7 @@ maps:
     accountsFor: Why the poles of G and the eigenvalues of A are the same numbers.
     pop:
       rough: rate of state = A·state + B·force; output = C·state
-      eqKey: x₁ = height z (m), x₂ = velocity ż (m/s).
+      eqKey: x₁ = height z (m), x₂ = velocity ż (m/s); A's eigenvalues = the poles.
       figures:
       - id: pop-states
         params:
@@ -1504,7 +1504,7 @@ maps:
   - id: CIRC
     label: G(s) for circuits and op-amps
     series: 0
-    short: 'Treat each part as a resistance that depends on s, its *impedance*: R, sL or 1/(sC). Then apply the ordinary voltage-divider and op-amp rules. An inverting op-amp stage gives −Z_f/Z_in, which is how the op-amp PID is built. Heat flow follows the same rules, so the house is literally an RC circuit.'
+    short: 'Treat each part as a resistance that depends on s, its *impedance*: R, sL or 1/(sC). Then apply the ordinary voltage-divider and op-amp rules. An inverting op-amp stage gives −Z_f/Z_in, which is how op-amp controllers are built. Heat flow follows the same rules, so the house is literally an RC circuit.'
     eq: 'RLC (output across C): 1/(LCs² + RCs + 1);  op-amp: −Z_f/Z_in'
     dive: circuits
     live: figure:rlc?preset=house
@@ -1850,7 +1850,7 @@ maps:
     why: |-
       **Still open:** Box 8 showed speed and bounce rising with Kp, but in still air the angle ends exactly on target.
 
-      **Why it matters:** a 1.2 m Ku-band beam is only 1.46° wide, so a 1° error loses most of the signal.
+      **Why it matters:** a 1.2 m satellite dish at 12 GHz has a beam only 1.46° wide, so a 1° error loses most of the signal.
 
       **What we want:** the leftover error under a steady disturbance, and what sets it.
   - from: SSE

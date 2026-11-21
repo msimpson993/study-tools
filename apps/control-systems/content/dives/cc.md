@@ -13,7 +13,10 @@ addsToExample: "The house's failure cases: two heaters on one dial can't change 
 
 ### The big idea
 
-Before designing with the states, check that the actuator can steer each one and the sensor can reveal each one. If a mode fails, it cancels out of G(s): invisible from outside, but still moving inside. The geometry, for two states: the push direction B and the direction the dynamics turn it, AB, must point different ways, so together they span the plane (controllable). The reading y = Cx and its rate of change with the input off, ẏ = CAx, must together pin down both states (observable).
+- **Two checks before designing:** can the actuator steer each state, and can the sensor reveal each one?
+- **If a mode fails,** it cancels out of G(s): invisible from outside, but still moving inside.
+- **Controllable (two states):** the push direction B and the direction the dynamics turn it, AB, point different ways, so together they cover the plane.
+- **Observable (two states):** the reading y = Cx and its rate with the input off, ẏ = CAx, together pin down both states.
 
 ### See it
 
