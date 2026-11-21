@@ -17,14 +17,11 @@ maps:
     short: 'Write the plant down as a model, learn to predict its response from a few numbers, then wrap it in feedback: measure the output, compare it with the command, and correct the input. Feedback is what makes a rough model good enough.'
     dive: overview
     quizTag: overview
+    examples: [house]
     accountsFor: Why the same handful of ideas predicts a house, a car and an antenna, and makes each obey despite a rough model.
     pop:
       rough: command → controller → plant → output, measured and fed back
-      figures:
-      - id: hero-three
-        alt: House H0, corner C0 and antenna A0, each with its finished loop dimmed behind it.
-      figCaption: 'Bright: the three plants as they come. Dimmed: the loops the course builds around them. Each box lights up one piece.'
-      example: A house that warms slowly (heater in, bedroom temperature out), a car corner that bounces (force in, height out) and an antenna that must point (torque in, angle out).
+      example: "The first running example is a two-room house: heater in, bedroom temperature out. Other examples join later, each where the house can't show what the map needs next."
       ask: q-root
   - id: MODEL
     label: Write the plant down
@@ -35,6 +32,7 @@ maps:
     dive: model
     live: figure:house
     quizTag: model
+    examples: [house]
     addsToExample: 'Writes the house down: two heat balances, heater in, temperatures out.'
     accountsFor: Why a 2.5 kW heater ends at exactly 20.45 K in the bedroom and 24.55 K in the living room.
     pop:
@@ -63,6 +61,7 @@ maps:
     dive: tf
     live: figure:tfbuild
     quizTag: tf
+    examples: [house]
     addsToExample: 'Draws the house as one block: heater in, bedroom out.'
     accountsFor: Why the bedroom's steady rise is just G(0) times the heater power.
     pop:
@@ -96,6 +95,7 @@ maps:
     dive: splane
     live: figure:splane
     quizTag: splane
+    examples: [house]
     addsToExample: Marks the house's poles, −0.2 and −2.2 per hour, and what each one does.
     accountsFor: Why no heater schedule can ever make the bedroom overshoot its final temperature.
     pop:
@@ -124,6 +124,7 @@ maps:
     dive: first
     live: figure:first
     quizTag: first
+    examples: [house]
     addsToExample: 'Gives the house its yardstick: K = 8.18 K/kW, τ = 5 h.'
     accountsFor: Why a heater left on overnight has done almost all its work by morning.
     pop:
@@ -152,6 +153,8 @@ maps:
     dive: second
     live: figure:corner
     quizTag: second
+    examples: [corner]
+    exampleWhy: ωₙ = 8, ζ = 0.25
     addsToExample: 'Puts the car corner on its spring and shock: ωₙ = 8 rad/s, ζ = 0.25.'
     accountsFor: Why a car with worn shocks keeps bouncing after a dip.
     pop:
@@ -180,6 +183,8 @@ maps:
     dive: second
     live: figure:specs
     quizTag: second
+    examples: [corner]
+    exampleWhy: turns the bounce into numbers (44 %, 0.41 s, about 2 s)
     addsToExample: 'Measures the corner''s bounce: 44 % overshoot, peak at 0.41 s, settled in about 2 s.'
     accountsFor: Why 'ride comfort' becomes a choice of ζ.
     pop:
@@ -200,6 +205,8 @@ maps:
     dive: blocks
     live: figure:loop
     quizTag: blocks
+    examples: [corner]
+    exampleWhy: 'a loop we already understand: the road is the command'
     addsToExample: Redraws the corner as a loop with the road as its command.
     accountsFor: 'Why the body ends exactly at the road''s new height: a passive loop with error feedback.'
     pop:
@@ -228,6 +235,8 @@ maps:
     dive: ctrl
     live: figure:antenna
     quizTag: ctrl
+    examples: [dish]
+    exampleWhy: Kp = 1000 gives ζ = 0.1
     addsToExample: 'Points the dish with a P loop: stiff but bouncy at Kp = 1000.'
     accountsFor: Why a stiffer pointing loop rings more unless something adds damping.
     pop:
@@ -256,6 +265,8 @@ maps:
     dive: sse
     live: figure:sse
     quizTag: sse
+    examples: [dish]
+    exampleWhy: wind torque leaves e_ss = −T_d/Kp
     addsToExample: 'Adds wind: the dish sits 1.15° off under P.'
     accountsFor: Why a P-only pedestal points well in still air and badly in wind.
     pop:
@@ -284,6 +295,8 @@ maps:
     dive: integral
     live: figure:integral
     quizTag: integral
+    examples: [dish]
+    exampleWhy: PI removes the wind error; Ki < 2Kp
     addsToExample: 'Adds Ki: no wind error, but even more bounce.'
     accountsFor: Why integral action alone can't fix a lightly damped servo.
     pop:
@@ -312,6 +325,8 @@ maps:
     dive: derivative
     live: figure:derivative
     quizTag: derivative
+    examples: [dish]
+    exampleWhy: adds Kd to B
     addsToExample: 'Adds a tachometer: Kd = 120 gives ζ = 0.7.'
     accountsFor: Why servos take D from the tachometer, not from the error.
     pop:
@@ -340,6 +355,8 @@ maps:
     dive: tuning
     live: figure:gains
     quizTag: tuning
+    examples: [dish]
+    exampleWhy: the trade-off and the specs
     addsToExample: 'Tunes the dish: (2000, 1000, 200) meets all three specs.'
     accountsFor: How three numbers trade stiffness, accuracy and bounce.
     pop:
@@ -360,6 +377,8 @@ maps:
     dive: dist
     live: figure:regulate
     quizTag: dist
+    examples: [house]
+    exampleWhy: "**Back to the house, now with a thermostat.** Holding steady against the weather is a thermostat's whole job, so the house shows plainly what feedback buys. Its open-loop model from Boxes 1–4 makes the before-and-after comparison exact."
     addsToExample: Closes the thermostat loop and sends in a cold front.
     accountsFor: Why a simple proportional thermostat lets the house run a little cold in cold weather, and a PI one doesn't.
     pop:
@@ -388,6 +407,8 @@ maps:
     dive: sens
     live: figure:sens
     quizTag: sens
+    examples: [house]
+    exampleWhy: leakier walls (−18.2 % plant gain)
     addsToExample: Gives the house leakier walls and shows the thermostat barely notices.
     accountsFor: Why a thermostat works even though nobody measured the walls.
     pop:
@@ -408,6 +429,8 @@ maps:
     dive: fb
     live: figure:sc
     quizTag: fb
+    examples: [house]
+    exampleWhy: sun on the thermostat (a +1 K reading)
     addsToExample: Puts the sun on the thermostat.
     accountsFor: Why a well-placed sensor matters more than a clever controller.
     pop:
@@ -436,6 +459,8 @@ maps:
     dive: ss
     live: figure:states
     quizTag: ss
+    examples: [corner]
+    exampleWhy: '**Back to the car corner, now with an actuator and a height sensor.** Its specs, a soft ride *and* a quick settle, need both coefficients of its polynomial set at will. P on the dish could set only one.'
     addsToExample: 'Gives the corner two state gauges: height and velocity.'
     accountsFor: Why the poles of G and the eigenvalues of A are the same numbers.
     pop:
@@ -464,6 +489,8 @@ maps:
     dive: cc
     live: figure:cc
     quizTag: cc
+    examples: [house, corner]
+    exampleWhy: the corner passes both tests; the house shows the failures (two heaters on one dial, an averaging sensor)
     addsToExample: 'Checks the corner: one force steers both states; one height sensor sees both.'
     accountsFor: Why we may estimate velocity from a position sensor.
     pop:
@@ -492,6 +519,8 @@ maps:
     dive: sf
     live: figure:sf
     quizTag: sf
+    examples: [corner]
+    exampleWhy: K = [14 400, 4 800]
     addsToExample: Adds an actuator with K = [14 400, 4 800].
     accountsFor: How an active suspension makes a soft car stop bouncing.
     pop:
@@ -520,6 +549,8 @@ maps:
     dive: obs
     live: figure:obs
     quizTag: obs
+    examples: [corner]
+    exampleWhy: L = [76, 2132]
     addsToExample: Adds a ghost corner that estimates velocity from height.
     accountsFor: How the actuator gets the velocity the design needs.
     pop:
@@ -540,6 +571,8 @@ maps:
     dive: sep
     live: figure:sep
     quizTag: sep
+    examples: [corner]
+    exampleWhy: poles −8 ± 6j and −40 ± 30j
     addsToExample: Wires the estimate into the actuator.
     accountsFor: Why the observer and controller can be designed one at a time.
     pop:
@@ -560,6 +593,8 @@ maps:
     dive: refin
     live: figure:refin
     quizTag: refin
+    examples: [corner]
+    exampleWhy: N̄ = 40 000 N/m
     addsToExample: Gives the corner a ride-height dial. The car's loop is complete.
     accountsFor: Why the command needs its own gain, and why that gain depends on the model.
     pop:
@@ -618,15 +653,15 @@ maps:
       **What we want:** the one-pole response, its two numbers, and how well it stands in for the house.
   - from: FIRST
     to: SECOND
-    label: can it ring? → car
-    question: The house can't bounce. What does a plant that can bounce do?
-    idea: 'The house can''t bounce: enter the suspension. A mass on a spring with a shock absorber is the standard plant that rings, and everyone has felt it.'
+    label: can it ring?
+    question: The house can't overshoot. What does a plant that swings past its target do?
+    idea: 'We need two energy stores that can pass energy back and forth, one holding it as motion and one as stretch. That is the simplest plant that rings.'
     why: |-
-      **Still open:** real poles only gave smooth rises. Box 3 showed complex poles mean oscillation, but no plant so far has them.
+      **Still open:** real poles only gave smooth rises. Box 3 showed that complex poles mean oscillation, but no plant so far has them.
 
-      **Why it matters:** most systems worth controlling can overshoot, and a car's ride, comfortable float or harsh bounce, is exactly that trade-off.
+      **Why it matters:** most systems worth controlling can overshoot, and the choice between a soft, floating response and a firm, jolting one is a design decision.
 
-      **What we want:** a second-order plant with one or two numbers that set how bouncy it is, on a car corner we can picture.
+      **What we want:** a plant with two energy stores, and one or two numbers that set how much it swings.
   - from: SECOND
     to: SPECS
     label: in numbers?
@@ -815,6 +850,7 @@ maps:
       **Why it matters:** it shows D is a physical damper, not just a formula, and why D on the measurement avoids the zero the road brings in.
 
       **What we want:** one picture: shock = Kd, spring = Kp.
+    reverse: true
   - from: PGAIN
     to: SF
     label: slide vs place
@@ -844,6 +880,7 @@ maps:
       **Why it matters:** seeing the s → 0 reading as one tool makes both boxes easier. It also shows N̄'s weakness: like the P thermostat's droop, it depends on the model being right.
 
       **What we want:** N̄ = 1/(DC gain), and why only integral action makes the final value independent of the model.
+    reverse: true
 - id: detail
   title: Full detail
   caption: The main chain plus 17 side questions (circuits, partial fractions, block-diagram algebra, the PID Lab, tuning recipes, the 14 symptom cards, Ackermann…). Side boxes end their branch; Back returns to the main chain.
@@ -860,14 +897,11 @@ maps:
     short: 'Write the plant down as a model, learn to predict its response from a few numbers, then wrap it in feedback: measure the output, compare it with the command, and correct the input. Feedback is what makes a rough model good enough.'
     dive: overview
     quizTag: overview
+    examples: [house]
     accountsFor: Why the same handful of ideas predicts a house, a car and an antenna, and makes each obey despite a rough model.
     pop:
       rough: command → controller → plant → output, measured and fed back
-      figures:
-      - id: hero-three
-        alt: House H0, corner C0 and antenna A0, each with its finished loop dimmed behind it.
-      figCaption: 'Bright: the three plants as they come. Dimmed: the loops the course builds around them. Each box lights up one piece.'
-      example: A house that warms slowly (heater in, bedroom temperature out), a car corner that bounces (force in, height out) and an antenna that must point (torque in, angle out).
+      example: "The first running example is a two-room house: heater in, bedroom temperature out. Other examples join later, each where the house can't show what the map needs next."
       ask: q-root
   - id: MODEL
     label: Write the plant down
@@ -878,6 +912,7 @@ maps:
     dive: model
     live: figure:house
     quizTag: model
+    examples: [house]
     addsToExample: 'Writes the house down: two heat balances, heater in, temperatures out.'
     accountsFor: Why a 2.5 kW heater ends at exactly 20.45 K in the bedroom and 24.55 K in the living room.
     pop:
@@ -906,6 +941,7 @@ maps:
     dive: tf
     live: figure:tfbuild
     quizTag: tf
+    examples: [house]
     addsToExample: 'Draws the house as one block: heater in, bedroom out.'
     accountsFor: Why the bedroom's steady rise is just G(0) times the heater power.
     pop:
@@ -939,6 +975,7 @@ maps:
     dive: splane
     live: figure:splane
     quizTag: splane
+    examples: [house]
     addsToExample: Marks the house's poles, −0.2 and −2.2 per hour, and what each one does.
     accountsFor: Why no heater schedule can ever make the bedroom overshoot its final temperature.
     pop:
@@ -967,6 +1004,7 @@ maps:
     dive: first
     live: figure:first
     quizTag: first
+    examples: [house]
     addsToExample: 'Gives the house its yardstick: K = 8.18 K/kW, τ = 5 h.'
     accountsFor: Why a heater left on overnight has done almost all its work by morning.
     pop:
@@ -995,6 +1033,8 @@ maps:
     dive: second
     live: figure:corner
     quizTag: second
+    examples: [corner]
+    exampleWhy: ωₙ = 8, ζ = 0.25
     addsToExample: 'Puts the car corner on its spring and shock: ωₙ = 8 rad/s, ζ = 0.25.'
     accountsFor: Why a car with worn shocks keeps bouncing after a dip.
     pop:
@@ -1023,6 +1063,8 @@ maps:
     dive: second
     live: figure:specs
     quizTag: second
+    examples: [corner]
+    exampleWhy: turns the bounce into numbers (44 %, 0.41 s, about 2 s)
     addsToExample: 'Measures the corner''s bounce: 44 % overshoot, peak at 0.41 s, settled in about 2 s.'
     accountsFor: Why 'ride comfort' becomes a choice of ζ.
     pop:
@@ -1043,6 +1085,8 @@ maps:
     dive: blocks
     live: figure:loop
     quizTag: blocks
+    examples: [corner]
+    exampleWhy: 'a loop we already understand: the road is the command'
     addsToExample: Redraws the corner as a loop with the road as its command.
     accountsFor: 'Why the body ends exactly at the road''s new height: a passive loop with error feedback.'
     pop:
@@ -1071,6 +1115,8 @@ maps:
     dive: ctrl
     live: figure:antenna
     quizTag: ctrl
+    examples: [dish]
+    exampleWhy: Kp = 1000 gives ζ = 0.1
     addsToExample: 'Points the dish with a P loop: stiff but bouncy at Kp = 1000.'
     accountsFor: Why a stiffer pointing loop rings more unless something adds damping.
     pop:
@@ -1099,6 +1145,8 @@ maps:
     dive: sse
     live: figure:sse
     quizTag: sse
+    examples: [dish]
+    exampleWhy: wind torque leaves e_ss = −T_d/Kp
     addsToExample: 'Adds wind: the dish sits 1.15° off under P.'
     accountsFor: Why a P-only pedestal points well in still air and badly in wind.
     pop:
@@ -1127,6 +1175,8 @@ maps:
     dive: integral
     live: figure:integral
     quizTag: integral
+    examples: [dish]
+    exampleWhy: PI removes the wind error; Ki < 2Kp
     addsToExample: 'Adds Ki: no wind error, but even more bounce.'
     accountsFor: Why integral action alone can't fix a lightly damped servo.
     pop:
@@ -1155,6 +1205,8 @@ maps:
     dive: derivative
     live: figure:derivative
     quizTag: derivative
+    examples: [dish]
+    exampleWhy: adds Kd to B
     addsToExample: 'Adds a tachometer: Kd = 120 gives ζ = 0.7.'
     accountsFor: Why servos take D from the tachometer, not from the error.
     pop:
@@ -1183,6 +1235,8 @@ maps:
     dive: tuning
     live: figure:gains
     quizTag: tuning
+    examples: [dish]
+    exampleWhy: the trade-off and the specs
     addsToExample: 'Tunes the dish: (2000, 1000, 200) meets all three specs.'
     accountsFor: How three numbers trade stiffness, accuracy and bounce.
     pop:
@@ -1203,6 +1257,8 @@ maps:
     dive: dist
     live: figure:regulate
     quizTag: dist
+    examples: [house]
+    exampleWhy: "**Back to the house, now with a thermostat.** Holding steady against the weather is a thermostat's whole job, so the house shows plainly what feedback buys. Its open-loop model from Boxes 1–4 makes the before-and-after comparison exact."
     addsToExample: Closes the thermostat loop and sends in a cold front.
     accountsFor: Why a simple proportional thermostat lets the house run a little cold in cold weather, and a PI one doesn't.
     pop:
@@ -1231,6 +1287,8 @@ maps:
     dive: sens
     live: figure:sens
     quizTag: sens
+    examples: [house]
+    exampleWhy: leakier walls (−18.2 % plant gain)
     addsToExample: Gives the house leakier walls and shows the thermostat barely notices.
     accountsFor: Why a thermostat works even though nobody measured the walls.
     pop:
@@ -1251,6 +1309,8 @@ maps:
     dive: fb
     live: figure:sc
     quizTag: fb
+    examples: [house]
+    exampleWhy: sun on the thermostat (a +1 K reading)
     addsToExample: Puts the sun on the thermostat.
     accountsFor: Why a well-placed sensor matters more than a clever controller.
     pop:
@@ -1279,6 +1339,8 @@ maps:
     dive: ss
     live: figure:states
     quizTag: ss
+    examples: [corner]
+    exampleWhy: '**Back to the car corner, now with an actuator and a height sensor.** Its specs, a soft ride *and* a quick settle, need both coefficients of its polynomial set at will. P on the dish could set only one.'
     addsToExample: 'Gives the corner two state gauges: height and velocity.'
     accountsFor: Why the poles of G and the eigenvalues of A are the same numbers.
     pop:
@@ -1307,6 +1369,8 @@ maps:
     dive: cc
     live: figure:cc
     quizTag: cc
+    examples: [house, corner]
+    exampleWhy: the corner passes both tests; the house shows the failures (two heaters on one dial, an averaging sensor)
     addsToExample: 'Checks the corner: one force steers both states; one height sensor sees both.'
     accountsFor: Why we may estimate velocity from a position sensor.
     pop:
@@ -1335,6 +1399,8 @@ maps:
     dive: sf
     live: figure:sf
     quizTag: sf
+    examples: [corner]
+    exampleWhy: K = [14 400, 4 800]
     addsToExample: Adds an actuator with K = [14 400, 4 800].
     accountsFor: How an active suspension makes a soft car stop bouncing.
     pop:
@@ -1363,6 +1429,8 @@ maps:
     dive: obs
     live: figure:obs
     quizTag: obs
+    examples: [corner]
+    exampleWhy: L = [76, 2132]
     addsToExample: Adds a ghost corner that estimates velocity from height.
     accountsFor: How the actuator gets the velocity the design needs.
     pop:
@@ -1383,6 +1451,8 @@ maps:
     dive: sep
     live: figure:sep
     quizTag: sep
+    examples: [corner]
+    exampleWhy: poles −8 ± 6j and −40 ± 30j
     addsToExample: Wires the estimate into the actuator.
     accountsFor: Why the observer and controller can be designed one at a time.
     pop:
@@ -1403,6 +1473,8 @@ maps:
     dive: refin
     live: figure:refin
     quizTag: refin
+    examples: [corner]
+    exampleWhy: N̄ = 40 000 N/m
     addsToExample: Gives the corner a ride-height dial. The car's loop is complete.
     accountsFor: Why the command needs its own gain, and why that gain depends on the model.
     pop:
@@ -1417,16 +1489,17 @@ maps:
   - id: ORDER
     label: Why two poles? (order = energy stores)
     series: 0
-    short: 'Because it stores heat in two independent places: the air and contents of each room. A plant''s *order*, the highest power of s in its denominator, equals its number of independent *energy stores*. Walls that only pass heat along store nothing here, so they add no order. The car corner is also second order: the spring stores energy in its stretch, the body in its motion.'
-    eq: order = number of independent heat capacities, masses, springs, inductors, capacitors
+    short: 'Because it stores heat in two independent places: the air and contents of each room. A plant''s *order*, the highest power of s in its denominator, equals its number of independent *energy stores*. Walls that only pass heat along store nothing here, so they add no order.'
+    eq: order = number of independent energy stores (here, the two rooms' heat capacities)
     dive: order
     live: board:s3
     quizTag: order
+    examples: [house]
     addsToExample: Explains the house's two poles.
     pop:
       rough: order = number of independent energy stores
-      eqKey: 'independent": two rooms with no wall between them act as one store.'
-      example: Two rooms → second order. Add the car's wheel (a second mass and the tyre's spring) and the corner becomes fourth order (see DOM).
+      eqKey: '"Independent": two rooms with no wall between them act as one store.'
+      example: 'Two rooms → second order. Knock the inner wall out and the house is one store: first order, one pole.'
       ask: q-order
   - id: CIRC
     label: G(s) for circuits and op-amps
@@ -1436,6 +1509,7 @@ maps:
     dive: circuits
     live: figure:rlc?preset=house
     quizTag: circuits
+    examples: [house]
     addsToExample: Redraws the house as a two-capacitor circuit.
     pop:
       rough: circuit G(s) = the divider or op-amp rule, with impedances in place of resistances
@@ -1450,6 +1524,7 @@ maps:
     dive: inverse
     live: figure:partial
     quizTag: inverse
+    examples: [house]
     addsToExample: Writes the bedroom's warm-up mode by mode.
     pop:
       rough: response = Σ (weight × one pole's motion)
@@ -1464,6 +1539,7 @@ maps:
     dive: plane
     live: figure:plane
     quizTag: plane
+    examples: [house]
     addsToExample: Draws the house's |G| as a landscape.
     pop:
       rough: height = (distances to zeros) ÷ (distances to poles)
@@ -1478,6 +1554,7 @@ maps:
     dive: reduce
     live: figure:reduce
     quizTag: reduce
+    examples: [house]
     addsToExample: Gives the house its best one-pole stand-in, τ = 5.02 h.
     pop:
       rough: small model = same DC gain + same low-frequency shape
@@ -1492,6 +1569,8 @@ maps:
     dive: dominant
     live: figure:dominant
     quizTag: dominant
+    examples: [corner]
+    exampleWhy: puts the wheel back to show why one mass was enough
     addsToExample: Puts the wheel back for one box, and shows why we may leave it out.
     pop:
       rough: slowest pair rules if the rest decay ≥ 5–10× faster
@@ -1506,6 +1585,8 @@ maps:
     dive: blocks
     live: board:s4
     quizTag: blocks
+    examples: [corner]
+    exampleWhy: its two transfer functions come from one diagram
     addsToExample: Derives the corner's two transfer functions from one diagram.
     pop:
       rough: series ×, parallel +, loop = forward/(1 + loop)
@@ -1520,6 +1601,8 @@ maps:
     dive: ctrl
     live: board:s5
     quizTag: ctrl
+    examples: [dish]
+    exampleWhy: the tuned controller written in the notes' Kp, Ti, T_D form
     addsToExample: Names the dish's controller in the lecture notes' notation.
     pop:
       rough: controller = some mix of the error now, its total so far, and its trend
@@ -1534,6 +1617,8 @@ maps:
     dive: ctrl
     live: figure:speed
     quizTag: ctrl
+    examples: [dish]
+    exampleWhy: the dish's speed loop, J/(B + K_ω)
     addsToExample: Wraps a fast speed loop around the dish's motor.
     pop:
       rough: closed-loop time constant = open-loop time constant ÷ (1 + loop gain)
@@ -1548,6 +1633,8 @@ maps:
     dive: sse
     live: figure:sse?preset=ramp
     quizTag: sse
+    examples: [dish]
+    exampleWhy: how far the dish lags a moving satellite
     addsToExample: Predicts how far the dish lags a moving satellite.
     pop:
       rough: each integrator in the loop removes one more kind of steady error
@@ -1562,6 +1649,8 @@ maps:
     dive: windup
     live: figure:windup
     quizTag: windup
+    examples: [dish]
+    exampleWhy: the dish's 200 N·m limit
     addsToExample: Gives the dish's motor a 200 N·m limit.
     pop:
       rough: clipped torque + integrator still charging = extra overshoot
@@ -1576,6 +1665,8 @@ maps:
     dive: lab
     live: figure:lab
     quizTag: lab
+    examples: [dish]
+    exampleWhy: the PID Lab
     addsToExample: Puts the whole tuning story on sliders.
     pop:
       rough: move a gain and watch the angle, the torque and the numbers change live
@@ -1590,6 +1681,8 @@ maps:
     dive: methods
     live: figure:zn
     quizTag: methods
+    examples: [dish]
+    exampleWhy: ZN on the dish with its amplifier lag
     addsToExample: Tries ZN on the dish and shows why hand tuning won.
     pop:
       rough: find the edge of instability, then back off by a fixed recipe
@@ -1604,6 +1697,8 @@ maps:
     dive: failures
     live: figure:fail-windup
     quizTag: failures
+    examples: [dish]
+    exampleWhy: the 14 cards
     addsToExample: Gives the dish 14 ways to fail, and their fixes.
     pop:
       rough: symptom picture → likely cause → one knob to turn
@@ -1618,6 +1713,8 @@ maps:
     dive: index
     live: figure:index
     quizTag: index
+    examples: [dish]
+    exampleWhy: the dish's rate gain K_r (ISE 80, IAE 112.5), with the notes' telescope in a side panel
     addsToExample: Scores the dish's damping by one number.
     pop:
       rough: score = total error over time; best gain = lowest score
@@ -1632,6 +1729,8 @@ maps:
     dive: ss2tf
     live: board:s7
     quizTag: ss2tf
+    examples: [house, corner]
+    exampleWhy: corner G from A, B, C; the house with an averaging sensor shows a cancelled mode
     addsToExample: Confirms that the corner's two descriptions agree.
     pop:
       rough: G = what the sensor sees of the states' response to the push
@@ -1646,6 +1745,8 @@ maps:
     dive: sf
     live: figure:sf?preset=ack
     quizTag: sf
+    examples: [corner]
+    exampleWhy: K = [14 400, 4 800]
     addsToExample: Re-derives the corner's K by formula.
     pop:
       rough: K = the last row of Pc⁻¹, times the desired polynomial applied to A
@@ -1699,15 +1800,15 @@ maps:
       **What we want:** the one-pole response, its two numbers, and how well it stands in for the house.
   - from: FIRST
     to: SECOND
-    label: can it ring? → car
-    question: The house can't bounce. What does a plant that can bounce do?
-    idea: 'The house can''t bounce: enter the suspension. A mass on a spring with a shock absorber is the standard plant that rings, and everyone has felt it.'
+    label: can it ring?
+    question: The house can't overshoot. What does a plant that swings past its target do?
+    idea: 'We need two energy stores that can pass energy back and forth, one holding it as motion and one as stretch. That is the simplest plant that rings.'
     why: |-
-      **Still open:** real poles only gave smooth rises. Box 3 showed complex poles mean oscillation, but no plant so far has them.
+      **Still open:** real poles only gave smooth rises. Box 3 showed that complex poles mean oscillation, but no plant so far has them.
 
-      **Why it matters:** most systems worth controlling can overshoot, and a car's ride, comfortable float or harsh bounce, is exactly that trade-off.
+      **Why it matters:** most systems worth controlling can overshoot, and the choice between a soft, floating response and a firm, jolting one is a design decision.
 
-      **What we want:** a second-order plant with one or two numbers that set how bouncy it is, on a car corner we can picture.
+      **What we want:** a plant with two energy stores, and one or two numbers that set how much it swings.
   - from: SECOND
     to: SPECS
     label: in numbers?
@@ -1896,6 +1997,7 @@ maps:
       **Why it matters:** it shows D is a physical damper, not just a formula, and why D on the measurement avoids the zero the road brings in.
 
       **What we want:** one picture: shock = Kd, spring = Kp.
+    reverse: true
   - from: PGAIN
     to: SF
     label: slide vs place
@@ -1925,6 +2027,7 @@ maps:
       **Why it matters:** seeing the s → 0 reading as one tool makes both boxes easier. It also shows N̄'s weakness: like the P thermostat's droop, it depends on the model being right.
 
       **What we want:** N̄ = 1/(DC gain), and why only integral action makes the final value independent of the model.
+    reverse: true
   - from: MODEL
     to: ORDER
     side: true
@@ -1944,9 +2047,9 @@ maps:
     question: How do we get G(s) for a circuit or an op-amp stage?
     idea: Impedances R, sL, 1/(sC) in the usual divider and op-amp rules; the house is an RC circuit.
     why: |-
-      **Still open:** we modelled heat flow, but the controller, the sensors and the motor driver are electronic.
+      **Still open:** we modelled heat flow, but controllers, sensors and actuator drivers are usually electronic.
 
-      **Why it matters:** a PID is often built from op-amps, and the house is itself an RC circuit, so one recipe covers both.
+      **Why it matters:** controllers are often built from op-amps, and the house is itself an RC circuit, so one recipe covers both.
 
       **What we want:** G(s) for resistors, capacitors, inductors and op-amp stages straight from impedances, without a differential equation.
   - from: POLES
@@ -1970,7 +2073,7 @@ maps:
     why: |-
       **Still open:** poles are single points, but G(s) has a value everywhere on the plane.
 
-      **Why it matters:** seeing |G| as a surface explains at once why the corner amplifies bumps near 7.5 rad/s, and why a zero kills a frequency.
+      **Why it matters:** seeing |G| as a surface explains at once why a plant passes slow changes but smooths out fast ones (a heater cycled once a day reaches the bedroom at 4.93 instead of 8.18 K/kW), and why a zero kills a frequency.
 
       **What we want:** one picture that holds poles, zeros and the response to sines.
   - from: FIRST

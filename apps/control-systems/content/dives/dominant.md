@@ -42,6 +42,6 @@ The decay ratio is 20.4/1.6 = 12.8×, so the body pair dominates. Under a 1 kN l
 
 ### What it can't do
 
-The rule is a rule of thumb. A zero near the dominant poles, or a slow pole in the controller (PI's), breaks it; see the tuned dish's −0.53 pole in *Choosing the three gains*.
+The rule is a rule of thumb. A zero near the dominant poles, or an extra slow pole (a controller can add one, as later boxes show), breaks it.
 
 <p class="src">Sources: LN2 s.29–34 (dropping far poles, keeping the DC gain). Not in lecture notes: the 5–10× rule of thumb and the corner's wheel model.</p>

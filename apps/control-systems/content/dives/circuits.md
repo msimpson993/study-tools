@@ -40,7 +40,7 @@ Choose the "house as RC" preset. The two rooms are capacitors, the walls are res
 | inductance L | none (so heat can't ring) | 1/k (spring) | mass m |
 | source | heater = current source | applied force = current source | applied force = voltage source |
 
-In force–voltage form the corner, z/F = 1/(ms² + cs + k), is the RLC's charge response 1/(Ls² + Rs + 1/C) with L = m, R = c, C = 1/k.
+In force–voltage form a mass on a spring and damper, z/F = 1/(ms² + cs + k), is the RLC's charge response 1/(Ls² + Rs + 1/C) with L = m, R = c, C = 1/k.
 
 **What each symbol means.**
 
@@ -52,7 +52,7 @@ In force–voltage form the corner, z/F = 1/(ms² + cs + k), is the RLC's charge
 - **C_th**: room heat capacity (1 MJ/K), the house's "capacitor".
 - **R_in, R_out**: thermal resistances, the wall's 1/conductance: inner 3.6 mK/W, each outer 18 mK/W.
 - **u**: heater power (W), the house's "current source".
-- **m, c, k, F**: corner mass (kg), damping (N·s/m), stiffness (N/m), force (N), for the analogy columns.
+- **m, c, k, F**: mass (kg), damping (N·s/m), stiffness (N/m) and force (N), for the analogy columns.
 
 ### Worked example: on the house
 

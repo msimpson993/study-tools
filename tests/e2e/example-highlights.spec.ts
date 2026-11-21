@@ -8,7 +8,7 @@ import { open, trackErrors, exampleGlyphClashes } from './helpers';
    - pointing at an Example node (mouse), tapping it, or having its introduction open lights every box that uses it (outline tint
      plus the glyph) and draws faint dotted links (no arrows) from the node to them; un-hover or close and they go;
    - the introduction ends with "Where this example comes back": those boxes in reading order, each a link that opens the box.
-   control-systems has no `examples`: none of this shows there. */
+   control-systems has its own block since stage-pass2 (Nov 21): cs-example-highlights.spec.ts. */
 const OUT = path.resolve(import.meta.dirname, '..', '..', 'shots', 'example-highlights');
 fs.mkdirSync(OUT, { recursive: true });
 const LS = 'linear-systems';
@@ -113,17 +113,4 @@ test.describe('linear-systems: example highlights', () => {
     await expect(p.locator('.qm-node.u-hl')).toHaveCount(0); await expect(p.locator('.qm-uselinks.u-on')).toHaveCount(0);
     await ctx.close();
   });
-});
-
-test('control-systems: unchanged (no glyphs, no highlight, no comes-back list, no legend entry)', async ({ page }) => {
-  await page.setViewportSize({ width: 1280, height: 900 });
-  await open(page, 'control-systems');
-  await expect(page.getByTestId('map-exglyph')).toHaveCount(0);
-  await expect(page.locator('.qm-node[data-uses]')).toHaveCount(0);
-  await expect(page.getByTestId('map-uselinks')).toHaveCount(0);
-  await expect(page.locator('[data-legend=uses]')).toHaveCount(0);
-  const ref = page.locator('[data-testid=map-ref]').first();
-  await ref.hover(); await expect(page.locator('.qm-node.u-hl')).toHaveCount(0);
-  await ref.dispatchEvent('click'); await expect(page.getByTestId('ref-question')).toBeVisible();
-  await expect(page.getByTestId('ref-comesback')).toHaveCount(0);
 });

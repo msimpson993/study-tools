@@ -26,7 +26,7 @@ lookFor: Turn on the heat-stored bars. The two bars rise at different rates: two
 
 - Order n = number of independent stores = number of states = degree of the characteristic polynomial.
 - House: two heat stores, C_th·x₁ and C_th·x₂ (C_th = 1 MJ/K per room), so n = 2.
-- Corner: spring energy ½kz² and body energy ½mż², so n = 2.
+- A mass on a spring: spring energy ½kz² and kinetic energy ½mż², so n = 2 (the notes' own mass–spring example).
 - "Independent" matters. Two capacitors in parallel share one voltage and count as one store, and so would two rooms with no wall between them.
 
 **What each symbol means.**
@@ -36,14 +36,12 @@ lookFor: Turn on the heat-stored bars. The two bars rise at different rates: two
 - **x₁, x₂**: room temperatures above outdoors (K). C_th·x is the heat stored (J).
 - **k, z**: spring stiffness (N/m) and stretch (m); ½kz² is the spring's stored energy (J).
 - **m, ż**: body mass (kg) and velocity (m/s); ½mż² is its kinetic energy (J).
-- **c**: shock damping (N·s/m). It turns motion into heat and stores nothing.
-- **m_u, k_t**: wheel mass 40 kg and tyre stiffness 200 kN/m: two more stores, so order 4.
+- **c**: a damper (N·s/m) turns motion into heat and stores nothing.
 
-### Worked example: on the house and the corner
+### Worked example: on the house
 
 - House: two rooms give two heat stores and two poles, −0.2 and −2.2 /h. Knock the inner wall out and you have one big room: one store, order 1.
-- Corner: spring + body give two poles, −2 ± 7.75j. Add the 40 kg wheel on its 200 kN/m tyre and you get two more stores (wheel motion, tyre spring), so order 4 (see *Which poles matter?*).
-- The shock absorber (1.6 kN·s/m) changes where the poles sit, not how many there are.
+- Two rooms with a wall between them can differ in temperature; that difference is the second state.
 
 ### What it can't do
 

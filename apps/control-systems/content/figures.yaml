@@ -48,6 +48,33 @@
         hs: 7
         cs: 7
         as: 5
+- id: overview-house
+  title: "The house and its loop: built one box at a time"
+  x: picture and block diagram
+  y: stage
+  legend:
+    - label: "highlighted block: what this stage adds"
+      color: var(--yel)
+  howToRead: The slider steps through the house's stages (H0–H6); the block a stage adds is outlined in yellow and named underneath.
+  lookFor: "The loop ends the same way every later example's does: command → controller → plant → output, measured and fed back."
+  controls:
+    - id: hs
+      label: house stage
+      type: range
+      min: 1
+      max: 7
+      step: 1
+      default: 7
+      group: primary
+  presets:
+    - id: start
+      label: as it comes
+      set:
+        hs: 1
+    - id: done
+      label: finished loop
+      set:
+        hs: 7
 - id: house
   title: "The two-room house: heat flows and temperatures"
   x: time (h)

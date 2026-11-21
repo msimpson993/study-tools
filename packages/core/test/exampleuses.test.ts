@@ -12,7 +12,7 @@ const TITLE_CHAR = 7.4, DETAIL_CHAR = 6.6;
 describe.each(listApps())('%s example usage', (app) => {
   const { content } = loadApp(path.join(repoRoot, 'apps', app));
   const on = content.maps.some((m) => m.nodes.some((n) => n.examples?.length));
-  if (app === 'control-systems') it('is off (no box lists examples): control-systems is unchanged', () => expect(on).toBe(false));
+  if (app === 'control-systems') it('is on (stage-pass2, Nov 21): every control-systems box lists its example', () => expect(on).toBe(true));
   if (!on) return;
   for (const m of content.maps) {
     it.each(WIDTHS)(`map ${m.id} @%ipx: glyphs inside their box, clear of the label and of every line label`, (w) => {

@@ -2,7 +2,7 @@ import content from 'virtual:study-content';
 import { mountApp } from '@study/core';
 import { mountBoard } from './guide/board';
 import { popFigures } from './figs/pop';
-import { overviewFigure } from './figs/overview';
+import { overviewFigure, overviewHouseFigure } from './figs/overview';
 import { houseFigure, tfbuildFigure, splaneFigure, firstFigure, reduceFigure, partialFigure, rlcFigure, planeFigure, regulateFigure, coldfrontFigure, sensFigure, scFigure } from './figs/house';
 import { ssblockFigure, rlcschemFigure, heatbarsFigure, torquebalFigure } from './figs/worked';
 import { cornerFigure, specsFigure, dominantFigure, loopFigure, statesFigure, ccFigure, sfFigure, obsFigure, sepFigure, refinFigure } from './figs/corner';
@@ -16,6 +16,7 @@ import './quiz.css';
 // Three running examples: the house (core HOUSE model), the car corner and the antenna dish (PID series, Lab default plant).
 const figures: Record<string, typeof houseFigure> = {
   overview: overviewFigure,
+  'overview-house': overviewHouseFigure,
   // house
   house: houseFigure, tfbuild: tfbuildFigure, splane: splaneFigure, first: firstFigure, reduce: reduceFigure, partial: partialFigure, rlc: rlcFigure, plane: planeFigure, regulate: regulateFigure, coldfront: coldfrontFigure, heatbars: heatbarsFigure, rlcschem: rlcschemFigure, sens: sensFigure, sc: scFigure,
   // car corner

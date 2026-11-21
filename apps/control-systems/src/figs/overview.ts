@@ -46,3 +46,5 @@ const panelFor = (id: 'house' | 'corner' | 'dish', title: string, key: string): 
   },
 });
 export const overviewFigure = figureOf(() => [panelFor('house', 'House', 'hs'), panelFor('corner', 'Car corner', 'cs'), panelFor('dish', 'Antenna dish', 'as')]);
+/** The root dive shows the house alone: the other examples join later, each in its own Example pop-up (stage-pass2 c8). */
+export const overviewHouseFigure = figureOf(() => [panelFor('house', 'House', 'hs')]);

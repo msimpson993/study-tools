@@ -2922,7 +2922,7 @@
   tags:
     - mini-exam-2
     - ln1-carryover
-    - second
+    - ctrl
   kind: compute
   q: A servo J·θ'' + B·θ' = T (J = 0.5, B = 2) is closed with proportional gain K = 8, giving C/R =
     K/(Js² + Bs + K). What are ω<sub>n</sub>, ζ and the attenuation σ = ζω<sub>n</sub>?

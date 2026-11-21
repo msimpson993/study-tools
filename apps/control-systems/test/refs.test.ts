@@ -28,13 +28,14 @@ describe('control-systems Example nodes', () => {
     expect(s).toContain(`C_th = ${HOUSE.Cth / 1e6} MJ/K`); expect(s).toContain(`shared wall passes ${Gin.toFixed(1)} W/K`); expect(s).toContain(`leaks ${Gout.toFixed(1)} W/K`);
     const [x1, x2] = houseSteady([houseB() * HOUSE.P, 0]);
     expect(s).toContain(`${HOUSE.P / 1000} kW`); expect(s).toContain(`bedroom settles ${x2.toFixed(2)} K`); expect(s).toContain(`living room ${x1.toFixed(2)} K`);
-    for (const bad of ['pole', 'τ', 'G(s)', '−0.2', '−2.2', '5 h', 'overshoot', 'time constant']) expect(all('house'), bad).not.toContain(bad);
+    // the plain word "overshoot" is allowed since stage-pass2 ("can't overshoot" is why the house comes first and the corner joins)
+    for (const bad of ['pole', 'τ', 'G(s)', '−0.2', '−2.2', '5 h', 'time constant']) expect(all('house'), bad).not.toContain(bad);
   });
   it('corner at SECOND: m, k, c and the two numbers SECOND introduces (ωₙ = 8 rad/s, ζ = 0.25); no specs yet', () => {
     const wn = Math.sqrt(CORNER.k / CORNER.m), z = CORNER.c / (2 * Math.sqrt(CORNER.k * CORNER.m));
     expect(ref('corner').numbers).toContain(`m = ${CORNER.m} kg, k = ${CORNER.k / 1000} kN/m, c = ${CORNER.c / 1000} kN·s/m`);
     expect(ref('corner').numbers).toContain(`ωₙ = ${wn} rad/s and ζ = ${z}`);
-    for (const bad of ['%OS', 'overshoot', 'settling', 'Tₛ', 'Tₚ', 'state feedback', 'observer']) expect(all('corner'), bad).not.toContain(bad);
+    for (const bad of ['%OS', 'settling', 'Tₛ', 'Tₚ', 'state feedback', 'observer']) expect(all('corner'), bad).not.toContain(bad);
   });
   it('dish at PGAIN: J 10, B 20, ±200 N·m, Θ/T = 0.1/(s(s + 2)), closed loop s² + 2s + Kp/10; nothing of I or D', () => {
     const s = ref('dish').numbers;

@@ -52,10 +52,9 @@ E = R − HC and C = GcG·E, so C(1 + GcGH) = GcG·R. With D at the plant input:
 
 - 5 cm road step: final 5 cm (the DC gain of Z/W is 1), peak 7.53 cm (50.6 %), Tₚ 0.34 s, Tₛ 1.71 s.
 - 1 kN force: 3.91 cm (DC gain 1/k).
-- The shock acts like D and the spring like P (look back from *Derivative action*).
 
 ### What it can't do
 
-The passive loop can't follow any command but the road, and its "gains" c and k are fixed hardware. Next: a motor we command (*Turn up the gain*).
+The passive loop can't follow any command but the road, and its "gains" c and k are fixed hardware. Next: a plant whose command we choose (*Turn up the gain*).
 
 <p class="src">Sources: LN1 s.6–9, 18–20.</p>

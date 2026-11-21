@@ -40,11 +40,12 @@ runningExample:
         - **In:** the heater power u, in room 1 (the living room).
         - **Out:** the two room temperatures x₁, x₂ above outdoors; the thermostat reads room 2 (the bedroom).
         - **Inside:** two heat stores (the rooms) and three heat paths: the shared wall and each room's outside wall.
-        - **Why this one:** everyone knows how a house warms, so the model's answers are easy to check against common sense; it is slow and gentle, warming smoothly over hours.
+        - **Why first:** everyone knows how a house warms, so every answer can be checked against common sense; and it is slow and can't overshoot, so nothing hides the method.
       numbers: |
         - **Rooms:** each stores C_th = 1 MJ/K (the heat to warm it 1 K).
         - **Walls:** the shared wall passes 277.8 W/K; each room leaks 55.6 W/K outdoors.
         - **Heater:** 2.5 kW left on, the bedroom settles 20.45 K above outdoors and the living room 24.55 K.
+      comesBack: { big: [DIST, SENS, NOISE, CC], detail: [DIST, SENS, NOISE, SS2TF, CC] }
     - id: corner
       at: SECOND
       label: the car suspension
@@ -57,11 +58,12 @@ runningExample:
         - **In:** a load on the body, or the road under the wheel.
         - **Out:** the body's height z.
         - **Inside:** one corner of a car: its share of the body on a spring and a shock absorber.
-        - **Why this one:** two energy stores (the spring and the moving body) trade energy back and forth, so it swings: the simplest plant that bounces, and one you have felt in every car.
+        - **Why now:** the house's poles are real, so it can never overshoot. The corner's spring and moving body pass energy back and forth, so it swings: the simplest plant that bounces, and one you have felt in every car.
         - Press play to watch the bounce.
       numbers: |
         - **Parts:** m = 400 kg, k = 25.6 kN/m, c = 1.6 kN·s/m.
         - **Its two numbers:** ωₙ = 8 rad/s and ζ = 0.25, light damping, so it bounces.
+      comesBack: { big: [STATE, CC, SF, OBS, SEP, REF], detail: [STATE, SS2TF, CC, SF, ACK, OBS, SEP, REF] }
     - id: dish
       at: PGAIN
       label: the antenna dish
@@ -74,11 +76,12 @@ runningExample:
         - **In:** the motor torque T; the controller turns the pointing error into torque.
         - **Out:** the dish angle θ, which should follow the satellite.
         - **Inside:** the dish's inertia, the bearing friction and a motor with a torque limit.
-        - **Why this one:** a servo has to go to a target and stop there, so P control's trade of speed for overshoot shows at a glance.
+        - **Why now:** P, I and D need a command we choose and an actuator that obeys it; the passive corner has neither. A servo must go to a target and stop there, so P's trade of speed for overshoot shows at a glance.
         - Press play to watch the dish turn.
       numbers: |
         - **Parts:** J = 10 kg·m², B = 20 N·m·s/rad, motor ±200 N·m, so Θ/T = 0.1/(s(s + 2)).
-        - **With P control:** the closed loop is s² + 2s + Kp/10; raise Kp and it gets faster but overshoots (stiff but bouncy at Kp = 1000).
+        - **With P control:** the closed loop is s² + 2s + Kp/10; Kp = 1000 gives ωₙ = 10 rad/s but ζ = 0.1.
+      comesBack: { big: [SSE, INT, DER, TUNE], detail: [MENU, SPEED, SSE, TYPE, INT, WINDUP, DER, TUNE, LAB, METHODS, FAIL, INDEX] }
 hub:
   order: 3
 # Porting guard (rebuilt Nov 2026, question-chain format; pid-tuning folded in): 2 maps (Big picture 22 boxes / 24 lines,

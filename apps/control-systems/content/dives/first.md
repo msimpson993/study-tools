@@ -48,6 +48,6 @@ G(s) = K/(τs + 1),   y(t) = K·u·(1 − e^(−t/τ))
 
 ### What it can't do
 
-A first-order model can't overshoot or ring, and it misses the early delay. For the bedroom that delay is only about 25 min, so it doesn't matter; for the corner it would.
+A first-order model can't overshoot or ring, and it misses the early delay. For the bedroom that delay is only about 25 min, so it doesn't matter. For a plant that swings past its target, a one-pole model misses the main behaviour, which is why the next box needs two poles.
 
 <p class="src">Sources: LN1 s.47–49.</p>
