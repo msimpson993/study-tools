@@ -17,7 +17,6 @@ maps:
     short: 'Write the plant down as a model, learn to predict its response from a few numbers, then wrap it in feedback: measure the output, compare it with the command, and correct the input. Feedback is what makes a rough model good enough.'
     dive: overview
     quizTag: overview
-    examples: [house]
     accountsFor: Why the same handful of ideas predicts a house, a car and an antenna, and makes each obey despite a rough model.
     pop:
       rough: command → controller → plant → output, measured and fed back
@@ -897,7 +896,6 @@ maps:
     short: 'Write the plant down as a model, learn to predict its response from a few numbers, then wrap it in feedback: measure the output, compare it with the command, and correct the input. Feedback is what makes a rough model good enough.'
     dive: overview
     quizTag: overview
-    examples: [house]
     accountsFor: Why the same handful of ideas predicts a house, a car and an antenna, and makes each obey despite a rough model.
     pop:
       rough: command → controller → plant → output, measured and fed back

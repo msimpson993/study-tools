@@ -10,7 +10,9 @@ import { exampleComesBack } from '../../../packages/core/src/maplayout';
 const app = path.resolve(import.meta.dirname, '..');
 const graph = parse(fs.readFileSync(path.join(app, 'content', 'graph.yaml'), 'utf8'));
 const refs = parse(fs.readFileSync(path.join(app, 'subject.yaml'), 'utf8')).runningExample.refs as { id: string; at: string; comesBack?: Record<string, string[]> }[];
-const PRE = ['root', 'MODEL', 'TF', 'POLES', 'FIRST', 'ORDER', 'CIRC', 'INV', 'PLANE', 'REDUCE'];
+/** root carries no glyph: on CI's fonts the house glyph sat on the long central-question label at 390 px (Nov 21) */
+const NONE = ['root'];
+const PRE = ['MODEL', 'TF', 'POLES', 'FIRST', 'ORDER', 'CIRC', 'INV', 'PLANE', 'REDUCE'];
 const AFTER: Record<string, string[]> = {
   SECOND: ['corner'], SPECS: ['corner'], LOOP: ['corner'], DOM: ['corner'], BLOCKALG: ['corner'],
   PGAIN: ['dish'], MENU: ['dish'], SPEED: ['dish'], SSE: ['dish'], TYPE: ['dish'], INT: ['dish'], WINDUP: ['dish'], DER: ['dish'], TUNE: ['dish'],
@@ -38,6 +40,7 @@ describe('CS per-box examples (stage-pass2)', () => {
   for (const m of graph.maps as { id: string; nodes: { id: string; examples?: string[]; exampleWhy?: string }[]; edges: never[] }[]) {
     it(`${m.id}: house before Two poles, the tutor's choice after; every post-switch box has its one-line why`, () => {
       for (const n of m.nodes) {
+        if (NONE.includes(n.id)) { expect(n.examples, n.id).toBeUndefined(); continue; }
         expect(n.examples, n.id).toEqual(PRE.includes(n.id) ? ['house'] : AFTER[n.id]);
         if (!PRE.includes(n.id)) expect((n.exampleWhy ?? '').length, `${n.id} why`).toBeGreaterThan(10); else expect(n.exampleWhy).toBeUndefined();
       }
