@@ -5,8 +5,8 @@ import { open } from './helpers';
  * says, for every preset with the wind on and off, and with a window that ends before the gust. Uses core text()'s __textLog. */
 interface E { s: string; x0: number; x1: number; y0?: number; y1?: number; cv: number; gen: number; skipped: boolean }
 const BASE = ['Overshoot', 'Settling', 'Steady error', 'Wind peak', 'Peak torque', 'Stability'];
-/** with the wind on, the R2 row "Offset at end (t = T s)" sits under the wind peak */
-const labelsFor = (windOn: boolean) => (windOn ? [...BASE.slice(0, 4), 'Offset at end', ...BASE.slice(4)] : BASE);
+/** with the wind on, the pass-3 row "Recovery to ±0.05° (spec < 10 s)" and the R2 row "Offset at end, t = T s (spec < 0.05°)" sit under the wind peak */
+const labelsFor = (windOn: boolean) => (windOn ? [...BASE.slice(0, 4), 'Recovery to', 'Offset at end', ...BASE.slice(4)] : BASE);
 async function rows(page: Page, LABELS: string[]) {
   await page.waitForTimeout(700);
   const log: E[] = await page.evaluate(() => (window as any).__textLog);
@@ -40,8 +40,10 @@ for (const vw of [1366, 390]) test(`control-systems Lab @${vw}: readout values s
     for (const want of [true, false]) {
       await presets.nth(i).click(); if ((await wind.isChecked()) !== want) await wind.click({ force: true });
       const rs = await check(page, `${name}, wind ${want ? 'on' : 'off'}`, want);
-      if (want) expect(rs[4].lab.s, 'the offset row names the window end').toBe('Offset at end (t = 16 s)');
-      if (want && /^P 1000/.test(name)) expect(rs[4].val[0].s, 'P leaves −T_d/Kp').toBe('−1.149°');
+      if (want) expect(rs[4].lab.s, 'the recovery row').toBe('Recovery to ±0.05° (spec < 10 s)');
+      if (want) expect(rs[5].lab.s, 'the offset row names the window end and its spec').toBe('Offset at end, t = 16 s (spec < 0.05°)');
+      if (want && /^P 1000/.test(name)) { expect(rs[5].val[0].s, 'P leaves −T_d/Kp').toBe('−1.149°'); expect(rs[4].val[0].s, 'P never comes back').toBe('not back by t = 16 s'); }
+      if (want && /^tuned/.test(name)) expect(rs[4].val[0].s, 'tuned: back 4.83 s after the gust ([PASS3] l.452)').toBe('4.83 s');
       const se = rs[2].lab.s;
       if (want) expect(se, 'the steady-error label names the time it is read').toContain('before gust'); else expect(se).toBe('Steady error');
     }
@@ -54,4 +56,5 @@ for (const vw of [1366, 390]) test(`control-systems Lab @${vw}: readout values s
   expect(rs[2].lab.s).toBe('Steady error');
   expect(rs[3].val[0].s).toBe('— (no gust in window)');
   expect(rs[4].val[0].s).toBe('— (no gust in window)');
+  expect(rs[5].val[0].s).toBe('— (no gust in window)');
 });
