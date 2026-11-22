@@ -216,7 +216,7 @@
   kind: recognize
   q: Why not place the observer poles 100× faster?
   choices:
-    - Huge L amplifies sensor noise
+    - Huge L_o amplifies sensor noise
     - It becomes unstable
     - It needs a second sensor
   answer: 0
@@ -232,7 +232,7 @@
     - "3"
   answer: 0
   why: The full system has the plant's 2 states plus the observer's 2. Separation splits the poles
-    into the 2 you placed with K and the 2 placed with L.
+    into the 2 you placed with K and the 2 placed with L_o.
 - id: q-ref
   tags:
     - refin
@@ -389,6 +389,17 @@
   why: The integrator keeps adding error while the motor is pinned at its limit, so it overshoots once
     it comes off. Small moves never hit the limit. On the dish, a 2 rad slew gives 21.6 % overshoot
     without anti-windup and 3.8 % with clamping; a 0.2 rad slew barely changes (7.9 %).
+- id: q-toolkit
+  tags:
+    - tuning
+  kind: recognize
+  q: The tuned dish overshoots far more on a big re-point than on a small one. Which toolkit box is about that?
+  choices:
+    - When the push hits its limit
+    - The controller menu
+    - The best gain in one number
+  answer: 0
+  why: A big turn asks for more torque than the motor's 200 N·m. While the torque is clipped, the I part keeps adding up error, and the dish overshoots when it comes off the limit.
 - id: q-lab
   tags:
     - lab
@@ -639,8 +650,7 @@
     - tuning
   kind: recall
   q: Why tune D before I?
-  a: D sets the damping I will erode; adding I to an underdamped loop makes overshoot worse (*Integral action*'s
-    80 %).
+  a: D sets the damping I will erode; adding I to an underdamped loop makes overshoot worse (80 % in *Integral action*).
 - id: ck-lab-1
   tags:
     - lab
@@ -756,7 +766,7 @@
   tags:
     - obs
   kind: recall
-  q: "Observer poles −16 ± 12j: L?"
+  q: "Observer poles −16 ± 12j: L_o?"
   a: s² + 32s + 400 → l₁ = 28, l₂ = 400 − 64 − 112 = 224.
 - id: ck-obs-2
   tags:
@@ -2650,7 +2660,7 @@
   - M = BN (on the corner, M = B N̄ = (0, 100)<sup>T</sup>)
   - N = K and M = L_o
   answer: 2
-  why: 'With M = BN the r terms cancel in the error equation e'' = (A − L_oC)e, so the observer does not ''see'' the command. N̄ is then chosen so the DC gain from r to y is 1. The other listed choice, M = −L and N = 0, is the alternative of feeding the tracking error to the observer. r enters the error equation through (BN − M)r, so only M = BN cancels it while still letting r drive the plant. (LN4 s.41–44: M = BN on s.43, the y − r alternative M = −L, N = 0 on s.44)'
+  why: 'With M = BN the r terms cancel in the error equation e'' = (A − L_oC)e, so the observer does not ''see'' the command. N̄ is then chosen so the DC gain from r to y is 1. The other listed choice, M = −L_o and N = 0, is the alternative of feeding the tracking error to the observer. r enters the error equation through (BN − M)r, so only M = BN cancels it while still letting r drive the plant. (LN4 s.41–44: M = BN on s.43, the y − r alternative M = −L_o, N = 0 on s.44)'
 - id: me2-1
   tags:
     - mini-exam-2

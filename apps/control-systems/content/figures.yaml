@@ -431,7 +431,7 @@
     - label: output
       color: var(--cyan)
   howToRead: "Left: the circuit and its G(s). Right: its step response. The house preset maps temperature to voltage and heat flow to current: two capacitors, three resistors, a current source."
-  lookFor: 'With R = L = C = 1, G = 1/(s² + s + 1): ζ = 0.5, so the step overshoots 16.3 %. Pick "house as RC" and the ringing disappears: no inductor.'
+  lookFor: 'With R = L = C = 1, G = 1/(s² + s + 1): the step swings about 16 % past its final value and rings before settling. Pick "house as RC" and the ringing disappears: no inductor. (How far it swings is worked out in *Two poles* and *Specs*.)'
   controls:
     - id: circ
       label: circuit
@@ -1862,7 +1862,7 @@
     - label: previous run
       color: var(--muted)
       dash: true
-  howToRead: 'The dish (0.1/(s(s + 2)), 0.1 rad step, 200 N·m limit, D on measurement) under your PID. Wind adds 20 N·m at 10 s, after the step has settled. Readouts check the specs: %OS < 10 %, wind peak < 0.6°, zero steady error, torque within the limit. Readouts include the derivative filter N_f, so they sit slightly below the ideal-derivative numbers quoted in the text (tuned: 6.3 % vs 7.4 %). With the wind on, the no-anti-windup preset fails the steady-error check (about 0.14° off at 9.9 s): the overfilled integrator is still bleeding off when the gust arrives. Switch to the clamping preset and it passes. Offset at end (t = T): θ_r − θ at the last sample of the window, in degrees. It appears only when wind is on. Pass mark: |offset| < 0.05°. Recovery to ±0.05°: seconds from the 10 s gust until the error stays inside ±0.05° for the rest of the window; pass < 10 s. Widen the window if it reads "not back by t = T s".'
+  howToRead: 'The dish (0.1/(s(s + 2)), 0.1 rad step, 200 N·m limit, D on measurement) under your PID. Wind adds 20 N·m at 10 s, after the step has settled. Readouts check the specs: %OS < 10 %, wind peak < 0.6°, zero steady error, torque within the limit. Readouts include the derivative filter N_f, so they sit slightly below the ideal-derivative numbers quoted in the text (tuned: 6.3 % vs 7.4 %). With the wind on, the no-anti-windup preset fails the steady-error check (about 0.14° off at 9.9 s): the overfilled integrator is still bleeding off when the gust arrives. Switch to the clamping preset and it passes. Offset at end (t = T): θ_r − θ at the last sample of the window, in degrees. It appears only when wind is on. Pass mark: |offset| < 0.05°. Recovery to ±0.05°: seconds from the 10 s gust until the error stays inside ±0.05° for the rest of the window; pass < 10 s. Widen the window if it reads "not back by T s".'
   lookFor: Start at P 1000 (73 % ring), add Kd until it stops ringing, then just enough Ki to clear the wind.
   controls:
     - id: plant
@@ -2671,7 +2671,7 @@
   y: angle · torque
   legend: *a1
   howToRead: "The antenna dish, G = 0.1/(s(s + 2)) (J = 10 kg·m², B = 20 N·m·s/rad), D on the measurement, a 0.1 rad step, then 20 N·m of wind from 10 s. The plot shows the pointing error after the gust. Solid: the problem at the slider settings; dashed: the fix, for contrast. Read-outs use the tutor's definitions (numbers.py [F])."
-  lookFor: PD (1000, 0, 120) is left 1.146° off for good; adding Ki = 500 peaks at 1.13° and clears the error (< 0.05°) in 6.09 s.
+  lookFor: PD (1000, 0, 120) is left 1.146° off for good; adding Ki = 500 peaks at 1.13° and clears the error (< 0.05°) in 6.10 s.
   controls:
     - id: Kp
       label: Kp
@@ -2815,7 +2815,7 @@
   y: angle · torque
   legend: *a1
   howToRead: "The antenna dish, G = 0.1/(s(s + 2)) (J = 10 kg·m², B = 20 N·m·s/rad), D on the measurement, a 0.1 rad step, then 20 N·m of wind from 10 s. The plot shows the pointing error after the gust. Solid: the problem at the slider settings; dashed: the fix, for contrast. Read-outs use the tutor's definitions (numbers.py [F])."
-  lookFor: "(500, 250, 100): the gust knocks the dish 2.08° off and takes 7.16 s to clear; tuned (2000, 1000, 200): 0.554°, cleared in 4.82 s."
+  lookFor: "(500, 250, 100): the gust knocks the dish 2.08° off and takes 7.16 s to clear; tuned (2000, 1000, 200): 0.557°, cleared in 4.83 s."
   controls:
     - id: Kp
       label: Kp
@@ -3144,8 +3144,8 @@
   x: time (s)
   y: angle · torque
   legend: *a1
-  howToRead: "The tuned dish (2000, 1000, 200): a 0.1 rad step, then 20 N·m of wind from 20 s. The set-point weight b scales the command in the P term only. Solid: the problem at the slider settings; dashed: the fix, for contrast. Read-outs use the tutor's definitions (numbers.py [F])."
-  lookFor: "b = 1: 7.4 % overshoot, wind peak 0.556°, cleared in 4.82 s. b = 0.9: no overshoot, Tₛ 1.67 s, the same wind response. b = 0.5 is too slow (Tₛ 6.07 s)."
+  howToRead: "The tuned dish (2000, 1000, 200): a 0.1 rad step, then 20 N·m of wind from 10 s. The set-point weight b scales the command in the P term only. Solid: the problem at the slider settings; dashed: the fix, for contrast. Read-outs use the tutor's definitions (numbers.py [F])."
+  lookFor: "b = 1: 7.4 % overshoot, wind peak 0.557°, cleared in 4.83 s. b = 0.9: no overshoot, Tₛ 1.67 s, and practically the same wind response (0.554°, 4.82 s): b only changes how the dish answers the command. b = 0.5 is too slow (Tₛ 6.07 s)."
   controls:
     - id: b
       label: set-point weight b

@@ -1,6 +1,6 @@
 ---
 id: fb
-order: 25
+order: 24
 title: "Why not infinite gain? The price of feedback"
 category: feedback
 neighbors: [sens, dist, ss]

@@ -1,6 +1,6 @@
 ---
 id: index
-order: 22
+order: 21
 title: "The best gain in one number"
 category: pid
 neighbors: [tuning, methods, derivative]
@@ -8,7 +8,7 @@ level: Worked calculation
 check: [q-index, ck-index-1, ck-index-2]
 ---
 
-**The question:** can "best" be made into one number we minimise? This is the side box *The best gain in one number*, under *Choosing the three gains*.
+**The question:** can "best" be made into one number we minimise? This is the side box *The best gain in one number*, in the *Tuning toolkit* under *Choosing the three gains*.
 
 ### The big idea
 

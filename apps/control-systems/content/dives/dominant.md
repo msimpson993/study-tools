@@ -1,6 +1,6 @@
 ---
 id: dominant
-order: 11
+order: 10
 title: "Which poles matter? Dominant poles"
 category: predict
 neighbors: [second, reduce]

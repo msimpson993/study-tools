@@ -20,7 +20,7 @@ maps:
     accountsFor: Why the same handful of ideas predicts a house, a car and an antenna, and makes each obey despite a rough model.
     pop:
       rough: command → controller → plant → output, measured and fed back
-      example: "The first running example is a two-room house: heater in, bedroom temperature out; its card is the dashed *the house thermostat* box beside *Write the plant down*. Other examples join later, each where the house can't show what the map needs next."
+      example: "The first running example is a two-room house: heater in, bedroom temperature out; its card is the dashed Example box, *the house thermostat*, beside *Write the plant down*. Other examples join later, each where the house can't show what the map needs next."
       ask: q-root
   - id: MODEL
     label: Write the plant down
@@ -89,7 +89,7 @@ maps:
     label: Poles and zeros
     detail: built-in motions
     series: 0
-    short: 'The motions the plant makes on its own. Each denominator root p, a *pole*, gives one motion e^(pt), called a *mode*. Its real part sets how fast it fades (negative: it dies out, *stable*); its imaginary part sets how fast it rings. Both house poles are real, so the house never overshoots. Numerator roots, *zeros*, only weight the modes.'
+    short: 'The motions the plant makes on its own. Each denominator root p, a *pole*, gives one motion e^(pt), called a *mode*. Its real part sets how fast it fades (negative: it dies out, *stable*); its imaginary part sets how fast it rings. Both house poles are real, so the house never swings past where it settles. Numerator roots, *zeros*, only weight the modes.'
     eq: p = σ + jω  →  e^(σt)(cos ωt, sin ωt)
     dive: splane
     live: figure:splane
@@ -265,9 +265,9 @@ maps:
     live: figure:sse
     quizTag: sse
     examples: [dish]
-    exampleWhy: wind torque leaves e_ss = −T_d/Kp
+    exampleWhy: a steady wind pushes on the dish, and P alone leaves it short of the target
     addsToExample: 'Adds wind: the dish sits 1.15° off under P.'
-    accountsFor: Why a P-only pedestal points well in still air and badly in wind.
+    accountsFor: Why a P-only dish points well in still air and badly in wind.
     pop:
       rough: leftover error = steady push ÷ gain
       eqKey: T_d = wind torque (N·m); ramp ω = a target moving at a steady ω rad/s.
@@ -295,7 +295,7 @@ maps:
     live: figure:integral
     quizTag: integral
     examples: [dish]
-    exampleWhy: PI removes the wind error; Ki < 2Kp
+    exampleWhy: a push that keeps growing while any error is left cancels the wind's offset, at the cost of more swing
     addsToExample: 'Adds Ki: no wind error, but even more bounce.'
     accountsFor: Why integral action alone can't fix a lightly damped servo.
     pop:
@@ -325,7 +325,7 @@ maps:
     live: figure:derivative
     quizTag: derivative
     examples: [dish]
-    exampleWhy: adds Kd to B
+    exampleWhy: a braking push, taken from the measured turning speed, calms the swing
     addsToExample: 'Adds a tachometer: Kd = 120 gives ζ = 0.7.'
     accountsFor: Why servos take D from the tachometer, not from the error.
     pop:
@@ -355,7 +355,7 @@ maps:
     live: figure:gains
     quizTag: tuning
     examples: [dish]
-    exampleWhy: the trade-off and the specs
+    exampleWhy: all three pushes together, tuned to meet targets for swing, wind and torque
     addsToExample: 'Tunes the dish: (2000, 1000, 200) meets all three specs.'
     accountsFor: How three numbers trade stiffness, accuracy and bounce.
     pop:
@@ -377,7 +377,7 @@ maps:
     live: figure:regulate
     quizTag: dist
     examples: [house]
-    exampleWhy: "**Back to the house, now with a thermostat.** Holding steady against the weather is a thermostat's whole job, so the house shows plainly what feedback buys. Its open-loop model from *Write the plant down* through *One pole: the yardstick* makes the before-and-after comparison exact."
+    exampleWhy: "the thermostat is switched on and a cold front hits the house"
     addsToExample: Closes the thermostat loop and sends in a cold front.
     accountsFor: Why a simple proportional thermostat lets the house run a little cold in cold weather, and a PI one doesn't.
     pop:
@@ -407,7 +407,7 @@ maps:
     live: figure:sens
     quizTag: sens
     examples: [house]
-    exampleWhy: leakier walls (−18.2 % plant gain)
+    exampleWhy: the walls turn out leakier than the model says
     addsToExample: Gives the house leakier walls and shows the thermostat barely notices.
     accountsFor: Why a thermostat works even though nobody measured the walls.
     pop:
@@ -429,7 +429,7 @@ maps:
     live: figure:sc
     quizTag: fb
     examples: [house]
-    exampleWhy: sun on the thermostat (a +1 K reading)
+    exampleWhy: sun falls on the thermostat, so it reads too warm
     addsToExample: Puts the sun on the thermostat.
     accountsFor: Why a well-placed sensor matters more than a clever controller.
     pop:
@@ -446,7 +446,7 @@ maps:
           panel: b
         alt: Bedroom temperature when the thermostat reads 1 K high.
         caption: (b)
-      figCaption: '<b>(a)</b> Gain versus sine speed, the *frequency response* (not in lecture notes), log axis: S ≈ 0.1, C ≈ 0.9 when slow; S peaks at 1.33 near 2.6 rad/h. <b>(b)</b> Reading 1 K high: P runs the room 0.9 K cold, PI 1 K.'
+      figCaption: '<b>(a)</b> Gain versus sine speed, the *frequency response* (not in lecture notes), log axis: S ≈ 0.1, C ≈ 0.9 when slow; S peaks at 1.33 near 2.6 rad/h; grey line 1 rad/h (6.3 h cycle). <b>(b)</b> Reading 1 K high: P runs the room 0.9 K cold, PI 1 K.'
       example: High gain also costs heater power.
       ask: q-noise
   - id: STATE
@@ -459,7 +459,7 @@ maps:
     live: figure:states
     quizTag: ss
     examples: [corner]
-    exampleWhy: '**Back to the car corner, now with an actuator and a height sensor.** Its specs, a soft ride *and* a quick settle, need both coefficients of its polynomial set at will. P on the dish could set only one.'
+    exampleWhy: 'the corner gets a motor and a height sensor, and we track its height and its speed together'
     addsToExample: 'Gives the corner two state gauges: height and velocity.'
     accountsFor: Why the poles of G and the eigenvalues of A are the same numbers.
     pop:
@@ -489,7 +489,7 @@ maps:
     live: figure:cc
     quizTag: cc
     examples: [house, corner]
-    exampleWhy: the corner passes both tests; the house shows the failures (two heaters on one dial, an averaging sensor)
+    exampleWhy: 'whether one heater and one reading can reach and see everything inside: the house shows two ways to fail (two heaters on one dial, a thermostat that averages both rooms); the car corner, a later example, passes'
     addsToExample: 'Checks the corner: one force steers both states; one height sensor sees both.'
     accountsFor: Why we may estimate velocity from a position sensor.
     pop:
@@ -519,7 +519,7 @@ maps:
     live: figure:sf
     quizTag: sf
     examples: [corner]
-    exampleWhy: K = [14 400, 4 800]
+    exampleWhy: a motor force worked out from the height and the speed sets the corner's bounce to whatever we choose
     addsToExample: Adds an actuator with K = [14 400, 4 800].
     accountsFor: How an active suspension makes a soft car stop bouncing.
     pop:
@@ -549,7 +549,7 @@ maps:
     live: figure:obs
     quizTag: obs
     examples: [corner]
-    exampleWhy: L_o = [76, 2132]
+    exampleWhy: the speed isn't measured, so it is worked out from the height reading
     addsToExample: Adds a ghost corner that estimates velocity from height.
     accountsFor: How the actuator gets the velocity the design needs.
     pop:
@@ -571,7 +571,7 @@ maps:
     live: figure:sep
     quizTag: sep
     examples: [corner]
-    exampleWhy: poles −8 ± 6j and −40 ± 30j
+    exampleWhy: the worked-out speed stands in for the real one, and the bounce we chose still holds
     addsToExample: Wires the estimate into the actuator.
     accountsFor: Why the observer and controller can be designed one at a time.
     pop:
@@ -593,7 +593,7 @@ maps:
     live: figure:refin
     quizTag: refin
     examples: [corner]
-    exampleWhy: N̄ = 40 000 N/m
+    exampleWhy: the corner is told to sit at a new height, and gets there
     addsToExample: Gives the corner a ride-height dial. The car's loop is complete.
     accountsFor: Why the command needs its own gain, and why that gain depends on the model.
     pop:
@@ -722,7 +722,7 @@ maps:
     question: 'Integral action made the bounce worse. What adds damping?'
     idea: 'A torque against the rate of turn: derivative action, best taken from the tachometer.'
     why: |-
-      **Still open:** *Integral action*'s dish overshoots 80 %, and the friction B is fixed.
+      **Still open:** in *Integral action* the dish overshoots 80 %, and the friction B is fixed.
 
       **Why it matters:** a dish that overshoots 80 % sweeps past the satellite on every move.
 
@@ -818,7 +818,7 @@ maps:
   - from: OBS
     to: SEP
     label: use the estimate?
-    question: If we feed back the estimate, does *Feed back every state*'s design still hold?
+    question: If we feed back the estimate, does the state-feedback design (*Feed back every state*) still hold?
     idea: 'Yes: the separation principle. The poles are the controller''s plus the observer''s.'
     why: |-
       **Still open:** *Feed back every state* assumed the true state, and *Estimate what we can't measure* built the estimate on its own. Wiring the estimate in might move the poles we placed.
@@ -844,7 +844,7 @@ maps:
     question: The car's shock absorber pushes against velocity. Isn't that derivative action?
     idea: 'Yes: c·ż is D on the measurement, and the spring k·(w − z) is P. A passive suspension is a PD loop.'
     why: |-
-      **Still open:** *Derivative action* added Kd to B on the dish; *Close the loop*'s corner already had c.
+      **Still open:** *Derivative action* added Kd to B on the dish; in *Close the loop* the corner already had c.
 
       **Why it matters:** it shows D is a physical damper, not just a formula, and why D on the measurement avoids the zero the road brings in.
 
@@ -861,7 +861,7 @@ maps:
       alt: 'One s-plane in rad/s: the dish''s P path rises straight up at −1; the corner''s poles move from −2 ± 7.75j to −8 ± 6j.'
     whyFigCaption: 'P can only slide the dish''s poles along one fixed path; its decay rate stays at 1 /s whatever Kp. Feeding back both states puts the corner''s poles exactly where we chose.'
     why: |-
-      **Still open:** *Turn up the gain (P)*'s poles could only climb at −1 ± jω; *Feed back every state* puts the corner's at −8 ± 6j. Both "move the poles", so how do they differ?
+      **Still open:** in *Turn up the gain (P)* the poles could only climb at −1 ± jω; *Feed back every state* puts the corner's at −8 ± 6j. Both "move the poles", so how do they differ?
 
       **Why it matters:** side by side, they show what the state-space detour bought: the decay rate is no longer fixed by the friction.
 
@@ -899,7 +899,7 @@ maps:
     accountsFor: Why the same handful of ideas predicts a house, a car and an antenna, and makes each obey despite a rough model.
     pop:
       rough: command → controller → plant → output, measured and fed back
-      example: "The first running example is a two-room house: heater in, bedroom temperature out; its card is the dashed *the house thermostat* box beside *Write the plant down*. Other examples join later, each where the house can't show what the map needs next."
+      example: "The first running example is a two-room house: heater in, bedroom temperature out; its card is the dashed Example box, *the house thermostat*, beside *Write the plant down*. Other examples join later, each where the house can't show what the map needs next."
       ask: q-root
   - id: MODEL
     label: Write the plant down
@@ -968,7 +968,7 @@ maps:
     label: Poles and zeros
     detail: built-in motions
     series: 0
-    short: 'The motions the plant makes on its own. Each denominator root p, a *pole*, gives one motion e^(pt), called a *mode*. Its real part sets how fast it fades (negative: it dies out, *stable*); its imaginary part sets how fast it rings. Both house poles are real, so the house never overshoots. Numerator roots, *zeros*, only weight the modes.'
+    short: 'The motions the plant makes on its own. Each denominator root p, a *pole*, gives one motion e^(pt), called a *mode*. Its real part sets how fast it fades (negative: it dies out, *stable*); its imaginary part sets how fast it rings. Both house poles are real, so the house never swings past where it settles. Numerator roots, *zeros*, only weight the modes.'
     eq: p = σ + jω  →  e^(σt)(cos ωt, sin ωt)
     dive: splane
     live: figure:splane
@@ -1144,9 +1144,9 @@ maps:
     live: figure:sse
     quizTag: sse
     examples: [dish]
-    exampleWhy: wind torque leaves e_ss = −T_d/Kp
+    exampleWhy: a steady wind pushes on the dish, and P alone leaves it short of the target
     addsToExample: 'Adds wind: the dish sits 1.15° off under P.'
-    accountsFor: Why a P-only pedestal points well in still air and badly in wind.
+    accountsFor: Why a P-only dish points well in still air and badly in wind.
     pop:
       rough: leftover error = steady push ÷ gain
       eqKey: T_d = wind torque (N·m); ramp ω = a target moving at a steady ω rad/s.
@@ -1174,7 +1174,7 @@ maps:
     live: figure:integral
     quizTag: integral
     examples: [dish]
-    exampleWhy: PI removes the wind error; Ki < 2Kp
+    exampleWhy: a push that keeps growing while any error is left cancels the wind's offset, at the cost of more swing
     addsToExample: 'Adds Ki: no wind error, but even more bounce.'
     accountsFor: Why integral action alone can't fix a lightly damped servo.
     pop:
@@ -1204,7 +1204,7 @@ maps:
     live: figure:derivative
     quizTag: derivative
     examples: [dish]
-    exampleWhy: adds Kd to B
+    exampleWhy: a braking push, taken from the measured turning speed, calms the swing
     addsToExample: 'Adds a tachometer: Kd = 120 gives ζ = 0.7.'
     accountsFor: Why servos take D from the tachometer, not from the error.
     pop:
@@ -1234,7 +1234,7 @@ maps:
     live: figure:gains
     quizTag: tuning
     examples: [dish]
-    exampleWhy: the trade-off and the specs
+    exampleWhy: all three pushes together, tuned to meet targets for swing, wind and torque
     addsToExample: 'Tunes the dish: (2000, 1000, 200) meets all three specs.'
     accountsFor: How three numbers trade stiffness, accuracy and bounce.
     pop:
@@ -1256,7 +1256,7 @@ maps:
     live: figure:regulate
     quizTag: dist
     examples: [house]
-    exampleWhy: "**Back to the house, now with a thermostat.** Holding steady against the weather is a thermostat's whole job, so the house shows plainly what feedback buys. Its open-loop model from *Write the plant down* through *One pole: the yardstick* makes the before-and-after comparison exact."
+    exampleWhy: "the thermostat is switched on and a cold front hits the house"
     addsToExample: Closes the thermostat loop and sends in a cold front.
     accountsFor: Why a simple proportional thermostat lets the house run a little cold in cold weather, and a PI one doesn't.
     pop:
@@ -1286,7 +1286,7 @@ maps:
     live: figure:sens
     quizTag: sens
     examples: [house]
-    exampleWhy: leakier walls (−18.2 % plant gain)
+    exampleWhy: the walls turn out leakier than the model says
     addsToExample: Gives the house leakier walls and shows the thermostat barely notices.
     accountsFor: Why a thermostat works even though nobody measured the walls.
     pop:
@@ -1308,7 +1308,7 @@ maps:
     live: figure:sc
     quizTag: fb
     examples: [house]
-    exampleWhy: sun on the thermostat (a +1 K reading)
+    exampleWhy: sun falls on the thermostat, so it reads too warm
     addsToExample: Puts the sun on the thermostat.
     accountsFor: Why a well-placed sensor matters more than a clever controller.
     pop:
@@ -1325,7 +1325,7 @@ maps:
           panel: b
         alt: Bedroom temperature when the thermostat reads 1 K high.
         caption: (b)
-      figCaption: '<b>(a)</b> Gain versus sine speed, the *frequency response* (not in lecture notes), log axis: S ≈ 0.1, C ≈ 0.9 when slow; S peaks at 1.33 near 2.6 rad/h. <b>(b)</b> Reading 1 K high: P runs the room 0.9 K cold, PI 1 K.'
+      figCaption: '<b>(a)</b> Gain versus sine speed, the *frequency response* (not in lecture notes), log axis: S ≈ 0.1, C ≈ 0.9 when slow; S peaks at 1.33 near 2.6 rad/h; grey line 1 rad/h (6.3 h cycle). <b>(b)</b> Reading 1 K high: P runs the room 0.9 K cold, PI 1 K.'
       example: High gain also costs heater power.
       ask: q-noise
   - id: STATE
@@ -1338,7 +1338,7 @@ maps:
     live: figure:states
     quizTag: ss
     examples: [corner]
-    exampleWhy: '**Back to the car corner, now with an actuator and a height sensor.** Its specs, a soft ride *and* a quick settle, need both coefficients of its polynomial set at will. P on the dish could set only one.'
+    exampleWhy: 'the corner gets a motor and a height sensor, and we track its height and its speed together'
     addsToExample: 'Gives the corner two state gauges: height and velocity.'
     accountsFor: Why the poles of G and the eigenvalues of A are the same numbers.
     pop:
@@ -1368,7 +1368,7 @@ maps:
     live: figure:cc
     quizTag: cc
     examples: [house, corner]
-    exampleWhy: the corner passes both tests; the house shows the failures (two heaters on one dial, an averaging sensor)
+    exampleWhy: 'whether one heater and one reading can reach and see everything inside: the house shows two ways to fail (two heaters on one dial, a thermostat that averages both rooms); the car corner, a later example, passes'
     addsToExample: 'Checks the corner: one force steers both states; one height sensor sees both.'
     accountsFor: Why we may estimate velocity from a position sensor.
     pop:
@@ -1398,7 +1398,7 @@ maps:
     live: figure:sf
     quizTag: sf
     examples: [corner]
-    exampleWhy: K = [14 400, 4 800]
+    exampleWhy: a motor force worked out from the height and the speed sets the corner's bounce to whatever we choose
     addsToExample: Adds an actuator with K = [14 400, 4 800].
     accountsFor: How an active suspension makes a soft car stop bouncing.
     pop:
@@ -1428,7 +1428,7 @@ maps:
     live: figure:obs
     quizTag: obs
     examples: [corner]
-    exampleWhy: L_o = [76, 2132]
+    exampleWhy: the speed isn't measured, so it is worked out from the height reading
     addsToExample: Adds a ghost corner that estimates velocity from height.
     accountsFor: How the actuator gets the velocity the design needs.
     pop:
@@ -1450,7 +1450,7 @@ maps:
     live: figure:sep
     quizTag: sep
     examples: [corner]
-    exampleWhy: poles −8 ± 6j and −40 ± 30j
+    exampleWhy: the worked-out speed stands in for the real one, and the bounce we chose still holds
     addsToExample: Wires the estimate into the actuator.
     accountsFor: Why the observer and controller can be designed one at a time.
     pop:
@@ -1472,7 +1472,7 @@ maps:
     live: figure:refin
     quizTag: refin
     examples: [corner]
-    exampleWhy: N̄ = 40 000 N/m
+    exampleWhy: the corner is told to sit at a new height, and gets there
     addsToExample: Gives the corner a ride-height dial. The car's loop is complete.
     accountsFor: Why the command needs its own gain, and why that gain depends on the model.
     pop:
@@ -1546,13 +1546,14 @@ maps:
       ask: q-plane
   - id: REDUCE
     label: Shrink the model, keep the behaviour
-    series: 1
+    series: 3
     short: 'Yes, in two ways. Drop a far pole and keep the DC gain. Or use the lecture notes'' *frequency matching*: pick the small model''s coefficients so its frequency response (gain versus sine speed, met in *Why not infinite gain?*) matches the big one''s at low frequency. The matching equations M₂q = Δ₂q are written for q = 1, 2, … until every unknown coefficient is fixed.'
     eq: 6/((s+1)(s+2)(s+3)) ≈ 1.60/(s² + 2.59s + 1.60)  (the lecture notes' example)
     dive: reduce
     live: figure:reduce
     quizTag: reduce
     examples: [house]
+    exampleWhy: a simpler one-step model stands in for the two-room house
     addsToExample: Gives the house its best one-pole stand-in, τ = 5.02 h.
     pop:
       rough: small model = same DC gain + same low-frequency shape
@@ -1591,16 +1592,41 @@ maps:
       eqKey: C = output (the lecture notes' letter); R = command; D = disturbance input.
       example: 'Corner: road to body is (cs + k)/(ms² + cs + k); actuator force to body is 1/(ms² + cs + k). Different numerators, same poles.'
       ask: q-blockalg
+  - id: TOOLKIT
+    label: Tuning toolkit
+    detail: six side boxes, any order
+    series: 2
+    short: |-
+      Six optional side boxes on the tuned dish, in any order:
+
+      - **Finish the controller:** *The controller menu* (other forms, and how the lecture notes write PID); *When the push hits its limit* (the motor's torque ceiling).
+      - **Try and find gains:** *PID Lab: drag the gains yourself*; *Recipes: by hand, Ziegler–Nichols, PID Tuner*.
+      - **Judge and fix:** *When it misbehaves: 14 symptom cards*; *The best gain in one number*.
+
+      The main path goes on at *A push we didn't command*. (Grouping not in lecture notes.)
+    eq: Gc = Kp + Ki/s + Kd·s, tuned at (2000, 1000, 200)
+    dive: tuning
+    live: figure:tunetable
+    quizTag: tuning
+    examples: [dish]
+    exampleWhy: six optional extras, all built on the tuned dish
+    addsToExample: Nothing new; it gathers the six side boxes that start from the tuned dish.
+    pop:
+      rough: one tuned loop, six ways to extend, test or score it
+      eqKey: the PID from *Choosing the three gains*, D on the measurement.
+      example: 'Every side box starts from (Kp, Ki, Kd) = (2000, 1000, 200): 7.4 % overshoot, wind peak 0.56°, back on target in 4.8 s.'
+      ask: q-toolkit
   - id: MENU
     label: The controller menu
     series: 2
+    shelf: true
     short: 'The classic choices, from crude to refined: *on/off* (full power or none, like a basic home thermostat), P, I, PI, PD and PID. The lecture notes write PID with times rather than gains, Kp(1 + 1/(Ti s) + T_D s), so Ki = Kp/Ti and Kd = Kp·T_D. Each can be built from op-amps (*G(s) for circuits and op-amps*).'
     eq: Gc = Kp(1 + 1/(Ti s) + T_D s)
     dive: tuning
     live: board:s5
     quizTag: ctrl
     examples: [dish]
-    exampleWhy: the tuned controller written in the lecture notes' Kp, Ti, T_D form
+    exampleWhy: the dish's controller written the way the lecture notes write it
     addsToExample: Names the dish's controller in the lecture notes' notation.
     pop:
       rough: controller = some mix of the error now, its total so far, and its trend
@@ -1616,7 +1642,7 @@ maps:
     live: figure:speed
     quizTag: ctrl
     examples: [dish]
-    exampleWhy: the dish's speed loop, J/(B + K_ω)
+    exampleWhy: measuring how fast the dish turns and feeding that back makes the motor respond faster
     addsToExample: Wraps a fast speed loop around the dish's motor.
     pop:
       rough: closed-loop time constant = open-loop time constant ÷ (1 + loop gain)
@@ -1632,7 +1658,7 @@ maps:
     live: figure:sse?preset=ramp
     quizTag: sse
     examples: [dish]
-    exampleWhy: how far the dish lags a moving satellite
+    exampleWhy: how far the dish lags a satellite that keeps moving
     addsToExample: Predicts how far the dish lags a moving satellite.
     pop:
       rough: each integrator in the loop removes one more kind of steady error
@@ -1642,13 +1668,14 @@ maps:
   - id: WINDUP
     label: When the push hits its limit
     series: 2
+    shelf: true
     short: The torque is clipped, but the integrator keeps adding up error as if it weren't. By the time the dish arrives, the stored-up integral pushes it past the target. This is *integrator windup*. *Anti-windup* stops integrating while the torque is clipped (clamping) or bleeds off the excess (back-calculation). (not in lecture notes)
     eq: stop integrating while |u| = u_max
     dive: windup
     live: figure:windup
     quizTag: windup
     examples: [dish]
-    exampleWhy: the dish's 200 N·m limit
+    exampleWhy: what happens when a big turn runs the motor into its torque limit
     addsToExample: Gives the dish's motor a 200 N·m limit.
     pop:
       rough: clipped torque + integrator still charging = extra overshoot
@@ -1658,13 +1685,14 @@ maps:
   - id: LAB
     label: 'PID Lab: drag the gains yourself'
     series: 2
-    short: Yes. The PID Lab runs a PID with a filtered derivative on the antenna (or on alternate plants), with sliders for Kp, Ki, Kd, the filter and the time window. Toggles add a wind gust, sensor noise, a torque limit, anti-windup, D on measurement, and a ghost of the last run.
+    shelf: true
+    short: Yes. The PID Lab runs a PID with a filtered derivative on the antenna (or on alternate plants), with sliders for Kp, Ki, Kd, the filter and the time window. Toggles add a wind gust, sensor noise, a torque limit, *anti-windup* (it stops the integrator piling up error while the torque is clipped), D on measurement, and a ghost of the last run.
     eq: Gc = Kp + Ki/s + Kd·N_f·s/(s + N_f)
     dive: lab
     live: figure:lab
     quizTag: lab
     examples: [dish]
-    exampleWhy: the PID Lab
+    exampleWhy: sliders to tune the dish yourself, with wind and other trouble switched on or off
     addsToExample: Puts the whole tuning story on sliders.
     pop:
       rough: move a gain and watch the angle, the torque and the numbers change live
@@ -1674,22 +1702,24 @@ maps:
   - id: METHODS
     label: 'Recipes: by hand, Ziegler–Nichols, PID Tuner'
     series: 2
+    shelf: true
     short: 'Three routes. Tune *by hand* from the cause-and-effect table. Use *Ziegler–Nichols* (ZN): raise P until the loop just oscillates (gain K_u, period T_u), then read the gains from a table. Or use MATLAB''s *PID Tuner*, whose sliders set speed and robustness. All give starting points. (not in lecture notes)'
     eq: 'ZN PID: Kp = 0.6K_u, Ti = T_u/2, T_D = T_u/8'
     dive: methods
     live: figure:zn
     quizTag: methods
     examples: [dish]
-    exampleWhy: ZN on the dish with its amplifier lag
+    exampleWhy: step-by-step recipes for the gains, tried on the dish
     addsToExample: Tries ZN on the dish and shows why hand tuning won.
     pop:
       rough: find the edge of instability, then back off by a fixed recipe
-      eqKey: K_u = ultimate gain; T_u = the oscillation period at that gain.
+      eqKey: K_u = ultimate gain; T_u = the oscillation period at that gain; Ti = Kp/Ki and T_D = Kd/Kp, the gains written as times (s).
       example: 'The ideal dish never oscillates under P. Add the amplifier''s 0.05 s lag: K_u = 440, T_u = 0.99 s, so Kp = 264, Ki = 532, Kd = 33, giving 64 % overshoot. Hand tuning did far better.'
       ask: q-methods
   - id: FAIL
     label: 'When it misbehaves: 14 symptom cards'
     series: 2
+    shelf: true
     short: 'Match the picture to a symptom card. The 14 symptoms:
 
       - slow, offset, overshoot, oscillation
@@ -1707,7 +1737,7 @@ maps:
     live: figure:fail-windup
     quizTag: failures
     examples: [dish]
-    exampleWhy: the 14 cards
+    exampleWhy: the ways the dish's loop goes wrong, each matched to its fix
     addsToExample: Gives the dish 14 ways to fail, and their fixes.
     pop:
       rough: match the picture, then turn one knob
@@ -1717,13 +1747,14 @@ maps:
   - id: INDEX
     label: The best gain in one number
     series: 2
+    shelf: true
     short: 'Yes: add up the error over the whole response. A *performance index* like ISE (∫e²), IAE (∫|e|) or ITAE (∫t|e|) turns a response into a score; the best gain minimises it. Each index prefers different damping, so the choice of index is itself a design decision.'
     eq: ISE = ∫₀^∞ e² dt = 1/(2a₁) + a₁/200,  a₁ = 2 + 0.1K_r
     dive: index
     live: figure:index
     quizTag: index
     examples: [dish]
-    exampleWhy: the dish's rate gain K_r (ISE 80, IAE 112.5), with the notes' telescope in a side panel
+    exampleWhy: one score for a whole response, used to pick how hard the dish brakes, with the lecture notes' telescope example beside it
     addsToExample: Scores the dish's damping by one number.
     pop:
       rough: score = total error over time; best gain = lowest score
@@ -1739,7 +1770,7 @@ maps:
     live: board:s7
     quizTag: ss2tf
     examples: [house, corner]
-    exampleWhy: corner G from A, B, C; the house with an averaging sensor shows a cancelled mode
+    exampleWhy: the house written a second way and back again; a thermostat that averages both rooms misses part of how the house warms (the car corner, a later example, too)
     addsToExample: Confirms that the corner's two descriptions agree.
     pop:
       rough: G = what the sensor sees of the states' response to the push
@@ -1755,7 +1786,7 @@ maps:
     live: figure:sf?preset=ack
     quizTag: sf
     examples: [corner]
-    exampleWhy: K = [14 400, 4 800]
+    exampleWhy: the same motor force, found with a ready-made formula
     addsToExample: Re-derives the corner's K by formula.
     pop:
       rough: K = the last row of Pc⁻¹, times the desired polynomial applied to A
@@ -1891,7 +1922,7 @@ maps:
     question: 'Integral action made the bounce worse. What adds damping?'
     idea: 'A torque against the rate of turn: derivative action, best taken from the tachometer.'
     why: |-
-      **Still open:** *Integral action*'s dish overshoots 80 %, and the friction B is fixed.
+      **Still open:** in *Integral action* the dish overshoots 80 %, and the friction B is fixed.
 
       **Why it matters:** a dish that overshoots 80 % sweeps past the satellite on every move.
 
@@ -1999,7 +2030,7 @@ maps:
   - from: OBS
     to: SEP
     label: use the estimate?
-    question: If we feed back the estimate, does *Feed back every state*'s design still hold?
+    question: If we feed back the estimate, does the state-feedback design (*Feed back every state*) still hold?
     idea: 'Yes: the separation principle. The poles are the controller''s plus the observer''s.'
     why: |-
       **Still open:** *Feed back every state* assumed the true state, and *Estimate what we can't measure* built the estimate on its own. Wiring the estimate in might move the poles we placed.
@@ -2025,7 +2056,7 @@ maps:
     question: The car's shock absorber pushes against velocity. Isn't that derivative action?
     idea: 'Yes: c·ż is D on the measurement, and the spring k·(w − z) is P. A passive suspension is a PD loop.'
     why: |-
-      **Still open:** *Derivative action* added Kd to B on the dish; *Close the loop*'s corner already had c.
+      **Still open:** *Derivative action* added Kd to B on the dish; in *Close the loop* the corner already had c.
 
       **Why it matters:** it shows D is a physical damper, not just a formula, and why D on the measurement avoids the zero the road brings in.
 
@@ -2042,7 +2073,7 @@ maps:
       alt: 'One s-plane in rad/s: the dish''s P path rises straight up at −1; the corner''s poles move from −2 ± 7.75j to −8 ± 6j.'
     whyFigCaption: 'P can only slide the dish''s poles along one fixed path; its decay rate stays at 1 /s whatever Kp. Feeding back both states puts the corner''s poles exactly where we chose.'
     why: |-
-      **Still open:** *Turn up the gain (P)*'s poles could only climb at −1 ± jω; *Feed back every state* puts the corner's at −8 ± 6j. Both "move the poles", so how do they differ?
+      **Still open:** in *Turn up the gain (P)* the poles could only climb at −1 ± jω; *Feed back every state* puts the corner's at −8 ± 6j. Both "move the poles", so how do they differ?
 
       **Why it matters:** side by side, they show what the state-space detour bought: the decay rate is no longer fixed by the friction.
 
@@ -2104,7 +2135,7 @@ maps:
     question: Real plants have more poles. When do the formulas still work?
     idea: 'When one pair is much slower: the wheel hops 12.8× faster than the body.'
     why: |-
-      **Still open:** *Specs: overshoot, settling, peak time*'s formulas assume exactly two poles, and we left the 40 kg wheel out of the corner.
+      **Still open:** the formulas in *Specs: overshoot, settling, peak time* assume exactly two poles, and we left the 40 kg wheel out of the corner.
 
       **Why it matters:** every real plant has extra poles. If they are too slow, the overshoot and settling numbers are simply wrong (with the wheel: 50.8 % instead of 44.4 %).
 
@@ -2146,6 +2177,42 @@ maps:
 
       **What we want:** the lag for steps and ramps, read off from the number of integrators.
   - from: TUNE
+    to: TOOLKIT
+    side: true
+    label: tools
+    question: 'The dish is tuned. What else helps when a real loop needs tuning?'
+    idea: 'Six optional side boxes: other controller forms, the motor''s limit, sliders, recipes, symptom cards and one-number scores.'
+    why: |-
+      **Still open:** *Choosing the three gains* tuned one loop on paper, with ideal parts.
+
+      **Why it matters:** a real loop raises side questions: other ways to write the controller, a motor that runs out of torque, gains you want to try or compute, a loop that misbehaves.
+
+      **What we want:** one place that lists those side questions, so each can be opened when it comes up.
+  - from: TOOLKIT
+    to: MENU
+    side: true
+    label: other forms?
+    question: Besides PID, what can the controller box hold, and how do the lecture notes write PID?
+    idea: From plain on/off up to PID; the lecture notes write PID with two times in place of Ki and Kd.
+    why: |-
+      **Still open:** *Choosing the three gains* tuned the dish with Kp, Ki and Kd.
+
+      **Why it matters:** the lecture notes and most tuning tables write PID with two times instead of the gains Ki and Kd, and simpler controllers such as on/off sit beside it.
+
+      **What we want:** the list of controller types, and how the two notations convert.
+  - from: TOOLKIT
+    to: WINDUP
+    side: true
+    label: limits?
+    question: What if the motor can't give the torque the tuned PID asks for?
+    idea: While the torque is stuck at the limit, the I part keeps adding up error, and the dish overshoots later; the fix is to make it stop.
+    why: |-
+      **Still open:** *Choosing the three gains* checked that a 0.1 rad step asks exactly the 200 N·m limit. A bigger re-point asks for far more.
+
+      **Why it matters:** the dish motor stops at 200 N·m. While the torque is clipped, the I part keeps adding up error, and on a long turn that stored-up push makes the dish overshoot badly.
+
+      **What we want:** how to recognise it, and how to stop the I part from causing it.
+  - from: TOOLKIT
     to: LAB
     side: true
     label: try it
@@ -2157,19 +2224,19 @@ maps:
       **Why it matters:** gains interact. Seeing overshoot, wind error and torque move together as you drag one slider shows which knob to turn next far better than a table does.
 
       **What we want:** a live dish loop with the real torque limit, sensor noise and wind, where every claim in the PID boxes can be reproduced.
-  - from: TUNE
+  - from: TOOLKIT
     to: METHODS
     side: true
     label: recipes?
     question: Is there a systematic way to find the gains?
-    idea: By hand, Ziegler–Nichols, or the PID Tuner, all as starting points.
+    idea: 'Three recipes: by hand, a classic test-then-table rule, or a software tuner; all give starting points.'
     why: |-
       **Still open:** *Choosing the three gains* gave a cause-and-effect table, not a procedure.
 
       **Why it matters:** tuning three interacting gains by trial is slow. A recipe gives a sensible starting point, and knowing its limits tells you how far to trust it.
 
-      **What we want:** step-by-step recipes (by hand, Ziegler–Nichols, a software tuner) and what each one gets wrong.
-  - from: TUNE
+      **What we want:** step-by-step recipes (by hand, a classic test-then-table rule, a software tuner) and what each one gets wrong.
+  - from: TOOLKIT
     to: FAIL
     side: true
     label: it misbehaves
@@ -2181,42 +2248,18 @@ maps:
       **Why it matters:** on real hardware the response often looks wrong in a recognisable way, and the right fix is often not a gain.
 
       **What we want:** a lookup from what the plot shows to the cause and the one change that fixes it.
-  - from: TUNE
+  - from: TOOLKIT
     to: INDEX
     side: true
     label: one number?
     question: Can one number say which gain is best?
-    idea: Minimise ISE, IAE or ITAE; each prefers different damping.
+    idea: Add up the error over the whole response into one score; each score prefers a different damping.
     why: |-
       **Still open:** *Choosing the three gains* traded overshoot against speed by eye.
 
       **Why it matters:** "best" depends on what you penalise. A single score turns the choice into a minimum you can compute, and different scores favour different damping.
 
-      **What we want:** error scores (ISE, IAE, ITAE) and the gain that minimises each, on the dish.
-  - from: TUNE
-    to: MENU
-    side: true
-    label: other forms?
-    question: Besides PID, what can the controller box hold, and how do the lecture notes write PID?
-    idea: On/off, P, I, PI, PD or PID; the lecture notes write PID with Kp, Ti and T_D instead of Kp, Ki and Kd.
-    why: |-
-      **Still open:** *Choosing the three gains* tuned the dish with Kp, Ki and Kd.
-
-      **Why it matters:** the lecture notes and most tuning tables write PID with times (Ti, T_D) instead of gains, and simpler controllers such as on/off sit beside it.
-
-      **What we want:** the list of controller types, and how the two notations convert.
-  - from: TUNE
-    to: WINDUP
-    side: true
-    label: limits?
-    question: What if the motor can't give the torque the tuned PID asks for?
-    idea: The integrator winds up while the torque is clipped; anti-windup stops it.
-    why: |-
-      **Still open:** *Choosing the three gains* checked that a 0.1 rad step asks exactly the 200 N·m limit. A bigger re-point asks for far more.
-
-      **Why it matters:** the dish motor stops at 200 N·m. While the torque is clipped the integrator keeps adding up error, and on a long slew that stored-up push overshoots badly (21.6 % at 2 rad).
-
-      **What we want:** how to recognise windup, and how to stop the integrator from causing it.
+      **What we want:** error scores and the gain that minimises each, on the dish.
   - from: STATE
     to: SS2TF
     side: true

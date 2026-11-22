@@ -1,6 +1,6 @@
 ---
 id: methods
-order: 20
+order: 19
 title: "Recipes: by hand, Ziegler–Nichols, PID Tuner"
 category: pid
 neighbors: [tuning, lab, index]
@@ -8,7 +8,7 @@ level: Worked calculation
 check: [q-methods, ck-zn-1]
 ---
 
-**The question:** is there a recipe that turns a couple of measurements into three gains? This is the side box *Recipes*, under *Choosing the three gains*.
+**The question:** is there a recipe that turns a couple of measurements into three gains? This is the side box *Recipes*, in the *Tuning toolkit* under *Choosing the three gains*.
 
 ### The big idea
 
@@ -29,7 +29,7 @@ A recipe turns two measurements into three gains. Ziegler–Nichols (ZN) pushes 
 Kp = 0.6K_u,   Ti = T_u/2,   T_D = T_u/8;   Ki = Kp/Ti,   Kd = Kp·T_D
 ```
 
-**What each symbol means.** K_u: the ultimate gain, where the P loop just oscillates; T_u: the period of that oscillation (s).
+**What each symbol means.** K_u: the ultimate gain, where the P loop just oscillates; T_u: the period of that oscillation (s); Ti = Kp/Ki and T_D = Kd/Kp: the same gains written as times (s), the form the lecture notes and ZN tables use (*The controller menu*).
 
 ### Worked example: on the dish with amplifier lag 1/(0.05s + 1)
 

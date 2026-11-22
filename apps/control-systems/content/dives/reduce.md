@@ -1,6 +1,6 @@
 ---
 id: reduce
-order: 5
+order: 25
 title: "Shrink the model, keep the behaviour"
 category: predict
 neighbors: [fb, first, dominant]
@@ -39,7 +39,7 @@ Dropping a far pole instead: 300/((s + 1)(s + 3)(s + 30)) → 10/((s + 1)(s + 3)
 
 ### Worked example: on the house
 
-Frequency matching gives 20.45/(5.021s + 1), with a largest step gap of 1.447 K against the true house; dropping −2.2 gives τ = 5 h and a gap of 1.463 K.
+Frequency matching gives G ≈ 8.18/(5.021s + 1) K per kW (20.45 K final for the 2.5 kW step), with a largest step gap of 1.447 K against the true house; dropping −2.2 gives τ = 5 h and a gap of 1.463 K.
 
 ### What it can't do
 

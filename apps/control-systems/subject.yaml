@@ -59,7 +59,7 @@ runningExample:
         - **In:** a load on the body, or the road under the wheel.
         - **Out:** the body's height z.
         - **Inside:** one corner of a car: its share of the body on a spring and a shock absorber.
-        - **Why now:** the house's poles are real, so it can never overshoot. The corner's spring and moving body pass energy back and forth, so it swings: the simplest plant that bounces, and one you have felt in every car.
+        - **Why now:** the house's poles are real, so it never swings past where it settles. The corner's spring and moving body pass energy back and forth, so it swings: the simplest plant that bounces, and one you have felt in every car.
         - Press play to watch the bounce.
       numbers: |
         - **Parts:** m = 400 kg, k = 25.6 kN/m, c = 1.6 kN·s/m.
@@ -83,15 +83,15 @@ runningExample:
       numbers: |
         - **Parts:** J = 10 kg·m², B = 20 N·m·s/rad, motor ±200 N·m, so Θ/T = 0.1/(s(s + 2)).
         - **With P control:** the closed loop is s² + 2s + Kp/10; Kp = 1000 gives ωₙ = 10 rad/s but ζ = 0.1.
-      comesBack: { big: [SSE, INT, DER, TUNE], detail: [SPEED, SSE, TYPE, INT, DER, TUNE, MENU, WINDUP, LAB, METHODS, FAIL, INDEX] }
+      comesBack: { big: [SSE, INT, DER, TUNE], detail: [SPEED, SSE, TYPE, INT, DER, TUNE, TOOLKIT, MENU, WINDUP, LAB, METHODS, FAIL, INDEX] }
 hub:
   order: 3
 # Porting guard (rebuilt Nov 2026, question-chain format; pid-tuning folded in): 2 maps (Big picture 22 boxes / 24 lines,
-# Full detail 39 / 41), 33 dives, 2 review pages, 261 quiz questions (39 box asks + 53 dive checks + 123 kept CS + 46 kept PID).
+# Full detail 40 / 42), 33 dives, 2 review pages, 262 quiz questions (40 box asks + 53 dive checks + 123 kept CS + 46 kept PID).
 expect:
   maps: 2
-  nodes: 61
-  edges: 65
+  nodes: 62
+  edges: 66
   dives: 33
   review: 2
-  quiz: 261
+  quiz: 262

@@ -1,6 +1,6 @@
 ---
 id: circuits
-order: 7
+order: 3
 title: "G(s) for circuits and op-amps"
 category: describe
 neighbors: [tf, model, order]

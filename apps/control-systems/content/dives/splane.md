@@ -1,6 +1,6 @@
 ---
 id: splane
-order: 3
+order: 4
 title: "Poles and zeros: the plant's own motions"
 category: describe
 neighbors: [tf, first, plane, inverse]

@@ -1,6 +1,6 @@
 ---
 id: failures
-order: 21
+order: 20
 title: "When it misbehaves: 14 symptom cards"
 category: pid
 neighbors: [tuning, lab, windup, derivative]
@@ -8,7 +8,7 @@ level: Conceptual
 check: [q-fail, ck-fail-1]
 ---
 
-**The question:** the loop misbehaves; which symptom is it, what causes it, and which knob fixes it? This is the side box *When it misbehaves*, under *Choosing the three gains*.
+**The question:** the loop misbehaves; which symptom is it, what causes it, and which knob fixes it? This is the side box *When it misbehaves*, in the *Tuning toolkit* under *Choosing the three gains*.
 
 ### The big idea
 
@@ -56,7 +56,7 @@ Twelve cards run on the antenna dish, G = 0.1/(s(s + 2)), with D on the measurem
 
 **Symptom:** sits off-target in wind. **Cause:** no I. **Fix:** add Ki.
 
-**On the dish:** PD (1000, 0, 120) is left 1.146° off for good in 20 N·m of wind; (1000, 500, 120) peaks at 1.13° and clears it (< 0.05°) in 6.09 s.
+**On the dish:** PD (1000, 0, 120) is left 1.146° off for good in 20 N·m of wind; (1000, 500, 120) peaks at 1.13° and clears it (< 0.05°) in 6.10 s.
 
 ```figure:fail-offset
 ```
@@ -89,7 +89,7 @@ Twelve cards run on the antenna dish, G = 0.1/(s(s + 2)), with D on the measurem
 
 **Symptom:** blown off by gusts. **Cause:** gains too low. **Fix:** raise Kp, Ki and Kd together.
 
-**On the dish:** (500, 250, 100): the gust peaks at 2.08° and takes 7.16 s to clear. Tuned: 0.554°, cleared in 4.82 s.
+**On the dish:** (500, 250, 100): the gust peaks at 2.08° and takes 7.16 s to clear. Tuned: 0.557°, cleared in 4.83 s.
 
 ```figure:fail-disturbance
 ```
@@ -185,7 +185,7 @@ Near the target Kp × error falls below the 20 N·m needed to restart, so the di
 
 **Symptom:** good tracking or good gust rejection, not both. **Cause:** one-degree-of-freedom compromise. **Fix:** set-point weighting.
 
-**On the dish:** b = 1: 7.4 % overshoot, wind 0.556°, cleared in 4.82 s. b = 0.9: no overshoot, Tₛ 1.67 s, rise 0.195 s, the same wind response. b = 0.5 is too slow (Tₛ 6.07 s).
+**On the dish:** b = 1: 7.4 % overshoot, wind 0.557°, cleared in 4.83 s. b = 0.9: no overshoot, Tₛ 1.67 s, rise 0.195 s, and practically the same wind response (0.554°, 4.82 s). b = 0.5 is too slow (Tₛ 6.07 s).
 
 ```figure:fail-twodof
 ```

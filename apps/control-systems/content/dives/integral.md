@@ -1,6 +1,6 @@
 ---
 id: integral
-order: 15
+order: 14
 title: "Integral action: removing the steady error"
 category: pid
 neighbors: [sse, windup, derivative, tuning]

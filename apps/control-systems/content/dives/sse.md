@@ -1,6 +1,6 @@
 ---
 id: sse
-order: 14
+order: 13
 title: "Why it stops short: steady-state error and system type"
 category: pid
 neighbors: [ctrl, integral, dist]

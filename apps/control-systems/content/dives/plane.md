@@ -1,6 +1,6 @@
 ---
 id: plane
-order: 9
+order: 7
 title: "The s-plane as a landscape"
 category: describe
 neighbors: [splane, inverse, sens]

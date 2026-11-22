@@ -1,6 +1,6 @@
 ---
 id: order
-order: 6
+order: 5
 title: "Why two poles? One state per energy store"
 category: describe
 neighbors: [splane, model, ss]

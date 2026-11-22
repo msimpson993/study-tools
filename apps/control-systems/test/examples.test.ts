@@ -12,18 +12,18 @@ const graph = parse(fs.readFileSync(path.join(app, 'content', 'graph.yaml'), 'ut
 const refs = parse(fs.readFileSync(path.join(app, 'subject.yaml'), 'utf8')).runningExample.refs as { id: string; at: string; comesBack?: Record<string, string[]> }[];
 /** root carries no glyph: on CI's fonts the house glyph sat on the long central-question label at 390 px (Nov 21) */
 const NONE = ['root'];
-const PRE = ['MODEL', 'TF', 'POLES', 'FIRST', 'ORDER', 'CIRC', 'INV', 'PLANE', 'REDUCE'];
+const PRE = ['MODEL', 'TF', 'POLES', 'FIRST', 'ORDER', 'CIRC', 'INV', 'PLANE'];
 const AFTER: Record<string, string[]> = {
   SECOND: ['corner'], SPECS: ['corner'], LOOP: ['corner'], DOM: ['corner'], BLOCKALG: ['corner'],
-  PGAIN: ['dish'], MENU: ['dish'], SPEED: ['dish'], SSE: ['dish'], TYPE: ['dish'], INT: ['dish'], WINDUP: ['dish'], DER: ['dish'], TUNE: ['dish'],
+  PGAIN: ['dish'], MENU: ['dish'], SPEED: ['dish'], SSE: ['dish'], TYPE: ['dish'], INT: ['dish'], WINDUP: ['dish'], DER: ['dish'], TUNE: ['dish'], TOOLKIT: ['dish'],
   LAB: ['dish'], METHODS: ['dish'], FAIL: ['dish'], INDEX: ['dish'],
-  DIST: ['house'], SENS: ['house'], NOISE: ['house'],
+  DIST: ['house'], SENS: ['house'], NOISE: ['house'], REDUCE: ['house'], // pass 4b: REDUCE hangs off NOISE, after the house's return, so it gets a comes-back line
   STATE: ['corner'], SS2TF: ['house', 'corner'], CC: ['house', 'corner'], SF: ['corner'], ACK: ['corner'], OBS: ['corner'], SEP: ['corner'], REF: ['corner'],
 };
 const COMES_BACK: Record<string, Record<string, string[]>> = {
   house: { big: ['DIST', 'SENS', 'NOISE', 'CC'], detail: ['DIST', 'SENS', 'NOISE', 'REDUCE', 'SS2TF', 'CC'] },
   corner: { big: ['STATE', 'CC', 'SF', 'OBS', 'SEP', 'REF'], detail: ['STATE', 'SS2TF', 'CC', 'SF', 'ACK', 'OBS', 'SEP', 'REF'] },
-  dish: { big: ['SSE', 'INT', 'DER', 'TUNE'], detail: ['SPEED', 'SSE', 'TYPE', 'INT', 'DER', 'TUNE', 'MENU', 'WINDUP', 'LAB', 'METHODS', 'FAIL', 'INDEX'] },
+  dish: { big: ['SSE', 'INT', 'DER', 'TUNE'], detail: ['SPEED', 'SSE', 'TYPE', 'INT', 'DER', 'TUNE', 'TOOLKIT', 'MENU', 'WINDUP', 'LAB', 'METHODS', 'FAIL', 'INDEX'] },
 };
 /** side boxes the derived rule counts as "coming back" because its first-stretch walk follows main lines only; the explicit
  *  comesBack lists leave them out (they hang off the host's own stretch) */

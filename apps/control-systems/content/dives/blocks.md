@@ -1,6 +1,6 @@
 ---
 id: blocks
-order: 12
+order: 11
 title: "Close the loop: block diagrams and T = G_f/(1 + L)"
 category: pid
 neighbors: [second, ctrl, sens, failures]

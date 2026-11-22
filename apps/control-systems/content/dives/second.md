@@ -1,6 +1,6 @@
 ---
 id: second
-order: 10
+order: 9
 title: "Two poles: ζ and ωₙ, and specs as regions"
 category: predict
 neighbors: [first, dominant, blocks, splane]

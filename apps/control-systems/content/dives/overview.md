@@ -13,7 +13,7 @@ addsToExample: "The house's finished loop, rebuilt box by box in the overview fi
 
 ### The big idea
 
-- **One question, one plant to start:** the **house** warms slowly and can't overshoot, which makes it the cleanest place to learn models, poles and what feedback buys.
+- **One question, one plant to start:** the **house** warms slowly and never swings past where it settles, which makes it the cleanest place to learn models, poles and what feedback buys.
 - **Others join when needed:** where the house runs out, a new example joins. Each is introduced in its own Example pop-up beside the box that needs it.
 
 ### See it
@@ -35,7 +35,7 @@ The panel rebuilds the house's loop a box at a time. Step the slider back to 1 t
 
 | at box | what happens | why |
 |---|---|---|
-| *Two poles* | a second example joins | the house can't overshoot |
+| *Two poles* | a second example joins | the house can't swing past where it settles |
 | *Turn up the gain* | a third example joins | P, I and D need a command we choose and an actuator that obeys it |
 | *A push we didn't command* | the house returns | a thermostat's whole job is holding steady against the weather |
 | *Look inside* | the example from *Two poles* returns | its specs need both polynomial coefficients set at will |

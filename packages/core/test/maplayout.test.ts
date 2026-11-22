@@ -92,7 +92,7 @@ describe('map view: Fit to screen vs Actual size', () => {
     control-systems/chain narrow ceilings were raised from 5/9 to 12/12 when the Designing-with-state-feedback chapter was added; wide ceilings are unchanged. */
 const BEFORE: Record<string, [number, number][]> = {
   // control-systems was rebuilt (Nov 2026) as Big picture + Full detail with pid-tuning folded in (the pid-tuning page and its map were removed); ceilings are what the current layout draws.
-  'control-systems/big': [[1, 0], [1, 0], [1, 0], [1, 0], [1, 0]], 'control-systems/detail': [[19, 0], [19, 0], [17, 0], [19, 0], [19, 0]], // CS pass 3: MENU and WINDUP join TUNE's fan (six side paths), whose lines cross the long FIRST ⇢ REF and PGAIN ⇢ SF look-backs once more
+  'control-systems/big': [[1, 0], [1, 0], [1, 0], [1, 0], [1, 0]], 'control-systems/detail': [[19, 0], [19, 0], [19, 0], [18, 0], [18, 0]], // CS pass 4: the six tuning side boxes sit on a shelf under Tuning toolkit (one side path off Choosing the three gains); at 775 the shelf is one column, whose lines cross the long look-backs twice more
   // linear-systems was rebuilt (Nov 2026) as Big picture + Full detail, and again on Nov 18 to the 14-box pop-up format; these maps never had the old layout, so their ceilings are what the current layout draws.
   'linear-systems/big': [[1, 0], [1, 0], [1, 0], [1, 0], [1, 0]], 'linear-systems/full': [[7, 0], [7, 0], [3, 0], [3, 0], [2, 0]], // Nov 18 tutor review: Controllability box under 'Do inside and outside match?' (Kalman box folded into it) adds one crossing on phones
 };

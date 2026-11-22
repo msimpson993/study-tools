@@ -1,6 +1,6 @@
 ---
 id: inverse
-order: 8
+order: 6
 title: "Back to time: partial fractions"
 category: describe
 neighbors: [splane, first, tf]

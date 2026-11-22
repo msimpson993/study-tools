@@ -1,6 +1,6 @@
 ---
 id: ctrl
-order: 13
+order: 12
 title: "Turn up the gain (P) and faster loops"
 category: pid
 neighbors: [blocks, sse, integral, derivative]
@@ -14,7 +14,7 @@ check: [q-pgain, q-speed, ck-pgain-1]
 
 P control pushes in proportion to the error. On the dish, torque Kp·e acts like a spring pulling the antenna onto the satellite. A stiffer spring is faster, but the friction that damps it is fixed, so the decay rate stays at B/(2J) = 1 /s while the swing gets faster: more gain, more bounce.
 
-**The plant.** A satellite-tracking pedestal, azimuth axis. J = 10 kg·m² (a ~1.2 m dish on its mount), B = 20 N·m·s/rad (bearing and motor viscous friction), the motor and gearing modelled as a pure torque source up to ±200 N·m at the axis. Θ/T = 1/(Js² + Bs) = 0.1/(s(s + 2)).
+**The plant.** A satellite-tracking dish mount, turning left–right (azimuth). J = 10 kg·m² (a ~1.2 m dish on its mount), B = 20 N·m·s/rad (bearing and motor viscous friction), the motor and gearing modelled as a pure torque source up to ±200 N·m at the axis. Θ/T = 1/(Js² + Bs) = 0.1/(s(s + 2)).
 
 ### See it
 

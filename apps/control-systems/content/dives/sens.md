@@ -1,6 +1,6 @@
 ---
 id: sens
-order: 24
+order: 23
 title: "What if the model is wrong? Sensitivity"
 category: feedback
 neighbors: [dist, fb, blocks]

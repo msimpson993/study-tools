@@ -1,6 +1,6 @@
 ---
 id: windup
-order: 16
+order: 17
 title: "When the push hits its limit: integrator windup"
 category: pid
 neighbors: [tuning, integral, lab, failures]
@@ -8,7 +8,7 @@ level: Conceptual
 check: [q-windup, ck-windup-1]
 ---
 
-**The question:** what goes wrong with integral action when the motor can't give the torque the controller asks for? This is the side box *When the push hits its limit*, under *Choosing the three gains*.
+**The question:** what goes wrong with integral action when the motor can't give the torque the controller asks for? This is the side box *When the push hits its limit*, in the *Tuning toolkit* under *Choosing the three gains*.
 
 ### The big idea
 

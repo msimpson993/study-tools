@@ -1,6 +1,6 @@
 ---
 id: first
-order: 4
+order: 8
 title: "One pole: the yardstick K/(τs + 1)"
 category: predict
 neighbors: [splane, second, reduce, dominant]

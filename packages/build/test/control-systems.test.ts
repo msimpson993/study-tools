@@ -18,14 +18,14 @@ export const boxWords = (m: Map, n: Node) => {
 };
 
 describe('control-systems (question-chain rebuild)', () => {
-  it('keeps its 2 maps / 61 nodes / 65 edges / 33 dives / 2 review pages / 261 questions', () => {
+  it('keeps its 2 maps / 62 nodes / 66 edges / 33 dives / 2 review pages / 262 questions', () => {
     const c = load();
     expect(c.maps.map((m) => m.id)).toEqual(['big', 'detail']);
-    expect(c.maps.map((m) => m.nodes.length)).toEqual([22, 39]);
-    expect(c.maps.map((m) => m.edges.length)).toEqual([24, 41]);
+    expect(c.maps.map((m) => m.nodes.length)).toEqual([22, 40]);
+    expect(c.maps.map((m) => m.edges.length)).toEqual([24, 42]);
     expect(c.dives.length).toBe(33);
     expect((c.review ?? []).map((r) => r.id).sort()).toEqual(['mini-exam-1', 'mini-exam-2']);
-    expect(c.quiz.length).toBe(261);
+    expect(c.quiz.length).toBe(262);
   });
   it('every box pop-up follows the template (answer, rough words, running example, next question, captioned figures, ≤ 4 figures, word budget)', () => {
     const c = load();

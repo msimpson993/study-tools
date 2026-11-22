@@ -1,6 +1,6 @@
 ---
 id: derivative
-order: 17
+order: 15
 title: "Derivative action: braking before you arrive"
 category: pid
 neighbors: [integral, tuning, blocks]
