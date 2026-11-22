@@ -410,6 +410,8 @@ details.derivation{margin:.7rem 0}details.derivation>summary{font-weight:650}
 /* a fork: the main path is the primary button; the side path (a shortcut) is outlined, dashed and labelled */
 .chain-nav .chain-side{border-style:dashed;background:transparent}
 .chain-nav .chain-side .ch-dir{font-style:italic}
+.chain-nav .chain-side-group{flex:1 1 100%;display:flex;flex-wrap:wrap;gap:.45rem}
+.chain-nav .chain-side-head{flex:1 1 100%;font:italic 600 .78rem system-ui,sans-serif;color:var(--muted)}
 .pop-next-list li.nx-main{list-style:disc}.pop-next-list li.nx-side{list-style:circle;opacity:.9}
 .pop-next-list .nx-tag{font-size:.78rem;font-weight:700;text-transform:uppercase;letter-spacing:.03em;opacity:.75}
 .pop-next-list li.nx-side .pop-next-link{font-weight:500}

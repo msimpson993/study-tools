@@ -597,12 +597,21 @@ export function mountConceptMap(host: HTMLElement, content: AppContent, progress
   function chainNav(id: string, m: MapDef): HTMLElement {
     const nav2 = h('div', { class: 'chain-nav', dataset: { testid: 'chain-nav' } });
     const ins = backOrder(id, m), outs = nextOrder(id, m), fork = outs.length > 1 && outs.some((e) => e.side);
+    // two or more side lines of the same kind share one header above them (student pass 4, issue 22); each button keeps its own question
+    const tagCount = new Map<string, number>(); for (const e of outs) if (fork && e.side) tagCount.set(sideTag(e, m), (tagCount.get(sideTag(e, m)) ?? 0) + 1);
+    const grouped = (e: MapEdge) => fork && !!e.side && (tagCount.get(sideTag(e, m)) ?? 0) > 1;
     const btn = (e: MapEdge, back: boolean) => h('button', { class: back ? 'tbtn chain-back' : e.side ? 'tbtn chain-next chain-side' : 'tbtn on chain-next', dataset: { testid: back ? 'chain-back' : 'chain-next', edge: edgeKey(e.from, e.to), to: back ? e.from : e.to, path: !back && fork ? (e.side ? 'side' : 'main') : undefined }, onclick: () => openEdge(edgeKey(e.from, e.to)) },
-      h('span', { class: 'ch-dir' }, back ? '← Back: the question that led here' : fork ? (e.side ? `${sideTag(e, m)} →` : 'Next on the main path →') : 'Next question →'), h('span', { class: 'ch-name', html: e.question }));
+      ...(!back && grouped(e) ? [] : [h('span', { class: 'ch-dir' }, back ? '← Back: the question that led here' : fork ? (e.side ? `${sideTag(e, m)} →` : 'Next on the main path →') : 'Next question →')]), h('span', { class: 'ch-name', html: !back && grouped(e) ? `${e.question} →` : e.question }));
     const anc = !outs.length && !content.maps[0]?.nodes.some((x) => x.id === id) ? mainAncestor(id, m) : undefined;
     // a branch end: one Back (the line you came by) and one Return, not a Back for every line in
     for (const e of anc ? ins.slice(0, 1) : ins) nav2.append(btn(e, true));
-    for (const e of outs) nav2.append(btn(e, false));
+    const groups = new Map<string, HTMLElement>();
+    for (const e of outs) {
+      if (!grouped(e)) { nav2.append(btn(e, false)); continue; }
+      const tag = sideTag(e, m); let g = groups.get(tag);
+      if (!g) { g = h('div', { class: 'chain-side-group', role: 'group', 'aria-label': tag, dataset: { testid: 'chain-side-group' } }, h('div', { class: 'chain-side-head', dataset: { testid: 'chain-side-head' } }, `${tag}:`)); groups.set(tag, g); nav2.append(g); }
+      g.append(btn(e, false));
+    }
     if (anc) nav2.append(h('button', { class: 'tbtn chain-main', dataset: { testid: 'chain-main', to: anc }, onclick: () => openNode(anc) }, h('span', { class: 'ch-dir' }, 'Return to the main chain'), h('span', { class: 'ch-name' }, m.nodes.find((x) => x.id === anc)!.label)));
     return nav2;
   }
