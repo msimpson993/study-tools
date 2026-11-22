@@ -157,7 +157,7 @@ export const popFigures: QuizFigureRegistry = {
   'pop-sc': mini((g, w, h, p) => {
     if (panel(p) === 'a') {
       const ws = lin(-2, 1.5, 200), S = ws.map((e) => houseSC(1100, 10 ** e).S), Cm = ws.map((e) => houseSC(1100, 10 ** e).C), F = fr(g, w, h, [-2, 1.5], [0, 1.4], 'log₁₀ ω (rad/h)', '|S|, |C|');
-      curve(g, F, ws, S, col.c(), 2); curve(g, F, ws, Cm, col.d(), 2); legend(g, F, [{ label: '|S| weather through', color: col.c() }, { label: '|C| sensor error through', color: col.d() }], 'tl', 9.5); text(g, 'ω = 1 rad/h', F.X(0) + 3, F.box.t + 10, col.muted(), 'left', 9); return;
+      curve(g, F, ws, S, col.c(), 2); curve(g, F, ws, Cm, col.d(), 2); legend(g, F, [{ label: '|S| weather through', color: col.c() }, { label: '|C| sensor error through', color: col.d() }], 'tl', 9.5); text(g, '1 rad/h (6.3 h cycle)', F.X(0) + 3, F.box.t + 10, col.muted(), 'left', 9); return;
     }
     const F = fr(g, w, h, [0, 12], [-1.2, 0.3], 'time (h)', 'room (K)'), t = lin(0, 12, 241), k = houseG2().num[0], pp = housePoly();
     const P = step(tf([k * 1100], [1, pp[1], pp[2] + k * 1100]), t).y.map((q) => -q), PI = step(tf([k * 1100, k * 200], [1, pp[1], pp[2] + k * 1100, k * 200]), t).y.map((q) => -q);

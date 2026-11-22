@@ -82,7 +82,7 @@ function stepCard(title: string, a: CardOpts, b: CardOpts, xr: V2, opt: { r?: nu
 /** a dish wind card: pointing error after a 20 N·m gust at tw, problem against the fix */
 function windCard(title: string, a: CardOpts, b: CardOpts, tw: number, T: number): Plot[] {
   const sa = card({ ...a, T, wind: WIND, twind: tw }), sb = card({ ...b, T, wind: WIND, twind: tw }), wa = cardWind(sa.t, sa.y, tw), wb = cardWind(sb.t, sb.y, tw);
-  const err = (y: number) => -deg(y - R0), pa = thin(sa, err, tw - 2), pb = thin(sb, err, tw - 2), top = Math.max(1, Math.ceil(Math.max(wa.peak, wb.peak) * 1.3 * 2) / 2);
+  const err = (y: number) => deg(y - R0), pa = thin(sa, err, tw - 2), pb = thin(sb, err, tw - 2), top = Math.max(1, Math.ceil(Math.max(wa.peak, wb.peak) * 1.3 * 2) / 2);
   return [{ title, y: 'pointing error (°)', xr: [tw - 2, T], yr: [-0.3, top], series: [{ ...pa, color: PB() }, { ...pb, color: FX(), dash: true }], hl: [{ y: 0, label: 'on target' }], vl: [{ x: tw, label: `${WIND} N·m wind` }], notes: [`solid: ${wtxt(wa, T - tw)}`, `dashed: ${wtxt(wb, T - tw)}`] },
     tPlot({ t: pa.t, u: pa.u }, { t: pb.t, u: pb.u }, [tw - 2, T])];
 }
@@ -123,10 +123,10 @@ const CASES: Record<string, Case> = {
     return [panel(0.02), panel(0.2)];
   },
   twodof: (v) => {
-    const a = card({ ...TUNED, T: 40, b: n(v, 'b'), wind: WIND, twind: 20 }), b = card({ ...TUNED, T: 40, b: 0.9, wind: WIND, twind: 20 }), pa = thin(a, (y) => y / R0), pb = thin(b, (y) => y / R0);
-    const t1 = (s: typeof a) => { const m = cardMet(s.t, s.y, R0, 20); return `%OS ${pct(m.OS)}, Ts ${m.Ts.toFixed(2)} s; ${wtxt(cardWind(s.t, s.y, 20), 20)}`; };
-    return [{ title: 'Set-point weight b: the step, then a 20 N·m gust at 20 s', y: 'angle ÷ target', xr: [0, 30], yr: [0, 1.4], series: [{ ...pa, color: PB() }, { ...pb, color: FX(), dash: true }], hl: [{ y: 1, label: 'target 0.1 rad' }], vl: [{ x: 20, label: 'wind' }], notes: [`solid: ${t1(a)}`, `dashed (b = 0.9): ${t1(b)}`] },
-      tPlot({ t: pa.t, u: pa.u }, { t: pb.t, u: pb.u }, [0, 30], { vl: [{ x: 20, label: 'wind' }] })];
+    const a = card({ ...TUNED, T: 40, b: n(v, 'b'), wind: WIND, twind: 10 }), b = card({ ...TUNED, T: 40, b: 0.9, wind: WIND, twind: 10 }), pa = thin(a, (y) => y / R0), pb = thin(b, (y) => y / R0);
+    const t1 = (s: typeof a) => { const m = cardMet(s.t, s.y, R0, 10); return `%OS ${pct(m.OS)}, Ts ${m.Ts.toFixed(2)} s; ${wtxt(cardWind(s.t, s.y, 10), 30)}`; };
+    return [{ title: 'Set-point weight b: the step, then a 20 N·m gust at 10 s', y: 'angle ÷ target', xr: [0, 30], yr: [0, 1.4], series: [{ ...pa, color: PB() }, { ...pb, color: FX(), dash: true }], hl: [{ y: 1, label: 'target 0.1 rad' }], vl: [{ x: 10, label: 'wind' }], notes: [`solid: ${t1(a)}`, `dashed (b = 0.9): ${t1(b)}`] },
+      tPlot({ t: pa.t, u: pa.u }, { t: pb.t, u: pb.u }, [0, 30], { vl: [{ x: 10, label: 'wind' }] })];
   },
   limitcycle: (v) => {
     // review 1 (W7): stiction plus integral action hunts forever; an integrator dead band δ stops it (numbers.py [R4])

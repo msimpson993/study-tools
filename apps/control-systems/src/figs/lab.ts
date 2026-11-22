@@ -86,15 +86,16 @@ export const labFigure = figureOf((c) => {
           ['Settling 2 %', !settles || !Number.isFinite(r.Ts) ? 'not settled' : `${f(r.Ts, 2)} s`, c(null)],
           [gust ? `Steady error (t = ${f(DISH.windAt - 0.1, 1)} s, before gust)` : 'Steady error', !settles ? ns : d ? `${f(deg(r.ess), 3)}°` : f(r.ess, 3), c(settles ? Math.abs(r.ess) < 1e-3 * r.r : null)],
           ['Wind peak (spec < 0.6°)', !d || !r.windOn ? 'wind off' : !gust ? '— (no gust in window)' : !settles ? ns : `${f(r.windPeak, 3)}°`, c(gust && settles ? r.windPeak < 0.6 : null)],
-          // recovery (pass 3, item 12): 'not back by t = T s' is a failure (red) at any window (Malcolm, Nov 21)
-          ...(d && r.windOn ? [['Recovery to ±0.05° (spec < 10 s)', !gust ? '— (no gust in window)' : !settles ? ns : r.back ? `${f(r.rec, 2)} s` : `not back by t = ${f(r.T, 0)} s`,
+          // recovery (pass 3, item 12): 'not back by T s' is a failure (red) at any window (Malcolm, Nov 21)
+          ...(d && r.windOn ? [['Recovery to ±0.05° (spec < 10 s)', !gust ? '— (no gust in window)' : !settles ? ns : r.back ? `${f(r.rec, 2)} s` : `not back by ${f(r.T, 0)} s`,
             c(!gust || !settles ? null : r.back ? r.rec < 10 : false)] as [string, string, string]] : []),
           // θ_r − θ at the window's last sample, wind on only; passes below 0.05°, the page's "back on target" band (pass 2, R2; label pass 3, item 7)
           ...(d && r.windOn ? [[`Offset at end, t = ${f(r.T, 0)} s (spec < 0.05°)`, !gust ? '— (no gust in window)' : !settles ? ns : `${f(deg(r.offEnd), 3)}°`, c(gust && settles ? Math.abs(deg(r.offEnd)) < 0.05 : null)] as [string, string, string]] : []),
           ['Peak torque (limit 200 N·m)', d ? `${k3(r.peakU)} N·m` : f(r.peakU), c(d ? r.peakU <= DISH.Tmax + 1e-6 : null)],
           ['Stability', maxRe < -1e-3 ? 'all poles left' : maxRe < 1e-3 ? 'on the jω axis' : 'unstable pole', c(maxRe < -1e-3)],
         ];
-        const y = readoutRows(g, w, rows);
+        // a dash ('— (never settles)', '— (no gust in window)') is no reading at all: grey, not the normal text colour (pass 4)
+        const y = readoutRows(g, w, rows.map(([l, v, cl]) => [l, v, v.startsWith('—') ? col.muted() : cl] as [string, string, string]));
         // the plant's own transfer function, built from params (pass 2, R9): 1/(J s² + B s) = (1/J)/(s(s + B/J)), times 1/(τs + 1) with the lag
         const gTxt = `${f(1 / DISH.J, 1)}/(s(s + ${f(DISH.B / DISH.J, 0)})${r.plant === 'lag' ? `(${f(DISH.lag, 2)}s + 1)` : ''})`;
         para(g, d ? `Plant: ${gTxt}, J = ${f(DISH.J, 0)} kg·m², B = ${f(DISH.B, 0)} N·m·s/rad${r.plant === 'lag' ? `, amplifier lag τ = ${f(DISH.lag, 2)} s` : ''}` : `Legacy plant ${PID_PLANTS[r.plant as PlantId].name}`, 8, y + 4, w - 16, col.muted(), 10);

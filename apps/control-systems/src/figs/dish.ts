@@ -167,7 +167,10 @@ const gainPanel = (id: 'Kp' | 'Ki' | 'Kd', title: string): FigurePanel => ({
     const val = num(v, id, base[id]), gs = { ...base, [id]: val }, a = gainRun(gs.Kp, gs.Ki, gs.Kd), b0 = gainRun(base.Kp, base.Ki, base.Kd), T = 20;
     const fr = plotFrame(g, w, h, [0, T], [0, 7], 'time (s)', 'θ (°)'); hline(g, fr, deg(DISH.step), [0, T], '', col.e());
     curve(g, fr, b0.s.t, degs(b0.s.y), col.muted(), 1.6, [6, 4]); curve(g, fr, a.s.t, degs(a.s.y), col.a(), 2.2);
-    legend(g, fr, [{ label: `(${gs.Kp}, ${gs.Ki}, ${gs.Kd}), ideal D: %OS ${f(a.m.OS, 1)} %, Ts ${f(a.m.Ts, 2)} s`, color: col.a() }, { label: `wind peak ${f(a.w.peak, 3)}°, back in 0.05° after ${f(a.w.recover, 1)} s`, color: col.d() }, { label: 'start (2000, 1000, 200), ideal D', color: col.muted(), dash: true }], 'br');
+    // the wind peak marked on the curve in the legend's colour (pass 4, issue 14)
+    const iw = a.s.t.reduce((best, t, i) => (t >= W && Math.abs(a.s.y[i] - DISH.step) > Math.abs(a.s.y[best] - DISH.step) ? i : best), a.s.t.findIndex((t) => t >= W));
+    dot(g, fr, [a.s.t[iw], deg(a.s.y[iw])], col.d(), 4);
+    legend(g, fr, [{ label: `(${gs.Kp}, ${gs.Ki}, ${gs.Kd}), ideal D: %OS ${f(a.m.OS, 1)} %, Ts ${f(a.m.Ts, 2)} s`, color: col.a() }, { label: `● wind peak ${f(a.w.peak, 3)}°, back in 0.05° after ${f(a.w.recover, 1)} s`, color: col.d() }, { label: 'start (2000, 1000, 200), ideal D', color: col.muted(), dash: true }], 'br');
   },
 });
 export const gainsFigure = figureOf(() => [gainPanel('Kp', 'Raise Kp'), gainPanel('Ki', 'Raise Ki'), gainPanel('Kd', 'Raise Kd')]);
@@ -208,7 +211,7 @@ export const tunetableFigure = figureOf(() => [
           if (stack) vals.forEach((t, j) => text(g, t, fr.X(i + 0.5), fr.box.b + 23 + 11 * j, col.muted(), 'center', 9));
           else text(g, vals.join(', '), fr.X(i + 0.5), fr.box.b + 23, col.muted(), 'center', 9); });
       });
-      legend(g, fr, [...keys.map(([, l, c]) => ({ label: l, color: c() })), { label: 'start: 7.4 %, 2.2 s, 0.556°', color: col.muted(), dash: true }], 'tr');
+      legend(g, fr, [...keys.map(([, l, c]) => ({ label: l, color: c() })), { label: 'start: 7.4 %, 2.2 s, 0.557°', color: col.muted(), dash: true }], 'tr');
     },
   },
 ] as FigurePanel[]);

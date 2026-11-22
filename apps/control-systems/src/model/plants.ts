@@ -264,7 +264,7 @@ export function dishCard(o: CardOpts) {
     // clamping as in [P7] and the windup dive: stop integrating whenever the torque is saturated
     if (!(aw && umax !== null && us !== uc)) I += e * dt;
     const d = twind !== null && i * dt >= twind ? wind : 0;
-    om += ((us - B * om - d) / J) * dt; th += om * dt;
+    om += ((us - B * om + d) / J) * dt; th += om * dt; // gust pushes the same way as the Lab (dishSim) and the tuning figure (pass 4)
     t[i] = i * dt; y[i] = th; u[i] = us;
   }
   return { t, y, u };

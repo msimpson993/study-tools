@@ -249,10 +249,10 @@ slow fix tuned OS 7.4 %, Ts 2.20 s, Tr 0.156 s peak|u| 200
 overshoot (1000,500,0) OS 80.2 %, Ts 5.11 s, Tr 0.108 s peak|u| 100
 oscillation (1000,1900,0) OS 98.8 %, Ts 20.00 s, Tr 0.102 s peak|u| 102
 oscillation fix (1000,500,120) OS 11.7 %, Ts 2.68 s, Tr 0.196 s peak|u| 100
-offset PD (1000,0,120) wind peak 1.199 deg, final -1.146 deg, inside 0.05 deg after 30.00 s
-offset fix (1000,500,120) wind peak 1.130 deg, final -0.000 deg, inside 0.05 deg after 6.09 s
-dist (500,250,100) wind peak 2.076 deg, final -0.000 deg, inside 0.05 deg after 7.16 s
-dist fix tuned wind peak 0.554 deg, final -0.000 deg, inside 0.05 deg after 4.82 s
+offset PD (1000,0,120) wind peak 1.199 deg, final 1.146 deg, inside 0.05 deg after 30.00 s
+offset fix (1000,500,120) wind peak 1.133 deg, final 0.000 deg, inside 0.05 deg after 6.10 s
+dist (500,250,100) wind peak 2.081 deg, final 0.000 deg, inside 0.05 deg after 7.16 s
+dist fix tuned wind peak 0.557 deg, final 0.000 deg, inside 0.05 deg after 4.83 s
 kick dm False peak|u| unlimited 4200 OS 16.6 %, Ts 0.37 s, Tr 0.057 s
    with 200 limit OS 6.1 %, Ts 2.12 s, Tr 0.154 s
 kick dm True peak|u| unlimited 200 OS 6.3 %, Ts 2.20 s, Tr 0.156 s
@@ -268,8 +268,8 @@ delay 0.08 OS 5565387920074729450373120.0 %, Ts 15.00 s, Tr 0.065 s
 sensorlag 0.02 OS 7.6 %, Ts 2.18 s, Tr 0.119 s
 sensorlag 0.05 OS 32.1 %, Ts 2.14 s, Tr 0.086 s
   lag fix (1000,500,120) OS 27.4 %, Ts 2.62 s, Tr 0.129 s
-twodof b 1.0 OS 7.4 %, Ts 2.20 s, Tr 0.156 s wind peak 0.556 deg, final -0.000 deg, inside 0.05 deg after 4.82 s
-twodof b 0.5 OS -0.0 %, Ts 6.07 s, Tr 2.978 s wind peak 0.556 deg, final -0.000 deg, inside 0.05 deg after 4.82 s
+twodof b 1.0 OS 7.4 %, Ts 2.20 s, Tr 0.156 s wind peak 0.556 deg, final 0.000 deg, inside 0.05 deg after 4.82 s
+twodof b 0.5 OS -0.0 %, Ts 6.07 s, Tr 2.978 s wind peak 0.556 deg, final 0.000 deg, inside 0.05 deg after 4.82 s
 Nbar off: z/r = 0.36
 ---- extras
 slow (200, 50, 40) OS 13.6 %, Ts 5.61 s, Tr 0.419 s
@@ -299,7 +299,7 @@ R2 linear check kick card PID (2000,1000,200), unlimited, D on measurement, N_f 
 R2 linear check kick card PID (2000,1000,200), unlimited, D on error, N_f 200: OS 16.59 %
 R3 second: %OS <= 10 % needs zeta >= 0.5912; c = 2 zeta sqrt(k m) = 3783.4 N s/m (Ts <= 1 s: c = 2 m 4 = 3200)
 R3 dominant: wheel-hop decay 20.4 /s over the body pair's decay WITH the wheel (1.5985 /s) = 12.76x; over the single-mass body's 2 /s = 10.2x (the figure's 10.2x divides by the wrong body pole)
-R3 integral: PI (1000, 500), 20 N m gust at 3 s on top of the step: wind's own effect (with-wind minus no-wind run) peaks at 1.911 deg; the largest |angle - target| after 3 s is 2.123 deg because the step's own ringing is still there
+R3 integral: PI (1000, 500), 20 N m gust at 3 s on top of the step: wind's own effect (with-wind minus no-wind run) peaks at 1.911 deg; the largest |angle - target| after 3 s is 1.936 deg because the step's own ringing is still there
 R3 index: telescope ISE = 1/K3 + 0.1 K3 is minimal at K3 = sqrt(10) = 3.1623; a 0.25-step grid would read 3.25
 R4 A12 PD (2000,0,200), step 0.02 rad, stiction 0/0 N m: overshoot 2.0 %, stops +0.000 deg from target (+0.0 % of the step)
 R4 A12 PD (2000,0,200), step 0.02 rad, stiction 20/10 N m: overshoot -23.5 %, stops +0.269 deg from target (+23.5 % of the step)
@@ -465,6 +465,29 @@ P3 recovery with ideal D (text convention), (2000, 500, 200), window 40 s: 9.78 
 P3 Lab lag plant, P 440: poles [-22.+0.j     -0.+6.325j  -0.-6.325j] (max Re -0.0000); theta_r - theta at 9.9 s = +4.858 deg, at 16 s = +5.104 deg (still oscillating)
 P3 tuned (2000, 1000, 200), D on the error, ideal: exact %OS 15.811 % (one decimal 15.8 %)
 P3 Ackermann, 1/s^2 with poles -1 +/- j (q = s^2 + 2s + 2): K = [2. 2.], eig(A - BK) = [-1.+1.j -1.-1.j]
+
+======== [PASS4] Pass 4: two-DOF and A5 card wind numbers, RLC 1/(s^2+s+1), |S|,|C| at 1 rad/h, house observability by thermostat room
+P4 two-DOF card, b = 1.0, gust at 20 s: OS 7.4 %, Ts 2.20 s, Tr 0.156 s; step error left at the gust +0.0000 deg; wind peak 0.556 deg, back inside 0.05 deg after 4.82 s
+P4 two-DOF card, b = 0.9, gust at 20 s: OS -0.0 %, Ts 1.67 s, Tr 0.195 s; step error left at the gust -0.0000 deg; wind peak 0.556 deg, back inside 0.05 deg after 4.82 s
+P4 two-DOF card, b = 0.5, gust at 20 s: OS -0.0 %, Ts 6.07 s, Tr 2.978 s; step error left at the gust -0.0001 deg; wind peak 0.556 deg, back inside 0.05 deg after 4.82 s
+P4 two-DOF card, b = 1.0, gust at 10 s: OS 7.4 %, Ts 2.20 s, Tr 0.156 s; step error left at the gust +0.0018 deg; wind peak 0.554 deg, back inside 0.05 deg after 4.82 s
+P4 two-DOF card, b = 0.9, gust at 10 s: OS -0.0 %, Ts 1.67 s, Tr 0.195 s; step error left at the gust -0.0014 deg; wind peak 0.557 deg, back inside 0.05 deg after 4.83 s
+P4 two-DOF card, b = 0.5, gust at 10 s: OS -0.2 %, Ts 6.07 s, Tr 2.978 s; step error left at the gust -0.0143 deg; wind peak 0.568 deg, back inside 0.05 deg after 4.87 s
+P4 A5 card (500, 250, 100), gust at 10 s: step error left +0.0032 deg; wind peak 2.076 deg, back after 7.16 s (card dt 1e-4); same at dt 2.5e-5: 2.076 deg, 7.16 s
+P4 A5 card (2000, 1000, 200), gust at 10 s: step error left +0.0018 deg; wind peak 0.554 deg, back after 4.82 s (card dt 1e-4); same at dt 2.5e-5: 0.554 deg, 4.82 s
+P4 RLC R = L = C = 1: zeta = 0.50, step overshoot 16.303 % (about 16 %)
+P4 P thermostat at  0.01 rad/h (period   628.3 h): |S| = 0.100, |C| = 0.900
+P4 P thermostat at  1.00 rad/h (period     6.3 h): |S| = 0.592, |C| = 0.952
+P4 P thermostat at  2.60 rad/h (period     2.4 h): |S| = 1.331, |C| = 0.594
+P4 house thermostat in room 1, C = [1, 0]: Po = [[1.0, 0.0], [-1.2, 1.0]], det = +1.00, rank 2
+P4 house thermostat in room 2 (bedroom), C = [0, 1]: Po = [[0.0, 1.0], [1.0, -1.2]], det = -1.00, rank 2
+P4 card, Lab gust direction, gust 10 s: two-DOF b = 1: OS 7.4 %, Ts 2.20 s, Tr 0.156 s; wind peak 0.557 deg; back inside 0.05 deg after 4.83 s
+P4 card, Lab gust direction, gust 10 s: two-DOF b = 0.9: OS -0.0 %, Ts 1.67 s, Tr 0.195 s; wind peak 0.554 deg; back inside 0.05 deg after 4.82 s
+P4 card, Lab gust direction, gust 10 s: two-DOF b = 0.5: OS -0.2 %, Ts 6.07 s, Tr 2.978 s; wind peak 0.543 deg; back inside 0.05 deg after 4.78 s
+P4 card, Lab gust direction, gust 10 s: A5 problem (500, 250, 100): OS 11.2 %, Ts 3.79 s, Tr 0.319 s; wind peak 2.081 deg; back inside 0.05 deg after 7.16 s
+P4 card, Lab gust direction, gust 10 s: A5 fix = tuned (2000, 1000, 200): OS 7.4 %, Ts 2.20 s, Tr 0.156 s; wind peak 0.557 deg; back inside 0.05 deg after 4.83 s
+P4 card, Lab gust direction, gust 10 s: offset problem PD (1000, 0, 120): OS 4.6 %, Ts 0.60 s, Tr 0.213 s; wind peak 1.199 deg; not back (final +1.146 deg)
+P4 card, Lab gust direction, gust 10 s: offset fix (1000, 500, 120): OS 11.7 %, Ts 2.68 s, Tr 0.196 s; wind peak 1.133 deg; back inside 0.05 deg after 6.10 s
 
 All numbers recomputed.
 EXIT 0
