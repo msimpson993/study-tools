@@ -42,7 +42,7 @@ for (const vw of [1366, 390]) test(`control-systems Lab @${vw}: readout values s
       const rs = await check(page, `${name}, wind ${want ? 'on' : 'off'}`, want);
       if (want) expect(rs[4].lab.s, 'the recovery row').toBe('Recovery to ±0.05° (spec < 10 s)');
       if (want) expect(rs[5].lab.s, 'the offset row names the window end and its spec').toBe('Offset at end, t = 16 s (spec < 0.05°)');
-      if (want && /^P 1000/.test(name)) { expect(rs[5].val[0].s, 'P leaves −T_d/Kp').toBe('−1.149°'); expect(rs[4].val[0].s, 'P never comes back').toBe('not back by t = 16 s'); }
+      if (want && /^P 1000/.test(name)) { expect(rs[5].val[0].s, 'P leaves −T_d/Kp').toBe('−1.149°'); expect(rs[4].val[0].s, 'P never comes back').toBe('not back by 16 s'); }
       if (want && /^tuned/.test(name)) expect(rs[4].val[0].s, 'tuned: back 4.83 s after the gust ([PASS3] l.452)').toBe('4.83 s');
       const se = rs[2].lab.s;
       if (want) expect(se, 'the steady-error label names the time it is read').toContain('before gust'); else expect(se).toBe('Steady error');

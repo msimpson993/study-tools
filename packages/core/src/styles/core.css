@@ -473,5 +473,5 @@ details.derivation{margin:.7rem 0}details.derivation>summary{font-weight:650}
   #app .pop-meet a, #app .ref-back a, #app .pop-side a.pop-next-link, #app .pop-end a { padding: max(.5rem, calc(17.5px - .6em)) .1rem; }
   /* pass 4 (student issue 21): the path links ("Path from the central question", "Side trip from") and the pop-up's buttons are phone tap targets too */
   #app .cm-panel .path a { display: inline-flex; align-items: center; min-height: 32px; padding: 0 .1rem; box-sizing: border-box; vertical-align: middle; }
-  #app .cm-panel .tbtn { min-height: 32px; box-sizing: border-box; }
+  #app .cm-panel .acts .tbtn, #app .cm-panel [data-testid=play] { min-height: 32px; }
 }

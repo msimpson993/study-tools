@@ -33,11 +33,11 @@ test.describe('control-systems: the migrated interactive guide', () => {
     await expect(page.getByTestId('qcard').first()).toBeVisible();
   });
 
-  test('quizzes: 39 box asks + 53 dive checks + 83 course + 22 mini-exam + 46 PID questions; figure questions render their diagram', async ({ page }) => {
+  test('quizzes: 40 box asks + 53 dive checks + 83 course + 22 mini-exam + 46 PID questions; figure questions render their diagram', async ({ page }) => {
     await open(page, 'control-systems');
     const q = await page.evaluate(() => (window as any).__study.content.quiz);
-    expect(q.length).toBe(261);
-    expect(q.filter((x: any) => /^q-/.test(x.id)).length).toBe(39);
+    expect(q.length).toBe(262);
+    expect(q.filter((x: any) => /^q-/.test(x.id)).length).toBe(40);
     expect(q.filter((x: any) => x.id.startsWith('ck-')).length).toBe(53);
     expect(q.filter((x: any) => x.id.startsWith('cs-')).length).toBe(83);
     expect(q.filter((x: any) => x.id.startsWith('mini-')).length).toBe(22);

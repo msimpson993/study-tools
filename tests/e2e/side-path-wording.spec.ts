@@ -8,7 +8,7 @@ test('control-systems Full detail: every side line reads as a detour, in the hea
   await open(page, 'control-systems');
   await page.locator('button[role=tab][data-map="detail"]').first().click(); await page.waitForTimeout(100);
   const sides: string[] = await page.evaluate(() => (window as any).__study.content.maps[1].edges.filter((e: any) => e.side).map((e: any) => `${e.from}__${e.to}`));
-  expect(sides.length).toBe(17);
+  expect(sides.length).toBe(18); // pass 4: TUNE → TOOLKIT joins the 17
   await expect(page.locator('[data-legend=side]')).toHaveText(/side path \(a detour; come back here\)/);
   for (const k of sides) {
     await page.locator(`[data-testid=map-edge][data-edge="${k}"]`).first().dispatchEvent('click');
