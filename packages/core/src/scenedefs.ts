@@ -136,7 +136,7 @@ export const SCENES: Record<string, SceneInfo> = {
   house: {
     id: 'house',
     title: 'The two-room house and its thermostat',
-    physical: 'Two rooms share a wall and each leaks heat outdoors. Temperatures are measured above the outdoor temperature: ẋ = Ax + Bu with A = [[−1.2, 1], [1, −1.2]] per hour, a heater in room 1 (u in kW; with C_th = 1 MJ/K per room, B = (3.6, 0)ᵀ K/h per kW) and a thermostat reading room 1 (C = [1, 0]). The modes are the average temperature (λ = −0.2/h, τ = 5 h) and the difference (λ = −2.2/h, τ ≈ 27 min).',
+    physical: 'Two rooms share a wall and each leaks heat outdoors. Temperatures are measured above the outdoor temperature: ẋ = Ax + Bu with A = [[−1.2, 1], [1, −1.2]] per hour, a heater in room 1 (u in kW; with C_th = 1 MJ/K per room, B = (3.6, 0)ᵀ K/h per kW) and a thermostat reading room 2, the bedroom (C = [0, 1]). The modes are the average temperature (λ = −0.2/h, τ = 5 h) and the difference (λ = −2.2/h, τ ≈ 27 min).',
     defaults: ['heat'],
     overlays: [
       { id: 'heat', label: 'heater on', says: 'The 2.5 kW heater in room 1 switches on at t = 0. Room 1 warms first; room 2 follows through the shared wall.' },
@@ -147,7 +147,7 @@ export const SCENES: Record<string, SceneInfo> = {
       { id: 'poles', label: 'eigenvalues', says: 'The eigenvalues −0.2/h and −2.2/h on the real axis: both negative, so the house is stable, and the slow one dominates.', inset: 'poles' },
       { id: 'both', label: 'heat both rooms', says: 'The heater power split equally between the rooms, B ∝ (1, 1): the input only pushes the average. The difference can never be changed by the input; it is uncontrollable and just decays on its own.' },
       { id: 'avg', label: 'thermostat reads the average', says: 'A thermostat that reads the average (x₁ + x₂)/2: it cannot tell the rooms apart, so the difference mode is unobservable.' },
-      { id: 'thermo', label: 'thermostat in room 1', says: 'The thermostat reads room 1 only, y = Cx with C = [1, 0]. It sees both modes, so the full state can be worked out from y(t).' },
+      { id: 'thermo', label: 'thermostat in the bedroom', says: 'The thermostat reads room 2, the bedroom, only: y = Cx with C = [0, 1]. Room 2 lags room 1 through the shared wall, so its reading carries both modes, and the full state can be worked out from y(t).' },
       { id: 'reach', label: 'where u can push', says: 'The directions B and AB: the heater pushes room 1 only, and the shared wall turns that into a push on room 2. Together they span the plane, so the pair is controllable.', inset: 'phase' },
       { id: 'gramian', label: 'reachable ellipse', says: 'The controllability Gramian as an ellipse: the states reachable with the same heating energy in 3 hours. It is long in a direction about 31° up from the room-1 axis (heat room 1 and let the wall share it) and thin across it: pulling the rooms apart is the expensive direction to reach.', inset: 'phase' },
       { id: 'optimal', label: 'least-energy warm-up', says: 'The heater profile with the least energy ∫u² that takes the house from cold to an illustrative target, (10, 7) K above outdoors in 3 hours (Pontryagin, or the Gramian formula). It rises for about two hours, then eases off so room 1 does not overshoot.', inset: 'ctrl' },

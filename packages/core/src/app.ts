@@ -346,7 +346,10 @@ export function mountApp(content: AppContent, hooks: AppHooks = {}): void {
       h('ol', { class: 'chain' }, ...d.chain.map((s) => h('li', null, s.title, s.detail ? h('small', null, s.detail) : null)))));
     let sceneStop: (() => void) | null = null;
     if (content.subject.runningExample && d.addsToExample) {
-      const exId = d.exampleScene?.scene, exTitle = (exId && content.subject.runningExample.moreScenes?.find((m) => m.id === exId)?.title) || (!exId && content.subject.runningExample.moreScenes?.length ? content.subject.runningExample.scene?.title : undefined) || content.subject.runningExample.title;
+      // E5 (CS pass 4): a subject without a hero scene names the example(s) the dive's box uses; Linear Systems keeps its scene-based title
+      const re5 = content.subject.runningExample, host5 = re5.scene ? undefined : content.maps.flatMap((m) => m.nodes).find((n) => n.dive === d.id && n.examples?.length);
+      const named5 = host5?.examples?.map((id) => re5.refs?.find((r) => r.id === id)?.label).filter(Boolean).join(', ');
+      const exId = d.exampleScene?.scene, exTitle = named5 || (exId && content.subject.runningExample.moreScenes?.find((m) => m.id === exId)?.title) || (!exId && content.subject.runningExample.moreScenes?.length ? content.subject.runningExample.scene?.title : undefined) || content.subject.runningExample.title;
       const callout = h('aside', { class: 'callout c-example', dataset: { testid: 'dive-example' } }, h('b', { class: 'lead' }, `Running example: ${exTitle}`),
         h('div', { class: 'cb', html: `<p><b>What this adds:</b> ${d.addsToExample}</p>${d.accountsFor ? `<p><b>What it lets us account for:</b> ${d.accountsFor}</p>` : ''}` }));
       const sc = content.subject.runningExample.scene;

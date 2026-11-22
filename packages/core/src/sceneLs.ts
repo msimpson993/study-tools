@@ -236,9 +236,9 @@ export function drawHouseMain(g: G, r: Rect, P: Pal, ov: string[], tAnim: number
   if (S.kind !== 'free') { heater(room1, st.u1, `${fmt(st.u1 / 1000, 2)} kW`); if (S.kind === 'both') heater(room2, st.u2, `${fmt(st.u2 / 1000, 2)} kW`); }
   // thermostat
   if (ov.includes('thermo') || ov.includes('avg')) {
-    const avg = ov.includes('avg'), tx = avg ? mid : gx0, ty = top + (base - top) * 0.5;
+    const avg = ov.includes('avg'), tx = avg ? mid : gx1, ty = top + (base - top) * 0.5;
     g.fillStyle = P.panel; g.strokeStyle = P.ok; g.lineWidth = 2; g.beginPath(); if (typeof g.roundRect === 'function') g.roundRect(tx - 9, ty - 9, 18, 18, 4); else g.rect(tx - 9, ty - 9, 18, 18); g.fill(); g.stroke();
-    text(g, avg ? `reads ½(x₁ + x₂) = ${fmt((st.a + st.b) / 2, 1)} K` : `reads x₁ = ${fmt(st.a, 1)} K`, avg ? mid : room1.x + room1.w / 2, ty + 24, P.ok, { align: 'center', px: px - 0.5, wt: 700 });
+    text(g, avg ? `reads ½(x₁ + x₂) = ${fmt((st.a + st.b) / 2, 1)} K` : `reads x₂ = ${fmt(st.b, 1)} K`, avg ? mid : room2.x + room2.w / 2, ty + 24, P.ok, { align: 'center', px: px - 0.5, wt: 700 });
   }
   // heat flows
   if (ov.includes('flows')) {

@@ -91,7 +91,7 @@ export const CHAIN_STAGES: Record<string, ChainStage> = {
   },
   'house-loop': {
     scene: 'house', title: 'the thermostat loop', rows: 2.2,
-    says: 'The thermostat closes a loop: it compares the room-1 reading with the set point and turns the heater power up or down. The plant is the same ẋ = Ax + Bu.',
+    says: 'The thermostat closes a loop: it compares the bedroom (room 2) reading with the set point and turns the heater power up or down. The plant is the same ẋ = Ax + Bu.',
     blocks: [sum('s', 14, 0.8), b('k', 34, 0.8, 16, 'thermostat', 'K'), b('h', 62, 0.8, 18, 'house ẋ = Ax + Bu', 'house'), b('c', 62, 1.9, 12, 'C')],
     wires: [wr([[0, 0.8], [12, 0.8]], { label: 'set', at: [5, 0.45] }), wr([[16, 0.8], [26, 0.8]]), wr([[42, 0.8], [53, 0.8]], { label: 'u', at: [47.5, 0.45] }), wr([[71, 0.8], [100, 0.8]], { label: 'T₁', at: [92, 0.45] }), wr([[86, 0.8], [86, 1.9], [68, 1.9]]), wr([[56, 1.9], [14, 1.9], [14, 1.1]], { label: '−', at: [17, 1.5] })],
     added: ['s', 'k'],
