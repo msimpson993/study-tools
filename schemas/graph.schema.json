@@ -53,6 +53,10 @@
                 "detail": {
                   "type": "string"
                 },
+                "shelf": {
+                  "type": "boolean",
+                  "description": "map layout: draw this side box on a shelf, in rows of its own after its rank's main boxes, split evenly and set to its parent's side"
+                },
                 "kind": {
                   "enum": [
                     "box",

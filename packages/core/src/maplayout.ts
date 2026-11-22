@@ -1,7 +1,7 @@
 /** Pure geometry for the question map: auto-layout in staggered rows, orthogonal edges, collision-avoided labels. No DOM. */
 export interface Pt { x: number; y: number }
 export interface Rect { x: number; y: number; w: number; h: number }
-export interface InNode { id: string; label: string; detail?: string; kind?: string; /** px reserved at the box's foot for an attached chip (none today) */ extra?: number }
+export interface InNode { id: string; label: string; detail?: string; kind?: string; /** px reserved at the box's foot for an attached chip (none today) */ extra?: number; /** a side box drawn on a shelf: rows of its own after its rank's other boxes, split evenly, set to its parent's side (opt-in; maps without it are unchanged) */ shelf?: boolean }
 export interface InEdge { from: string; to: string; label?: string }
 export interface NodeBox extends Rect { id: string; row: number; lines: string[]; detailLines: string[]; kind: string; /** px at the foot kept for an attached chip (0 if none) */ extra: number }
 export interface EdgeGeom { key: string; from: string; to: string; points: Pt[]; dot: Pt; gapTop: number; gapBottom: number; /** hop-overs: where this line's horizontal piece jumps over another line's vertical piece */ hops: Hop[] }
@@ -79,7 +79,7 @@ const ORDERS = new Map<string, string[][]>();
 const MIN_LANE_SP = 4, LANE_SP = 8;
 
 function graphOf(nodes: InNode[], edges: InEdge[]): Graph {
-  const sig = `${nodes.map((n) => `${n.id}:${n.kind ?? ''}:${n.label}:${n.detail ?? ''}:${n.extra ?? 0}`).join('|')}#${edges.map((e) => `${e.from}>${e.to}`).join(',')}`;
+  const sig = `${nodes.map((n) => `${n.id}:${n.kind ?? ''}:${n.label}:${n.detail ?? ''}:${n.extra ?? 0}${n.shelf ? ':s' : ''}`).join('|')}#${edges.map((e) => `${e.from}>${e.to}`).join(',')}`;
   const hit = GRAPHS.get(sig); if (hit) return hit;
   const children: Record<string, string[]> = {}, parents: Record<string, string[]> = {};
   for (const n of nodes) { children[n.id] = []; parents[n.id] = []; }
@@ -144,9 +144,26 @@ function build(G: Graph, p: Params, order: string[][]): Built {
   const { nodeW, lane, margin, cols, width } = p, { edges, topo } = G, sized = sizesFor(G, nodeW);
   const rows: string[][] = [], centerX: Record<string, number> = {}, rowOf: Record<string, number> = {};
   for (let r = 0; r <= G.maxRank; r++) {
-    const ids = order[r];
-    for (let i = 0; i < ids.length; i += cols) {
-      const chunk = ids.slice(i, i + cols), rowW = chunk.length * nodeW + (chunk.length - 1) * lane, startX = (width - rowW) / 2;
+    const ids = order[r], plain = ids.filter((u) => !G.byId[u].shelf), shelf = ids.filter((u) => G.byId[u].shelf).sort((a, b) => G.edges.findIndex((e) => e.to === a) - G.edges.findIndex((e) => e.to === b)); // shelf boxes keep the source's line order (reading order), not the crossing search's
+    if (shelf.length) {
+      // shelf boxes come first, right under their parent, in the columns the main line does not use (the columns of the
+      // boxes this rank's other boxes hang from); rows are split evenly so no lone shelf box sits in the middle of the map
+      const full = cols * nodeW + (cols - 1) * lane, x0 = (width - full) / 2, colX = Array.from({ length: cols }, (_, c) => x0 + c * (nodeW + lane));
+      const taken = [...new Set(plain.flatMap((u) => G.parents[u]))].filter((q) => !G.byId[q].shelf && centerX[q] !== undefined).map((q) => centerX[q] - nodeW / 2);
+      const pcx = G.parents[shelf[0]].map((q) => centerX[q]).filter((x) => x !== undefined), at = pcx.length ? pcx.reduce((x, y) => x + y, 0) / pcx.length : width / 2;
+      const mid = taken.length ? taken.reduce((x, y) => x + y, 0) / taken.length + nodeW / 2 : width / 2, left = at <= mid;
+      let free = colX.filter((x) => taken.every((t) => x + nodeW <= t || x >= t + nodeW) && (left ? x + nodeW / 2 < mid : x + nodeW / 2 > mid));
+      if (!free.length) free = colX;
+      const nRows = Math.ceil(shelf.length / free.length), per = Math.ceil(shelf.length / nRows);
+      const use = free.slice().sort((x, y) => Math.abs(x + nodeW / 2 - at) - Math.abs(y + nodeW / 2 - at)).slice(0, per).sort((x, y) => x - y);
+      for (let i = 0; i < shelf.length; i += per) {
+        const chunk = shelf.slice(i, i + per);
+        chunk.forEach((u, j) => { centerX[u] = use[j] + nodeW / 2; rowOf[u] = rows.length; });
+        rows.push(chunk);
+      }
+    }
+    for (let i = 0; i < plain.length; i += cols) {
+      const chunk = plain.slice(i, i + cols), rowW = chunk.length * nodeW + (chunk.length - 1) * lane, startX = (width - rowW) / 2;
       chunk.forEach((u, j) => { centerX[u] = startX + j * (nodeW + lane) + nodeW / 2; rowOf[u] = rows.length; });
       rows.push(chunk);
     }
@@ -174,12 +191,21 @@ function build(G: Graph, p: Params, order: string[][]): Built {
     freeCache[r] = out; return out;
   };
   const keyOf = (e: InEdge) => edgeKey(e.from, e.to);
+  const shelfSpan = (g: number): { x0: number; x1: number; mainLeft: boolean } | null => {
+    const bs = rows[g].filter((u) => G.byId[u].shelf).map((u) => boxes[u]); if (!bs.length) return null;
+    const x0 = Math.min(...bs.map((q) => q.x)) - 6, x1 = Math.max(...bs.map((q) => q.x + q.w)) + 6; return { x0, x1, mainLeft: (x0 + x1) / 2 > width / 2 };
+  };
   const laneIv: Record<string, number[]> = {}, members: Record<string, { key: string; sortKey: number }[]> = {};
   for (const e of edges) {
     const k = keyOf(e), a = rowOf[e.from], b = rowOf[e.to], tx = centerX[e.to]; let cx = centerX[e.from]; laneIv[k] = [];
     for (let g = a + 1; g < b; g++) {
-      const ints = freeIntervals(g); let bi = 0, bc = Infinity;
-      ints.forEach((iv, i) => { const near = Math.min(Math.max(tx, iv[0]), iv[1]), c = Math.abs(near - tx) + 0.5 * Math.abs(near - cx); if (c < bc - 1e-9) { bc = c; bi = i; } });
+      const ints = freeIntervals(g), sh = shelfSpan(g); let bi = 0, bc = Infinity;
+      ints.forEach((iv, i) => {
+        const near = Math.min(Math.max(tx, iv[0]), iv[1]);
+        // past a shelf: lines to shelf boxes stay among or beyond them, the other lines stay on the main side
+        const off = !sh ? 0 : (G.byId[e.to].shelf ? (sh.mainLeft ? iv[1] <= sh.x0 : iv[0] >= sh.x1) : (sh.mainLeft ? iv[1] > sh.x0 : iv[0] < sh.x1)) ? 1e4 : 0;
+        const c = Math.abs(near - tx) + 0.5 * Math.abs(near - cx) + off; if (c < bc - 1e-9) { bc = c; bi = i; }
+      });
       laneIv[k].push(bi); (members[`${g}:${bi}`] ??= []).push({ key: k, sortKey: tx + 0.001 * centerX[e.from] }); cx = (ints[bi][0] + ints[bi][1]) / 2;
     }
   }
@@ -190,7 +216,10 @@ function build(G: Graph, p: Params, order: string[][]): Built {
     const cap = Math.max(1, Math.floor((span - 8) / MIN_LANE_SP) + 1); if (n > cap) overfull += n - cap;
     const sp = n > 1 ? Math.max(1.5, Math.min(LANE_SP, (span - 8) / (n - 1))) : 0;
     list.sort((p1, p2) => p1.sortKey - p2.sortKey || p1.key.localeCompare(p2.key));
-    list.forEach((m, i) => { laneX[m.key][g] = Math.min(iv[1] - 3, Math.max(iv[0] + 3, iv[0] + span / 2 + (i - (n - 1) / 2) * sp)); });
+    // in a row with shelf boxes the lanes gather near where their lines are headed instead of the middle of a wide gap (no long detours)
+    const shelfRow = rows[g].some((u) => G.byId[u].shelf), half = ((n - 1) / 2) * sp + 4, aim = list.reduce((t, m) => t + Math.floor(m.sortKey), 0) / n;
+    const mid = shelfRow && span > 2 * half ? Math.min(iv[1] - half, Math.max(iv[0] + half, aim)) : iv[0] + span / 2;
+    list.forEach((m, i) => { laneX[m.key][g] = Math.min(iv[1] - 3, Math.max(iv[0] + 3, mid + (i - (n - 1) / 2) * sp)); });
   }
   // ---- ports follow the lanes (the first / last x a line has to reach)
   const outPort: Record<string, number> = {}, inPort: Record<string, number> = {};
@@ -225,10 +254,12 @@ function build(G: Graph, p: Params, order: string[][]): Built {
       pts.push({ x: it.xt, y: ty }); pts.push({ x: it.xb, y: ty });
     }
     pts.push({ x: inPort[key], y: tBox.y });
-    const p1 = pts[1], p2 = pts[2], dot = { x: (p1.x + p2.x) / 2, y: p1.y };
+    // a line to a shelf box carries its dot (and so its label) on its last run, just above the box it opens, not in the crowded gap under the parent
+    const toShelf = !!G.byId[e.to].shelf && b - a > 1, la = toShelf ? b - 1 : a, n0 = toShelf ? pts.length - 3 : 1;
+    const p1 = pts[n0], p2 = pts[n0 + 1], dot = { x: (p1.x + p2.x) / 2, y: p1.y };
     const clean: Pt[] = [];
     for (const q of pts) { const last = clean[clean.length - 1]; if (!last || Math.abs(last.x - q.x) > 0.01 || Math.abs(last.y - q.y) > 0.01) clean.push(q); }
-    geoms.push({ key, from: e.from, to: e.to, points: clean, dot, gapTop: gapTop[a], gapBottom: gapTop[a] + gapH[a], hops: [] });
+    geoms.push({ key, from: e.from, to: e.to, points: clean, dot, gapTop: gapTop[la], gapBottom: gapTop[la] + gapH[la], hops: [] });
   }
   void margin;
   return { geom: { width, height, nodeW, boxes, order: topo, edges: geoms }, overfull, stacked, crossings, wire };

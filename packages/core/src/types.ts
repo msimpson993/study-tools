@@ -9,6 +9,8 @@ export interface MapNode {
   label: string;
   detail?: string;
   kind?: NodeKind;
+  /** map layout: draw this side box on a shelf (rows of its own beside its rank's main boxes); see maplayout InNode.shelf */
+  shelf?: boolean;
   /** colour series (0-4) */
   series?: number;
   /** rendered HTML (inline markdown) of the short answer */

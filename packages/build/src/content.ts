@@ -103,7 +103,7 @@ export function loadApp(appDir: string): { content: AppContent; warnings: string
       maps.push({
         id: m.id, title: m.title, caption: m.caption, seriesNames: m.seriesNames,
         nodes: (m.nodes ?? []).map((n: any) => ({
-          id: n.id, label: n.label, detail: n.detail, kind: n.kind, series: n.series, ...(n.examples ? { examples: n.examples } : {}), ...(n.exampleWhy ? { exampleWhy: inline(n.exampleWhy, `graph.yaml ${m.id}/${n.id} exampleWhy`) } : {}),
+          id: n.id, label: n.label, detail: n.detail, kind: n.kind, series: n.series, ...(n.shelf ? { shelf: true } : {}), ...(n.examples ? { examples: n.examples } : {}), ...(n.exampleWhy ? { exampleWhy: inline(n.exampleWhy, `graph.yaml ${m.id}/${n.id} exampleWhy`) } : {}),
           short: inline(n.short, `graph.yaml ${m.id}/${n.id}`),
           eq: n.eq,
           eqHtml: n.eqTex ? (where = `graph.yaml ${m.id}/${n.id} eqTex`, md.renderInline(`$${n.eqTex}$`)) : undefined,
