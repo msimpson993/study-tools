@@ -67,8 +67,8 @@ export const CHAIN_STAGES: Record<string, ChainStage> = {
   },
   'house-open': {
     scene: 'house', title: 'the house as ẋ = Ax + Bu', rows: 2.2,
-    says: 'The house as a state-space model: the heater power u enters room 1 through B, the integrator holds the two temperatures, A couples the rooms and leaks heat outdoors, and the thermostat reads y = Cx.',
-    blocks: [b('B', 20, 0.8, 16, 'B = (3600/C_th, 0)', 'B'), sum('s', 38, 0.8), b('int', 55, 0.8, 14, '∫ dt', '∫'), b('C', 82, 0.8, 13, 'C = [1, 0]', 'C'), b('A', 55, 1.9, 16, 'A (wall + leaks)', 'A')],
+    says: 'The house as a state-space model: the heater power u enters room 1 through B, the integrator holds the two temperatures, A couples the rooms and leaks heat outdoors, and the thermostat reads the bedroom, y = Cx = x₂.',
+    blocks: [b('B', 20, 0.8, 16, 'B = (3600/C_th, 0)', 'B'), sum('s', 38, 0.8), b('int', 55, 0.8, 14, '∫ dt', '∫'), b('C', 82, 0.8, 13, 'C = [0, 1]', 'C'), b('A', 55, 1.9, 16, 'A (wall + leaks)', 'A')],
     wires: [wr([[0, 0.8], [12, 0.8]], { label: 'u (W)', at: [5, 0.45] }), wr([[28, 0.8], [36, 0.8]]), wr([[40, 0.8], [48, 0.8]], { label: 'ẋ', at: [44, 0.45] }), wr([[62, 0.8], [75.5, 0.8]], { label: 'x = (T₁, T₂)', at: [69, 0.45] }), wr([[88.5, 0.8], [100, 0.8]], { label: 'y', at: [95, 0.45] }), wr([[69, 0.8], [69, 1.9], [63, 1.9]]), wr([[47, 1.9], [38, 1.9], [38, 1.1]])],
     added: ['B', 'int', 'A', 'C'],
     eq: 'A = [[−1.2, 1], [1, −1.2]] /h',
@@ -93,7 +93,7 @@ export const CHAIN_STAGES: Record<string, ChainStage> = {
     scene: 'house', title: 'the thermostat loop', rows: 2.2,
     says: 'The thermostat closes a loop: it compares the bedroom (room 2) reading with the set point and turns the heater power up or down. The plant is the same ẋ = Ax + Bu.',
     blocks: [sum('s', 14, 0.8), b('k', 34, 0.8, 16, 'thermostat', 'K'), b('h', 62, 0.8, 18, 'house ẋ = Ax + Bu', 'house'), b('c', 62, 1.9, 12, 'C')],
-    wires: [wr([[0, 0.8], [12, 0.8]], { label: 'set', at: [5, 0.45] }), wr([[16, 0.8], [26, 0.8]]), wr([[42, 0.8], [53, 0.8]], { label: 'u', at: [47.5, 0.45] }), wr([[71, 0.8], [100, 0.8]], { label: 'T₁', at: [92, 0.45] }), wr([[86, 0.8], [86, 1.9], [68, 1.9]]), wr([[56, 1.9], [14, 1.9], [14, 1.1]], { label: '−', at: [17, 1.5] })],
+    wires: [wr([[0, 0.8], [12, 0.8]], { label: 'set', at: [5, 0.45] }), wr([[16, 0.8], [26, 0.8]]), wr([[42, 0.8], [53, 0.8]], { label: 'u', at: [47.5, 0.45] }), wr([[71, 0.8], [100, 0.8]], { label: 'T₂', at: [92, 0.45] }), wr([[86, 0.8], [86, 1.9], [68, 1.9]]), wr([[56, 1.9], [14, 1.9], [14, 1.1]], { label: '−', at: [17, 1.5] })],
     added: ['s', 'k'],
   },
 };
