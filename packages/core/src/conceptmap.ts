@@ -263,7 +263,8 @@ export function mountConceptMap(host: HTMLElement, content: AppContent, progress
     return ins.sort((a, b) => rank(a) - rank(b));
   };
   /** a side line is a shortcut when its box leads on; a branch that ends there (a Full-detail side box) is a detour you come back from */
-  const sideTag = (e: MapEdge, m: MapDef) => (m.edges.some((x) => x.from === e.to && !x.dashed) ? 'Side path (shortcut)' : 'Side path (a detour; come back here)');
+  const sideTag = (e: MapEdge, m: MapDef) => (m.edges.some((x) => x.from === e.to && !x.dashed && !x.side) ? // a shortcut rejoins the main path; a side box whose own lines are side paths (CS Tuning toolkit) is still a detour
+    'Side path (shortcut)' : 'Side path (a detour; come back here)');
   /** a side line's header uses the same words as its box's tag and the legend: a detour you come back from, or a shortcut that
    *  leads on (pass 3: never call a detour a shortcut or a quicker way) */
   const sideHeader = (e: MapEdge, m: MapDef) => `${sideTag(e, m)}: an extra question off the main path`; // tutor pass 3 L1
