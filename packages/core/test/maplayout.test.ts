@@ -183,3 +183,17 @@ describe('hop-overs', () => {
     expect(plain, `${plain} of ${crossings} crossings stay plain`).toBeLessThan(crossings * 0.4);
   });
 });
+
+// CS pass 5 (issue 8): on a phone the main line past the Tuning toolkit's shelf (A push we didn't command → What if the model is wrong?)
+// stays under one screen, and no box label is cut short
+describe('control-systems shelf at phone width', () => {
+  const { content } = loadApp(path.join(repoRoot, 'apps', 'control-systems'));
+  const m = content.maps.find((x) => x.id === 'detail')!;
+  it.each([360, 390, 480])('DIST → SENS is short at %ipx and no label ends in …', (w) => {
+    const g = computeGeometry(m.nodes, m.edges, w);
+    const e = g.edges.find((x) => x.from === 'DIST' && x.to === 'SENS')!;
+    let len = 0; for (let i = 1; i < e.points.length; i++) len += Math.abs(e.points[i].x - e.points[i - 1].x) + Math.abs(e.points[i].y - e.points[i - 1].y);
+    expect(len).toBeLessThan(1000);
+    for (const b of Object.values(g.boxes) as { lines?: string[] }[]) for (const l of b.lines ?? []) expect(l.endsWith('…'), l).toBe(false);
+  });
+});

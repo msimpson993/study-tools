@@ -31,8 +31,8 @@ export function wrapText(text: string, maxChars: number, maxLines: number): stri
   for (const raw of words) {
     let word = raw;
     while (word.length > maxChars) {
-      // a hyphenated compound ("approximately-known") breaks after its own hyphen when that part fits
-      const hy = word.lastIndexOf('-', maxChars - 1);
+      // a hyphenated compound ("approximately-known") or a dashed pair ("Ziegler–Nichols") breaks after its own hyphen or dash when that part fits
+      const hy = Math.max(word.lastIndexOf('-', maxChars - 1), word.lastIndexOf('–', maxChars - 1));
       if (hy > 0) {
         const head = word.slice(0, hy + 1), joined = cur ? `${cur} ${head}` : head;
         if (joined.length <= maxChars) lines.push(joined); else { if (cur) lines.push(cur); lines.push(head); }
@@ -101,7 +101,7 @@ function sizesFor(G: Graph, nodeW: number) {
   const out: Record<string, { lines: string[]; detailLines: string[]; h: number }> = {};
   for (const n of G.nodes) {
     const kind = n.kind ?? 'box', inner = nodeW - (kind === 'decision' ? 44 : 26);
-    const lines = wrapText(n.label, Math.max(8, Math.floor(inner / QM_TITLE_CHAR)), n.kind === 'terminal' ? 12 : 3); // the root (start) box is never truncated
+    const lines = wrapText(n.label, Math.max(8, Math.floor(inner / QM_TITLE_CHAR)), n.kind === 'terminal' ? 12 : 4); // the root (start) box is never truncated; others get 4 lines so a long label is not cut on a phone (CS pass 5, issue 8)
     const detailLines = n.detail ? wrapText(n.detail, Math.max(8, Math.floor(inner / QM_DETAIL_CHAR)), 2) : [];
     out[n.id] = { lines, detailLines, h: Math.max(kind === 'decision' ? 60 : 50, 20 + lines.length * 15 + detailLines.length * 14) + (n.extra ?? 0) };
   }
@@ -145,6 +145,14 @@ function build(G: Graph, p: Params, order: string[][]): Built {
   const rows: string[][] = [], centerX: Record<string, number> = {}, rowOf: Record<string, number> = {};
   for (let r = 0; r <= G.maxRank; r++) {
     const ids = order[r], plain = ids.filter((u) => !G.byId[u].shelf), shelf = ids.filter((u) => G.byId[u].shelf).sort((a, b) => G.edges.findIndex((e) => e.to === a) - G.edges.findIndex((e) => e.to === b)); // shelf boxes keep the source's line order (reading order), not the crossing search's
+    // two columns (phones): the shelf fills BOTH columns, three rows of two instead of six of one, so the main line past it is
+    // half as long and runs beside half the dashed lanes (CS pass 5, issue 8); wider maps keep the shelf to the parent's side
+    const two = cols <= 2;
+    const plainRows = () => { for (let i = 0; i < plain.length; i += cols) {
+      const chunk = plain.slice(i, i + cols), rowW = chunk.length * nodeW + (chunk.length - 1) * lane, startX = (width - rowW) / 2;
+      chunk.forEach((u, j) => { centerX[u] = startX + j * (nodeW + lane) + nodeW / 2; rowOf[u] = rows.length; });
+      rows.push(chunk);
+    } };
     if (shelf.length) {
       // shelf boxes come first, right under their parent, in the columns the main line does not use (the columns of the
       // boxes this rank's other boxes hang from); rows are split evenly so no lone shelf box sits in the middle of the map
@@ -152,7 +160,7 @@ function build(G: Graph, p: Params, order: string[][]): Built {
       const taken = [...new Set(plain.flatMap((u) => G.parents[u]))].filter((q) => !G.byId[q].shelf && centerX[q] !== undefined).map((q) => centerX[q] - nodeW / 2);
       const pcx = G.parents[shelf[0]].map((q) => centerX[q]).filter((x) => x !== undefined), at = pcx.length ? pcx.reduce((x, y) => x + y, 0) / pcx.length : width / 2;
       const mid = taken.length ? taken.reduce((x, y) => x + y, 0) / taken.length + nodeW / 2 : width / 2, left = at <= mid;
-      let free = colX.filter((x) => taken.every((t) => x + nodeW <= t || x >= t + nodeW) && (left ? x + nodeW / 2 < mid : x + nodeW / 2 > mid));
+      let free = two ? colX : colX.filter((x) => taken.every((t) => x + nodeW <= t || x >= t + nodeW) && (left ? x + nodeW / 2 < mid : x + nodeW / 2 > mid));
       if (!free.length) free = colX;
       const nRows = Math.ceil(shelf.length / free.length), per = Math.ceil(shelf.length / nRows);
       const use = free.slice().sort((x, y) => Math.abs(x + nodeW / 2 - at) - Math.abs(y + nodeW / 2 - at)).slice(0, per).sort((x, y) => x - y);
@@ -162,11 +170,7 @@ function build(G: Graph, p: Params, order: string[][]): Built {
         rows.push(chunk);
       }
     }
-    for (let i = 0; i < plain.length; i += cols) {
-      const chunk = plain.slice(i, i + cols), rowW = chunk.length * nodeW + (chunk.length - 1) * lane, startX = (width - rowW) / 2;
-      chunk.forEach((u, j) => { centerX[u] = startX + j * (nodeW + lane) + nodeW / 2; rowOf[u] = rows.length; });
-      rows.push(chunk);
-    }
+    plainRows();
   }
   const gapCount: number[] = rows.map(() => 0);
   for (const e of edges) { const a = rowOf[e.from], b = rowOf[e.to]; if (b <= a) throw new Error(`edge ${e.from}->${e.to} does not go down`); for (let g = a; g < b; g++) gapCount[g]++; }
