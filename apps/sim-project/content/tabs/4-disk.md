@@ -9,14 +9,15 @@ quizTags: [disk]
 
 ## (a) The problem
 
-A disk drive's read head sits on an arm that swings across the disk. To read a new track, the arm must *seek*: move there fast and stop without swinging past. A shock (a bump to the laptop) pushes the arm off. An amplifier with gain Ka turns the position error into coil voltage. The handout compares Ka = 10 and Ka = 80 for a seek (Fig. 4.30) and looks at a unit shock at Ka = 80 (Fig. 4.31).
-
-- **Takeaway:** **the head always ends exactly on the new track** (zero step error for any stable Ka), but **Ka trades speed against swing**: Ka = 10 has no overshoot and takes 1.40 s, Ka = 80 takes 0.41 s with 17 % overshoot ("unacceptably oscillatory"). A larger Ka also shrinks the shock offset (−0.0025 at Ka = 80).
-- **One step further (not in lab handout):** past Ka = 4080 the loop becomes unstable, so the gain has a ceiling.
+- **The machine:** a disk drive's read head sits on an arm that swings across the disk. To read a new track, the arm must *seek*: move there fast and stop without swinging past. A shock (a bump to the laptop) pushes the arm off. An amplifier with gain Ka turns the position error into coil voltage.
+- **What the handout asks:** compare Ka = 10 and Ka = 80 for a seek (Fig. 4.30), and look at a unit shock at Ka = 80 (Fig. 4.31).
+- **Takeaway:** **the head always ends exactly on the new track** (zero step error, for any Ka at which the loop settles; such a loop is called *stable*), but **Ka trades speed against swing**. Ka = 10 has no *overshoot* (no swing past the track) and takes 1.40 s; Ka = 80 takes 0.41 s with 17 % overshoot ("unacceptably oscillatory").
+- **Shocks:** a larger Ka also shrinks the *shock offset*, how far off track a steady shock leaves the head (−0.0025 at Ka = 80).
+- **One step further (not in lab handout):** past Ka = 4080 the loop becomes *unstable* (it swings ever wider), so the gain has a ceiling.
 
 ## (b) The setup
 
-**Live figure:** `loop`, preset `disk` (new figure, see FIGURES.md). The handout's own diagrams are Fig. 4.28 (in symbols) and Fig. 4.29 (with the typical values).
+The handout's own diagrams are Fig. 4.28 (in symbols) and Fig. 4.29 (with the typical values); the diagram below follows Fig. 4.29.
 
 ```figure:loop preset=disk
 ```
@@ -29,6 +30,7 @@ A disk drive's read head sits on an arm that swings across the disk. To read a n
 - **The arm and head, G₂ = 1/(s(s + 20)):** force in, position out. The 1/s means a held force keeps moving the arm (it adds up). The 20 is bearing friction ÷ arm inertia (the b/J of Fig. 4.28's 1/(s(Js + b)); not in lab handout); the arm responds over about 1/20 s = 50 ms.
 - **The shock, T_d:** enters between coil and arm with a minus sign (Fig. 4.29).
 - **The sensor, H(s) = 1:** the head's position is read and compared directly.
+- **Poles:** the roots of the loop's denominator. Each is one way the head can move on its own: a real pole is a smooth fade, a pair with an imaginary part (j = √−1) is a swing. Poles further left die out faster.
 
 **The models (Dorf Eqs. 4.67–4.69):**
 
@@ -40,45 +42,67 @@ shock:  Y/T_d = −G₂/(1 + Ka·G₁·G₂)       (the handout prints it withou
 
 ## (c) What's going on
 
-1. **The head always lands on the track.** The arm's 1/s means any leftover error would keep the arm moving, so the loop can only come to rest at zero error. The *final value theorem* (set s = 0 to read where a response ends up) gives e(∞) = 0 for any stable Ka. *Stable* means it settles after a nudge instead of swinging ever wider. The handout notes this holds "in spite of changes in the system parameters". **Live figure:** `disk`, preset `ka10`, input *seek*.
+1. **The head always lands on the track.**
+   - **Why:** the arm's 1/s means any leftover error would keep the arm moving, so the loop can only come to rest at zero error.
+   - **The shortcut:** the *final value theorem* (set s = 0 to read where a response ends up) gives e(∞) = 0 for any stable Ka. *Stable* means it settles after a nudge instead of swinging ever wider.
+   - **From the handout:** this holds "in spite of changes in the system parameters".
+   - **Look for:** with **Ka = 10** set, the seek curve creeps up to exactly 1 with no swing (OS 0.00 %, settling 1.397 s).
 
 ```figure:disk preset=ka10
 ```
 
-2. **Ka trades speed against swing.** At Ka = 10 the head creeps in: no overshoot, settling (within 2 %) in 1.40 s. At Ka = 80 it gets there in 0.41 s but swings 17.1 % past the track first. **Live figure:** `disk`, presets `ka10` then `ka80`.
-
-```figure:disk preset=ka10
-```
-
-3. **Why it behaves like the boring machine: the coil is 50× faster than the arm.** Drop the coil but keep its steady gain 5, and the loop becomes 5·Ka/(s² + 20s + 5·Ka), a spring of stiffness 5·Ka with a damper of 20 (not in lab handout). Its *damping ratio* ζ = 10/√(5·Ka) (how fast swings die out; below 1 means overshoot) is 1.41 at Ka = 10 and 0.50 at Ka = 80. The stand-in predicts 16.3 % overshoot, close to the real 17.1 %. **Live figure:** `disk`, preset `ka80`, which turns on *drop the coil*.
+2. **Ka trades speed against swing.**
+   - **Ka = 10:** the head creeps in with no overshoot, settling (within 2 %) in 1.40 s.
+   - **Ka = 80:** it gets there in 0.41 s but swings 17.1 % past the track first.
+   - **Look for:** with **Ka = 80 (Fig. 4.30)** set, the seek curve shoots past 1 to a peak of 1.17 at 0.18 s, then settles at 0.409 s. The grey ghosts are the handout's two settings, Ka = 10 and 80.
 
 ```figure:disk preset=ka80
 ```
 
-4. **A shock leaves an offset of −1/(5·Ka).** A steady push needs a steady counter-force, and the loop only makes force from error. At Ka = 80 the head dips to −0.0029 at 0.18 s and settles at −0.0025 (the handout's −2.5×10⁻³). Halving that offset means doubling Ka, which means more swing on every seek: the same trade as step 2. **Live figure:** `disk`, preset `shock`; then `tradeoff`, preset `disk`.
+3. **Why it behaves like the boring machine: the coil is 50× faster than the arm.**
+   - **The stand-in (not in lab handout):** drop the coil but keep its steady gain 5, and the loop becomes 5·Ka/(s² + 20s + 5·Ka). That is a spring of stiffness 5·Ka with a damper of 20.
+   - **Damping ratio:** its *damping ratio* ζ = 10/√(5·Ka) (how fast swings die out; below 1 means overshoot) is 1.41 at Ka = 10 and 0.50 at Ka = 80.
+   - **How close:** the stand-in predicts 16.3 % overshoot, against the real 17.1 %.
+   - **Look for:** with **Ka = 80, coil dropped** set, the dashed stand-in curve sits almost on top of the real one, and the readout gives both: OS 17.11 % and stand-in 16.30 %.
+
+```figure:disk preset=ka80stand
+```
+
+4. **A shock leaves an offset of −1/(5·Ka).**
+   - **Why:** a steady push needs a steady counter-force, and the loop only makes force from error.
+   - **At Ka = 80:** the head dips to −0.0029 at 0.18 s and settles at −0.0025 (the handout's −2.5×10⁻³).
+   - **Look for:** with **shock, Ka = 80 (Fig. 4.31)** set, the shock curve drops below zero, dips to −0.0029 and settles on the marked −0.0025 line within about 0.41 s.
 
 ```figure:disk preset=shock
 ```
+
+   - **The same trade as step 2:** halving that offset means doubling Ka, which means more swing on every seek.
+   - **Look for:** with **disk head, Ka = 80** set, the dot sits on the yellow Ka = 80 mark (seek overshoot 17.1 %, shock offset 0.0025); the Ka = 10 mark has no overshoot but an offset of 0.02.
+
 ```figure:tradeoff preset=disk
 ```
 
-5. **The ceiling: past Ka = 4080 it goes unstable (not in lab handout).** The two-part stand-in says any Ka is stable, but the real loop has three lags in a ring, and the coil's 1 ms lag is the third. The *Routh test* (a shortcut that checks stability straight from the polynomial's coefficients) says s³ + 1020s² + 20000s + 5000·Ka is stable only while 1020 × 20000 > 5000·Ka, so Ka < 4080. At the ceiling the head rings forever at √20000 = 141 rad/s. **Live figure:** `disk`, preset `limit` (Ka = 3981, barely stable; the stand-in shows nothing).
+5. **The ceiling: past Ka = 4080 it goes unstable (not in lab handout).**
+   - **Why the stand-in misses it:** the two-part stand-in is stable for every Ka. The real loop has three lags in a ring, and the coil's 1 ms lag is the third.
+   - **The test:** the *Routh test* (a shortcut that checks stability straight from the polynomial's coefficients) says s³ + 1020s² + 20000s + 5000·Ka is stable only while 1020 × 20000 > 5000·Ka, so Ka < 4080.
+   - **At the ceiling:** the head rings forever at √20000 = 141 rad/s.
+   - **Look for:** with **near the ceiling (own)** set (Ka = 3981), the real seek curve rings fast and barely dies out (98.55 % overshoot; settling takes 16.7 s, off the plot). The dashed stand-in swings hard too (79.99 % overshoot) but dies out within 0.38 s. Only the real loop is close to ringing forever.
 
 ```figure:disk preset=limit
 ```
 
-
 ## (d) Try it
 
-| Handout case | Live figure and preset | What you should see |
+| Handout case | Button (on this tab's figures) | What you should see |
 |---|---|---|
-| Fig. 4.30, Ka = 10 | `disk` → **Ka = 10** (`ka10`) | no overshoot, 1.40 s |
-| Fig. 4.30, Ka = 80 | `disk` → **Ka = 80 (Fig. 4.30)** (`ka80`) | 17.1 % (stand-in 16.3 %), 0.41 s |
-| Fig. 4.31, shock at Ka = 80 | `disk` → **shock, Ka = 80 (Fig. 4.31)** (`shock`) | dip −0.0029 at 0.18 s, settles −0.0025 |
-| The trade | `tradeoff` → **disk head, Ka = 80** (`disk`) | the two handout points on the curve |
-| Offset of 0.001 (not in lab handout) | `disk` → **shock target** (new preset `ka200`) | Ka = 200: 37 % overshoot |
-| The ceiling (not in lab handout) | `disk` → **near the ceiling (own)** (`limit`) | barely stable at Ka = 3981 |
-| The scripts, line by line | `blocks` → **Fig. 4.30 (disk seek)** (new preset `diskseek`) and **Fig. 4.31 (disk shock)** (`diskshock`) | each line lights its block |
+| Fig. 4.30, Ka = 10 | **Ka = 10** | no overshoot, 1.40 s |
+| Fig. 4.30, Ka = 80 | **Ka = 80 (Fig. 4.30)** | 17.1 %, 0.41 s |
+| Two-part stand-in (not in lab handout) | **Ka = 80, coil dropped** | stand-in 16.3 % against the real 17.1 % |
+| Fig. 4.31, shock at Ka = 80 | **shock, Ka = 80 (Fig. 4.31)** | dip −0.0029 at 0.18 s, settles −0.0025 |
+| The trade | **disk head, Ka = 80** | the two handout points on the curve |
+| Offset of 0.001 (not in lab handout) | **shock target (own)** | Ka = 200: 37 % overshoot |
+| The ceiling (not in lab handout) | **near the ceiling (own)** | real loop barely dies out at Ka = 3981; the stand-in swings but settles |
+| The scripts, line by line | **Fig. 4.30 (disk seek)** and **Fig. 4.31 (disk shock)** on the script figure in Check your work | each line lights its block |
 
 **Sliders to play with:** Ka (log scale, 1 to about 5000), input (seek, shock, both), *drop the coil* (overlays the two-part stand-in).
 
@@ -116,6 +140,13 @@ seek=feedback(series(Ka*sysf,sysg),[1]);
 stepinfo(seek)            % Overshoot 17.1, SettlingTime 0.409
 % the ceiling (not in lab handout)
 roots([1 1020 20000 5000*4080])   % a pair on the imaginary axis at ±141j
+```
+
+**The script, one line at a time:** step the *line* slider through the script. Each line lights the block it builds, and the fraction so far is written underneath.
+
+- **Look for:** with **Fig. 4.31 (disk shock)** set, the fraction under the diagram reads −G₂/(1 + Ka·G₁·G₂). Line 4, `sys=-sys`, put in that minus sign, the one Eq. 4.69 leaves out.
+
+```figure:blocks preset=diskshock
 ```
 
 ````callout:trap Eq. 4.69 is missing its minus sign

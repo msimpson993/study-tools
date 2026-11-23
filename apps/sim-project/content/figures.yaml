@@ -27,7 +27,7 @@
     - { label: closed loop, color: "var(--acc)" }
     - { label: "final value", color: "var(--yel)", dash: true }
   howToRead: "Left: the motor and its load, with the tachometer and amplifier drawn when the loop is on; the shaft's spin slows as the load hits at t = 0. Right: the speed change after a 1 N·m load. The readout gives the final sag, the time constant τ, the loop gain and the ratio closed/open against the handout's 0.02 line."
-  lookFor: "On the 7 s axis the closed-loop curve looks flat; switch the time axis to 0.02 s to see it is a full curve 361× faster."
+  lookFor: "The two loops differ by 361× in time: on the 7 s axis the closed loop looks flat, and on the 0.02 s axis the open loop has barely started to move."
   animate: { control: t, speed: 1, loop: false }
   controls:
     - { id: loop, label: feedback, type: seg, options: [open, closed, both], default: both, group: primary }
@@ -41,8 +41,10 @@
   presets:
     - { id: open, label: "Fig. 4.23: open loop", set: { loop: open, axis: "7 s", Ka: 54, Kt: 1, J: 2, b: 0.5, Kb: 0.1 }, about: "Sag −0.667 rad/s, τ = 1.33 s." }
     - { id: closed, label: "Fig. 4.24: closed loop", set: { loop: closed, axis: "0.02 s", Ka: 54, Kt: 1, J: 2, b: 0.5, Kb: 0.1 }, about: "Sag −0.00185 rad/s, τ = 3.69 ms, ratio 0.0028." }
-    - { id: sweep, label: "just meets 0.02", set: { loop: both, axis: "7 s", Ka: 7.35, Kt: 1 }, about: "Ka = 7.35: ratio 0.020 (not in lab handout)." }
-    - { id: heavy, label: "double the inertia", set: { loop: both, J: 4, Ka: 54 }, about: "Slower both ways, same sag (not in lab handout)." }
+    - { id: scale, label: "both loops, 7 s axis", set: { loop: both, axis: "7 s", Ka: 54, Kt: 1, J: 2, b: 0.5, Kb: 0.1 }, about: "Open loop sags over seconds; the closed loop is a flat line at this scale (Fig. 4.24: 'Note the scale')." }
+    - { id: kt2, label: "Kt = 2", set: { loop: closed, axis: "0.02 s", Ka: 54, Kt: 2, J: 2, b: 0.5, Kb: 0.1 }, about: "Sag −0.000925 rad/s, τ = 1.849 ms: about half of Kt = 1 (not in lab handout)." }
+    - { id: sweep, label: "just under 0.02", set: { loop: both, axis: "7 s", Ka: 7.5, Kt: 1, J: 2, b: 0.5, Kb: 0.1 }, about: "Ka = 7.5, the first slider value past the 7.35 threshold: ratio 0.01961, sag −0.01307 rad/s, τ = 26.14 ms (not in lab handout)." }
+    - { id: heavy, label: "double the inertia", set: { loop: both, axis: "7 s", Ka: 54, Kt: 1, J: 4, b: 0.5, Kb: 0.1 }, about: "τ = 2.667 s open, 7.387 ms closed; same sag (not in lab handout)." }
 - id: borer
   title: "The boring machine: turn K, watch the command, the push and the poles"
   x: time (s) · s-plane
@@ -51,7 +53,7 @@
     - { label: "planned line / final value", color: "var(--muted)", dash: true }
     - { label: "response at your K", color: "var(--acc)" }
     - { label: "K = 20 and K = 100 (ghosts)", color: "var(--muted)" }
-  howToRead: "Top: the machine seen from above, steering onto the planned line (command) or pushed sideways by the rock (push). Middle left: the step response to a new planned line, with overshoot, 2 % band and settling time marked. Middle right: the response to a unit push, final offset 1/K marked. Bottom: the poles (×) and the zero (○) of the command response; the dashed rays are ζ = 1 and ζ = 0.6."
+  howToRead: "Top: the machine seen from above, steering onto the planned line (command) or pushed sideways by the rock (push). Middle left: the step response to a new planned line, with overshoot, 2 % band and settling time marked. Middle right: the response to a unit push, final offset 1/K marked. Bottom: the poles (×) and the zero (○) of the command response; the dashed rays are ζ = 1 and ζ = 0.6; the grey dots are the poles at K = 20 and K = 100. Readout: ζ (damping ratio), ωn (natural frequency, rad/s), OS (overshoot, the handout's P.O.) and Ts (2 % settling time)."
   lookFor: "As K rises past 36 the two real poles meet and split into a swinging pair; overshoot climbs while the push offset 1/K falls."
   animate: { control: t, speed: 0.5, loop: false }
   controls:
@@ -64,7 +66,8 @@
     - { id: k20, label: "K = 20", set: { K: 20, Kd: 11 }, about: "3.9 % overshoot, 0.91 s, offset 0.05 (handout: 4 %, 1.0 s, 5 %)." }
     - { id: k100, label: "K = 100", set: { K: 100, Kd: 11 }, about: "22.0 %, 0.67 s, offset 0.01 (handout: 22 %, 0.7 s, 1 %)." }
     - { id: k36, label: "K = 36 (ζ = 1)", set: { K: 36, Kd: 11 }, about: "Poles meet at −6; the zero still gives 9.2 % overshoot." }
-    - { id: push, label: "rock push, K = 20 vs 100", set: { input: push, K: 100, Kd: 11 }, about: "Fig. 4.26." }
+    - { id: push, label: "rock push, K = 100", set: { input: push, K: 100, Kd: 11 }, about: "Fig. 4.26(a): offset 0.0100, peak 0.01095 at 0.393 s." }
+    - { id: push20, label: "rock push, K = 20", set: { input: push, K: 20, Kd: 11 }, about: "Fig. 4.26(b): offset 0.0500 (at 2.5 s still 0.04958)." }
     - { id: nodamp, label: "no rate term (own)", set: { K: 100, Kd: 0 }, about: "Damping 1 only: 85 % overshoot (not in lab handout)." }
 - id: tradeoff
   title: "One knob, two goals: overshoot against push offset"
@@ -108,7 +111,7 @@
     - { label: "two-part stand-in (coil dropped)", color: "var(--yel)", dash: true }
     - { label: "Ka = 10 and 80 (ghosts)", color: "var(--muted)" }
   howToRead: "Top: the drive from above, the arm swinging the head to a new track (seek) or knocked by a shock. Left: the seek (command step), overshoot and settling marked. Middle: the shock response, final offset −1/(5·Ka) marked. Right: the poles near the origin (the arm's), with an inset arrow to the coil's pole near −1000. Readout: overshoot, settling, offset, and the distance to the ceiling Ka = 4080."
-  lookFor: "At Ka = 80 the stand-in (dashed) sits on the real curve; near Ka = 4000 it stays calm while the real loop rings."
+  lookFor: "With the coil dropped, the dashed stand-in sits almost on the real curve at Ka = 80. Near the ceiling both swing hard, but only the real loop is close to ringing forever: the stand-in always dies out."
   animate: { control: t, speed: 0.4, loop: false }
   controls:
     - { id: lgKa, label: "Ka", type: range, min: 0, max: 3.7, step: 0.01, default: 1.903, group: primary, display: pow10 }
@@ -117,11 +120,12 @@
     - { id: ghosts, label: "Ka = 10, 80 ghosts", type: toggle, default: true, group: more }
     - { id: t, label: time, type: range, min: 0, max: 2, step: 0.01, default: 2, group: more }
   presets:
-    - { id: ka10, label: "Ka = 10", set: { lgKa: 1, stand: false }, about: "No overshoot, 1.40 s." }
-    - { id: ka80, label: "Ka = 80 (Fig. 4.30)", set: { lgKa: 1.903, stand: true }, about: "17.1 % (stand-in 16.3 %), 0.41 s." }
+    - { id: ka10, label: "Ka = 10", set: { lgKa: 1, stand: false }, about: "No overshoot, settles in 1.40 s." }
+    - { id: ka80, label: "Ka = 80 (Fig. 4.30)", set: { lgKa: 1.903, stand: false }, about: "17.1 % overshoot (peak 1.17 at 0.18 s), settles in 0.409 s." }
+    - { id: ka80stand, label: "Ka = 80, coil dropped", set: { lgKa: 1.903, stand: true, input: seek }, about: "Real 17.11 %, two-part stand-in 16.30 % (not in lab handout)." }
     - { id: shock, label: "shock, Ka = 80 (Fig. 4.31)", set: { lgKa: 1.903, input: shock }, about: "Dip −0.0029 at 0.18 s, settles −0.0025." }
     - { id: ka200, label: "shock target (own)", set: { lgKa: 2.301, input: both, stand: false }, about: "Ka = 200: shock offset −0.001, seek overshoot 37 %, 0.36 s (not in lab handout)." }
-    - { id: limit, label: "near the ceiling (own)", set: { lgKa: 3.6, stand: true, input: seek }, about: "Ka ≈ 3980: barely stable; the stand-in sees nothing (not in lab handout)." }
+    - { id: limit, label: "near the ceiling (own)", set: { lgKa: 3.6, stand: true, input: seek }, about: "Ka = 3981: the real loop overshoots 98.55 % and takes 16.7 s to settle; the stand-in overshoots 79.99 % but settles in 0.38 s (not in lab handout)." }
 - id: pi
   title: "P and I on the stand-in engine: why I removes the leftover error"
   x: time (s)
@@ -131,7 +135,7 @@
     - { label: "P part of the throttle", color: "var(--yel)" }
     - { label: "I part of the throttle", color: "var(--grn)" }
   howToRead: "Top: engine speed after a unit step in commanded speed, on the stand-in engine (not in lab handout). Bottom: the throttle command split into P × error and I × accumulated error. With I = 0 the speed stops short by 1/(1 + P·K_e); with I > 0 the I part grows until it holds the throttle alone and the error is zero."
-  lookFor: "At the end, the P part is zero and the I part carries the whole throttle."
+  lookFor: "With I > 0, the I part grows until it carries the whole throttle and the P part (and the error) fall to zero. With I = 0, the P part has to hold the throttle, so an error is left."
   controls:
     - { id: P, label: "P", type: range, min: 0, max: 0.012, step: 0.0000001, default: 0.0042253, group: primary }
     - { id: I, label: "I", type: range, min: 0, max: 0.02, step: 0.0000001, default: 0.0092411, group: primary }
@@ -157,10 +161,10 @@
     - { id: rpm, label: "rpm axis (2000 → 3000 step)", type: toggle, default: false, group: more }
     - { id: t, label: time, type: range, min: 0, max: 6, step: 0.01, default: 6, group: more }
   presets:
-    - { id: initial, label: "initial (0.678 s, 0.6)", set: { resp: 0.678, rob: 0.6 }, about: "Handout p.3: 7.5 %, 1.96 s." }
-    - { id: slower, label: "slower (3.1 s, 0.6)", set: { resp: 3.1, rob: 0.6 }, about: "Handout p.4: P = 0, 0.401 %, 3.45 s." }
-    - { id: final, label: "final (1.5 s, 0.72)", set: { resp: 1.5, rob: 0.72 }, about: "Handout p.5: 0 %, 1.81 s." }
-    - { id: aggressive, label: "aggressive (own)", set: { resp: 0.678, rob: 0.4 }, about: "28 % overshoot (not in lab handout)." }
+    - { id: initial, label: "initial (0.678 s, 0.6)", set: { resp: 0.678, rob: 0.6 }, about: "Handout p.3: 7.5 %, 1.96 s, PM 59.9°. The emulation gives about 7.4 %, 1.96 s, PM 60.0° (not in lab handout)." }
+    - { id: slower, label: "slower (3.1 s, 0.6)", set: { resp: 3.1, rob: 0.6 }, about: "Handout p.4: P = 0, 0.401 %, 3.45 s, PM 69.3°. Emulation: 0.38 %, 3.455 s, PM 69.4°." }
+    - { id: final, label: "final (1.5 s, 0.72)", set: { resp: 1.5, rob: 0.72 }, about: "Handout p.5: 0 %, 1.81 s, PM 72°, GM 32.8 dB. Emulation: 0 %, 1.806 s, PM 72.0°, GM 32.7 dB; with rpm axis on, 2980 rpm at t₀ + 1.81 s." }
+    - { id: aggressive, label: "aggressive (own)", set: { resp: 0.678, rob: 0.4 }, about: "28.42 % overshoot, 3.163 s, PM 40.0° (not in lab handout)." }
 - id: loop
   title: "The block diagram: every block in plain words"
   x: "(none)"
@@ -170,16 +174,16 @@
     - { label: "feedback path (output → summer)", color: "var(--fg)" }
     - { label: "disturbance entry", color: "var(--org)" }
   howToRead: "Signals flow along the arrows. The circle is the summer: its + and − say which signals are added and which subtracted. Each box shows its symbol, its handout value and one line in plain words; hover or tap a box to see what goes in and what comes out."
-  lookFor: "Where the disturbance enters, and with which sign: that sign is why the motor and disk scripts end with sys = -sys."
+  lookFor: "Follow the loop round: where the output is measured, where it is compared with the command, and where an unplanned push enters (and with which sign)."
   controls:
     - { id: machine, label: machine, type: select, options: [motor-open, motor-closed, borer, disk, engine], default: motor-open, group: primary }
     - { id: words, label: labels, type: seg, options: [plain words, symbols, values], default: plain words, group: primary }
   presets:
-    - { id: motor-open, label: "motor, no feedback (Fig. 4.23)", set: { machine: motor-open } }
-    - { id: motor-closed, label: "motor with tachometer (Fig. 4.24)", set: { machine: motor-closed } }
-    - { id: borer, label: "boring machine (Eq. 4.57)", set: { machine: borer } }
-    - { id: disk, label: "disk head (Fig. 4.29)", set: { machine: disk } }
-    - { id: engine, label: "engine model (handout p.1)", set: { machine: engine } }
+    - { id: motor-open, label: "motor, no feedback (Fig. 4.23)", set: { machine: motor-open }, about: "The load torque T_d enters with a minus sign (it slows the motor): that is why the script ends with sys_o = -sys_o." }
+    - { id: motor-closed, label: "motor with tachometer (Fig. 4.24)", set: { machine: motor-closed }, about: "The same minus sign on T_d, so the script ends with sys_c = -sys_c. The outer loop through Kt and Ka is the feedback." }
+    - { id: borer, label: "boring machine (Eq. 4.57)", set: { machine: borer }, about: "The rock T_d adds (+) to the steering effort after the controller, so no sign flip is needed." }
+    - { id: disk, label: "disk head (Fig. 4.29)", set: { machine: disk }, about: "The shock T_d enters between coil and arm with a minus sign: that is why the Fig. 4.31 script ends with sys = -sys." }
+    - { id: engine, label: "engine model (handout p.1)", set: { machine: engine }, about: "The handout studies a step in the speed command; the load (Tload) enters inside Vehicle Dynamics. The PI block uses the final design's gains." }
 - id: engine-fit
   title: "Where the stand-in engine comes from (not in lab handout)"
   x: ω (rad/s, log)

@@ -9,20 +9,19 @@ quizTags: [motor]
 
 ## (a) The problem
 
-A DC motor spins a load at a set speed, and a brake-like *load torque* T_d suddenly drags on it. The handout asks how much speed the load steals with no feedback (Fig. 4.23), and how much once a tachometer measures the speed and an amplifier corrects the motor's voltage (Fig. 4.24).
-
-- **Takeaway:** feedback cuts the lost speed from 0.667 to 0.00185 rad/s per N·m of load (the handout rounds to −0.66 and −0.002), and the motor recovers 361× faster.
+- **The machine:** a DC motor spins a load at a set speed, and a brake-like *load torque* T_d (a twisting force that drags on the shaft) suddenly switches on.
+- **What the handout asks:** how much speed the load steals with no feedback (Fig. 4.23), and how much once a *tachometer* (a sensor that turns speed into volts) measures the speed and an amplifier corrects the motor's voltage (Fig. 4.24).
+- **Takeaway:** feedback cuts the lost speed from 0.667 to 0.00185 rad/s per N·m of load (the handout rounds these to −0.66 and −0.002). It also makes the motor *recover 361× faster* (it gets back to its new steady speed in 1/361 of the time).
 - **The advantage it shows:** *disturbance rejection*, the handout's term for shrugging off pushes nobody planned.
 
 ## (b) The setup
-
-**Live figure:** `loop` with preset `motor-open`, then `motor-closed` (new figure, see FIGURES.md).
 
 ```figure:loop preset=motor-open
 ```
 
 
 **The blocks, in plain words:**
+- **The voltage in, V_a:** the voltage applied to the motor's coil. In this example it is held fixed, so only the load torque changes anything.
 - **A block** is a box that turns one signal into another. Its rule is written as a fraction in *s*, its *transfer function*.
 - **What s means:** read s as "rate of change" and 1/s as "add up over time". So a term Js means "inertia times how fast the speed is changing".
 - **The coil, Km/Ra:** voltage in, torque out. Ra = 1 Ω is the coil's resistance and Km = 10 N·m/A is the torque per amp, so 10 N·m per volt.
@@ -32,6 +31,7 @@ A DC motor spins a load at a set speed, and a brake-like *load torque* T_d sudde
 - **Added for the closed loop:**
   - **Tachometer, Kt = 1 V·s:** a small generator on the shaft that turns speed into volts.
   - **Amplifier, Ka = 54:** multiplies the speed shortfall and adds it to the motor's voltage.
+- **On the diagram:** the closed-loop version is the same picture plus the outer loop through Kt and Ka; pick **motor with tachometer (Fig. 4.24)** to see it.
 
 **The two models (Dorf p.259):**
 
@@ -44,46 +44,65 @@ closed loop:  ω/T_d = −1/(J·s + b + Km·(Ka·Kt + Kb)/Ra) = −1/(2s + 541.5
 
 ## (c) What's going on
 
-1. **No feedback: the speed falls until drag balances the load.** The only thing resisting the load is the motor's own drag, 0.5 + 1 = 1.5 N·m·s. A 1 N·m load therefore costs 1 ÷ 1.5 = 0.667 rad/s. It gets there smoothly in about 5 s: the *time constant* τ = J ÷ drag = 1.33 s is the time to cover about two-thirds of the way, and four time constants (5.3 s) gets within 2 %, which counts as "settled". **Live figure:** `motor`, preset `open`.
+1. **No feedback: the speed falls until drag balances the load.**
+   - **Why:** the only thing resisting the load is the motor's own drag, 0.5 + 1 = 1.5 N·m·s, so a 1 N·m load costs 1 ÷ 1.5 = 0.667 rad/s.
+   - **How fast:** the *time constant* τ = J ÷ drag = 1.33 s is the time to cover about two-thirds of the way. Four time constants (5.3 s) gets within 2 %, which counts as "settled".
+   - **Look for:** with **Fig. 4.23: open loop** set, the speed curve slides smoothly down to the dashed final value at −0.667, and the readout's first line gives τ = 1.333 s and −0.6632 at 7 s.
 
 ```figure:motor preset=open
 ```
 
-2. **Feedback adds "electronic friction".** The tachometer and amplifier push back in proportion to the speed lost, which to the load feels like Km·Ka·Kt/Ra = 540 N·m·s of extra friction. The total drag becomes 541.5, so the sag is 1 ÷ 541.5 = 0.00185 rad/s. **Live figure:** `motor`, preset `closed`.
+2. **Feedback adds "electronic friction".**
+   - **Why:** the tachometer and amplifier push back in proportion to the speed lost. To the load this feels like Km·Ka·Kt/Ra = 540 N·m·s of extra friction.
+   - **Numbers:** the total drag becomes 541.5, so the sag is 1 ÷ 541.5 = 0.00185 rad/s.
+   - **Look for:** with **Fig. 4.24: closed loop** set, the time axis runs only 0.02 s and the curve settles at −0.00185 (the readout's second line: −0.001847). The marked final value is the exact one; the handout rounds it to −0.002.
 
 ```figure:motor preset=closed
 ```
 
-3. **It also recovers far faster.** τ = 2 ÷ 541.5 = 3.69 ms instead of 1.33 s: 361× faster. That is why the handout's closed-loop plot runs for only 0.02 s, against 7 s for the open loop ("Note the scale"). On a 7 s axis the closed loop would look like a flat line. **Live figure:** `motor`, switch *time axis* between 7 s and 0.02 s.
+3. **It also recovers far faster: 361×.**
+   - **Numbers:** τ = 2 ÷ 541.5 = 3.69 ms instead of 1.33 s.
+   - **Why the handout's plots differ:** that is why Fig. 4.24 runs for only 0.02 s against 7 s for Fig. 4.23 ("Note the scale").
+   - **Look for:** with **both loops, 7 s axis** set, the open loop (grey) sags over seconds while the closed loop is a flat line at zero. Switch *time axis* to 0.02 s: now the closed loop is a full curve and the open loop has barely started to move.
 
-```figure:motor
+```figure:motor preset=scale
 ```
 
-4. **One number runs it: the loop gain.** Follow a speed error once around the loop: tachometer (Kt), amplifier (Ka), coil (Km/Ra), back as torque, then ÷ 1.5 for the drag. That product is the *loop gain*. Both the sag and the time constant divide by 1 + loop gain = 1 + 540 ÷ 1.5 = 361. So Ka and Kt do exactly the same job: double either and the sag roughly halves. **Live figure:** `motor`, drag Ka, then Kt.
+4. **One number runs it: the loop gain.**
+   - **What it is:** follow a speed error once around the loop: tachometer (Kt), amplifier (Ka), coil (Km/Ra), back as torque, then ÷ 1.5 for the drag. That product is the *loop gain*.
+   - **What it does:** both the sag and the time constant divide by 1 + loop gain = 1 + 540 ÷ 1.5 = 361.
+   - **So Ka and Kt do the same job:** double either and the sag roughly halves.
+   - **Look for:** with **Kt = 2** set, the sag is −0.000925 rad/s and τ = 1.849 ms, about half of step 2's values, and the readout's loop gain has doubled (not in lab handout).
 
-```figure:motor
+```figure:motor preset=kt2
 ```
 
-5. **The handout's yardstick, the 0.02 rule.** "We generally expect" closed-loop sag ÷ open-loop sag < 0.02 (Dorf p.259), meaning the loop removes at least 98 % of the sag. Here the ratio is 0.0028 (the handout rounds to 0.003), about 7× inside the rule. Ka = 7.35 would just meet it (not in lab handout). **Live figure:** `motor`, preset `sweep`.
+5. **The handout's yardstick: the 0.02 rule.**
+   - **The rule:** "we generally expect" closed-loop sag ÷ open-loop sag < 0.02 (Dorf p.259). In other words, the loop removes at least 98 % of the sag.
+   - **Here:** the ratio is 0.0028 (the handout rounds it to 0.003), about 7× inside the rule.
+   - **The threshold (not in lab handout):** the ratio equals 0.02 exactly at Ka = 7.35. Any Ka above that passes.
+   - **Look for:** with **just under 0.02** set (Ka = 7.5), the readout's third line turns green: ratio 0.01961, under 0.02. The closed curve now sags to −0.0131, visible even on the 7 s axis.
 
 ```figure:motor preset=sweep
 ```
 
-6. **Inertia sets only the speed of recovery, never the final sag.** J appears only beside s, and once the speed stops changing, the s terms drop out. Doubling J to 4 makes τ 2.67 s open and 7.39 ms closed, with the same sag (not in lab handout). **Live figure:** `motor`, preset `heavy`.
+6. **Inertia sets only the speed of recovery, never the final sag.**
+   - **Why:** J appears only beside s. Once the speed stops changing, the s terms drop out.
+   - **Numbers (not in lab handout):** doubling J to 4 makes τ 2.67 s open and 7.39 ms closed, with the same sag.
+   - **Look for:** with **double the inertia** set, the open-loop curve takes twice as long to reach the same −0.667 line, and the readout's τ values double while both sags stay put.
 
 ```figure:motor preset=heavy
 ```
 
-
 ## (d) Try it
 
-| Handout case | Live figure and preset | What you should see |
+| Handout case | Button (on this tab's figures) | What you should see |
 |---|---|---|
-| Fig. 4.23, open loop | `motor` → **Fig. 4.23: open loop** (`open`) | sag to −0.667 rad/s, τ = 1.33 s |
-| Fig. 4.24, closed loop | `motor` → **Fig. 4.24: closed loop** (`closed`) | sag −0.00185 rad/s, τ = 3.69 ms, ratio 0.0028 |
-| The 0.02 rule (not in lab handout) | `motor` → **just meets 0.02** (`sweep`) | Ka = 7.35, ratio 0.020 |
-| Heavier load (not in lab handout) | `motor` → **double the inertia** (`heavy`) | slower both ways, same sag |
-| The scripts, line by line | `blocks` → **Fig. 4.23 (open loop)** and **Fig. 4.24 (closed loop)** | each line lights the block it builds |
+| Fig. 4.23, open loop | **Fig. 4.23: open loop** | sag to −0.667 rad/s, τ = 1.33 s |
+| Fig. 4.24, closed loop | **Fig. 4.24: closed loop** | sag −0.00185 rad/s, τ = 3.69 ms, ratio 0.0028 |
+| The 0.02 rule (not in lab handout) | **just under 0.02** | Ka = 7.5, ratio 0.0196 ✓ (the exact threshold is Ka = 7.35) |
+| Heavier load (not in lab handout) | **double the inertia** | slower both ways, same sag |
+| The scripts, line by line | **Fig. 4.23 (open loop)** and **Fig. 4.24 (closed loop)** on the script figure in Check your work | each line lights the block it builds |
 
 **Sliders to play with:** Ka and Kt (same effect), J (speed only), b and Kb (open-loop sag only, nearly no effect closed).
 
@@ -122,6 +141,13 @@ yc(length(T))          % handout: about -0.002
 dcgain(sys_c)          % exact final value: -0.001847
 ```
 
+**The script, one line at a time:** step the *line* slider through Fig. 4.24's script. Each line lights the block it builds, and the fraction so far is written underneath.
+
+- **Look for:** with **Fig. 4.24 (closed loop)** set at its last line, `sys_c=-sys_c` flips the fraction's sign: that is the minus sign of the load torque.
+
+```figure:blocks preset=motorclosed
+```
+
 ````callout:trap Fig. 4.23(b) won't run as printed
 The script sets `f=0.5` but then uses `den1=[J,b]`, so in a fresh MATLAB session it stops with "Unrecognized function or variable 'b'". Write `b=0.5`, as Fig. 4.24 does.
 ````
@@ -133,7 +159,7 @@ The script sets `f=0.5` but then uses `den1=[J,b]`, so in a fresh MATLAB session
 ````
 
 ````callout:note The block diagrams aren't in the project PDF
-The text points to Figs. 4.8 and 4.9 (Section 4.5) for the open- and closed-loop diagrams, but those pages aren't in the project PDF. The `loop` figure draws them from the scripts (not in lab handout).
+The text points to Figs. 4.8 and 4.9 (Section 4.5) for the open- and closed-loop diagrams, but those pages aren't in the project PDF. The block diagram in The setup draws them from the scripts (not in lab handout).
 ````
 
 ## (f) For your report

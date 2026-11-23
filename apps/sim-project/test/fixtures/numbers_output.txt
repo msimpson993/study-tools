@@ -223,4 +223,22 @@ Known handout text/figure mismatches (Project 1 text vs its own screenshots):
   - text 'settling time of 4 seconds', 'overshoot of zero'; table p.4: 3.45 s, 0.401 %
   - Fig. 4.23(b) script sets f=0.5 but uses b in den1=[J,b] (undefined variable in a fresh session)
   - Table 4.3 settling at K = 20: 1.0 s; exact 2 % settling 0.91 s
+
+======================================================================
+PASS2  numbers for the tabs pass-2 presets and captions [own]
+======================================================================
+motor Ka=7.35: closed drag 75.00; sag -0.01333 rad/s; ratio 0.02000 (not under 0.02); tau 26.67 ms
+motor Ka=7.5: closed drag 76.50; sag -0.01307 rad/s; ratio 0.01961 (under 0.02); tau 26.14 ms
+motor slider Ka step 0.5: 7.35 is off the grid; 7.5 is the first slider value under the 0.02 line
+borer K=20: poles [-10.+0.j  -2.+0.j], zero -1.8182
+borer K=36: poles [-6.-0.j -6.+0.j], zero -3.2727
+borer K=100: poles [-6.-8.j -6.+8.j], zero -9.0909
+disk Ka=10^3.6=3981.1: real loop PO=98.55% Ts(2%)=16.71s; slowest decay rate 0.233/s -> time constant 4.28 s; ring at 139.7 rad/s
+disk Ka=3981.1: stand-in zeta=0.0709 PO=79.99% Ts(2%)=0.383s (swings hard, always dies out)
+disk Ka=80 stand-in: PO=16.30% Ts=0.4038s; shock Ts(2%) at Ka=80 = 0.4081 s (see E3), seek Ts = 0.4091 s
+engine handout final gains: P=0.0014551 I=0.0043791: 2000->3000 rpm step reaches 2980 rpm at t0+1.816 s
+engine emulated final gains: P=0.0014529 I=0.0043857: 2000->3000 rpm step reaches 2980 rpm at t0+1.806 s
+engine initial, emulated gains, dt=0.2 ms: OS=7.36% Ts=1.962s
+engine initial, emulated gains, dt=1.0 ms: OS=7.43% Ts=1.963s
+engine initial, emulated gains: PM 60.0 deg @ 2.950 rad/s | GM 25.4 dB @ 16.70 rad/s
 EXIT 0
