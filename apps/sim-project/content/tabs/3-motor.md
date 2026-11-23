@@ -26,7 +26,11 @@ quizTags: [motor]
 - **What s means:** read s as "rate of change" and 1/s as "add up over time". So a term Js means "inertia times how fast the speed is changing".
 - **The coil, Km/Ra:** voltage in, torque out. Ra = 1 Ω is the coil's resistance and Km = 10 N·m/A is the torque per amp, so 10 N·m per volt.
 - **The spinning load, 1/(Js + b):** torque in, speed out. J = 2 kg·m² is the inertia (how hard the load is to speed up or slow down) and b = 0.5 N·m·s is the bearing friction.
-- **Back-EMF, Kb = 0.1 V·s:** the spinning motor makes a voltage that fights its own current. It acts like Km·Kb/Ra = 1 N·m·s of extra friction, so the motor has a feedback loop built in before we add one.
+- **Back-EMF, Kb = 0.1 V·s:** the spinning motor makes a voltage that fights its own current. Isn't that feedback? Yes, but a built-in kind (not in lab handout):
+  - **Natural feedback inside the motor:** the faster it spins, the more voltage it pushes back, which cuts the current and so the torque.
+  - **Not a knob:** Kb is fixed by how the motor is built (its magnets and windings), so you can't turn it.
+  - **It acts like extra friction:** Km·Kb/Ra = 10 × 0.1 ÷ 1 = 1 N·m·s, on top of the bearing friction b = 0.5. The motor's total drag is 1.5 N·m·s.
+  - **What "no feedback" means here:** the handout's open loop (Fig. 4.23) has no *tachometer loop*, the one you add and can adjust. The back-EMF is still there in both cases.
 - **The load torque T_d:** enters with a minus sign, because it slows the motor. That is why the scripts flip the sign at the end (`sys_o = -sys_o`).
 - **Added for the closed loop:**
   - **Tachometer, Kt = 1 V·s:** a small generator on the shaft that turns speed into volts.
@@ -55,6 +59,11 @@ closed loop:  ω/T_d = −1/(J·s + b + Km·(Ka·Kt + Kb)/Ra) = −1/(2s + 541.5
 2. **Feedback adds "electronic friction".**
    - **Why:** the tachometer and amplifier push back in proportion to the speed lost. To the load this feels like Km·Ka·Kt/Ra = 540 N·m·s of extra friction.
    - **Numbers:** the total drag becomes 541.5, so the sag is 1 ÷ 541.5 = 0.00185 rad/s.
+   - **Careful: more real friction does not fix sag (not in lab handout).**
+     - **What sag is:** only the change in speed that the load causes.
+     - **Real friction shrinks everything:** raising b shrinks that change and the motor's response to your voltage by the same factor, because both are divided by the same drag. Turned up toward infinity, the motor barely moves at all, so "zero sag" would just mean there's nothing left to sag.
+     - **The tachometer loop is different:** it pushes back only when the speed strays from what you commanded. The amplifier boosts the command as well, so the motor still reaches the speed you asked for (closed-loop steady gain close to 1), while the load's effect shrinks by 1 + loop gain = 361.
+     - **So the name is a half-truth:** "electronic friction" acts like friction only against the load, not against your command. That holds while the loop's push-back (540) is much bigger than the real drag.
    - **Look for:** with **Fig. 4.24: closed loop** set, the time axis runs only 0.02 s and the curve settles at −0.00185 (the readout's second line: −0.001847). The marked final value is the exact one; the handout rounds it to −0.002.
 
 ```figure:motor preset=closed
