@@ -283,34 +283,32 @@ test.describe('sim-project tabbed page', () => {
     await expect(page.getByTestId('sticky-cap')).toContainText('Step 4');
   });
 
-  test('at 1280px the (c) split is about 30 % text and 60 % figure, with controls under the plots', async ({ page }) => {
-    await page.setViewportSize({ width: 1280, height: 900 });
-    await open(page, 'sim-project', '#/tab/motor');
-    const split = page.getByTestId('sticky-split');
-    await expect(split).toBeVisible();
-    const dims = await page.evaluate(() => {
-      const splitEl = document.querySelector('[data-testid=sticky-split]')!;
-      const steps = document.querySelector('.sticky-steps')!;
-      const fig = document.querySelector('[data-testid=sticky-fig]')!;
-      const sw = splitEl.getBoundingClientRect().width;
-      const sr = steps.getBoundingClientRect();
-      const fr = fig.getBoundingClientRect();
-      const plots = fig.querySelector('.pair2, .fig-stage')!;
-      const rail = fig.querySelector('.st-ctl');
-      return {
-        stepFrac: sr.width / sw,
-        figFrac: fr.width / sw,
-        sideBySide: Math.abs(sr.top - fr.top) < 80 && fr.left > sr.right - 8,
-        railBelow: !rail || rail.getBoundingClientRect().top >= plots.getBoundingClientRect().bottom - 8,
-      };
+  for (const width of [923, 1280, 1920] as const) {
+    test(`at ${width}px the (c) split is about 40 % text and 60 % figure, with controls under the plots`, async ({ page }) => {
+      await page.setViewportSize({ width, height: width >= 1920 ? 1080 : 900 });
+      await open(page, 'sim-project', '#/tab/motor');
+      const split = page.getByTestId('sticky-split');
+      await expect(split).toBeVisible();
+      const dims = await page.evaluate(() => {
+        const steps = document.querySelector('.sticky-steps')!;
+        const fig = document.querySelector('[data-testid=sticky-fig]')!;
+        const sr = steps.getBoundingClientRect();
+        const fr = fig.getBoundingClientRect();
+        const plots = fig.querySelector('.pair2, .fig-stage')!;
+        const rail = fig.querySelector('.st-ctl');
+        const pair = sr.width + fr.width;
+        return {
+          textShare: sr.width / pair,
+          sideBySide: Math.abs(sr.top - fr.top) < 80 && fr.left > sr.right - 8,
+          railBelow: !rail || rail.getBoundingClientRect().top >= plots.getBoundingClientRect().bottom - 8,
+        };
+      });
+      expect(dims.textShare, `text/(text+figure) ${dims.textShare} at ${width}px`).toBeGreaterThanOrEqual(0.37);
+      expect(dims.textShare).toBeLessThanOrEqual(0.43);
+      expect(dims.sideBySide).toBe(true);
+      expect(dims.railBelow).toBe(true);
     });
-    expect(dims.stepFrac, `text column ${dims.stepFrac}`).toBeGreaterThan(0.25);
-    expect(dims.stepFrac).toBeLessThan(0.38);
-    expect(dims.figFrac, `figure column ${dims.figFrac}`).toBeGreaterThan(0.52);
-    expect(dims.figFrac).toBeLessThan(0.68);
-    expect(dims.sideBySide).toBe(true);
-    expect(dims.railBelow).toBe(true);
-  });
+  }
 
   test('no Look-for text appears inside the sticky figure panel', async ({ page }) => {
     await page.setViewportSize({ width: 1280, height: 900 });
@@ -390,19 +388,22 @@ test.describe('sim-project tabbed page', () => {
       const fr = fig.getBoundingClientRect();
       const rail = fig.querySelector('.st-ctl');
       const plots = fig.querySelector('.pair2, .fig-stage');
+      const plot = [...fig.querySelectorAll('canvas')].find((c) => {
+        const r = c.getBoundingClientRect();
+        return (c.getAttribute('data-fig') === 'plot' || r.height > 40) && r.width > 40;
+      });
       return {
-        stepFrac: sr.width / sw,
-        figFrac: fr.width / sw,
+        textShare: sr.width / (sr.width + fr.width),
         sideBySide: fr.left > sr.right - 12 && Math.abs(sr.top - fr.top) < 120,
         stacked: fr.top > sr.bottom - 8,
         railBelow: !rail || !plots || rail.getBoundingClientRect().top >= plots.getBoundingClientRect().bottom - 8,
+        plotFrac: plot ? plot.getBoundingClientRect().width / fr.width : 0,
       };
     });
     expect(dims.stacked, 'must not stack top/bottom').toBe(false);
     expect(dims.sideBySide).toBe(true);
-    expect(dims.stepFrac, `text ${dims.stepFrac}`).toBeGreaterThan(0.32);
-    expect(dims.stepFrac).toBeLessThan(0.48);
-    expect(dims.figFrac, `plots ${dims.figFrac}`).toBeGreaterThan(0.52);
-    expect(dims.figFrac).toBeLessThan(0.68);
+    expect(dims.textShare, `text/(text+figure) ${dims.textShare}`).toBeGreaterThanOrEqual(0.37);
+    expect(dims.textShare).toBeLessThanOrEqual(0.43);
     expect(dims.railBelow).toBe(true);
+    expect(dims.plotFrac, `plot/panel ${dims.plotFrac}`).toBeGreaterThanOrEqual(0.85);
   });

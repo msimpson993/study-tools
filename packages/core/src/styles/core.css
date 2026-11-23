@@ -557,7 +557,7 @@ html.layout-tabs .tab-body > .sticky-split,html.layout-tabs .tab-sec-figs{max-wi
 }
 
 /* ---- sticky figure for section (c) on a tabbed problem page ---- */
-.sticky-split{display:grid;grid-template-columns:minmax(0,30%) minmax(0,60%);grid-template-areas:"steps fig";justify-content:space-between;column-gap:0;gap:1rem 0;align-items:start;margin:0.6rem 0 1.2rem;min-width:0}
+.sticky-split{display:grid;grid-template-columns:minmax(0,2fr) minmax(0,3fr);grid-template-areas:"steps fig";justify-content:stretch;column-gap:1.25rem;gap:1rem 1.25rem;align-items:start;margin:0.6rem 0 1.2rem;min-width:0}
 .sticky-steps{grid-area:steps;min-width:0}
 .sticky-fig{
   grid-area:fig;position:sticky;top:6.4rem;align-self:start;z-index:40;
@@ -663,7 +663,7 @@ html.layout-tabs .tab-body > .sticky-split,html.layout-tabs .tab-sec-figs{max-wi
 
 /* short landscape (e.g. 844×390): 40/60 side-by-side, controls under plots, panel scrolls */
 @media (orientation:landscape) and (max-height:500px){
-  .sticky-split{display:grid !important;grid-template-columns:minmax(0,40%) minmax(0,60%);grid-template-areas:"steps fig";justify-content:stretch;column-gap:.7rem;gap:.5rem .7rem}
+  .sticky-split{display:grid !important;grid-template-columns:minmax(0,2fr) minmax(0,3fr);grid-template-areas:"steps fig";justify-content:stretch;column-gap:.7rem;gap:.5rem .7rem}
   .sticky-fig{
     order:0;position:sticky;top:var(--sticky-pin-top,5.5rem);z-index:40;
     max-height:calc(100vh - var(--sticky-pin-top,5.5rem));overflow:auto;overflow-x:hidden;
@@ -672,10 +672,10 @@ html.layout-tabs .tab-body > .sticky-split,html.layout-tabs .tab-sec-figs{max-wi
   }
   .sticky-fig::before{content:none}
   .sticky-fig .fig-layout{grid-template-columns:1fr}
-  .sticky-fig .pair2{grid-template-columns:repeat(2,minmax(0,1fr))}
-  .sticky-fig .pair2.one{grid-template-columns:1fr}
-  .sticky-fig .fig:has(canvas[data-fig="scene"]){display:none}
-  .sticky-fig .fig canvas{height:120px !important;max-height:none}
+  .sticky-fig .pair2,.sticky-fig .pair2.one{grid-template-columns:1fr}
+  .sticky-fig .fig,.sticky-fig .fig-stage,.sticky-fig .pair2,.sticky-host{width:100%;max-width:100%;box-sizing:border-box}
+  .sticky-fig .fig:has(canvas[data-fig="scene"]){display:block}
+  .sticky-fig .fig canvas{width:100%;height:120px !important;max-height:none}
   .sticky-fig .fig:has(canvas[data-fig="plot"]) canvas{height:150px !important}
   .sticky-ctl-open{display:none}
   .sticky-sheet,.sticky-sheet-backdrop{display:none !important}
