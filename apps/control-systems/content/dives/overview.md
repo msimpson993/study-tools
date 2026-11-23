@@ -46,7 +46,7 @@ The panel rebuilds the house's loop a box at a time. Step the slider back to 1 t
 
 ### How to use the two maps
 
-*Big picture* is the main chain (21 boxes). *Full detail* adds the side questions (17 more boxes) hanging off their parents. Tap a box for its short answer, tap a line for the question that leads there, and open the deep dive for the full story.
+*Big picture* is the main chain (21 boxes). *Full detail* adds the side questions (18 more boxes, six of them under the Tuning toolkit) hanging off their parents. Tap a box for its short answer, tap a line for the question that leads there, and open the deep dive for the full story.
 
 **What each symbol means.**
 

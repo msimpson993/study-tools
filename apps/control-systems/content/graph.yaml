@@ -882,7 +882,7 @@ maps:
     reverse: true
 - id: detail
   title: Full detail
-  caption: The main chain plus 18 side boxes (circuits, partial fractions, block-diagram algebra, Ackermann…, and the Tuning toolkit). Most side boxes end their branch; the Tuning toolkit opens six more under it (the controller menu, torque limits, the PID Lab, tuning recipes, the 14 symptom cards, one-number scores). Back goes one step, to the box you came from.
+  caption: The main chain plus 18 side boxes (circuits, partial fractions, block-diagram algebra, Ackermann…, and the Tuning toolkit). Most side boxes end their branch; the Tuning toolkit opens six of them under it (the controller menu, torque limits, the PID Lab, tuning recipes, the 14 symptom cards, one-number scores). Back goes one step, to the box you came from.
   seriesNames:
   - Describe the plant
   - Predict the response
