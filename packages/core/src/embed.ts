@@ -35,6 +35,14 @@ export function controlsForSlot(def: FigureDef, slot: HTMLElement): ControlSet {
   return controls;
 }
 
+/** True when the block immediately before a figure slot already has a "Look for" line. */
+export function stepSuppliesLookFor(slot: HTMLElement): boolean {
+  let n: ChildNode | null = slot.previousSibling;
+  while (n && n.nodeType === 3 && !n.textContent?.trim()) n = n.previousSibling;
+  if (!n || n.nodeType !== 1) return false;
+  return /\bLook for\b/i.test((n as HTMLElement).innerText || n.textContent || '');
+}
+
 /** Wrap back-to-back ```figure:``` slots in .pop-figs so they sit side by side above 700 px and stack below. */
 export function wrapAdjacentFigureSlots(root: HTMLElement): void {
   const slots = [...root.querySelectorAll<HTMLElement>('.viz-slot[data-figure]')];
@@ -68,7 +76,9 @@ export function embedFigureSlots(root: HTMLElement, content: AppContent, hooks: 
     if (!def || !mounter) { slot.append(h('p', { class: 'st-hint' }, `(figure ${id} is not available)`)); return; }
     slot.classList.add('viz-embed');
     slot.dataset.testid = 'viz';
-    const d = slot.dataset.look ? { ...def, lookFor: slot.dataset.look } : def;
+    const d = slot.dataset.look
+      ? { ...def, lookFor: slot.dataset.look }
+      : (stepSuppliesLookFor(slot) ? { ...def, lookFor: undefined } : def);
     const stop = mounter(slot, d, controlsForSlot(def, slot));
     if (typeof stop === 'function') stops.push(stop);
   });

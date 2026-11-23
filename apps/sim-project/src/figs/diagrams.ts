@@ -406,9 +406,9 @@ export function drawLabDiagram(g: CanvasRenderingContext2D, w: number, h: number
   } else if (opts.words) {
     // engine (handout p.1): a fuller block path than the script stepper uses
     const railE = 38;
-    text(g, 'Speed Ref', X(0), Y(railE) + 3, col.text(), 'left', 9);
-    const s1 = { x: X(7), y: Y(railE) };
-    const pi = boxAt('PI', 10, railE - 9, 10, 18, L('PID (PI)', 'P=0.0014551, I=0.0043791', 'throttle from the error now and the error so far', 'in: speed error. out: throttle command. what it does: P and I make a throttle from the error now and the error so far'));
+    const s1 = { x: X(8), y: Y(railE) };
+    text(g, 'Speed Ref', X(0), Y(railE) - 12, col.text(), 'left', 9);
+    const pi = boxAt('PI', 12, railE - 9, 12, 18, L('PI', 'P + I', 'throttle from the error now and the error so far', 'in: speed error. out: throttle command. what it does: P and I make a throttle from the error now and the error so far'));
     const th = boxAt('throttle', 22, railE - 9, 16, 18, L('Throttle & Manifold', 'nonlinear', 'throttle angle and speed to air charge', 'in: throttle command and engine speed N. out: air charge. what it does: throttle angle and speed to air charge'));
     const del = boxAt('delay', 40, railE - 9, 14, 18, L('Induction delay', 'e^{−0.015s}', 'air takes time to reach the cylinders', 'in: air charge. out: delayed air charge. what it does: air takes time to reach the cylinders'));
     const comb = boxAt('combustion', 56, railE - 9, 12, 18, L('Combustion', 'nonlinear', 'air charge to torque', 'in: delayed air charge and engine speed N. out: combustion torque. what it does: air charge to torque'));
@@ -427,7 +427,7 @@ export function drawLabDiagram(g: CanvasRenderingContext2D, w: number, h: number
     arrow(g, veh.r, veh.cy, rpm.l, rpm.cy, c.color);
     arrow(g, rpm.r, rpm.cy, outX, outY, cf.color);
     // load torque into vehicle dynamics
-    text(g, 'Tload', veh.cx, Y(8), col.text(), 'center', 10);
+    text(g, 'Tload (drag)', veh.cx, Y(8), col.text(), 'center', 9);
     arrow(g, veh.cx, Y(14), veh.cx, veh.t, cd.color);
     // thin inner N (engine speed) back to throttle and combustion
     const ny = Y(22);

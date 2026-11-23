@@ -26,22 +26,23 @@ export const motorPanels = (): FigurePanel[] => [
       const n = motorNumbers({ Ka: num(v, 'Ka', 54), Kt: num(v, 'Kt', 1), J: num(v, 'J', 2), b: num(v, 'b', 0.5), Kb: num(v, 'Kb', 0.1) });
       const t = lin(0, axis, 400);
       const show = { ess: true };
+      const essLabel = Math.abs(Math.abs(n.wcInf) - 0.002) < 3.5e-4 ? "handout’s −0.002" : `final sag ${n.wcInf.toFixed(5)}`;
       const yr: [number, number] = axis < 1 ? [-0.002, 0] : [-0.7, 0];
       const head = 40;
       wipe(g, w, h);
       g.save(); g.translate(0, head);
       const H = h - head;
       if (loop === 'open' || loop === 'both') {
-        drawStepResponse(g, w, H, { t, y: t.map(n.wo), ref: 0, final: n.woInf, tEnd: axis, yRange: yr, color: col.muted(), yLabel: axis < 1 ? 'ω (rad/s)  ×10⁻³ scale' : 'ω (rad/s per N·m)', show, band: 0 });
+        drawStepResponse(g, w, H, { t, y: t.map(n.wo), ref: 0, final: n.woInf, tEnd: axis, yRange: yr, color: col.muted(), yLabel: axis < 1 ? 'ω (rad/s)  ×10⁻³ scale' : 'ω (rad/s per N·m)', show, essLabel: `final sag ${n.woInf.toFixed(3)}`, band: 0 });
       }
       if (loop === 'closed' || loop === 'both') {
         if (loop === 'closed') {
-          drawStepResponse(g, w, H, { t, y: t.map(n.wc), ref: 0, final: n.wcInf, tEnd: axis, yRange: yr, color: col.a(), show, yLabel: axis < 1 ? 'ω (rad/s)' : 'ω (rad/s per N·m)' });
+          drawStepResponse(g, w, H, { t, y: t.map(n.wc), ref: 0, final: n.wcInf, tEnd: axis, yRange: yr, color: col.a(), show, essLabel, yLabel: axis < 1 ? 'ω (rad/s)' : 'ω (rad/s per N·m)' });
         } else {
           drawStepResponse(g, w, H, {
             t, y: t.map(n.wc), ghost: { t, y: t.map(n.wo), label: 'open' },
             ref: 0, final: n.wcInf, tEnd: axis, yRange: yr, color: col.a(), show,
-            yLabel: axis < 1 ? 'ω (rad/s)' : 'ω (rad/s per N·m)',
+            yLabel: axis < 1 ? 'ω (rad/s)' : 'ω (rad/s per N·m)', essLabel,
           });
         }
       }

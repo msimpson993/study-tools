@@ -30,8 +30,17 @@ function logXs(n = 260): number[] {
   return Array.from({ length: n }, (_, i) => W_MIN + (W_MAX - W_MIN) * i / (n - 1));
 }
 
-function corner(g: CanvasRenderingContext2D, w: number, h: number) {
-  text(g, 'Stand-in, not in lab handout. Points derived from the handout\'s PID Tuner tables (pp.3–5 and the P = I = 1 baseline).', 8, h - 6, col.muted(), 'left', 9);
+function unwrap(vals: number[]): number[] {
+  const out = vals.slice();
+  for (let i = 1; i < out.length; i++) {
+    while (out[i] - out[i - 1] > 180) out[i] -= 360;
+    while (out[i] - out[i - 1] < -180) out[i] += 360;
+  }
+  return out;
+}
+/** Footnote sits under the plot box, not over the curves. */
+function corner(g: CanvasRenderingContext2D, _w: number, h: number) {
+  text(g, 'Stand-in, not in lab handout. Points from the handout\'s PID Tuner tables (pp.3–5).', 8, h - 6, col.muted(), 'left', 9);
 }
 
 function nearPoint(w: number): typeof FIT_POINTS[number] | undefined {
@@ -50,7 +59,7 @@ function engineFitPanels(): FigurePanel[] {
         const magOn = xs.map((lw) => Math.log10(Math.max(1e-6, engineFitAt(10 ** lw, true).mag)));
         const magOff = xs.map((lw) => Math.log10(Math.max(1e-6, engineFitAt(10 ** lw, false).mag)));
         const yr: [number, number] = [-0.2, Math.log10(400)];
-        const fr = rangeFrame(w, h, [W_MIN, W_MAX], yr, 50, 12, 14, 32);
+        const fr = rangeFrame(w, h, [W_MIN, W_MAX], yr, 50, 12, 14, 44);
         graphAxes(g, fr, [W_MIN, W_MAX], yr, 'ω (rad/s)', '|G|', 0.5, 1,
           (x) => fmtPow10(x), (y) => fmtPow10(y));
         curve(g, fr, xs, magOn, col.a(), 2);
@@ -76,10 +85,10 @@ function engineFitPanels(): FigurePanel[] {
         wipe(g, w, h);
         const showOff = v.delay !== false;
         const probe = 10 ** Number(v.w ?? 0.47);
-        const phOn = xs.map((lw) => engineFitAt(10 ** lw, true).plotPhase);
-        const phOff = xs.map((lw) => engineFitAt(10 ** lw, false).plotPhase);
+        const phOn = unwrap(xs.map((lw) => engineFitAt(10 ** lw, true).plotPhase));
+        const phOff = unwrap(xs.map((lw) => engineFitAt(10 ** lw, false).plotPhase));
         const yr: [number, number] = [-240, 20];
-        const fr = rangeFrame(w, h, [W_MIN, W_MAX], yr, 50, 12, 14, 32);
+        const fr = rangeFrame(w, h, [W_MIN, W_MAX], yr, 50, 12, 14, 44);
         graphAxes(g, fr, [W_MIN, W_MAX], yr, 'ω (rad/s)', 'phase (°)', 0.5, 45,
           (x) => fmtPow10(x), (y) => String(y));
         curve(g, fr, xs, phOn, col.a(), 2);

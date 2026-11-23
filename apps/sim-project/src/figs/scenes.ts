@@ -7,7 +7,10 @@ const ink = () => col.text(), dim = () => col.muted(), acc = () => col.accent(),
 /** DC motor + load disc + brake; tachometer and amplifier only when the loop is on. */
 export function drawMotor(g: CanvasRenderingContext2D, w: number, h: number, o: { loop?: 'open' | 'closed' | 'both'; t?: number; speed?: number; exaggerate?: number } = {}) {
   wipe(g, w, h);
-  const cx = w * 0.42, cy = h * 0.48, R = Math.min(w, h) * 0.22;
+  // keep the load disc and T_d inside the panel
+  const R = Math.min(w, h) * 0.18;
+  const cx = Math.min(w * 0.36, Math.max(R * 1.4, w - R * 3.6 - 36));
+  const cy = h * 0.50;
   const ang = (o.speed ?? 0) * (o.exaggerate ?? 100);
   // housing
   g.fillStyle = col.grid(); rounded(g, cx - R * 1.15, cy - R * 0.85, R * 1.5, R * 1.7, 8); g.fill();
@@ -117,21 +120,31 @@ export function drawEngine(g: CanvasRenderingContext2D, w: number, h: number, o:
   g.strokeStyle = acc(); g.lineWidth = 2.4;
   g.beginPath(); g.moveTo(gx, gy); g.lineTo(gx + gR * 0.8 * Math.cos(ang), gy + gR * 0.8 * Math.sin(ang)); g.stroke();
   text(g, 'rpm', gx, gy + gR + 14, dim(), 'center', 10);
-  if (o.label) text(g, o.label, 8, h - 6, dim(), 'left', 9);
+  if (o.label) {
+    g.font = '9px system-ui, sans-serif';
+    const maxW = w - 16;
+    let s = o.label;
+    if (g.measureText(s).width > maxW) {
+      while (s.length > 4 && g.measureText(s + '…').width > maxW) s = s.slice(0, -1);
+      s = s.trimEnd() + '…';
+    }
+    text(g, s, 8, h - 6, dim(), 'left', 9);
+  }
 }
 
 /** Tuner slider strip, drawn like the PID Tuner toolbar. */
 export function drawTunerSliders(g: CanvasRenderingContext2D, w: number, h: number, resp: number, rob: number, respRange: [number, number] = [0.3, 5], robRange: [number, number] = [0.3, 0.9]) {
   wipe(g, w, h);
   const row = (y: number, left: string, right: string, v: number, lo: number, hi: number) => {
-    text(g, left, 10, y + 4, dim(), 'left', 10);
-    text(g, right, w - 10, y + 4, dim(), 'right', 10);
-    const x0 = 70, x1 = w - 70, t = (v - lo) / (hi - lo), x = x0 + t * (x1 - x0);
+    // labels sit above the track so a dot at either end cannot cover them
+    text(g, left, 10, y - 14, dim(), 'left', 10);
+    text(g, right, w - 10, y - 14, dim(), 'right', 10);
+    const x0 = 16, x1 = w - 16, t = (v - lo) / (hi - lo), x = x0 + t * (x1 - x0);
     g.strokeStyle = col.grid(); g.lineWidth = 3; g.beginPath(); g.moveTo(x0, y); g.lineTo(x1, y); g.stroke();
     g.fillStyle = acc(); g.beginPath(); g.arc(x, y, 6, 0, 6.28); g.fill();
-    text(g, f(v, 3), x, y - 12, acc(), 'center', 10);
+    text(g, f(v, 3), x, y + 16, acc(), 'center', 10);
   };
-  text(g, 'Stand-in engine and emulated tuner (not in lab handout)', w / 2, 12, dim(), 'center', 9);
+  text(g, 'Stand-in engine (not in lab handout)', w / 2, 12, dim(), 'center', 9);
   row(h * 0.42, 'Slower', 'Faster', resp, respRange[0], respRange[1]);
   row(h * 0.78, 'Aggressive', 'Robust', rob, robRange[0], robRange[1]);
 }

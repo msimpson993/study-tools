@@ -73,9 +73,10 @@ export function mountTabbedApp(content: AppContent, hooks: AppHooks = {}): void 
   ));
 
   const tabBar = h('nav', { class: 'tab-bar', 'aria-label': 'Problems', dataset: { testid: 'tab-bar' } });
+  const tabWrap = h('div', { class: 'tab-bar-wrap' }, tabBar);
   const main = h('main', { class: 'content tab-content', id: 'main' });
   const frame = h('div', { class: 'frame nosb tabbed' }, main);
-  root.append(topbar, tabBar, frame);
+  root.append(topbar, tabWrap, frame);
   document.documentElement.classList.add('layout-tabs');
 
   function paintTabs(active?: string) {
@@ -90,6 +91,11 @@ export function mountTabbedApp(content: AppContent, hooks: AppHooks = {}): void 
         dataset: { testid: 'tab', tab: t.id },
       }, TAB_BAR_LABEL[t.id] ?? t.title));
     }
+    requestAnimationFrame(() => {
+      tabWrap.classList.toggle('overflows', tabBar.scrollWidth > tabBar.clientWidth + 1);
+      const on = tabBar.querySelector('a.on') as HTMLElement | null;
+      on?.scrollIntoView({ inline: 'nearest', block: 'nearest' });
+    });
   }
 
   function renderTab(tab: TabPage) {

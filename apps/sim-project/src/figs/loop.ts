@@ -65,5 +65,23 @@ export function loopFigure(host: HTMLElement, def: FigureDef, controls: ControlS
     },
   }];
   api = mountFigure(host, def, panels, controls, opts);
+  const MACHINE_LABEL: Record<string, string> = {
+    'motor-open': 'motor, no feedback',
+    'motor-closed': 'motor with tachometer',
+    borer: 'boring machine',
+    disk: 'disk head',
+    engine: 'engine model',
+  };
+  const familyOf = (m: string): string[] => (
+    m === 'motor-open' || m === 'motor-closed' ? ['motor-open', 'motor-closed'] : [m]
+  );
+  const sel = host.querySelector('select[aria-label="machine"]') as HTMLSelectElement | null;
+  if (sel) {
+    const family = familyOf(String(controls.values.machine ?? 'motor-open'));
+    [...sel.options].forEach((o) => {
+      if (!family.includes(o.value)) o.remove();
+      else o.textContent = MACHINE_LABEL[o.value] ?? o.textContent;
+    });
+  }
   return () => api?.destroy();
 }

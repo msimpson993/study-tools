@@ -9,8 +9,8 @@ export interface FigurePanel {
   title: string;
   /** inline canvas height in px (default from CSS) */
   height?: number;
-  /** x / y axis names with units (shown as a caption; the draw callback should also label its axes) */
-  x: string; y: string;
+  /** x / y axis names with units (shown as a caption; the draw callback should also label its axes). y may depend on the live control values (e.g. rpm vs fraction). */
+  x: string; y: string | ((v: Record<string, number | string | boolean>) => string);
   draw(g: CanvasRenderingContext2D, w: number, h: number, v: Record<string, number | string | boolean>): void;
   /** optional direct manipulation (drag a pole, drag the gain along a locus). Every draggable quantity must ALSO have a slider. */
   pointer?: PanelPointer;
@@ -52,7 +52,14 @@ function wirePointer(cv: HTMLCanvasElement, ptr: PanelPointer): () => boolean {
  * (forward + inverse side by side with a strip naming both directions). Legend is expandable; "how to read" shows only expanded.
  */
 /** “x: … · y: …” under a panel, only when it is a plot with both axes named (a formula, a table or a picture has none) */
-const axesCaption = (p: { x?: string; y?: string }) => (p.x?.trim() && p.y?.trim() ? `x: ${p.x} · y: ${p.y}` : '');
+const axisY = (p: { y?: FigurePanel['y'] }, v?: Record<string, number | string | boolean>) => {
+  if (typeof p.y === 'function') return v ? p.y(v) : '';
+  return p.y ?? '';
+};
+const axesCaption = (p: { x?: string; y?: FigurePanel['y'] }, v?: Record<string, number | string | boolean>) => {
+  const y = axisY(p, v);
+  return (p.x?.trim() && y.trim() ? `x: ${p.x} · y: ${y}` : '');
+};
 /** `intro`: the compact form an Example node's introduction uses: only the named panels (the animated picture), with its
  *  play button but no controls rail and no "Look for" (those belong to the boxes that introduce what they show) */
 export interface FigureMountOpts { intro?: { panels?: string[] } }
@@ -96,7 +103,8 @@ export function mountFigure(host: HTMLElement, def: FigureDef, panels0: FigurePa
   }
   stage.append(overlay);
   const rail = controls.render('Controls');
-  host.append(h('div', { class: `fig-layout${intro ? ' fig-intro' : ''}` }, stage, intro ? null : rail));
+  const layout = h('div', { class: `fig-layout${intro ? ' fig-intro' : ''}` }, stage, intro ? null : rail);
+  host.append(layout);
 
   const canvases = new Map<string, HTMLCanvasElement>();
   const redrawers: (() => void)[] = [];
@@ -111,12 +119,33 @@ export function mountFigure(host: HTMLElement, def: FigureDef, panels0: FigurePa
     const open = () => api.open([p.id]);
     const wasDrag = p.pointer ? wirePointer(cv, p.pointer) : () => false;
     cv.addEventListener('click', () => { if (!wasDrag()) open(); });
+    const cap = axesCaption(p, controls.values);
+    const axesEl = cap ? h('div', { class: 'fig-axes' }, cap) : null;
     inline.append(h('div', { class: 'fig' },
       h('h4', null, p.title),
       h('button', { class: 'st-xp', 'aria-label': `Expand ${p.title}`, title: 'Expand', dataset: { expand: p.id }, onclick: open }, '⤢'),
-      cv, axesCaption(p) ? h('div', { class: 'fig-axes' }, axesCaption(p)) : null));
-    redrawers.push(() => { const f = fitCanvas(cv); p.draw(f.g, f.w, f.h, controls.values); });
+      cv, axesEl));
+    redrawers.push(() => {
+      const f = fitCanvas(cv);
+      p.draw(f.g, f.w, f.h, controls.values);
+      if (axesEl) axesEl.textContent = axesCaption(p, controls.values);
+    });
   }
+
+  // On a phone tab page, sit the controls directly under the first plot so they are not
+  // a long scroll below all four stacked panels. Desktop keeps the right-hand rail.
+  const placeRail = () => {
+    if (intro) return;
+    const phoneTabs = document.documentElement.classList.contains('layout-tabs')
+      && window.matchMedia('(max-width: 700px)').matches;
+    const first = inline.querySelector('.fig');
+    if (phoneTabs && first) first.after(rail);
+    else layout.append(rail);
+  };
+  placeRail();
+  const mq = window.matchMedia('(max-width: 700px)');
+  const onRailMq = () => placeRail();
+  mq.addEventListener?.('change', onRailMq);
 
   const slotCanvases: HTMLCanvasElement[] = [];
   function renderOverlay() {
@@ -140,7 +169,7 @@ export function mountFigure(host: HTMLElement, def: FigureDef, panels0: FigurePa
       if (p.pointer) wirePointer(cv, p.pointer);
       const lg = h('div', { class: 'st-lgbox', hidden: !legendOpen[i], dataset: { testid: 'legend-box' } }, ...def.legend.map((l) => h('div', { class: 'li' }, h('i', { class: l.dash ? 'dash' : '', style: `--c:${l.color};border-top-color:${l.color}` }), l.label)));
       const chip = h('button', { class: 'chip', 'aria-expanded': String(legendOpen[i]), dataset: { testid: 'legend-chip' }, onclick: () => { legendOpen[i] = !legendOpen[i]; chip.setAttribute('aria-expanded', String(legendOpen[i])); lg.hidden = !legendOpen[i]; } }, 'Legend ▾');
-      grid.append(h('div', { class: 'fig-slot' }, h('div', { class: 'sh' }, h('span', null, axesCaption(p) ? `${p.title}  ·  ${axesCaption(p).replace(' · ', '  ·  ')}` : p.title), chip), lg, cv));
+      grid.append(h('div', { class: 'fig-slot' }, h('div', { class: 'sh' }, h('span', null, axesCaption(p, controls.values) ? `${p.title}  ·  ${axesCaption(p, controls.values).replace(' · ', '  ·  ')}` : p.title), chip), lg, cv));
     });
     box.append(grid, h('div', { class: 'fig-how', dataset: { testid: 'how-to-read' }, html: `<b>How to read this:</b> ${def.howToRead}` }));
     overlay.append(box);
@@ -163,7 +192,7 @@ export function mountFigure(host: HTMLElement, def: FigureDef, panels0: FigurePa
     redraw,
     open(ids: string[]) { openIds = ids; legendOpen = [false, false]; renderOverlay(); },
     close() { openIds = []; renderOverlay(); },
-    destroy() { stopAnim(); ro.disconnect(); window.removeEventListener('study-theme', onTheme); document.removeEventListener('keydown', onKey, true); },
+    destroy() { stopAnim(); ro.disconnect(); window.removeEventListener('study-theme', onTheme); document.removeEventListener('keydown', onKey, true); mq.removeEventListener?.('change', onRailMq); },
   };
   requestAnimationFrame(redraw);
   return api;

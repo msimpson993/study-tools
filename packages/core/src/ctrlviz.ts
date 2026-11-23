@@ -1,7 +1,7 @@
 import { C, cabs, type Cx } from './dsp/complex';
 import { type TF, type StepMetrics, type Margins, type Bode, bode, margins, stepMetrics, tfEval, logspace, tfPoles, tfZeros, freqresp } from './dsp/tf';
 import { type RLocus, rlocusPolesAt, rlocusNearest } from './dsp/rlocus';
-import { col, planeFrame, rangeFrame, wipe, text, tline, polyline, dot, cross, graphAxes, curve, clipBox, heat, axes2, type Frame, type V2 } from './viz';
+import { col, planeFrame, rangeFrame, wipe, text, tline, polyline, dot, cross, graphAxes, curve, clipBox, heat, axes2, tickLabel, type Frame, type V2 } from './viz';
 import { withLabelRole, labelsOn } from './labels';
 import type { PanelPointer } from './figure';
 
@@ -33,6 +33,7 @@ export interface StepViewSpec {
   show?: { timing?: boolean; overshoot?: boolean; band?: boolean; settling?: boolean; ess?: boolean };
   /** settling band fraction (default 0.02) */ band?: number;
   tEnd?: number; yRange?: V2; xLabel?: string; yLabel?: string; color?: string;
+  /** override the Ts / ess marker text */ settlingLabel?: string; essLabel?: string;
 }
 /** Draw a step response. Returns the metrics used for the markers (or null when the data has fewer than 3 samples). */
 export function drawStepResponse(g: CanvasRenderingContext2D, w: number, h: number, s: StepViewSpec): StepMetrics | null {
@@ -71,11 +72,13 @@ export function drawStepResponse(g: CanvasRenderingContext2D, w: number, h: numb
     // the dashed Ts line stops just under the overshoot label when it would run through it (it made "15.7 %" read "5.7 %")
     const tx = f.X(m.settlingTime), cut = osBox && tx > osBox.x0 - 3 && tx < osBox.x1 + 3 ? Math.min(yr[1], f.iy(osBox.y + 8)) : yr[1];
     tline(g, f, [m.settlingTime, yr[0]], [m.settlingTime, cut], col.c(), 1.5, [5, 4]);
-    lbl(`Ts ${fmtN(m.settlingTime)} s`, f.X(m.settlingTime) + 4, f.box.b - 18, col.c());
+    lbl(s.settlingLabel ?? `Ts ${fmtN(m.settlingTime)} s`, f.X(m.settlingTime) + 4, f.box.b - 18, col.c());
   }
   if (show.ess && Number.isFinite(m.ess) && Math.abs(m.ess) > 1e-3 * Math.max(1, Math.abs(ref))) {
     const xe = tEnd * 0.985; tline(g, f, [xe, yf], [xe, ref], col.bad(), 3);
-    lbl(`ess ${fmtN(m.ess, 3)}`, f.X(xe) - 6, f.Y((yf + ref) / 2), col.bad(), 'right');
+    const essText = s.essLabel ?? `final sag ${fmtN(m.ess, 3)}`;
+    // sit just above the final-value line at the right, so the label is not on the curve
+    lbl(essText, f.box.r - 4, f.Y(yf) - 8, col.bad(), 'right');
   }
   return m;
 }
@@ -107,8 +110,10 @@ export function drawSPlane(g: CanvasRenderingContext2D, w: number, h: number, s:
   let st = niceStep(2 * s.range, 6); while (st * f.sx < 26) st = niceStep(st * 2.01, 1);
   g.save(); clipBox(g, f); g.strokeStyle = col.grid(); g.lineWidth = 1;
   withLabelRole('tick', () => {
-    for (let x = Math.ceil(f.ix(f.box.l) / st) * st; x <= f.ix(f.box.r); x += st) { g.beginPath(); g.moveTo(f.X(x), f.box.t); g.lineTo(f.X(x), f.box.b); g.stroke(); const lab = String(+x.toFixed(3)); if (f.X(x) + 2 + 5.6 * lab.length <= f.box.r) text(g, lab, f.X(x) + 2, f.box.b - 6, col.muted(), 'left', 9); /* a number that would run past the plot edge is left out, not cut */ }
-    for (let y = Math.ceil(f.iy(f.box.b) / st) * st; y <= f.iy(f.box.t); y += st) { g.beginPath(); g.moveTo(f.box.l, f.Y(y)); g.lineTo(f.box.r, f.Y(y)); g.stroke(); if (Math.abs(y) > 1e-9) text(g, String(+y.toFixed(3)), f.box.l + 3, f.Y(y) - 6, col.muted(), 'left', 9); }
+    let lastX = '';
+    for (let x = Math.ceil(f.ix(f.box.l) / st) * st; x <= f.ix(f.box.r); x += st) { g.beginPath(); g.moveTo(f.X(x), f.box.t); g.lineTo(f.X(x), f.box.b); g.stroke(); const lab = tickLabel(x, st); if (lab && lab !== lastX && f.X(x) + 2 + 5.6 * lab.length <= f.box.r) { text(g, lab, f.X(x) + 2, f.box.b - 6, col.muted(), 'left', 9); lastX = lab; } }
+    let lastY = '';
+    for (let y = Math.ceil(f.iy(f.box.b) / st) * st; y <= f.iy(f.box.t); y += st) { g.beginPath(); g.moveTo(f.box.l, f.Y(y)); g.lineTo(f.box.r, f.Y(y)); g.stroke(); const lab = tickLabel(y, st); if (lab && lab !== '0' && lab !== lastY) { text(g, lab, f.box.l + 3, f.Y(y) - 6, col.muted(), 'left', 9); lastY = lab; } }
   });
   g.restore();
   // one row below the jω axis name, so the two never touch on a narrow panel (pass 3)

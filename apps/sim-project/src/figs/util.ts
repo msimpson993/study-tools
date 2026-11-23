@@ -78,14 +78,14 @@ export function drawKeyValueTable(
   const footerH = (opts?.footer ? 14 : 0) + (opts?.key ? 14 : 0);
   const cols = rows[0]?.length ?? 0;
   if (!cols) return;
-  let size = 10;
+  let size = 11;
   const padX = 5;
   const measure = (sz: number) => {
     g.font = `${sz}px system-ui, sans-serif`;
     return Array.from({ length: cols }, (_, j) => Math.max(8, ...rows.map((r) => g.measureText(r[j] ?? '').width)) + padX * 2);
   };
   let widths = measure(size);
-  while (size > 7 && widths.reduce((a, b) => a + b, 0) > w - 4) { size -= 1; widths = measure(size); }
+  while (size > 9 && widths.reduce((a, b) => a + b, 0) > w - 4) { size -= 1; widths = measure(size); }
   const total = widths.reduce((a, b) => a + b, 0);
   if (total > w - 4) widths = widths.map((x) => x * ((w - 4) / total));
   const rowH = Math.min(20, Math.max(12, (h - footerH - 4) / Math.max(1, rows.length)));

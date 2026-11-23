@@ -59,6 +59,7 @@ export const diskPanels = (): FigurePanel[] => [
       drawStepResponse(g, w, h - head, {
         t: r.t, y: r.y, final: off, ref: 0, tEnd: 2, show: { settling: settled, overshoot: false },
         color: col.a(), yLabel: 'y(t)  (offset −1/(5Ka))',
+        settlingLabel: settled ? `shock Ts ${r.m.ts.toFixed(2)} s` : undefined,
       });
       g.restore();
       text(g, `offset ${f(off, 5)}   dip ${f(r.m.peak, 6)} at ${f(r.m.tp, 3)} s`, 8, 14, col.text(), 'left', 10);

@@ -36,6 +36,18 @@ export function metrics(t: ArrayLike<number>, y: ArrayLike<number>, yf?: number,
   return { os, tr: t[i90] - t[i10], ts, tp, peak, yf: yFinal };
 }
 
+/** First time the samples cross `thresh` from below, linearly interpolated. */
+export function firstCrossing(t: ArrayLike<number>, y: ArrayLike<number>, thresh: number): number {
+  for (let i = 1; i < y.length; i++) {
+    if (y[i - 1] < thresh && y[i] >= thresh) {
+      const dy = y[i] - y[i - 1];
+      const u = Math.abs(dy) < 1e-15 ? 0 : (thresh - y[i - 1]) / dy;
+      return Number(t[i - 1]) + u * (Number(t[i]) - Number(t[i - 1]));
+    }
+  }
+  return NaN;
+}
+
 export const timeGrid = (T: number, n: number): number[] =>
   Array.from({ length: n }, (_, i) => (T * i) / (n - 1));
 

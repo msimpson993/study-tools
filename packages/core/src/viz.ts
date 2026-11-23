@@ -188,6 +188,13 @@ export function heat(g: CanvasRenderingContext2D, f: Frame, fn: (x: number, y: n
   g.save(); g.imageSmoothingEnabled = true; g.drawImage(cv, f.box.l, f.box.t, bw, bh); g.restore();
 }
 /** Simple axes + x ticks for a graph drawn through a rangeFrame. */
+/** Tick text with enough decimals to tell neighbouring ticks apart. */
+export function tickLabel(v: number, step: number): string {
+  if (!Number.isFinite(v)) return '';
+  if (Math.abs(v) < Math.max(Math.abs(step), 1e-12) * 1e-9) return '0';
+  const dec = Math.max(0, Math.min(8, Math.ceil(-Math.log10(Math.abs(step) || 1) - 1e-12)));
+  return String(+v.toFixed(dec)).replace('-', '−');
+}
 export function graphAxes(g: CanvasRenderingContext2D, f: Frame, xr: V2, yr: V2, xLabel: string, yLabel: string, xs = 0, ys = 0, xfmt?: (x: number) => string, yfmt?: (y: number) => string) {
   const nice = (span: number, n: number) => { const raw = span / n, p = Math.pow(10, Math.floor(Math.log10(raw))), m = raw / p; return (m < 1.5 ? 1 : m < 3.5 ? 2 : m < 7.5 ? 5 : 10) * p; };
   const sx = xs || nice(xr[1] - xr[0], 6), sy = ys || nice(yr[1] - yr[0], 4);
@@ -195,8 +202,18 @@ export function graphAxes(g: CanvasRenderingContext2D, f: Frame, xr: V2, yr: V2,
   // the axis names first, so tick numbers that would sit on them give way
   withLabelRole('axis', () => { text(g, xLabel, (f.box.l + f.box.r) / 2, f.h - 5, col.text(), 'center', 11); g.save(); g.translate(10, (f.box.t + f.box.b) / 2); g.rotate(-Math.PI / 2); text(g, yLabel, 0, 0, col.text(), 'center', 11); g.restore(); });
   withLabelRole('tick', () => {
-    for (let x = Math.ceil(xr[0] / sx) * sx; x <= xr[1] + 1e-9; x += sx) { g.strokeStyle = col.grid(); g.beginPath(); g.moveTo(f.X(x), f.box.t); g.lineTo(f.X(x), f.box.b); g.stroke(); text(g, xfmt ? xfmt(x) : String(+x.toFixed(3)), f.X(x), f.box.b + 9, col.muted(), 'center', 10); }
-    for (let y = Math.ceil(yr[0] / sy) * sy; y <= yr[1] + 1e-9; y += sy) { g.strokeStyle = col.grid(); g.beginPath(); g.moveTo(f.box.l, f.Y(y)); g.lineTo(f.box.r, f.Y(y)); g.stroke(); text(g, yfmt ? yfmt(y) : String(+y.toFixed(3)), f.box.l - 4, f.Y(y), col.muted(), 'right', 10); }
+    let lastX = '';
+    for (let x = Math.ceil(xr[0] / sx) * sx; x <= xr[1] + 1e-9; x += sx) {
+      g.strokeStyle = col.grid(); g.beginPath(); g.moveTo(f.X(x), f.box.t); g.lineTo(f.X(x), f.box.b); g.stroke();
+      const lab = xfmt ? xfmt(x) : tickLabel(x, sx);
+      if (lab && lab !== lastX) { text(g, lab, f.X(x), f.box.b + 9, col.muted(), 'center', 10); lastX = lab; }
+    }
+    let lastY = '';
+    for (let y = Math.ceil(yr[0] / sy) * sy; y <= yr[1] + 1e-9; y += sy) {
+      g.strokeStyle = col.grid(); g.beginPath(); g.moveTo(f.box.l, f.Y(y)); g.lineTo(f.box.r, f.Y(y)); g.stroke();
+      const lab = yfmt ? yfmt(y) : tickLabel(y, sy);
+      if (lab && lab !== lastY) { text(g, lab, f.box.l - 4, f.Y(y), col.muted(), 'right', 10); lastY = lab; }
+    }
   });
   g.strokeStyle = col.strong();
   if (yr[0] < 0 && yr[1] > 0) { g.beginPath(); g.moveTo(f.box.l, f.Y(0)); g.lineTo(f.box.r, f.Y(0)); g.stroke(); }

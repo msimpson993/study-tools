@@ -1,7 +1,7 @@
 /** Figures `pi` and `tuner`: stand-in engine, P/I split, emulated PID Tuner. */
 import { figureOf, drawStepResponse, col, text, wipe, rangeFrame, graphAxes, curve, tline, type FigurePanel } from '@study/core';
 import { ENGINE, DESIGNS, type DesignName } from '../model/params';
-import { engineMargins, enginePError, engineStep, simEngine, tuner, metrics, engineLoopJw } from '../model/plants';
+import { engineMargins, enginePError, engineStep, simEngine, tuner, metrics, engineLoopJw, firstCrossing } from '../model/plants';
 import { f, lin, num, on, str, fmtPow10, drawKeyValueTable, type V } from './util';
 import { drawEngine, drawTunerSliders } from './scenes';
 
@@ -69,7 +69,7 @@ function drawEngineBode(g: CanvasRenderingContext2D, w: number, h: number, P: nu
   const fm = rangeFrame(w, hTop, [lo, hi], [-40, 40], 48, 12, 8, 6);
   const fp = rangeFrame(w, hBot, [lo, hi], [-200, 20], 48, 12, 6, 32);
   const plot = (fr: typeof fm, xr: [number, number], yr: [number, number], xs: number[], ys: number[], ylab: string, bottom: boolean) => {
-    graphAxes(g, fr, xr, yr, bottom ? 'ω (rad/s)' : '', ylab, 1, 0, bottom ? fmtPow10 : undefined);
+    graphAxes(g, fr, xr, yr, bottom ? 'ω (rad/s)' : '', ylab, 1, 0, fmtPow10);
     curve(g, fr, xs, ys, col.a(), 2);
   };
   g.save();
@@ -100,52 +100,55 @@ export const tunerPanels = (): FigurePanel[] => [
     },
   },
   {
-    id: 'step', title: "Step Plot: Reference tracking (stand-in)", x: 'time (s)', y: 'speed (fraction of step)',
+    id: 'step', title: "Step Plot: Reference tracking (stand-in)", x: 'time (s)', y: (v) => v.rpm ? 'speed (rpm)' : 'speed (fraction of step)',
     draw(g, w, h, v: V) {
       const resp = num(v, 'resp', 0.678), rob = num(v, 'rob', 0.6);
       const { P, I, clamped } = tuner(resp, rob);
       const rpmOn = !!v.rpm;
+      const head = 22;
+      const piLine = `P = ${f(P, 7)}  I = ${f(I, 7)}${clamped ? '  (P clamped)' : ''}`;
       if (rpmOn) {
         const r = engineStep(P, I, 20, 1e-3);
-        const tEnd = 15;
+        const tEnd = 15, t0 = 2;
         const tt: number[] = [], yy: number[] = [];
-        for (let i = 0; i < 400; i++) {
-          const t0 = (tEnd * i) / 399;
-          tt.push(t0);
-          if (t0 < 2) yy.push(2000);
-          else {
-            // y(t) is the unit-step fraction; shift the command to t = 2 s
-            const tau = t0 - 2;
-            let y = 0;
-            for (let k = 0; k < r.t.length; k++) { if (r.t[k] >= tau) { y = r.y[k]; break; } y = r.y[k]; }
-            yy.push(2000 + 1000 * y);
-          }
+        for (let k = 0; k < r.t.length; k++) {
+          const tau = r.t[k];
+          if (tau > tEnd - t0) break;
+          tt.push(t0 + tau);
+          yy.push(2000 + 1000 * r.y[k]);
         }
-        let tHit = NaN;
-        for (let i = 0; i < tt.length; i++) if (tt[i] >= 2 && yy[i] >= 2980) { tHit = tt[i]; break; }
-        const fr = rangeFrame(w, h, [0, tEnd], [1500, 3500], 48, 12, 18, 30);
+        // hold 2000 rpm until the command at t₀, then the simulated unit-step
+        const tPlot = [0, t0, ...tt], yPlot = [2000, 2000, ...yy];
+        const tHit = firstCrossing(r.t, r.y, 0.98);
+        wipe(g, w, h);
+        text(g, piLine, 8, 14, col.text(), 'left', 10);
+        g.save(); g.translate(0, head);
+        const fr = rangeFrame(w, h - head, [0, tEnd], [1500, 3500], 48, 12, 14, 30);
         graphAxes(g, fr, [0, tEnd], [1500, 3500], 'time (s)', 'rpm', 5, 500);
-        curve(g, fr, tt, yy, col.a(), 2);
+        curve(g, fr, tPlot, yPlot, col.a(), 2);
         g.strokeStyle = col.e(); g.lineWidth = 1; g.setLineDash([4, 4]);
         g.beginPath(); g.moveTo(fr.box.l, fr.Y(2980)); g.lineTo(fr.box.r, fr.Y(2980)); g.stroke(); g.setLineDash([]);
         text(g, '2980 rpm (2 % band)', fr.box.r - 4, fr.Y(2980) - 5, col.e(), 'right', 10);
         if (Number.isFinite(tHit)) {
-          g.fillStyle = col.e(); g.beginPath(); g.arc(fr.X(tHit), fr.Y(2980), 4, 0, Math.PI * 2); g.fill();
-          text(g, `reaches 2980 at t₀ + ${(tHit - 2).toFixed(2)} s`, 8, 28, col.text(), 'left', 10);
+          g.fillStyle = col.e(); g.beginPath(); g.arc(fr.X(t0 + tHit), fr.Y(2980), 4, 0, Math.PI * 2); g.fill();
+          text(g, `reaches 2980 at t₀ + ${tHit.toFixed(2)} s`, 8, 16, col.text(), 'left', 10);
         }
-        text(g, `P = ${f(P, 7)}  I = ${f(I, 7)}${clamped ? '  (P clamped)' : ''}`, 8, 14, col.text(), 'left', 10);
-        text(g, 'Linear stand-in, not the nonlinear Simulink engine (not in lab handout). The handout\'s scope (p.6) is the real check.', 8, h - 8, col.muted(), 'left', 9);
+        text(g, 'Linear stand-in, not the nonlinear Simulink engine (not in lab handout). The handout\'s scope (p.6) is the real check.', 8, h - head - 8, col.muted(), 'left', 9);
+        g.restore();
         return;
       }
       const r = engineStep(P, I, 14, 1e-3);
       const hit = nearDesign(resp, rob);
       const ghost = hit ? engineStep(DESIGNS[hit].P, DESIGNS[hit].I, 14, 1e-3) : undefined;
-      drawStepResponse(g, w, h, {
+      wipe(g, w, h);
+      text(g, `${piLine}  OS ${f(r.m.os, 2)} %  Ts ${f(r.m.ts, 3)} s`, 8, 14, col.text(), 'left', 10);
+      g.save(); g.translate(0, head);
+      drawStepResponse(g, w, h - head, {
         t: r.t, y: r.y, final: 1, ref: 1, tEnd: 8, show: { overshoot: true, band: true, settling: true, timing: true },
         ghost: ghost && hit ? { t: ghost.t, y: ghost.y, label: `${hit} handout gains` } : undefined,
         color: col.a(),
       });
-      text(g, `P = ${f(P, 7)}  I = ${f(I, 7)}${clamped ? '  (P clamped)' : ''}  OS ${f(r.m.os, 2)} %  Ts ${f(r.m.ts, 3)} s`, 8, 14, col.text(), 'left', 10);
+      g.restore();
     },
   },
   {
@@ -157,7 +160,7 @@ export const tunerPanels = (): FigurePanel[] => [
   },
   {
     id: 'table', title: 'Show Parameters (emulated) beside the handout table', x: '', y: '',
-    height: 136,
+    height: 168,
     draw(g, w, h, v: V) {
       wipe(g, w, h);
       const resp = num(v, 'resp', 0.678), rob = num(v, 'rob', 0.6), show = on(v, 'hand');
