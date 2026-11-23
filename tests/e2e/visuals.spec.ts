@@ -1,5 +1,5 @@
 import { test, expect, type Page } from '@playwright/test';
-import { APPS, open, trackErrors, noHScroll } from './helpers';
+import { MAP_APPS, open, trackErrors, noHScroll } from './helpers';
 
 interface Fig { id: string; animate?: { control: string }; controls: { id: string; type: string; min?: number; max?: number; default: unknown; options?: { value: string }[] }[] }
 const figuresOf = async (page: Page, app: string): Promise<Fig[]> => { await open(page, app); return page.evaluate(() => (window as any).__study.content.figures); };
@@ -30,7 +30,7 @@ async function nudge(page: Page, f: Fig) {
   throw new Error(`figure ${f.id} has nothing to nudge`);
 }
 
-for (const app of APPS) {
+for (const app of MAP_APPS) {
   test.describe(`${app}: every new figure renders and responds`, () => {
     test('each figure draws ink, reacts to a control, its presets apply, and it animates (play/pause)', async ({ page }) => {
       test.setTimeout(240_000);

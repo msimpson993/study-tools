@@ -11,7 +11,7 @@ const info = (page: Page): Promise<{ refs: R[]; maps: M[] }> => page.evaluate(()
 const tab = async (page: Page, id: string) => { const x = page.getByTestId('panel-close'); if (await x.isVisible()) { await x.click(); await page.waitForTimeout(150); } const t = page.locator(`button[role=tab][data-map="${id}"]`).first(); if (await t.count()) { await t.click(); await page.waitForTimeout(120); } };
 const node = (page: Page, id: string) => page.locator(`[data-testid=map-node][data-node="${id}"]`).first().dispatchEvent('click');
 
-for (const app of ['control-systems', 'linear-systems', 'sim-project'])
+for (const app of ['control-systems', 'linear-systems'])
   for (const [W, H] of [[1280, 900], [390, 844]] as const) test(`${app} @${W}: host boxes link to their example's introduction; Back returns to the box`, async ({ page }) => {
     const errs = trackErrors(page);
     await page.setViewportSize({ width: W, height: H });

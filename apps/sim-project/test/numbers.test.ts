@@ -8,6 +8,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { MOTOR, BORER, DISK, ENGINE, DESIGNS } from '../src/model/params';
 import * as M from '../src/model/plants';
+import { engineFitAt, FIT_POINTS } from '../src/figs/enginefit';
 
 const OUT = fs.readFileSync(path.join(__dirname, 'fixtures/numbers_output.txt'), 'utf8');
 const grab = (re: RegExp): number => { const m = OUT.match(re); if (!m) throw new Error(`no match ${re}`); return Number(m[1]); };
@@ -217,5 +218,35 @@ describe('pass-1 numbers used by the staged content', () => {
     const z = Math.abs(poles[0].re) / Math.hypot(poles[0].re, poles[0].im);
     nearAbs(z, 0.49, 0.002);
     nearAbs(grab(/engine initial, emulated gains:[\s\S]*?OS=([\d.]+)%/), 7.362, 0.02);
+  });
+});
+
+describe('tabs-layout presets and new figures', () => {
+  it('disk ka200 preset: shock offset −0.001, seek overshoot 37.18 %, Ts 0.3563 s', () => {
+    const Ka = 200;
+    const s = M.diskSeek(Ka), d = M.diskShock(Ka);
+    nearAbs(s.m.os, 37.18, 0.05);
+    nearAbs(s.m.ts, 0.3563, 0.003);
+    nearAbs(d.m.yf, -0.001, 2e-5);
+  });
+
+  it('engine-fit stand-in curve matches the 8 fitted values (within 0.5 % / 0.2°)', () => {
+    const fitMag = [190.42, 12.63, 303.02, 173.72, 278.36, 15.54, 9.83, 1.00];
+    const fitPh = [-83.55, -172.54, -20.65, -90.10, -41.76, -168.65, -177.11, 134.39];
+    FIT_POINTS.forEach((p, i) => {
+      const g = engineFitAt(p.w, true);
+      near(g.mag, fitMag[i], 0.005);
+      // the last point is reported as +134.39° (wrapped); plotPhase is the unwrapped −225.65°
+      const ph = i === 7 ? g.phase : g.plotPhase;
+      nearAbs(ph, fitPh[i], 0.2);
+    });
+  });
+
+  it('tuner final design reaches 2980 rpm at t₀ + 1.82 s on the linear stand-in', () => {
+    const { P, I } = M.tuner(1.5, 0.72);
+    const r = M.engineStep(P, I, 8, 1e-3);
+    let tHit = NaN;
+    for (let i = 0; i < r.t.length; i++) if (r.y[i] >= 0.98) { tHit = r.t[i]; break; }
+    nearAbs(tHit, 1.82, 0.03);
   });
 });

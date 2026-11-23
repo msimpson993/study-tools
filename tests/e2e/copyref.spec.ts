@@ -1,5 +1,5 @@
 import { test, expect, type Page } from '@playwright/test';
-import { APPS, open } from './helpers';
+import { MAP_APPS, open } from './helpers';
 
 test.use({ permissions: ['clipboard-read', 'clipboard-write'] });
 
@@ -21,7 +21,7 @@ async function clickCopy(page: Page, scope: ReturnType<Page['getByTestId']> | Pa
   return { btn, text };
 }
 
-for (const app of APPS) {
+for (const app of MAP_APPS) {
   test.describe(`${app}: copy reference`, () => {
     test('copies a packet from a node panel, a dive and a figure', async ({ page, context }) => {
       await context.grantPermissions(['clipboard-read', 'clipboard-write']);

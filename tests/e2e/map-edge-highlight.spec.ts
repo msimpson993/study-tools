@@ -1,7 +1,7 @@
 import { test, expect, type Page } from '@playwright/test';
 import fs from 'node:fs';
 import path from 'node:path';
-import { APPS, open, selectMap } from './helpers';
+import { MAP_APPS, open, selectMap } from './helpers';
 import { pathToRoot, pathEdgeKeys, edgeKey } from '../../packages/core/src/maplayout';
 
 // Tapping a LINE lights everything up to the arrow: the SOURCE box and its chain back to the root, styled exactly as a tap on the source box
@@ -45,7 +45,7 @@ const paint = (page: Page, id: string) => page.locator(`[data-testid=map-node][d
 const deepest = (m: M) => [...m.edges].sort((a, b) => pathToRoot(b.from, m.edges).length - pathToRoot(a.from, m.edges).length)[0];
 const tapEdge = (page: Page, e: E) => page.locator(`[data-testid=map-edge][data-edge="${edgeKey(e.from, e.to)}"]`).first().dispatchEvent('click');
 
-for (const app of APPS) {
+for (const app of MAP_APPS) {
   test.describe(`${app}: tapping a line lights everything up to the arrow, not the box after it`, () => {
     test('every line on every map', async ({ page }) => {
       test.setTimeout(120_000);

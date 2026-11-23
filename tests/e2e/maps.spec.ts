@@ -1,7 +1,7 @@
 import { test, expect } from '@playwright/test';
-import { APPS, open, selectMap, measureOverlaps, trackErrors } from './helpers';
+import { MAP_APPS, open, selectMap, measureOverlaps, trackErrors } from './helpers';
 
-for (const app of APPS) {
+for (const app of MAP_APPS) {
   test.describe(`${app}: concept maps`, () => {
     test('opens on the question map with no console errors', async ({ page }) => {
       const errs = trackErrors(page);

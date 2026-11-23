@@ -1,5 +1,5 @@
 import { test, expect, type Page } from '@playwright/test';
-import { APPS, open } from './helpers';
+import { MAP_APPS, open } from './helpers';
 
 /* Desktop reading layout (Nov 19): with a box or line pop-up open, the map takes the left ~40% and the entry the right
    ~60%; the side map shrinks to fit its column; a plain mouse wheel scrolls it and Ctrl/Cmd+wheel (or a trackpad pinch) zooms it about the cursor (drag pans, Reset zoom
@@ -12,7 +12,7 @@ const widths = (page: Page) => page.evaluate(() => {
 const zoomOf = (page: Page) => page.evaluate(() => Number((document.querySelector('[data-testid=map-wrap]') as HTMLElement).dataset.zoom ?? '1'));
 
 const VPS: [number, number][] = [[768, 1024], [923, 1300], [1024, 700], [1280, 760], [1366, 900], [1920, 1080]];
-for (const app of APPS) for (const [vw, vh] of VPS) {
+for (const app of MAP_APPS) for (const [vw, vh] of VPS) {
   test.describe(`${app} @${vw}x${vh}: split layout`, () => {
     test.use({ viewport: { width: vw, height: vh } });
 
@@ -117,7 +117,7 @@ for (const app of APPS) for (const [vw, vh] of VPS) {
 }
 
 /** tablets: the open entry and its side map fill the screen under the top bar, nothing clipped, entry text readable */
-for (const app of APPS) for (const [vw, vh] of VPS.slice(0, 4)) test(`${app} @${vw}x${vh}: tablet split fills the screen, nothing clipped, entry text readable`, async ({ page }) => {
+for (const app of MAP_APPS) for (const [vw, vh] of VPS.slice(0, 4)) test(`${app} @${vw}x${vh}: tablet split fills the screen, nothing clipped, entry text readable`, async ({ page }) => {
   await page.setViewportSize({ width: vw, height: vh });
   await open(page, app);
   await page.locator('[data-testid=map-node]').nth(3).dispatchEvent('click');
@@ -139,7 +139,7 @@ for (const app of APPS) for (const [vw, vh] of VPS.slice(0, 4)) test(`${app} @${
 });
 
 /** touch: two fingers pinch-zoom the side map about their midpoint; one finger pans it; the page does not scroll */
-for (const app of APPS) test(`${app} @923x1300 touch: pinch zooms the side map, one finger pans it, Reset zoom restores`, async ({ page, browserName }) => {
+for (const app of MAP_APPS) test(`${app} @923x1300 touch: pinch zooms the side map, one finger pans it, Reset zoom restores`, async ({ page, browserName }) => {
   test.skip(browserName !== 'chromium', 'multi-touch via CDP');
   await page.setViewportSize({ width: 923, height: 1300 });
   await open(page, app);

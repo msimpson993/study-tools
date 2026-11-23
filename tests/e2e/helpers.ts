@@ -1,6 +1,7 @@
 import { expect, type Page } from '@playwright/test';
 
 export const APPS = ['linear-systems', 'control-systems', 'sim-project'] as const;
+export const MAP_APPS = ['linear-systems', 'control-systems'] as const;
 export const url = (app: string, hash = '') => `/${app}/index.html${hash}`;
 
 /** Collect console errors / page errors during a test. */

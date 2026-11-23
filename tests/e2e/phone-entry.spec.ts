@@ -1,5 +1,5 @@
 import { test, expect, type Page } from '@playwright/test';
-import { APPS, open } from './helpers';
+import { MAP_APPS, open } from './helpers';
 
 /* Phones (< 700 px), Nov 19: an open map entry is a floating card over most of the screen (about 10 px margins, rounded,
    the map faint at its edges). Since Nov 19 (10:17 PM) there is no bottom "← Back to map" bar: the card closes with its ✕
@@ -26,7 +26,7 @@ const expectInView = async (page: Page, id: string) => {
 };
 const kept = (page: Page) => page.evaluate(() => ({ y: scrollY, same: (document.querySelector('[data-testid=map-wrap]') as HTMLElement | null)?.dataset.keep === '1' }));
 
-for (const app of APPS) test.describe(`${app} @390: map entry card`, () => {
+for (const app of MAP_APPS) test.describe(`${app} @390: map entry card`, () => {
   test.use({ viewport: { width: 390, height: 844 } });
 
   test('an open box or line is a floating card over most of the screen, no bottom bar, its ✕ pinned in reach while it scrolls', async ({ page }) => {
@@ -101,7 +101,7 @@ for (const app of APPS) test.describe(`${app} @390: map entry card`, () => {
   });
 });
 
-for (const app of APPS) test(`${app} @1366: desktop keeps the 40/60 split and no Back bar; opening an entry adds one history step (pass 3, back-wide.spec.ts)`, async ({ page }) => {
+for (const app of MAP_APPS) test(`${app} @1366: desktop keeps the 40/60 split and no Back bar; opening an entry adds one history step (pass 3, back-wide.spec.ts)`, async ({ page }) => {
   await page.setViewportSize({ width: 1366, height: 900 });
   await open(page, app);
   const len = await page.evaluate(() => history.length);

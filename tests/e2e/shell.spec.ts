@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test';
-import { APPS, open, url, noHScroll, trackErrors } from './helpers';
+import { APPS, MAP_APPS, open, url, noHScroll, trackErrors } from './helpers';
 
 test('hub lists both pages and links to them', async ({ page }) => {
   const errs = trackErrors(page);
@@ -35,6 +35,7 @@ for (const app of APPS) {
     });
 
     test('sidebar collapses and the glossary drawer opens', async ({ page }) => {
+      test.skip(!(MAP_APPS as readonly string[]).includes(app), 'tabbed apps have a top menu, not a sidebar');
       await page.setViewportSize({ width: 1400, height: 900 });
       await open(page, app);
       await expect(page.getByTestId('sidebar')).toBeVisible();

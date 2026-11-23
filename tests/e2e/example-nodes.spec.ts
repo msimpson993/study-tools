@@ -1,7 +1,7 @@
 import { test, expect, type Page } from '@playwright/test';
 import fs from 'node:fs';
 import path from 'node:path';
-import { APPS, open, trackErrors, noHScroll, exampleNodeClashes } from './helpers';
+import { MAP_APPS, open, trackErrors, noHScroll, exampleNodeClashes } from './helpers';
 
 /* Example nodes (Nov 20, approved redesign): each running example is its own dashed node with an "Example" tag in a side
    column beside the box where it first appears, joined to that box by a plain dotted link (no arrowhead, no label, not
@@ -21,7 +21,7 @@ const liveBox = (page: Page) => page.evaluate(() => {
 });
 const label = (page: Page, id: string) => page.evaluate((i) => (window as any).__study.content.maps.flatMap((m: any) => m.nodes).find((n: any) => n.id === i).label, id);
 
-for (const app of APPS) test.describe(`${app}: Example nodes`, () => {
+for (const app of MAP_APPS) test.describe(`${app}: Example nodes`, () => {
   test('one standalone dashed node per example beside its host, a plain dotted link, no pill in any box, a legend entry', async ({ page }) => {
     await page.setViewportSize({ width: 1280, height: 900 });
     await open(page, app);

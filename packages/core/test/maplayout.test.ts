@@ -8,6 +8,7 @@ const WIDTHS = [360, 390, 480, 640, 768, 900, 1024, 1150, 1280, 1400];
 
 describe.each(listApps())('%s concept maps', (app) => {
   const { content } = loadApp(path.join(repoRoot, 'apps', app));
+  if (!content.maps.length) { it('is a tabbed page with no map', () => expect(content.tabs?.length).toBeGreaterThan(0)); return; }
   for (const map of content.maps) {
     describe(`map ${map.id}`, () => {
       it.each(WIDTHS)('has no node/node, label/node or label/label overlaps at %ipx', (w) => {

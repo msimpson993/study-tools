@@ -1,57 +1,79 @@
-/** Content guards for sim-project (question-chain format). */
+/** Content guards for the tabbed sim-project page. */
 import { describe, it, expect } from 'vitest';
 import path from 'node:path';
 import { loadApp, repoRoot } from '../../../packages/build/src';
-import { boxBodyWords, lineBodyWords, capReport } from '../../../packages/build/test/wordcap';
 
 const load = () => loadApp(path.join(repoRoot, 'apps', 'sim-project')).content;
 
-describe('sim-project content', () => {
-  it('keeps its 1 map / 22 boxes / 21 lines / 8 dives / 2 review pages / 69 questions', () => {
+describe('sim-project tabs content', () => {
+  it('loads five tabs, 71 questions, 55 glossary terms, 10 figures and the practice page', () => {
     const c = load();
-    expect(c.maps.map((m) => m.id)).toEqual(['chain']);
-    expect(c.maps[0].nodes.length).toBe(22);
-    expect(c.maps[0].edges.length).toBe(21);
-    expect(c.dives.length).toBe(8);
-    expect((c.review ?? []).map((r) => r.id).sort()).toEqual(['practice', 'report-guide']);
-    expect(c.quiz.length).toBe(69);
-    expect(c.figures.map((f) => f.id)).toEqual(['blocks', 'motor', 'borer', 'tradeoff', 'sens', 'disk', 'pi', 'tuner', 'knobs']);
+    expect(c.maps).toEqual([]);
+    expect(c.dives).toEqual([]);
+    expect(c.tabs?.map((t) => t.id)).toEqual(['overview', 'motor', 'borer', 'disk', 'engine']);
+    expect(c.tabs?.map((t) => t.title)).toEqual([
+      'Overview',
+      'Speed controlled motor',
+      'Boring machine',
+      'Disk drive head',
+      'Engine speed with the PID Tuner',
+    ]);
+    expect((c.review ?? []).map((r) => r.id)).toEqual(['practice']);
+    expect(c.quiz.length).toBe(71);
+    expect(c.glossary.length).toBe(55);
+    expect(c.figures.map((f) => f.id)).toEqual([
+      'blocks', 'motor', 'borer', 'tradeoff', 'sens', 'disk', 'pi', 'tuner', 'loop', 'engine-fit',
+    ]);
+    expect(c.figures.some((f) => f.id === 'knobs')).toBe(false);
   });
-  it('every box pop-up follows the template (answer, rough words, running example, captioned figures, intuition question)', () => {
+
+  it('every figure fence names a figure (and preset when given) that exists', () => {
     const c = load();
-    for (const m of c.maps) for (const n of m.nodes) {
-      if (!n.pop) continue;
-      const id = `${m.id}/${n.id}`;
-      expect(n.short, id).toBeTruthy();
-      expect(n.pop.rough, id).toBeTruthy();
-      expect(n.pop.example ?? n.addsToExample, id).toBeTruthy();
-      if (n.id !== 'root') expect(n.pop.ask, `${id} intuition question`).toBeTruthy();
-      const figs = n.pop.figures ?? [];
-      if (figs.length) expect(n.pop.figCaption, `${id} figure caption`).toBeTruthy();
+    const figs = new Map(c.figures.map((f) => [f.id, new Set(f.presets.map((p) => p.id))]));
+    const fences: { tab: string; id: string; preset?: string }[] = [];
+    for (const tab of c.tabs ?? []) {
+      const re = /class="viz-slot"[^>]*data-figure="([^"]+)"([^>]*)>/g;
+      let m: RegExpExecArray | null;
+      while ((m = re.exec(tab.html))) {
+        const preset = /data-preset="([^"]+)"/.exec(m[2])?.[1];
+        fences.push({ tab: tab.id, id: m[1], preset });
+      }
+    }
+    expect(fences.length, 'live figures were embedded').toBeGreaterThanOrEqual(20);
+    for (const f of fences) {
+      expect(figs.has(f.id), `${f.tab}: figure ${f.id}`).toBe(true);
+      if (f.preset) expect(figs.get(f.id)?.has(f.preset), `${f.tab}: ${f.id} preset ${f.preset}`).toBe(true);
     }
   });
-  it('box and line pop-ups keep to the soft word cap (~400 words of main body; fails only past 600)', () => {
-    const c = load(), counts: Record<string, number> = {};
-    for (const m of c.maps) { for (const n of m.nodes) counts[`${m.id}/${n.id}`] = boxBodyWords(n); for (const e of m.edges) counts[`${m.id}/line ${e.from}->${e.to}`] = lineBodyWords(e); }
-    expect(capReport('sim-project', counts)).toEqual([]);
-  });
-  it('lines carry their question and why; non-root boxes restate an incoming question', () => {
-    const c = load(), m = c.maps[0];
-    for (const e of m.edges) {
-      expect(e.question, `${e.from}->${e.to}`).toBeTruthy();
-      expect((e.why ?? '').length, `${e.from}->${e.to} why`).toBeGreaterThan(20);
-    }
-    for (const n of m.nodes) if (n.pop && n.id !== 'root') expect(m.edges.find((e) => e.to === n.id && !e.dashed)?.question ?? '', `${n.id} incoming`).toMatch(/\?/);
-  });
-  it('dives have a level, a live figure, a worked example, what it can\'t do, and 2 checks', () => {
+
+  it('each problem tab has sections (a)–(f) and the Eq. 4.69 callout is on the disk tab', () => {
     const c = load();
-    for (const d of c.dives) {
-      expect(d.level, d.id).toMatch(/Conceptual|Some algebra|Worked calculation/);
-      expect(d.html, `${d.id} live figure`).toMatch(/data-figure=|figure="|class="figure/);
-      expect(d.html, `${d.id} worked`).toMatch(/Worked example/);
-      expect(d.html, `${d.id} can't`).toMatch(/What it can(’|'|&#39;)t do/);
-      expect((d.check ?? []).length, d.id).toBeGreaterThanOrEqual(2);
-      expect((d.check ?? []).length, d.id).toBeLessThanOrEqual(3);
+    for (const id of ['motor', 'borer', 'disk', 'engine']) {
+      const tab = c.tabs!.find((t) => t.id === id)!;
+      const titles = tab.sections.map((s) => s.title);
+      expect(titles.some((s) => s.includes('(a)')), id).toBe(true);
+      expect(titles.some((s) => s.includes('(b)')), id).toBe(true);
+      expect(titles.some((s) => s.includes('(c)')), id).toBe(true);
+      expect(titles.some((s) => s.includes('(d)')), id).toBe(true);
+      expect(titles.some((s) => s.includes('(e)')), id).toBe(true);
+      expect(titles.some((s) => s.includes('(f)')), id).toBe(true);
     }
+    const disk = c.tabs!.find((t) => t.id === 'disk')!;
+    expect(disk.html).toMatch(/Eq\.\s*4\.69/);
+    expect(disk.html).toMatch(/minus sign|no minus/i);
+  });
+
+  it('glossary keeps the tutor section names', () => {
+    const c = load();
+    const sections = [...new Set(c.glossary.map((g) => g.section).filter(Boolean))];
+    expect(sections.sort()).toEqual([
+      'Blocks & loops', 'Boring machine', 'Disk head', 'Engine & tuner', 'Math', 'Motor', 'Specs',
+    ].sort());
+  });
+
+  it('every quiz question is tagged to a tab', () => {
+    const c = load();
+    const tags = new Set(c.tabs!.flatMap((t) => t.quizTags ?? [t.id]));
+    for (const q of c.quiz) expect(q.tags.some((t) => tags.has(t)), q.id).toBe(true);
   });
 });

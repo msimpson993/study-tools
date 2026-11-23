@@ -1,7 +1,7 @@
 import { test, expect, type Page } from '@playwright/test';
 import fs from 'node:fs';
 import path from 'node:path';
-import { APPS, open, trackErrors } from './helpers';
+import { MAP_APPS, open, trackErrors } from './helpers';
 
 /* Full-map zoom (Nov 20, both apps): with nothing open the map is the same zoomable viewport as the side map: a frame filling the
    screen under the header; a plain wheel scrolls it (shift+wheel sideways; at its top or bottom edge the page scrolls on),
@@ -17,7 +17,7 @@ const frame = (page: Page) => page.evaluate(() => { const s = document.querySele
 const under = (page: Page, x: number, y: number) => page.evaluate(([x, y]) => { const s = document.querySelector('[data-testid=map-svg]') as SVGSVGElement, r = s.getBoundingClientRect(), vb = s.viewBox.baseVal; return { x: ((x - r.left) / r.width) * vb.width, y: ((y - r.top) / r.height) * vb.height }; }, [x, y]);
 const W3 = [[390, 844], [923, 1300], [1280, 900]] as const;
 
-for (const app of APPS) for (const [W, H] of W3) test.describe(`${app} @${W}: full-map zoom`, () => {
+for (const app of MAP_APPS) for (const [W, H] of W3) test.describe(`${app} @${W}: full-map zoom`, () => {
   test('a framed viewport under the header, one zoom bar with Fit / Actual size (none in the legend), 100% at the top; screenshot', async ({ page }) => {
     const errs = trackErrors(page);
     await page.setViewportSize({ width: W, height: H });

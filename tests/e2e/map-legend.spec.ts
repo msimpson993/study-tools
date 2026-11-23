@@ -1,7 +1,7 @@
 import { test, expect, type Page } from '@playwright/test';
 import fs from 'node:fs';
 import path from 'node:path';
-import { APPS, open, selectMap, noHScroll } from './helpers';
+import { MAP_APPS, open, selectMap, noHScroll } from './helpers';
 
 // The legend is the map's key: solid = next question, dashed = same idea in another view, plus the box shapes the map uses.
 // It must list only what the current map uses, draw its swatches with the SAME dash pattern as the real lines, and no line state may read as dotted.
@@ -14,7 +14,7 @@ const dash = (page: Page, sel: string) => page.locator(sel).first().evaluate((el
 /** Dash and gap lengths of a computed stroke-dasharray ("none" -> []). */
 const nums = (a: string) => (a === 'none' ? [] : a.split(/[ ,]+/).map((x) => parseFloat(x)));
 
-for (const app of APPS) {
+for (const app of MAP_APPS) {
   test.describe(`${app}: map legend`, () => {
     test('lists exactly what each map uses, with swatches that match the real lines', async ({ page }) => {
       await open(page, app);

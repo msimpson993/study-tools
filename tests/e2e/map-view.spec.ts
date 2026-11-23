@@ -1,7 +1,7 @@
 import { test, expect, type Page } from '@playwright/test';
 import fs from 'node:fs';
 import path from 'node:path';
-import { APPS, open } from './helpers';
+import { MAP_APPS, open } from './helpers';
 
 // Map view toggle: "Fit to screen" (default, the layout follows the screen) vs "Actual size" (natural boxes, pan around).
 const OUT = path.resolve(import.meta.dirname, '..', '..', 'shots');
@@ -11,7 +11,7 @@ const pick = (page: Page, v: 'fit' | 'actual') => page.locator(`[data-testid=map
 const dims = (page: Page) => page.evaluate(() => { const sc = document.querySelector('.cm-scroll') as HTMLElement, sv = sc.querySelector('svg')!.getBoundingClientRect(); const nb = (document.querySelector('[data-testid=map-node] .shape') as SVGGraphicsElement).getBoundingClientRect(); return { cw: sc.clientWidth, ch: sc.clientHeight, sw: sc.scrollWidth, sh: sc.scrollHeight, svgW: sv.width, boxW: nb.width, actual: sc.classList.contains('actual'), sl: sc.scrollLeft, st: sc.scrollTop }; });
 const state = (page: Page) => page.evaluate(() => ({ sel: document.querySelectorAll('.qm-node.n-sel').length, edge: document.querySelectorAll('.qm-edge.e-sel').length }));
 
-for (const app of APPS) {
+for (const app of MAP_APPS) {
   for (const [view, vp] of [['desktop', { width: 1400, height: 900 }], ['mobile', { width: 390, height: 844 }]] as const) {
     test.describe(`${app} ${view}: map view`, () => {
       test.use({ viewport: vp });

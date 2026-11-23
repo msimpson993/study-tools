@@ -6,7 +6,7 @@ import { open, trackErrors } from './helpers';
 type M = { id: string; edges: { from: string; to: string; dashed?: boolean; side?: boolean }[] };
 const firstMap = (page: Page): Promise<M> => page.evaluate(() => (window as any).__study.content.maps[0]);
 const sel = (page: Page) => page.locator('.qm-node.n-sel');
-for (const app of ['control-systems', 'linear-systems', 'sim-project'])
+for (const app of ['control-systems', 'linear-systems'])
   for (const [W, H] of [[923, 1300], [1280, 900]] as const) test(`${app} @${W}: Back walks back up the chain, then closes onto the map; ✕ closes in one go`, async ({ page }) => {
     const errs = trackErrors(page);
     await page.setViewportSize({ width: W, height: H });

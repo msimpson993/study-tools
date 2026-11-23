@@ -26,7 +26,8 @@ const errorsOf = (dir: string): string => { try { loadApp(dir); return ''; } cat
 describe('shipped content', () => {
   it.each(listApps())('%s validates and matches its porting guard', (app) => {
     const { content } = loadApp(srcOf(app));
-    expect(content.maps.length).toBeGreaterThan(0);
+    if (content.tabs?.length) expect(content.tabs.length).toBeGreaterThan(0);
+    else expect(content.maps.length).toBeGreaterThan(0);
   });
   it('linear-systems keeps its 2 maps / 52 nodes / 55 edges / 31 dives (Big picture + Full detail rebuild)', () => {
     const { content } = loadApp(path.join(repoRoot, 'apps', 'linear-systems'));
