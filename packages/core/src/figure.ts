@@ -136,24 +136,16 @@ export function mountFigure(host: HTMLElement, def: FigureDef, panels0: FigurePa
   // a long scroll below all four stacked panels. Desktop keeps the right-hand rail.
   const placeRail = () => {
     if (intro) return;
-    const landscapeShort = window.matchMedia('(orientation: landscape) and (max-height: 500px)').matches;
     const phoneTabs = document.documentElement.classList.contains('layout-tabs')
-      && window.matchMedia('(max-width: 700px)').matches
-      && !landscapeShort;
-    const sticky = host.closest('.sticky-fig');
-    const sheetBody = document.querySelector('.sticky-controls-body');
+      && window.matchMedia('(max-width: 700px)').matches;
     const first = inline.querySelector('.fig');
-    if (phoneTabs && sticky && sheetBody) sheetBody.append(rail);
-    else if (sticky) layout.append(rail);
-    else if (phoneTabs && first) first.after(rail);
+    if (phoneTabs && first) first.after(rail);
     else layout.append(rail);
   };
   placeRail();
   const mq = window.matchMedia('(max-width: 700px)');
-  const mqLand = window.matchMedia('(orientation: landscape) and (max-height: 500px)');
   const onRailMq = () => placeRail();
   mq.addEventListener?.('change', onRailMq);
-  mqLand.addEventListener?.('change', onRailMq);
 
   const slotCanvases: HTMLCanvasElement[] = [];
   function renderOverlay() {
@@ -200,7 +192,7 @@ export function mountFigure(host: HTMLElement, def: FigureDef, panels0: FigurePa
     redraw,
     open(ids: string[]) { openIds = ids; legendOpen = [false, false]; renderOverlay(); },
     close() { openIds = []; renderOverlay(); },
-    destroy() { stopAnim(); ro.disconnect(); window.removeEventListener('study-theme', onTheme); document.removeEventListener('keydown', onKey, true); mq.removeEventListener?.('change', onRailMq); mqLand.removeEventListener?.('change', onRailMq); },
+    destroy() { stopAnim(); ro.disconnect(); window.removeEventListener('study-theme', onTheme); document.removeEventListener('keydown', onKey, true); mq.removeEventListener?.('change', onRailMq); },
   };
   requestAnimationFrame(redraw);
   return api;

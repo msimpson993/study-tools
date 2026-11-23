@@ -70,7 +70,6 @@ export function embedFigureSlots(root: HTMLElement, content: AppContent, hooks: 
   if (opts?.wrapPairs) wrapAdjacentFigureSlots(root);
   const stops: (() => void)[] = [];
   root.querySelectorAll<HTMLElement>('.viz-slot[data-figure]').forEach((slot) => {
-    if (slot.dataset.skipEmbed === '1') return;
     const id = slot.dataset.figure!;
     const def = content.figures.find((f) => f.id === id);
     const mounter = hooks.figures?.[id];
