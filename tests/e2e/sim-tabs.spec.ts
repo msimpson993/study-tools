@@ -271,3 +271,138 @@ test.describe('sim-project tabbed page', () => {
       }
     });
   }
+
+  test('clicking a step card activates it and shows that figure', async ({ page }) => {
+    await page.setViewportSize({ width: 1280, height: 900 });
+    await open(page, 'sim-project', '#/tab/motor');
+    const steps = page.getByTestId('sticky-step');
+    await expect(page.getByTestId('sticky-fig')).toHaveAttribute('data-preset', 'open');
+    await steps.nth(3).click({ position: { x: 24, y: 40 } });
+    await expect(page.getByTestId('sticky-fig')).toHaveAttribute('data-preset', 'kt2');
+    await expect(steps.nth(3)).toHaveAttribute('aria-current', 'step');
+    await expect(page.getByTestId('sticky-cap')).toContainText('Step 4');
+  });
+
+  test('at 1280px the (c) split is about 30 % text and 60 % figure, with controls under the plots', async ({ page }) => {
+    await page.setViewportSize({ width: 1280, height: 900 });
+    await open(page, 'sim-project', '#/tab/motor');
+    const split = page.getByTestId('sticky-split');
+    await expect(split).toBeVisible();
+    const dims = await page.evaluate(() => {
+      const splitEl = document.querySelector('[data-testid=sticky-split]')!;
+      const steps = document.querySelector('.sticky-steps')!;
+      const fig = document.querySelector('[data-testid=sticky-fig]')!;
+      const sw = splitEl.getBoundingClientRect().width;
+      const sr = steps.getBoundingClientRect();
+      const fr = fig.getBoundingClientRect();
+      const plots = fig.querySelector('.pair2, .fig-stage')!;
+      const rail = fig.querySelector('.st-ctl');
+      return {
+        stepFrac: sr.width / sw,
+        figFrac: fr.width / sw,
+        sideBySide: Math.abs(sr.top - fr.top) < 80 && fr.left > sr.right - 8,
+        railBelow: !rail || rail.getBoundingClientRect().top >= plots.getBoundingClientRect().bottom - 8,
+      };
+    });
+    expect(dims.stepFrac, `text column ${dims.stepFrac}`).toBeGreaterThan(0.25);
+    expect(dims.stepFrac).toBeLessThan(0.38);
+    expect(dims.figFrac, `figure column ${dims.figFrac}`).toBeGreaterThan(0.52);
+    expect(dims.figFrac).toBeLessThan(0.68);
+    expect(dims.sideBySide).toBe(true);
+    expect(dims.railBelow).toBe(true);
+  });
+
+  test('no Look-for text appears inside the sticky figure panel', async ({ page }) => {
+    await page.setViewportSize({ width: 1280, height: 900 });
+    await open(page, 'sim-project', '#/tab/motor');
+    await expect(page.getByTestId('sticky-fig')).not.toContainText(/Look for/i);
+    await expect(page.getByTestId('sticky-step').first()).toContainText(/Look for/i);
+    await expect(page.getByTestId('how-to-read')).toBeVisible();
+    await page.getByTestId('sticky-step').nth(1).getByTestId('sticky-show').click();
+    await expect(page.getByTestId('sticky-fig')).not.toContainText(/Look for/i);
+  });
+
+  test('the phone Controls sheet opens over the text and leaves the plot visible', async ({ page }) => {
+    await page.setViewportSize({ width: 390, height: 800 });
+    await open(page, 'sim-project', '#/tab/motor');
+    const fig = page.getByTestId('sticky-fig');
+    await expect(fig).toBeVisible();
+    await page.getByTestId('sticky-step').nth(1).evaluate((el) => el.scrollIntoView({ block: 'start' }));
+    await page.waitForTimeout(250);
+    await page.getByTestId('sticky-controls-open').click();
+    await expect(page.getByTestId('sticky-controls-sheet')).toBeVisible();
+    const vis = await page.evaluate(() => {
+      const figEl = document.querySelector('[data-testid=sticky-fig]')!;
+      const plot = [...figEl.querySelectorAll('canvas')].find((c) => {
+        const r = c.getBoundingClientRect();
+        return r.height > 40 && r.width > 40;
+      }) ?? figEl;
+      const sheet = document.querySelector('[data-testid=sticky-controls-sheet]')!;
+      const pr = plot.getBoundingClientRect();
+      const sr = sheet.getBoundingClientRect();
+      return {
+        plotVisible: pr.height > 40 && pr.top >= 0 && pr.bottom <= window.innerHeight + 4,
+        sheetBelowPlot: sr.top >= pr.bottom - 4,
+      };
+    });
+    expect(vis.plotVisible).toBe(true);
+    expect(vis.sheetBelowPlot).toBe(true);
+    await page.getByTestId('sticky-controls-close').click();
+    await expect(page.getByTestId('sticky-controls-sheet')).toBeHidden();
+  });
+
+  test('at 390px there is no gap above the pinned figure header', async ({ page }) => {
+    await page.setViewportSize({ width: 390, height: 800 });
+    await open(page, 'sim-project', '#/tab/motor');
+    await page.getByTestId('sticky-step').nth(2).evaluate((el) => el.scrollIntoView({ block: 'start' }));
+    await page.waitForTimeout(250);
+    const gap = await page.evaluate(() => {
+      const bar = document.querySelector('.tab-bar-wrap')!.getBoundingClientRect();
+      const fig = document.querySelector('[data-testid=sticky-fig]')!.getBoundingClientRect();
+      return fig.top - bar.bottom;
+    });
+    expect(gap, `gap ${gap}px`).toBeGreaterThanOrEqual(-1);
+    expect(gap).toBeLessThanOrEqual(3);
+  });
+
+  test('at 1920px each side margin of the tab column is under 8 % of the viewport', async ({ page }) => {
+    await page.setViewportSize({ width: 1920, height: 1080 });
+    await open(page, 'sim-project', '#/tab/motor');
+    const m = await page.evaluate(() => {
+      const frame = document.querySelector('.frame.tabbed')!;
+      const r = frame.getBoundingClientRect();
+      return { left: r.left / window.innerWidth, right: (window.innerWidth - r.right) / window.innerWidth };
+    });
+    expect(m.left, `left margin ${m.left}`).toBeLessThan(0.08);
+    expect(m.right, `right margin ${m.right}`).toBeLessThan(0.08);
+    expect(m.left).toBeGreaterThan(0);
+  });
+
+  test('an 844×390 landscape phone uses a 40/60 side-by-side split', async ({ page }) => {
+    await page.setViewportSize({ width: 844, height: 390 });
+    await open(page, 'sim-project', '#/tab/motor');
+    const dims = await page.evaluate(() => {
+      const split = document.querySelector('[data-testid=sticky-split]')!;
+      const steps = document.querySelector('.sticky-steps')!;
+      const fig = document.querySelector('[data-testid=sticky-fig]')!;
+      const sw = split.getBoundingClientRect().width;
+      const sr = steps.getBoundingClientRect();
+      const fr = fig.getBoundingClientRect();
+      const rail = fig.querySelector('.st-ctl');
+      const plots = fig.querySelector('.pair2, .fig-stage');
+      return {
+        stepFrac: sr.width / sw,
+        figFrac: fr.width / sw,
+        sideBySide: fr.left > sr.right - 12 && Math.abs(sr.top - fr.top) < 120,
+        stacked: fr.top > sr.bottom - 8,
+        railBelow: !rail || !plots || rail.getBoundingClientRect().top >= plots.getBoundingClientRect().bottom - 8,
+      };
+    });
+    expect(dims.stacked, 'must not stack top/bottom').toBe(false);
+    expect(dims.sideBySide).toBe(true);
+    expect(dims.stepFrac, `text ${dims.stepFrac}`).toBeGreaterThan(0.32);
+    expect(dims.stepFrac).toBeLessThan(0.48);
+    expect(dims.figFrac, `plots ${dims.figFrac}`).toBeGreaterThan(0.52);
+    expect(dims.figFrac).toBeLessThan(0.68);
+    expect(dims.railBelow).toBe(true);
+  });

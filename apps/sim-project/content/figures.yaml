@@ -26,7 +26,7 @@
     - { label: open loop, color: "var(--muted)" }
     - { label: closed loop, color: "var(--acc)" }
     - { label: "final value", color: "var(--yel)", dash: true }
-  howToRead: "Left: the motor and its load, with the tachometer and amplifier drawn when the loop is on; the shaft's spin slows as the load hits at t = 0. Right: the speed change after a 1 N·m load. The readout gives the final sag, the time constant τ, the loop gain and the ratio closed/open against the handout's 0.02 line."
+  howToRead: "The picture shows the motor and its load, with the tachometer and amplifier drawn when the loop is on; the shaft's spin slows as the load hits at t = 0. The plot is the speed change after a 1 N·m load. When both loops are shown and the closed curve would look flat, a zoomed inset shows that sag. The readout gives the final sag, the time constant τ, the loop gain and the ratio closed/open against the handout's 0.02 line."
   lookFor: "The two loops differ by 361× in time: on the 7 s axis the closed loop looks flat, and on the 0.02 s axis the open loop has barely started to move."
   animate: { control: t, speed: 1, loop: false }
   controls:
@@ -53,7 +53,7 @@
     - { label: "planned line / final value", color: "var(--muted)", dash: true }
     - { label: "response at your K", color: "var(--acc)" }
     - { label: "K = 20 and K = 100 (ghosts)", color: "var(--muted)" }
-  howToRead: "Top: the machine seen from above, steering onto the planned line (command) or pushed sideways by the rock (push). Middle left: the step response to a new planned line, with overshoot, 2 % band and settling time marked. Middle right: the response to a unit push, final offset 1/K marked. Bottom: the poles (×) and the zero (○) of the command response; the dashed rays are ζ = 1 and ζ = 0.6; the grey dots are the poles at K = 20 and K = 100. Readout: ζ (damping ratio), ωn (natural frequency, rad/s), OS (overshoot, the handout's P.O.) and Ts (2 % settling time)."
+  howToRead: "The picture shows the machine from above, steering onto the planned line (command) or pushed sideways by the rock (push). One plot is the step response to a new planned line, with overshoot, 2 % band and settling time marked. Another is the response to a unit push, final offset 1/K marked. The s-plane shows the poles (×) and the zero (○) of the command response; the dashed rays are ζ = 1 and ζ = 0.6; the grey dots are the poles at K = 20 and K = 100. Readout: ζ (damping ratio), ωn (natural frequency, rad/s), OS (overshoot, the handout's P.O.) and Ts (2 % settling time)."
   lookFor: "As K rises past 36 the two real poles meet and split into a swinging pair; overshoot climbs while the push offset 1/K falls."
   animate: { control: t, speed: 0.5, loop: false }
   controls:
@@ -94,7 +94,7 @@
     - { label: "S(jω) = s(s + 1)/(s² + 12s + K)", color: "var(--acc)" }
     - { label: "shortcut s/K", color: "var(--muted)", dash: true }
     - { label: "probe ω", color: "var(--yel)" }
-  howToRead: "Left (the handout's Fig. 4.27 top): S drawn in the complex plane as ω runs from 0.1 to 1000 rad/s; it starts near 0 and ends at 1. Right (Fig. 4.27 bottom): |S| against ω on log axes, solid, with the shortcut s/K dashed. The yellow probe marks your ω on both; the readout says what a 10 % change in the machine at that ω does to the loop. Re S (across) is the real part of S and Im S (up) its imaginary part, the j part; together they carry the size and the lag of the response to a wiggle."
+  howToRead: "One plot (the handout's Fig. 4.27 top) draws S in the complex plane as ω runs from 0.1 to 1000 rad/s; it starts near 0 and ends at 1. The other (Fig. 4.27 bottom) is |S| against ω on log axes, solid, with the shortcut s/K dashed. The yellow probe marks your ω on both; the readout says what a 10 % change in the machine at that ω does to the loop. Re S (across) is the real part of S and Im S (up) its imaginary part, the j part; together they carry the size and the lag of the response to a wiggle."
   lookFor: "Raise K: the left end of the |S| curve drops (slow motions protected better); the right end stays at 1."
   controls:
     - { id: K, label: "K (gain)", type: range, min: 5, max: 200, step: 1, default: 20, group: primary }
@@ -110,7 +110,7 @@
     - { label: "response at your Ka", color: "var(--acc)" }
     - { label: "two-part stand-in (coil dropped)", color: "var(--yel)", dash: true }
     - { label: "Ka = 10 and 80 (ghosts)", color: "var(--muted)" }
-  howToRead: "Top: the drive from above, the arm swinging the head to a new track (seek) or knocked by a shock. Left: the seek (command step), overshoot and settling marked. Middle: the shock response, final offset −1/(5·Ka) marked. Right: the poles near the origin (the arm's), with an inset arrow to the coil's pole near −1000. Readout: overshoot, settling, offset, and the distance to the ceiling Ka = 4080."
+  howToRead: "The picture shows the drive from above, the arm swinging the head to a new track (seek) or knocked by a shock. One plot is the seek (command step), with overshoot and settling marked. Another is the shock response, final offset −1/(5·Ka) marked. The s-plane shows the poles near the origin (the arm's), with an inset arrow to the coil's pole near −1000. Readout: overshoot, settling, offset, and the distance to the ceiling Ka = 4080."
   lookFor: "With the coil dropped, the dashed stand-in sits almost on the real curve at Ka = 80. Near the ceiling both swing hard, but only the real loop is close to ringing forever: the stand-in always dies out."
   animate: { control: t, speed: 0.4, loop: false }
   controls:
@@ -134,7 +134,7 @@
     - { label: speed, color: "var(--acc)" }
     - { label: "P part of the throttle", color: "var(--yel)" }
     - { label: "I part of the throttle", color: "var(--grn)" }
-  howToRead: "Top: engine speed after a unit step in commanded speed, on the stand-in engine (not in lab handout). Bottom: the throttle command split into P × error and I × accumulated error. With I = 0 the speed stops short by 1/(1 + P·Kₑ), where Kₑ = 311 rpm per unit throttle is the stand-in engine's steady gain; with I > 0 the I part grows until it holds the throttle alone and the error is zero."
+  howToRead: "One plot is engine speed after a unit step in commanded speed, on the stand-in engine (not in lab handout). The other is the throttle command split into P × error and I × accumulated error. With I = 0 the speed stops short by 1/(1 + P·Kₑ), where Kₑ = 311 rpm per unit throttle is the stand-in engine's steady gain; with I > 0 the I part grows until it holds the throttle alone and the error is zero."
   lookFor: "With I > 0, the I part grows until it carries the whole throttle and the P part (and the error) fall to zero. With I = 0, the P part has to hold the throttle, so an error is left."
   controls:
     - { id: P, label: "P", type: range, min: 0, max: 0.012, step: 0.0000001, default: 0.0042253, group: primary }
@@ -151,7 +151,7 @@
     - { label: "response at your sliders", color: "var(--acc)" }
     - { label: "baseline / previous design (ghost)", color: "var(--muted)" }
     - { label: "phase margin and gain margin bars", color: "var(--yel)" }
-  howToRead: "Top: the engine and throttle (scene), and the two sliders drawn as in the tuner. Left: the step response at your settings (the tuner's 'Step Plot: Reference tracking'). Right: the loop's Bode plot with the PM bar at crossover and the GM bar where the phase reaches −180°. Table: P, I, rise, settling, overshoot, peak, GM, PM, as in the tuner's 'Show Parameters', with the handout's values beside them when 'show handout table' is on. All values come from an emulation on a stand-in engine fitted to the handout's tables (not in lab handout)."
+  howToRead: "The picture shows the engine and throttle, and the two sliders drawn as in the tuner. The step plot is the response at your settings (the tuner's 'Step Plot: Reference tracking'). The Bode plot is the loop gain and phase, with the PM bar at crossover and the GM bar where the phase reaches −180°. The table lists P, I, rise, settling, overshoot, peak, GM, PM, as in the tuner's 'Show Parameters', with the handout's values beside them when 'show handout table' is on. All values come from an emulation on a stand-in engine fitted to the handout's tables (not in lab handout)."
   lookFor: "At robustness 0.6, slide response time past about 2.1 s and P reaches 0: from there on the margin comes out above what you asked for."
   animate: { control: t, speed: 1, loop: false }
   controls:
@@ -192,7 +192,7 @@
     - { label: "points read from the handout's four tuner tables", color: "var(--yel)" }
     - { label: "stand-in G(s) = 311·3.42²·e^(−0.015s)/(s² + 6.3954s + 11.6964)", color: "var(--acc)" }
     - { label: "same curve without the 15 ms delay", color: "var(--muted)", dash: true }
-  howToRead: "Each tuner table gives a crossover (where |C·G| = 1) and a phase margin, plus a gain-margin frequency, for known P and I. Each of those pins one point of the engine's own frequency response G(jω): 8 points in all. The curve is the simple model that passes through all 8 (within 0.5 %)."
+  howToRead: "The two plots are the stand-in's gain |G| and its phase against wiggle rate ω. Each tuner table gives a crossover (where |C·G| = 1) and a phase margin, plus a gain-margin frequency, for known P and I. Each of those pins one point of the engine's own frequency response G(jω): 8 points in all. The curve is the simple model that passes through all 8 (within 0.5 %)."
   lookFor: "The phase keeps falling past −180° at high ω only because of the delay; without it the curve would level off at −180°."
   controls:
     - { id: delay, label: show the no-delay curve, type: toggle, default: true, group: primary }
