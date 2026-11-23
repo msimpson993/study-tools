@@ -197,8 +197,8 @@ Near the target Kp × error falls below the 20 N·m needed to restart, so the di
 **Symptom:** small steady hunting. **Cause:** stiction plus integral action: while the gear is stuck, the integrator keeps building torque until it breaks free and jumps past the target, then builds the other way (not in lecture notes). **Fix:** an integrator dead band: stop integrating while |e| < δ = 0.003 rad (0.17°).
 
 **On the dish, tuned PID (2000, 1000, 200), same stiction as A12, 0.1 rad step:**
-- without the dead band it hunts between −0.145° and +0.147°, period 23.9 s, forever (11 crossings in 60–200 s);
-- with the dead band it sticks at +0.149° and stays.
+- without the dead band it hunts between −0.147° and +0.145°, period 23.9 s, forever (11 crossings in 60–200 s);
+- with the dead band it sticks at e = −0.149° (0.149° past the target) and stays.
 
 A small, steady error inside the band is the price of no hunting.
 

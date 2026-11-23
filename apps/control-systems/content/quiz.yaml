@@ -600,13 +600,13 @@
     - sse
   kind: recall
   q: Kp = 2000, 50 N·m gust. e_ss?
-  a: 0.025 rad = 1.43°.
+  a: e_ss = −T_d/Kp = −50/2000 = −0.025 rad = −1.43° (the dish sits 1.43° past the target).
 - id: ck-sse-2
   tags:
     - sse
   kind: recall
   q: Kp = 1000, 0.5°/s pass. e_ss?
-  a: B·ω/Kp = 0.010°.
+  a: "B·ω/Kp = +0.010°: positive, the dish lags behind the satellite."
 - id: ck-int-1
   tags:
     - integral

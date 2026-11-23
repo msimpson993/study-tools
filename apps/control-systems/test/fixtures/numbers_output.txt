@@ -146,12 +146,12 @@ Td = Kd/Kp = 0.12 s;  wind under PD: still e_ss = -Td/Kp (D does nothing at rest
 
 ======== [P6] PID, D on measurement (Lab default): from PD (1000, 0, 120) to the tuned (2000, 1000, 200)
 PD on the positioner with Kp=2000, Kd=200: s^2 + 22 s + 200 -> wn = 14.142 , zeta = 0.778
-(1000, 0, 120): poles [-7.+7.141j -7.-7.141j], final=1, peak=1.046, OS=4.599, Tp=0.4399, Ts=0.5979, Tr1090=0.2126 | wind 20 N m: peak 1.199 deg, final 1.146 deg, inside 0.05 deg after 30.00 s
-(2000, 0, 200): poles [-11.+8.888j -11.-8.888j], final=1, peak=1.02, OS=2.049, Tp=0.3535, Ts=0.3698, Tr1090=0.1687 | wind 20 N m: peak 0.585 deg, final 0.573 deg, inside 0.05 deg after 30.00 s
-(1000, 1000, 120): poles [-6.411+6.618j -6.411-6.618j -1.178+0.j   ], final=1, peak=1.181, OS=18.14, Tp=0.4466, Ts=2.005, Tr1090=0.1835 | wind 20 N m: peak 1.083 deg, final 0.000 deg, inside 0.05 deg after 2.95 s
-(2000, 500, 200): poles [-10.871+8.73j -10.871-8.73j  -0.257+0.j  ], final=1, peak=1.048, OS=4.759, Tp=0.3581, Ts=1.525, Tr1090=0.1619 | wind 20 N m: peak 0.569 deg, final 0.000 deg, inside 0.05 deg after 9.70 s
-(2000, 1000, 200): poles [-10.735+8.566j -10.735-8.566j  -0.53 +0.j   ], final=1, peak=1.074, OS=7.365, Tp=0.3599, Ts=2.198, Tr1090=0.1563 | wind 20 N m: peak 0.556 deg, final 0.000 deg, inside 0.05 deg after 4.82 s
-(2000, 2000, 200): poles [-10.433+8.215j -10.433-8.215j  -1.134+0.j   ], final=1, peak=1.123, OS=12.25, Tp=0.3574, Ts=1.798, Tr1090=0.1471 | wind 20 N m: peak 0.535 deg, final 0.000 deg, inside 0.05 deg after 2.38 s
+(1000, 0, 120): poles [-7.+7.141j -7.-7.141j], final=1, peak=1.046, OS=4.599, Tp=0.4399, Ts=0.5979, Tr1090=0.2126 | wind 20 N m: peak |e| 1.199 deg, final e -1.146 deg, inside 0.05 deg after 30.00 s
+(2000, 0, 200): poles [-11.+8.888j -11.-8.888j], final=1, peak=1.02, OS=2.049, Tp=0.3535, Ts=0.3698, Tr1090=0.1687 | wind 20 N m: peak |e| 0.585 deg, final e -0.573 deg, inside 0.05 deg after 30.00 s
+(1000, 1000, 120): poles [-6.411+6.618j -6.411-6.618j -1.178+0.j   ], final=1, peak=1.181, OS=18.14, Tp=0.4466, Ts=2.005, Tr1090=0.1835 | wind 20 N m: peak |e| 1.083 deg, final e -0.000 deg, inside 0.05 deg after 2.95 s
+(2000, 500, 200): poles [-10.871+8.73j -10.871-8.73j  -0.257+0.j  ], final=1, peak=1.048, OS=4.759, Tp=0.3581, Ts=1.525, Tr1090=0.1619 | wind 20 N m: peak |e| 0.569 deg, final e -0.000 deg, inside 0.05 deg after 9.70 s
+(2000, 1000, 200): poles [-10.735+8.566j -10.735-8.566j  -0.53 +0.j   ], final=1, peak=1.074, OS=7.365, Tp=0.3599, Ts=2.198, Tr1090=0.1563 | wind 20 N m: peak |e| 0.556 deg, final e -0.000 deg, inside 0.05 deg after 4.82 s
+(2000, 2000, 200): poles [-10.433+8.215j -10.433-8.215j  -1.134+0.j   ], final=1, peak=1.123, OS=12.25, Tp=0.3574, Ts=1.798, Tr1090=0.1471 | wind 20 N m: peak |e| 0.535 deg, final e -0.000 deg, inside 0.05 deg after 2.38 s
 tuned PID, D on error instead: final=1, peak=1.158, OS=15.81, Tp=0.1662, Ts=0.3754, Tr1090=0.06492
 PI bound with D: Ki < (2 + 0.1 Kd) Kp = 44000 for (2000, ., 200)
 Lab step size: 0.1 rad (5.7 deg); tuned initial torque Kp x 0.1 = 200.0 N m (limit 200)
@@ -236,7 +236,7 @@ corner c 3200 (zeta 0.5) load step: final=3.906e-05, peak=4.543e-05, OS=16.3, Tp
 dish: Kp for zeta 0.7 = 20.41; step: final=1, peak=1.046, OS=4.599, Tp=3.079, Ts=4.185, Tr1090=1.488
 dish: K_w for tau 0.2 s = 30
 dish: Kd for zeta 0.7 at Kp 2000 = 177.99; D on meas: final=1, peak=1.046, OS=4.599, Tp=0.3111, Ts=0.4228, Tr1090=0.1504
-dish P 1000, wind 20 N m: peak -1.982 deg, final -1.146 deg
+dish P 1000, wind 20 N m, error e = theta_r - theta: most negative -1.982 deg (largest |e| 1.982), final -1.146 deg
 wind 50 N m at Kp 2000: 0.025 rad = 1.432 deg; 0.5 deg/s ramp at Kp 1000: 0.010 deg
 SF -10+/-10j: k1 = 54400  k2 = 6400  Nbar = 80000
 observer -16+/-12j: l1 = 28  l2 = 224
@@ -249,10 +249,10 @@ slow fix tuned OS 7.4 %, Ts 2.20 s, Tr 0.156 s peak|u| 200
 overshoot (1000,500,0) OS 80.2 %, Ts 5.11 s, Tr 0.108 s peak|u| 100
 oscillation (1000,1900,0) OS 98.8 %, Ts 20.00 s, Tr 0.102 s peak|u| 102
 oscillation fix (1000,500,120) OS 11.7 %, Ts 2.68 s, Tr 0.196 s peak|u| 100
-offset PD (1000,0,120) wind peak 1.199 deg, final 1.146 deg, inside 0.05 deg after 30.00 s
-offset fix (1000,500,120) wind peak 1.133 deg, final 0.000 deg, inside 0.05 deg after 6.10 s
-dist (500,250,100) wind peak 2.081 deg, final 0.000 deg, inside 0.05 deg after 7.16 s
-dist fix tuned wind peak 0.557 deg, final 0.000 deg, inside 0.05 deg after 4.83 s
+offset PD (1000,0,120) wind peak 1.199 deg, final -1.146 deg, inside 0.05 deg after 30.00 s
+offset fix (1000,500,120) wind peak 1.133 deg, final -0.000 deg, inside 0.05 deg after 6.10 s
+dist (500,250,100) wind peak 2.081 deg, final -0.000 deg, inside 0.05 deg after 7.16 s
+dist fix tuned wind peak 0.557 deg, final -0.000 deg, inside 0.05 deg after 4.83 s
 kick dm False peak|u| unlimited 4200 OS 16.6 %, Ts 0.37 s, Tr 0.057 s
    with 200 limit OS 6.1 %, Ts 2.12 s, Tr 0.154 s
 kick dm True peak|u| unlimited 200 OS 6.3 %, Ts 2.20 s, Tr 0.156 s
@@ -268,8 +268,8 @@ delay 0.08 OS 5565387920074729450373120.0 %, Ts 15.00 s, Tr 0.065 s
 sensorlag 0.02 OS 7.6 %, Ts 2.18 s, Tr 0.119 s
 sensorlag 0.05 OS 32.1 %, Ts 2.14 s, Tr 0.086 s
   lag fix (1000,500,120) OS 27.4 %, Ts 2.62 s, Tr 0.129 s
-twodof b 1.0 OS 7.4 %, Ts 2.20 s, Tr 0.156 s wind peak 0.556 deg, final 0.000 deg, inside 0.05 deg after 4.82 s
-twodof b 0.5 OS -0.0 %, Ts 6.07 s, Tr 2.978 s wind peak 0.556 deg, final 0.000 deg, inside 0.05 deg after 4.82 s
+twodof b 1.0 OS 7.4 %, Ts 2.20 s, Tr 0.156 s wind peak 0.556 deg, final -0.000 deg, inside 0.05 deg after 4.82 s
+twodof b 0.5 OS -0.0 %, Ts 6.07 s, Tr 2.978 s wind peak 0.556 deg, final -0.000 deg, inside 0.05 deg after 4.82 s
 Nbar off: z/r = 0.36
 ---- extras
 slow (200, 50, 40) OS 13.6 %, Ts 5.61 s, Tr 0.419 s
@@ -305,8 +305,8 @@ R4 A12 PD (2000,0,200), step 0.02 rad, stiction 0/0 N m: overshoot 2.0 %, stops 
 R4 A12 PD (2000,0,200), step 0.02 rad, stiction 20/10 N m: overshoot -23.5 %, stops +0.269 deg from target (+23.5 % of the step)
 R4 A12 PD (2000,0,200), step 0.2 rad, stiction 0/0 N m: overshoot 2.0 %, stops +0.000 deg from target (+0.0 % of the step)
 R4 A12 PD (2000,0,200), step 0.2 rad, stiction 20/10 N m: overshoot -0.6 %, stops +0.064 deg from target (+0.6 % of the step)
-R4 A14 tuned PID, stiction 20/10 N m, 0.1 rad step, t = 60-200 s: error -0.145 .. +0.147 deg, 11 zero crossings, period 23.9 s
-R4 A14 tuned PID + integrator dead band 0.003 rad, stiction 20/10 N m, 0.1 rad step, t = 60-200 s: error +0.149 .. +0.149 deg, 0 zero crossings, period nan s (no hunting: it sticks and stays)
+R4 A14 tuned PID, stiction 20/10 N m, 0.1 rad step, t = 60-200 s: error -0.147 .. +0.145 deg, 11 zero crossings, period 23.9 s
+R4 A14 tuned PID + integrator dead band 0.003 rad, stiction 20/10 N m, 0.1 rad step, t = 60-200 s: error -0.149 .. -0.149 deg, 0 zero crossings, period nan s (no hunting: it sticks and stays)
 R5 P 1000: |L| = 1 at 9.90 rad/s, phase margin 11.4 deg
 R5 PD (1000, 0, 120): |L| = 1 at 13.86 rad/s, phase margin 67.2 deg
 R5 tuned PID (2000, 1000, 200): |L| = 1 at 21.73 rad/s, phase margin 70.3 deg
@@ -325,14 +325,14 @@ B4 ssblock u=1000 N: z final 39.06 mm, z peak 56.42 mm at 0.406 s; velocity peak
 B4 torquebal Kp=1000: steady deviation 1.146 deg (e = -20/Kp); peak 1.982 deg at 0.316 s
 B4 torquebal Kp=2000: steady deviation 0.573 deg (e = -20/Kp); peak 1.032 deg at 0.223 s
 B4 A14 torque, tuned PID, t = 60-200 s: max +20.0 N m, min -20.0 N m; peak at t=0 200 N m (limit 200)
-B4 A14 dead band 0.0005 rad (0.029 deg): error -0.145 .. +0.147 deg, 11 crossings, torque at 200 s -16.28 N m -> still hunts
-B4 A14 dead band 0.0010 rad (0.057 deg): error -0.145 .. +0.147 deg, 11 crossings, torque at 200 s -16.33 N m -> still hunts
-B4 A14 dead band 0.0015 rad (0.086 deg): error -0.146 .. +0.147 deg, 11 crossings, torque at 200 s -16.46 N m -> still hunts
-B4 A14 dead band 0.0020 rad (0.115 deg): error -0.146 .. +0.147 deg, 11 crossings, torque at 200 s -16.61 N m -> still hunts
-B4 A14 dead band 0.0030 rad (0.172 deg): error +0.149 .. +0.149 deg, 0 crossings, torque at 200 s +6.37 N m -> sticks
-B4 A14 dead band 0.0040 rad (0.229 deg): error +0.148 .. +0.148 deg, 0 crossings, torque at 200 s +6.36 N m -> sticks
-B4 A14 dead band 0.0050 rad (0.286 deg): error +0.148 .. +0.148 deg, 0 crossings, torque at 200 s +6.35 N m -> sticks
-B4 A14 dead band 0.0060 rad (0.344 deg): error +0.147 .. +0.147 deg, 0 crossings, torque at 200 s +6.33 N m -> sticks
+B4 A14 dead band 0.0005 rad (0.029 deg): error -0.147 .. +0.145 deg, 11 crossings, torque at 200 s -16.28 N m -> still hunts
+B4 A14 dead band 0.0010 rad (0.057 deg): error -0.147 .. +0.145 deg, 11 crossings, torque at 200 s -16.33 N m -> still hunts
+B4 A14 dead band 0.0015 rad (0.086 deg): error -0.147 .. +0.146 deg, 11 crossings, torque at 200 s -16.46 N m -> still hunts
+B4 A14 dead band 0.0020 rad (0.115 deg): error -0.147 .. +0.146 deg, 11 crossings, torque at 200 s -16.61 N m -> still hunts
+B4 A14 dead band 0.0030 rad (0.172 deg): error -0.149 .. -0.149 deg, 0 crossings, torque at 200 s +6.37 N m -> sticks
+B4 A14 dead band 0.0040 rad (0.229 deg): error -0.148 .. -0.148 deg, 0 crossings, torque at 200 s +6.36 N m -> sticks
+B4 A14 dead band 0.0050 rad (0.286 deg): error -0.148 .. -0.148 deg, 0 crossings, torque at 200 s +6.35 N m -> sticks
+B4 A14 dead band 0.0060 rad (0.344 deg): error -0.147 .. -0.147 deg, 0 crossings, torque at 200 s +6.33 N m -> sticks
 B4 cs-73 corner with P on height, u = Kp(r - z), Kp=6400 N/m: s^2 + 4 s + 80 -> poles [-2.+8.7178j -2.-8.7178j]
 B4 cs-73 corner with P on height, u = Kp(r - z), Kp=14400 N/m: s^2 + 4 s + 100 -> poles [-2.+9.798j -2.-9.798j]
 B4 cs-73 corner with P on height, u = Kp(r - z), Kp=25600 N/m: s^2 + 4 s + 128 -> poles [-2.+11.1355j -2.-11.1355j]
@@ -347,9 +347,9 @@ B4b replica check, preset P 1000: OS 72.9 %, Ts 3.84 s, peak torque 100 N·m (sc
 B4b pid-29 P 5 (window 30 s): zeta 1.414, poles -1.707, -0.293; OS 0.0 %, Ts 14.00 s, 63 % at 4.06 s, peak torque 0.50 N·m of 200, theta/target at 30 s 0.9998
 B4b pid-29 P 10 (window 30 s): zeta 1.000, poles -1.000, -1.000; OS 0.0 %, Ts 5.84 s, 63 % at 2.15 s, peak torque 1.00 N·m of 200, theta/target at 30 s 1.0000
 B4b (2000, 1000, 200) no wind: OS 6.3 % at 0.37 s, Ts 2.21 s, lowest after the peak +0.01 % of target; PI zero -0.50; poles (ideal D) -10.73+8.57j, -10.73-8.57j, -0.53+0.00j
-B4b (2000, 1000, 200) wind on (Lab readouts): OS 6.3 %, Ts 2.21 s; error at 3 s +0.0751 deg; wind peak 0.613 deg (spec < 0.6); back inside 0.05 deg 5.03 s after the gust
+B4b (2000, 1000, 200) wind on (Lab readouts): OS 6.3 %, Ts 2.21 s; error at 3 s -0.0751 deg; wind peak 0.613 deg (spec < 0.6); back inside 0.05 deg 5.03 s after the gust
 B4b (2000, 3000, 200) no wind: OS 15.4 % at 0.36 s, Ts 1.46 s, lowest after the peak +0.00 % of target; PI zero -1.50; poles (ideal D) -10.08+7.83j, -10.08-7.83j, -1.84+0.00j
-B4b (2000, 3000, 200) wind on (Lab readouts): OS 15.4 %, Ts 1.46 s; error at 3 s +0.0066 deg; wind peak 0.515 deg (spec < 0.6); back inside 0.05 deg 1.56 s after the gust
+B4b (2000, 3000, 200) wind on (Lab readouts): OS 15.4 %, Ts 1.46 s; error at 3 s -0.0066 deg; wind peak 0.515 deg (spec < 0.6); back inside 0.05 deg 1.56 s after the gust
 B4b pid-33 dish + lag: 0.5 s^3 + 11 s^2 + 20 s + Kp; Routh 11*20 = 0.5 Kp -> Ku 440.0 N·m/rad, wu 6.325 rad/s, Tu 0.993 s
 B4b pid-33 P 430: first peak 1.952x target at 0.55 s, last peak 1.772x at 11.59 s, mean period 1.004 s, lowest after 6 s +0.142x, peak torque 43.0 N·m
 B4b pid-33 P 440: first peak 1.961x target at 0.54 s, last peak 1.963x at 11.47 s, mean period 0.994 s, lowest after 6 s +0.037x, peak torque 44.0 N·m
@@ -357,32 +357,32 @@ B4b pid-33 P 450: first peak 1.969x target at 0.54 s, last peak 2.193x at 11.35 
 
 ======== [B4c] Gust time for the Lab and the gains figure (labRun / gainRun replicas)
 B4c tuned, gust on a dish at rest: Lab simulator (N_f = 200 filter) peak 0.5488 deg; same with ideal D (as numbers.py wind()) 0.5556 deg
-B4c tuned (Lab), gust at  3 s: error when it hits +0.0751 deg; wind peak 0.6130 deg (FAILS < 0.6); back inside 0.05 deg 5.03 s later, at 8.03 s
-B4c tuned (Lab), gust at  4 s: error when it hits +0.0442 deg; wind peak 0.5865 deg (passes < 0.6); back inside 0.05 deg 4.94 s later, at 8.94 s
-B4c tuned (Lab), gust at  5 s: error when it hits +0.0260 deg; wind peak 0.5710 deg (passes < 0.6); back inside 0.05 deg 4.89 s later, at 9.89 s
-B4c tuned (Lab), gust at  6 s: error when it hits +0.0153 deg; wind peak 0.5618 deg (passes < 0.6); back inside 0.05 deg 4.86 s later, at 10.86 s
-B4c tuned (Lab), gust at  7 s: error when it hits +0.0090 deg; wind peak 0.5565 deg (passes < 0.6); back inside 0.05 deg 4.85 s later, at 11.85 s
-B4c tuned (Lab), gust at  8 s: error when it hits +0.0053 deg; wind peak 0.5533 deg (passes < 0.6); back inside 0.05 deg 4.84 s later, at 12.84 s
-B4c tuned (Lab), gust at 10 s: error when it hits +0.0018 deg; wind peak 0.5503 deg (passes < 0.6); back inside 0.05 deg 4.83 s later, at 14.83 s
-B4c tuned (Lab), gust at 12 s: error when it hits +0.0006 deg; wind peak 0.5493 deg (passes < 0.6); back inside 0.05 deg 4.82 s later, at 16.82 s
-B4c Lab gust 3 s / window 12 s, P 1000, wind on: OS 72.9 %, Ts 2.97 s; error at gust +0.026 deg; wind peak 1.988 deg (fail); not back inside 0.05 deg in the window
-B4c Lab gust 3 s / window 12 s, PD (1000, 0, 120), wind on: OS 3.8 %, Ts 0.58 s; error at gust +0.000 deg; wind peak 1.189 deg (fail); not back inside 0.05 deg in the window
-B4c Lab gust 3 s / window 12 s, tuned (2000, 1000, 200), wind on: OS 6.3 %, Ts 2.21 s; error at gust +0.075 deg; wind peak 0.613 deg (fail); back in 0.05 deg after 5.03 s
-B4c Lab gust 3 s / window 12 s, too much I (2000, 3000, 200), wind on: OS 15.4 %, Ts 1.46 s; error at gust +0.007 deg; wind peak 0.515 deg (pass); back in 0.05 deg after 1.56 s
-B4c Lab gust 3 s / window 12 s, too much Kd (2000, 1000, 400), wind on: OS 7.5 %, Ts NaN (not settled before the gust); error at gust +0.161 deg; wind peak 0.605 deg (fail); back in 0.05 deg after 5.11 s
-B4c Lab gust 3 s / window 12 s, derivative kick (D on error), wind on: OS 6.1 %, Ts 2.13 s; error at gust +0.072 deg; wind peak 0.610 deg (fail); back in 0.05 deg after 5.02 s
-B4c Lab gust 3 s / window 12 s, windup 2 rad, none, wind on: OS 21.2 %, Ts NaN (not settled before the gust); error at gust +5.494 deg; wind peak 5.498 deg (fail); not back inside 0.05 deg in the window
-B4c Lab gust 3 s / window 12 s, windup 2 rad, clamp, wind on: OS 3.4 %, Ts 0.80 s; error at gust +0.334 deg; wind peak 0.836 deg (fail); back in 0.05 deg after 5.61 s
-B4c Lab gust 3 s / window 12 s, ZN + lag (264, 531.5, 32.8), wind on: OS 67.0 %, Ts 2.99 s; error at gust -0.091 deg; wind peak 4.887 deg (fail); back in 0.05 deg after 5.35 s
-B4c Lab gust 10 s / window 16 s, P 1000, wind on: OS 72.9 %, Ts 3.84 s; error at gust -0.000 deg; wind peak 1.981 deg (fail); not back inside 0.05 deg in the window
-B4c Lab gust 10 s / window 16 s, PD (1000, 0, 120), wind on: OS 3.8 %, Ts 0.58 s; error at gust -0.000 deg; wind peak 1.189 deg (fail); not back inside 0.05 deg in the window
-B4c Lab gust 10 s / window 16 s, tuned (2000, 1000, 200), wind on: OS 6.3 %, Ts 2.21 s; error at gust +0.002 deg; wind peak 0.550 deg (pass); back in 0.05 deg after 4.83 s
-B4c Lab gust 10 s / window 16 s, too much I (2000, 3000, 200), wind on: OS 15.4 %, Ts 1.46 s; error at gust +0.000 deg; wind peak 0.511 deg (pass); back in 0.05 deg after 1.56 s
-B4c Lab gust 10 s / window 16 s, too much Kd (2000, 1000, 400), wind on: OS 7.5 %, Ts 3.60 s; error at gust +0.003 deg; wind peak 0.487 deg (pass); back in 0.05 deg after 4.78 s
-B4c Lab gust 10 s / window 16 s, derivative kick (D on error), wind on: OS 6.1 %, Ts 2.13 s; error at gust +0.002 deg; wind peak 0.550 deg (pass); back in 0.05 deg after 4.82 s
-B4c Lab gust 10 s / window 16 s, windup 2 rad, none, wind on: OS 21.2 %, Ts 4.65 s; error at gust +0.134 deg; wind peak 0.664 deg (fail); back in 0.05 deg after 5.18 s
-B4c Lab gust 10 s / window 16 s, windup 2 rad, clamp, wind on: OS 3.4 %, Ts 0.80 s; error at gust +0.008 deg; wind peak 0.556 deg (pass); back in 0.05 deg after 4.84 s
-B4c Lab gust 10 s / window 16 s, ZN + lag (264, 531.5, 32.8), wind on: OS 67.0 %, Ts 4.22 s; error at gust +0.001 deg; wind peak 4.645 deg (fail); back in 0.05 deg after 4.85 s
+B4c tuned (Lab), gust at  3 s: error when it hits -0.0751 deg; wind peak 0.6130 deg (FAILS < 0.6); back inside 0.05 deg 5.03 s later, at 8.03 s
+B4c tuned (Lab), gust at  4 s: error when it hits -0.0442 deg; wind peak 0.5865 deg (passes < 0.6); back inside 0.05 deg 4.94 s later, at 8.94 s
+B4c tuned (Lab), gust at  5 s: error when it hits -0.0260 deg; wind peak 0.5710 deg (passes < 0.6); back inside 0.05 deg 4.89 s later, at 9.89 s
+B4c tuned (Lab), gust at  6 s: error when it hits -0.0153 deg; wind peak 0.5618 deg (passes < 0.6); back inside 0.05 deg 4.86 s later, at 10.86 s
+B4c tuned (Lab), gust at  7 s: error when it hits -0.0090 deg; wind peak 0.5565 deg (passes < 0.6); back inside 0.05 deg 4.85 s later, at 11.85 s
+B4c tuned (Lab), gust at  8 s: error when it hits -0.0053 deg; wind peak 0.5533 deg (passes < 0.6); back inside 0.05 deg 4.84 s later, at 12.84 s
+B4c tuned (Lab), gust at 10 s: error when it hits -0.0018 deg; wind peak 0.5503 deg (passes < 0.6); back inside 0.05 deg 4.83 s later, at 14.83 s
+B4c tuned (Lab), gust at 12 s: error when it hits -0.0006 deg; wind peak 0.5493 deg (passes < 0.6); back inside 0.05 deg 4.82 s later, at 16.82 s
+B4c Lab gust 3 s / window 12 s, P 1000, wind on: OS 72.9 %, Ts 2.97 s; error at gust -0.026 deg; wind peak 1.988 deg (fail); not back inside 0.05 deg in the window
+B4c Lab gust 3 s / window 12 s, PD (1000, 0, 120), wind on: OS 3.8 %, Ts 0.58 s; error at gust -0.000 deg; wind peak 1.189 deg (fail); not back inside 0.05 deg in the window
+B4c Lab gust 3 s / window 12 s, tuned (2000, 1000, 200), wind on: OS 6.3 %, Ts 2.21 s; error at gust -0.075 deg; wind peak 0.613 deg (fail); back in 0.05 deg after 5.03 s
+B4c Lab gust 3 s / window 12 s, too much I (2000, 3000, 200), wind on: OS 15.4 %, Ts 1.46 s; error at gust -0.007 deg; wind peak 0.515 deg (pass); back in 0.05 deg after 1.56 s
+B4c Lab gust 3 s / window 12 s, too much Kd (2000, 1000, 400), wind on: OS 7.5 %, Ts NaN (not settled before the gust); error at gust -0.161 deg; wind peak 0.605 deg (fail); back in 0.05 deg after 5.11 s
+B4c Lab gust 3 s / window 12 s, derivative kick (D on error), wind on: OS 6.1 %, Ts 2.13 s; error at gust -0.072 deg; wind peak 0.610 deg (fail); back in 0.05 deg after 5.02 s
+B4c Lab gust 3 s / window 12 s, windup 2 rad, none, wind on: OS 21.2 %, Ts NaN (not settled before the gust); error at gust -5.494 deg; wind peak 5.498 deg (fail); not back inside 0.05 deg in the window
+B4c Lab gust 3 s / window 12 s, windup 2 rad, clamp, wind on: OS 3.4 %, Ts 0.80 s; error at gust -0.334 deg; wind peak 0.836 deg (fail); back in 0.05 deg after 5.61 s
+B4c Lab gust 3 s / window 12 s, ZN + lag (264, 531.5, 32.8), wind on: OS 67.0 %, Ts 2.99 s; error at gust +0.091 deg; wind peak 4.887 deg (fail); back in 0.05 deg after 5.35 s
+B4c Lab gust 10 s / window 16 s, P 1000, wind on: OS 72.9 %, Ts 3.84 s; error at gust +0.000 deg; wind peak 1.981 deg (fail); not back inside 0.05 deg in the window
+B4c Lab gust 10 s / window 16 s, PD (1000, 0, 120), wind on: OS 3.8 %, Ts 0.58 s; error at gust +0.000 deg; wind peak 1.189 deg (fail); not back inside 0.05 deg in the window
+B4c Lab gust 10 s / window 16 s, tuned (2000, 1000, 200), wind on: OS 6.3 %, Ts 2.21 s; error at gust -0.002 deg; wind peak 0.550 deg (pass); back in 0.05 deg after 4.83 s
+B4c Lab gust 10 s / window 16 s, too much I (2000, 3000, 200), wind on: OS 15.4 %, Ts 1.46 s; error at gust -0.000 deg; wind peak 0.511 deg (pass); back in 0.05 deg after 1.56 s
+B4c Lab gust 10 s / window 16 s, too much Kd (2000, 1000, 400), wind on: OS 7.5 %, Ts 3.60 s; error at gust -0.003 deg; wind peak 0.487 deg (pass); back in 0.05 deg after 4.78 s
+B4c Lab gust 10 s / window 16 s, derivative kick (D on error), wind on: OS 6.1 %, Ts 2.13 s; error at gust -0.002 deg; wind peak 0.550 deg (pass); back in 0.05 deg after 4.82 s
+B4c Lab gust 10 s / window 16 s, windup 2 rad, none, wind on: OS 21.2 %, Ts 4.65 s; error at gust -0.134 deg; wind peak 0.664 deg (fail); back in 0.05 deg after 5.18 s
+B4c Lab gust 10 s / window 16 s, windup 2 rad, clamp, wind on: OS 3.4 %, Ts 0.80 s; error at gust -0.008 deg; wind peak 0.556 deg (pass); back in 0.05 deg after 4.84 s
+B4c Lab gust 10 s / window 16 s, ZN + lag (264, 531.5, 32.8), wind on: OS 67.0 %, Ts 4.22 s; error at gust -0.001 deg; wind peak 4.645 deg (fail); back in 0.05 deg after 4.85 s
 B4c gains figure gust 3 s / window 12 s, (2000, 1000, 200): OS 6.3 %, Ts 2.21 s; wind peak 0.613 deg; back in 0.05 deg after 5.03 s (at 8.03 s)
 B4c gains figure gust 3 s / window 12 s, (4000, 1000, 200): OS 12.5 %, Ts 0.30 s; wind peak 0.350 deg; back in 0.05 deg after 7.47 s (at 10.47 s)
 B4c gains figure gust 3 s / window 12 s, (5000, 1000, 200): OS 16.2 %, Ts 0.25 s; wind peak 0.289 deg; back in 0.05 deg after 8.19 s (at 11.19 s)
@@ -436,10 +436,10 @@ P2 index, dish IAE optimum (numerical): a1 = 13.248 /s, K_r = 112.5 N m s/rad, z
 P2 telescope side panel (LN2 s.26-28): a0 = 2.5, a1 = 0.5 K3: ISE optimum a1 = sqrt(2.5) -> K3 = sqrt(10) = 3.162, zeta = 0.50; IAE optimum K3 = 4.189, zeta = 0.662 (same zeta as the dish: time scaling moves the gain, not the damping)
 
 ======== [PASS3] Pass 3: tuning figure vs table (exact), dish and house bubble scenes, index K_r = 120
-P3 tuning (2000, 1000, 200): exact %OS 7.365 % (one decimal: 7.4 %), Ts 2.198 s | gust on a dish at rest: peak 0.5557 deg, back in 0.05 deg 4.82 s | gust 10 s after the step: step error left at 10 s +0.0018 deg, peak 0.5572 deg, back in 0.05 deg 4.83 s
-P3 tuning (4000, 1000, 200): exact %OS 14.339 % (one decimal: 14.3 %), Ts 0.308 s | gust on a dish at rest: peak 0.3187 deg, back in 0.05 deg 7.00 s | gust 10 s after the step: step error left at 10 s +0.0064 deg, peak 0.3248 deg, back in 0.05 deg 7.08 s
-P3 tuning (2000, 3000, 200): exact %OS 16.746 % (one decimal: 16.7 %), Ts 1.447 s | gust on a dish at rest: peak 0.5179 deg, back in 0.05 deg 1.56 s | gust 10 s after the step: step error left at 10 s +0.0000 deg, peak 0.5179 deg, back in 0.05 deg 1.56 s
-P3 tuning (2000, 1000, 400): exact %OS 7.619 % (one decimal: 7.6 %), Ts 3.592 s | gust on a dish at rest: peak 0.4876 deg, back in 0.05 deg 4.77 s | gust 10 s after the step: step error left at 10 s +0.0030 deg, peak 0.4898 deg, back in 0.05 deg 4.78 s
+P3 tuning (2000, 1000, 200): exact %OS 7.365 % (one decimal: 7.4 %), Ts 2.198 s | gust on a dish at rest: peak 0.5557 deg, back in 0.05 deg 4.82 s | gust 10 s after the step: step error left at 10 s -0.0018 deg, peak 0.5572 deg, back in 0.05 deg 4.83 s
+P3 tuning (4000, 1000, 200): exact %OS 14.339 % (one decimal: 14.3 %), Ts 0.308 s | gust on a dish at rest: peak 0.3187 deg, back in 0.05 deg 7.00 s | gust 10 s after the step: step error left at 10 s -0.0064 deg, peak 0.3248 deg, back in 0.05 deg 7.08 s
+P3 tuning (2000, 3000, 200): exact %OS 16.746 % (one decimal: 16.7 %), Ts 1.447 s | gust on a dish at rest: peak 0.5179 deg, back in 0.05 deg 1.56 s | gust 10 s after the step: step error left at 10 s -0.0000 deg, peak 0.5179 deg, back in 0.05 deg 1.56 s
+P3 tuning (2000, 1000, 400): exact %OS 7.619 % (one decimal: 7.6 %), Ts 3.592 s | gust on a dish at rest: peak 0.4876 deg, back in 0.05 deg 4.77 s | gust 10 s after the step: step error left at 10 s -0.0030 deg, peak 0.4898 deg, back in 0.05 deg 4.78 s
 P3 dish bubble Kp 40: wn 2.00 rad/s, zeta 0.50, %OS 16.3 %, Ts 4.04 s; at t = 2 s: dish 6.61 deg, error -0.88 deg, torque Kp*e -0.6 N·m; first torque Kp*0.1 = 4 N·m
 P3 dish bubble Kp 1000: wn 10.00 rad/s, zeta 0.10, %OS 72.9 %, Ts 3.84 s; at t = 2 s: dish 5.28 deg, error +0.45 deg, torque Kp*e +7.9 N·m; first torque Kp*0.1 = 100 N·m
 P3 house bubble at t =  1.0 h: x1 = 5.90 K, x2 = 2.26 K above outdoors (outdoors 5 C: 10.9 C, 7.3 C); shared-wall flow (x1 - x2)·277.8 W/K = 1011 W
@@ -467,14 +467,14 @@ P3 tuned (2000, 1000, 200), D on the error, ideal: exact %OS 15.811 % (one decim
 P3 Ackermann, 1/s^2 with poles -1 +/- j (q = s^2 + 2s + 2): K = [2. 2.], eig(A - BK) = [-1.+1.j -1.-1.j]
 
 ======== [PASS4] Pass 4: two-DOF and A5 card wind numbers, RLC 1/(s^2+s+1), |S|,|C| at 1 rad/h, house observability by thermostat room
-P4 two-DOF card, b = 1.0, gust at 20 s: OS 7.4 %, Ts 2.20 s, Tr 0.156 s; step error left at the gust +0.0000 deg; wind peak 0.556 deg, back inside 0.05 deg after 4.82 s
-P4 two-DOF card, b = 0.9, gust at 20 s: OS -0.0 %, Ts 1.67 s, Tr 0.195 s; step error left at the gust -0.0000 deg; wind peak 0.556 deg, back inside 0.05 deg after 4.82 s
-P4 two-DOF card, b = 0.5, gust at 20 s: OS -0.0 %, Ts 6.07 s, Tr 2.978 s; step error left at the gust -0.0001 deg; wind peak 0.556 deg, back inside 0.05 deg after 4.82 s
-P4 two-DOF card, b = 1.0, gust at 10 s: OS 7.4 %, Ts 2.20 s, Tr 0.156 s; step error left at the gust +0.0018 deg; wind peak 0.554 deg, back inside 0.05 deg after 4.82 s
-P4 two-DOF card, b = 0.9, gust at 10 s: OS -0.0 %, Ts 1.67 s, Tr 0.195 s; step error left at the gust -0.0014 deg; wind peak 0.557 deg, back inside 0.05 deg after 4.83 s
-P4 two-DOF card, b = 0.5, gust at 10 s: OS -0.2 %, Ts 6.07 s, Tr 2.978 s; step error left at the gust -0.0143 deg; wind peak 0.568 deg, back inside 0.05 deg after 4.87 s
-P4 A5 card (500, 250, 100), gust at 10 s: step error left +0.0032 deg; wind peak 2.076 deg, back after 7.16 s (card dt 1e-4); same at dt 2.5e-5: 2.076 deg, 7.16 s
-P4 A5 card (2000, 1000, 200), gust at 10 s: step error left +0.0018 deg; wind peak 0.554 deg, back after 4.82 s (card dt 1e-4); same at dt 2.5e-5: 0.554 deg, 4.82 s
+P4 two-DOF card, b = 1.0, gust at 20 s: OS 7.4 %, Ts 2.20 s, Tr 0.156 s; step error left at the gust -0.0000 deg; wind peak 0.556 deg, back inside 0.05 deg after 4.82 s
+P4 two-DOF card, b = 0.9, gust at 20 s: OS -0.0 %, Ts 1.67 s, Tr 0.195 s; step error left at the gust +0.0000 deg; wind peak 0.556 deg, back inside 0.05 deg after 4.82 s
+P4 two-DOF card, b = 0.5, gust at 20 s: OS -0.0 %, Ts 6.07 s, Tr 2.978 s; step error left at the gust +0.0001 deg; wind peak 0.556 deg, back inside 0.05 deg after 4.82 s
+P4 two-DOF card, b = 1.0, gust at 10 s: OS 7.4 %, Ts 2.20 s, Tr 0.156 s; step error left at the gust -0.0018 deg; wind peak 0.554 deg, back inside 0.05 deg after 4.82 s
+P4 two-DOF card, b = 0.9, gust at 10 s: OS -0.0 %, Ts 1.67 s, Tr 0.195 s; step error left at the gust +0.0014 deg; wind peak 0.557 deg, back inside 0.05 deg after 4.83 s
+P4 two-DOF card, b = 0.5, gust at 10 s: OS -0.2 %, Ts 6.07 s, Tr 2.978 s; step error left at the gust +0.0143 deg; wind peak 0.568 deg, back inside 0.05 deg after 4.87 s
+P4 A5 card (500, 250, 100), gust at 10 s: step error left -0.0032 deg; wind peak 2.076 deg, back after 7.16 s (card dt 1e-4); same at dt 2.5e-5: 2.076 deg, 7.16 s
+P4 A5 card (2000, 1000, 200), gust at 10 s: step error left -0.0018 deg; wind peak 0.554 deg, back after 4.82 s (card dt 1e-4); same at dt 2.5e-5: 0.554 deg, 4.82 s
 P4 RLC R = L = C = 1: zeta = 0.50, step overshoot 16.303 % (about 16 %)
 P4 P thermostat at  0.01 rad/h (period   628.3 h): |S| = 0.100, |C| = 0.900
 P4 P thermostat at  1.00 rad/h (period     6.3 h): |S| = 0.592, |C| = 0.952
@@ -486,8 +486,17 @@ P4 card, Lab gust direction, gust 10 s: two-DOF b = 0.9: OS -0.0 %, Ts 1.67 s, T
 P4 card, Lab gust direction, gust 10 s: two-DOF b = 0.5: OS -0.2 %, Ts 6.07 s, Tr 2.978 s; wind peak 0.543 deg; back inside 0.05 deg after 4.78 s
 P4 card, Lab gust direction, gust 10 s: A5 problem (500, 250, 100): OS 11.2 %, Ts 3.79 s, Tr 0.319 s; wind peak 2.081 deg; back inside 0.05 deg after 7.16 s
 P4 card, Lab gust direction, gust 10 s: A5 fix = tuned (2000, 1000, 200): OS 7.4 %, Ts 2.20 s, Tr 0.156 s; wind peak 0.557 deg; back inside 0.05 deg after 4.83 s
-P4 card, Lab gust direction, gust 10 s: offset problem PD (1000, 0, 120): OS 4.6 %, Ts 0.60 s, Tr 0.213 s; wind peak 1.199 deg; not back (final +1.146 deg)
+P4 card, Lab gust direction, gust 10 s: offset problem PD (1000, 0, 120): OS 4.6 %, Ts 0.60 s, Tr 0.213 s; wind peak 1.199 deg; not back (final -1.146 deg)
 P4 card, Lab gust direction, gust 10 s: offset fix (1000, 500, 120): OS 11.7 %, Ts 2.68 s, Tr 0.196 s; wind peak 1.133 deg; back inside 0.05 deg after 6.10 s
+
+======== [PASS4C] error convention e = theta_r - theta; why the Lab's P 1000 offset reads 1.149 and PD 1.146
+P4C steady wind error under P or PD: e_ss = -T_d/Kp = -20/1000 rad = -1.1459 deg (theta itself settles T_d/Kp = 1.1459 deg past the target, LN1 s.66)
+P4C Lab offset at end (e = theta_r - theta), P 1000: t = 16 s: -1.1488 deg; t = 21 s: -1.1459 deg; t = 40 s: -1.1459 deg
+P4C Lab offset at end (e = theta_r - theta), PD (1000, 0, 120): t = 16 s: -1.1459 deg; t = 21 s: -1.1459 deg; t = 40 s: -1.1459 deg
+P4C P 1000 after the gust: zeta = 0.10, decay rate 1 /s, so 6 s after the gust the ringing is still up to 0.0029 deg on top of 1.1459 (PD, zeta 0.70, decay 7 /s: 9.2e-19 deg)
+P4C card PD (1000, 0, 120), gust 10 s, final at 40 s: e = -1.1459 deg
+P4C ck-sse-1: Kp 2000, 50 N m: e_ss = -50/2000 = -0.025 rad = -1.432 deg; ck-sse-2: Kp 1000, 0.5 deg/s: e_ss = B w/Kp = +0.010 deg (behind the satellite, so positive)
+P4C house: G = X2/U uses C = [0, 1] (Ch = [0.0, 1.0]); det Pc = b^2 = 1.296e-05, det Po = -1.00
 
 All numbers recomputed.
 EXIT 0

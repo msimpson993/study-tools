@@ -84,13 +84,13 @@ export const labFigure = figureOf((c) => {
         const rows: [string, string, string][] = [
           ['Overshoot (spec < 10 %)', r.unstable ? '—' : `${f(r.OS, 1)} %`, c(d ? r.OS < 10 : null)],
           ['Settling 2 %', !settles || !Number.isFinite(r.Ts) ? 'not settled' : `${f(r.Ts, 2)} s`, c(null)],
-          [gust ? `Steady error (t = ${f(DISH.windAt - 0.1, 1)} s, before gust)` : 'Steady error', !settles ? ns : d ? `${f(deg(r.ess), 3)}°` : f(r.ess, 3), c(settles ? Math.abs(r.ess) < 1e-3 * r.r : null)],
-          ['Wind peak (spec < 0.6°)', !d || !r.windOn ? 'wind off' : !gust ? '— (no gust in window)' : !settles ? ns : `${f(r.windPeak, 3)}°`, c(gust && settles ? r.windPeak < 0.6 : null)],
+          [gust ? `Steady error e (t = ${f(DISH.windAt - 0.1, 1)} s, before gust)` : 'Steady error e', !settles ? ns : d ? `${f(deg(r.ess), 3)}°` : f(r.ess, 3), c(settles ? Math.abs(r.ess) < 1e-3 * r.r : null)],
+          ['Wind peak |e| (spec < 0.6°)', !d || !r.windOn ? 'wind off' : !gust ? '— (no gust in window)' : !settles ? ns : `${f(r.windPeak, 3)}°`, c(gust && settles ? r.windPeak < 0.6 : null)],
           // recovery (pass 3, item 12): 'not back by T s' is a failure (red) at any window (Malcolm, Nov 21)
           ...(d && r.windOn ? [['Recovery to ±0.05° (spec < 10 s)', !gust ? '— (no gust in window)' : !settles ? ns : r.back ? `${f(r.rec, 2)} s` : `not back by ${f(r.T, 0)} s`,
             c(!gust || !settles ? null : r.back ? r.rec < 10 : false)] as [string, string, string]] : []),
           // θ_r − θ at the window's last sample, wind on only; passes below 0.05°, the page's "back on target" band (pass 2, R2; label pass 3, item 7)
-          ...(d && r.windOn ? [[`Offset at end, t = ${f(r.T, 0)} s (spec < 0.05°)`, !gust ? '— (no gust in window)' : !settles ? ns : `${f(deg(r.offEnd), 3)}°`, c(gust && settles ? Math.abs(deg(r.offEnd)) < 0.05 : null)] as [string, string, string]] : []),
+          ...(d && r.windOn ? [[`Offset at end e, t = ${f(r.T, 0)} s (spec |e| < 0.05°)`, !gust ? '— (no gust in window)' : !settles ? ns : `${f(deg(r.offEnd), 3)}°`, c(gust && settles ? Math.abs(deg(r.offEnd)) < 0.05 : null)] as [string, string, string]] : []),
           ['Peak torque (limit 200 N·m)', d ? `${k3(r.peakU)} N·m` : f(r.peakU), c(d ? r.peakU <= DISH.Tmax + 1e-6 : null)],
           ['Stability', maxRe < -1e-3 ? 'all poles left' : maxRe < 1e-3 ? 'on the jω axis' : 'unstable pole', c(maxRe < -1e-3)],
         ];

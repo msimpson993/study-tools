@@ -177,7 +177,7 @@ export function dishPid(Kp: number, Ki: number, Kd: number, dOnError = false): T
   if (!Ki) return tf(dOnError ? [Kd / J, Kp / J] : [Kp / J], [1, (Bf + Kd) / J, Kp / J]);
   return tf(dOnError ? [Kd / J, Kp / J, Ki / J] : [Kp / J, Ki / J], [1, (Bf + Kd) / J, Kp / J, Ki / J]);
 }
-/** Response of the angle to a wind torque step Td (N·m) under P/PI/PID (D on measurement): peak (deg), recovery to 0.05°, final. */
+/** Response of the angle to a wind torque step Td (N·m) under P/PI/PID (D on measurement): peak (deg), recovery to 0.05°, final (returns the angle θ, target 0; the error is −θ). */
 export function dishWind(Kp: number, Ki: number, Kd: number, Td: number = DISH.wind, T = 30, n = 30001) {
   const J = DISH.J, Bf = DISH.B; const G = Ki ? tf([Td / J, 0], [1, (Bf + Kd) / J, Kp / J, Ki / J]) : tf([Td / J], [1, (Bf + Kd) / J, Kp / J]);
   const r = step(G, T, n); let pk = -Infinity, ip = 0, last = -1;
@@ -279,10 +279,10 @@ export function cardMet(t: ArrayLike<number>, y: ArrayLike<number>, r: number, u
   }
   return { OS: (100 * (pk - r)) / r, Ts: last >= 0 ? t[last] : 0, Tr: t[Math.max(i90, 0)] - t[Math.max(i10, 0)], unstable: !Number.isFinite(pk) || Math.abs(pk) > 100 * Math.abs(r) };
 }
-/** numbers.py [F] `windm`: pointing error after the wind arrives at tw (degrees, about the 0.1 rad target). */
+/** numbers.py [F] `windm`: the error e = θ_r − θ after the wind arrives at tw (degrees); peak is the largest |e| (pass 4c). */
 export function cardWind(t: ArrayLike<number>, y: ArrayLike<number>, tw: number, r = 0.1) {
   let pk = 0, lastOut = -1, fin = 0;
-  for (let i = 0; i < y.length; i++) { if (t[i] < tw) continue; const e = deg(y[i] - r); fin = e; if (Math.abs(e) > pk) pk = Math.abs(e); if (Math.abs(e) > 0.05) lastOut = i; }
+  for (let i = 0; i < y.length; i++) { if (t[i] < tw) continue; const e = deg(r - y[i]); fin = e; if (Math.abs(e) > pk) pk = Math.abs(e); if (Math.abs(e) > 0.05) lastOut = i; }
   return { peak: pk, final: fin, recover: lastOut >= 0 ? t[lastOut] - tw : 0 };
 }
 /** REF with N̄ off (u = −k₁(z − r) − k₂ż): the body stops at k₁/(k + k₁) of the command. */

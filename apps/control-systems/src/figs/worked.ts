@@ -118,26 +118,26 @@ export const heatbarsFigure = figureOf((): FigurePanel[] => [{
 
 /* ── sse · figure:torquebal: the wind's 20 N·m against the motor's Kp·e; they balance at e = 20/Kp ── */
 export const torquebalFigure = figureOf((): FigurePanel[] => [{
-  id: 'bal', title: 'Torque balance at rest: wind against Kp × error', x: 'pointing error e (°)', y: 'torque (N·m)', height: 240,
+  id: 'bal', title: 'Torque balance at rest: wind against Kp × error', x: 'size of the error |e| (°)', y: 'torque (N·m)', height: 240,
   draw(g, w, h, v: V) {
     const Kp = num(v, 'Kp', 1000), Td = DISH.wind as number, eStar = Td / Kp, eMax = Math.max(2.5, (eStar * 180) / Math.PI * 1.8);
-    const fr = plotFrame(g, w, h, [0, eMax], [0, 45], 'pointing error e (°)', 'N·m');
+    const fr = plotFrame(g, w, h, [0, eMax], [0, 45], 'size of the error |e| (°)', 'N·m');
     g.save(); g.strokeStyle = col.c(); g.lineWidth = 2.2; g.setLineDash([6, 4]); g.beginPath(); g.moveTo(fr.X(0), fr.Y(Td)); g.lineTo(fr.X(eMax), fr.Y(Td)); g.stroke(); g.restore();
     g.save(); g.strokeStyle = col.a(); g.lineWidth = 2.4; g.beginPath(); g.moveTo(fr.X(0), fr.Y(0)); const eTop = Math.min(eMax, ((45 / Kp) * 180) / Math.PI); g.lineTo(fr.X(eTop), fr.Y((Kp * eTop * Math.PI) / 180)); g.stroke(); g.restore();
     const xs = fr.X((eStar * 180) / Math.PI); g.save(); g.fillStyle = col.e(); g.beginPath(); g.arc(xs, fr.Y(Td), 4.5, 0, 2 * Math.PI); g.fill(); g.restore();
-    text(g, `balance: e = ${f(Td, 0)}/${k3(Kp)} = ${f(eStar, 3)} rad = ${f((eStar * 180) / Math.PI)}°`, xs + 8, fr.Y(Td) + 14, col.e(), 'left', 10.5);
-    legend(g, fr, [{ label: `wind torque ${f(Td, 0)} N·m`, color: col.c(), dash: true }, { label: `motor torque Kp·e (Kp = ${k3(Kp)} N·m/rad)`, color: col.a() }], 'tl');
+    text(g, `balance: |e| = ${f(Td, 0)}/${k3(Kp)} = ${f(eStar, 3)} rad = ${f((eStar * 180) / Math.PI)}° (e = −${f((eStar * 180) / Math.PI)}°)`, xs + 8, fr.Y(Td) + 14, col.e(), 'left', 10.5);
+    legend(g, fr, [{ label: `wind torque ${f(Td, 0)} N·m`, color: col.c(), dash: true }, { label: `motor torque Kp·|e| (Kp = ${k3(Kp)} N·m/rad)`, color: col.a() }], 'tl');
   },
 }, {
-  id: 'time', title: 'The same balance in time: P holding the dish against the wind', x: 'time (s)', y: 'pushed off target (°)', height: 220,
+  id: 'time', title: 'The same balance in time: P holding the dish against the wind', x: 'time (s)', y: 'θ, pushed past the target (°)', height: 220,
   draw(g, w, h, v: V) {
     // target 0, wind 20 N·m from t = 0: J θ̈ + B θ̇ = Kp·e + 20, e = −θ (Euler, 1 ms)
     const Kp = num(v, 'Kp', 1000), Td = DISH.wind as number, T = 8, dt = 1e-3, t: number[] = [], e: number[] = []; let th = 0, om = 0;
     // plotted as the offset θ, positive, so it matches the left panel's balance at +20/Kp (tutor build 4, 1d)
     for (let i = 0; i <= T / dt; i++) { if (i % 10 === 0) { t.push(i * dt); e.push((th * 180) / Math.PI); } om += (dt * (-Kp * th + Td - DISH.B * om)) / DISH.J; th += dt * om; }
-    const eS = ((Td / Kp) * 180) / Math.PI, hi = Math.max(...e), fr = plotFrame(g, w, h, [0, T], [Math.min(-0.2, -hi * 0.15), hi * 1.3], 'time (s)', 'pushed off target (°)');
+    const eS = ((Td / Kp) * 180) / Math.PI, hi = Math.max(...e), fr = plotFrame(g, w, h, [0, T], [Math.min(-0.2, -hi * 0.15), hi * 1.3], 'time (s)', 'θ, pushed past the target (°)');
     g.save(); g.strokeStyle = col.e(); g.lineWidth = 1; g.setLineDash([5, 4]); g.beginPath(); g.moveTo(fr.X(0), fr.Y(eS)); g.lineTo(fr.X(T), fr.Y(eS)); g.stroke(); g.restore();
     g.save(); g.strokeStyle = col.a(); g.lineWidth = 2.2; g.beginPath(); t.forEach((q, i) => (i ? g.lineTo(fr.X(q), fr.Y(e[i])) : g.moveTo(fr.X(q), fr.Y(e[i])))); g.stroke(); g.restore();
-    legend(g, fr, [{ label: `settles at 20/Kp = ${f(eS)}°`, color: col.e(), dash: true }, { label: 'offset from target under P', color: col.a() }], 'tr');
+    legend(g, fr, [{ label: `settles at 20/Kp = ${f(eS)}°`, color: col.e(), dash: true }, { label: 'angle θ (target 0)', color: col.a() }], 'tr');
   },
 }]);

@@ -54,7 +54,7 @@ E(s) = R − Θ, and the final-value theorem gives e_ss = lim sE(s) as s → 0 (
 ```figure:torquebal
 ```
 
-- Kp = 1000, T_d = 20 N·m: −0.02 rad = 1.15°.
+- Kp = 1000, T_d = 20 N·m: e_ss = −0.02 rad = −1.15°, the dish held 1.15° past the target.
 - A 1.2 m Ku-band (12 GHz) dish has a 3 dB beam ≈ 70λ/D = 1.46° wide; 1.15° off costs ≈ 12(θ/θ₃)² = 7.4 dB, most of the signal.
 - For 0.1° under P you'd need Kp ≥ 11 459 (ζ = 0.03).
 - Ramp 1°/s: 0.020°, K_v = 50 /s.

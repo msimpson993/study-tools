@@ -141,7 +141,7 @@
   meaning: Peak time π/ω<sub>d</sub>.
   section: Time response
 - term: e_ss
-  meaning: "Steady-state error lim <i>sE</i>(<i>s</i>) (stable loop only). Step, type 0: 1/(1+<i>L</i>(0))."
+  meaning: "Steady-state error lim <i>sE</i>(<i>s</i>) (stable loop only). Step, type 0: 1/(1+<i>L</i>(0)). Sign as in the lecture notes, e = r − y: wind on the dish gives e_ss = −T_d/Kp (pushed past the target)."
   section: Time response
 - term: K_v
   meaning: Velocity constant lim <i>sL</i>(<i>s</i>); ramp error 1/<i>K</i><sub>v</sub>.
@@ -365,7 +365,7 @@
     + 2)).
   section: Running examples
 - term: "Dish: T, T_d"
-  meaning: Motor torque at the axis (N·m, limit ±200) and wind (disturbance) torque (N·m, 20 in the examples).
+  meaning: "Motor torque at the axis (N·m, limit ±200) and wind (disturbance) torque (N·m, 20 in the examples). Readouts quote the error e = θ_r − θ; a *wind peak* is the largest |e| after the gust."
   section: Running examples
 - term: N_f
   meaning: "Derivative filter bandwidth (rad/s): the D term is K_d·N_f·s/(s + N_f), so D ignores changes faster than about N_f. 200 rad/s on the dish. Written N_f so it isn't confused with the sensor noise N."

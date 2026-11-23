@@ -71,7 +71,7 @@ const gains = (v: V) => ({ Kp: n(v, 'Kp'), Ki: n(v, 'Ki'), Kd: n(v, 'Kd') });
 const R0 = DISH.step, WIND = DISH.wind;
 const pct = (x: number) => (Math.abs(x) > 1e4 ? 'unstable' : `${Math.max(0, x).toFixed(1)} %`);
 const mtxt = (m: ReturnType<typeof cardMet>, T: number) => (m.unstable ? 'unstable: the swing grows' : `%OS ${pct(m.OS)}, Ts ${m.Ts >= T - 0.01 ? `> ${T.toFixed(0)} s (still ringing)` : `${m.Ts.toFixed(2)} s`}, Tr ${m.Tr.toFixed(3)} s`);
-const wtxt = (w: ReturnType<typeof cardWind>, T: number) => `wind peak ${w.peak.toFixed(2)}°, ${Math.abs(w.final) > 0.05 ? `stays ${Math.abs(w.final).toFixed(2)}° off` : `cleared in ${w.recover >= T - 0.01 ? `> ${T.toFixed(0)}` : w.recover.toFixed(1)} s`}`;
+const wtxt = (w: ReturnType<typeof cardWind>, T: number) => `wind peak |e| ${w.peak.toFixed(2)}°, ${Math.abs(w.final) > 0.05 ? `stays ${Math.abs(w.final).toFixed(2)}° off (e = ${w.final.toFixed(2)}°)` : `cleared in ${w.recover >= T - 0.01 ? `> ${T.toFixed(0)}` : w.recover.toFixed(1)} s`}`;
 /** a dish step card: angle / target and torque, problem (solid) against the fix (dashed), with the [F] read-outs */
 function stepCard(title: string, a: CardOpts, b: CardOpts, xr: V2, opt: { r?: number; yr?: V2; upto?: number } = {}): Plot[] {
   const r = opt.r ?? R0, sa = card(a), sb = card(b), T = a.T ?? 10, ma = cardMet(sa.t, sa.y, r, opt.upto), mb = cardMet(sb.t, sb.y, r, opt.upto);
@@ -82,8 +82,8 @@ function stepCard(title: string, a: CardOpts, b: CardOpts, xr: V2, opt: { r?: nu
 /** a dish wind card: pointing error after a 20 N·m gust at tw, problem against the fix */
 function windCard(title: string, a: CardOpts, b: CardOpts, tw: number, T: number): Plot[] {
   const sa = card({ ...a, T, wind: WIND, twind: tw }), sb = card({ ...b, T, wind: WIND, twind: tw }), wa = cardWind(sa.t, sa.y, tw), wb = cardWind(sb.t, sb.y, tw);
-  const err = (y: number) => deg(y - R0), pa = thin(sa, err, tw - 2), pb = thin(sb, err, tw - 2), top = Math.max(1, Math.ceil(Math.max(wa.peak, wb.peak) * 1.3 * 2) / 2);
-  return [{ title, y: 'pointing error (°)', xr: [tw - 2, T], yr: [-0.3, top], series: [{ ...pa, color: PB() }, { ...pb, color: FX(), dash: true }], hl: [{ y: 0, label: 'on target' }], vl: [{ x: tw, label: `${WIND} N·m wind` }], notes: [`solid: ${wtxt(wa, T - tw)}`, `dashed: ${wtxt(wb, T - tw)}`] },
+  const err = (y: number) => deg(R0 - y), pa = thin(sa, err, tw - 2), pb = thin(sb, err, tw - 2), top = Math.max(1, Math.ceil(Math.max(wa.peak, wb.peak) * 1.3 * 2) / 2);
+  return [{ title, y: 'error e = θ_r − θ (°)', xr: [tw - 2, T], yr: [-top, 0.3], series: [{ ...pa, color: PB() }, { ...pb, color: FX(), dash: true }], hl: [{ y: 0, label: 'on target' }], vl: [{ x: tw, label: `${WIND} N·m wind` }], notes: [`solid: ${wtxt(wa, T - tw)}`, `dashed: ${wtxt(wb, T - tw)}`] },
     tPlot({ t: pa.t, u: pa.u }, { t: pb.t, u: pb.u }, [tw - 2, T])];
 }
 
@@ -130,13 +130,13 @@ const CASES: Record<string, Case> = {
   },
   limitcycle: (v) => {
     // review 1 (W7): stiction plus integral action hunts forever; an integrator dead band δ stops it (numbers.py [R4])
-    const edb = n(v, 'edb'), run = (d: number) => { const k = `lc|${d}`; if (!stickCache.has(k)) stickCache.set(k, M.simStick(2000, 1000, 200, { T: 200, edb: d, every: 200 })); const s = stickCache.get(k)!; return { t: s.t, y: Array.from(s.y, (y) => ((y - 0.1) * 180) / Math.PI), u: Array.from(s.u) }; };
+    const edb = n(v, 'edb'), run = (d: number) => { const k = `lc|${d}`; if (!stickCache.has(k)) stickCache.set(k, M.simStick(2000, 1000, 200, { T: 200, edb: d, every: 200 })); const s = stickCache.get(k)!; return { t: s.t, y: Array.from(s.y, (y) => ((0.1 - y) * 180) / Math.PI), u: Array.from(s.u) }; };
     const de = edb > 0 ? edb : 0.003, a = run(0), b = run(de), dd = (de * 180) / Math.PI;
     // the legend is read from the run, not assumed (tutor build 4, 1e): after 60 s, does the error still cross zero?
     let cross = 0, lo = Infinity, hi = -Infinity; for (let i = 1; i < b.t.length; i++) if (b.t[i] >= 60) { if (Math.sign(b.y[i]) !== Math.sign(b.y[i - 1]) && b.y[i] !== 0) cross++; lo = Math.min(lo, b.y[i]); hi = Math.max(hi, b.y[i]); }
     const sticks = cross === 0, endE = b.y[b.y.length - 1], dTxt = de.toFixed(4).replace(/0+$/, ''), sg = (x: number) => `${x >= 0 ? '+' : '−'}${Math.abs(x).toFixed(3)}°`;
     const bLab = sticks ? `with a dead band δ = ${dTxt} rad: sticks at ${sg(endE)}` : `δ = ${dTxt} rad is too narrow: still hunts (${sg(lo)} … ${sg(hi)})`;
-    return [{ title: 'Pointing error with stiction, tuned PID (2000, 1000, 200)', y: 'error (°)', xr: [0, 200], yr: [-0.5, 0.3], series: [{ ...a, color: PB(), width: 1.8 }, { ...b, color: FX(), dash: true }], hl: [{ y: dd }, { y: -dd, label: `±δ = ±${dd.toFixed(2)}°` }, { y: 0 }],
+    return [{ title: 'Pointing error with stiction, tuned PID (2000, 1000, 200)', y: 'error e = θ_r − θ (°)', xr: [0, 200], yr: [-0.3, 0.5], series: [{ ...a, color: PB(), width: 1.8 }, { ...b, color: FX(), dash: true }], hl: [{ y: dd }, { y: -dd, label: `±δ = ±${dd.toFixed(2)}°` }, { y: 0 }],
       legend: [{ label: 'tuned PID: hunts ±0.15°, period 23.9 s', color: PB() }, { label: bLab, color: FX(), dash: true }], legendAt: 'br' },
       { title: 'Motor torque: the integrator builds it up while the gear is stuck', y: 'torque (N·m)', xr: [0, 200], yr: [-70, 40], series: [{ t: a.t, y: a.u, color: PB(), width: 1.6 }, { t: b.t, y: b.u, color: FX(), dash: true }], hl: [{ y: 20, label: 'T_st = 20 N·m' }, { y: -20 }],
         legend: [{ label: 'tuned PID: torque ramps to ±T_st, breaks free, overshoots', color: PB() }, { label: sticks ? 'dead band: torque stops changing' : 'band too narrow: torque still ramps', color: FX(), dash: true }], legendAt: 'br' }];

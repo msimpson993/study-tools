@@ -31,7 +31,7 @@ describe('review 1', () => {
     }
     const a = M.simStick(2000, 1000, 200, { T: 200, every: 100 }), e = Array.from(a.y).map((y, i) => [a.t[i], ((y - 0.1) * 180) / Math.PI]).filter(([t]) => t >= 60).map(([, x]) => x);
     nearAbs(Math.min(...e), -0.145, 0.002); nearAbs(Math.max(...e), 0.147, 0.002);
-    const b = M.simStick(2000, 1000, 200, { T: 200, edb: 0.003, every: 100 }); nearAbs(((b.final - 0.1) * 180) / Math.PI, 0.149, 0.0006);
+    const b = M.simStick(2000, 1000, 200, { T: 200, edb: 0.003, every: 100 }); nearAbs(((0.1 - b.final) * 180) / Math.PI, -0.149, 0.0006); // e = θ_r − θ (pass 4c)
   });
   it('[R5] dish loop crossover and phase margin', () => {
     for (const [Kp, Ki, Kd, wc, pm] of [[1000, 0, 0, 9.9, 11.4], [1000, 0, 120, 13.86, 67.2], [2000, 1000, 200, 21.73, 70.3]]) {

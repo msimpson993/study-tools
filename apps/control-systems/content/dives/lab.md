@@ -31,13 +31,13 @@ The default plant is the dish, 0.1/(s(s + 2)). The alternate adds the motor ampl
 - Torque limit |T| 50–1000 N·m (default 200) and anti-windup {none, clamp, back-calculation}: anti-windup stops the integrator piling up error while the torque is clipped (*When the push hits its limit*).
 - D on measurement (default on); ghost toggle to keep the last run.
 - Window 4–40 s (default 16 s): how long each run lasts. The gust comes at 10 s, so windows of 10 s or less have no gust.
-- **Readouts** (green = passes, red = fails, grey = no spec): overshoot (< 10 %); settling to ±2 %; steady error (θ_r − θ just before the gust; zero passes); wind peak (< 0.6°); recovery to ±0.05° (spec < 10 s): seconds from the 10 s gust until the error stays inside ±0.05° to the window's end; "not back by T s" means it hadn't settled back when the window ended (a fail; widen the window to see when it does); offset at end, θ_r − θ at the last sample, wind on only (< 0.05°, the page's back-on-target band; PD stays −T_d/Kp off, so it fails); peak torque (≤ 200 N·m); stability.
+- **Readouts** (green = passes, red = fails, grey = no spec): overshoot (< 10 %); settling to ±2 %; steady error (θ_r − θ just before the gust; zero passes); wind peak, the largest |e| after the gust (< 0.6°); recovery to ±0.05° (spec < 10 s): seconds from the 10 s gust until the error stays inside ±0.05° to the window's end; "not back by T s" means it hadn't settled back when the window ended (a fail; widen the window to see when it does); offset at end, θ_r − θ at the last sample, wind on only (< 0.05°, the page's back-on-target band; PD stays at e = −T_d/Kp, so it fails); peak torque (≤ 200 N·m); stability.
 
 ### Presets that reproduce the chain
 
 P 1000; PD (1000, 0, 120); tuned (2000, 1000, 200); too much I (2000, 3000, 200); too much Kd (2000, 1000, 400); derivative kick (D on the error); windup on a 2 rad slew, without and with integrator clamping; Ziegler–Nichols on the dish with its amplifier lag (264, 531.5, 32.8).
 
-PD has no integrator, so the motor can hold the 20 N·m wind only by sitting off target: Kp·e = T_d, so the offset is −T_d/Kp = −20/1000 rad = **−1.146°**. Kd does nothing at rest.
+PD has no integrator, so the motor can hold the 20 N·m wind only by sitting off target: at rest Kp·e + T_d = 0, so the offset is e = −T_d/Kp = −20/1000 rad = **−1.146°** (the dish 1.146° past the target). Kd does nothing at rest. The P 1000 preset reads −1.149° at the default 16 s window because, with ζ = 0.1, it is still ringing 6 s after the gust; widen the window to 21 s and it reads −1.146°.
 
 ### Worked example: on the dish
 
