@@ -263,7 +263,9 @@ export function mountConceptMap(host: HTMLElement, content: AppContent, progress
     return ins.sort((a, b) => rank(a) - rank(b));
   };
   /** a side line is a shortcut when its box leads on; a branch that ends there (a Full-detail side box) is a detour you come back from */
-  const sideTag = (e: MapEdge, m: MapDef) => (m.edges.some((x) => x.from === e.to && !x.dashed && !x.side) ? // a shortcut rejoins the main path; a side box whose own lines are side paths (CS Tuning toolkit) is still a detour
+  /** a short answer is inline HTML, or already paragraphs and a list when its Markdown had one (pass 5, issue 2): wrap only the inline kind */
+const asBlock = (html: string) => (/^\s*<(p|ul|ol|div|h\d)[\s>]/.test(html) ? html : `<p>${html}</p>`);
+const sideTag = (e: MapEdge, m: MapDef) => (m.edges.some((x) => x.from === e.to && !x.dashed && !x.side) ? // a shortcut rejoins the main path; a side box whose own lines are side paths (CS Tuning toolkit) is still a detour
     'Side path (shortcut)' : 'Side path (a detour; come back here)');
   /** a side line's header uses the same words as its box's tag and the legend: a detour you come back from, or a shortcut that
    *  leads on (pass 3: never call a detour a shortcut or a quicker way) */
@@ -543,7 +545,7 @@ export function mountConceptMap(host: HTMLElement, content: AppContent, progress
     const inc = backOrder(n.id, m)[0];
     const qText = inc ? inc.question : n.label;
     out.push(h('p', { class: 'pop-question', dataset: { testid: 'pop-question', edge: inc ? edgeKey(inc.from, inc.to) : '' } }, h('span', { class: 'pq-lead' }, inc ? 'The question:' : 'The central question:'), ' ', h('span', { class: 'pq-text', html: qText })));
-    out.push(h('div', { class: 'pop-answer', dataset: { testid: 'pop-answer', body: '' }, html: `<p>${n.short}</p>` }));
+    out.push(h('div', { class: 'pop-answer', dataset: { testid: 'pop-answer', body: '' }, html: asBlock(n.short) }));
     out.push(row('pop-rough', 'In rough words:', p.rough, 'pop-rough'));
     if (n.eqHtml || n.eq) out.push(n.eqHtml ? h('div', { class: 'st-eq', html: n.eqHtml }) : h('div', { class: 'st-eq' }, n.eq!));
     if (p.eqKey) out.push(h('p', { class: 'pop-key st-hint', dataset: { testid: 'pop-key' }, html: p.eqKey }));
@@ -570,7 +572,19 @@ export function mountConceptMap(host: HTMLElement, content: AppContent, progress
     if (outs.length) {
       const r = h('div', { class: 'pop-row pop-next', dataset: { testid: 'pop-next' } }, h('b', { class: 'pop-lead' }, outs.length > 1 ? 'Next questions:' : 'Next question:'));
       const ul = h('ul', { class: 'pop-next-list' });
-      for (const e of outs) ul.append(h('li', { class: fork ? (e.side ? 'nx-side' : 'nx-main') : undefined }, ...(fork ? [h('span', { class: 'nx-tag' }, e.side ? `${sideTag(e, m)}:` : 'Main path:'), ' '] : []), link(e, 'pop-next-link')));
+      // two or more side lines of one kind: their tag once, over a sub-list of their questions (pass 5, issue 4; the chain buttons do the same)
+      const nTag = new Map<string, number>(); for (const e of outs) if (fork && e.side) nTag.set(sideTag(e, m), (nTag.get(sideTag(e, m)) ?? 0) + 1);
+      const subs = new Map<string, HTMLElement>();
+      for (const e of outs) {
+        const tag = fork && e.side ? sideTag(e, m) : '';
+        if (tag && (nTag.get(tag) ?? 0) > 1) {
+          let sub = subs.get(tag);
+          if (!sub) { sub = h('ul', { class: 'pop-next-sub' }); subs.set(tag, sub); ul.append(h('li', { class: 'nx-side nx-group', dataset: { testid: 'pop-next-group' } }, h('span', { class: 'nx-tag', dataset: { testid: 'pop-next-group-tag' } }, `${tag}:`), sub)); }
+          sub.append(h('li', { class: 'nx-side' }, link(e, 'pop-next-link')));
+          continue;
+        }
+        ul.append(h('li', { class: fork ? (e.side ? 'nx-side' : 'nx-main') : undefined }, ...(fork ? [h('span', { class: 'nx-tag' }, e.side ? `${sideTag(e, m)}:` : 'Main path:'), ' '] : []), link(e, 'pop-next-link')));
+      }
       r.append(ul); out.push(r);
     } else if (p.next) out.push(row('pop-next', 'Next question:', p.next, 'pop-next'));
     // a Full-detail branch end is not a dead end: Back up the branch, or straight back to the main chain
@@ -680,7 +694,7 @@ export function mountConceptMap(host: HTMLElement, content: AppContent, progress
       if (!n) return;
       const head = h('div', { class: 'cm-head' }, h('h3', null, n.label), copyRefButton(() => nodeReference(content, n, m.id)), close);
       if (n.pop) panel.append(head, ...popTemplate(n, m));
-      else panel.append(head, ...(n.detail ? [h('div', { class: 'st-hint', dataset: { body: '' } }, n.detail)] : []), h('div', { html: `<p>${n.short}</p>`, dataset: { body: '' } }));
+      else panel.append(head, ...(n.detail ? [h('div', { class: 'st-hint', dataset: { body: '' } }, n.detail)] : []), h('div', { html: asBlock(n.short), dataset: { body: '' } }));
       if (n.pop) { /* template replaces the free-form rows */ } else if (n.eqHtml) panel.append(h('div', { class: 'st-eq', html: n.eqHtml })); else if (n.eq) panel.append(h('div', { class: 'st-eq' }, n.eq));
       if (!n.pop && n.addsToExample) panel.append(h('aside', { class: 'callout c-example', dataset: { testid: 'adds-to-example' } }, h('b', { class: 'lead' }, 'Adds to the running example'), h('div', { class: 'cb', html: `<p>${n.addsToExample}</p>`, dataset: { body: '' } })));
       if (!n.pop) panel.append(...meetLinks(n, m));

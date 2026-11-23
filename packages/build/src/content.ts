@@ -71,6 +71,8 @@ export function loadApp(appDir: string): { content: AppContent; warnings: string
   const md = createMarkdown(mathErrors, () => where);
   const inline = (s: string | undefined, w: string) => { where = w; return s ? md.renderInline(s) : ''; };
   const block = (s: string | undefined, w: string) => { where = w; return s ? md.render(s) : ''; };
+  /** a box's short answer: inline as before, unless it holds a Markdown list, which renders as real paragraphs and a bullet list (CS pass 5, issue 2) */
+  const shortMd = (s: string | undefined, w: string) => (s && /(^|\n)\s*([-*+]|\d+\.)\s/.test(s) ? block(s, w).trim() : inline(s, w));
 
 
   /** figures.yaml may write `options: [open, closed]`; controls.ts wants {value, label}. */
@@ -123,7 +125,7 @@ export function loadApp(appDir: string): { content: AppContent; warnings: string
         id: m.id, title: m.title, caption: m.caption, seriesNames: m.seriesNames,
         nodes: (m.nodes ?? []).map((n: any) => ({
           id: n.id, label: n.label, detail: n.detail, kind: n.kind, series: n.series, ...(n.shelf ? { shelf: true } : {}), ...(n.examples ? { examples: n.examples } : {}), ...(n.exampleWhy ? { exampleWhy: inline(n.exampleWhy, `graph.yaml ${m.id}/${n.id} exampleWhy`) } : {}),
-          short: inline(n.short, `graph.yaml ${m.id}/${n.id}`),
+          short: shortMd(n.short, `graph.yaml ${m.id}/${n.id}`),
           eq: n.eq,
           eqHtml: n.eqTex ? (where = `graph.yaml ${m.id}/${n.id} eqTex`, md.renderInline(`$${n.eqTex}$`)) : undefined,
           why: n.why ? inline(n.why, `${m.id}/${n.id}`) : undefined,

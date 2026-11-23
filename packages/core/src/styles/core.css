@@ -415,6 +415,7 @@ details.derivation{margin:.7rem 0}details.derivation>summary{font-weight:650}
 .pop-next-list li.nx-main{list-style:disc}.pop-next-list li.nx-side{list-style:circle;opacity:.9}
 .pop-next-list .nx-tag{font-size:.78rem;font-weight:700;text-transform:uppercase;letter-spacing:.03em;opacity:.75}
 .pop-next-list li.nx-side .pop-next-link{font-weight:500}
+.pop-next-list li.nx-group{list-style:none;margin-left:-1.1rem;opacity:1}.pop-next-list .pop-next-sub{margin:.15rem 0 0 1.1rem;padding:0}
 .pop-end a{font-weight:600}
 .chain-nav .chain-main{border-style:solid}
 /* folds above the map: long summaries on wide screens, short ones side by side on a phone */
@@ -476,4 +477,7 @@ details.derivation{margin:.7rem 0}details.derivation>summary{font-weight:650}
   /* pass 4 (student issue 21): the path links ("Path from the central question", "Side trip from") and the pop-up's buttons are phone tap targets too */
   #app .cm-panel .path a { display: inline-flex; align-items: center; min-height: 32px; padding: 0 .1rem; box-sizing: border-box; vertical-align: middle; }
   #app .cm-panel .acts .tbtn, #app .cm-panel [data-testid=play] { min-height: 32px; }
+  /* pass 5 (student issue 10): the pop-up's copy button was 27 px */
+  #app .st-copy { width: 32px; height: 32px; }
+  #app .st-copy.copied { width: auto; }
 }
