@@ -124,4 +124,26 @@ test.describe('sim-project tabbed page', () => {
       }
     });
   }
+
+  test('loop figure presets are tab-local on each problem tab', async ({ page }) => {
+    const want: Record<string, string[]> = {
+      motor: ['motor-open', 'motor-closed'],
+      borer: ['borer'],
+      disk: ['disk'],
+      engine: ['engine'],
+    };
+    const all = Object.values(want).flat();
+    for (const [tab, ids] of Object.entries(want)) {
+      await open(page, 'sim-project', `#/tab/${tab}`);
+      const loop = page.locator('[data-testid=viz][data-figure=loop]');
+      await expect(loop, `${tab} has a loop figure`).toHaveCount(1);
+      const got = await loop.locator('.st-presets [data-preset]').evaluateAll((els) => els.map((e) => e.getAttribute('data-preset')));
+      expect(got, `${tab} loop presets`).toEqual(ids);
+      const machines = await loop.locator('select[aria-label="machine"]').evaluate((el: HTMLSelectElement) => [...el.options].map((o) => o.value));
+      expect(machines, `${tab} machine select`).toEqual(ids);
+      for (const other of all.filter((id) => !ids.includes(id))) {
+        await expect(loop.locator(`.st-presets [data-preset="${other}"]`), `${tab} should not offer ${other}`).toHaveCount(0);
+      }
+    }
+  });
 });

@@ -72,15 +72,27 @@ export function loopFigure(host: HTMLElement, def: FigureDef, controls: ControlS
     disk: 'disk head',
     engine: 'engine model',
   };
-  const familyOf = (m: string): string[] => (
-    m === 'motor-open' || m === 'motor-closed' ? ['motor-open', 'motor-closed'] : [m]
-  );
+  /** Presets (and machine-select options) allowed on each problem tab. Overview keeps every machine. */
+  const TAB_LOOP_PRESETS: Record<string, string[]> = {
+    motor: ['motor-open', 'motor-closed'],
+    borer: ['borer'],
+    disk: ['disk'],
+    engine: ['engine'],
+  };
+  const tab = host.closest<HTMLElement>('[data-testid="tab-page"]')?.dataset.tab
+    ?? /#\/tab\/([^/?]+)/.exec(location.hash ?? '')?.[1];
+  const allowed = (tab && TAB_LOOP_PRESETS[tab]) ? TAB_LOOP_PRESETS[tab] : null;
   const sel = host.querySelector('select[aria-label="machine"]') as HTMLSelectElement | null;
   if (sel) {
-    const family = familyOf(String(controls.values.machine ?? 'motor-open'));
     [...sel.options].forEach((o) => {
-      if (!family.includes(o.value)) o.remove();
+      if (allowed && !allowed.includes(o.value)) o.remove();
       else o.textContent = MACHINE_LABEL[o.value] ?? o.textContent;
+    });
+  }
+  if (allowed) {
+    host.querySelectorAll<HTMLButtonElement>('.st-presets [data-preset]').forEach((b) => {
+      const id = b.dataset.preset ?? '';
+      if (!allowed.includes(id)) b.remove();
     });
   }
   return () => api?.destroy();
