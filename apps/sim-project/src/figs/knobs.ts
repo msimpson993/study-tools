@@ -24,11 +24,10 @@ function evalMotor(knob: string, x: number) {
     t, baseY: t.map(base.wc), liveY: t.map(live.wc), tEnd,
     rows: [
       { name: 'sag |ω∞|', base: Math.abs(base.wcInf), live: Math.abs(live.wcInf), better: 'down' as const, unit: 'rad/s' },
-      { name: 'overshoot', base: 0, live: 0, better: 'flat' as const, unit: '%' },
       { name: 'τ (settling ~4τ)', base: base.tauClosed, live: live.tauClosed, better: 'down' as const, unit: 's' },
-      { name: 'margin', base: 1, live: 1, better: 'flat' as const, unit: '' },
     ] satisfies Row[],
     yLabel: 'closed-loop ω (rad/s)',
+    kind: 'motor' as const,
   };
 }
 
@@ -107,9 +106,17 @@ export const knobsPanels = (): FigurePanel[] => [
     id: 'plot', title: 'Main response: handout setting (grey) vs yours', x: 'time (s)', y: 'response',
     draw(g, w, h, v: V) {
       const p = pack(v);
+      const allY = [...p.liveY, ...p.baseY];
+      let lo = allY[0], hi = allY[0];
+      for (const y of allY) { if (y < lo) lo = y; if (y > hi) hi = y; }
+      const span = Math.max(hi - lo, 1e-9);
+      const ref = p.liveY[p.liveY.length - 1] > 0.5 ? 1 : 0;
+      const yRange: [number, number] = [Math.min(lo, ref) - 0.1 * span, Math.max(hi, ref) + 0.18 * span];
+      const motor = p.yLabel.includes('ω');
       drawStepResponse(g, w, h, {
         t: p.t, y: p.liveY, ghost: { t: p.t, y: p.baseY, label: 'handout setting' },
-        tEnd: p.tEnd, color: col.a(), yLabel: p.yLabel, ref: p.liveY[p.liveY.length - 1] > 0.5 ? 1 : undefined,
+        tEnd: p.tEnd, color: col.a(), yLabel: p.yLabel, ref,
+        yRange, show: motor ? {} : { overshoot: true, settling: true },
       });
     },
   },

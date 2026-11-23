@@ -27,7 +27,7 @@ const niceStep = (span: number, n: number) => { const raw = span / n, p = Math.p
 /* ═════════════════════════════ step response ═════════════════════════════ */
 export interface StepViewSpec {
   t: ArrayLike<number>; y: ArrayLike<number>;
-  /** a faint dashed second trace (e.g. the previous tuning) */ ghost?: { t: ArrayLike<number>; y: ArrayLike<number>; label?: string };
+  /** a faint dashed second trace (e.g. the previous tuning) */ ghost?: { t: ArrayLike<number>; y: ArrayLike<number>; label?: string; color?: string };
   /** reference level (default 1) */ ref?: number; /** final value; default = last sample */ final?: number;
   /** which markers to draw; each is optional and off by default */
   show?: { timing?: boolean; overshoot?: boolean; band?: boolean; settling?: boolean; ess?: boolean };
@@ -50,9 +50,9 @@ export function drawStepResponse(g: CanvasRenderingContext2D, w: number, h: numb
   const yf = m.yFinal;
   if (show.band && Number.isFinite(yf)) { g.save(); clipBox(g, f); g.fillStyle = col.ok(); g.globalAlpha = 0.14; g.fillRect(f.box.l, f.Y(yf * (1 + band)), f.box.r - f.box.l, f.Y(yf * (1 - band)) - f.Y(yf * (1 + band))); g.restore(); text(g, `±${fmtN(band * 100, 0)}%`, f.box.r - 4, f.Y(yf * (1 - band)) + 12, col.ok(), 'right', 10) /* at the right end, where the response has settled inside the band (pass 3: at the left it sat on the rising curve) */; }
   tline(g, f, [0, ref], [tEnd, ref], col.muted(), 1, [5, 4]);
-  if (s.ghost) curve(g, f, Array.from(s.ghost.t), Array.from(s.ghost.y), col.muted(), 2, [6, 4]);
+  if (s.ghost) curve(g, f, Array.from(s.ghost.t), Array.from(s.ghost.y), s.ghost.color ?? col.muted(), 2, [6, 4]);
   curve(g, f, t, y, s.color ?? col.a(), 2.4);
-  if (s.ghost?.label) text(g, `┄ ${s.ghost.label}`, f.box.r - 5, f.box.b - 8, col.muted(), 'right', 10);
+  if (s.ghost?.label) text(g, `┄ ${s.ghost.label}`, f.box.r - 5, f.box.b - 8, s.ghost.color ?? col.muted(), 'right', 10);
   const lbl = (str: string, px: number, py: number, color: string, align: CanvasTextAlign = 'left') => text(g, str, px, py, color, align, 10.5);
   if (show.timing && Number.isFinite(m.riseTime)) {
     const y10 = yf * 0.1, y90 = yf * 0.9;

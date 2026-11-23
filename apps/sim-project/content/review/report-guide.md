@@ -22,13 +22,13 @@ covers: "Project page (deliverables), Project 1 handout (PID Tuner, 6 pp.), Proj
 
 | Item | Reproduce | You should get | Map box |
 |---|---|---|---|
-| Fig. 4.23 | open-loop speed after a unit load | "−0.66 rad/s" at 7 s (exact −0.663; final −0.667) | [No feedback](#/dive/speed) |
-| Fig. 4.24 | closed-loop speed, Ka = 54, Kt = 1 | "−0.002 rad/s" (exact −0.00185); ratio "0.003" (exact 0.0028) < 0.02 | [Measure and correct](#/dive/speed) |
-| Fig. 4.25 | step, K = 100 and K = 20 | Table 4.3: "22 %, 0.7 s" and "4 %, 1.0 s" (exact 22.0 %, 0.67 s; 3.9 %, 0.91 s) | [K and the command](#/dive/borer) |
-| Fig. 4.26 | unit push, K = 100 and K = 20 | "0.01" and "0.05" | [K and the rock's push](#/dive/borer) |
-| Fig. 4.27 | sensitivity, K = 20 | the arc from 0 to 1 (top), |S| and s/K (bottom) | [When the machine changes](#/dive/sens) |
-| Fig. 4.30 | seek, Ka = 10 and 80 | Ka = 80 peaks near 1.2 (exact 1.17 at 0.18 s, 17.1 %) | [Ka: fast or calm](#/dive/disk) |
-| Fig. 4.31 | shock, Ka = 80 | "−2.5×10⁻³" (dip −0.0029 at 0.18 s) | [Ka and a shock](#/dive/disk) |
+| Fig. 4.23 | open-loop speed after a unit load | "−0.66 rad/s" at 7 s (exact −0.663; final −0.667) | [No feedback](#/node/OPEN) |
+| Fig. 4.24 | closed-loop speed, Ka = 54, Kt = 1 | "−0.002 rad/s" (exact −0.00185); ratio "0.003" (exact 0.0028) < 0.02 | [Measure and correct](#/node/CLOSED) |
+| Fig. 4.25 | step, K = 100 and K = 20 | Table 4.3: "22 %, 0.7 s" and "4 %, 1.0 s" (exact 22.0 %, 0.67 s; 3.9 %, 0.91 s) | [K and the command](#/node/KSTEP) |
+| Fig. 4.26 | unit push, K = 100 and K = 20 | "0.01" and "0.05" | [K and the rock's push](#/node/KPUSH) |
+| Fig. 4.27 | sensitivity, K = 20 | the arc from 0 to 1 (top), |S| and s/K (bottom) | [When the machine changes](#/node/SENS) |
+| Fig. 4.30 | seek, Ka = 10 and 80 | Ka = 80 peaks near 1.2 (exact 1.17 at 0.18 s, 17.1 %) | [Ka: fast or calm](#/node/KA) |
+| Fig. 4.31 | shock, Ka = 80 | "−2.5×10⁻³" (dip −0.0029 at 0.18 s) | [Ka and a shock](#/node/KAPUSH) |
 
 ### Checklist: Project 1 (PID Tuner)
 

@@ -2,7 +2,7 @@
 import { figureOf, drawStepResponse, col, text, wipe, rangeFrame, graphAxes, curve, tline, type FigurePanel } from '@study/core';
 import { ENGINE, DESIGNS, type DesignName } from '../model/params';
 import { engineMargins, enginePError, engineStep, simEngine, tuner, metrics, engineLoopJw } from '../model/plants';
-import { f, lin, num, on, str, type V } from './util';
+import { f, lin, num, on, str, fmtPow10, drawKeyValueTable, type V } from './util';
 import { drawEngine, drawTunerSliders } from './scenes';
 
 const nearDesign = (resp: number, rob: number): DesignName | null => {
@@ -16,19 +16,19 @@ export const piPanels = (): FigurePanel[] => [
   {
     id: 'speed', title: 'Unit speed step on the stand-in engine (not in lab handout)', x: 'time (s)', y: 'speed (fraction of the step)',
     draw(g, w, h, v: V) {
-      const P = num(v, 'P', 0.0042), I = num(v, 'I', 0.0092);
+      const P = num(v, 'P', 0.0042253), I = num(v, 'I', 0.0092411);
       const r = simEngine(P, I, { T: 8, dt: 1e-3 });
       const m = metrics(r.t, r.y, 1);
       drawStepResponse(g, w, h, { t: r.t, y: r.y, final: 1, ref: 1, tEnd: 8, show: { overshoot: true, band: true, settling: true, ess: I === 0 }, color: col.a() });
       const err = I === 0 ? enginePError(P) : 0;
-      text(g, I === 0 ? `P only: settles at ${f(1 - err, 3)}, error ${f(err, 3)} = 1/(1 + P·Kₑ)` : `OS ${f(m.os, 2)} %  Ts ${f(m.ts, 3)} s  (I > 0 ⇒ zero steady error)`, 50, 14, col.text(), 'left', 10);
+      text(g, I === 0 ? `P only: settles at ${f(1 - err, 3)}, error ${f(err, 3)} = 1/(1 + P·Kₑ)` : `OS ${f(m.os, 2)} %  Ts ${f(m.ts, 3)} s  (I > 0 ⇒ zero steady error)`, 8, 14, col.text(), 'left', 10);
     },
   },
   {
     id: 'throttle', title: 'Throttle split: P·e(t) and I·∫e dt', x: 'time (s)', y: 'throttle units',
     draw(g, w, h, v: V) {
       wipe(g, w, h);
-      const P = num(v, 'P', 0.0042), I = num(v, 'I', 0.0092);
+      const P = num(v, 'P', 0.0042253), I = num(v, 'I', 0.0092411);
       const r = simEngine(P, I, { T: 8, dt: 1e-3 });
       const pPart: number[] = [], iPart: number[] = [];
       let xi = 0;
@@ -69,7 +69,7 @@ function drawEngineBode(g: CanvasRenderingContext2D, w: number, h: number, P: nu
   const fm = rangeFrame(w, hTop, [lo, hi], [-40, 40], 48, 12, 8, 6);
   const fp = rangeFrame(w, hBot, [lo, hi], [-200, 20], 48, 12, 6, 32);
   const plot = (fr: typeof fm, xr: [number, number], yr: [number, number], xs: number[], ys: number[], ylab: string, bottom: boolean) => {
-    graphAxes(g, fr, xr, yr, bottom ? 'log₁₀ ω (rad/s)' : '', ylab);
+    graphAxes(g, fr, xr, yr, bottom ? 'ω (rad/s)' : '', ylab, 1, 0, bottom ? fmtPow10 : undefined);
     curve(g, fr, xs, ys, col.a(), 2);
   };
   g.save();
@@ -112,7 +112,7 @@ export const tunerPanels = (): FigurePanel[] => [
         ghost: ghost && hit ? { t: ghost.t, y: ghost.y, label: `${hit} handout gains` } : undefined,
         color: col.a(),
       });
-      text(g, `P = ${f(P, 7)}  I = ${f(I, 7)}${clamped ? '  (P clamped)' : ''}  OS ${f(r.m.os, 2)} %  Ts ${f(r.m.ts, 3)} s`, 50, 14, col.text(), 'left', 10);
+      text(g, `P = ${f(P, 7)}  I = ${f(I, 7)}${clamped ? '  (P clamped)' : ''}  OS ${f(r.m.os, 2)} %  Ts ${f(r.m.ts, 3)} s`, 8, 14, col.text(), 'left', 10);
     },
   },
   {
@@ -124,7 +124,7 @@ export const tunerPanels = (): FigurePanel[] => [
   },
   {
     id: 'table', title: 'Show Parameters (emulated) beside the handout table', x: '', y: '',
-    height: 120,
+    height: 136,
     draw(g, w, h, v: V) {
       wipe(g, w, h);
       const resp = num(v, 'resp', 0.678), rob = num(v, 'rob', 0.6), show = on(v, 'hand');
@@ -139,11 +139,10 @@ export const tunerPanels = (): FigurePanel[] => [
         const d = DESIGNS[hit];
         rows.push(['handout', String(d.P), String(d.I), String(d.tr), String(d.ts), String(d.os), String(d.peak), String(d.gmDb), String(d.pm), 'yes']);
       }
-      const cw = w / cols.length;
-      rows.forEach((row, i) => row.forEach((cell, j) => {
-        text(g, cell, 4 + j * cw, 16 + i * 16, i === 0 ? col.muted() : col.text(), 'left', 10);
-      }));
-      text(g, 'Stand-in engine and emulated tuner (not in lab handout)', 4, h - 8, col.muted(), 'left', 9);
+      drawKeyValueTable(g, w, h, rows, {
+        footer: 'Stand-in engine and emulated tuner (not in lab handout)',
+        key: 'Tr rise  ·  Ts settling  ·  OS overshoot  ·  PM phase margin  ·  GM gain margin',
+      });
     },
   },
 ];

@@ -1,7 +1,7 @@
 /** Figures `borer`, `tradeoff`, `sens`. */
 import { figureOf, drawStepResponse, drawSPlane, col, text, wipe, rangeFrame, graphAxes, curve, tline, dot, type FigurePanel } from '@study/core';
 import { C } from '@study/core/dsp';
-import { f, lin, num, on, str, type V } from './util';
+import { f, lin, num, on, str, fmtPow10, type V } from './util';
 import { borerPoles, borerPush, borerS, borerStep, borerWnZeta, borerZero, diskSeek, diskShock } from '../model/plants';
 import { drawBorer } from './scenes';
 
@@ -24,26 +24,33 @@ export const borerPanels = (): FigurePanel[] => [
       const ghosts = on(v, 'ghosts');
       const g20 = ghosts ? borerStep(20, Kd, 4, 4001) : undefined;
       const g100 = ghosts ? borerStep(100, Kd, 4, 4001) : undefined;
-      drawStepResponse(g, w, h, {
-        t: r.t, y: r.y, final: 1, ref: 1, tEnd: 2, show: { overshoot: true, band: true, settling: true },
+      const head = 22;
+      wipe(g, w, h);
+      g.save(); g.translate(0, head);
+      const settled = r.m.ts < 2 * 0.98;
+      drawStepResponse(g, w, h - head, {
+        t: r.t, y: r.y, final: 1, ref: 1, tEnd: 2, show: { overshoot: true, band: true, settling: settled },
         ghost: g20 ? { t: g20.t, y: g20.y, label: 'K = 20' } : undefined, color: col.a(),
       });
-      if (g100 && K !== 100) {
-        // already used ghost for K=20; sketch K=100 only when not the live value — skip to keep one ghost
-      }
+      g.restore();
       const z = borerWnZeta(K, Kd);
-      text(g, `ζ = ${f(z.zeta, 3)}  ωn = ${f(z.wn, 2)}  OS ${f(r.m.os, 2)} %  Ts ${f(r.m.ts, 3)} s`, 50, 14, col.text(), 'left', 10);
+      text(g, `ζ = ${f(z.zeta, 3)}  ωn = ${f(z.wn, 2)}  OS ${f(r.m.os, 2)} %  Ts ${f(r.m.ts, 3)} s`, 8, 14, col.text(), 'left', 10);
     },
   },
   {
     id: 'push', title: 'Unit rock push', x: 'time (s)', y: 'y(t)',
     draw(g, w, h, v: V) {
       const { K, Kd } = borerOf(v), r = borerPush(K, Kd, 4, 8001);
-      drawStepResponse(g, w, h, {
-        t: r.t, y: r.y, final: 1 / K, ref: 0, tEnd: 2.5, show: { ess: false, overshoot: true, settling: true },
+      const head = 22;
+      wipe(g, w, h);
+      g.save(); g.translate(0, head);
+      const settled = r.m.ts < 2.5 * 0.98;
+      drawStepResponse(g, w, h - head, {
+        t: r.t, y: r.y, final: 1 / K, ref: 0, tEnd: 2.5, show: { ess: false, overshoot: false, settling: settled },
         color: col.a(), yLabel: 'y(t)  (offset 1/K)',
       });
-      text(g, `offset 1/K = ${f(1 / K, 4)}   peak ${f(r.m.peak, 5)} at ${f(r.m.tp, 3)} s`, 50, 14, col.text(), 'left', 10);
+      g.restore();
+      text(g, `offset 1/K = ${f(1 / K, 4)}   peak ${f(r.m.peak, 5)} at ${f(r.m.tp, 3)} s`, 8, 14, col.text(), 'left', 10);
     },
   },
   {
@@ -83,7 +90,7 @@ export const tradeoffPanels = (): FigurePanel[] => [
       // log y
       const yLog: [number, number] = [Math.log10(Math.max(yr[0], 1e-5)), Math.log10(yr[1])];
       const fr = rangeFrame(w, h, xr, yLog, 52, 14, 12, 32);
-      graphAxes(g, fr, xr, yLog, 'overshoot (%)', isDisk ? '|shock offset|  (log)' : 'push offset  (log)');
+      graphAxes(g, fr, xr, yLog, 'overshoot (%)', isDisk ? '|shock offset|' : 'push offset', 0, 1, undefined, fmtPow10);
       curve(g, fr, xs, ys.map((y) => Math.log10(y)), col.muted(), 2);
       const liveX = isDisk ? diskSeek(g0, 3, 4001).m.os : borerStep(g0, 11, 6, 4001).m.os;
       const liveY = isDisk ? Math.abs(-1 / (5 * g0)) : 1 / g0;
@@ -108,7 +115,7 @@ export const tradeoffPanels = (): FigurePanel[] => [
         t: r.t, y: r.y, final: 1, ref: 1, tEnd: isDisk ? 1.5 : 2.5,
         show: { overshoot: true, band: true, settling: true }, color: col.a(),
       });
-      text(g, `${isDisk ? 'Ka' : 'K'} = ${f(g0, 1)}  OS ${f(r.m.os, 2)} %  Ts ${f(r.m.ts, 3)} s`, 50, 14, col.text(), 'left', 10);
+      text(g, `${isDisk ? 'Ka' : 'K'} = ${f(g0, 1)}  OS ${f(r.m.os, 2)} %  Ts ${f(r.m.ts, 3)} s`, 8, 14, col.text(), 'left', 10);
     },
   },
 ];
@@ -145,7 +152,7 @@ export const sensPanels = (): FigurePanel[] => [
       const approx = ws.map((ww) => ww / K);
       const xr: [number, number] = [-1, 3], yr: [number, number] = [-3, 0.3];
       const fr = rangeFrame(w, h, xr, yr, 48, 12, 10, 30);
-      graphAxes(g, fr, xr, yr, 'log₁₀ ω', 'log₁₀ |S|');
+      graphAxes(g, fr, xr, yr, 'ω (rad/s)', '|S|', 1, 1, fmtPow10, fmtPow10);
       curve(g, fr, ws.map(Math.log10), mag.map((m) => Math.log10(Math.max(m, 1e-6))), col.a(), 2);
       curve(g, fr, ws.map(Math.log10), approx.map((m) => Math.log10(Math.max(m, 1e-6))), col.muted(), 1.6, [6, 4]);
       tline(g, fr, [Math.log10(w0), yr[0]], [Math.log10(w0), yr[1]], col.e(), 1.2, [4, 3]);

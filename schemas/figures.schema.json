@@ -123,6 +123,13 @@
             },
             "unit": {
               "type": "string"
+            },
+            "display": {
+              "type": "string",
+              "enum": [
+                "pow10"
+              ],
+              "description": "Stored range value is log10 of the quantity shown in the number box."
             }
           }
         }

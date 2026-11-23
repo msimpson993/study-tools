@@ -88,12 +88,26 @@ export class ControlSet {
     const wrap = h('div');
     const fmt = (v: number) => String(+v.toFixed(6));
     if (d.type === 'range') {
-      const num = h('input', { type: 'number', class: 'num', min: d.min, max: d.max, step: 'any', inputmode: 'decimal', 'aria-label': `${d.label} value`, dataset: { n: d.id } });
+      const pow = d.display === 'pow10';
+      const shown = (v: number) => pow ? 10 ** v : v;
+      const fromShown = (n: number) => pow ? Math.log10(Math.max(n, 1e-15)) : n;
+      const fmtShown = (v: number) => {
+        if (!pow) return fmt(v);
+        const s = shown(v);
+        if (!Number.isFinite(s)) return '';
+        if (s >= 100) return String(+s.toFixed(0));
+        if (s >= 10) return String(+s.toFixed(1));
+        if (s >= 1) return String(+s.toFixed(2));
+        return String(+s.toPrecision(3));
+      };
+      const nMin = pow && d.min !== undefined ? 10 ** d.min : d.min;
+      const nMax = pow && d.max !== undefined ? 10 ** d.max : d.max;
+      const num = h('input', { type: 'number', class: 'num', min: nMin, max: nMax, step: 'any', inputmode: 'decimal', 'aria-label': `${d.label} value`, dataset: { n: d.id } });
       const rng = h('input', { type: 'range', min: d.min, max: d.max, step: d.step ?? 'any', 'aria-label': d.label, dataset: { k: d.id } });
       rng.addEventListener('input', () => this.set(d.id, Number(rng.value)));
-      num.addEventListener('change', () => { const n = Number(num.value); if (Number.isFinite(n)) this.set(d.id, n); else this.syncAll(); });
+      num.addEventListener('change', () => { const n = Number(num.value); if (Number.isFinite(n)) this.set(d.id, fromShown(n)); else this.syncAll(); });
       wrap.append(h('label', null, `${d.label}${d.unit ? ` (${d.unit})` : ''}`, num), rng);
-      this.inputs.set(d.id, { wrap, sync: () => { const v = this.values[d.id] as number; if (document.activeElement !== num) num.value = fmt(v); rng.value = String(v); } });
+      this.inputs.set(d.id, { wrap, sync: () => { const v = this.values[d.id] as number; if (document.activeElement !== num) num.value = fmtShown(v); rng.value = String(v); } });
     } else if (d.type === 'select') {
       const sel = h('select', { 'aria-label': d.label, dataset: { k: d.id } }, ...(d.options ?? []).map((o) => h('option', { value: o.value }, o.label)));
       sel.addEventListener('change', () => this.set(d.id, sel.value));

@@ -1,5 +1,5 @@
 /** Figure `disk`: seek, shock, poles, stand-in and the Ka ceiling. */
-import { figureOf, drawStepResponse, drawSPlane, col, text, type FigurePanel } from '@study/core';
+import { figureOf, drawStepResponse, drawSPlane, col, text, wipe, type FigurePanel } from '@study/core';
 import { C } from '@study/core/dsp';
 import { f, num, on, str, type V } from './util';
 import { diskKaMax, diskOscW, diskPoles, diskSeek, diskShock, diskStand } from '../model/plants';
@@ -29,12 +29,17 @@ export const diskPanels = (): FigurePanel[] => [
       }
       const r = diskSeek(Ka, 3, 8001);
       const stand = on(v, 'stand') ? diskStand(Ka, 3, 4001) : undefined;
-      drawStepResponse(g, w, h, {
-        t: r.t, y: r.y, final: 1, ref: 1, tEnd: 2, show: { overshoot: true, band: true, settling: true },
-        ghost: stand ? { t: stand.t, y: stand.y, label: 'stand-in (coil dropped)' } : undefined,
+      const head = 22;
+      wipe(g, w, h);
+      g.save(); g.translate(0, head);
+      const settled = r.m.ts < 2 * 0.98;
+      drawStepResponse(g, w, h - head, {
+        t: r.t, y: r.y, final: 1, ref: 1, tEnd: 2, show: { overshoot: true, band: true, settling: settled },
+        ghost: stand ? { t: stand.t, y: stand.y, label: 'stand-in (coil dropped)', color: col.e() } : undefined,
         color: col.a(),
       });
-      text(g, `Ka = ${f(Ka, 1)}  OS ${f(r.m.os, 2)} %  Ts ${f(r.m.ts, 3)} s` + (stand ? `  stand-in ${f(stand.m.os, 2)} %` : ''), 50, 14, col.text(), 'left', 10);
+      g.restore();
+      text(g, `Ka = ${f(Ka, 1)}  OS ${f(r.m.os, 2)} %  Ts ${f(r.m.ts, 3)} s` + (stand ? `  stand-in ${f(stand.m.os, 2)} %` : ''), 8, 14, col.text(), 'left', 10);
     },
   },
   {
@@ -47,11 +52,16 @@ export const diskPanels = (): FigurePanel[] => [
         return;
       }
       const r = diskShock(Ka, 2, 8001), off = -1 / (5 * Ka);
-      drawStepResponse(g, w, h, {
-        t: r.t, y: r.y, final: off, ref: 0, tEnd: 2, show: { settling: true, overshoot: true },
+      const head = 22;
+      wipe(g, w, h);
+      g.save(); g.translate(0, head);
+      const settled = r.m.ts < 2 * 0.98;
+      drawStepResponse(g, w, h - head, {
+        t: r.t, y: r.y, final: off, ref: 0, tEnd: 2, show: { settling: settled, overshoot: false },
         color: col.a(), yLabel: 'y(t)  (offset −1/(5Ka))',
       });
-      text(g, `offset ${f(off, 5)}   dip ${f(r.m.peak, 6)} at ${f(r.m.tp, 3)} s`, 50, 14, col.text(), 'left', 10);
+      g.restore();
+      text(g, `offset ${f(off, 5)}   dip ${f(r.m.peak, 6)} at ${f(r.m.tp, 3)} s`, 8, 14, col.text(), 'left', 10);
     },
   },
   {
@@ -60,10 +70,15 @@ export const diskPanels = (): FigurePanel[] => [
       const Ka = KaOf(v), poles = diskPoles(Math.min(Ka, 1e5));
       const coil = poles.reduce((a, p) => (p.re < a.re ? p : a));
       const arm = poles.filter((p) => p !== coil);
+      const imMax = Math.max(8, ...arm.map((p) => Math.abs(p.im)));
+      const reExt = Math.max(8, ...arm.map((p) => Math.abs(p.re)));
+      const range = Math.max(20, imMax * 1.25, reExt * 1.15);
+      const zetaOf = (p: { re: number; im: number }) => { const wn = Math.hypot(p.re, p.im); return wn > 1e-9 ? Math.abs(p.re) / wn : 1; };
+      const zetas = [...new Set(arm.filter((p) => Math.abs(p.im) > 0.5).map((p) => +zetaOf(p).toFixed(2)))];
       drawSPlane(g, w, h, {
-        range: 30, reCenter: -12, poles: arm, zeros: [], labels: true, zetaRays: [0.7, 1],
+        range, reCenter: -range * 0.4, poles: arm, zeros: [], labels: true, zetaRays: zetas.length ? zetas : undefined,
       });
-      text(g, `coil pole at ${f(coil.re, 1)}  (live)`, 8, 16, col.muted(), 'left', 10);
+      text(g, `coil pole at ${f(coil.re, 1)}  (off scale)`, 8, 16, col.muted(), 'left', 10);
       const ceil = diskKaMax, ratio = ceil / Math.max(Ka, 1e-6);
       const msg = Ka >= ceil ? 'UNSTABLE' : `ceiling Ka = 4080  (×${f(ratio, 2)} above you)  ω = ${f(diskOscW, 1)} rad/s`;
       text(g, msg, 8, 30, Ka >= ceil ? col.bad() : col.text(), 'left', 10);

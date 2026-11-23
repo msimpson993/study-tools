@@ -132,6 +132,8 @@ export interface ControlDef {
   default: number | string | boolean;
   group: 'primary' | 'more';
   unit?: string;
+  /** Stored range value is log₁₀ of the number shown in the box. */
+  display?: 'pow10';
 }
 export interface PresetDef { id: string; label: string; set: Record<string, number | string | boolean>; about?: string }
 export interface FigureDef {
