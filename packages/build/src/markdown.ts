@@ -7,7 +7,7 @@ const LEADS: Record<string, string> = {
   short: 'Short answer', why: 'Why it matters', recognize: 'Recognize', trap: 'Trap', predict: 'Predict', note: 'Note', derivation: 'Full derivation',
 };
 
-export class MathErrors { list: string[] = []; figureRefs: { id: string; where: string }[] = []; pictureRefs: { id: string; where: string }[] = [] }
+export class MathErrors { list: string[] = []; figureRefs: { id: string; where: string; preset?: string; params?: Record<string, string> }[] = []; pictureRefs: { id: string; where: string }[] = [] }
 
 /** Create a renderer. KaTeX errors are collected (not swallowed) so the build can fail on them. */
 export function createMarkdown(errors: MathErrors, where: () => string) {
@@ -32,11 +32,20 @@ export function createMarkdown(errors: MathErrors, where: () => string) {
       return `<div class="st-eq">${esc(t.content.trimEnd())}</div>\n`;
     }
     if (info.startsWith('figure:')) {
-      const id = info.slice('figure:'.length).trim();
-      errors.figureRefs.push({ id, where: where() });
+      const tokens = info.slice('figure:'.length).trim().split(/\s+/).filter(Boolean);
+      const id = tokens[0] ?? '';
+      const params: Record<string, string> = {};
+      for (const tok of tokens.slice(1)) {
+        const i = tok.indexOf('=');
+        if (i > 0) params[tok.slice(0, i)] = tok.slice(i + 1);
+      }
+      const preset = params.preset;
+      errors.figureRefs.push({ id, where: where(), ...(preset ? { preset } : {}), params });
       // optional body `lookFor: …` gives this embed its own look-for line (a figure reused by another dive)
       const look = /^lookFor:\s*([\s\S]+)$/.exec(t.content.trim())?.[1]?.trim();
-      return `<div class="viz-slot" data-figure="${esc(id)}"${look ? ` data-look="${esc(look)}"` : ''}></div>\n`;
+      const extra = Object.entries(params).filter(([k]) => k !== 'preset');
+      const paramAttr = extra.length ? ` data-params="${esc(JSON.stringify(Object.fromEntries(extra)))}"` : '';
+      return `<div class="viz-slot" data-figure="${esc(id)}"${preset ? ` data-preset="${esc(preset)}"` : ''}${paramAttr}${look ? ` data-look="${esc(look)}"` : ''}></div>\n`;
     }
     if (info.startsWith('picture:')) { // a static captioned picture from the quiz-figure registry: ```picture:<id> Caption text```, body = alt text
       const [id, ...cap] = info.slice('picture:'.length).trim().split(/\s+/);

@@ -48,6 +48,8 @@ button{color:var(--text)}
 .prose{max-width:880px}
 .prose h1,.prose h2{margin-top:1.4rem}
 .prose table{border-collapse:collapse;width:100%;margin:.7rem 0;font:.88rem/1.4 system-ui,sans-serif;display:block;overflow-x:auto}
+.prose pre{display:block;overflow-x:auto;max-width:100%;margin:.7rem 0;padding:.55rem .7rem;background:var(--panel2);border:1px solid var(--border);border-radius:10px;font:.78rem/1.45 ui-monospace,SFMono-Regular,Menlo,monospace}
+.prose .katex-display{overflow-x:auto;overflow-y:hidden;max-width:100%}
 .prose th,.prose td{border:1px solid var(--border);padding:.35rem .55rem;text-align:left;vertical-align:top}
 .prose th{background:var(--panel2)}
 .prose p.src{margin-top:1.6rem;padding-top:.5rem;border-top:1px solid var(--border);font:.78rem/1.45 system-ui,sans-serif;color:var(--muted)}
@@ -481,4 +483,36 @@ details.derivation{margin:.7rem 0}details.derivation>summary{font-weight:650}
   /* pass 5 (student issue 10): the pop-up's copy button was 27 px */
   #app .st-copy { width: 32px; height: 32px; }
   #app .st-copy.copied { width: auto; }
+}
+
+/* ---- one-off tabbed page (sim-project): no question map, a top tab bar and a single column ---- */
+html.layout-tabs .frame.tabbed{max-width:54rem}
+html.layout-tabs .tab-content{padding:1rem 1.2rem 3.5rem;max-width:100%;min-width:0}
+html.layout-tabs .tab-article,html.layout-tabs .tab-body{max-width:100%;min-width:0;overflow-wrap:anywhere}
+.tab-bar{max-width:100%}
+.tab-bar{display:flex;flex-wrap:nowrap;gap:0;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:thin;border-bottom:1px solid var(--border);background:var(--bg);position:sticky;top:44px;z-index:50}
+.tab-bar a{flex:0 0 auto;padding:.65rem .95rem;color:var(--muted);text-decoration:none;font:600 .88rem system-ui,sans-serif;white-space:nowrap;border-bottom:2px solid transparent;margin-bottom:-1px}
+.tab-bar a:hover{color:var(--text);background:var(--panel2)}
+.tab-bar a.on{color:var(--accent);border-bottom-color:var(--accent)}
+.app-menu{position:relative;flex:0 0 auto}
+.app-menu>summary{list-style:none;cursor:pointer}
+.app-menu>summary::-webkit-details-marker{display:none}
+.app-menu-list{position:absolute;right:0;top:calc(100% + 4px);min-width:10rem;background:var(--panel);border:1px solid var(--border);border-radius:10px;box-shadow:0 8px 24px rgba(0,0,0,.28);padding:.35rem;z-index:80;display:flex;flex-direction:column}
+.app-menu-list a{padding:.4rem .65rem;border-radius:7px;text-decoration:none;color:var(--text);font:600 .85rem system-ui,sans-serif}
+.app-menu-list a:hover{background:var(--accent-soft);color:var(--accent)}
+.tab-article h1{margin:.2rem 0 .4rem;font:750 1.45rem/1.25 system-ui,sans-serif}
+.tab-summary{color:var(--muted);margin:0 0 1rem;font:400 .95rem/1.45 system-ui,sans-serif}
+.tab-toc{display:flex;flex-wrap:wrap;gap:.15rem .85rem;align-items:baseline;margin:0 0 1.2rem;padding:.5rem .7rem;border:1px solid var(--border);border-radius:10px;background:var(--panel);font:.82rem/1.4 system-ui,sans-serif}
+.tab-toc b{color:var(--muted);font:700 .72rem system-ui,sans-serif;letter-spacing:.06em;text-transform:uppercase;margin-right:.3rem}
+.tab-toc a{color:var(--accent);text-decoration:none;white-space:nowrap}
+.tab-toc a:hover{text-decoration:underline}
+.tab-body .viz-embed,.tab-body .pop-figs{margin:0.85rem 0 1.15rem}
+.quiz-tab-filter{margin:.4rem 0 .2rem}
+@media (max-width:700px){
+  html.layout-tabs .tab-content{padding:.7rem .7rem 3rem}
+  .tab-bar a{padding:.55rem .75rem;font-size:.82rem}
+  .tab-article h1{font-size:1.22rem}
+}
+@media (max-width:1099px){
+  html.layout-tabs .tab-bar{top:44px}
 }

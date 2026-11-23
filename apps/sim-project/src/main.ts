@@ -5,7 +5,8 @@ import { motorFigure } from './figs/motor';
 import { borerFigure, tradeoffFigure, sensFigure } from './figs/borer';
 import { diskFigure } from './figs/disk';
 import { piFigure, tunerFigure } from './figs/engine';
-import { knobsFigure } from './figs/knobs';
+import { loopFigure } from './figs/loop';
+import { engineFitFigure } from './figs/enginefit';
 import { popFigures } from './figs/pop';
 
 const figures = {
@@ -17,7 +18,8 @@ const figures = {
   disk: diskFigure,
   pi: piFigure,
   tuner: tunerFigure,
-  knobs: knobsFigure,
+  loop: loopFigure,
+  'engine-fit': engineFitFigure,
 };
 
 mountApp(content, { figures, quizFigures: popFigures });

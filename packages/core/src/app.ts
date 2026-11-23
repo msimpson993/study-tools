@@ -14,6 +14,7 @@ import type { PopAudioHook } from './conceptmap';
 import { ControlSet } from './controls';
 import { createFullscreen, replaceUrl, fullscreenActive } from './fullscreen';
 import { setRefContent, pickFromHash, mapHashFor, isMapHash, copyRefButton, diveReference } from './copyref';
+import { mountTabbedApp } from './tabpage';
 
 export interface BoardHandle { destroy?(): void; show?(params: URLSearchParams): void; hide?(): void }
 export interface AppHooks {
@@ -38,6 +39,7 @@ const go = (hash: string) => { location.hash = hash; };
 const PHONE = typeof matchMedia === 'function' ? matchMedia('(max-width: 699px)') : ({ matches: false } as MediaQueryList);
 
 export function mountApp(content: AppContent, hooks: AppHooks = {}): void {
+  if (content.tabs?.length) { mountTabbedApp(content, hooks); return; }
   setRefContent(content);
   initTheme();
   const subj = content.subject;

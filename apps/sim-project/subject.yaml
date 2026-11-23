@@ -1,103 +1,25 @@
 # sim-project: EECE5130 Simulation Project. Every number on the page is printed by the tutor's numbers.py (fixture: test/fixtures/numbers_output.txt).
 id: sim-project
 title: "Simulation Project (EECE5130): feedback on four machines"
-quizOrder: chain
+quizOrder: authored
 centralQuestion: What does feedback buy a real machine, and what does each knob trade away?
-blurb: "A question-chain map of the EECE5130 Simulation Project, for a reader new to control. Project 2's three solved examples (a speed-controlled motor, the English Channel boring machine and a disk-drive read head) and Project 1's engine tuned with MATLAB's PID Tuner, each drawn as a picture, with sliders for every gain and setting, what each knob does, a self-test and a report checklist."
+blurb: "The EECE5130 Simulation Project as five tabs: an overview of what to hand in, then the speed-controlled motor, the boring machine, the disk-drive head, and the engine tuned with MATLAB's PID Tuner. Each problem tab has the setup, what's going on with live figures, a try-it table, checks against the handout, and notes for the report."
 archetype: guide
 categories:
   - { id: motor, label: "Feedback against a push (motor)" }
   - { id: borer, label: "The price of gain (boring machine)" }
   - { id: disk, label: "One more part (disk drive)" }
   - { id: engine, label: "Let software tune it (engine)" }
-  - { id: wrap, label: "What it all bought" }
 sections:
-  - { id: map, title: The question map, kind: map }
-  - { id: dives, title: Topic deep dives, kind: dives }
-  - { id: figures, title: Live figures, kind: figures }
   - { id: quiz, title: Self-check, kind: quiz }
-  - { id: review, title: Review (report and practice), kind: review }
-  - { id: glossary, title: Variables & terms, kind: glossary }
+  - { id: review, title: Practice, kind: review }
+  - { id: glossary, title: Glossary, kind: glossary }
 quizFigures: [lab-scene, lab-block, lab-step, lab-splane, lab-sens, lab-trade, lab-knob, lab-tuner, lab-table, lab-flow]
-runningExample:
-  title: "Four machines, met in order: a motor, a boring machine, a disk head, an engine"
-  summary: "Each solved example in the project is a running example, met where it teaches best: the **motor** (holding speed against a load), the **boring machine** (steering a tunnel-boring machine onto its line), the **disk head** (seeking a track) and the **engine** (holding speed, with gains from PID Tuner). Each is its own dashed Example node on the map, beside the box where it first appears."
-  refs:
-    - id: motor
-      at: BLOCKS
-      label: the speed controlled motor
-      title: The motor and its tachometer
-      question: What's the running example?
-      figure: motor
-      panels: [scene]
-      caption: "<b>The motor</b>: a DC motor spins a load; a brake drags on it (the load torque T_d); a tachometer on the shaft can measure the speed. Press play to watch the load hit."
-      about: |
-        - **In:** the voltage on the motor, and a load torque T_d that nobody controls.
-        - **Out:** the shaft speed ω.
-        - **Inside:** a coil (resistance Ra, torque per amp Km), the spinning load (inertia J, friction b), and the voltage the spinning motor makes back (Kb).
-        - **Why first:** one moving part, so everything feedback does shows up in one number: how much speed a load steals.
-        - **In the project:** Project 2, Example 4.4 (Dorf §4.9).
-      numbers: |
-        - **Table 4.2:** Ra = 1 Ω, Km = 10 N·m/A, J = 2 kg·m², b = 0.5 N·m·s, Kb = 0.1 V·s.
-      comesBack: { chain: [PRICE, NEEDI, FOUR] }
-    - id: borer
-      at: PRICE
-      label: the boring machine
-      title: The tunnel-boring machine
-      question: Meet the second running example
-      figure: borer
-      panels: [scene]
-      caption: "<b>The boring machine</b>, seen from above: the cutter head steers toward the planned line; the rock pushes it sideways (T_d). The readout y is the cutter's position off the line. Press play to watch it steer."
-      about: |
-        - **In:** the planned position R, and the rock's sideways push T_d.
-        - **Out:** the machine's actual position Y.
-        - **Inside:** the machine's steering response, and a controller whose gain K we choose.
-        - **Why now:** it stores energy as motion and as position, so steering it too hard carries it past the line: the simplest machine where gain has a price.
-        - **In the project:** Project 2, Example 4.5, the English Channel boring machines (Dorf §4.9).
-      numbers: |
-        - **Nothing yet:** its loop and its gains are written down in the next box.
-      comesBack: { chain: [KA, KAPUSH, NEEDI, FOUR] }
-    - id: disk
-      at: DISK
-      label: the disk-drive head
-      title: The disk-drive read head
-      question: Meet the third running example
-      figure: disk
-      panels: [scene]
-      caption: "<b>The disk head</b>, seen from above: the arm pivots to carry the read head across the tracks; a shock knocks the arm (T_d). Press play to watch a seek."
-      about: |
-        - **In:** the commanded track position R, and a shock T_d.
-        - **Out:** the head position Y.
-        - **Inside:** an amplifier (gain Ka), a coil that turns voltage into force, and the arm on its bearing.
-        - **Why now:** it adds a fast electrical part to a two-part machine, so we can see when a part can be ignored and when it can't.
-        - **In the project:** Project 2, §4.10, the sequential design example (Dorf).
-      numbers: |
-        - **Coil:** 5000/(s + 1000), its current builds in about 1 ms.
-        - **Arm:** 1/(s(s + 20)).
-      comesBack: { chain: [NEEDI, FOUR] }
-    - id: engine
-      at: TUNER
-      label: the engine speed loop
-      title: The engine and PID Tuner
-      question: Meet the fourth running example
-      figure: tuner
-      panels: [scene]
-      caption: "<b>The engine</b>: the controller opens and closes the throttle to hold a commanded speed while the car's drag loads the engine. Press play to watch a speed step."
-      about: |
-        - **In:** the commanded engine speed (rpm).
-        - **Out:** the engine speed (rpm).
-        - **Inside:** throttle and intake manifold, a delay from intake to power stroke, combustion torque and the car's drag: MATLAB's Simulink model scdspeedctrlpidblock.
-        - **Why now:** the first machine too tangled to write down by hand, so the gains come from software.
-        - **In the project:** Project 1, MathWorks' "PID Controller Tuning in Simulink".
-      numbers: |
-        - **Goals:** settle in under 5 s; zero steady-state error to a step in commanded speed.
-      comesBack: { chain: [FOUR] }
 hub:
   order: 4
 expect:
-  maps: 1
-  nodes: 22
-  edges: 21
-  dives: 8
-  review: 2
-  quiz: 69
+  tabs: 5
+  review: 1
+  quiz: 71
+  glossary: 55
+  figures: 10

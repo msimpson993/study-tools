@@ -5,7 +5,7 @@ import { parse as parseYaml } from 'yaml';
 import Ajv from 'ajv';
 import { sceneProblems } from '../../core/src/scenedefs';
 import { createMarkdown, MathErrors } from './markdown';
-import type { AppContent, MapDef, Dive, ReviewPage, Question, Term, FigureDef, Subject } from '../../core/src/types';
+import type { AppContent, MapDef, Dive, ReviewPage, Question, Term, FigureDef, Subject, TabPage, TabSection } from '../../core/src/types';
 
 export const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '..', '..');
 const schemaDir = path.join(repoRoot, 'schemas');
@@ -95,6 +95,9 @@ export function loadApp(appDir: string): { content: AppContent; warnings: string
   const subject = readYaml(path.join(appDir, 'subject.yaml')) as Subject & { expect?: Record<string, number> };
   checkSchema(problems, 'subject', subject, 'subject.yaml');
 
+  const tabDir = path.join(cdir, 'tabs');
+  const hasTabs = exists(tabDir) && fs.readdirSync(tabDir).some((f) => f.endsWith('.md'));
+
   // ---------- graph ----------
   const maps: MapDef[] = [];
   const graphFile = path.join(cdir, 'graph.yaml');
@@ -147,7 +150,7 @@ export function loadApp(appDir: string): { content: AppContent; warnings: string
         })),
       });
     }
-  } else {
+  } else if (!hasTabs) {
     problems.push('content/graph.yaml is required: every page opens on the question map');
   }
 
@@ -227,6 +230,44 @@ export function loadApp(appDir: string): { content: AppContent; warnings: string
     for (const p of f.presets) for (const k of Object.keys(p.set)) if (!ids.has(k)) problems.push(`figures.yaml ${f.id}/${p.id}: preset sets "${k}", which is not a visible control`);
   }
 
+  // ---------- tabs (optional one-off layout: no question map) ----------
+  const tabs: TabPage[] = [];
+  const slug = (title: string) => title.toLowerCase().replace(/[()]/g, '').replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+  const headingIds = (html: string): { html: string; sections: TabSection[] } => {
+    const sections: TabSection[] = [];
+    const next = html.replace(/<h2>([\s\S]*?)<\/h2>/g, (_m, inner: string) => {
+      const title = String(inner).replace(/<[^>]+>/g, '').trim();
+      const id = slug(title);
+      sections.push({ id, title });
+      return `<h2 id="${id}">${inner}</h2>`;
+    });
+    return { html: next, sections };
+  };
+  if (hasTabs) {
+    const seen = new Set<string>();
+    for (const f of fs.readdirSync(tabDir).filter((x) => x.endsWith('.md')).sort()) {
+      try {
+        const { fm, body } = splitFrontMatter(fs.readFileSync(path.join(tabDir, f), 'utf8'));
+        const d = fm as { id: string; order?: number; title: string; summary?: string; figures?: string[]; quizTags?: string[] };
+        if (!d.id || !d.title) problems.push(`tabs/${f}: front matter needs id and title`);
+        if (d.id && seen.has(d.id)) problems.push(`tabs/${f}: duplicate tab id ${d.id}`);
+        if (d.id) seen.add(d.id);
+        const rendered = headingIds(block(body, `tabs/${f}`));
+        tabs.push({
+          id: d.id, order: d.order ?? 999, title: d.title, summary: inline(d.summary, `tabs/${f}`),
+          ...(d.figures ? { figures: d.figures } : {}), ...(d.quizTags ? { quizTags: d.quizTags } : {}),
+          html: rendered.html, sections: rendered.sections,
+        });
+      } catch (e) { problems.push(`tabs/${f}: ${(e as Error).message}`); }
+    }
+    tabs.sort((a, b) => a.order - b.order || a.id.localeCompare(b.id));
+    if (!tabs.length) problems.push('content/tabs/: no tab markdown files');
+    const ids = new Set(tabs.map((x) => x.id));
+    for (const tab of tabs) {
+      for (const fig of tab.figures ?? []) if (!figures.some((f) => f.id === fig)) problems.push(`tabs/${tab.id}: figures lists "${fig}", which is not in figures.yaml`);
+    }
+  }
+
   // ---------- extra (examples.yaml) ----------
   const extra: Record<string, unknown> = {};
   if (exists(path.join(cdir, 'examples.yaml'))) {
@@ -253,7 +294,7 @@ export function loadApp(appDir: string): { content: AppContent; warnings: string
     }
     return { id: s.id, title: s.title, kind: s.kind };
   });
-  if (subject.sections && subject.sections[0] && subject.sections[0].kind !== 'map') problems.push('subject.yaml: the first section must be the map (map-first rule)');
+  if (!hasTabs && subject.sections && subject.sections[0] && subject.sections[0].kind !== 'map') problems.push('subject.yaml: the first section must be the map (map-first rule)');
 
   // ---------- colour families (node.series) ----------
   // The accent bar on a box means nothing unless the legend names it: warn when `series` is used without `seriesNames`; fail on an index with no name.
@@ -326,7 +367,11 @@ export function loadApp(appDir: string): { content: AppContent; warnings: string
     if (d.exampleScene) { if (!sceneId) warnings.push(`dives/${d.id}: exampleScene is ignored: subject.yaml has no runningExample.scene`); else problems.push(...sceneProblems(sceneOf(d.exampleScene, `dives/${d.id}`), d.exampleScene.overlays, `dives/${d.id} exampleScene`, d.exampleScene.params, d.exampleScene.diagram)); }
     else if (sceneId) warnings.push(`dives/${d.id}: no exampleScene; the scene's default overlays are shown`);
   }
-  for (const ref of mathErrors.figureRefs) if (!figures.some((f) => f.id === ref.id)) problems.push(`${ref.where}: figure:${ref.id} is not in figures.yaml`);
+  for (const ref of mathErrors.figureRefs) {
+    const f = figures.find((x) => x.id === ref.id);
+    if (!f) problems.push(`${ref.where}: figure:${ref.id} is not in figures.yaml`);
+    else if (ref.preset && !f.presets.some((p) => p.id === ref.preset)) problems.push(`${ref.where}: figure:${ref.id} has no preset "${ref.preset}"`);
+  }
   for (const ref of mathErrors.pictureRefs) if (subject.quizFigures && !subject.quizFigures.includes(ref.id)) problems.push(`${ref.where}: picture:${ref.id} is not in subject.yaml quizFigures`);
 
   // ---------- cross checks ----------
@@ -364,8 +409,13 @@ export function loadApp(appDir: string): { content: AppContent; warnings: string
   for (const q of quiz) if (q.figure && subject.quizFigures && !subject.quizFigures.includes(q.figure.id)) problems.push(`quiz.yaml ${q.id}: figure "${q.figure.id}" is not in subject.yaml quizFigures [${subject.quizFigures.join(', ')}]`);
   const reviewTags = new Set(review.flatMap((r) => [r.quizTag, ...(r.quizSubsets ?? []).map((x) => x.tag)]).filter(Boolean) as string[]);
   for (const s of (subject as { quizSets?: { tag: string }[] }).quizSets ?? []) reviewTags.add(s.tag); // off-map practice sets
-  for (const q of quiz) {
-    for (const t of q.tags) if (!tags.has(t) && !diveIds.has(t) && !reviewTags.has(t)) problems.push(`quiz.yaml ${q.id}: tag "${t}" matches no node/dive/review page`);
+  if (hasTabs) {
+    const tabTags = new Set(tabs.flatMap((tab) => tab.quizTags?.length ? tab.quizTags : [tab.id]));
+    for (const q of quiz) if (!q.tags.some((tg) => tabTags.has(tg))) problems.push(`quiz.yaml ${q.id}: has no tab tag (one of ${[...tabTags].join(', ')})`);
+  } else {
+    for (const q of quiz) {
+      for (const t of q.tags) if (!tags.has(t) && !diveIds.has(t) && !reviewTags.has(t)) problems.push(`quiz.yaml ${q.id}: tag "${t}" matches no node/dive/review page`);
+    }
   }
   // review pages: their self-test must exist, and in-page links to dives/nodes must resolve
   const nodeIds = new Set(maps.flatMap((m) => m.nodes.map((n) => n.id)));
@@ -389,6 +439,7 @@ export function loadApp(appDir: string): { content: AppContent; warnings: string
     const got = {
       maps: maps.length, nodes: maps.reduce((a, m) => a + m.nodes.length, 0), edges: maps.reduce((a, m) => a + m.edges.length, 0),
       dives: dives.length, review: review.length, quiz: quiz.length, examples: ((extra.examples as any)?.examples ?? []).length,
+      tabs: tabs.length, glossary: glossaryR.length, figures: figuresR.length,
     } as Record<string, number>;
     for (const [k, v] of Object.entries(exp)) if (got[k] !== v) problems.push(`subject.yaml expect.${k} = ${v} but found ${got[k]} (content was dropped or added; update expect deliberately)`);
   }
@@ -398,7 +449,7 @@ export function loadApp(appDir: string): { content: AppContent; warnings: string
 
   const content: AppContent = {
     subject: { ...subject, sections: sectionsR as any, runningExample: re ? { title: re.title, summary: inline(re.summary, 'runningExample'), details: re.details ? block(re.details, 'runningExample.details') : undefined, scene: re.scene, moreScenes: (re as { moreScenes?: unknown[] }).moreScenes as never, refs: refsR.length ? refsR as never : undefined } : undefined },
-    maps, dives, review, quiz, glossary: glossaryR as Term[], figures: figuresR as FigureDef[], extra,
+    maps, dives, review, quiz, glossary: glossaryR as Term[], figures: figuresR as FigureDef[], extra, ...(tabs.length ? { tabs } : {}),
   };
   return { content, warnings };
 }

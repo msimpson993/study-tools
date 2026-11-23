@@ -19,7 +19,7 @@ export interface MapState {
   series: number | null;
   revealed: Set<string>;
 }
-export const newMapState = (content: AppContent): MapState => ({ mapId: content.maps[0].id, mode: 'explore', recall: false, pick: null, series: null, revealed: new Set() });
+export const newMapState = (content: AppContent): MapState => ({ mapId: content.maps[0]?.id ?? '', mode: 'explore', recall: false, pick: null, series: null, revealed: new Set() });
 
 export interface MapNav {
   openDive(id: string): void;

@@ -160,6 +160,10 @@ export function labBlockParts(sys: string): LabBlockParts {
   };
 }
 
+export type LabelWords = 'plain words' | 'symbols' | 'values';
+export interface BoxHit { id: string; x: number; y: number; w: number; h: number; tip: string }
+export interface LabCaption { symbol: string; value: string; plain: string; tip: string }
+
 export interface DrawLabOpts {
   sys: string;
   show?: string;
@@ -167,6 +171,10 @@ export interface DrawLabOpts {
   highlight?: string;
   /** ids already built (live stepper); omit to draw the finished diagram */
   built?: Set<string>;
+  /** When set, box captions switch between plain words, symbols and values (the `loop` figure). */
+  words?: LabelWords;
+  /** Filled with box hit-areas for hover/tap tooltips. */
+  hits?: BoxHit[];
 }
 
 type Id = string;
@@ -222,7 +230,8 @@ export function drawLabDiagram(g: CanvasRenderingContext2D, w: number, h: number
   const botH = script && sideW === 0 ? Math.min(h * 0.42, 16 + tags.length * 16) : 0;
   const dw = w - sideW, dh = h - botH;
 
-  const padL = dw < 200 ? 8 : 16, padR = dw < 200 ? 20 : 36, padT = dh < 140 ? 8 : 14, padB = dh < 140 ? 10 : 18;
+  const cap = !!opts.words && !script;
+  const padL = dw < 200 ? 8 : 16, padR = dw < 200 ? 20 : 36, padT = dh < 140 ? 8 : 14, padB = (dh < 140 ? 10 : 18) + (cap ? 16 : 0);
   const X = (x: number) => padL + (x / 100) * (dw - padL - padR);
   const Y = (y: number) => padT + (y / 100) * (dh - padT - padB);
   const W = (ww: number) => (ww / 100) * (dw - padL - padR);
@@ -233,13 +242,39 @@ export function drawLabDiagram(g: CanvasRenderingContext2D, w: number, h: number
 
   const colorOf = (id: Id, also?: Id[]) => stroke(tone(id, opts, also));
 
-  const boxAt = (id: Id, x: number, y: number, ww: number, hh: number, label: string, also?: Id[]) => {
+  const pick = (lab: string | LabCaption) => {
+    if (typeof lab === 'string') return lab;
+    if (opts.words === 'values') return lab.value;
+    if (opts.words === 'plain words') return lab.plain;
+    return lab.symbol;
+  };
+  const boxAt = (id: Id, x: number, y: number, ww: number, hh: number, lab: string | LabCaption, also?: Id[]) => {
     const t = tone(id, opts, also), s = stroke(t);
     const px = X(x), py = Y(y), bw = W(ww), bh = H(hh);
+    const label = pick(lab);
     g.lineWidth = s.width;
-    box(g, px, py, bw, bh, label, s.color, undefined, Math.min(11, Math.max(8, bw / Math.max(6, label.length) * 1.6)));
+    const sz0 = Math.min(11, Math.max(7, bw / Math.max(6, Math.min(label.length, 22)) * 1.6));
+    const lines = wrap(g, label, Math.max(12, bw - 8), sz0);
+    const sz = lines.length > 2 ? Math.max(7, sz0 - 1) : sz0;
+    const lines2 = lines.length > 2 ? wrap(g, label, Math.max(12, bw - 8), sz) : lines;
+    // stroke the box, then draw wrapped lines so a long plain-words caption stays inside
+    box(g, px, py, bw, bh, '', s.color, undefined, sz);
+    const lh = sz + 1;
+    const y0 = py + bh / 2 - ((lines2.length - 1) * lh) / 2 + sz * 0.35;
+    lines2.forEach((ln, i) => text(g, ln, px + bw / 2, y0 + i * lh, col.text(), 'center', sz));
+    if (opts.hits && typeof lab !== 'string') opts.hits.push({ id, x: px, y: py, w: bw, h: bh, tip: lab.tip });
     anchors.push({ id, x: px + bw / 2, y: py + bh + 6 });
     return { x: px, y: py, w: bw, h: bh, cx: px + bw / 2, cy: py + bh / 2, r: px + bw, b: py + bh, l: px, t: py };
+  };
+  const L = (symbol: string, value: string, plain: string, tip: string): string | LabCaption =>
+    opts.words ? { symbol, value, plain, tip } : symbol;
+
+  const CAPTION: Record<string, string> = {
+    'motor-open': 'drag felt by the load: b + Km·Kb/Ra = 1.5 N·m·s',
+    'motor-closed': 'sag and time constant ÷ (1 + loop gain) = ÷ 361',
+    borer: 'both responses share s² + 12s + K',
+    disk: "the arm's 1/s gives zero step error",
+    engine: 'nonlinear: no single transfer function; the tuner linearizes it',
   };
 
   const rail = 42;
@@ -247,9 +282,9 @@ export function drawLabDiagram(g: CanvasRenderingContext2D, w: number, h: number
     // Va → ⊕ → [Km/Ra] → ⊕ → [1/(Js+b)] → ω,  Kb on the feedback, T_d into the second sum
     text(g, 'Va', X(0), Y(rail) + 3, col.text(), 'left', 11);
     const s1 = { x: X(10), y: Y(rail) };
-    const coil = boxAt('sys2', 16, rail - 10, 20, 20, 'Km/Ra', ['sys4']);
+    const coil = boxAt('sys2', 16, rail - 10, 20, 20, L('Km/Ra', '10 N·m/V', 'volts to torque', 'in: voltage Va. out: torque. what it does: turns volts into torque'), ['sys4']);
     const s2 = { x: X(48), y: Y(rail) };
-    const load = boxAt('sys1', 54, rail - 10, 24, 20, '1/(Js+b)');
+    const load = boxAt('sys1', 54, rail - 10, 24, 20, L('1/(Js+b)', '1/(2s + 0.5)', 'torque to speed', 'in: net torque. out: shaft speed ω. what it does: inertia and friction turn torque into speed'));
     const outX = X(92), outY = Y(rail);
     text(g, 'ω', outX + 8, outY + 4, col.text(), 'left', 12);
     const c1 = colorOf('sys2', ['sys4']), c2 = colorOf('sys1'), cf = colorOf('feedback', ['loop', 'sign', 'step']);
@@ -264,7 +299,7 @@ export function drawLabDiagram(g: CanvasRenderingContext2D, w: number, h: number
     text(g, 'T_d', s2.x, Y(8), col.text(), 'center', 11);
     intoSum(g, s2.x, Y(14), s2.x, s2.y, '−', c2.color, r);
     // feedback under, through Kb, into sum1 minus
-    const kb = boxAt('sys2', 36, 76, 20, 16, 'Kb');
+    const kb = boxAt('sys2', 28, 74, 36, 20, L('Kb', '0.1 V·s', 'back-EMF: speed makes a voltage that fights the current', 'in: shaft speed ω. out: back-EMF voltage. what it does: the spinning motor makes a voltage that fights its own current'));
     g.strokeStyle = cf.color; g.lineWidth = cf.width; g.setLineDash([]);
     g.beginPath();
     g.moveTo(outX, outY);
@@ -281,11 +316,11 @@ export function drawLabDiagram(g: CanvasRenderingContext2D, w: number, h: number
     //      −Kt         −Kb            −T_d
     text(g, '0', X(0), Y(rail) + 3, col.text(), 'left', 11);
     const sR = { x: X(8), y: Y(rail) };
-    const ka = boxAt('sys2', 14, rail - 10, 12, 20, 'Ka');
+    const ka = boxAt('sys2', 14, rail - 10, 12, 20, L('Ka', '54', 'multiplies the speed shortfall', 'in: speed error (volts). out: amplifier voltage. what it does: multiplies the speed shortfall'));
     const sE = { x: X(34), y: Y(rail) };
-    const coil = boxAt('sys4', 40, rail - 10, 16, 20, 'Km/Ra', ['sysb']);
+    const coil = boxAt('sys4', 40, rail - 10, 16, 20, L('Km/Ra', '10 N·m/V', 'volts to torque', 'in: coil voltage. out: torque. what it does: turns volts into torque'), ['sysb']);
     const sT = { x: X(64), y: Y(rail) };
-    const load = boxAt('sys1', 70, rail - 10, 18, 20, '1/(Js+b)');
+    const load = boxAt('sys1', 70, rail - 10, 18, 20, L('1/(Js+b)', '1/(2s + 0.5)', 'torque to speed', 'in: net torque. out: shaft speed ω. what it does: inertia and friction turn torque into speed'));
     const outX = X(96), outY = Y(rail);
     text(g, 'ω', outX + 4, outY + 4, col.text(), 'left', 12);
     const cKa = colorOf('sys2'), cCoil = colorOf('sys4', ['sysb']), cLoad = colorOf('sys1');
@@ -303,8 +338,8 @@ export function drawLabDiagram(g: CanvasRenderingContext2D, w: number, h: number
     text(g, 'T_d', sT.x, Y(8), col.text(), 'center', 11);
     intoSum(g, sT.x, Y(14), sT.x, sT.y, '−', cLoad.color, r);
     // two feedback boxes on the return: Kt under the first sum, Kb under the middle
-    const kt = boxAt('sys2', 10, 72, 12, 16, 'Kt');
-    const kb = boxAt('sys3', 36, 72, 12, 16, 'Kb', ['sysa']);
+    const kt = boxAt('sys2', 10, 72, 12, 16, L('Kt', '1 V·s', 'speed to volts', 'in: shaft speed ω. out: tachometer volts. what it does: a small generator on the shaft turns speed into volts'));
+    const kb = boxAt('sys3', 36, 72, 12, 16, L('Kb', '0.1 V·s', 'back-EMF: speed makes a voltage that fights the current', 'in: shaft speed ω. out: back-EMF voltage. what it does: the spinning motor makes a voltage that fights its own current'), ['sysa']);
     const fy = Y(92);
     g.strokeStyle = cFb.color; g.lineWidth = cFb.width; g.setLineDash([]);
     g.beginPath();
@@ -323,9 +358,9 @@ export function drawLabDiagram(g: CanvasRenderingContext2D, w: number, h: number
   } else if (kind === 'borer') {
     text(g, 'R', X(0), Y(rail) + 3, col.text(), 'left', 11);
     const s1 = { x: X(10), y: Y(rail) };
-    const gc = boxAt('sys1', 16, rail - 10, 22, 20, 'K+11s');
+    const gc = boxAt('sys1', 16, rail - 10, 22, 20, L('K + 11s', 'K = 20 or 100', 'push on the error now, plus 11 × how fast it is changing', 'in: position error. out: steering effort. what it does: push on the error now, plus 11 × how fast it is changing'));
     const s2 = { x: X(50), y: Y(rail) };
-    const gplant = boxAt('sysg', 56, rail - 10, 24, 20, '1/(s(s+1))');
+    const gplant = boxAt('sysg', 56, rail - 10, 24, 20, L('1/(s(s+1))', '1/(s(s+1))', 'effort to position', 'in: effort plus the rock T_d. out: cutter position Y. what it does: turns steering effort into position along the planned line'));
     const outX = X(94), outY = Y(rail);
     text(g, 'Y', outX + 6, outY + 4, col.text(), 'left', 12);
     const c1 = colorOf('sys1'), c2 = colorOf('sysg', ['series']), cf = colorOf('feedback', ['loop', 'minreal']);
@@ -345,10 +380,10 @@ export function drawLabDiagram(g: CanvasRenderingContext2D, w: number, h: number
   } else if (kind === 'disk') {
     text(g, 'R', X(0), Y(rail) + 3, col.text(), 'left', 11);
     const s1 = { x: X(8), y: Y(rail) };
-    const ka = boxAt('Ka', 14, rail - 10, 10, 20, 'Ka', ['series']);
-    const g1 = boxAt('sysf', 28, rail - 10, 24, 20, '5000/(s+1000)', ['series']);
+    const ka = boxAt('Ka', 14, rail - 10, 10, 20, L('Ka', '10 or 80', 'volts per unit error', 'in: position error. out: amplifier voltage. what it does: volts per unit error'), ['series']);
+    const g1 = boxAt('sysf', 28, rail - 10, 24, 20, L('G₁ = 5000/(s+1000)', '5000/(s+1000)', 'volts to force, builds in 1 ms', 'in: voltage. out: force. what it does: the coil turns volts into force; current builds in about 1 ms'), ['series']);
     const s2 = { x: X(60), y: Y(rail) };
-    const g2 = boxAt('sysg', 66, rail - 10, 22, 20, '1/(s(s+20))');
+    const g2 = boxAt('sysg', 66, rail - 10, 22, 20, L('G₂ = 1/(s(s+20))', '1/(s(s+20))', 'force to position', 'in: net force (coil minus shock). out: head position Y. what it does: the arm turns force into position'));
     const outX = X(96), outY = Y(rail);
     text(g, 'Y', outX + 4, outY + 4, col.text(), 'left', 12);
     const c1 = colorOf('Ka', ['series']), cG1 = colorOf('sysf', ['series']), cG2 = colorOf('sysg'), cf = colorOf('feedback', ['loop', 'sign', 'step']);
@@ -368,8 +403,45 @@ export function drawLabDiagram(g: CanvasRenderingContext2D, w: number, h: number
     g.strokeStyle = cf.color; g.lineWidth = cf.width; g.setLineDash([]);
     g.beginPath(); g.moveTo(outX, outY); g.lineTo(outX, fy); g.lineTo(s1.x, fy); g.lineTo(s1.x, s1.y + r + 1); g.stroke();
     intoSum(g, s1.x, fy, s1.x, s1.y, '−', cf.color, r);
+  } else if (opts.words) {
+    // engine (handout p.1): a fuller block path than the script stepper uses
+    const railE = 38;
+    text(g, 'Speed Ref', X(0), Y(railE) + 3, col.text(), 'left', 9);
+    const s1 = { x: X(7), y: Y(railE) };
+    const pi = boxAt('PI', 10, railE - 9, 10, 18, L('PID (PI)', 'P=0.0014551, I=0.0043791', 'throttle from the error now and the error so far', 'in: speed error. out: throttle command. what it does: P and I make a throttle from the error now and the error so far'));
+    const th = boxAt('throttle', 22, railE - 9, 16, 18, L('Throttle & Manifold', 'nonlinear', 'throttle angle and speed to air charge', 'in: throttle command and engine speed N. out: air charge. what it does: throttle angle and speed to air charge'));
+    const del = boxAt('delay', 40, railE - 9, 14, 18, L('Induction delay', 'e^{−0.015s}', 'air takes time to reach the cylinders', 'in: air charge. out: delayed air charge. what it does: air takes time to reach the cylinders'));
+    const comb = boxAt('combustion', 56, railE - 9, 12, 18, L('Combustion', 'nonlinear', 'air charge to torque', 'in: delayed air charge and engine speed N. out: combustion torque. what it does: air charge to torque'));
+    const veh = boxAt('vehicle', 70, railE - 9, 14, 18, L('Vehicle Dynamics', 'Teng, Tload', 'torque minus load spins the engine', "in: combustion torque Teng and load Tload. out: engine speed (rad/s). what it does: torque minus load spins the engine"));
+    const rpm = boxAt('rpm', 86, railE - 9, 8, 18, L('30/π', '30/π', 'rad/s to rpm', 'in: rad/s. out: rpm. what it does: converts shaft speed to rpm'));
+    const outX = X(98), outY = Y(railE);
+    text(g, 'rpm', outX + 1, outY + 4, col.text(), 'left', 10);
+    const c = { color: col.a(), width: 1.8 }, cf = { color: col.text(), width: 1.5 }, cd = { color: col.b(), width: 1.8 };
+    sum(g, s1.x, s1.y, r, c.color, c.width);
+    intoSum(g, X(1), Y(railE), s1.x, s1.y, '+', col.text(), r);
+    arrow(g, s1.x + r, s1.y, pi.l, pi.cy, c.color);
+    arrow(g, pi.r, pi.cy, th.l, th.cy, c.color);
+    arrow(g, th.r, th.cy, del.l, del.cy, c.color);
+    arrow(g, del.r, del.cy, comb.l, comb.cy, c.color);
+    arrow(g, comb.r, comb.cy, veh.l, veh.cy, c.color);
+    arrow(g, veh.r, veh.cy, rpm.l, rpm.cy, c.color);
+    arrow(g, rpm.r, rpm.cy, outX, outY, cf.color);
+    // load torque into vehicle dynamics
+    text(g, 'Tload', veh.cx, Y(8), col.text(), 'center', 10);
+    arrow(g, veh.cx, Y(14), veh.cx, veh.t, cd.color);
+    // thin inner N (engine speed) back to throttle and combustion
+    const ny = Y(22);
+    g.strokeStyle = col.muted(); g.lineWidth = 1; g.setLineDash([3, 3]);
+    g.beginPath(); g.moveTo(rpm.cx, rpm.t); g.lineTo(rpm.cx, ny); g.lineTo(th.cx, ny); g.lineTo(th.cx, th.t); g.stroke();
+    g.beginPath(); g.moveTo(comb.cx, ny); g.lineTo(comb.cx, comb.t); g.stroke();
+    g.setLineDash([]);
+    text(g, 'N', (th.cx + comb.cx) / 2, ny - 3, col.muted(), 'center', 8);
+    const fy = Y(90);
+    g.strokeStyle = cf.color; g.lineWidth = cf.width; g.setLineDash([]);
+    g.beginPath(); g.moveTo(outX, outY); g.lineTo(outX, fy); g.lineTo(s1.x, fy); g.lineTo(s1.x, s1.y + r + 1); g.stroke();
+    intoSum(g, s1.x, fy, s1.x, s1.y, '−', col.text(), r);
   } else {
-    // engine
+    // engine (script stepper: a compact four-box path)
     text(g, 'rpm*', X(0), Y(rail) + 3, col.text(), 'left', 11);
     const s1 = { x: X(8), y: Y(rail) };
     const pi = boxAt('PI', 14, rail - 10, 10, 20, 'PI');
@@ -410,5 +482,10 @@ export function drawLabDiagram(g: CanvasRenderingContext2D, w: number, h: number
         text(g, `${t.box}:  ${t.code}`, 8, y, col.text(), 'left', 9);
       });
     }
+  }
+
+  if (cap) {
+    const msg = CAPTION[kind];
+    if (msg) text(g, msg, padL, h - 6, col.muted(), 'left', 10);
   }
 }

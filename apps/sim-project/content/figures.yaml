@@ -1,4 +1,4 @@
-# sim-project live figures. Models: src/model (ported from the tutor's numbers.py, pinned in test/numbers.test.ts).
+# sim-project live figures (tabs layout: adds loop and engine-fit; new presets on blocks and disk; rpm toggle on tuner). Models: src/model (ported from the tutor's numbers.py, pinned in test/numbers.test.ts).
 - id: blocks
   title: "Reading a script: each line builds a block"
   x: block diagram · fraction so far
@@ -14,6 +14,9 @@
   presets:
     - { id: motoropen, label: "Fig. 4.23 (open loop)", set: { script: motor-open, line: 6 } }
     - { id: motorclosed, label: "Fig. 4.24 (closed loop)", set: { script: motor-closed, line: 8 } }
+    - { id: borerstep, label: "Fig. 4.25 (command step)", set: { script: borer-step, line: 4 } }
+    - { id: borerpush, label: "Fig. 4.26 (rock push)", set: { script: borer-push, line: 4 } }
+    - { id: diskseek, label: "Fig. 4.30 (disk seek)", set: { script: disk-seek, line: 4 } }
     - { id: diskshock, label: "Fig. 4.31 (disk shock)", set: { script: disk-shock, line: 5 } }
 - id: motor
   title: "The motor: a load hits, with and without the tachometer loop"
@@ -108,7 +111,7 @@
   lookFor: "At Ka = 80 the stand-in (dashed) sits on the real curve; near Ka = 4000 it stays calm while the real loop rings."
   animate: { control: t, speed: 0.4, loop: false }
   controls:
-    - { id: lgKa, label: Ka, type: range, min: 0, max: 3.7, step: 0.01, default: 1.903, group: primary, display: pow10 }
+    - { id: lgKa, label: "Ka", type: range, min: 0, max: 3.7, step: 0.01, default: 1.903, group: primary, display: pow10 }
     - { id: input, label: show, type: seg, options: [seek, shock, both], default: both, group: primary }
     - { id: stand, label: drop the coil, type: toggle, default: false, group: primary }
     - { id: ghosts, label: "Ka = 10, 80 ghosts", type: toggle, default: true, group: more }
@@ -117,6 +120,7 @@
     - { id: ka10, label: "Ka = 10", set: { lgKa: 1, stand: false }, about: "No overshoot, 1.40 s." }
     - { id: ka80, label: "Ka = 80 (Fig. 4.30)", set: { lgKa: 1.903, stand: true }, about: "17.1 % (stand-in 16.3 %), 0.41 s." }
     - { id: shock, label: "shock, Ka = 80 (Fig. 4.31)", set: { lgKa: 1.903, input: shock }, about: "Dip −0.0029 at 0.18 s, settles −0.0025." }
+    - { id: ka200, label: "shock target (own)", set: { lgKa: 2.301, input: both, stand: false }, about: "Ka = 200: shock offset −0.001, seek overshoot 37 %, 0.36 s (not in lab handout)." }
     - { id: limit, label: "near the ceiling (own)", set: { lgKa: 3.6, stand: true, input: seek }, about: "Ka ≈ 3980: barely stable; the stand-in sees nothing (not in lab handout)." }
 - id: pi
   title: "P and I on the stand-in engine: why I removes the leftover error"
@@ -150,27 +154,43 @@
     - { id: resp, label: "Response time (s)", type: range, min: 0.3, max: 5, step: 0.001, default: 0.678, group: primary }
     - { id: rob, label: "Transient behavior (robustness)", type: range, min: 0.3, max: 0.9, step: 0.01, default: 0.6, group: primary }
     - { id: hand, label: show handout table, type: toggle, default: true, group: primary }
+    - { id: rpm, label: "rpm axis (2000 → 3000 step)", type: toggle, default: false, group: more }
     - { id: t, label: time, type: range, min: 0, max: 6, step: 0.01, default: 6, group: more }
   presets:
     - { id: initial, label: "initial (0.678 s, 0.6)", set: { resp: 0.678, rob: 0.6 }, about: "Handout p.3: 7.5 %, 1.96 s." }
     - { id: slower, label: "slower (3.1 s, 0.6)", set: { resp: 3.1, rob: 0.6 }, about: "Handout p.4: P = 0, 0.401 %, 3.45 s." }
     - { id: final, label: "final (1.5 s, 0.72)", set: { resp: 1.5, rob: 0.72 }, about: "Handout p.5: 0 %, 1.81 s." }
     - { id: aggressive, label: "aggressive (own)", set: { resp: 0.678, rob: 0.4 }, about: "28 % overshoot (not in lab handout)." }
-- id: knobs
-  title: "Every knob: pick a machine and a knob"
-  x: time (s)
-  y: response
+- id: loop
+  title: "The block diagram: every block in plain words"
+  x: "(none)"
+  y: "(none)"
   legend:
-    - { label: "handout setting (ghost)", color: "var(--muted)" }
-    - { label: your setting, color: "var(--acc)" }
-  howToRead: "Pick a machine, then a knob; one slider sets its value. The plot shows the machine's main response at the handout's setting (grey) and at yours, and the arrows below say which goals improved (green ↑) and which got worse (red ↓): sag or offset, overshoot, settling time, stability margin."
-  lookFor: "Every gain that improves the steady error makes the swing worse, on every machine."
+    - { label: "forward path (command → output)", color: "var(--acc)" }
+    - { label: "feedback path (output → summer)", color: "var(--fg)" }
+    - { label: "disturbance entry", color: "var(--org)" }
+  howToRead: "Signals flow along the arrows. The circle is the summer: its + and − say which signals are added and which subtracted. Each box shows its symbol, its handout value and one line in plain words; hover or tap a box to see what goes in and what comes out."
+  lookFor: "Where the disturbance enters, and with which sign: that sign is why the motor and disk scripts end with sys = -sys."
   controls:
-    - { id: machine, label: machine, type: select, options: [motor, boring machine, disk head, engine], default: motor, group: primary }
-    - { id: knob, label: knob, type: select, options: [Ka, Kt, J, b, K, rate gain, disk Ka, response time, robustness, P, I], default: Ka, group: primary }
-    - { id: x, label: "knob value (× handout setting)", type: range, min: -1, max: 1, step: 0.01, default: 0, group: primary, display: pow10 }
+    - { id: machine, label: machine, type: select, options: [motor-open, motor-closed, borer, disk, engine], default: motor-open, group: primary }
+    - { id: words, label: labels, type: seg, options: [plain words, symbols, values], default: plain words, group: primary }
   presets:
-    - { id: motorKa, label: "motor Ka × 2", set: { machine: motor, knob: Ka, x: 0.301 } }
-    - { id: borerK, label: "boring machine K × 5", set: { machine: boring machine, knob: K, x: 0.699 } }
-    - { id: diskKa, label: "disk Ka ÷ 8", set: { machine: disk head, knob: disk Ka, x: -0.903 } }
-    - { id: engRob, label: "engine robustness × 1.2", set: { machine: engine, knob: robustness, x: 0.079 } }
+    - { id: motor-open, label: "motor, no feedback (Fig. 4.23)", set: { machine: motor-open } }
+    - { id: motor-closed, label: "motor with tachometer (Fig. 4.24)", set: { machine: motor-closed } }
+    - { id: borer, label: "boring machine (Eq. 4.57)", set: { machine: borer } }
+    - { id: disk, label: "disk head (Fig. 4.29)", set: { machine: disk } }
+    - { id: engine, label: "engine model (handout p.1)", set: { machine: engine } }
+- id: engine-fit
+  title: "Where the stand-in engine comes from (not in lab handout)"
+  x: ω (rad/s, log)
+  y: "|G| (rpm per unit throttle, log) · phase (°)"
+  legend:
+    - { label: "points read from the handout's four tuner tables", color: "var(--yel)" }
+    - { label: "stand-in G(s) = 311·3.42²·e^(−0.015s)/(s² + 6.3954s + 11.6964)", color: "var(--acc)" }
+    - { label: "same curve without the 15 ms delay", color: "var(--muted)", dash: true }
+  howToRead: "Each tuner table gives a crossover (where |C·G| = 1) and a phase margin, plus a gain-margin frequency, for known P and I. Each of those pins one point of the engine's own frequency response G(jω): 8 points in all. The curve is the simple model that passes through all 8 (within 0.5 %)."
+  lookFor: "The phase keeps falling past −180° at high ω only because of the delay; without it the curve would level off at −180°."
+  controls:
+    - { id: delay, label: show the no-delay curve, type: toggle, default: true, group: primary }
+    - { id: w, label: "probe ω", type: range, min: -0.5, max: 2, step: 0.01, default: 0.47, group: primary, unit: "rad/s", display: pow10 }
+  presets: []

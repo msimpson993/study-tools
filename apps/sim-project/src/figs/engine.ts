@@ -104,6 +104,39 @@ export const tunerPanels = (): FigurePanel[] => [
     draw(g, w, h, v: V) {
       const resp = num(v, 'resp', 0.678), rob = num(v, 'rob', 0.6);
       const { P, I, clamped } = tuner(resp, rob);
+      const rpmOn = !!v.rpm;
+      if (rpmOn) {
+        const r = engineStep(P, I, 20, 1e-3);
+        const tEnd = 15;
+        const tt: number[] = [], yy: number[] = [];
+        for (let i = 0; i < 400; i++) {
+          const t0 = (tEnd * i) / 399;
+          tt.push(t0);
+          if (t0 < 2) yy.push(2000);
+          else {
+            // y(t) is the unit-step fraction; shift the command to t = 2 s
+            const tau = t0 - 2;
+            let y = 0;
+            for (let k = 0; k < r.t.length; k++) { if (r.t[k] >= tau) { y = r.y[k]; break; } y = r.y[k]; }
+            yy.push(2000 + 1000 * y);
+          }
+        }
+        let tHit = NaN;
+        for (let i = 0; i < tt.length; i++) if (tt[i] >= 2 && yy[i] >= 2980) { tHit = tt[i]; break; }
+        const fr = rangeFrame(w, h, [0, tEnd], [1500, 3500], 48, 12, 18, 30);
+        graphAxes(g, fr, [0, tEnd], [1500, 3500], 'time (s)', 'rpm', 5, 500);
+        curve(g, fr, tt, yy, col.a(), 2);
+        g.strokeStyle = col.e(); g.lineWidth = 1; g.setLineDash([4, 4]);
+        g.beginPath(); g.moveTo(fr.box.l, fr.Y(2980)); g.lineTo(fr.box.r, fr.Y(2980)); g.stroke(); g.setLineDash([]);
+        text(g, '2980 rpm (2 % band)', fr.box.r - 4, fr.Y(2980) - 5, col.e(), 'right', 10);
+        if (Number.isFinite(tHit)) {
+          g.fillStyle = col.e(); g.beginPath(); g.arc(fr.X(tHit), fr.Y(2980), 4, 0, Math.PI * 2); g.fill();
+          text(g, `reaches 2980 at t₀ + ${(tHit - 2).toFixed(2)} s`, 8, 28, col.text(), 'left', 10);
+        }
+        text(g, `P = ${f(P, 7)}  I = ${f(I, 7)}${clamped ? '  (P clamped)' : ''}`, 8, 14, col.text(), 'left', 10);
+        text(g, 'Linear stand-in, not the nonlinear Simulink engine (not in lab handout). The handout\'s scope (p.6) is the real check.', 8, h - 8, col.muted(), 'left', 9);
+        return;
+      }
       const r = engineStep(P, I, 14, 1e-3);
       const hit = nearDesign(resp, rob);
       const ghost = hit ? engineStep(DESIGNS[hit].P, DESIGNS[hit].I, 14, 1e-3) : undefined;

@@ -10,11 +10,13 @@ export interface QuizOpts {
   tags?: string[];
   title?: string;
   /** renderers for questions that carry a `figure` (see quizfig.ts) */ figures?: QuizFigureRegistry;
-  openDive(id: string): void;
+  openDive?(id: string): void;
   back(): void;
 }
 
 export function tagLabel(content: AppContent, tag: string): string {
+  const tab = content.tabs?.find((x) => x.id === tag || x.quizTags?.includes(tag));
+  if (tab) return tab.title;
   const d = content.dives.find((x) => x.id === tag);
   if (d) return d.title;
   for (const m of content.maps) { const n = m.nodes.find((x) => (x.quizTag ?? x.dive ?? x.id) === tag); if (n) return n.label; }
@@ -33,6 +35,9 @@ export function mountQuiz(host: HTMLElement, content: AppContent, progress: Prog
   let missedOnly = false;
   let shuffle = false;
   let activeTags: Set<string> | null = opts.tags && opts.tags.length ? new Set(opts.tags) : null;
+  const tabIds = (content.tabs ?? []).map((x) => x.id);
+  const tabTagSet = new Set((content.tabs ?? []).flatMap((x) => x.quizTags?.length ? x.quizTags : [x.id]));
+  let tabFilter: string | null = null; // null = All tabs
   let list: Question[] = [];
   let idx = 0;
   let chosen: number | null = null;
@@ -58,7 +63,7 @@ export function mountQuiz(host: HTMLElement, content: AppContent, progress: Prog
   }
 
   function rebuild() {
-    let qs = content.quiz.filter((q) => !activeTags || q.tags.some((t) => activeTags!.has(t)));
+    let qs = content.quiz.filter((q) => (!tabFilter || q.tags.includes(tabFilter)) && (!activeTags || q.tags.some((tg) => activeTags!.has(tg))));
     if (missedOnly) qs = qs.filter((q) => progress.answer(q.id) === 'm');
     list = shuffle ? shuffled(qs) : content.subject.quizOrder === 'chain' ? chainOrder(qs) : qs;
     idx = 0;
@@ -86,9 +91,19 @@ export function mountQuiz(host: HTMLElement, content: AppContent, progress: Prog
         h('button', { class: flash ? '' : 'on', dataset: { mode: 'quiz' }, onclick: () => { flash = false; rebuild(); render(); } }, 'Quiz'),
         h('button', { class: flash ? 'on' : '', dataset: { mode: 'flash' }, onclick: () => { flash = true; rebuild(); render(); } }, 'Flashcards'))));
     // filters
+    if (tabIds.length) {
+      const tabRow = h('div', { class: 'chips quiz-tab-filter', dataset: { testid: 'quiz-tab-filter' }, role: 'group', 'aria-label': 'Filter by tab' });
+      tabRow.append(h('button', { class: `chip${!tabFilter ? ' on' : ''}`, dataset: { tab: 'all' }, onclick: () => { tabFilter = null; rebuild(); render(); } }, 'All'));
+      for (const id of tabIds) {
+        const tab = content.tabs!.find((x) => x.id === id)!;
+        const short = ({ overview: 'Overview', motor: 'Motor', borer: 'Boring machine', disk: 'Disk head', engine: 'Engine' } as Record<string, string>)[id] ?? tab.title;
+        tabRow.append(h('button', { class: `chip${tabFilter === id ? ' on' : ''}`, dataset: { tab: id }, onclick: () => { tabFilter = id; rebuild(); render(); } }, short));
+      }
+      root.append(tabRow);
+    }
     const chips = h('div', { class: 'chips' });
     chips.append(h('button', { class: `chip${!activeTags ? ' on' : ''}`, onclick: () => { activeTags = null; rebuild(); render(); } }, 'All topics'));
-    for (const t of allTags) chips.append(h('button', { class: `chip${activeTags?.has(t) ? ' on' : ''}`, dataset: { tag: t }, onclick: () => { const n = new Set(activeTags ?? []); if (n.has(t)) n.delete(t); else n.add(t); activeTags = n.size ? n : null; rebuild(); render(); } }, tagLabel(content, t)));
+    for (const t of allTags.filter((tg) => !tabTagSet.has(tg))) chips.append(h('button', { class: `chip${activeTags?.has(t) ? ' on' : ''}`, dataset: { tag: t }, onclick: () => { const n = new Set(activeTags ?? []); if (n.has(t)) n.delete(t); else n.add(t); activeTags = n.size ? n : null; rebuild(); render(); } }, tagLabel(content, t)));
     root.append(h('details', { class: 'fold', open: opts.tags && opts.tags.length ? undefined : undefined }, h('summary', null, 'Filter topics'), h('div', null, chips)));
     root.append(h('div', { class: 'row' },
       h('button', { class: `chip${missedOnly ? ' on' : ''}`, dataset: { testid: 'missed-only' }, onclick: () => { missedOnly = !missedOnly; rebuild(); render(); } }, 'Missed only'),
@@ -133,7 +148,7 @@ export function mountQuiz(host: HTMLElement, content: AppContent, progress: Prog
         card.append(h('div', { class: 'why', dataset: { testid: 'why' }, html: `<b>${wrong ? 'Not quite.' : 'Right.'}</b> ${q.why ?? ''}` }));
         const link = q.tags.find((t) => content.dives.some((d) => d.id === t));
         card.append(h('div', { class: 'row' },
-          wrong && link ? h('button', { class: 'tbtn', dataset: { testid: 'review-link' }, onclick: () => opts.openDive(link) }, `Review: ${tagLabel(content, link)}`) : null,
+          wrong && link ? h('button', { class: 'tbtn', dataset: { testid: 'review-link' }, onclick: () => opts.openDive?.(link) }, `Review: ${tagLabel(content, link)}`) : null,
           h('button', { class: 'tbtn on', dataset: { testid: 'next' }, onclick: next }, idx + 1 >= list.length ? 'Finish' : 'Next')));
       }
     }

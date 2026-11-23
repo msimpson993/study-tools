@@ -80,3 +80,74 @@ Metrics: overshoot vs final value; rise 10–90 %; settling = last exit from a �
 | `lab-tuner` | `resp`, `rob` | the two-slider strip above the stand-in step response |
 | `lab-table` | `table: tuner3` | the handout's three-design table (values verbatim from handout pp.3–5) |
 | `lab-flow` | `flow: tuner` | four-step loop: linearize → tune → Update Block → simulate full model (↺ if it fails) |
+
+---
+
+# Tabs layout: new and changed figures
+
+The `knobs` figure is no longer registered (Manager: drop it). The rest of this file is the pass-1 specs; the block below is the tabs-layout delta from the tutor.
+
+# Figure specs: changes for the tabs layout (for Study Tools Manager)
+
+Only new or changed figures are here. Everything else is unchanged from `/workspace/cs-lab/package/FIGURES.md` (pass-1 version), including the models table, metrics, and the specs for `blocks`, `motor`, `borer`, `tradeoff`, `sens`, `disk`, `pi`, `tuner` and `knobs`. `figures.yaml` in this folder is the pass-1 file with the changes below applied. Every number below is in `numbers_output.txt`.
+
+## Summary
+
+| Figure | Change | Used in tab |
+|---|---|---|
+| `loop` | **NEW**, a static block diagram per machine (also covers build item B2) | (b) of all four problem tabs |
+| `engine-fit` | **NEW**, the stand-in engine's 8 fitted points (not in lab handout) | Engine, (c) step 2 |
+| `blocks` | 3 new presets: `borerstep`, `borerpush`, `diskseek` (scripts already exist) | Borer and disk (d) |
+| `disk` | 1 new preset: `ka200` | Disk (d) |
+| `tuner` | new toggle `rpm` (rpm axis for the 2000 → 3000 step) | Engine, (c) step 6 |
+| `knobs` | unchanged; **not referenced by any tab** (Manager's call) | – |
+
+## How the tabs reference figures
+
+Each step in (c) and each row in (d) names a figure by its figures.yaml id and a preset id, e.g. "**Live figure:** `motor`, preset `open`". Suggested embedding (Manager's call, since the one-off layout has no dives): a fenced block with the preset as an argument, ```` ```figure:motor preset=open``` ````, rendering the figure with that preset applied. One figure per step is enough. If a step names two presets ("`k20` then `k100`"), embed the figure once with the first and let the reader click the second.
+
+## NEW: loop
+
+- **Purpose:** the setup section (b) of each problem tab. A real block diagram: summer circle with + and − signs, forward path left to right, feedback path along the bottom, disturbance arrow from above at its true entry point and sign, and the measured output fed back. No animation and no time axis.
+- **Controls:** `machine` (motor-open, motor-closed, borer, disk, engine); `words` (plain words | symbols | values) switches each box's caption. Hover or tap a box for a tooltip: "in: … out: … what it does: …".
+- **Colours:** forward path `--acc`, feedback path `--fg`, disturbance `--org`, summer signs in `--fg`.
+- **Diagrams (box: symbol · value · plain words):**
+  - **motor-open (Fig. 4.23):** input V_a (= 0 here) → coil Km/Ra · 10 N·m/V · "volts to torque" → summer (+ motor torque, − T_d "load torque") → load 1/(Js + b) · 1/(2s + 0.5) · "torque to speed" → output ω. Inner loop from ω through Kb · 0.1 V·s · "back-EMF: speed makes a voltage that fights the current" into a summer (−) before the coil. Caption: "drag felt by the load: b + Km·Kb/Ra = 1.5 N·m·s".
+  - **motor-closed (Fig. 4.24):** as motor-open, plus an outer loop from ω through tachometer Kt · 1 V·s · "speed to volts" and amplifier Ka · 54 · "multiplies the speed shortfall", into the input summer (−). Caption: "sag and time constant ÷ (1 + loop gain) = ÷ 361".
+  - **borer (Eq. 4.57):** R "planned line" → summer (+R, −Y) → controller K + 11s · K = 20 or 100 · "push on the error now, plus 11 × how fast it is changing" → summer (+ effort, + T_d "the rock") → machine 1/(s(s + 1)) · "effort to position" → Y. Unity feedback. Caption: "both responses share s² + 12s + K".
+  - **disk (Fig. 4.29):** R "new track" → summer (+R, −Y) → amplifier Ka · 10 or 80 · "volts per unit error" → coil G₁ = 5000/(s + 1000) · "volts to force, builds in 1 ms" → summer (+ force, − T_d "shock") → arm G₂ = 1/(s(s + 20)) · "force to position" → Y. Sensor H = 1. Caption: "the arm's 1/s gives zero step error".
+  - **engine (handout p.1 model):** Speed Reference (step) → summer (+ ref, − speed) → PID Controller (PI) · P = 0.0014551, I = 0.0043791 (final design, p.6) · "throttle from the error now and the error so far" → Throttle & Manifold · "throttle angle and speed to air charge" → Induction to Power Stroke Delay · "air takes time to reach the cylinders" → Combustion · "air charge to torque" → Vehicle Dynamics (Teng in, Tload in from Drag Torque/Load) · "torque minus load spins the engine" → rad/s to rpm · 30/π → Engine Speed (rpm) scope, and back to the summer. Inner signal: engine speed N also feeds Throttle & Manifold and Combustion (draw it thin). Caption: "nonlinear: no single transfer function; the tuner linearizes it".
+- **Pinned numbers:** 10, 1.5, 540, 361 (motor); none beyond the handout values elsewhere.
+- **Presets:** `motor-open`, `motor-closed`, `borer`, `disk`, `engine` (see figures.yaml).
+
+## NEW: engine-fit (not in lab handout)
+
+- **Purpose:** the engine tab, step 2: shows where the stand-in engine comes from, so "fitted to the tables" is visible and not a black box.
+- **Panels:** Bode magnitude (|G|, log) and phase (°) against ω (log, 10^−0.5 to 10^2 rad/s). Yellow dots at the 8 points, the stand-in curve in `--acc`, and (toggle `delay`) the same model without the 15 ms delay, dashed `--muted`. A probe line at ω = 10^w with a readout of |G| and phase from both the point (if within 2 % of a point's ω) and the curve.
+- **The 8 points (ω rad/s: |G| from tables, phase °), pinned:** 2.950: 190.12, −83.55; 16.700: 12.60, −172.54; 0.645: 303.34, −20.70; 3.270: 174.55, −90.00; 1.330: 277.80, −41.84; 15.000: 15.44, −168.66; 19.000: 9.87, −176.99; 60.300: 1.00, 134.35 (plot this one as −225.65°, i.e. unwrapped). Fit values at the same ω: 190.42, 12.63, 303.02, 173.72, 278.36, 15.54, 9.83, 1.00; phases −83.55, −172.54, −20.65, −90.10, −41.76, −168.65, −177.11, 134.39.
+- **Corner label:** "Stand-in, not in lab handout. Points derived from the handout's PID Tuner tables (pp.3–5 and the P = I = 1 baseline)."
+- **Model:** G(s) = 311·3.42²·e^(−0.015s)/(s² + 6.3954s + 11.6964); exact e^(−jωτ) for the phase.
+
+## CHANGED: blocks (3 presets)
+
+- `borerstep`: "Fig. 4.25 (command step)", `{ script: borer-step, line: 4 }`.
+- `borerpush`: "Fig. 4.26 (rock push)", `{ script: borer-push, line: 4 }`.
+- `diskseek`: "Fig. 4.30 (disk seek)", `{ script: disk-seek, line: 4 }`.
+- No code change: the scripts exist in `src/figs/blocks.ts`.
+
+## CHANGED: disk (1 preset)
+
+- `ka200`: "shock target (own)", `{ lgKa: 2.301, input: both, stand: false }`; about: "Ka = 200: shock offset −0.001, seek overshoot 37 %, 0.36 s (not in lab handout)."
+- Pinned: Ka = 200 → PO 37.18 %, Ts 0.3563 s, shock final −0.001.
+
+## CHANGED: tuner (rpm toggle)
+
+- New control `rpm` (toggle, group more, default off): "rpm axis (2000 → 3000 step)".
+- When on, the step-response panel's y axis becomes rpm, 1500…3500, the x axis 0…15 s (matching the handout's p.6 scope), and the curve is 2000 + 1000·y(t − 2) for t ≥ 2 s, flat 2000 before. Mark 2980 rpm (2 % band) and the time it is reached.
+- Corner label: "Linear stand-in, not the nonlinear Simulink engine (not in lab handout). The handout's scope (p.6) is the real check."
+- Pinned: final design reaches 2980 rpm at t₀ + 1.82 s.
+
+## Unchanged and not referenced: knobs
+
+The `knobs` figure (every knob on every machine) has no slot in the five tabs, since each tab's (d) has its own knob table. Options: drop it, or add it to the Overview tab under "How to use the tabs" as a "compare the knobs" panel. Manager's call.
+

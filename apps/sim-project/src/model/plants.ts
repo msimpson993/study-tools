@@ -166,7 +166,7 @@ export const engineWn2 = ENGINE.wn * ENGINE.wn;
 export const engine2ZWn = 2 * ENGINE.zeta * ENGINE.wn;
 
 /** Plant G(jω) including the exact delay e^(−jωτ). */
-export function engineGjw(w: number, K = ENGINE.K, wn = ENGINE.wn, z = ENGINE.zeta, tau = ENGINE.tau): { re: number; im: number; mag: number; ang: number } {
+export function engineGjw(w: number, K = ENGINE.K, wn = ENGINE.wn, z = ENGINE.zeta, tau: number = ENGINE.tau): { re: number; im: number; mag: number; ang: number } {
   const sRe = 0, sIm = w;
   const denR = 1 - (w * w) / (wn * wn), denI = 2 * z * w / wn;
   const d2 = denR * denR + denI * denI;

@@ -175,10 +175,25 @@ export interface Subject {
   quizOrder?: 'authored' | 'chain';
 }
 
+export interface TabSection { id: string; title: string }
+/** A one-off tabbed page (sim-project): markdown article with inline live figures, no question map. */
+export interface TabPage {
+  id: string;
+  order: number;
+  title: string;
+  summary: string;
+  figures?: string[];
+  quizTags?: string[];
+  html: string;
+  sections: TabSection[];
+}
+
 export interface AppContent {
   subject: Subject;
   maps: MapDef[];
   dives: Dive[];
+  /** Present on a tabbed app (no map). */
+  tabs?: TabPage[];
   /** review pages (mini exams) reachable from the Review section, not from the map */
   review?: ReviewPage[];
   quiz: Question[];

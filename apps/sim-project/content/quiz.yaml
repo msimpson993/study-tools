@@ -1,8 +1,8 @@
-# sim-project quiz: 22 box asks (q-*), 20 dive checks (ck-*), 27 knob/practice questions (kn-*) = 69.
-# Every number is in test/fixtures/numbers_output.txt. Tags: dive id + box id.
-# ---------------- box asks (one per box, the intuition question)
+# sim-project quiz (tabs layout): 22 intuition questions (q-*), 20 section checks (ck-*), 29 knob/practice questions (kn-*) = 71.
+# Every number is in numbers_output.txt (numbers.py). Tags: [tab id, topic]; tab ids: overview, motor, borer, disk, engine.
+# ---------------- intuition questions (one per idea)
 - id: q-root
-  tags: [root, knobs]
+  tags: [overview, feedback]
   kind: recognize
   q: "In one sentence, what does <i>feedback</i> mean in this project?"
   choices:
@@ -11,9 +11,9 @@
   - "Feed the machine's input forward to its output to make it faster"
   - "Turn every gain up as high as it will go"
   answer: 0
-  why: "Measure, compare, correct. Every machine on the map does this with a different sensor and knob."
+  why: "Measure, compare, correct. Every machine in the project does this with a different sensor and knob."
 - id: q-blocks
-  tags: [blocks, BLOCKS]
+  tags: [motor, setup]
   kind: recognize
   q: "A block reads 1/(2s + 0.5): torque in, speed out. What do the 2 and the 0.5 stand for on the motor?"
   choices:
@@ -24,7 +24,7 @@
   answer: 0
   why: "`tf(1,[J b])` with J = 2 and b = 0.5 (Table 4.2). The s multiplies J: inertia resists changes of speed."
 - id: q-open
-  tags: [speed, OPEN]
+  tags: [motor, open]
   kind: recognize
   q: "With no feedback, why does the motor settle at a lower speed instead of stopping or slowing forever?"
   choices:
@@ -35,7 +35,7 @@
   answer: 0
   why: "Steady state means torques balance: drag falls in proportion to speed until it has dropped by the load. 1 N·m ÷ 1.5 N·m·s = 0.667 rad/s."
 - id: q-closed
-  tags: [speed, CLOSED]
+  tags: [motor, closed]
   kind: recognize
   figure:
     id: lab-step
@@ -51,7 +51,7 @@
   answer: 0
   why: "τ drops from 1.33 s to 3.69 ms. The handout labels it: 'Note the scale'."
 - id: q-gain1
-  tags: [speed, GAIN1]
+  tags: [motor, loopgain]
   kind: action
   q: "You want half the closed-loop sag on the motor, but the amplifier is already at its maximum Ka. What else could you change?"
   choices:
@@ -62,7 +62,7 @@
   answer: 0
   why: "The sag divides by 1 + Km·Ka·Kt/(Ra·1.5). Kt = 2 gives −0.00093 rad/s. J only changes how fast it settles."
 - id: q-price
-  tags: [borer, PRICE]
+  tags: [borer, model]
   kind: recognize
   q: "Why can't the motor model overshoot no matter how high the gain, while the boring machine can?"
   choices:
@@ -73,7 +73,7 @@
   answer: 0
   why: "One store can only creep toward its final value. Two stores can trade energy back and forth, which is what a swing is."
 - id: q-borer
-  tags: [borer, BORER]
+  tags: [borer, model]
   kind: recognize
   q: "In the closed boring-machine loop, s² + 12s + K, what plays the shock absorber and what plays the spring?"
   choices:
@@ -84,7 +84,7 @@
   answer: 0
   why: "Compare m·s² + c·s + k: the s-term is damping, the constant is stiffness."
 - id: q-kstep
-  tags: [borer, KSTEP]
+  tags: [borer, command]
   kind: recognize
   figure:
     id: lab-step
@@ -100,7 +100,7 @@
   answer: 0
   why: "The zero at s = −K/11 = −1.8 sits near the slow pole −2. With the poles alone the overshoot would be 0 %."
 - id: q-kpush
-  tags: [borer, KPUSH]
+  tags: [borer, push]
   kind: recognize
   q: "The machine itself contains an integrator (the 1/s in 1/(s(s+1))). Why doesn't it remove the offset from a steady rock push?"
   choices:
@@ -111,7 +111,7 @@
   answer: 0
   why: "The push enters at the machine's input. To hold against it the controller must output a steady counter-push, and K + 11s can only do that from a steady error: 1/K."
 - id: q-trade
-  tags: [borer, TRADE]
+  tags: [borer, trade]
   kind: recognize
   q: "Which statement matches the handout's conclusion for the boring machine?"
   choices:
@@ -122,7 +122,7 @@
   answer: 0
   why: "Table 4.3 and the text: 'increasing K leads to better disturbance rejection, whereas decreasing K leads to better performance'."
 - id: q-sens
-  tags: [sens, SENS]
+  tags: [borer, sensitivity]
   kind: recognize
   figure:
     id: lab-sens
@@ -138,7 +138,7 @@
   answer: 0
   why: "S is the ratio of percentage changes: 0.063 × 10 % ≈ 0.6 %."
 - id: q-disk
-  tags: [disk, DISK]
+  tags: [disk, model]
   kind: recognize
   q: "Why does the disk head end exactly on a new track for any stable Ka?"
   choices:
@@ -149,7 +149,7 @@
   answer: 0
   why: "Eq. 4.67: e(∞) = lim s·1/(1 + Ka·G₁·G₂)·1/s = 0, because G₂ → ∞ as s → 0."
 - id: q-ka
-  tags: [disk, KA]
+  tags: [disk, seek]
   kind: recognize
   q: "Why can we ignore the coil, 5000/(s + 1000), when predicting the seek at Ka = 80?"
   choices:
@@ -160,7 +160,7 @@
   answer: 0
   why: "Keep its steady gain (5000/1000 = 5) and drop its lag: 5Ka/(s² + 20s + 5Ka) predicts 16.3 % against the exact 17.1 %."
 - id: q-kapush
-  tags: [disk, KAPUSH]
+  tags: [disk, shock]
   kind: compute
   q: "A steady unit shock hits the arm at Ka = 80. Where does the head settle?"
   choices:
@@ -171,7 +171,7 @@
   answer: 0
   why: "y(∞) = −1/(Ka·G₁(0)) = −1/(80 × 5). Handout Fig. 4.31: −2.5×10⁻³."
 - id: q-limit
-  tags: [disk, LIMIT]
+  tags: [disk, ceiling]
   kind: recognize
   q: "The two-part stand-in 5Ka/(s² + 20s + 5Ka) is stable for every Ka. Why does the real head go unstable past Ka = 4080?"
   choices:
@@ -182,7 +182,7 @@
   answer: 0
   why: "Routh: 1020 × 20000 > 5000·Ka ⇒ Ka < 4080. The stand-in has no third pole, so it can't see this (not in lab handout)."
 - id: q-tuner
-  tags: [tuner, TUNER]
+  tags: [engine, tuner]
   kind: recognize
   q: "What does PID Tuner do first when you press Tune on the engine's PID block?"
   choices:
@@ -193,7 +193,7 @@
   answer: 0
   why: "Handout p.2: 'the software computes a linearized plant model seen by the controller', at the current operating point."
 - id: q-needi
-  tags: [pi, NEEDI]
+  tags: [engine, integral]
   kind: recognize
   q: "Which machines need an integral term to reach a step command exactly, and why?"
   choices:
@@ -204,7 +204,7 @@
   answer: 0
   why: "A position stays put with no push; a speed sags without one. P can only push in proportion to the error, so it needs a leftover error."
 - id: q-sliders
-  tags: [tuner, SLIDERS]
+  tags: [engine, sliders]
   kind: recognize
   q: "What does moving the Transient behavior slider toward Robust do?"
   choices:
@@ -215,7 +215,7 @@
   answer: 0
   why: "0.6 → 0.72 raised the phase margin from about 60° to 72° and took the overshoot to 0 (handout p.5)."
 - id: q-three
-  tags: [tuner, THREE]
+  tags: [engine, designs]
   kind: recognize
   q: "To get both zero overshoot and settling under 2 s, the handout moved both sliders. Which way?"
   choices:
@@ -226,9 +226,9 @@
   answer: 0
   why: "Faster for the settling, more robust for the overshoot: 1.81 s, 0 %."
 - id: q-intonly
-  tags: [tuner, INTONLY]
+  tags: [engine, designs]
   kind: recognize
-  q: "At the slow setting the tuner returned P = 0. What is the reason reconstructed on this page?"
+  q: "At the slow setting the tuner returned P = 0. What is the reason reconstructed here (not in lab handout)?"
   choices:
   - "Keeping a 60° margin would need more than 90° of controller lag, and pure I (P = 0) is the most lag a PI controller can give"
   - "P was causing a steady-state error"
@@ -237,7 +237,7 @@
   answer: 0
   why: "Needed lag 180° − 60° − 21° = 99° > 90°. With P = 0 the margin becomes 69.3°, as in the handout's table (reconstruction, not in lab handout)."
 - id: q-nonlin
-  tags: [tuner, NONLIN]
+  tags: [engine, verify]
   kind: recognize
   q: "Why does the handout simulate the full nonlinear engine after Update Block?"
   choices:
@@ -248,7 +248,7 @@
   answer: 0
   why: "Linearization holds for small changes. A 2000 → 3000 rpm step is large, so it has to be checked."
 - id: q-four
-  tags: [knobs, FOUR]
+  tags: [overview, advantages]
   kind: recognize
   q: "Which of these is NOT one of the four advantages of feedback the project demonstrates?"
   choices:
@@ -258,9 +258,9 @@
   - "It removes steady-state error"
   answer: 0
   why: "The four: reject pushes, shape the transient response, lower sensitivity, remove steady error. Energy use is not one of them."
-# ---------------- dive checks
+# ---------------- section checks
 - id: ck-blocks-1
-  tags: [blocks]
+  tags: [motor, scripts]
   kind: recognize
   q: "To get the load-torque → speed transfer function of a loop, which goes first in feedback(·,·)?"
   choices:
@@ -271,7 +271,7 @@
   answer: 0
   why: "feedback(G, H) = G/(1 + GH) with G the forward path from the input you study. Fig. 4.31: feedback(sysg, Ka*sysf)."
 - id: ck-blocks-2
-  tags: [blocks]
+  tags: [motor, scripts]
   kind: trap
   q: "You paste the handout's Fig. 4.23(b) script into a fresh MATLAB session. What happens?"
   choices:
@@ -282,7 +282,7 @@
   answer: 0
   why: "Rename f to b (as Fig. 4.24 does). The script check is mine, not in lab handout."
 - id: ck-speed-1
-  tags: [speed]
+  tags: [motor]
   kind: compute
   q: "Open loop, a 3 N·m load hits the motor. Final speed change?"
   choices:
@@ -293,7 +293,7 @@
   answer: 0
   why: "−3/1.5 = −2.0 rad/s (linear: three times the 1 N·m sag)."
 - id: ck-speed-2
-  tags: [speed]
+  tags: [motor]
   kind: compute
   q: "What is the smallest Ka (Kt = 1) that meets the handout's rule ω_c(∞)/ω_o(∞) < 0.02?"
   choices:
@@ -304,7 +304,7 @@
   answer: 0
   why: "Ratio = 1.5/(1.5 + 10·Ka). Below 0.02 needs 10·Ka > 73.5, Ka > 7.35 (not in lab handout)."
 - id: ck-speed-3
-  tags: [speed]
+  tags: [motor]
   kind: recognize
   q: "You double the motor's inertia J (Ka = 54). What happens to the closed-loop sag and recovery?"
   choices:
@@ -348,7 +348,7 @@
   answer: 0
   why: "s² + s + 100: ζ = 0.05. The rate term is the shock absorber (not in lab handout)."
 - id: ck-sens-1
-  tags: [sens]
+  tags: [borer, sensitivity]
   kind: recognize
   q: "The shortcut S ≈ s/K is good for which wiggle rates?"
   choices:
@@ -359,7 +359,7 @@
   answer: 0
   why: "At ω = 100 rad/s the shortcut says 5 while |S| is 0.99."
 - id: ck-sens-2
-  tags: [sens]
+  tags: [borer, sensitivity]
   kind: recognize
   q: "What is the sensitivity of an open loop (no feedback) to a change in the machine?"
   choices:
@@ -403,7 +403,7 @@
   answer: 0
   why: "Need 1020 × 20000 > 5000·Ka ⇒ Ka < 4080 (not in lab handout)."
 - id: ck-pi-1
-  tags: [pi]
+  tags: [engine, integral]
   kind: compute
   q: "On the stand-in engine (steady gain ≈ 311), P-only with P = 0.0042253: what fraction of a speed step is left as error?"
   choices:
@@ -414,7 +414,7 @@
   answer: 0
   why: "1/(1 + 0.0042253 × 311) = 1/2.31 = 0.43 (stand-in, not in lab handout)."
 - id: ck-pi-2
-  tags: [pi]
+  tags: [engine, integral]
   kind: recognize
   q: "When the PI loop has settled with zero error, which part of the controller is holding the throttle open?"
   choices:
@@ -425,7 +425,7 @@
   answer: 0
   why: "P × 0 = 0. The integral remembers the error that has been, and that memory holds the throttle."
 - id: ck-tuner-1
-  tags: [tuner]
+  tags: [engine, tuner]
   kind: compute
   q: "In all three of the handout's tables, crossover frequency × response time ≈ ?"
   choices:
@@ -436,7 +436,7 @@
   answer: 0
   why: "2.95 × 0.678 = 2.0; 0.645 × 3.1 = 2.0; 1.33 × 1.5 = 2.0 (pattern read from the tables, not stated in the handout)."
 - id: ck-tuner-2
-  tags: [tuner]
+  tags: [engine, tuner]
   kind: trap
   q: "The handout's text says the response time went 'from 3.4 to 1.5 seconds'. What should a report quote?"
   choices:
@@ -447,7 +447,7 @@
   answer: 0
   why: "The screenshot field reads 3.1, and 2/3.4 = 0.59 would not match the table's 0.645 rad/s."
 - id: ck-tuner-3
-  tags: [tuner]
+  tags: [engine, tuner]
   kind: recognize
   q: "The baseline P = I = 1 shows phase margin −46.6° and gain margin −19.9 dB. What does that mean?"
   choices:
@@ -458,7 +458,7 @@
   answer: 0
   why: "Negative margins: the loop gain is above 1 where the phase passes −180°. The tuner shows 'Closed-loop stability: Undefined'."
 - id: ck-knobs-1
-  tags: [knobs]
+  tags: [overview, advantages]
   kind: recognize
   q: "On all four machines, raising the main gain does what to the steady error and what to the swing?"
   choices:
@@ -469,7 +469,7 @@
   answer: 0
   why: "Motor: sag ÷ (1 + loop gain), but in its one-store model no swing appears; borer, disk, engine: ζ or margin falls as gain rises."
 - id: ck-knobs-2
-  tags: [knobs]
+  tags: [motor, knobs]
   kind: recognize
   q: "Which motor knob changes only how fast the speed recovers, not how much it sags?"
   choices:
@@ -481,7 +481,7 @@
   why: "J multiplies s only; at steady state (s → 0) it drops out."
 # ---------------- knob and practice questions
 - id: kn-01
-  tags: [speed, CLOSED]
+  tags: [motor, closed]
   kind: compute
   q: "Closed loop with Ka = 54: what is the time constant of the speed recovery?"
   choices:
@@ -492,7 +492,7 @@
   answer: 0
   why: "τ = J/541.5 = 2/541.5 = 3.69 ms."
 - id: kn-02
-  tags: [speed, GAIN1]
+  tags: [motor, loopgain]
   kind: compute
   q: "What is the motor's loop gain at Ka = 54, Kt = 1?"
   choices:
@@ -503,7 +503,7 @@
   answer: 0
   why: "Km·Ka·Kt/Ra = 540 N·m·s, divided by the open-loop drag 1.5: 360. Sag ÷ 361."
 - id: kn-03
-  tags: [speed, OPEN]
+  tags: [motor, open]
   kind: recognize
   q: "What does the back-EMF do to the open-loop motor?"
   choices:
@@ -514,7 +514,7 @@
   answer: 0
   why: "Faster spin → more back-voltage → less current → less torque: drag proportional to speed."
 - id: kn-04
-  tags: [speed, CLOSED]
+  tags: [motor, closed]
   kind: recognize
   q: "In Fig. 4.24's script, why are Ka·Kt and Kb combined with parallel()?"
   choices:
@@ -525,7 +525,7 @@
   answer: 0
   why: "parallel adds. Then series with Km/Ra turns that voltage into torque, and feedback wraps it around the load."
 - id: kn-05
-  tags: [speed, GAIN1]
+  tags: [motor, loopgain]
   kind: compute
   q: "What Ka (Kt = 1) makes the closed-loop sag 0.005 rad/s per N·m?"
   choices:
@@ -536,7 +536,7 @@
   answer: 0
   why: "Total drag must be 1/0.005 = 200: 1.5 + 10·Ka = 200 ⇒ Ka = 19.85 (not in lab handout)."
 - id: kn-06
-  tags: [speed, OPEN]
+  tags: [motor, open]
   kind: recognize
   q: "Why does the handout's script flip the sign with sys_o = −sys_o?"
   choices:
@@ -547,7 +547,7 @@
   answer: 0
   why: "Handout margin note: 'Change sign of transfer function since the disturbance has negative sign in the diagram.'"
 - id: kn-07
-  tags: [borer, KSTEP]
+  tags: [borer, command]
   kind: recognize
   q: "You raise K on the boring machine from 20 to 200. Which change happens?"
   choices:
@@ -558,7 +558,7 @@
   answer: 0
   why: "ζ = 6/√200 = 0.42. Values from numbers.py (not in lab handout)."
 - id: kn-08
-  tags: [borer, KSTEP]
+  tags: [borer, command]
   kind: compute
   q: "ωₙ and ζ for the boring machine at K = 100?"
   choices:
@@ -569,7 +569,7 @@
   answer: 0
   why: "s² + 12s + 100: ωₙ = √100, 2ζωₙ = 12."
 - id: kn-09
-  tags: [borer, KPUSH]
+  tags: [borer, push]
   kind: compute
   q: "Final-value theorem: a unit step push 1/s through 1/(s² + 12s + K). What is y(∞)?"
   choices:
@@ -580,7 +580,7 @@
   answer: 0
   why: "lim s·1/(s² + 12s + K)·1/s = 1/K as s → 0 (handout p.263)."
 - id: kn-10
-  tags: [borer, TRADE]
+  tags: [borer, trade]
   kind: action
   figure:
     id: lab-trade
@@ -596,7 +596,7 @@
   answer: 0
   why: "The two goals pull K in opposite directions. Meeting both needs another knob, e.g. more rate gain or an I term (not in lab handout)."
 - id: kn-11
-  tags: [borer, TRADE]
+  tags: [borer, trade]
   kind: action
   q: "Same spec (≤ 10 % overshoot, ≤ 2 % offset). Which second knob could help most directly?"
   choices:
@@ -607,7 +607,7 @@
   answer: 0
   why: "At K = 100, rate gain 20 gives about 10 % overshoot with a 1 % offset (not in lab handout)."
 - id: kn-12
-  tags: [sens, SENS]
+  tags: [borer, sensitivity]
   kind: recognize
   q: "Raising K from 20 to 100 does what to |S| at 0.1 rad/s?"
   choices:
@@ -618,7 +618,7 @@
   answer: 0
   why: "S ≈ s/K at low frequency."
 - id: kn-13
-  tags: [sens, SENS]
+  tags: [borer, sensitivity]
   kind: recognize
   figure:
     id: lab-sens
@@ -634,7 +634,7 @@
   answer: 0
   why: "S → 0 as s → 0 and S → 1 as s → ∞."
 - id: kn-14
-  tags: [disk, KA]
+  tags: [disk, seek]
   kind: recognize
   q: "On the disk head, Ka = 10 versus Ka = 80. Which is true?"
   choices:
@@ -645,7 +645,7 @@
   answer: 0
   why: "Fig. 4.30, exact values from numbers.py."
 - id: kn-15
-  tags: [disk, KA]
+  tags: [disk, seek]
   kind: compute
   q: "What Ka gives the disk head's two-part stand-in critical damping (ζ = 1)?"
   choices:
@@ -656,7 +656,7 @@
   answer: 0
   why: "ζ = 10/√(5·Ka) = 1 ⇒ 5Ka = 100 ⇒ Ka = 20."
 - id: kn-16
-  tags: [disk, LIMIT]
+  tags: [disk, ceiling]
   kind: recognize
   q: "If the coil were faster (its pole further left than −1000, same steady gain 5), what would happen to the ceiling on Ka?"
   choices:
@@ -667,7 +667,7 @@
   answer: 0
   why: "With a coil pole at −p: Ka < 4(20 + p). A faster coil looks more like a pure gain (not in lab handout)."
 - id: kn-17
-  tags: [disk, KAPUSH]
+  tags: [disk, shock]
   kind: recognize
   q: "Fig. 4.31's script writes sys = feedback(sysg, Ka*sysf). Why is the arm (sysg) first?"
   choices:
@@ -678,7 +678,7 @@
   answer: 0
   why: "Y/T_d = −G₂/(1 + Ka·G₁·G₂): forward G₂, return Ka·G₁."
 - id: kn-18
-  tags: [tuner, SLIDERS]
+  tags: [engine, sliders]
   kind: recognize
   q: "You move only the Response time slider toward Faster (robustness fixed). On the stand-in engine, what mostly changes?"
   choices:
@@ -689,7 +689,7 @@
   answer: 0
   why: "Response time sets ω_c = 2/t_resp; the robustness slider holds the margin (emulation, not in lab handout)."
 - id: kn-19
-  tags: [tuner, THREE]
+  tags: [engine, designs]
   kind: compute
   q: "Final design: P = 0.0014551, I = 0.0043791. What is the integral time T_i = P/I?"
   choices:
@@ -700,7 +700,7 @@
   answer: 0
   why: "0.0014551/0.0043791 = 0.332 s (not in lab handout)."
 - id: kn-20
-  tags: [tuner, THREE]
+  tags: [engine, designs]
   kind: recognize
   q: "Why are the tuner's gains so small (P ≈ 0.004)?"
   choices:
@@ -711,7 +711,7 @@
   answer: 0
   why: "P × 311 ≈ 1.3 for the initial design (engine gain estimated from the tables, not in lab handout)."
 - id: kn-21
-  tags: [tuner, THREE]
+  tags: [engine, designs]
   kind: recognize
   q: "Which design in the handout has the largest phase margin?"
   choices:
@@ -722,7 +722,7 @@
   answer: 0
   why: "Handout pp.3–5: 59.9°, 69.3°, 72°."
 - id: kn-22
-  tags: [tuner, TUNER]
+  tags: [engine, tuner]
   kind: recognize
   q: "Project 1's two design requirements are…"
   choices:
@@ -733,7 +733,7 @@
   answer: 0
   why: "Handout p.1, Design Overview."
 - id: kn-23
-  tags: [pi, NEEDI]
+  tags: [engine, integral]
   kind: recognize
   q: "On the engine with I = 0, you double P. What happens to the leftover speed error?"
   choices:
@@ -744,7 +744,7 @@
   answer: 0
   why: "Error = 1/(1 + P·K_e): smaller, never zero. Only I removes it."
 - id: kn-24
-  tags: [tuner, INTONLY]
+  tags: [engine, designs]
   kind: recognize
   q: "A PI controller C = P + I/s. Its lag (phase) is always between…"
   choices:
@@ -755,9 +755,9 @@
   answer: 0
   why: "C(jω) = P − jI/ω: real part ≥ 0, imaginary part ≤ 0."
 - id: kn-25
-  tags: [knobs, FOUR]
+  tags: [overview, advantages]
   kind: recognize
-  q: "Which machine on the map best shows feedback rejecting a push?"
+  q: "Which of the four machines best shows feedback rejecting a push?"
   choices:
   - "The motor: its sag shrinks to 0.3 % of open loop"
   - "The engine"
@@ -766,7 +766,7 @@
   answer: 0
   why: "Example 4.4 exists to show disturbance rejection (Dorf §4.9 introduction)."
 - id: kn-26
-  tags: [blocks, BLOCKS]
+  tags: [borer, scripts]
   kind: recognize
   q: "What does MATLAB's minreal() do in Fig. 4.26's script?"
   choices:
@@ -777,7 +777,7 @@
   answer: 0
   why: "minreal cancels any factor shared by numerator and denominator. Here feedback() already gives 1/(s² + 12s + K), so it is a tidy-up step that guarantees the simplest form."
 - id: kn-27
-  tags: [knobs, FOUR]
+  tags: [borer, trade]
   kind: action
   q: "Your report must say why the handout picked no single K for the boring machine. Best one-line reason?"
   choices:
@@ -787,3 +787,25 @@
   - "The handout ran out of space"
   answer: 0
   why: "Dorf p.263: 'The final decision on how to choose K rests with the designer.'"
+- id: kn-28
+  tags: [disk, shock]
+  kind: trap
+  q: "Eq. 4.69 prints Y(s) = G₂/(1 + Ka·G₁·G₂)·T_d(s). Fig. 4.31's plot settles at −2.5×10⁻³. Which is right?"
+  choices:
+  - "The plot: the shock enters the summer with a minus sign (Fig. 4.29, and sys=-sys in the script), so Y/T_d = −G₂/(1 + Ka·G₁·G₂)"
+  - "The equation: the plot is upside down"
+  - "Both: the sign depends on the time axis"
+  - "Neither: the final value is +0.0025 at Ka = 10"
+  answer: 0
+  why: "The script's comment says 'Disturbance enters summer with a negative sign'. Coding Eq. 4.69 as printed flips your plot."
+- id: kn-29
+  tags: [borer, push]
+  kind: trap
+  q: "Fig. 4.26(b) (K = 20, the rock) ends at 2.5 s at about 0.0496, not 0.05. Why?"
+  choices:
+  - "The plot stops before the response has fully settled; it does reach 1/K = 0.05"
+  - "The final value is really 0.0496"
+  - "The rate gain 11 removes 0.84 % of the offset"
+  - "MATLAB rounds the last point"
+  answer: 0
+  why: "At 2.5 s the response is 0.04958, still 0.84 % short; the final value theorem gives exactly 1/20 = 0.05."

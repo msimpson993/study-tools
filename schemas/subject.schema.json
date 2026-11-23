@@ -173,6 +173,15 @@
         },
         "review": {
           "type": "integer"
+        },
+        "tabs": {
+          "type": "integer"
+        },
+        "glossary": {
+          "type": "integer"
+        },
+        "figures": {
+          "type": "integer"
         }
       },
       "additionalProperties": false

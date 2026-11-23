@@ -1,9 +1,9 @@
-# sim-project glossary
+# sim-project glossary (tabs layout; sections are unchanged and group terms by topic)
 - { term: s, meaning: "Laplace variable: read it as \"rate of change\" (d/dt); 1/s adds up (integrates). Signals are written in s too: Y(s) is the output, and a step that switches on and stays on is 1/s. Units 1/s.", section: Math }
 - { term: "s = jω", meaning: "Evaluating a fraction at s = jω (j = √−1) gives what it does to a wiggle at ω rad/s: how much bigger or smaller it comes out, and how far behind. 1 rad/s is one full wiggle every 6.3 s.", section: Math }
 - { term: stable, meaning: "A loop that settles after a nudge, instead of swinging ever wider. Every pole in the left half of the s-plane.", section: Math }
 - { term: transfer function, meaning: "A block's rule as a fraction in s: output over input, starting from rest.", section: Blocks & loops }
-- { term: "tf, series, parallel, feedback", meaning: "MATLAB commands: make a block; chain two (multiply); add two side by side; close a loop G/(1 + GH).", section: Blocks & loops }
+- { term: "tf, series, parallel, feedback", meaning: "MATLAB commands: make a block; connect two in a row (multiply); add two side by side; close a loop G/(1 + GH).", section: Blocks & loops }
 - { term: minreal, meaning: "MATLAB: cancel factors shared by top and bottom of a fraction.", section: Blocks & loops }
 - { term: superposition, meaning: "In a linear system the response to two inputs is the sum of the responses to each alone (Dorf p.258).", section: Blocks & loops }
 - { term: feedback, meaning: "Measure the output, compare it with the command, correct the input.", section: Blocks & loops }
@@ -50,3 +50,7 @@
 - { term: gain margin (GM), meaning: "Factor (dB) the gain could rise before the loop swings forever, read where the phase is −180°. Negative: unstable.", units: dB, section: Engine & tuner }
 - { term: lag, meaning: "How far a wiggle coming out trails the wiggle going in, as an angle: 360° is one full wiggle late, 180° is upside down. Pure I lags 90°.", units: deg, section: Engine & tuner }
 - { term: Update Block, meaning: "PID Tuner button that writes the tuned P and I back into the Simulink PID block.", section: Engine & tuner }
+- { term: summing junction (summer), meaning: "The circle in a block diagram where signals are added or subtracted, with a + or − beside each arrow. The command minus the measured output gives the error.", section: Blocks & loops }
+- { term: disturbance rejection, meaning: "How little an unplanned push (a load, a rock, a shock) moves the output. Feedback improves it by dividing the push's effect by 1 + loop gain. The motor example's purpose (Dorf §4.9).", section: Blocks & loops }
+- { term: nonlinear, meaning: "A model whose parts don't scale in proportion: double the input and the output does not simply double. The Simulink engine is nonlinear; the PID Tuner designs on a linear copy of it.", section: Engine & tuner }
+- { term: emulated tuner, meaning: "This page's reconstruction of how PID Tuner turns its two sliders into P and I: crossover = 2/response time, phase margin = 100° × robustness, P ≥ 0 (not in lab handout).", section: Engine & tuner }
