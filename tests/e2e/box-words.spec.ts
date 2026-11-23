@@ -57,3 +57,13 @@ for (const app of ['linear-systems', 'control-systems']) {
     expect(over.filter(([, n]) => n > HARD_CAP).map(([k, n]) => `${k}: ${n}`)).toEqual([]);
   });
 }
+
+test(`sim-project: box and line pop-ups keep to the soft word cap (~${SOFT_CAP} words of main body, as rendered; fails only past ${HARD_CAP})`, async ({ page }) => {
+  test.setTimeout(180_000);
+  await page.setViewportSize({ width: 390, height: 844 });
+  const res = await popWords(page, 'sim-project');
+  expect(Object.keys(res).filter((k) => k.includes('line ')).length).toBeGreaterThan(15);
+  expect(Object.keys(res).filter((k) => !k.includes('line ')).length).toBeGreaterThan(15);
+  const over = Object.entries(res).filter(([, n]) => n > HARD_CAP);
+  expect(over, over.map(([k, n]) => `${k}: ${n}`).join(', ')).toEqual([]);
+});

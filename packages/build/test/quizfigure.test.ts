@@ -34,11 +34,15 @@ describe('quiz figure field', () => {
     ['missing alt', { id: 'a', params: {} }, /alt/],
     ['too-short alt', { id: 'a', alt: 'plot' }, /alt|minLength/],
     ['unknown key', { id: 'a', alt: 'A long enough alt text', width: 3 }, /additional|width/i],
-    ['non-scalar param', { id: 'a', alt: 'A long enough alt text', params: { p: [1, 2] } }, /params|type/],
+    ['non-scalar param', { id: 'a', alt: 'A long enough alt text', params: { p: { min: 1 } } }, /params|type/],
     ['bad id', { id: 'a b', alt: 'A long enough alt text' }, /pattern|id/],
   ])('rejects %s', (_n, fig, re) => {
     const dir = copyApp(APP); edit(path.join(dir, 'content/quiz.yaml'), (y) => { y[0].figure = fig; });
     expect(errorsOf(dir)).toMatch(re);
+  });
+  it('joins an array of scalar params (K: [20, 100] → "20,100") so the schema still sees a scalar', () => {
+    const dir = copyApp(APP); edit(path.join(dir, 'content/quiz.yaml'), (y) => { y[0].figure = { id: 'scope1', alt: 'A long enough alt text here.', params: { K: [20, 100], on: true } }; });
+    expect(loadApp(dir).content.quiz[0].figure).toEqual({ id: 'scope1', alt: 'A long enough alt text here.', params: { K: '20,100', on: true } });
   });
   it('subject.yaml quizFigures, when present, must list every figure id used', () => {
     const dir = copyApp(APP); edit(path.join(dir, 'content/quiz.yaml'), (y) => { y[0].figure = good; });

@@ -6,7 +6,7 @@ import { open, selectMap, measureOverlaps } from './helpers';
 // Crossing clarity: fewer crossings, and where two lines still cross the one with the horizontal piece hops over the other with a small arc.
 const OUT = path.resolve(import.meta.dirname, '..', '..', 'shots');
 fs.mkdirSync(OUT, { recursive: true });
-const PICK: Record<string, string> = { 'linear-systems': 'full', 'control-systems': 'detail' };
+const PICK: Record<string, string> = { 'linear-systems': 'full', 'control-systems': 'detail', 'sim-project': 'chain' };
 const pickView = (page: Page, v: 'fit' | 'actual') => page.locator(`[data-testid=map-view] [data-view=${v}]`).click();
 const maps = (page: Page): Promise<{ id: string; title: string }[]> => page.evaluate(() => (window as any).__study.content.maps);
 const arcs = (page: Page) => page.evaluate(() => [...document.querySelectorAll('.qm-edge')].map((g) => ({ key: g.getAttribute('data-edge')!, d: g.querySelector('.line')!.getAttribute('d')!, plain: g.querySelector('path:not(.line):not(.head)')!.getAttribute('d')!, cls: g.getAttribute('class')! })).filter((e) => / A /.test(e.d)));

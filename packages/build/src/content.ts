@@ -72,6 +72,24 @@ export function loadApp(appDir: string): { content: AppContent; warnings: string
   const inline = (s: string | undefined, w: string) => { where = w; return s ? md.renderInline(s) : ''; };
   const block = (s: string | undefined, w: string) => { where = w; return s ? md.render(s) : ''; };
 
+
+  /** figures.yaml may write `options: [open, closed]`; controls.ts wants {value, label}. */
+  const normalizeFigureOptions = (figures: { controls?: { options?: unknown[] }[] }[]) => {
+    for (const f of figures ?? []) for (const c of f.controls ?? []) {
+      if (!c.options) continue;
+      c.options = c.options.map((o) => (typeof o === 'string' ? { value: o, label: o } : o));
+    }
+  };
+  /** Pop-up / quiz figure params may list several values (`K: [20, 100]`); the schema is a scalar, so join them. */
+  const flattenFigParams = (params?: Record<string, unknown>) => {
+    if (!params) return;
+    const scalar = (x: unknown) => x === null || ['number', 'string', 'boolean'].includes(typeof x);
+    for (const k of Object.keys(params)) {
+      const v = params[k];
+      if (Array.isArray(v) && v.every(scalar)) params[k] = v.map(String).join(',');
+    }
+  };
+
   const subject = readYaml(path.join(appDir, 'subject.yaml')) as Subject & { expect?: Record<string, number> };
   checkSchema(problems, 'subject', subject, 'subject.yaml');
 
@@ -80,6 +98,7 @@ export function loadApp(appDir: string): { content: AppContent; warnings: string
   const graphFile = path.join(cdir, 'graph.yaml');
   if (exists(graphFile)) {
     const g = readYaml(graphFile) as { maps: any[] };
+    for (const m of g.maps ?? []) for (const n of m.nodes ?? []) for (const f of n.pop?.figures ?? []) flattenFigParams(f.params);
     checkSchema(problems, 'graph', g, 'graph.yaml');
     for (const m of g.maps ?? []) {
       const ids = new Set<string>();
@@ -167,6 +186,7 @@ export function loadApp(appDir: string): { content: AppContent; warnings: string
 
   // ---------- quiz / glossary / figures ----------
   const quizRaw = exists(path.join(cdir, 'quiz.yaml')) ? (readYaml(path.join(cdir, 'quiz.yaml')) as any[]) : [];
+  for (const q of quizRaw as { figure?: { params?: Record<string, unknown> } }[]) flattenFigParams(q.figure?.params);
   checkSchema(problems, 'quiz', quizRaw, 'quiz.yaml');
   const quiz: Question[] = quizRaw.map((q) => ({
     id: q.id, tags: q.tags, kind: q.kind,
@@ -197,6 +217,7 @@ export function loadApp(appDir: string): { content: AppContent; warnings: string
   const glossaryR = glossary.map((t) => ({ ...t, meaning: inline(t.meaning, `glossary ${t.term}`) }));
 
   const figures: FigureDef[] = exists(path.join(cdir, 'figures.yaml')) ? (readYaml(path.join(cdir, 'figures.yaml')) as FigureDef[]) : [];
+  normalizeFigureOptions(figures);
   checkSchema(problems, 'figures', figures, 'figures.yaml');
   const figuresR = figures.map((f) => ({ ...f, howToRead: inline(f.howToRead, `figure ${f.id}`), presets: f.presets.map((p) => ({ ...p, about: p.about ? inline(p.about, `figure ${f.id}/${p.id}`) : undefined })) }));
   for (const f of figures) {

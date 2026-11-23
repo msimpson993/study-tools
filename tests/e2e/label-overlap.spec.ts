@@ -106,7 +106,7 @@ for (const vw of [1366, 390]) {
 
 /** Example nodes (Nov 20): on both maps of both apps, at phone, tablet and desktop widths, in Fit and Actual size, nothing
  *  lies under a node (box, line, line label or another node) and its dotted link runs from its host into no box and across no line. */
-for (const app of ['linear-systems', 'control-systems'] as const) test(`${app}: Example nodes clear of boxes, lines and labels at every width`, async ({ page }) => {
+for (const app of ['linear-systems', 'control-systems', 'sim-project'] as const) test(`${app}: Example nodes clear of boxes, lines and labels at every width`, async ({ page }) => {
   test.setTimeout(120_000);
   const bad: string[] = [];
   for (const [W, H] of [[390, 844], [768, 1024], [923, 1300], [1024, 768], [1280, 900], [1600, 1000]] as const) {
@@ -135,7 +135,7 @@ for (const app of ['linear-systems', 'control-systems'] as const) test(`${app}: 
 
 /** Example glyphs (Nov 20, linear-systems; control-systems since Nov 21): every box marker inside its box and clear of the label and
  *  of every line label, on both maps, at phone, tablet and desktop widths, in Fit and Actual size and in the split side map. */
-for (const app of ['linear-systems', 'control-systems'] as const) test(`${app}: example glyphs clear of box labels and line labels`, async ({ page }) => {
+for (const app of ['linear-systems', 'control-systems', 'sim-project'] as const) test(`${app}: example glyphs clear of box labels and line labels`, async ({ page }) => {
   test.setTimeout(120_000);
   const bad: string[] = []; let total = 0;
   for (const [W, H] of [[390, 844], [768, 1024], [923, 1300], [1024, 768], [1280, 900], [1600, 1000]] as const) {

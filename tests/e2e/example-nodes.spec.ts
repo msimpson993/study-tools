@@ -12,7 +12,7 @@ const OUT = path.resolve(import.meta.dirname, '..', '..', 'shots', 'example-node
 fs.mkdirSync(OUT, { recursive: true });
 type Ref = { id: string; at: string; label: string; question?: string; scene?: { id: string }; figure?: string };
 const refsOf = (page: Page): Promise<Ref[]> => page.evaluate(() => (window as any).__study.content.subject.runningExample.refs);
-const WANT: Record<string, string[]> = { 'linear-systems': ['earbud@SYS', 'car@STATE'], 'control-systems': ['house@MODEL', 'corner@SECOND', 'dish@PGAIN'] };
+const WANT: Record<string, string[]> = { 'linear-systems': ['earbud@SYS', 'car@STATE'], 'control-systems': ['house@MODEL', 'corner@SECOND', 'dish@PGAIN'], 'sim-project': ['motor@BLOCKS', 'borer@PRICE', 'disk@DISK', 'engine@TUNER'] };
 const node = (page: Page, id: string) => page.locator(`[data-testid=map-ref][data-ref="${id}"]`);
 const liveBox = (page: Page) => page.evaluate(() => {
   const p = document.querySelector('[data-testid=map-panel]')!.getBoundingClientRect(), live = document.querySelector('[data-testid=ref-live]')!;

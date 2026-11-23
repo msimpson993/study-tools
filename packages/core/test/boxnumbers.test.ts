@@ -16,7 +16,7 @@ const literals = (src: string): string[] => {
   return [...code.matchAll(/'(?:[^'\\\n]|\\.)*'|"(?:[^"\\\n]|\\.)*"|`(?:[^`\\]|\\.)*`/g)].map((m) => m[0]);
 };
 
-for (const app of ['control-systems', 'linear-systems']) describe(`${app}: no "Box N" in reader-facing text`, () => {
+for (const app of ['control-systems', 'linear-systems', 'sim-project']) describe(`${app}: no "Box N" in reader-facing text`, () => {
   const dir = path.join(root, 'apps', app);
   it('content YAML, subject and dives', () => {
     const hits: string[] = [];

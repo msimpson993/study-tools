@@ -95,7 +95,9 @@ const BEFORE: Record<string, [number, number][]> = {
   'control-systems/big': [[1, 0], [1, 0], [1, 0], [1, 0], [1, 0]], 'control-systems/detail': [[19, 0], [19, 0], [19, 0], [18, 0], [18, 0]], // CS pass 4: the six tuning side boxes sit on a shelf under Tuning toolkit (one side path off Choosing the three gains); at 775 the shelf is one column, whose lines cross the long look-backs twice more
   // linear-systems was rebuilt (Nov 2026) as Big picture + Full detail, and again on Nov 18 to the 14-box pop-up format; these maps never had the old layout, so their ceilings are what the current layout draws.
   'linear-systems/big': [[1, 0], [1, 0], [1, 0], [1, 0], [1, 0]], 'linear-systems/full': [[7, 0], [7, 0], [3, 0], [3, 0], [2, 0]], // Nov 18 tutor review: Controllability box under 'Do inside and outside match?' (Kalman box folded into it) adds one crossing on phones
-};
+
+  // sim-project is a new 22-box question chain (Nov 2026); ceilings are what the current layout draws (no crossings at these widths).
+  'sim-project/chain': [[0, 0], [0, 0], [0, 0], [0, 0], [0, 0]],};
 const WIDTHS5 = [362, 560, 775, 980, 1400];
 const shipped = () => listApps().flatMap((app) => loadApp(path.join(repoRoot, 'apps', app)).content.maps.map((m) => ({ id: `${app}/${m.id}`, m })));
 describe('layout: fewer crossings, every line in its own lane', () => {
