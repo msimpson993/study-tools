@@ -104,7 +104,7 @@ export const popFigures: QuizFigureRegistry = {
   }),
 
   'pop-wind': mini((g, w, h, p) => {
-    if (panel(p) === 'a') { g.clearRect(0, 0, w, h); drawDish(g, 0, 0, w, h, { theta: -0.02 * 8, ref: 0, wind: true, torque: -1, scale: 1 }); text(g, 'held 1.15° off (drawn 8× larger)', w / 2, h - 6, col.muted(), 'center', 10); return; }
+    if (panel(p) === 'a') { g.clearRect(0, 0, w, h); drawDish(g, 0, 0, w, h, { theta: +0.02 * 8, ref: 0, wind: true, torque: -1, scale: 1 }); text(g, 'held 1.15° off (drawn 8× larger)', w / 2, h - 6, col.muted(), 'center', 10); return; }
     const s = dishSim({ Kp: 1000, r: () => 0, d: (t) => (t >= 0.5 ? DISH.wind : 0), T: 5, dt: 1e-3, every: 10 }), F = fr(g, w, h, [0, 5], [-0.2, 2.2], 'time (s)', 'θ (°)');
     tline(g, F, [0, 1.146], [5, 1.146], col.muted(), 1, [5, 4]); curve(g, F, s.t, degs(s.y), col.a(), 2); text(g, 'settles 1.15° off', F.box.r - 4, F.Y(1.146) - 8, col.muted(), 'right', 10);
   }),

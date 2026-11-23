@@ -74,7 +74,13 @@ export function drawDish(g: G, x: number, y: number, w: number, h: number, o: Di
     line(g, cx, cy, cx + ux * dR * 0.75, cy + uy * dR * 0.75, col.a(), 1.6); // feed arm
     g.save(); g.fillStyle = col.text(); g.beginPath(); g.arc(cx, cy, 4.5, 0, 2 * Math.PI); g.fill(); g.restore();
     rect(g, cx - 12, cy + 6, 24, 10, col.muted()); if (o.labels !== false) text(g, 'motor', cx, cy + 24, col.muted(), 'center', 9.5);
-    if (o.torque) { const sgn = Math.sign(o.torque); g.save(); g.strokeStyle = col.b(); g.lineWidth = 2; g.beginPath(); g.arc(cx, cy, 14, -Math.PI / 2 - 0.9, -Math.PI / 2 + 0.9, sgn < 0); g.stroke(); g.restore(); }
+    // motor torque: a short arc over the hub turning the way the torque turns (+ = the same way as +θ, clockwise on screen), arrowhead at its end (pass 4c)
+    if (o.torque) {
+      const sgn = Math.sign(o.torque), rr = 14, a0 = -Math.PI / 2 - sgn * 0.9, a1 = -Math.PI / 2 + sgn * 0.9;
+      g.save(); g.strokeStyle = col.b(); g.lineWidth = 2; g.beginPath(); g.arc(cx, cy, rr, a0, a1, sgn < 0); g.stroke(); g.restore();
+      const ex = cx + rr * Math.cos(a1), ey = cy + rr * Math.sin(a1), tx = -Math.sin(a1) * sgn, ty = Math.cos(a1) * sgn, nx = -ty, ny = tx, hd = 6;
+      g.save(); g.fillStyle = col.b(); g.beginPath(); g.moveTo(ex + tx * hd * 0.6, ey + ty * hd * 0.6); g.lineTo(ex - tx * hd * 0.6 + nx * hd * 0.5, ey - ty * hd * 0.6 + ny * hd * 0.5); g.lineTo(ex - tx * hd * 0.6 - nx * hd * 0.5, ey - ty * hd * 0.6 - ny * hd * 0.5); g.closePath(); g.fill(); g.restore();
+    }
     if (o.wind) { for (let i = 0; i < 3; i++) arrowPx(g, x + 4, y + 12 + i * 9, x + w * 0.28, y + 12 + i * 9, col.d(), 1.5, 5); if (o.labels !== false) text(g, 'wind', x + 4, y + 44, col.d(), 'left', 9.5); }
   });
 }
