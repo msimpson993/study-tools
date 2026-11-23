@@ -3,10 +3,10 @@ import { open, noHScroll, trackErrors } from './helpers';
 
 const TABS = [
   { id: 'overview', label: 'Overview', title: 'Overview' },
+  { id: 'engine', label: 'Engine', title: 'Engine speed with the PID Tuner' },
   { id: 'motor', label: 'Motor', title: 'Speed controlled motor' },
   { id: 'borer', label: 'Boring machine', title: 'Boring machine' },
   { id: 'disk', label: 'Disk head', title: 'Disk drive head' },
-  { id: 'engine', label: 'Engine', title: 'Engine speed with the PID Tuner' },
 ] as const;
 
 test.describe('sim-project tabbed page', () => {
@@ -15,6 +15,7 @@ test.describe('sim-project tabbed page', () => {
     await open(page, 'sim-project');
     await expect(page).toHaveURL(/#\/tab\/overview/);
     await expect(page.getByTestId('tab-bar')).toBeVisible();
+    await expect.poll(async () => page.getByTestId('tab').evaluateAll((els) => els.map((e) => (e as HTMLElement).dataset.tab))).toEqual(TABS.map((t) => t.id));
     for (const t of TABS) await expect(page.getByTestId('tab').filter({ hasText: t.label })).toBeVisible();
     await expect(page.getByTestId('tab-page')).toContainText('What feedback means here');
 
@@ -138,12 +139,52 @@ test.describe('sim-project tabbed page', () => {
       const loop = page.locator('[data-testid=viz][data-figure=loop]');
       await expect(loop, `${tab} has a loop figure`).toHaveCount(1);
       const got = await loop.locator('.st-presets [data-preset]').evaluateAll((els) => els.map((e) => e.getAttribute('data-preset')));
-      expect(got, `${tab} loop presets`).toEqual(ids);
-      const machines = await loop.locator('select[aria-label="machine"]').evaluate((el: HTMLSelectElement) => [...el.options].map((o) => o.value));
-      expect(machines, `${tab} machine select`).toEqual(ids);
+      expect(got, `${tab} loop presets`).toEqual(ids.length > 1 ? ids : []);
+      if (ids.length > 1) {
+        const machines = await loop.locator('select[aria-label="machine"]').evaluate((el: HTMLSelectElement) => [...el.options].map((o) => o.value));
+        expect(machines, `${tab} machine select`).toEqual(ids);
+      } else {
+        await expect(loop.locator('select[aria-label="machine"]'), `${tab} hides a one-option machine select`).toHaveCount(0);
+      }
       for (const other of all.filter((id) => !ids.includes(id))) {
         await expect(loop.locator(`.st-presets [data-preset="${other}"]`), `${tab} should not offer ${other}`).toHaveCount(0);
       }
     }
   });
+
+  test('no select or radio group with a single option is rendered on any tab', async ({ page }) => {
+    for (const t of TABS) {
+      await open(page, 'sim-project', `#/tab/${t.id}`);
+      const bad = await page.evaluate(() => {
+        const sels = [...document.querySelectorAll('select')].filter((s) => (s as HTMLSelectElement).options.length <= 1)
+          .map((s) => (s as HTMLSelectElement).getAttribute('aria-label') || s.outerHTML.slice(0, 80));
+        const groups = [...document.querySelectorAll('[role=radiogroup]')].filter((g) => g.querySelectorAll('[role=radio]').length <= 1)
+          .map((g) => g.getAttribute('aria-label') || (g as HTMLElement).innerText.slice(0, 80));
+        return { sels, groups };
+      });
+      expect(bad.sels, `${t.id} single-option selects`).toEqual([]);
+      expect(bad.groups, `${t.id} single-option radio groups`).toEqual([]);
+    }
+  });
+
+  for (const width of [320, 390] as const) {
+    test(`every tab is reachable at ${width}px and the tab bar shows a scroll control when it overflows`, async ({ page }) => {
+      await page.setViewportSize({ width, height: 800 });
+      await open(page, 'sim-project', '#/tab/overview');
+      const wrap = page.locator('.tab-bar-wrap');
+      const overflows = await wrap.evaluate((el) => el.classList.contains('overflows') || (el.querySelector('.tab-bar')!.scrollWidth > el.querySelector('.tab-bar')!.clientWidth + 1));
+      if (overflows) {
+        await expect(wrap).toHaveClass(/overflows/);
+        await expect(page.getByTestId('tab-bar-next')).toBeVisible();
+      }
+      for (const t of TABS) {
+        const tab = page.getByTestId('tab').filter({ hasText: t.label });
+        await tab.evaluate((el) => el.scrollIntoView({ inline: 'nearest', block: 'nearest' }));
+        await expect(tab, `${t.label} at ${width}px`).toBeVisible();
+        await tab.click();
+        await expect(page).toHaveURL(new RegExp(`#/tab/${t.id}`));
+        await expect(page.getByTestId('tab-page')).toContainText(t.title);
+      }
+    });
+  }
 });

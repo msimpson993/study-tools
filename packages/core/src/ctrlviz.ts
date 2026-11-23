@@ -58,8 +58,8 @@ export function drawStepResponse(g: CanvasRenderingContext2D, w: number, h: numb
   if (show.timing && Number.isFinite(m.riseTime)) {
     const y10 = yf * 0.1, y90 = yf * 0.9;
     tline(g, f, [m.t10, y10], [m.t10, 0], col.e(), 1, [2, 3]); tline(g, f, [m.t90, y90], [m.t90, 0], col.e(), 1, [2, 3]);
-    g.strokeStyle = col.e(); g.lineWidth = 2; g.beginPath(); g.moveTo(f.X(m.t10), f.Y(yr[0]) - 6); g.lineTo(f.X(m.t90), f.Y(yr[0]) - 6); g.stroke();
-    lbl(`Tr ${fmtN(m.riseTime)} s`, f.X((m.t10 + m.t90) / 2), f.Y(yr[0]) - 15, col.e(), 'center');
+    g.strokeStyle = col.e(); g.lineWidth = 2; g.beginPath(); g.moveTo(f.X(m.t10), f.Y(yr[0]) - 14); g.lineTo(f.X(m.t90), f.Y(yr[0]) - 14); g.stroke();
+    lbl(`Tr ${fmtN(m.riseTime)} s`, f.X((m.t10 + m.t90) / 2), f.Y(yr[0]) - 26, col.e(), 'center');
   }
   let osBox: { x0: number; x1: number; y: number } | null = null;
   if (show.overshoot && Number.isFinite(m.peak) && m.overshootPct > 0.05) {

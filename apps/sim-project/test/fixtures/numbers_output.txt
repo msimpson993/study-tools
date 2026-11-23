@@ -241,4 +241,12 @@ engine emulated final gains: P=0.0014529 I=0.0043857: 2000->3000 rpm step reache
 engine initial, emulated gains, dt=0.2 ms: OS=7.36% Ts=1.962s
 engine initial, emulated gains, dt=1.0 ms: OS=7.43% Ts=1.963s
 engine initial, emulated gains: PM 60.0 deg @ 2.950 rad/s | GM 25.4 dB @ 16.70 rad/s
+
+======================================================================
+PASS3  engine figure at the figure's dt = 1 ms [own]
+======================================================================
+engine emulated final gains, dt=0.2 ms: OS=0.00% Ts(2%, sample after last exit)=1.806s Tr=1.089s; 0.98 crossing (interpolated)=1.806s
+engine emulated final gains, dt=1.0 ms: OS=0.00% Ts(2%, sample after last exit)=1.802s Tr=1.088s; 0.98 crossing (interpolated)=1.802s
+engine handout final gains, dt=0.2 ms: OS=0.00% Ts(2%, sample after last exit)=1.816s Tr=1.091s; 0.98 crossing (interpolated)=1.816s
+engine handout final gains, dt=1.0 ms: OS=0.00% Ts(2%, sample after last exit)=1.812s Tr=1.091s; 0.98 crossing (interpolated)=1.811s
 EXIT 0

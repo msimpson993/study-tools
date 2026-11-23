@@ -2,6 +2,7 @@
 import { mountFigure, col, text, type FigurePanel, type FigureDef, type FigureMountOpts } from '@study/core';
 import type { ControlSet } from '@study/core';
 import { drawLabDiagram, type BoxHit, type LabelWords } from './diagrams';
+import { applyTabLocalControls } from './tablocal';
 
 const WORDS: LabelWords[] = ['plain words', 'symbols', 'values'];
 const asWords = (v: string): LabelWords => (WORDS as string[]).includes(v) ? (v as LabelWords) : 'plain words';
@@ -12,11 +13,14 @@ export function loopFigure(host: HTMLElement, def: FigureDef, controls: ControlS
   let api: { redraw(): void; destroy(): void } | undefined;
   const bump = () => { api?.redraw(); };
 
+  applyTabLocalControls('loop', host, controls);
+  const machine = String(controls.values.machine ?? 'motor-open');
+  const heightFor = (m: string) => m === 'engine' ? 440 : 300;
   const panels: FigurePanel[] = [{
     id: 'diagram',
     title: 'Block diagram',
     x: '', y: '',
-    height: 280,
+    height: heightFor(machine),
     draw(g, w, h, v) {
       hits.length = 0;
       drawLabDiagram(g, w, h, { sys: String(v.machine ?? 'motor-open'), words: asWords(String(v.words ?? 'plain words')), hits });
@@ -65,35 +69,15 @@ export function loopFigure(host: HTMLElement, def: FigureDef, controls: ControlS
     },
   }];
   api = mountFigure(host, def, panels, controls, opts);
-  const MACHINE_LABEL: Record<string, string> = {
-    'motor-open': 'motor, no feedback',
-    'motor-closed': 'motor with tachometer',
-    borer: 'boring machine',
-    disk: 'disk head',
-    engine: 'engine model',
+  const layout = host.querySelector('.fig-layout');
+  const applySize = () => {
+    const m = String(controls.values.machine ?? 'motor-open');
+    layout?.classList.toggle('fig-wide', m === 'engine');
+    const cv = host.querySelector<HTMLCanvasElement>('canvas[data-fig="diagram"]');
+    if (cv) cv.style.height = `${heightFor(m)}px`;
   };
-  /** Presets (and machine-select options) allowed on each problem tab. Overview keeps every machine. */
-  const TAB_LOOP_PRESETS: Record<string, string[]> = {
-    motor: ['motor-open', 'motor-closed'],
-    borer: ['borer'],
-    disk: ['disk'],
-    engine: ['engine'],
-  };
-  const tab = host.closest<HTMLElement>('[data-testid="tab-page"]')?.dataset.tab
-    ?? /#\/tab\/([^/?]+)/.exec(location.hash ?? '')?.[1];
-  const allowed = (tab && TAB_LOOP_PRESETS[tab]) ? TAB_LOOP_PRESETS[tab] : null;
-  const sel = host.querySelector('select[aria-label="machine"]') as HTMLSelectElement | null;
-  if (sel) {
-    [...sel.options].forEach((o) => {
-      if (allowed && !allowed.includes(o.value)) o.remove();
-      else o.textContent = MACHINE_LABEL[o.value] ?? o.textContent;
-    });
-  }
-  if (allowed) {
-    host.querySelectorAll<HTMLButtonElement>('.st-presets [data-preset]').forEach((b) => {
-      const id = b.dataset.preset ?? '';
-      if (!allowed.includes(id)) b.remove();
-    });
-  }
+  applySize();
+  requestAnimationFrame(() => api?.redraw());
+  controls.onChange(() => { applySize(); requestAnimationFrame(() => api?.redraw()); });
   return () => api?.destroy();
 }

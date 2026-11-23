@@ -1,6 +1,6 @@
 ---
 id: borer
-order: 3
+order: 4
 title: Boring machine
 summary: "Dorf Example 4.5 (Figs. 4.25–4.27): the Channel Tunnel boring machine, one gain K traded between following the steering command, resisting the rock, and not caring about changes in the machine."
 figures: [loop, borer, tradeoff, sens, blocks]
@@ -38,6 +38,7 @@ Y(s) = (K + 11s)/(s² + 12s + K) · R(s)  +  1/(s² + 12s + K) · T_d(s)
 - **Second part:** how much the rock T_d moves it.
 - **Both share the denominator s² + 12s + K.** It sets how the machine moves no matter which input started it, so K changes both responses at once.
 - **Poles:** the roots of that denominator. Each pole is one way the machine can move on its own: a real pole is a smooth fade, a pair with an imaginary part is a swing. The further left a pole sits, the faster that motion dies out.
+- **The j in a pole:** j = √−1 marks the swing part. A pair like −6 ± 8j swings at 8 rad/s while dying out at rate 6; a pole with no j part doesn't swing.
 
 ## (c) What's going on
 
@@ -48,13 +49,13 @@ Y(s) = (K + 11s)/(s² + 12s + K) · R(s)  +  1/(s² + 12s + K) · T_d(s)
    - **Look for:** with **K = 36 (ζ = 1)** set:
      - in the poles plot, the two × poles sit on top of each other at −6;
      - the grey dots are the poles at K = 20 (−2 and −10, on the horizontal axis) and K = 100 (−6 ± 8j, above and below it);
-     - the readout's ωn is the *natural frequency*, how fast it would swing with no damping.
+     - in the readout, ωn is the *natural frequency* (how fast it would swing with no damping), OS the *overshoot* (how far past the target it goes) and Ts the *settling time* (when it stays within 2 % of the target).
 
 ```figure:borer preset=k36
 ```
 
 2. **The command step: higher K is faster but overshoots.**
-   - **Terms:** *overshoot* (P.O., OS in the readout) is how far past the target the response goes; *settling time T_s* is when it stays within 2 % of the target.
+   - **Terms:** overshoot is P.O. in the handout and OS in the readout; settling time is T_s in the handout and Ts in the readout.
    - **Numbers:** K = 20 gives 3.9 % and 0.91 s; K = 100 gives 22 % and 0.67 s.
    - **Look for:** with **K = 100** set, the step curve rises past 1 to a peak about a fifth too high, then settles inside the 2 % band at 0.666 s. The grey curve is K = 20, slower but nearly flat on top.
 
@@ -89,13 +90,13 @@ Y(s) = (K + 11s)/(s² + 12s + K) · R(s)  +  1/(s² + 12s + K) · T_d(s)
 
 6. **Sensitivity: higher K means changes in the machine matter less.**
    - **What S measures:** feed the loop a steady wiggle at rate ω (in rad/s; 1 rad/s is one full wiggle every 6.3 s). If the machine G changes by 10 % for that wiggle, the overall response changes by |S| × 10 %.
-   - **Notation:** the handout writes this as S(jω), "S at wiggle rate ω". The j (j = √−1) lets one number carry two things: how much bigger or smaller the wiggle comes out (its size, |S|) and how far behind it trails.
+   - **Notation:** the handout writes this as S(jω), "S at wiggle rate ω" (the same wiggle idea as the Engine tab's frequency response). The j is the one from the poles: it lets one number carry two things, how much bigger or smaller the wiggle comes out (its size, |S|) and how far behind it trails.
    - **Here:** S = s(s+1)/(s² + 12s + K) ≈ s/K for slow wiggles. At ω = 0.1 rad/s, |S| = 0.005 at K = 20 and 0.001 at K = 100.
    - **For fast wiggles |S| climbs to about 1:** there, feedback no longer helps.
    - **Look for:** with **Fig. 4.27 (K = 20)** set:
      - the probe sits at ω = 1 and reads |S| = 0.0629, so a 10 % change in the machine there changes the loop by only 0.63 %;
      - in the |S| plot (Fig. 4.27 bottom), the solid curve rises from bottom left and levels off at 1, with the dashed s/K shortcut hugging it at low ω;
-     - in the path plot (Fig. 4.27 top), S is drawn as a point whose across and up coordinates are the two parts of that one number; it travels from near 0 out to 1.
+     - in the path plot (Fig. 4.27 top), S is drawn as a point: across is its *real part* (the axis labelled Re S) and up is its *imaginary part*, the j part (Im S). As ω rises it travels from near 0 out to 1.
 
 ```figure:sens preset=fig427
 ```

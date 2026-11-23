@@ -94,7 +94,7 @@
     - { label: "S(jω) = s(s + 1)/(s² + 12s + K)", color: "var(--acc)" }
     - { label: "shortcut s/K", color: "var(--muted)", dash: true }
     - { label: "probe ω", color: "var(--yel)" }
-  howToRead: "Left (the handout's Fig. 4.27 top): S drawn in the complex plane as ω runs from 0.1 to 1000 rad/s; it starts near 0 and ends at 1. Right (Fig. 4.27 bottom): |S| against ω on log axes, solid, with the shortcut s/K dashed. The yellow probe marks your ω on both; the readout says what a 10 % change in the machine at that ω does to the loop."
+  howToRead: "Left (the handout's Fig. 4.27 top): S drawn in the complex plane as ω runs from 0.1 to 1000 rad/s; it starts near 0 and ends at 1. Right (Fig. 4.27 bottom): |S| against ω on log axes, solid, with the shortcut s/K dashed. The yellow probe marks your ω on both; the readout says what a 10 % change in the machine at that ω does to the loop. Re S (across) is the real part of S and Im S (up) its imaginary part, the j part; together they carry the size and the lag of the response to a wiggle."
   lookFor: "Raise K: the left end of the |S| curve drops (slow motions protected better); the right end stays at 1."
   controls:
     - { id: K, label: "K (gain)", type: range, min: 5, max: 200, step: 1, default: 20, group: primary }
@@ -125,7 +125,7 @@
     - { id: ka80stand, label: "Ka = 80, coil dropped", set: { lgKa: 1.903, stand: true, input: seek }, about: "Real 17.11 %, two-part stand-in 16.30 % (not in lab handout)." }
     - { id: shock, label: "shock, Ka = 80 (Fig. 4.31)", set: { lgKa: 1.903, input: shock }, about: "Dip −0.0029 at 0.18 s, settles −0.0025." }
     - { id: ka200, label: "shock target (own)", set: { lgKa: 2.301, input: both, stand: false }, about: "Ka = 200: shock offset −0.001, seek overshoot 37 %, 0.36 s (not in lab handout)." }
-    - { id: limit, label: "near the ceiling (own)", set: { lgKa: 3.6, stand: true, input: seek }, about: "Ka = 3981: the real loop overshoots 98.55 % and takes 16.7 s to settle; the stand-in overshoots 79.99 % but settles in 0.38 s (not in lab handout)." }
+    - { id: limit, label: "near the ceiling (own)", set: { lgKa: 3.6, stand: true, input: seek }, about: "Ka = 3981: the real loop overshoots about 98.5 % and takes about 16.7 s to settle; the stand-in overshoots about 80 % but settles in 0.38 s (not in lab handout)." }
 - id: pi
   title: "P and I on the stand-in engine: why I removes the leftover error"
   x: time (s)
@@ -134,7 +134,7 @@
     - { label: speed, color: "var(--acc)" }
     - { label: "P part of the throttle", color: "var(--yel)" }
     - { label: "I part of the throttle", color: "var(--grn)" }
-  howToRead: "Top: engine speed after a unit step in commanded speed, on the stand-in engine (not in lab handout). Bottom: the throttle command split into P × error and I × accumulated error. With I = 0 the speed stops short by 1/(1 + P·K_e); with I > 0 the I part grows until it holds the throttle alone and the error is zero."
+  howToRead: "Top: engine speed after a unit step in commanded speed, on the stand-in engine (not in lab handout). Bottom: the throttle command split into P × error and I × accumulated error. With I = 0 the speed stops short by 1/(1 + P·Kₑ), where Kₑ = 311 rpm per unit throttle is the stand-in engine's steady gain; with I > 0 the I part grows until it holds the throttle alone and the error is zero."
   lookFor: "With I > 0, the I part grows until it carries the whole throttle and the P part (and the error) fall to zero. With I = 0, the P part has to hold the throttle, so an error is left."
   controls:
     - { id: P, label: "P", type: range, min: 0, max: 0.012, step: 0.0000001, default: 0.0042253, group: primary }

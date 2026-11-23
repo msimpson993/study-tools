@@ -203,7 +203,7 @@ details.fold>div{padding:0 .8rem .6rem}
 .st-ctl{font:.82rem system-ui,sans-serif;background:var(--panel);border:1px solid var(--border);border-radius:14px;padding:.6rem .8rem}
 .st-ctl h4{margin:.1rem 0 .4rem;font-size:.86rem}
 .st-ctl label{display:block;margin:.42rem 0 .05rem;color:var(--muted);font-weight:600}
-.st-ctl label input.num{float:right;width:5.4em;margin-top:-.12rem;padding:.05rem .3rem;border-radius:6px;border:1px solid var(--border);background:var(--panel2);color:var(--text);font:600 .76rem ui-monospace,SFMono-Regular,Menlo,monospace;text-align:right;-moz-appearance:textfield}
+.st-ctl label input.num{float:right;width:7em;margin-top:-.12rem;padding:.05rem .3rem;border-radius:6px;border:1px solid var(--border);background:var(--panel2);color:var(--text);font:600 .76rem ui-monospace,SFMono-Regular,Menlo,monospace;text-align:right;-moz-appearance:textfield}
 .st-ctl label input.num::-webkit-inner-spin-button,.st-ctl label input.num::-webkit-outer-spin-button{-webkit-appearance:none;margin:0}
 .st-ctl input[type=range]{width:100%;accent-color:var(--accent);margin:0}
 .st-ctl select{width:100%;padding:.35rem;border-radius:8px;border:1px solid var(--border);background:var(--panel2);color:var(--text);font:600 .78rem system-ui,sans-serif}
@@ -489,8 +489,12 @@ details.derivation{margin:.7rem 0}details.derivation>summary{font-weight:650}
 html.layout-tabs .frame.tabbed{max-width:54rem}
 html.layout-tabs .tab-content{padding:1rem 1.2rem 3.5rem;max-width:100%;min-width:0}
 html.layout-tabs .tab-article,html.layout-tabs .tab-body{max-width:100%;min-width:0;overflow-wrap:anywhere}
-.tab-bar{max-width:100%}
-.tab-bar{display:flex;flex-wrap:nowrap;gap:0;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:thin;border-bottom:1px solid var(--border);background:var(--bg);position:sticky;top:44px;z-index:50}
+.tab-bar-wrap{position:sticky;top:44px;z-index:50;display:flex;align-items:stretch;max-width:100%;background:var(--bg);border-bottom:1px solid var(--border)}
+.tab-bar{flex:1 1 auto;min-width:0;max-width:100%;display:flex;flex-wrap:nowrap;gap:0;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:thin;background:var(--bg)}
+.tab-bar-chevron{flex:0 0 auto;width:1.7rem;border:0;background:var(--bg);color:var(--text);font:700 1.25rem/1 system-ui,sans-serif;cursor:pointer;padding:0}
+.tab-bar-chevron:hover{background:var(--panel2)}
+.tab-bar-chevron:disabled{opacity:.35;cursor:default}
+.tab-bar-chevron[hidden]{display:none}
 .tab-bar a{flex:0 0 auto;padding:.65rem .95rem;color:var(--muted);text-decoration:none;font:600 .88rem system-ui,sans-serif;white-space:nowrap;border-bottom:2px solid transparent;margin-bottom:-1px}
 .tab-bar a:hover{color:var(--text);background:var(--panel2)}
 .tab-bar a.on{color:var(--accent);border-bottom-color:var(--accent)}
@@ -513,8 +517,9 @@ html.layout-tabs,html.layout-tabs body,html.layout-tabs .tab-article,html.layout
 /* live figures on a tab always stack, even when two fences end up neighbours */
 html.layout-tabs .pop-figs.n2,html.layout-tabs .pop-figs.n3,html.layout-tabs .pop-figs.n4{grid-template-columns:1fr}
 html.layout-tabs .pop-figs.n4>:first-child{grid-column:auto}
-.tab-bar-wrap{position:relative;max-width:100%}
-.tab-bar-wrap.overflows::after{content:"";position:absolute;top:0;right:0;bottom:0;width:28px;pointer-events:none;background:linear-gradient(to right,transparent,var(--bg))}
+.tab-bar-wrap.can-start::before,.tab-bar-wrap.can-more::after{content:"";position:absolute;top:0;bottom:0;width:28px;pointer-events:none;z-index:1}
+.tab-bar-wrap.can-start::before{left:1.7rem;background:linear-gradient(to right,var(--bg),transparent)}
+.tab-bar-wrap.can-more::after{right:1.7rem;background:linear-gradient(to right,transparent,var(--bg))}
 .tab-body .viz-embed,.tab-body .pop-figs{margin:0.85rem 0 1.15rem}
 .quiz-tab-filter{margin:.4rem 0 .2rem}
 @media (max-width:700px){
@@ -525,5 +530,11 @@ html.layout-tabs .pop-figs.n4>:first-child{grid-column:auto}
   .tab-toc a{white-space:normal;overflow-wrap:anywhere;min-height:32px;display:inline-flex;align-items:center}
 }
 @media (max-width:1099px){
-  html.layout-tabs .tab-bar{top:44px}
+  html.layout-tabs .tab-bar-wrap{top:44px}
 }
+
+/* a machine with many blocks (engine) gets the full stage width; controls sit underneath */
+.fig-layout.fig-wide,.viz-slot .fig-layout.fig-wide{grid-template-columns:minmax(0,1fr)}
+
+/* tuner parameters table needs the full stage width so columns stay aligned */
+.pair2 .fig:has(canvas[data-fig="table"]){grid-column:1/-1}

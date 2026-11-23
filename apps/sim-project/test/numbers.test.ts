@@ -318,3 +318,39 @@ describe('pass-2 pins (new presets and captions)', () => {
     nearAbs(tHit, 1.816, 0.01);
   });
 });
+
+describe('pass-3 pins (engine figure at dt = 1 ms)', () => {
+  it('emulated final gains: Ts 1.802 s and Tr 1.088 s at dt = 1 ms', () => {
+    const { P, I } = M.tuner(1.5, 0.72);
+    const r = M.engineStep(P, I, 14, 1e-3);
+    nearAbs(r.m.os, grab(/engine emulated final gains, dt=1\.0 ms: OS=([\d.]+)%/), 0.02);
+    nearAbs(r.m.ts, grab(/engine emulated final gains, dt=1\.0 ms:[\s\S]*?Ts\(2%, sample after last exit\)=([\d.]+)s/), 0.002);
+    nearAbs(r.m.tr, grab(/engine emulated final gains, dt=1\.0 ms:[\s\S]*?Tr=([\d.]+)s/), 0.002);
+    nearAbs(M.firstCrossing(r.t, r.y, 0.98), grab(/engine emulated final gains, dt=1\.0 ms:[\s\S]*?0\.98 crossing \(interpolated\)=([\d.]+)s/), 0.002);
+    nearAbs(r.m.ts, 1.802, 0.002);
+    nearAbs(r.m.tr, 1.088, 0.003);
+    expect(r.m.os).toBe(0);
+  });
+
+  it('emulated final gains at dt = 0.2 ms: Ts 1.806 s', () => {
+    const { P, I } = M.tuner(1.5, 0.72);
+    const r = M.engineStep(P, I, 14, 2e-4);
+    nearAbs(r.m.ts, grab(/engine emulated final gains, dt=0\.2 ms:[\s\S]*?Ts\(2%, sample after last exit\)=([\d.]+)s/), 0.003);
+    nearAbs(r.m.tr, grab(/engine emulated final gains, dt=0\.2 ms:[\s\S]*?Tr=([\d.]+)s/), 0.003);
+    nearAbs(r.m.ts, 1.806, 0.003);
+  });
+
+  it('handout final gains: Ts 1.812 s at dt = 1 ms, 1.816 s at 0.2 ms', () => {
+    const P = DESIGNS.final.P, I = DESIGNS.final.I;
+    const r1 = M.engineStep(P, I, 14, 1e-3);
+    const r2 = M.engineStep(P, I, 14, 2e-4);
+    nearAbs(r1.m.ts, grab(/engine handout final gains, dt=1\.0 ms:[\s\S]*?Ts\(2%, sample after last exit\)=([\d.]+)s/), 0.003);
+    nearAbs(r1.m.tr, grab(/engine handout final gains, dt=1\.0 ms:[\s\S]*?Tr=([\d.]+)s/), 0.003);
+    nearAbs(M.firstCrossing(r1.t, r1.y, 0.98), grab(/engine handout final gains, dt=1\.0 ms:[\s\S]*?0\.98 crossing \(interpolated\)=([\d.]+)s/), 0.003);
+    nearAbs(r2.m.ts, grab(/engine handout final gains, dt=0\.2 ms:[\s\S]*?Ts\(2%, sample after last exit\)=([\d.]+)s/), 0.003);
+    nearAbs(r1.m.ts, 1.812, 0.003);
+    nearAbs(r2.m.ts, 1.816, 0.003);
+    expect(r1.m.os).toBe(0);
+    expect(r2.m.os).toBe(0);
+  });
+});

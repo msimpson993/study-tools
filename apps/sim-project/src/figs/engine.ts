@@ -39,7 +39,7 @@ export const piPanels = (): FigurePanel[] => [
       }
       const all = [...pPart, ...iPart];
       const yr: [number, number] = [Math.min(0, ...all) * 1.1, Math.max(0.01, ...all) * 1.15];
-      const fr = rangeFrame(w, h, [0, 8], yr, 48, 12, 10, 28);
+      const fr = rangeFrame(w, h, [0, 8], yr, 48, 12, 10, 40);
       graphAxes(g, fr, [0, 8], yr, 'time (s)', 'throttle');
       curve(g, fr, r.t, pPart, col.e(), 2);
       curve(g, fr, r.t, iPart, col.c(), 2);
@@ -160,7 +160,7 @@ export const tunerPanels = (): FigurePanel[] => [
   },
   {
     id: 'table', title: 'Show Parameters (emulated) beside the handout table', x: '', y: '',
-    height: 168,
+    height: 230,
     draw(g, w, h, v: V) {
       wipe(g, w, h);
       const resp = num(v, 'resp', 0.678), rob = num(v, 'rob', 0.6), show = on(v, 'hand');

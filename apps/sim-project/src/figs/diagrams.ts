@@ -404,39 +404,65 @@ export function drawLabDiagram(g: CanvasRenderingContext2D, w: number, h: number
     g.beginPath(); g.moveTo(outX, outY); g.lineTo(outX, fy); g.lineTo(s1.x, fy); g.lineTo(s1.x, s1.y + r + 1); g.stroke();
     intoSum(g, s1.x, fy, s1.x, s1.y, '−', cf.color, r);
   } else if (opts.words) {
-    // engine (handout p.1): a fuller block path than the script stepper uses
-    const railE = 38;
-    const s1 = { x: X(8), y: Y(railE) };
-    text(g, 'Speed Ref', X(0), Y(railE) - 12, col.text(), 'left', 9);
-    const pi = boxAt('PI', 12, railE - 9, 12, 18, L('PI', 'P + I', 'throttle from the error now and the error so far', 'in: speed error. out: throttle command. what it does: P and I make a throttle from the error now and the error so far'));
-    const th = boxAt('throttle', 22, railE - 9, 16, 18, L('Throttle & Manifold', 'nonlinear', 'throttle angle and speed to air charge', 'in: throttle command and engine speed N. out: air charge. what it does: throttle angle and speed to air charge'));
-    const del = boxAt('delay', 40, railE - 9, 14, 18, L('Induction delay', 'e^{−0.015s}', 'air takes time to reach the cylinders', 'in: air charge. out: delayed air charge. what it does: air takes time to reach the cylinders'));
-    const comb = boxAt('combustion', 56, railE - 9, 12, 18, L('Combustion', 'nonlinear', 'air charge to torque', 'in: delayed air charge and engine speed N. out: combustion torque. what it does: air charge to torque'));
-    const veh = boxAt('vehicle', 70, railE - 9, 14, 18, L('Vehicle Dynamics', 'Teng, Tload', 'torque minus load spins the engine', "in: combustion torque Teng and load Tload. out: engine speed (rad/s). what it does: torque minus load spins the engine"));
-    const rpm = boxAt('rpm', 86, railE - 9, 8, 18, L('30/π', '30/π', 'rad/s to rpm', 'in: rad/s. out: rpm. what it does: converts shaft speed to rpm'));
-    const outX = X(98), outY = Y(railE);
-    text(g, 'rpm', outX + 1, outY + 4, col.text(), 'left', 10);
+    // engine (handout p.1): own size and, on a narrow canvas, two rows so labels stay inside the boxes
+    const narrow = dw < 560;
+    const r1 = narrow ? 26 : 40;
+    const r2 = 68;
+    const boxH = narrow ? 30 : 26;
+    const s1 = { x: X(narrow ? 8 : 7), y: Y(r1) };
+    text(g, 'Speed Ref', narrow ? s1.x : X(0), Y(r1) - (narrow ? r + 24 : 18), col.text(), narrow ? 'center' : 'left', 10);
+    const pi = boxAt('PI', narrow ? 14 : 11, r1 - boxH / 2, narrow ? 20 : 13, boxH, L('PI', 'P + I', 'error now + so far', 'in: speed error. out: throttle command. what it does: P and I make a throttle from the error now and the error so far'));
+    const th = boxAt('throttle', narrow ? 38 : 26, r1 - boxH / 2, narrow ? 26 : 16, boxH, L('Throttle & Manifold', 'nonlinear', 'throttle → air', 'in: throttle command and engine speed N. out: air charge. what it does: throttle angle and speed to air charge'));
+    const del = boxAt('delay', narrow ? 68 : 44, r1 - boxH / 2, narrow ? 24 : 14, boxH, L('Induction delay', 'e^{−0.015s}', 'air arrives late', 'in: air charge. out: delayed air charge. what it does: air takes time to reach the cylinders'));
+    const comb = boxAt('combustion', narrow ? 8 : 60, (narrow ? r2 : r1) - boxH / 2, narrow ? 22 : 13, boxH, L('Combustion', 'nonlinear', 'air → torque', 'in: delayed air charge and engine speed N. out: combustion torque. what it does: air charge to torque'));
+    const veh = boxAt('vehicle', narrow ? 36 : 75, (narrow ? r2 : r1) - boxH / 2, narrow ? 26 : 14, boxH, L('Vehicle Dynamics', 'Teng, Tload', 'torque − load → speed', "in: combustion torque Teng and load Tload. out: engine speed (rad/s). what it does: torque minus load spins the engine"));
+    const rpm = boxAt('rpm', narrow ? 68 : 91, (narrow ? r2 : r1) - boxH / 2, narrow ? 18 : 6, boxH, L('30/π', '30/π', 'rad/s to rpm', 'in: rad/s. out: rpm. what it does: converts shaft speed to rpm'));
+    const outX = rpm.r + 12, outY = rpm.cy;
+    text(g, 'rpm', outX + 2, outY + 4, col.text(), 'left', 10);
     const c = { color: col.a(), width: 1.8 }, cf = { color: col.text(), width: 1.5 }, cd = { color: col.b(), width: 1.8 };
     sum(g, s1.x, s1.y, r, c.color, c.width);
-    intoSum(g, X(1), Y(railE), s1.x, s1.y, '+', col.text(), r);
+    intoSum(g, X(1), Y(r1), s1.x, s1.y, '+', col.text(), r);
     arrow(g, s1.x + r, s1.y, pi.l, pi.cy, c.color);
     arrow(g, pi.r, pi.cy, th.l, th.cy, c.color);
     arrow(g, th.r, th.cy, del.l, del.cy, c.color);
-    arrow(g, del.r, del.cy, comb.l, comb.cy, c.color);
-    arrow(g, comb.r, comb.cy, veh.l, veh.cy, c.color);
-    arrow(g, veh.r, veh.cy, rpm.l, rpm.cy, c.color);
-    arrow(g, rpm.r, rpm.cy, outX, outY, cf.color);
-    // load torque into vehicle dynamics
-    text(g, 'Tload (drag)', veh.cx, Y(8), col.text(), 'center', 9);
-    arrow(g, veh.cx, Y(14), veh.cx, veh.t, cd.color);
-    // thin inner N (engine speed) back to throttle and combustion
-    const ny = Y(22);
+    if (narrow) {
+      const midY = (del.b + comb.t) / 2;
+      g.strokeStyle = c.color; g.lineWidth = c.width; g.setLineDash([]);
+      g.beginPath(); g.moveTo(del.cx, del.b); g.lineTo(del.cx, midY); g.lineTo(comb.cx, midY); g.stroke();
+      arrow(g, comb.cx, midY, comb.cx, comb.t, c.color);
+      arrow(g, comb.r, comb.cy, veh.l, veh.cy, c.color);
+      arrow(g, veh.r, veh.cy, rpm.l, rpm.cy, c.color);
+      arrow(g, rpm.r, rpm.cy, outX, outY, cf.color);
+    } else {
+      // stay on one rail: the extra canvas width (fig-wide) gives each box room to wrap
+      arrow(g, del.r, del.cy, comb.l, comb.cy, c.color);
+      arrow(g, comb.r, comb.cy, veh.l, veh.cy, c.color);
+      arrow(g, veh.r, veh.cy, rpm.l, rpm.cy, c.color);
+      arrow(g, rpm.r, rpm.cy, outX, outY, cf.color);
+    }
+    if (narrow) {
+      text(g, 'Tload (drag)', veh.cx, Math.min(veh.b + 12, Y(86)), col.text(), 'center', 9);
+      arrow(g, veh.cx, veh.b + 8, veh.cx, veh.b, cd.color);
+    } else {
+      text(g, 'Tload (drag)', veh.cx, veh.t - 12, col.text(), 'center', 9);
+      arrow(g, veh.cx, veh.t - 8, veh.cx, veh.t, cd.color);
+    }
     g.strokeStyle = col.muted(); g.lineWidth = 1; g.setLineDash([3, 3]);
-    g.beginPath(); g.moveTo(rpm.cx, rpm.t); g.lineTo(rpm.cx, ny); g.lineTo(th.cx, ny); g.lineTo(th.cx, th.t); g.stroke();
-    g.beginPath(); g.moveTo(comb.cx, ny); g.lineTo(comb.cx, comb.t); g.stroke();
+    if (narrow) {
+      const topY = Y(8), rightX = Math.min(X(99), w - 6), leftX = Math.max(4, s1.x - r - 8);
+      g.beginPath();
+      g.moveTo(rpm.r, rpm.cy); g.lineTo(rightX, rpm.cy); g.lineTo(rightX, topY); g.lineTo(th.cx, topY); g.stroke();
+      g.beginPath(); g.moveTo(th.cx, topY); g.lineTo(th.cx, th.t); g.stroke();
+      g.beginPath(); g.moveTo(th.cx, topY); g.lineTo(leftX, topY); g.lineTo(leftX, comb.cy); g.lineTo(comb.l, comb.cy); g.stroke();
+      text(g, 'N', (th.cx + leftX) / 2, topY - 4, col.muted(), 'center', 8);
+    } else {
+      const ny = Y(14);
+      g.beginPath(); g.moveTo(rpm.cx, rpm.t); g.lineTo(rpm.cx, ny); g.lineTo(th.cx, ny); g.lineTo(th.cx, th.t); g.stroke();
+      g.beginPath(); g.moveTo(comb.cx, ny); g.lineTo(comb.cx, comb.t); g.stroke();
+      text(g, 'N', (th.cx + comb.cx) / 2, ny - 4, col.muted(), 'center', 8);
+    }
     g.setLineDash([]);
-    text(g, 'N', (th.cx + comb.cx) / 2, ny - 3, col.muted(), 'center', 8);
-    const fy = Y(90);
+    const fy = Y(92);
     g.strokeStyle = cf.color; g.lineWidth = cf.width; g.setLineDash([]);
     g.beginPath(); g.moveTo(outX, outY); g.lineTo(outX, fy); g.lineTo(s1.x, fy); g.lineTo(s1.x, s1.y + r + 1); g.stroke();
     intoSum(g, s1.x, fy, s1.x, s1.y, '−', col.text(), r);

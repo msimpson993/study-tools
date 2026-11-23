@@ -10,13 +10,13 @@ describe('sim-project tabs content', () => {
     const c = load();
     expect(c.maps).toEqual([]);
     expect(c.dives).toEqual([]);
-    expect(c.tabs?.map((t) => t.id)).toEqual(['overview', 'motor', 'borer', 'disk', 'engine']);
+    expect(c.tabs?.map((t) => t.id)).toEqual(['overview', 'engine', 'motor', 'borer', 'disk']);
     expect(c.tabs?.map((t) => t.title)).toEqual([
       'Overview',
+      'Engine speed with the PID Tuner',
       'Speed controlled motor',
       'Boring machine',
       'Disk drive head',
-      'Engine speed with the PID Tuner',
     ]);
     expect((c.review ?? []).map((r) => r.id)).toEqual(['practice']);
     expect(c.quiz.length).toBe(71);

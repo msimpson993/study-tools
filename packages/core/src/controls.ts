@@ -68,7 +68,9 @@ export class ControlSet {
   /** Render the control rail: presets, primary controls, a collapsed "More controls" drawer, and Reset. */
   render(title = 'Controls'): HTMLElement {
     const root = h('div', { class: 'st-ctl', dataset: { testid: 'controls' } }, h('h4', null, title));
-    if (this.presets.length) {
+    // on a tabbed page a single leftover preset is not a choice — keep it applied, but don't draw a one-button row
+    const hideLonePreset = typeof document !== 'undefined' && document.documentElement.classList.contains('layout-tabs');
+    if (this.presets.length > 1 || (this.presets.length === 1 && !hideLonePreset)) {
       const row = h('div', { class: 'st-presets', role: 'group', 'aria-label': 'Presets' });
       for (const p of this.presets) {
         const b = h('button', { dataset: { preset: p.id }, title: p.about ? p.about.replace(/<[^>]+>/g, '') : '', onclick: () => this.applyPreset(p.id) }, p.label);
@@ -77,7 +79,11 @@ export class ControlSet {
       root.append(row);
     }
     const more = h('div', { class: 'morebody' });
-    for (const d of this.defs) (d.group === 'primary' ? root : more).append(this.control(d));
+    for (const d of this.defs) {
+      const el = this.control(d);
+      if (!el.childNodes.length) continue;
+      (d.group === 'primary' ? root : more).append(el);
+    }
     if (this.defs.some((d) => d.group === 'more')) root.append(h('details', { class: 'st-more', dataset: { testid: 'more-controls' } }, h('summary', null, 'More controls'), more));
     root.append(h('div', { class: 'actions' }, h('button', { class: 'tbtn', dataset: { testid: 'reset' }, onclick: () => this.reset() }, 'Reset')));
     this.syncAll();
@@ -109,16 +115,20 @@ export class ControlSet {
       wrap.append(h('label', null, `${d.label}${d.unit ? ` (${d.unit})` : ''}`, num), rng);
       this.inputs.set(d.id, { wrap, sync: () => { const v = this.values[d.id] as number; if (document.activeElement !== num) num.value = fmtShown(v); rng.value = String(v); } });
     } else if (d.type === 'select') {
-      const sel = h('select', { 'aria-label': d.label, dataset: { k: d.id } }, ...(d.options ?? []).map((o) => h('option', { value: o.value }, o.label)));
+      const opts = d.options ?? [];
+      if (opts.length <= 1) { this.inputs.set(d.id, { wrap, sync: () => {} }); return wrap; }
+      const sel = h('select', { 'aria-label': d.label, dataset: { k: d.id } }, ...opts.map((o) => h('option', { value: o.value }, o.label)));
       sel.addEventListener('change', () => this.set(d.id, sel.value));
       wrap.append(h('label', null, d.label), sel);
       this.inputs.set(d.id, { wrap, sync: () => { sel.value = String(this.values[d.id]); } });
     } else if (d.type === 'seg') {
-      const seg = h('div', { class: 'st-seg', dataset: { k: d.id } });
-      const btns = (d.options ?? []).map((o) => h('button', { dataset: { v: o.value }, onclick: () => this.set(d.id, o.value) }, o.label));
+      const opts = d.options ?? [];
+      if (opts.length <= 1) { this.inputs.set(d.id, { wrap, sync: () => {} }); return wrap; }
+      const seg = h('div', { class: 'st-seg', role: 'radiogroup', 'aria-label': d.label, dataset: { k: d.id } });
+      const btns = opts.map((o) => h('button', { dataset: { v: o.value }, role: 'radio', onclick: () => this.set(d.id, o.value) }, o.label));
       seg.append(...btns);
       wrap.append(h('label', null, d.label), seg);
-      this.inputs.set(d.id, { wrap, sync: () => btns.forEach((b) => b.classList.toggle('on', b.dataset.v === String(this.values[d.id]))) });
+      this.inputs.set(d.id, { wrap, sync: () => btns.forEach((b) => { const on = b.dataset.v === String(this.values[d.id]); b.classList.toggle('on', on); b.setAttribute('aria-checked', String(on)); }) });
     } else {
       const cb = h('input', { type: 'checkbox', dataset: { k: d.id } });
       cb.addEventListener('change', () => this.set(d.id, cb.checked));

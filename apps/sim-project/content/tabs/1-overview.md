@@ -15,10 +15,10 @@ quizTags: [overview]
 
 | Tab | Problem | What it teaches about feedback |
 |---|---|---|
+| Engine speed with the PID Tuner | Project 1 (MathWorks example) | **Software tuning:** when the machine is too tangled to write down, MATLAB copies it near its operating point and picks P and I from two sliders; the I term is what removes the steady error. |
 | Speed controlled motor | Dorf Example 4.4, Figs. 4.23–4.24 | **Rejecting pushes:** measuring the speed and correcting cuts the speed lost to a load from 0.667 to 0.00185 rad/s per N·m. |
 | Boring machine | Dorf Example 4.5, Figs. 4.25–4.27 | **One knob, two goals:** a higher gain holds the line better against the rock but overshoots more, and it also makes the loop care less about changes in the machine. |
 | Disk drive head | Dorf §4.10, Figs. 4.30–4.31 | **Zero error for free, with a ceiling:** the arm's own build-up gives zero step error, but the gain still trades speed against swing, and too much gain makes the loop unstable (the ceiling is not in lab handout). |
-| Engine speed with the PID Tuner | Project 1 (MathWorks example) | **Software tuning:** when the machine is too tangled to write down, MATLAB copies it near its operating point and picks P and I from two sliders; the I term is what removes the steady error. |
 
 ## Deliverables and dates (from the project page)
 
@@ -40,8 +40,8 @@ quizTags: [overview]
 ## Slide suggestion (not in lab handout)
 
 Three exercises that cover the most ground:
+- **Engine:** the PID Tuner's final design, and the Simulink scope.
 - **Motor:** the load step, open vs closed (Figs. 4.23–4.24).
 - **Boring machine:** K = 20 vs K = 100 (Figs. 4.25–4.26).
-- **Engine:** the PID Tuner's final design, and the Simulink scope.
 
 <p class="src">Sources: project page (deliverables and dates); Dorf §4.9 introduction (the advantages each example shows); PID Tuner handout p.1 (goals).</p>

@@ -73,7 +73,27 @@ export function mountTabbedApp(content: AppContent, hooks: AppHooks = {}): void 
   ));
 
   const tabBar = h('nav', { class: 'tab-bar', 'aria-label': 'Problems', dataset: { testid: 'tab-bar' } });
-  const tabWrap = h('div', { class: 'tab-bar-wrap' }, tabBar);
+  const scrollTabs = (dir: number) => {
+    const step = Math.max(96, Math.round(tabBar.clientWidth * 0.75));
+    tabBar.scrollBy({ left: dir * step, behavior: 'smooth' });
+  };
+  const prevBtn = h('button', { type: 'button', class: 'tab-bar-chevron start', 'aria-label': 'Earlier tabs', title: 'Earlier tabs', dataset: { testid: 'tab-bar-prev' }, onclick: () => scrollTabs(-1) }, '‹');
+  const nextBtn = h('button', { type: 'button', class: 'tab-bar-chevron end', 'aria-label': 'More tabs', title: 'More tabs', dataset: { testid: 'tab-bar-next' }, onclick: () => scrollTabs(1) }, '›');
+  const tabWrap = h('div', { class: 'tab-bar-wrap' }, prevBtn, tabBar, nextBtn);
+  const updateOverflow = () => {
+    const overflows = tabBar.scrollWidth > tabBar.clientWidth + 1;
+    const atStart = tabBar.scrollLeft <= 1;
+    const atEnd = tabBar.scrollLeft + tabBar.clientWidth >= tabBar.scrollWidth - 1;
+    tabWrap.classList.toggle('overflows', overflows);
+    tabWrap.classList.toggle('can-start', overflows && !atStart);
+    tabWrap.classList.toggle('can-more', overflows && !atEnd);
+    prevBtn.hidden = !overflows;
+    nextBtn.hidden = !overflows;
+    prevBtn.disabled = atStart;
+    nextBtn.disabled = atEnd;
+  };
+  tabBar.addEventListener('scroll', updateOverflow, { passive: true });
+  window.addEventListener('resize', updateOverflow);
   const main = h('main', { class: 'content tab-content', id: 'main' });
   const frame = h('div', { class: 'frame nosb tabbed' }, main);
   root.append(topbar, tabWrap, frame);
@@ -92,9 +112,9 @@ export function mountTabbedApp(content: AppContent, hooks: AppHooks = {}): void 
       }, TAB_BAR_LABEL[t.id] ?? t.title));
     }
     requestAnimationFrame(() => {
-      tabWrap.classList.toggle('overflows', tabBar.scrollWidth > tabBar.clientWidth + 1);
       const on = tabBar.querySelector('a.on') as HTMLElement | null;
       on?.scrollIntoView({ inline: 'nearest', block: 'nearest' });
+      updateOverflow();
     });
   }
 

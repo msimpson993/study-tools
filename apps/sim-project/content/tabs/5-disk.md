@@ -1,6 +1,6 @@
 ---
 id: disk
-order: 4
+order: 5
 title: Disk drive head
 summary: "Dorf §4.10 (Figs. 4.30–4.31): moving a disk drive's read head to a new track, and holding it there through a shock, with one amplifier gain Ka."
 figures: [loop, disk, tradeoff, blocks]
@@ -17,7 +17,7 @@ quizTags: [disk]
 
 ## (b) The setup
 
-The handout's own diagrams are Fig. 4.28 (in symbols) and Fig. 4.29 (with the typical values); the diagram below follows Fig. 4.29.
+The handout's own diagrams are Fig. 4.28 (in symbols) and Fig. 4.29 (with the typical values); this tab's block diagram follows Fig. 4.29.
 
 ```figure:loop preset=disk
 ```
@@ -83,10 +83,10 @@ shock:  Y/T_d = −G₂/(1 + Ka·G₁·G₂)       (the handout prints it withou
 ```
 
 5. **The ceiling: past Ka = 4080 it goes unstable (not in lab handout).**
-   - **Why the stand-in misses it:** the two-part stand-in is stable for every Ka. The real loop has three lags in a ring, and the coil's 1 ms lag is the third.
+   - **Why the stand-in misses it:** the two-part stand-in is stable for every Ka. The real loop has three lags in a ring, and the coil's 1 ms lag is the third. Together they can add up to the 180° of lag that makes a loop swing forever (lag and 180° as in the Engine tab).
    - **The test:** the *Routh test* (a shortcut that checks stability straight from the polynomial's coefficients) says s³ + 1020s² + 20000s + 5000·Ka is stable only while 1020 × 20000 > 5000·Ka, so Ka < 4080.
    - **At the ceiling:** the head rings forever at √20000 = 141 rad/s.
-   - **Look for:** with **near the ceiling (own)** set (Ka = 3981), the real seek curve rings fast and barely dies out (98.55 % overshoot; settling takes 16.7 s, off the plot). The dashed stand-in swings hard too (79.99 % overshoot) but dies out within 0.38 s. Only the real loop is close to ringing forever.
+   - **Look for:** with **near the ceiling (own)** set (Ka = 3981), the real seek curve rings fast and barely dies out (about 98.5 % overshoot; settling takes about 16.7 s, long after the plot ends). The dashed stand-in swings hard too (about 80 % overshoot) but dies out within 0.38 s. Only the real loop is close to ringing forever.
 
 ```figure:disk preset=limit
 ```

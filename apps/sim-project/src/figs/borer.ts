@@ -111,11 +111,15 @@ export const tradeoffPanels = (): FigurePanel[] => [
       const machine = str(v, 'machine', 'boring machine'), g0 = num(v, 'g', 100);
       const isDisk = machine.includes('disk');
       const r = isDisk ? diskSeek(g0, 3, 4001) : borerStep(g0, 11, 6, 4001);
-      drawStepResponse(g, w, h, {
+      const head = 22;
+      wipe(g, w, h);
+      text(g, `${isDisk ? 'Ka' : 'K'} = ${f(g0, 1)}  OS ${f(r.m.os, 2)} %  Ts ${f(r.m.ts, 3)} s`, 8, 14, col.text(), 'left', 10);
+      g.save(); g.translate(0, head);
+      drawStepResponse(g, w, h - head, {
         t: r.t, y: r.y, final: 1, ref: 1, tEnd: isDisk ? 1.5 : 2.5,
         show: { overshoot: true, band: true, settling: true }, color: col.a(),
       });
-      text(g, `${isDisk ? 'Ka' : 'K'} = ${f(g0, 1)}  OS ${f(r.m.os, 2)} %  Ts ${f(r.m.ts, 3)} s`, 8, 14, col.text(), 'left', 10);
+      g.restore();
     },
   },
 ];
@@ -151,13 +155,14 @@ export const sensPanels = (): FigurePanel[] => [
       const mag = ws.map((ww) => borerS(K, { re: 0, im: ww }).mag);
       const approx = ws.map((ww) => ww / K);
       const xr: [number, number] = [-1, 3], yr: [number, number] = [-3, 0.3];
-      const fr = rangeFrame(w, h, xr, yr, 48, 12, 10, 30);
+      const head = 36;
+      const fr = rangeFrame(w, h, xr, yr, 48, 12, head, 30);
       graphAxes(g, fr, xr, yr, 'ω (rad/s)', '|S|', 1, 1, fmtPow10, fmtPow10);
       curve(g, fr, ws.map(Math.log10), mag.map((m) => Math.log10(Math.max(m, 1e-6))), col.a(), 2);
       curve(g, fr, ws.map(Math.log10), approx.map((m) => Math.log10(Math.max(m, 1e-6))), col.muted(), 1.6, [6, 4]);
       tline(g, fr, [Math.log10(w0), yr[0]], [Math.log10(w0), yr[1]], col.e(), 1.2, [4, 3]);
       const S = borerS(K, { re: 0, im: w0 }).mag;
-      text(g, `|S| = ${f(S, 4)} at ω = ${f(w0, 2)}.  A 10 % change in the machine at this rate changes the loop by ${f(10 * S, 2)} %.`, 52, 14, col.text(), 'left', 10);
+      text(g, `|S| = ${f(S, 4)} at ω = ${f(w0, 2)}.  A 10 % change in the machine at this rate changes the loop by ${f(10 * S, 2)} %.`, 8, 14, col.text(), 'left', 10);
     },
   },
 ];

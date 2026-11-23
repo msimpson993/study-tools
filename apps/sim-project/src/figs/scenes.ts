@@ -90,11 +90,11 @@ export function drawDisk(g: CanvasRenderingContext2D, w: number, h: number, o: {
   g.strokeStyle = acc(); g.lineWidth = 4; g.beginPath(); g.moveTo(px, py); g.lineTo(headX, headY); g.stroke();
   g.fillStyle = acc(); g.beginPath(); g.arc(px, py, 6, 0, 6.28); g.fill();
   g.beginPath(); g.arc(headX, headY, 5, 0, 6.28); g.fill();
-  text(g, 'head', headX, headY - 12, acc(), 'center', 9);
+  text(g, 'head', headX - 16, headY + 14, acc(), 'right', 9);
   text(g, 'arm', px, py + 16, dim(), 'center', 9);
   if (o.input === 'shock' || o.input === 'push' || o.input === 'both') {
     arrow(g, headX + 28, headY - 28, headX + 8, headY - 6, col.bad(), 1.8);
-    text(g, 'T_d  shock', headX + 32, headY - 32, col.bad(), 'left', 10);
+    text(g, 'T_d  shock', Math.min(w - 8, headX + 18), Math.max(16, headY - 44), col.bad(), 'left', 10);
   }
 }
 

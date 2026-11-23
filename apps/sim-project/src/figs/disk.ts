@@ -27,19 +27,21 @@ export const diskPanels = (): FigurePanel[] => [
         text(g, `UNSTABLE  (Ka = ${f(Ka, 0)} > 4080)`, 56, 20, col.bad(), 'left', 14);
         return;
       }
-      const r = diskSeek(Ka, 3, 8001);
-      const stand = on(v, 'stand') ? diskStand(Ka, 3, 4001) : undefined;
-      const head = 22;
+      // metrics from a long enough run (Ka near the ceiling settles in ~17 s); the plot stays at 2 s
+      const r = diskSeek(Ka, 30, 60001);
+      const stand = on(v, 'stand') ? diskStand(Ka, 30, 60001) : undefined;
+      const head = 22, tEnd = 2;
       wipe(g, w, h);
       g.save(); g.translate(0, head);
-      const settled = r.m.ts < 2 * 0.98;
+      const settled = r.m.ts < tEnd * 0.98;
       drawStepResponse(g, w, h - head, {
-        t: r.t, y: r.y, final: 1, ref: 1, tEnd: 2, show: { overshoot: true, band: true, settling: settled },
+        t: r.t, y: r.y, final: 1, ref: 1, tEnd, show: { overshoot: true, band: true, settling: settled },
         ghost: stand ? { t: stand.t, y: stand.y, label: 'stand-in (coil dropped)', color: col.e() } : undefined,
         color: col.a(),
       });
       g.restore();
-      text(g, `Ka = ${f(Ka, 1)}  OS ${f(r.m.os, 2)} %  Ts ${f(r.m.ts, 3)} s` + (stand ? `  stand-in ${f(stand.m.os, 2)} %` : ''), 8, 14, col.text(), 'left', 10);
+      const tsTxt = r.m.ts > tEnd ? `Ts ${f(r.m.ts, 1)} s (off plot)` : `Ts ${f(r.m.ts, 3)} s`;
+      text(g, `Ka = ${f(Ka, 1)}  OS ${f(r.m.os, 2)} %  ${tsTxt}` + (stand ? `  stand-in ${f(stand.m.os, 2)} %` : ''), 8, 14, col.text(), 'left', 10);
     },
   },
   {
@@ -81,8 +83,10 @@ export const diskPanels = (): FigurePanel[] => [
       });
       text(g, `coil pole at ${f(coil.re, 1)}  (off scale)`, 8, 16, col.muted(), 'left', 10);
       const ceil = diskKaMax, ratio = ceil / Math.max(Ka, 1e-6);
-      const msg = Ka >= ceil ? 'UNSTABLE' : `ceiling Ka = 4080  (×${f(ratio, 2)} above you)  ω = ${f(diskOscW, 1)} rad/s`;
-      text(g, msg, 8, 30, Ka >= ceil ? col.bad() : col.text(), 'left', 10);
+      const ofCeil = ratio >= 10 ? `1/${f(ratio, 0)}` : f(1 / ratio, 2);
+      const msg = Ka >= ceil ? 'UNSTABLE'
+        : `ceiling Ka = 4080; Ka = ${f(Ka, 0)} is ${ofCeil} of the ceiling.  ω = ${f(diskOscW, 1)} rad/s`;
+      text(g, msg, 8, h - 8, Ka >= ceil ? col.bad() : col.text(), 'left', 10);
     },
   },
 ];

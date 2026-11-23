@@ -20,10 +20,26 @@ export const strList = (v: unknown): string[] => {
   return [];
 };
 
-export function wrap(g: CanvasRenderingContext2D, s: string, maxW: number, size = 10): string[] {
-  g.font = `${size}px system-ui, sans-serif`; const out: string[] = []; let line = '';
-  for (const word of s.split(' ')) { const t = line ? `${line} ${word}` : word; if (g.measureText(t).width > maxW && line) { out.push(line); line = word; } else line = t; }
-  if (line) out.push(line); return out;
+export function wrap(g: CanvasRenderingContext2D, s: string, maxW: number, size = 10, family = 'system-ui, sans-serif'): string[] {
+  g.font = `${size}px ${family}`;
+  const out: string[] = [];
+  let line = '';
+  const flushChunk = (word: string) => {
+    if (g.measureText(word).width <= maxW) { line = word; return; }
+    let chunk = '';
+    for (const ch of word) {
+      const try0 = chunk + ch;
+      if (chunk && g.measureText(try0).width > maxW) { out.push(chunk); chunk = ch; } else chunk = try0;
+    }
+    line = chunk;
+  };
+  for (const word of s.split(' ')) {
+    const t = line ? `${line} ${word}` : word;
+    if (g.measureText(t).width > maxW && line) { out.push(line); flushChunk(word); }
+    else line = t;
+  }
+  if (line) out.push(line);
+  return out;
 }
 export function para(g: CanvasRenderingContext2D, s: string, x: number, y: number, maxW: number, color = col.text(), size = 10, align: CanvasTextAlign = 'left'): number {
   for (const l of wrap(g, s, maxW, size)) { text(g, l, x, y, color, align, size); y += size + 3; } return y;
@@ -70,34 +86,65 @@ export function fmtPow10(logv: number): string {
   return String(+v.toPrecision(2));
 }
 
-/** Fit a small table on a canvas: shrink type, then scale columns, so headers do not collide. */
+/** Draw a parameters table. When the canvas is too narrow for one row of columns,
+ *  each design is a stacked, labelled block so values never sit under the wrong header. */
 export function drawKeyValueTable(
   g: CanvasRenderingContext2D, w: number, h: number, rows: string[][],
   opts?: { footer?: string; key?: string },
 ): void {
-  const footerH = (opts?.footer ? 14 : 0) + (opts?.key ? 14 : 0);
+  const footerH = (opts?.footer ? 16 : 0) + (opts?.key ? 16 : 0);
   const cols = rows[0]?.length ?? 0;
   if (!cols) return;
-  let size = 11;
-  const padX = 5;
+  const headers = rows[0];
+  const body = rows.slice(1);
+  const footerY0 = h - 6;
+  let fy = footerY0;
+  if (opts?.footer) { text(g, opts.footer, 6, fy, col.muted(), 'left', 10); fy -= 15; }
+  if (opts?.key) text(g, opts.key, 6, fy, col.muted(), 'left', 10);
+  const availH = h - footerH - 6;
+  const padX = 8;
+  const minSize = 11;
   const measure = (sz: number) => {
-    g.font = `${sz}px system-ui, sans-serif`;
-    return Array.from({ length: cols }, (_, j) => Math.max(8, ...rows.map((r) => g.measureText(r[j] ?? '').width)) + padX * 2);
+    g.font = `600 ${sz}px system-ui, sans-serif`;
+    return Array.from({ length: cols }, (_, j) => Math.max(12, ...rows.map((r) => g.measureText(r[j] ?? '').width)) + padX);
   };
+  let size = 13;
   let widths = measure(size);
-  while (size > 9 && widths.reduce((a, b) => a + b, 0) > w - 4) { size -= 1; widths = measure(size); }
+  while (size > minSize && widths.reduce((a, b) => a + b, 0) > w - 8) { size -= 1; widths = measure(size); }
   const total = widths.reduce((a, b) => a + b, 0);
-  if (total > w - 4) widths = widths.map((x) => x * ((w - 4) / total));
-  const rowH = Math.min(20, Math.max(12, (h - footerH - 4) / Math.max(1, rows.length)));
-  const xs: number[] = [];
-  let x0 = 2;
-  for (const ww of widths) { xs.push(x0); x0 += ww; }
-  rows.forEach((row, i) => row.forEach((c, j) => {
-    const align: CanvasTextAlign = (j === 0 || i === 0) ? 'left' : 'right';
-    const x = align === 'left' ? xs[j] + 3 : xs[j] + widths[j] - 3;
-    text(g, c, x, 11 + i * rowH, i === 0 ? col.muted() : col.text(), align, size);
-  }));
-  let fy = h - 6;
-  if (opts?.footer) { text(g, opts.footer, 4, fy, col.muted(), 'left', 9); fy -= 13; }
-  if (opts?.key) text(g, opts.key, 4, fy, col.muted(), 'left', 9);
+  const fits = total <= w - 8;
+  if (fits) {
+    widths = widths.map((x) => x * ((w - 8) / total));
+    const rowH = Math.min(28, Math.max(18, (availH) / Math.max(1, rows.length)));
+    const xs: number[] = [];
+    let x0 = 4;
+    for (const ww of widths) { xs.push(x0); x0 += ww; }
+    rows.forEach((row, i) => row.forEach((c, j) => {
+      const align: CanvasTextAlign = (j === 0 || i === 0) ? 'left' : 'right';
+      const x = align === 'left' ? xs[j] + 4 : xs[j] + widths[j] - 4;
+      text(g, c, x, 14 + i * rowH, i === 0 ? col.muted() : col.text(), align, size);
+    }));
+    return;
+  }
+  // stacked: one block per design, labels and values on the same line in wraps of 4
+  const pairsFor = (row: string[]) => headers.map((h, j) => (j === 0 ? null : [h, row[j]] as [string, string])).filter(Boolean) as [string, string][];
+  const lineH = 16, blockPad = 8, titleH = 16;
+  let y = 16;
+  g.font = '11px system-ui, sans-serif';
+  for (const row of body) {
+    text(g, row[0] ?? '', 6, y, col.text(), 'left', 12);
+    y += titleH;
+    const pairs = pairsFor(row);
+    let x = 6, rowTop = y;
+    for (const [lab, val] of pairs) {
+      const chunk = `${lab}  ${val}`;
+      const cw = g.measureText(chunk).width + 16;
+      if (x > 6 && x + cw > w - 6) { x = 6; y += lineH; }
+      text(g, lab, x, y, col.muted(), 'left', 11);
+      const lw = g.measureText(lab).width;
+      text(g, val, x + lw + 6, y, col.text(), 'left', 11);
+      x += cw;
+    }
+    y = Math.max(y, rowTop) + lineH + blockPad;
+  }
 }

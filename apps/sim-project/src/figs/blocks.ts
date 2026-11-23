@@ -6,22 +6,31 @@ import { SCRIPTS, drawLabDiagram } from './diagrams';
 export const blocksPanels = (/* c, def */): FigurePanel[] => [
   {
     id: 'code', title: 'The handout script, one line at a time', x: '', y: '',
+    height: 420,
     draw(g, w, h, v: V) {
       wipe(g, w, h);
       const id = str(v, 'script', 'motor-open');
       const steps = SCRIPTS[id] ?? SCRIPTS['motor-open'];
       const line = Math.max(1, Math.min(Math.round(num(v, 'line', 1)), steps.length));
-      const rowH = Math.min(26, (h - 8) / steps.length);
+      const size = 11, gap = size + 2, pad = 8;
+      const mono = 'ui-monospace, SFMono-Regular, Menlo, monospace';
+      const wrapped = steps.map((s) => wrap(g, s.code, w - 24, size, mono));
+      const rowHs = wrapped.map((lines, i) => pad + lines.length * gap + (i === line - 1 && steps[i].warn ? 12 : 0));
+      const need = 10 + rowHs.reduce((a, b) => a + b, 0);
+      if (h + 1 < need) {
+        g.canvas.style.height = `${Math.ceil(need)}px`;
+        return;
+      }
+      let y = 14;
       steps.forEach((s, i) => {
-        const y = 14 + i * rowH, on = i === line - 1;
-        if (on) { g.fillStyle = col.e(); g.globalAlpha = 0.18; g.fillRect(4, y - 12, w - 8, rowH); g.globalAlpha = 1; }
-        const size = 11;
-        const lines = wrap(g, s.code, w - 20, size);
+        const rh = rowHs[i], on = i === line - 1;
+        if (on) { g.fillStyle = col.e(); g.globalAlpha = 0.18; g.fillRect(4, y - 12, w - 8, rh); g.globalAlpha = 1; }
         g.font = `${size}px ui-monospace, SFMono-Regular, Menlo, monospace`;
         g.fillStyle = on ? col.text() : col.muted();
         g.textAlign = 'left';
-        lines.slice(0, 2).forEach((ln, j) => g.fillText(ln, 10, y + j * (size + 1)));
-        if (on && s.warn) { text(g, '⚠ ' + s.warn, 10, y + Math.min(lines.length, 2) * (size + 1) + 2, col.e(), 'left', 9); }
+        wrapped[i].forEach((ln, j) => g.fillText(ln, 10, y + j * gap));
+        if (on && s.warn) text(g, '⚠ ' + s.warn, 10, y + wrapped[i].length * gap + 2, col.e(), 'left', 9);
+        y += rh;
       });
     },
   },
