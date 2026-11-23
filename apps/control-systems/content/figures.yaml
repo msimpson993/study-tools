@@ -1423,7 +1423,7 @@
       set:
         Kw: 180
 - id: sse
-  title: Why it stops short, and system type
+  title: Why it ends up off target, and system type
   x: time (s)
   y: pointing error (°)
   legend:
@@ -2162,7 +2162,7 @@
       set:
         vals: false
 - id: torquebal
-  title: "Why it stops short: the torque balance"
+  title: "Why it ends up off target: the torque balance"
   x: size of the error |e| (°)
   y: torque (N·m)
   legend:

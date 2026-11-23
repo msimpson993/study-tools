@@ -1,5 +1,5 @@
 # Generated from the tutor's batch 1 (v2, three running examples) by /workspace/cs-build/gen_graph.py; edit the source and regenerate.
-# Big picture: root + 21 boxes, 24 lines (21 chain + 3 dashed look-backs). Full detail: 39 boxes, 41 lines (+17 side questions).
+# Big picture: root + 21 boxes, 24 lines (21 chain + 3 dashed look-backs). Full detail: root + 39 boxes, 42 lines (+18 side boxes; 6 of them under the Tuning toolkit).
 maps:
 - id: big
   title: Big picture
@@ -256,7 +256,7 @@ maps:
       example: Kp = 1000 gives ωₙ = 10 rad/s but ζ = 0.1.
       ask: q-pgain
   - id: SSE
-    label: Why it stops short
+    label: Why it ends up off target
     detail: steady-state error
     series: 2
     short: 'A steady push. In still air the dish ends exactly on target, because its angle integrates the motor''s speed: one integrator in the loop, *type 1*. Wind is different: P makes torque only from error, so holding a steady wind torque leaves a *steady-state error* e_ss. The *final-value theorem* reads that long-run value from E(s) at s → 0, if the loop is stable.'
@@ -265,7 +265,7 @@ maps:
     live: figure:sse
     quizTag: sse
     examples: [dish]
-    exampleWhy: a steady wind pushes on the dish, and P alone leaves it short of the target
+    exampleWhy: a steady wind pushes on the dish, and P alone leaves it pointing off target, at a steady offset
     addsToExample: 'Adds wind: the dish sits 1.15° off under P.'
     accountsFor: Why a P-only dish points well in still air and badly in wind.
     pop:
@@ -489,7 +489,7 @@ maps:
     live: figure:cc
     quizTag: cc
     examples: [house, corner]
-    exampleWhy: 'whether one heater and one reading can reach and see everything inside: the house shows two ways to fail (two heaters on one dial, a thermostat that averages both rooms); the car corner, a later example, passes'
+    exampleWhy: 'whether the input can reach, and the sensor can see, everything inside: the house shows two ways to fail (two heaters on one dial, a thermostat that averages both rooms)'
     addsToExample: 'Checks the corner: one force steers both states; one height sensor sees both.'
     accountsFor: Why we may estimate velocity from a position sensor.
     pop:
@@ -696,8 +696,8 @@ maps:
       **What we want:** a plant whose input we drive and whose target we choose, and the simplest rule that drives it there.
   - from: PGAIN
     to: SSE
-    label: why short?
-    question: The dish reaches the satellite in still air. What could still leave it pointing off?
+    label: why off target?
+    question: The dish reaches the satellite in still air. What could still leave it pointing off target?
     idea: 'A steady push P must hold: wind torque T_d leaves e_ss = −T_d/Kp.'
     why: |-
       **Still open:** *Turn up the gain (P)* showed speed and bounce rising with Kp, but in still air the angle ends exactly on target.
@@ -711,7 +711,7 @@ maps:
     question: Can we cancel the wind error without an enormous Kp?
     idea: 'Add a term that keeps growing until the error is exactly zero: integral action.'
     why: |-
-      **Still open:** *Why it stops short* needed Kp ≈ 11 500 for 0.1°, which drops ζ to 0.03.
+      **Still open:** *Why it ends up off target* needed Kp ≈ 11 500 for 0.1°, which drops ζ to 0.03.
 
       **Why it matters:** raising gain trades accuracy for bounce. We need accuracy that doesn't depend on gain.
 
@@ -882,7 +882,7 @@ maps:
     reverse: true
 - id: detail
   title: Full detail
-  caption: The main chain plus 17 side questions (circuits, partial fractions, block-diagram algebra, the PID Lab, tuning recipes, the 14 symptom cards, Ackermann…). Side boxes end their branch; Back returns to the main chain.
+  caption: The main chain plus 18 side boxes (circuits, partial fractions, block-diagram algebra, Ackermann…, and the Tuning toolkit). Most side boxes end their branch; the Tuning toolkit opens six more under it (the controller menu, torque limits, the PID Lab, tuning recipes, the 14 symptom cards, one-number scores). Back goes one step, to the box you came from.
   seriesNames:
   - Describe the plant
   - Predict the response
@@ -1135,7 +1135,7 @@ maps:
       example: Kp = 1000 gives ωₙ = 10 rad/s but ζ = 0.1.
       ask: q-pgain
   - id: SSE
-    label: Why it stops short
+    label: Why it ends up off target
     detail: steady-state error
     series: 2
     short: 'A steady push. In still air the dish ends exactly on target, because its angle integrates the motor''s speed: one integrator in the loop, *type 1*. Wind is different: P makes torque only from error, so holding a steady wind torque leaves a *steady-state error* e_ss. The *final-value theorem* reads that long-run value from E(s) at s → 0, if the loop is stable.'
@@ -1144,7 +1144,7 @@ maps:
     live: figure:sse
     quizTag: sse
     examples: [dish]
-    exampleWhy: a steady wind pushes on the dish, and P alone leaves it short of the target
+    exampleWhy: a steady wind pushes on the dish, and P alone leaves it pointing off target, at a steady offset
     addsToExample: 'Adds wind: the dish sits 1.15° off under P.'
     accountsFor: Why a P-only dish points well in still air and badly in wind.
     pop:
@@ -1368,7 +1368,7 @@ maps:
     live: figure:cc
     quizTag: cc
     examples: [house, corner]
-    exampleWhy: 'whether one heater and one reading can reach and see everything inside: the house shows two ways to fail (two heaters on one dial, a thermostat that averages both rooms); the car corner, a later example, passes'
+    exampleWhy: 'whether the input can reach, and the sensor can see, everything inside: the house shows two ways to fail (two heaters on one dial, a thermostat that averages both rooms)'
     addsToExample: 'Checks the corner: one force steers both states; one height sensor sees both.'
     accountsFor: Why we may estimate velocity from a position sensor.
     pop:
@@ -1597,24 +1597,24 @@ maps:
     detail: six side boxes, any order
     series: 2
     short: |-
-      Six optional side boxes on the tuned dish, in any order:
+      Six optional side boxes, in any order:
 
       - **Finish the controller:** *The controller menu* (other forms, and how the lecture notes write PID); *When the push hits its limit* (the motor's torque ceiling).
       - **Try and find gains:** *PID Lab: drag the gains yourself*; *Recipes: by hand, Ziegler–Nichols, PID Tuner*.
       - **Judge and fix:** *When it misbehaves: 14 symptom cards*; *The best gain in one number*.
 
-      The main path goes on at *A push we didn't command*. (Grouping not in lecture notes.)
+      The main path goes on at *A push we didn't command*.
     eq: Gc = Kp + Ki/s + Kd·s, tuned at (2000, 1000, 200)
     dive: tuning
     live: figure:tunetable
     quizTag: tuning
     examples: [dish]
-    exampleWhy: six optional extras, all built on the tuned dish
-    addsToExample: Nothing new; it gathers the six side boxes that start from the tuned dish.
+    exampleWhy: six optional extras built on the dish's loop
+    addsToExample: Nothing new; it gathers six optional side boxes on the dish's loop.
     pop:
-      rough: one tuned loop, six ways to extend, test or score it
+      rough: six optional extras around the tuned loop
       eqKey: the PID from *Choosing the three gains*, D on the measurement.
-      example: 'Every side box starts from (Kp, Ki, Kd) = (2000, 1000, 200): 7.4 % overshoot, wind peak 0.56°, back on target in 4.8 s.'
+      example: '*The controller menu* and *When the push hits its limit* use the tuned (2000, 1000, 200); *Recipes* adds a 0.05 s lag to P alone; *The best gain in one number* varies Kd at Kp 1000.'
       ask: q-toolkit
   - id: MENU
     label: The controller menu
@@ -1720,18 +1720,16 @@ maps:
     label: 'When it misbehaves: 14 symptom cards'
     series: 2
     shelf: true
-    short: 'Match the picture to a symptom card. The 14 symptoms:
+    short: |-
+      Match the picture to a symptom card. The 14 symptoms, by cause:
 
-      - slow, offset, overshoot, oscillation
+      - **Gains set wrong:** slow (A1), offset (A2), overshoot (A3), oscillation (A4), poor gust rejection (A5).
+      - **The D part:** noisy torque (A6), derivative kick (A8).
+      - **The torque ceiling:** windup (A7), saturation (A9).
+      - **The real hardware:** delay (A10), sensor lag (A11), nonlinearity (A12), limit cycle (A14).
+      - **One controller for two jobs:** command vs gust trade-off (A13).
 
-      - poor gust rejection, noisy torque, windup
-
-      - derivative kick, saturation, delay
-
-      - sensor lag, nonlinearity, command vs gust trade-off, limit cycle
-
-
-      Each card shows the bad loop, the fixed loop (dashed) and the knob to turn.'
+      Each card shows the bad loop, the fixed loop (dashed) and the knob to turn. (Grouping not in lecture notes.)
     eq: symptom → likely cause → one knob
     dive: failures
     live: figure:fail-windup
@@ -1770,7 +1768,7 @@ maps:
     live: board:s7
     quizTag: ss2tf
     examples: [house, corner]
-    exampleWhy: the house written a second way and back again; a thermostat that averages both rooms misses part of how the house warms (the car corner, a later example, too)
+    exampleWhy: the model written a second way and back again; a thermostat that averages both rooms misses part of how the house warms
     addsToExample: Confirms that the corner's two descriptions agree.
     pop:
       rough: G = what the sensor sees of the states' response to the push
@@ -1896,8 +1894,8 @@ maps:
       **What we want:** a plant whose input we drive and whose target we choose, and the simplest rule that drives it there.
   - from: PGAIN
     to: SSE
-    label: why short?
-    question: The dish reaches the satellite in still air. What could still leave it pointing off?
+    label: why off target?
+    question: The dish reaches the satellite in still air. What could still leave it pointing off target?
     idea: 'A steady push P must hold: wind torque T_d leaves e_ss = −T_d/Kp.'
     why: |-
       **Still open:** *Turn up the gain (P)* showed speed and bounce rising with Kp, but in still air the angle ends exactly on target.
@@ -1911,7 +1909,7 @@ maps:
     question: Can we cancel the wind error without an enormous Kp?
     idea: 'Add a term that keeps growing until the error is exactly zero: integral action.'
     why: |-
-      **Still open:** *Why it stops short* needed Kp ≈ 11 500 for 0.1°, which drops ζ to 0.03.
+      **Still open:** *Why it ends up off target* needed Kp ≈ 11 500 for 0.1°, which drops ζ to 0.03.
 
       **Why it matters:** raising gain trades accuracy for bounce. We need accuracy that doesn't depend on gain.
 
@@ -2171,7 +2169,7 @@ maps:
     question: What about tracking a moving satellite, and is there a shortcut by counting integrators?
     idea: System type = integrators in L; type 1 leaves ramp error ω/K_v.
     why: |-
-      **Still open:** *Why it stops short* handled a steady push. A satellite crossing the sky is a target moving at constant speed.
+      **Still open:** *Why it ends up off target* handled a steady push. A satellite crossing the sky is a target moving at constant speed.
 
       **Why it matters:** a loop with no error in still air can still lag a moving target. Counting integrators predicts which inputs leave an error, without solving anything.
 
@@ -2207,7 +2205,7 @@ maps:
     question: What if the motor can't give the torque the tuned PID asks for?
     idea: While the torque is stuck at the limit, the I part keeps adding up error, and the dish overshoots later; the fix is to make it stop.
     why: |-
-      **Still open:** *Choosing the three gains* checked that a 0.1 rad step asks exactly the 200 N·m limit. A bigger re-point asks for far more.
+      **Still open:** *Choosing the three gains* picked gains that stay within the motor's 200 N·m. A bigger re-point asks for far more.
 
       **Why it matters:** the dish motor stops at 200 N·m. While the torque is clipped, the I part keeps adding up error, and on a long turn that stored-up push makes the dish overshoot badly.
 

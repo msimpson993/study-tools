@@ -8,7 +8,7 @@ level: Some algebra
 check: [q-int, ck-int-1, ck-int-2]
 ---
 
-**The question:** P leaves an error against a steady wind; what kind of term keeps pushing until the error is exactly zero? This is the box *Integral action*, after *Why it stops short*.
+**The question:** P leaves an error against a steady wind; what kind of term keeps pushing until the error is exactly zero? This is the box *Integral action*, after *Why it ends up off target*.
 
 ### The big idea
 

@@ -58,6 +58,6 @@ Settling barely changes (σ = 1 fixed); overshoot explodes. Speed loop: K_ω = 8
 
 ### What it can't do
 
-One knob can't set speed and damping separately; with a steady wind it also leaves an error (*Why it stops short*).
+One knob can't set speed and damping separately; with a steady wind it also leaves an error (*Why it ends up off target*).
 
 <p class="src">Sources: LN1 s.10–17 (controller types and op-amp circuits), s.50–51, 62–72 (the servo); LN2 s.15–18 (feedback speeds the loop up). Not in lecture notes: root locus. Exam practice: Review › Mini exam 2, Problem 7 (tachometer) and LN1 carry-over problems 2 and 4.</p>

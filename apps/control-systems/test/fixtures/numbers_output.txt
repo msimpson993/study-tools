@@ -498,5 +498,11 @@ P4C card PD (1000, 0, 120), gust 10 s, final at 40 s: e = -1.1459 deg
 P4C ck-sse-1: Kp 2000, 50 N m: e_ss = -50/2000 = -0.025 rad = -1.432 deg; ck-sse-2: Kp 1000, 0.5 deg/s: e_ss = B w/Kp = +0.010 deg (behind the satellite, so positive)
 P4C house: G = X2/U uses C = [0, 1] (Ch = [0.0, 1.0]); det Pc = b^2 = 1.296e-05, det Po = -1.00
 
+======== [PASS5] toolkit starting points
+P5 MENU and WINDUP: tuned (2000, 1000, 200); in the notes' form Kp = 2000, Ti = Kp/Ki = 2 s, T_D = Kd/Kp = 0.1 s
+P5 METHODS: P alone on the dish with a 0.05 s amplifier lag: Ku = 440 N m/rad, Tu = 0.99 s -> ZN (264, 531.5, 32.8)
+P5 INDEX: Kp fixed at 1000, rate gain K_r (= Kd) varied: s^2 + (2 + 0.1 K_r) s + 100; K_r = 120 (hand-tuned Kd, [PASS3]) gives a1 = 14 /s
+P5 torque check (tuning dive step 5, not in the TUNE box): 0.1 rad step asks Kp*0.1 = 200 N m, the 200 N m limit
+
 All numbers recomputed.
 EXIT 0

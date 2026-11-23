@@ -23,7 +23,7 @@ The table sums up all 14 cards; each card below has its own figure, in order fro
 | card | symptom | cause | fix | in the chain |
 |---|---|---|---|---|
 | A1 · Slow response | sluggish slew | gains too low (dish: Tₛ 4.92 s at (400, 100, 80)) | raise the gains | [Turn up the gain](#/dive/ctrl) |
-| A2 · Steady-state offset | sits off-target in wind | no I (dish: 1.15° at Kp 1000) | add Ki | [Why it stops short](#/dive/sse) |
+| A2 · Steady-state offset | sits off-target in wind | no I (dish: 1.15° at Kp 1000) | add Ki | [Why it ends up off target](#/dive/sse) |
 | A3 · Overshoot | big overshoot | too little Kd or too much Ki (dish: 80 % at (1000, 500, 0)) | add Kd or cut Ki | [Derivative action](#/dive/derivative) |
 | A4 · Sustained oscillation | keeps ringing | Ki near the bound (2 + 0.1Kd)Kp | back off | [Integral action](#/dive/integral) |
 | A5 · Poor disturbance rejection | blown off by gusts | gains too low (dish: 2.08° at (500, 250, 100)) | raise Kp, Ki and Kd | [Choosing the three gains](#/dive/tuning) |

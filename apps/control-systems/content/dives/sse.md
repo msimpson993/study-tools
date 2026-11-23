@@ -1,14 +1,14 @@
 ---
 id: sse
 order: 13
-title: "Why it stops short: steady-state error and system type"
+title: "Why it ends up off target: steady-state error and system type"
 category: pid
 neighbors: [ctrl, integral, dist]
 level: Some algebra
 check: [q-sse, q-type, ck-sse-1]
 ---
 
-**The question:** once the motion stops, how far from the target does the dish end up, and why? This is the box *Why it stops short* (and its side box *System type*), after *Turn up the gain (P)*.
+**The question:** once the motion stops, how far from the target does the dish end up, and why? This is the box *Why it ends up off target* (and its side box *System type*), after *Turn up the gain (P)*.
 
 ### The big idea
 

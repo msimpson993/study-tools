@@ -49,7 +49,7 @@ Gc = Kp + Ki/s + Kd·s  (D on measurement):  s³ + (2 + 0.1Kd)s² + 0.1Kp s + 0.
 <a id="toolkit"></a>
 ### The tuning toolkit
 
-**The question:** the dish is tuned at (2000, 1000, 200). What else helps when a real loop needs tuning? This is the side box *Tuning toolkit*, under *Choosing the three gains*. Its six side boxes all start from the tuned dish. They are optional; read any of them, in any order. (The grouping is this page's, not the lecture notes'.)
+**The question:** the dish is tuned at (2000, 1000, 200). What else helps when a real loop needs tuning? This is the side box *Tuning toolkit*, under *Choosing the three gains*. *The controller menu* and *When the push hits its limit* use the tuned gains; the *PID Lab* opens at P 1000 with the tuned gains as a preset; each symptom card sets its own faulty gains; *Recipes* starts again from P alone with the amplifier's 0.05 s lag added; *The best gain in one number* varies Kd with Kp held at 1000. They are optional; read any of them, in any order. (The grouping is this page's, not the lecture notes'.)
 
 **Finish the controller**
 

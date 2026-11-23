@@ -13,7 +13,7 @@ const num = (l: string, re: RegExp) => { const m = l.match(re); if (!m) throw ne
 const r1 = (x: number, d: number) => Number(x.toFixed(d));
 
 describe('[PASS3] fixture', () => {
-  it('is the tutor\'s 502-line run (pass 4c), ending EXIT 0', () => { expect(OUT.filter((l, i) => i < OUT.length - 1 || l).length).toBe(502); expect(OUT.filter(Boolean).at(-1)).toBe('EXIT 0'); });
+  it('is the tutor\'s 508-line run (pass 5), ending EXIT 0', () => { expect(OUT.filter((l, i) => i < OUT.length - 1 || l).length).toBe(508); expect(OUT.filter(Boolean).at(-1)).toBe('EXIT 0'); });
 });
 
 describe('[PASS3] item 1: the tuning table uses the figure\'s convention (gust 10 s after the step)', () => {
