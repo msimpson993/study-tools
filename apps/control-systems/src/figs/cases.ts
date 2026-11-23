@@ -15,7 +15,7 @@ const stickCache = new Map<string, ReturnType<typeof M.simStick>>();
 
 type V = Record<string, number | string | boolean>;
 interface Series { t: ArrayLike<number>; y: ArrayLike<number>; color: string; dash?: boolean; width?: number }
-interface Plot { title: string; y: string; xr: V2; yr: V2; series: Series[]; hl?: { y: number; label?: string }[]; vl?: { x: number; label?: string }[]; peak?: { t: number; y: number; label: string }; notes?: string[]; /** an in-plot legend (the full-screen legend box is not the only key) */ legend?: Item[]; legendAt?: 'tl' | 'tr' | 'bl' | 'br' }
+interface Plot { title: string; y: string; xr: V2; yr: V2; series: Series[]; hl?: { y: number; label?: string }[]; vl?: { x: number; label?: string }[]; peak?: { t: number; y: number; label: string }; notes?: string[]; /** notes go top left, or (when set) right-aligned around this y value, in an empty band clear of the curves (pass 5, issue 9) */ notesY?: number; /** an in-plot legend (the full-screen legend box is not the only key) */ legend?: Item[]; legendAt?: 'tl' | 'tr' | 'bl' | 'br' }
 const n = (v: V, k: string) => v[k] as number;
 const on = (v: V, k: string) => v[k] === true || v[k] === 'true';
 const nz = (a: number | undefined) => a ?? 0;
@@ -32,7 +32,13 @@ const draw = (g: CanvasRenderingContext2D, w: number, h: number, p: Plot) => {
     for (let i = 0; i < m; i += step) { xs.push(s.t[i]); ys.push(s.y[i]); }
     curve(g, f, xs, clip(ys), s.color, s.width ?? (s.dash ? 2 : 2.4), s.dash ? [6, 4] : []);
   }
-  (p.notes ?? []).forEach((l, i) => text(g, l, f.box.l + 6, f.box.t + 12 + i * 13, i ? FX() : PB(), 'left', 10));
+  if (p.notesY !== undefined && p.notes?.length) {
+    // right-aligned in the empty band at notesY (data units), clear of the curves; a note wider than the right 70 % of the plot (left of that is the gust and its recovery) splits at its first comma (pass 5, issue 9)
+    g.save(); g.font = '10px system-ui,sans-serif'; const room = 0.7 * (f.box.r - f.box.l) - 6, wide = p.notes.some((l) => g.measureText(l).width > room); g.restore();
+    const ls: [string, string][] = p.notes.flatMap((l, i): [string, string][] => { const c = i ? FX() : PB(), k = l.indexOf(', '); return wide && k > 0 ? [[l.slice(0, k + 1), c], [l.slice(k + 2), c]] : [[l, c]]; });
+    const y0 = f.Y(p.notesY) - ((ls.length - 1) * 13) / 2;
+    ls.forEach(([l, c], i) => text(g, l, f.box.r - 6, y0 + i * 13, c, 'right', 10));
+  } else (p.notes ?? []).forEach((l, i) => text(g, l, f.box.l + 6, f.box.t + 12 + i * 13, i ? FX() : PB(), 'left', 10));
   if (p.peak) { dot(g, f, [p.peak.t, p.peak.y], col.b(), 4); text(g, p.peak.label, f.X(p.peak.t) + 8, f.Y(p.peak.y) - 8, col.b(), 'left', 10.5); }
   if (p.legend?.length) legend(g, f, p.legend, p.legendAt ?? 'br');
   };
@@ -71,7 +77,7 @@ const gains = (v: V) => ({ Kp: n(v, 'Kp'), Ki: n(v, 'Ki'), Kd: n(v, 'Kd') });
 const R0 = DISH.step, WIND = DISH.wind;
 const pct = (x: number) => (Math.abs(x) > 1e4 ? 'unstable' : `${Math.max(0, x).toFixed(1)} %`);
 const mtxt = (m: ReturnType<typeof cardMet>, T: number) => (m.unstable ? 'unstable: the swing grows' : `%OS ${pct(m.OS)}, Ts ${m.Ts >= T - 0.01 ? `> ${T.toFixed(0)} s (still ringing)` : `${m.Ts.toFixed(2)} s`}, Tr ${m.Tr.toFixed(3)} s`);
-const wtxt = (w: ReturnType<typeof cardWind>, T: number) => `wind peak |e| ${w.peak.toFixed(2)}°, ${Math.abs(w.final) > 0.05 ? `stays ${Math.abs(w.final).toFixed(2)}° off (e = ${w.final.toFixed(2)}°)` : `cleared in ${w.recover >= T - 0.01 ? `> ${T.toFixed(0)}` : w.recover.toFixed(1)} s`}`;
+const wtxt = (w: ReturnType<typeof cardWind>, T: number) => `wind peak |e| ${w.peak.toFixed(2)}°, ${Math.abs(w.final) > 0.05 ? `stays ${Math.abs(w.final).toFixed(2)}° off (e = ${w.final.toFixed(2).replace('-', '−')}°)` : `cleared in ${w.recover >= T - 0.01 ? `> ${T.toFixed(0)}` : w.recover.toFixed(1)} s`}`;
 /** a dish step card: angle / target and torque, problem (solid) against the fix (dashed), with the [F] read-outs */
 function stepCard(title: string, a: CardOpts, b: CardOpts, xr: V2, opt: { r?: number; yr?: V2; upto?: number } = {}): Plot[] {
   const r = opt.r ?? R0, sa = card(a), sb = card(b), T = a.T ?? 10, ma = cardMet(sa.t, sa.y, r, opt.upto), mb = cardMet(sb.t, sb.y, r, opt.upto);
@@ -83,7 +89,7 @@ function stepCard(title: string, a: CardOpts, b: CardOpts, xr: V2, opt: { r?: nu
 function windCard(title: string, a: CardOpts, b: CardOpts, tw: number, T: number): Plot[] {
   const sa = card({ ...a, T, wind: WIND, twind: tw }), sb = card({ ...b, T, wind: WIND, twind: tw }), wa = cardWind(sa.t, sa.y, tw), wb = cardWind(sb.t, sb.y, tw);
   const err = (y: number) => deg(R0 - y), pa = thin(sa, err, tw - 2), pb = thin(sb, err, tw - 2), top = Math.max(1, Math.ceil(Math.max(wa.peak, wb.peak) * 1.3 * 2) / 2);
-  return [{ title, y: 'error e = θ_r − θ (°)', xr: [tw - 2, T], yr: [-top, 0.3], series: [{ ...pa, color: PB() }, { ...pb, color: FX(), dash: true }], hl: [{ y: 0, label: 'on target' }], vl: [{ x: tw, label: `${WIND} N·m wind` }], notes: [`solid: ${wtxt(wa, T - tw)}`, `dashed: ${wtxt(wb, T - tw)}`] },
+  return [{ title, y: 'error e = θ_r − θ (°)', xr: [tw - 2, T], yr: [-top, 0.3], series: [{ ...pa, color: PB() }, { ...pb, color: FX(), dash: true }], hl: [{ y: 0, label: 'on target' }], vl: [{ x: tw, label: `${WIND} N·m wind` }], notes: [`solid: ${wtxt(wa, T - tw)}`, `dashed: ${wtxt(wb, T - tw)}`], notesY: Math.min(wa.final, wb.final) < -0.3 ? Math.min(wa.final, wb.final) / 2 : -top / 2 },
     tPlot({ t: pa.t, u: pa.u }, { t: pb.t, u: pb.u }, [tw - 2, T])];
 }
 
