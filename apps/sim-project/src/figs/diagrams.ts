@@ -253,11 +253,9 @@ export function drawLabDiagram(g: CanvasRenderingContext2D, w: number, h: number
     const px = X(x), py = Y(y), bw = W(ww), bh = H(hh);
     const label = pick(lab);
     g.lineWidth = s.width;
-    const sz0 = Math.min(11, Math.max(7, bw / Math.max(6, Math.min(label.length, 22)) * 1.6));
-    const lines = wrap(g, label, Math.max(12, bw - 8), sz0);
-    const sz = lines.length > 2 ? Math.max(7, sz0 - 1) : sz0;
-    const lines2 = lines.length > 2 ? wrap(g, label, Math.max(12, bw - 8), sz) : lines;
-    // stroke the box, then draw wrapped lines so a long plain-words caption stays inside
+    // one label size on every block; wrap rather than shrinking to fit
+    const sz = dw < 560 ? 10 : 11;
+    const lines2 = wrap(g, label, Math.max(12, bw - 8), sz);
     box(g, px, py, bw, bh, '', s.color, undefined, sz);
     const lh = sz + 1;
     const y0 = py + bh / 2 - ((lines2.length - 1) * lh) / 2 + sz * 0.35;

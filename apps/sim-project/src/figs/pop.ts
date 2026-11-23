@@ -5,6 +5,7 @@ import { drawSPlane, drawStepResponse } from '@study/core';
 import { DESIGNS } from '../model/params';
 import { borerPush, borerS, borerStep, borerPoles, borerZero, diskSeek, diskShock, diskPoles, engineStep, motorNumbers, tuner } from '../model/plants';
 import { fmtPow10, numList, strList, wrap, drawKeyValueTable } from './util';
+import { motorPlotLayout } from './motorScale';
 import { drawMachine, drawTunerSliders } from './scenes';
 import { drawLabDiagram } from './diagrams';
 
@@ -108,15 +109,20 @@ const labStep = {
     const { traces, tEnd, yLabel } = labStepSeries(p);
     wipe(g, w, h);
     if (!traces.length) return;
+    const openTr = traces.find((s) => s.label === 'open');
+    const closedTr = traces.find((s) => s.label === 'closed');
+    const motorBoth = sys.startsWith('motor') && openTr && closedTr;
+    const layout = motorBoth ? motorPlotLayout(openTr.y, closedTr.y, 'both') : undefined;
     const ys = traces.flatMap((s) => s.y);
     const finals = traces.map((s) => s.final).filter((v): v is number => v !== undefined);
     const yMin = Math.min(0, ...ys, ...finals);
     const yMax = Math.max(...ys, ...finals);
     const span = Math.max(yMax - yMin, 1e-9);
-    const yr: [number, number] = [yMin - 0.08 * span, yMax + 0.16 * span];
+    const yr: [number, number] = layout?.main ?? [yMin - 0.08 * span, yMax + 0.16 * span];
+    const insetH = layout?.inset ? Math.round(Math.max(80, h * 0.36)) : 0;
     const xName = sys === 'generic' ? '' : 'time (s)';
     const yName = sys === 'generic' ? '' : yLabel;
-    const fr = rangeFrame(w, h, [0, tEnd], yr, 48, 10, 8, 26);
+    const fr = rangeFrame(w, h - insetH, [0, tEnd], yr, 48, 10, 8, 26);
     graphAxes(g, fr, [0, tEnd], yr, xName, yName);
     const pal = traces[0]?.label === 'open' && traces.length > 1
       ? [col.muted(), col.a(), col.e(), col.c()]
@@ -125,6 +131,19 @@ const labStep = {
       curve(g, fr, s.t, s.y, pal[i % pal.length], 2);
       if (s.final !== undefined) tline(g, fr, [0, s.final], [tEnd, s.final], pal[i % pal.length], 1, [5, 4]);
     });
+    if (layout?.inset && layout.insetFor && insetH) {
+      const tr = traces.find((s) => s.label === layout.insetFor);
+      const color = layout.insetFor === 'closed' ? col.a() : col.muted();
+      if (tr) {
+        g.save(); g.translate(0, h - insetH);
+        text(g, layout.note ?? 'y zoomed', 12, 12, col.text(), 'left', 10);
+        const ifr = rangeFrame(w, insetH, [0, tEnd], layout.inset, 48, 10, 18, 22);
+        graphAxes(g, ifr, [0, tEnd], layout.inset, 'time (s)', 'ω (rad/s)');
+        curve(g, ifr, tr.t, tr.y, color, 2);
+        if (tr.final !== undefined) tline(g, ifr, [0, tr.final], [tEnd, tr.final], color, 1, [5, 4]);
+        g.restore();
+      }
+    }
     // legend (top-right) and a key for the dashed finals
     const lx = fr.box.r - 6;
     traces.forEach((s, i) => {

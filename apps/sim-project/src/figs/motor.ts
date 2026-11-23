@@ -1,8 +1,12 @@
 /** Figure `motor`: load step, open and closed loop. */
-import { figureOf, drawStepResponse, col, text, wipe, type FigurePanel } from '@study/core';
+import { figureOf, drawStepResponse, col, text, wipe, rangeFrame, graphAxes, curve, tline, type FigurePanel } from '@study/core';
 import { f, lin, num, str, type V } from './util';
 import { motorNumbers } from '../model/plants';
 import { drawMotor } from './scenes';
+import { motorPlotLayout, type LoopView } from './motorScale';
+
+export { motorPlotLayout, paddedRange, spanFraction, seriesSpan } from './motorScale';
+export type { LoopView } from './motorScale';
 
 export const motorPanels = (): FigurePanel[] => [
   {
@@ -10,7 +14,7 @@ export const motorPanels = (): FigurePanel[] => [
     draw(g, w, h, v: V) {
       const axis = str(v, 'axis', '7 s') === '0.02 s' ? 0.02 : 7;
       const tFrac = num(v, 't', 1), t = tFrac * axis;
-      const loop = str(v, 'loop', 'both') as 'open' | 'closed' | 'both';
+      const loop = str(v, 'loop', 'both') as LoopView;
       const n = motorNumbers({ Ka: num(v, 'Ka', 54), Kt: num(v, 'Kt', 1), J: num(v, 'J', 2), b: num(v, 'b', 0.5), Kb: num(v, 'Kb', 0.1) });
       const closed = loop === 'closed' || (loop === 'both' && axis < 1);
       const speed = closed ? n.wc(t) : n.wo(t);
@@ -22,29 +26,38 @@ export const motorPanels = (): FigurePanel[] => [
     id: 'plot', title: 'Speed change after a 1 N·m load at t = 0', x: 'time (s)', y: 'ω (rad/s per N·m)',
     draw(g, w, h, v: V) {
       const axis = str(v, 'axis', '7 s') === '0.02 s' ? 0.02 : 7;
-      const loop = str(v, 'loop', 'both');
+      const loop = (str(v, 'loop', 'both') as LoopView);
       const n = motorNumbers({ Ka: num(v, 'Ka', 54), Kt: num(v, 'Kt', 1), J: num(v, 'J', 2), b: num(v, 'b', 0.5), Kb: num(v, 'Kb', 0.1) });
       const t = lin(0, axis, 400);
+      const openY = t.map(n.wo), closedY = t.map(n.wc);
+      const layout = motorPlotLayout(openY, closedY, loop);
       const show = { ess: true };
       const essLabel = Math.abs(Math.abs(n.wcInf) - 0.002) < 3.5e-4 ? "handout’s −0.002" : `final sag ${n.wcInf.toFixed(5)}`;
-      const yr: [number, number] = axis < 1 ? [-0.002, 0] : [-0.7, 0];
+      const yLabel = 'ω (rad/s per N·m)';
       const head = 40;
+      const inner = Math.max(0, h - head);
+      const insetH = layout.inset
+        ? Math.round(Math.min(inner * 0.55, Math.max(w < 500 ? 80 : 96, inner * (w < 500 ? 0.48 : 0.36))))
+        : 0;
       wipe(g, w, h);
       g.save(); g.translate(0, head);
-      const H = h - head;
-      if (loop === 'open' || loop === 'both') {
-        drawStepResponse(g, w, H, { t, y: t.map(n.wo), ref: 0, final: n.woInf, tEnd: axis, yRange: yr, color: col.muted(), yLabel: axis < 1 ? 'ω (rad/s)  ×10⁻³ scale' : 'ω (rad/s per N·m)', show, essLabel: `final sag ${n.woInf.toFixed(3)}`, band: 0 });
+      const H = h - head - insetH;
+      const yr = layout.main;
+      if (loop === 'open') {
+        drawStepResponse(g, w, H, { t, y: openY, ref: 0, final: n.woInf, tEnd: axis, yRange: yr, color: col.muted(), yLabel, show, essLabel: `final sag ${n.woInf.toFixed(3)}`, band: 0 });
+      } else if (loop === 'closed') {
+        drawStepResponse(g, w, H, { t, y: closedY, ref: 0, final: n.wcInf, tEnd: axis, yRange: yr, color: col.a(), show, essLabel, yLabel });
+      } else {
+        drawStepResponse(g, w, H, {
+          t, y: closedY, ghost: { t, y: openY, label: 'open', color: col.muted() },
+          ref: 0, final: n.wcInf, tEnd: axis, yRange: yr, color: col.a(), show, yLabel, essLabel,
+        });
       }
-      if (loop === 'closed' || loop === 'both') {
-        if (loop === 'closed') {
-          drawStepResponse(g, w, H, { t, y: t.map(n.wc), ref: 0, final: n.wcInf, tEnd: axis, yRange: yr, color: col.a(), show, essLabel, yLabel: axis < 1 ? 'ω (rad/s)' : 'ω (rad/s per N·m)' });
-        } else {
-          drawStepResponse(g, w, H, {
-            t, y: t.map(n.wc), ghost: { t, y: t.map(n.wo), label: 'open' },
-            ref: 0, final: n.wcInf, tEnd: axis, yRange: yr, color: col.a(), show,
-            yLabel: axis < 1 ? 'ω (rad/s)' : 'ω (rad/s per N·m)', essLabel,
-          });
-        }
+      if (layout.inset && layout.insetFor) {
+        const ys = layout.insetFor === 'closed' ? closedY : openY;
+        const final = layout.insetFor === 'closed' ? n.wcInf : n.woInf;
+        const color = layout.insetFor === 'closed' ? col.a() : col.muted();
+        drawMotorInset(g, w, H, insetH, { t, y: ys, tEnd: axis, yr: layout.inset, final, color, note: layout.note ?? 'y zoomed' });
       }
       g.restore();
       const ratio = n.ratio, ok = ratio < 0.02;
@@ -57,5 +70,23 @@ export const motorPanels = (): FigurePanel[] => [
     },
   },
 ];
+
+function drawMotorInset(
+  g: CanvasRenderingContext2D, w: number, plotH: number, insetH: number,
+  s: { t: number[]; y: number[]; tEnd: number; yr: [number, number]; final: number; color: string; note: string },
+) {
+  g.save();
+  g.translate(0, plotH);
+  g.fillStyle = 'rgba(127,127,127,0.08)';
+  g.strokeStyle = col.muted();
+  g.lineWidth = 1;
+  g.beginPath(); g.rect(4, 2, w - 8, insetH - 4); g.fill(); g.stroke();
+  text(g, s.note, 12, 14, col.text(), 'left', 10);
+  const fr = rangeFrame(w, insetH, [0, s.tEnd], s.yr, 48, 12, 20, 22);
+  graphAxes(g, fr, [0, s.tEnd], s.yr, 'time (s)', 'ω (rad/s)');
+  curve(g, fr, s.t, s.y, s.color, 2);
+  tline(g, fr, [0, s.final], [s.tEnd, s.final], s.color, 1, [5, 4]);
+  g.restore();
+}
 
 export const motorFigure = figureOf(() => motorPanels());

@@ -138,8 +138,10 @@ export function mountFigure(host: HTMLElement, def: FigureDef, panels0: FigurePa
     if (intro) return;
     const phoneTabs = document.documentElement.classList.contains('layout-tabs')
       && window.matchMedia('(max-width: 700px)').matches;
+    const drawer = host.closest('.sticky-fig')?.querySelector('.sticky-controls-body');
     const first = inline.querySelector('.fig');
-    if (phoneTabs && first) first.after(rail);
+    if (phoneTabs && drawer) drawer.append(rail);
+    else if (phoneTabs && first) first.after(rail);
     else layout.append(rail);
   };
   placeRail();

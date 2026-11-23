@@ -188,3 +188,86 @@ test.describe('sim-project tabbed page', () => {
     });
   }
 });
+
+  test('scrolling each (c) step changes the sticky figure preset on Engine and Motor', async ({ page }) => {
+    await page.setViewportSize({ width: 1280, height: 900 });
+
+    await open(page, 'sim-project', '#/tab/motor');
+    const motorSteps = page.getByTestId('sticky-step');
+    await expect(motorSteps).toHaveCount(6);
+    const motorWant = ['open', 'closed', 'scale', 'kt2', 'sweep', 'heavy'];
+    for (let i = 0; i < motorWant.length; i++) {
+      await motorSteps.nth(i).evaluate((el) => el.scrollIntoView({ block: 'center' }));
+      await expect.poll(async () => page.getByTestId('sticky-fig').getAttribute('data-preset'), { timeout: 5000 })
+        .toBe(motorWant[i]);
+      await expect(page.getByTestId('sticky-readout')).toContainText(motorWant[i]);
+    }
+
+    await open(page, 'sim-project', '#/tab/engine');
+    const engineSteps = page.getByTestId('sticky-step');
+    await expect(engineSteps).toHaveCount(6);
+    const engineWant: { figure: string; preset: string; params?: string }[] = [
+      { figure: 'pi', preset: 'ponly' },
+      { figure: 'engine-fit', preset: '' },
+      { figure: 'tuner', preset: 'initial' },
+      { figure: 'tuner', preset: 'slower' },
+      { figure: 'tuner', preset: 'final' },
+      { figure: 'tuner', preset: 'final', params: 'rpm' },
+    ];
+    for (let i = 0; i < engineWant.length; i++) {
+      await engineSteps.nth(i).evaluate((el) => el.scrollIntoView({ block: 'center' }));
+      const want = engineWant[i];
+      await expect.poll(async () => page.getByTestId('sticky-fig').getAttribute('data-figure'), { timeout: 5000 })
+        .toContain(want.figure);
+      await expect.poll(async () => page.getByTestId('sticky-fig').getAttribute('data-preset') ?? '', { timeout: 5000 })
+        .toContain(want.preset);
+      if (want.params) {
+        await expect.poll(async () => page.getByTestId('sticky-fig').getAttribute('data-params') ?? '').toContain(want.params);
+      }
+    }
+  });
+
+  test('"Show this" switches the sticky figure to that step', async ({ page }) => {
+    await page.setViewportSize({ width: 1280, height: 900 });
+    await open(page, 'sim-project', '#/tab/motor');
+    const steps = page.getByTestId('sticky-step');
+    await expect(page.getByTestId('sticky-fig')).toHaveAttribute('data-preset', 'open');
+    await steps.nth(3).getByTestId('sticky-show').click();
+    await expect(page.getByTestId('sticky-fig')).toHaveAttribute('data-preset', 'kt2');
+    await expect(steps.nth(3)).toHaveAttribute('aria-current', 'step');
+    await expect(page.getByTestId('sticky-cap')).toContainText('Step 4');
+    await expect(page.getByTestId('sticky-show').nth(3)).toBeEnabled();
+    expect(await steps.nth(3).getByTestId('sticky-show').evaluate((el) => el.tagName)).toBe('BUTTON');
+  });
+
+  for (const width of [1280, 390] as const) {
+    test(`sticky figure stays on screen while scrolling (c) at ${width}px`, async ({ page }) => {
+      await page.setViewportSize({ width, height: width === 1280 ? 900 : 800 });
+      await open(page, 'sim-project', '#/tab/motor');
+      const split = page.getByTestId('sticky-split');
+      await expect(split).toBeVisible();
+      const steps = page.getByTestId('sticky-step');
+      const n = await steps.count();
+      expect(n).toBeGreaterThan(1);
+      for (let i = 0; i < n; i++) {
+        await steps.nth(i).evaluate((el) => el.scrollIntoView({ block: 'center' }));
+        await page.waitForTimeout(150);
+        const vis = await page.getByTestId('sticky-fig').evaluate((el) => {
+          const r = el.getBoundingClientRect();
+          return r.height > 0 && r.bottom > 8 && r.top < window.innerHeight - 8;
+        });
+        expect(vis, `step ${i + 1} at ${width}px`).toBe(true);
+      }
+    });
+  }
+
+  for (const width of [320, 390, 923, 1280] as const) {
+    test(`no horizontal overflow at ${width}px on every problem tab`, async ({ page }) => {
+      await page.setViewportSize({ width, height: width >= 923 ? 900 : 800 });
+      for (const t of TABS.filter((x) => x.id !== 'overview')) {
+        await open(page, 'sim-project', `#/tab/${t.id}`);
+        await page.waitForTimeout(200);
+        expect(await noHScroll(page), `${t.id} at ${width}`).toBe(true);
+      }
+    });
+  }
