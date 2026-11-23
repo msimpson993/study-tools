@@ -94,4 +94,34 @@ test.describe('sim-project tabbed page', () => {
       }
     });
   }
+
+  test('authoring notes (FIGURES.md, new preset) never appear in the DOM', async ({ page }) => {
+    for (const hash of ['#/tab/overview', '#/tab/motor', '#/tab/borer', '#/tab/disk', '#/tab/engine', '#/quiz', '#/glossary', '#/review/practice']) {
+      await open(page, 'sim-project', hash);
+      const body = await page.locator('#app').innerText();
+      expect(body, hash).not.toMatch(/FIGURES\.md/);
+      expect(body, hash).not.toMatch(/new preset/i);
+    }
+  });
+
+  for (const width of [923, 1280] as const) {
+    test(`back-to-back figures stack and no text column is under 200px at ${width}px`, async ({ page }) => {
+      await page.setViewportSize({ width, height: 900 });
+      for (const hash of ['#/tab/disk', '#/tab/engine']) {
+        await open(page, 'sim-project', hash);
+        await page.waitForTimeout(300);
+        const info = await page.evaluate(() => {
+          const figs = [...document.querySelectorAll<HTMLElement>('[data-testid=viz] .fig, [data-testid=viz] .fig-stage')];
+          const narrow = figs.map((el) => ({ w: Math.round(el.getBoundingClientRect().width), t: (el.querySelector('h4')?.textContent ?? el.className).slice(0, 60) })).filter((x) => x.w > 0 && x.w < 200);
+          const sideBySide = [...document.querySelectorAll<HTMLElement>('.pop-figs.n2, .pop-figs.n3, .pop-figs.n4')].some((el) => {
+            const cs = getComputedStyle(el);
+            return (cs.gridTemplateColumns || '').split(' ').filter((c) => c && c !== 'none').length > 1;
+          });
+          return { narrow, sideBySide };
+        });
+        expect(info.sideBySide, `${hash} still lays two figures in one row`).toBe(false);
+        expect(info.narrow, `${hash} narrow columns: ${JSON.stringify(info.narrow)}`).toEqual([]);
+      }
+    });
+  }
 });

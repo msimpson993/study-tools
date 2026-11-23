@@ -245,8 +245,76 @@ describe('tabs-layout presets and new figures', () => {
   it('tuner final design reaches 2980 rpm at t₀ + 1.82 s on the linear stand-in', () => {
     const { P, I } = M.tuner(1.5, 0.72);
     const r = M.engineStep(P, I, 8, 1e-3);
-    let tHit = NaN;
-    for (let i = 0; i < r.t.length; i++) if (r.y[i] >= 0.98) { tHit = r.t[i]; break; }
-    nearAbs(tHit, 1.82, 0.03);
+    const tHit = M.firstCrossing(r.t, r.y, 0.98);
+    nearAbs(tHit, grab(/engine emulated final gains:[\s\S]*?t0\+([\d.]+) s/), 0.01);
+    nearAbs(tHit, 1.806, 0.01);
+  });
+});
+
+describe('pass-2 pins (new presets and captions)', () => {
+  it('motor Ka = 7.5 is just under the 0.02 line; Ka = 7.35 is not', () => {
+    nearAbs(grab(/motor Ka=7\.35:[\s\S]*?ratio ([\d.]+)/), 0.02000, 5e-5);
+    nearAbs(grab(/motor Ka=7\.5:[\s\S]*?ratio ([\d.]+)/), 0.01961, 5e-5);
+    const n735 = M.motorNumbers({ Ka: 7.35 });
+    const n75 = M.motorNumbers({ Ka: 7.5 });
+    nearAbs(n735.ratio, 0.02000, 5e-5);
+    nearAbs(n75.ratio, 0.01961, 5e-5);
+    expect(n75.ratio < 0.02).toBe(true);
+    expect(n735.ratio < 0.02).toBe(false);
+    nearAbs(n75.tauClosed * 1000, 26.14, 0.05);
+    nearAbs(n75.wcInf, -0.01307, 5e-5);
+  });
+
+  it('borer poles and zeros at K = 20, 36 and 100', () => {
+    const z20 = M.borerZero(20), z36 = M.borerZero(36), z100 = M.borerZero(100);
+    expect(z20).not.toBeNull(); expect(z36).not.toBeNull(); expect(z100).not.toBeNull();
+    nearAbs(z20!, -1.8182, 5e-4);
+    nearAbs(z36!, -3.2727, 5e-4);
+    nearAbs(z100!, -9.0909, 5e-4);
+    const p20 = M.borerPoles(20).map((q) => q.re).sort((a, b) => a - b);
+    nearAbs(p20[0], -10, 0.05);
+    nearAbs(p20[1], -2, 0.05);
+    const p36 = M.borerPoles(36);
+    p36.forEach((q) => nearAbs(q.re, -6, 0.05));
+    const p100 = M.borerPoles(100);
+    const pair = p100.filter((q) => Math.abs(q.im) > 0.5);
+    expect(pair).toHaveLength(2);
+    nearAbs(Math.abs(pair[0].im), 8, 0.05);
+    nearAbs(pair[0].re, -6, 0.05);
+  });
+
+  it('disk Ka = 3981: real loop nearly rings forever, stand-in dies out', () => {
+    const Ka = 10 ** 3.6;
+    nearAbs(Ka, 3981.1, 0.2);
+    const seek = M.diskSeek(Ka, 30);
+    const stand = M.diskStand(Ka);
+    nearAbs(seek.m.os, grab(/disk Ka=10\^3\.6=3981\.1: real loop PO=([\d.]+)%/), 0.05);
+    nearAbs(seek.m.ts, 16.71, 0.08);
+    nearAbs(stand.m.os, grab(/stand-in zeta=[\d.]+ PO=([\d.]+)%/), 0.05);
+    nearAbs(stand.m.ts, 0.383, 0.01);
+  });
+
+  it('disk Ka = 80 stand-in and shock settling times', () => {
+    nearAbs(M.diskStand(80).m.os, 16.30, 0.05);
+    nearAbs(M.diskStand(80).m.ts, 0.4038, 0.003);
+    nearAbs(M.diskShock(80).m.ts, 0.4081, 0.003);
+    nearAbs(M.diskSeek(80).m.ts, 0.4091, 0.003);
+  });
+
+  it('engine initial at dt = 1 ms is 7.43 %; margins 60.0° / 25.4 dB', () => {
+    const { P, I } = M.tuner(0.678, 0.6);
+    const r = M.engineStep(P, I, 8, 1e-3);
+    nearAbs(r.m.os, grab(/engine initial, emulated gains, dt=1\.0 ms: OS=([\d.]+)%/), 0.03);
+    nearAbs(r.m.os, 7.43, 0.03);
+    const mrg = M.engineMargins(P, I, ENGINE.K, ENGINE.wn, ENGINE.zeta, ENGINE.tau, 20001);
+    nearAbs(mrg.pm, grab(/engine initial, emulated gains: PM ([\d.]+) deg/), 0.15);
+    nearAbs(mrg.gm, grab(/engine initial, emulated gains: PM [\d.]+ deg @[\s\S]*?GM ([\d.]+) dB/), 0.15);
+  });
+
+  it('handout final gains reach 2980 rpm at t₀ + 1.816 s', () => {
+    const r = M.engineStep(DESIGNS.final.P, DESIGNS.final.I, 8, 1e-3);
+    const tHit = M.firstCrossing(r.t, r.y, 0.98);
+    nearAbs(tHit, grab(/engine handout final gains:[\s\S]*?t0\+([\d.]+) s/), 0.01);
+    nearAbs(tHit, 1.816, 0.01);
   });
 });
