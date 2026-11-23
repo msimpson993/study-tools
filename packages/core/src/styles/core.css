@@ -502,9 +502,9 @@ html.layout-tabs .tab-article,html.layout-tabs .tab-body{max-width:100%;min-widt
 .app-menu-list a:hover{background:var(--accent-soft);color:var(--accent)}
 .tab-article h1{margin:.2rem 0 .4rem;font:750 1.45rem/1.25 system-ui,sans-serif}
 .tab-summary{color:var(--muted);margin:0 0 1rem;font:400 .95rem/1.45 system-ui,sans-serif}
-.tab-toc{display:flex;flex-wrap:wrap;gap:.15rem .85rem;align-items:baseline;margin:0 0 1.2rem;padding:.5rem .7rem;border:1px solid var(--border);border-radius:10px;background:var(--panel);font:.82rem/1.4 system-ui,sans-serif}
+.tab-toc{display:flex;flex-wrap:wrap;gap:.15rem .85rem;align-items:baseline;margin:0 0 1.2rem;padding:.5rem .7rem;border:1px solid var(--border);border-radius:10px;background:var(--panel);font:.82rem/1.4 system-ui,sans-serif;min-width:0;max-width:100%}
 .tab-toc b{color:var(--muted);font:700 .72rem system-ui,sans-serif;letter-spacing:.06em;text-transform:uppercase;margin-right:.3rem}
-.tab-toc a{color:var(--accent);text-decoration:none;white-space:nowrap}
+.tab-toc a{color:var(--accent);text-decoration:none;white-space:nowrap;max-width:100%}
 .tab-toc a:hover{text-decoration:underline}
 .tab-body .viz-embed,.tab-body .pop-figs{margin:0.85rem 0 1.15rem}
 .quiz-tab-filter{margin:.4rem 0 .2rem}
@@ -512,6 +512,8 @@ html.layout-tabs .tab-article,html.layout-tabs .tab-body{max-width:100%;min-widt
   html.layout-tabs .tab-content{padding:.7rem .7rem 3rem}
   .tab-bar a{padding:.55rem .75rem;font-size:.82rem}
   .tab-article h1{font-size:1.22rem}
+  /* long Contents links (e.g. Overview) must wrap; nowrap overflowed the page at 320px in CI fonts */
+  .tab-toc a{white-space:normal;overflow-wrap:anywhere}
 }
 @media (max-width:1099px){
   html.layout-tabs .tab-bar{top:44px}

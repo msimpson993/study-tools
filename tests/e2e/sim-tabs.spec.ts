@@ -84,9 +84,9 @@ test.describe('sim-project tabbed page', () => {
     await expect(art).toContainText(/minus sign|no minus/i);
   });
 
-  for (const width of [390, 1280] as const) {
+  for (const width of [320, 390, 1280] as const) {
     test(`no horizontal overflow at ${width}px on Overview, Motor, Quiz and Glossary`, async ({ page }) => {
-      await page.setViewportSize({ width, height: width === 390 ? 800 : 900 });
+      await page.setViewportSize({ width, height: width === 1280 ? 900 : 800 });
       for (const hash of ['#/tab/overview', '#/tab/motor', '#/quiz', '#/glossary']) {
         await open(page, 'sim-project', hash);
         await page.waitForTimeout(200);
