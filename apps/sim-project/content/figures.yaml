@@ -1,0 +1,176 @@
+# PROPOSED figures.yaml for sim-project. Drawing behaviour per figure: ../FIGURES.md. Models: numbers.py (port to src/model, pin in test/numbers.test.ts).
+- id: blocks
+  title: "Reading a script: each line builds a block"
+  x: block diagram · fraction so far
+  y: script line
+  legend:
+    - { label: "block this line builds", color: "var(--yel)" }
+    - { label: "already built", color: "var(--fg)" }
+  howToRead: "Pick a script from the handout. The slider steps through it one line at a time: the line is shown in code type, the block it builds is outlined in yellow on the diagram, and the fraction the script holds after that line is written underneath."
+  lookFor: "feedback(machine, rest-of-loop): for a push, the machine is the forward path and the controller is the return path."
+  controls:
+    - { id: script, label: script, type: select, options: [motor-open, motor-closed, borer-step, borer-push, disk-seek, disk-shock], default: motor-open, group: primary }
+    - { id: line, label: line, type: range, min: 1, max: 8, step: 1, default: 1, group: primary }
+  presets:
+    - { id: motoropen, label: "Fig. 4.23 (open loop)", set: { script: motor-open, line: 6 } }
+    - { id: motorclosed, label: "Fig. 4.24 (closed loop)", set: { script: motor-closed, line: 8 } }
+    - { id: diskshock, label: "Fig. 4.31 (disk shock)", set: { script: disk-shock, line: 5 } }
+- id: motor
+  title: "The motor: a load hits, with and without the tachometer loop"
+  x: time (s)
+  y: speed change ω (rad/s per N·m of load)
+  legend:
+    - { label: open loop, color: "var(--muted)" }
+    - { label: closed loop, color: "var(--acc)" }
+    - { label: "final value", color: "var(--yel)", dash: true }
+  howToRead: "Left: the motor and its load, with the tachometer and amplifier drawn when the loop is on; the shaft's spin slows as the load hits at t = 0. Right: the speed change after a 1 N·m load. The readout gives the final sag, the time constant τ, the loop gain and the ratio closed/open against the handout's 0.02 line."
+  lookFor: "On the 7 s axis the closed-loop curve looks flat; switch the time axis to 0.02 s to see it is a full curve 361× faster."
+  animate: { control: t, speed: 1, loop: false }
+  controls:
+    - { id: loop, label: feedback, type: seg, options: [open, closed, both], default: both, group: primary }
+    - { id: Ka, label: "Ka (amplifier gain)", type: range, min: 0, max: 100, step: 0.5, default: 54, group: primary }
+    - { id: Kt, label: "Kt (tachometer, V·s)", type: range, min: 0.25, max: 2, step: 0.05, default: 1, group: primary }
+    - { id: axis, label: time axis, type: seg, options: ["7 s", "0.02 s"], default: "7 s", group: primary }
+    - { id: J, label: "J (inertia, kg·m²)", type: range, min: 0.5, max: 4, step: 0.1, default: 2, group: more }
+    - { id: b, label: "b (friction, N·m·s)", type: range, min: 0.1, max: 2, step: 0.05, default: 0.5, group: more }
+    - { id: Kb, label: "Kb (back-EMF, V·s)", type: range, min: 0, max: 0.3, step: 0.01, default: 0.1, group: more }
+    - { id: t, label: time, type: range, min: 0, max: 1, step: 0.01, default: 1, group: more }
+  presets:
+    - { id: open, label: "Fig. 4.23: open loop", set: { loop: open, axis: "7 s", Ka: 54, Kt: 1, J: 2, b: 0.5, Kb: 0.1 }, about: "Sag −0.667 rad/s, τ = 1.33 s." }
+    - { id: closed, label: "Fig. 4.24: closed loop", set: { loop: closed, axis: "0.02 s", Ka: 54, Kt: 1, J: 2, b: 0.5, Kb: 0.1 }, about: "Sag −0.00185 rad/s, τ = 3.69 ms, ratio 0.0028." }
+    - { id: sweep, label: "just meets 0.02", set: { loop: both, axis: "7 s", Ka: 7.35, Kt: 1 }, about: "Ka = 7.35: ratio 0.020 (not in lab handout)." }
+    - { id: heavy, label: "double the inertia", set: { loop: both, J: 4, Ka: 54 }, about: "Slower both ways, same sag (not in lab handout)." }
+- id: borer
+  title: "The boring machine: turn K, watch the command, the push and the poles"
+  x: time (s) · s-plane
+  y: position y(t)
+  legend:
+    - { label: "planned line / final value", color: "var(--muted)", dash: true }
+    - { label: "response at your K", color: "var(--acc)" }
+    - { label: "K = 20 and K = 100 (ghosts)", color: "var(--muted)" }
+  howToRead: "Top: the machine seen from above, steering onto the planned line (command) or pushed sideways by the rock (push). Middle left: the step response to a new planned line, with overshoot, 2 % band and settling time marked. Middle right: the response to a unit push, final offset 1/K marked. Bottom: the poles (×) and the zero (○) of the command response; the dashed rays are ζ = 1 and ζ = 0.6."
+  lookFor: "As K rises past 36 the two real poles meet and split into a swinging pair; overshoot climbs while the push offset 1/K falls."
+  animate: { control: t, speed: 0.5, loop: false }
+  controls:
+    - { id: K, label: "K (gain)", type: range, min: 5, max: 400, step: 1, default: 100, group: primary }
+    - { id: input, label: show, type: seg, options: [command, push, both], default: both, group: primary }
+    - { id: Kd, label: "rate gain (handout: 11)", type: range, min: 0, max: 30, step: 0.5, default: 11, group: more }
+    - { id: ghosts, label: "K = 20, 100 ghosts", type: toggle, default: true, group: more }
+    - { id: t, label: time, type: range, min: 0, max: 2.5, step: 0.01, default: 2.5, group: more }
+  presets:
+    - { id: k20, label: "K = 20", set: { K: 20, Kd: 11 }, about: "3.9 % overshoot, 0.91 s, offset 0.05 (handout: 4 %, 1.0 s, 5 %)." }
+    - { id: k100, label: "K = 100", set: { K: 100, Kd: 11 }, about: "22.0 %, 0.67 s, offset 0.01 (handout: 22 %, 0.7 s, 1 %)." }
+    - { id: k36, label: "K = 36 (ζ = 1)", set: { K: 36, Kd: 11 }, about: "Poles meet at −6; the zero still gives 9.2 % overshoot." }
+    - { id: push, label: "rock push, K = 20 vs 100", set: { input: push, K: 100, Kd: 11 }, about: "Fig. 4.26." }
+    - { id: nodamp, label: "no rate term (own)", set: { K: 100, Kd: 0 }, about: "Damping 1 only: 85 % overshoot (not in lab handout)." }
+- id: tradeoff
+  title: "One knob, two goals: overshoot against push offset"
+  x: step overshoot (%)
+  y: push offset (per unit push)
+  legend:
+    - { label: "every K (5 to 400)", color: "var(--muted)" }
+    - { label: your K, color: "var(--acc)" }
+    - { label: "handout's K values", color: "var(--yel)" }
+  howToRead: "Each point on the curve is one gain: how far the response overshoots a new command (across) and how far a unit push leaves it off (up). The dot is your gain; the yellow marks are the handout's two settings. For the disk head the axes are seek overshoot and shock offset."
+  lookFor: "Sliding along the curve, one number always gets worse as the other gets better: there is no corner at the origin."
+  controls:
+    - { id: machine, label: machine, type: seg, options: [boring machine, disk head], default: boring machine, group: primary }
+    - { id: g, label: "gain (K or Ka)", type: range, min: 5, max: 400, step: 1, default: 100, group: primary }
+  presets:
+    - { id: borer, label: "boring machine, K = 100", set: { machine: boring machine, g: 100 } }
+    - { id: disk, label: "disk head, Ka = 80", set: { machine: disk head, g: 80 } }
+    - { id: ten, label: "10 % overshoot (own)", set: { machine: boring machine, g: 39 }, about: "K ≈ 38.7: offset 0.026 (not in lab handout)." }
+- id: sens
+  title: "Sensitivity: how much a change in the machine shows in the loop"
+  x: "Re S · ω (rad/s, log)"
+  y: "Im S · |S| (log)"
+  legend:
+    - { label: "S(jω) = s(s + 1)/(s² + 12s + K)", color: "var(--acc)" }
+    - { label: "shortcut s/K", color: "var(--muted)", dash: true }
+    - { label: "probe ω", color: "var(--yel)" }
+  howToRead: "Left (the handout's Fig. 4.27 top): S drawn in the complex plane as ω runs from 0.1 to 1000 rad/s; it starts near 0 and ends at 1. Right (Fig. 4.27 bottom): |S| against ω on log axes, solid, with the shortcut s/K dashed. The yellow probe marks your ω on both; the readout says what a 10 % change in the machine at that ω does to the loop."
+  lookFor: "Raise K: the left end of the |S| curve drops (slow drift hidden better); the right end stays at 1."
+  controls:
+    - { id: K, label: "K (gain)", type: range, min: 5, max: 200, step: 1, default: 20, group: primary }
+    - { id: w, label: "probe ω (rad/s, log)", type: range, min: -1, max: 3, step: 0.01, default: 0, group: primary }
+  presets:
+    - { id: fig427, label: "Fig. 4.27 (K = 20)", set: { K: 20, w: 0 } }
+    - { id: k100, label: "K = 100", set: { K: 100, w: 1.27 }, about: "|S| peaks at 1.04 near 19 rad/s (not in lab handout)." }
+- id: disk
+  title: "The disk head: turn Ka, watch the seek, the shock and the poles"
+  x: time (s) · s-plane
+  y: head position y(t)
+  legend:
+    - { label: "response at your Ka", color: "var(--acc)" }
+    - { label: "two-part stand-in (coil dropped)", color: "var(--yel)", dash: true }
+    - { label: "Ka = 10 and 80 (ghosts)", color: "var(--muted)" }
+  howToRead: "Top: the drive from above, the arm swinging the head to a new track (seek) or knocked by a shock. Left: the seek (command step), overshoot and settling marked. Middle: the shock response, final offset −1/(5·Ka) marked. Right: the poles near the origin (the arm's), with an inset arrow to the coil's pole near −1000. Readout: overshoot, settling, offset, and the distance to the ceiling Ka = 4080."
+  lookFor: "At Ka = 80 the stand-in (dashed) sits on the real curve; near Ka = 4000 it stays calm while the real loop rings."
+  animate: { control: t, speed: 0.4, loop: false }
+  controls:
+    - { id: lgKa, label: "Ka (log)", type: range, min: 0, max: 3.7, step: 0.01, default: 1.903, group: primary }
+    - { id: input, label: show, type: seg, options: [seek, shock, both], default: both, group: primary }
+    - { id: stand, label: drop the coil, type: toggle, default: false, group: primary }
+    - { id: ghosts, label: "Ka = 10, 80 ghosts", type: toggle, default: true, group: more }
+    - { id: t, label: time, type: range, min: 0, max: 2, step: 0.01, default: 2, group: more }
+  presets:
+    - { id: ka10, label: "Ka = 10", set: { lgKa: 1, stand: false }, about: "No overshoot, 1.40 s." }
+    - { id: ka80, label: "Ka = 80 (Fig. 4.30)", set: { lgKa: 1.903, stand: true }, about: "17.1 % (stand-in 16.3 %), 0.41 s." }
+    - { id: shock, label: "shock, Ka = 80 (Fig. 4.31)", set: { lgKa: 1.903, input: shock }, about: "Dip −0.0029 at 0.18 s, settles −0.0025." }
+    - { id: limit, label: "near the ceiling (own)", set: { lgKa: 3.6, stand: true, input: seek }, about: "Ka ≈ 3980: barely stable; the stand-in sees nothing (not in lab handout)." }
+- id: pi
+  title: "P and I on the stand-in engine: why I removes the leftover error"
+  x: time (s)
+  y: speed (fraction of the step) · throttle (P part, I part)
+  legend:
+    - { label: speed, color: "var(--acc)" }
+    - { label: "P part of the throttle", color: "var(--yel)" }
+    - { label: "I part of the throttle", color: "var(--grn)" }
+  howToRead: "Top: engine speed after a unit step in commanded speed, on the stand-in engine (not in lab handout). Bottom: the throttle command split into P × error and I × accumulated error. With I = 0 the speed stops short by 1/(1 + P·K_e); with I > 0 the I part grows until it holds the throttle alone and the error is zero."
+  lookFor: "At the end, the P part is zero and the I part carries the whole throttle."
+  controls:
+    - { id: P, label: "P", type: range, min: 0, max: 0.012, step: 0.0001, default: 0.0042, group: primary }
+    - { id: I, label: "I", type: range, min: 0, max: 0.02, step: 0.0001, default: 0.0092, group: primary }
+  presets:
+    - { id: ponly, label: "P only (initial P)", set: { P: 0.0042, I: 0 }, about: "Stops 43 % short (stand-in)." }
+    - { id: initial, label: "initial design", set: { P: 0.0042, I: 0.0092 }, about: "7.5 % overshoot, 1.96 s." }
+    - { id: ionly, label: "I only (slower design)", set: { P: 0, I: 0.0021 }, about: "0.4 %, 3.45 s." }
+- id: tuner
+  title: "PID Tuner, emulated: two sliders on the stand-in engine"
+  x: time (s) · ω (rad/s)
+  y: speed (fraction of step) · loop gain (dB) and phase (°)
+  legend:
+    - { label: "response at your sliders", color: "var(--acc)" }
+    - { label: "baseline / previous design (ghost)", color: "var(--muted)" }
+    - { label: "phase margin and gain margin bars", color: "var(--yel)" }
+  howToRead: "Top: the engine and throttle (scene), and the two sliders drawn as in the tuner. Left: the step response at your settings (the tuner's 'Step Plot: Reference tracking'). Right: the loop's Bode plot with the PM bar at crossover and the GM bar where the phase reaches −180°. Table: P, I, rise, settling, overshoot, peak, GM, PM, as in the tuner's 'Show Parameters', with the handout's values beside them when 'show handout table' is on. All values come from an emulation on a stand-in engine fitted to the handout's tables (not in lab handout)."
+  lookFor: "At robustness 0.6, slide response time past about 2.1 s and P reaches 0: from there on the margin comes out above what you asked for."
+  animate: { control: t, speed: 1, loop: false }
+  controls:
+    - { id: resp, label: "Response time (s)", type: range, min: 0.3, max: 5, step: 0.001, default: 0.678, group: primary }
+    - { id: rob, label: "Transient behavior (robustness)", type: range, min: 0.3, max: 0.9, step: 0.01, default: 0.6, group: primary }
+    - { id: hand, label: show handout table, type: toggle, default: true, group: primary }
+    - { id: t, label: time, type: range, min: 0, max: 6, step: 0.01, default: 6, group: more }
+  presets:
+    - { id: initial, label: "initial (0.678 s, 0.6)", set: { resp: 0.678, rob: 0.6 }, about: "Handout p.3: 7.5 %, 1.96 s." }
+    - { id: slower, label: "slower (3.1 s, 0.6)", set: { resp: 3.1, rob: 0.6 }, about: "Handout p.4: P = 0, 0.401 %, 3.45 s." }
+    - { id: final, label: "final (1.5 s, 0.72)", set: { resp: 1.5, rob: 0.72 }, about: "Handout p.5: 0 %, 1.81 s." }
+    - { id: aggressive, label: "aggressive (own)", set: { resp: 0.678, rob: 0.4 }, about: "28 % overshoot (not in lab handout)." }
+- id: knobs
+  title: "Every knob: pick a machine and a knob"
+  x: time (s)
+  y: response
+  legend:
+    - { label: "handout setting (ghost)", color: "var(--muted)" }
+    - { label: your setting, color: "var(--acc)" }
+  howToRead: "Pick a machine, then a knob; one slider sets its value. The plot shows the machine's main response at the handout's setting (grey) and at yours, and the arrows below say which goals improved (green ↑) and which got worse (red ↓): sag or offset, overshoot, settling time, stability margin."
+  lookFor: "Every gain that improves the steady error makes the swing worse, on every machine."
+  controls:
+    - { id: machine, label: machine, type: select, options: [motor, boring machine, disk head, engine], default: motor, group: primary }
+    - { id: knob, label: knob, type: select, options: [Ka, Kt, J, b, K, rate gain, disk Ka, response time, robustness, P, I], default: Ka, group: primary }
+    - { id: x, label: "knob value (× handout setting, log)", type: range, min: -1, max: 1, step: 0.01, default: 0, group: primary }
+  presets:
+    - { id: motorKa, label: "motor Ka × 2", set: { machine: motor, knob: Ka, x: 0.301 } }
+    - { id: borerK, label: "boring machine K × 5", set: { machine: boring machine, knob: K, x: 0.699 } }
+    - { id: diskKa, label: "disk Ka ÷ 8", set: { machine: disk head, knob: disk Ka, x: -0.903 } }
+    - { id: engRob, label: "engine robustness × 1.2", set: { machine: engine, knob: robustness, x: 0.079 } }

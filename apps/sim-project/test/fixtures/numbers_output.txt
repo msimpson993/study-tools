@@ -1,0 +1,205 @@
+
+======================================================================
+E1  Speed tachometer (Example 4.4, Table 4.2)
+======================================================================
+params Ra=1.0 Ohm, Km=10.0 N·m/A, J=2.0 kg·m², b=0.5 N·m·s, Kb=0.1 V·s, Ka=54.0, Kt=1.0 V·s
+back-EMF acts like friction Km*Kb/Ra = 1 N·m·s; open-loop total 'friction' b + KmKb/Ra = 1.5
+open loop  w/Td = -1/(2s + 1.5)
+  tau_open = 1.3333 s; w_o(inf) = -0.6667 rad/s; w_o(7 s) = -0.6632 rad/s; 98% at 4tau = 5.333 s
+  CHECK E1 w_o(7): ours -0.663168 vs handout -0.66 (tol 0.005) -> OK 
+closed loop adds Km*Ka*Kt/Ra = 540 N·m·s -> w/Td = -1/(2s + 541.5)
+  tau_closed = 3.693 ms; w_c(inf) = -0.001847 rad/s; w_c(0.02 s) = -0.001839 rad/s
+  CHECK E1 w_c(0.02): ours -0.00183851 vs handout -0.002 (tol 0.0003) -> OK (handout rounds -0.00184 to -0.002; its plot reads ≈ -1.8e-3)
+  ratio w_c/w_o = 0.00277  (= 1.5/541.5)
+  CHECK E1 ratio: ours 0.00277008 vs handout 0.003 (tol 0.0005) -> OK 
+  ratio < 0.02 rule: needs Km*Ka*Kt/Ra > 73.5 -> Ka > 7.350 (at Kt = 1)
+  speed-up factor tau_o/tau_c = 361.0 (same as 1/ratio = 361.0)
+  [own] Ka knob table (Kt = 1): Ka, sag (rad/s), ratio, tau (ms)
+    Ka=  0.00: sag=-0.66667, ratio=1.0000, tau= 1333.33 ms
+    Ka=  1.00: sag=-0.08696, ratio=0.1304, tau=  173.91 ms
+    Ka=  5.00: sag=-0.01942, ratio=0.0291, tau=   38.83 ms
+    Ka=  7.35: sag=-0.01333, ratio=0.0200, tau=   26.67 ms
+    Ka= 10.00: sag=-0.00985, ratio=0.0148, tau=   19.70 ms
+    Ka= 20.00: sag=-0.00496, ratio=0.0074, tau=    9.93 ms
+    Ka= 54.00: sag=-0.00185, ratio=0.0028, tau=    3.69 ms
+    Ka=100.00: sag=-0.00100, ratio=0.0015, tau=    2.00 ms
+  [own] other knobs at Ka=54: J doubles -> tau doubles, sag unchanged; b 0.5->1.0 -> open sag -0.5000, closed sag -0.001845
+  [own] J=4: tau_o=2.667 s, tau_c=7.387 ms
+  [own] in rpm: open sag -6.37 rpm, closed -0.0176 rpm per N·m
+  [own] Kt=0.5: closed sag -0.003683 rad/s, tau 7.366 ms
+  [own] Kt=1: closed sag -0.001847 rad/s, tau 3.693 ms
+  [own] Kt=2: closed sag -0.000925 rad/s, tau 1.849 ms
+
+======================================================================
+E2  English Channel boring machine (Example 4.5)
+======================================================================
+plant G = 1/(s(s+1)); controller Gc = K + 11s; Y = (K+11s)/(s²+12s+K) R + 1/(s²+12s+K) Td
+  derivative gain fixed at 11; zero of T at s = -K/11
+K=20: wn=4.4721, zeta=1.3416, poles=[-10.  -2.], zero=-1.8182
+   step: PO=3.86%  Ts(2%)=0.913s  Tr(10-90)=0.1697s  Tp=0.4758s peak=1.0386
+   disturbance: final=0.0500 (5%), peak=0.04998 at 4.000s, dist-overshoot=0.00%, Ts(2%)=2.068s
+   poles-only step (no zero) PO=0.00%
+K=100: wn=10.0000, zeta=0.6000, poles=[-6.+8.j -6.-8.j], zero=-9.0909
+   step: PO=22.03%  Ts(2%)=0.666s  Tr(10-90)=0.0971s  Tp=0.2424s peak=1.2203
+   disturbance: final=0.0100 (1%), peak=0.01095 at 0.393s, dist-overshoot=9.48%, Ts(2%)=0.594s
+   poles-only step (no zero) PO=9.48%
+  CHECK E2 PO K=20: ours 3.86097 vs handout 4 (tol 0.5) -> OK 
+  CHECK E2 PO K=100: ours 22.0273 vs handout 22 (tol 0.5) -> OK 
+  CHECK E2 Ts K=20: ours 0.91328 vs handout 1 (tol 0.05) -> FLAG 
+  CHECK E2 Ts K=100: ours 0.66606 vs handout 0.7 (tol 0.05) -> OK 
+  CHECK E2 ess K=20: ours 0.05 vs handout 0.05 (tol 1e-09) -> OK 
+  CHECK E2 ess K=100: ours 0.01 vs handout 0.01 (tol 1e-09) -> OK 
+  Fig 4.26(b) K=20 disturbance at t=2.5 s = 0.04958 (still 0.84% short of 0.05)
+  critical damping K = 36 (zeta = 1)
+  K=36: PO=9.23% Ts=0.848s (zero at -3.273 still adds overshoot)
+  [own] K sweep: K, zeta, PO%, Ts(2%), ess(dist)=1/K, Tr
+    K=   5: zeta=2.683 PO=  0.00% Ts=2.165s Tr=0.2379s ess=0.2000
+    K=  10: zeta=1.897 PO=  0.00% Ts=0.389s Tr=0.2045s ess=0.1000
+    K=  20: zeta=1.342 PO=  3.86% Ts=0.913s Tr=0.1697s ess=0.0500
+    K=  36: zeta=1.000 PO=  9.23% Ts=0.848s Tr=0.1412s ess=0.0278
+    K=  50: zeta=0.849 PO= 12.89% Ts=0.718s Tr=0.1261s ess=0.0200
+    K= 100: zeta=0.600 PO= 22.03% Ts=0.666s Tr=0.0971s ess=0.0100
+    K= 200: zeta=0.424 PO= 32.61% Ts=0.544s Tr=0.0728s ess=0.0050
+    K= 400: zeta=0.300 PO= 43.80% Ts=0.655s Tr=0.0532s ess=0.0025
+  [own] K for PO = 10%: 38.70 -> ess = 0.0258
+  [own] rate-gain knob Kd (handout fixes 11): K=100
+    Kd= 0: zeta=0.050 PO= 85.45% Ts=7.601s ess(dist)=0.01
+    Kd= 5: zeta=0.300 PO= 42.62% Ts=1.309s ess(dist)=0.01
+    Kd=11: zeta=0.600 PO= 22.03% Ts=0.666s ess(dist)=0.01
+    Kd=20: zeta=1.050 PO= 10.08% Ts=0.524s ess(dist)=0.01
+  sensitivity S(s) = s(s+1)/(s²+12s+K), approx s/K at low frequency
+  K=20: |S| at w=0.1: 0.00502 (approx 0.00500); peak |S|=0.9999 at w=1000.0; |S| never exceeds 1 (approaches 1 from below); |S| = 0.5 at w = 6.08; max Im(S) = 0.5389 at Re = 0.4640
+      w=  0.1: |S|=0.0050  approx 0.0050
+      w=    1: |S|=0.0629  approx 0.0500
+      w=   10: |S|=0.6968  approx 0.5000
+      w=  100: |S|=0.9949  approx 5.0000
+  K=100: |S| at w=0.1: 0.00101 (approx 0.00100); peak |S|=1.0431 at w=18.7; |S| exceeds 1 above w = 13.27 rad/s; |S| = 0.5 at w = 6.98; max Im(S) = 0.8918 at Re = 0.3343
+      w=  0.1: |S|=0.0010  approx 0.0010
+      w=    1: |S|=0.0142  approx 0.0100
+      w=   10: |S|=0.8375  approx 0.1000
+      w=  100: |S|=1.0028  approx 1.0000
+  meaning: 10% change in G at w -> |S|·10% change in T; at DC S=0
+
+======================================================================
+E3  Disk drive read system (§4.10, Fig 4.29)
+======================================================================
+G1 = 5000/(s+1000) (coil), G2 = 1/(s(s+20)) (arm+load); T = 5000Ka/(s³+1020s²+20000s+5000Ka)
+  coil time constant 1/1000 = 1 ms; arm pole 1/20 = 50 ms; coil DC gain G1(0) = 5
+Ka=10: poles=[-1000.051   -17.01     -2.939]
+   step: PO=0.00% Ts=1.3965s Tr=0.7669s Tp=3.0000s peak=0.9998
+   2nd-order stand-in 5Ka/(s²+20s+5Ka): wn=7.0711, zeta=1.4142, PO=0.00%, Ts=1.3999s
+   disturbance (Td=1/s): final = -0.02000, peak = -0.019932 at t = 2.0000s, Ts(2%) = 1.3955s
+Ka=80: poles=[-1000.408 +0.j       -9.796+17.432j    -9.796-17.432j]
+   step: PO=17.11% Ts=0.4091s Tr=0.0810s Tp=0.1812s peak=1.1711
+   2nd-order stand-in 5Ka/(s²+20s+5Ka): wn=20.0000, zeta=0.5000, PO=16.30%, Ts=0.4038s
+   disturbance (Td=1/s): final = -0.00250, peak = -0.002928 at t = 0.1802s, Ts(2%) = 0.4081s
+  CHECK E3 Ka=80 disturbance final: ours -0.0025 vs handout -0.0025 (tol 1e-09) -> OK 
+  step e(inf) = 0 for any stable Ka (G2 has a pole at s = 0)
+  [own] Routh stability limit Ka < 4080; oscillation there at w = sqrt(20000) = 141.421 rad/s
+  [own] 2nd-order stand-in predicts NO limit (stable for every Ka): the coil pole sets the limit
+  [own] Ka sweep: Ka, PO%, Ts, Tr, dist final
+    Ka=    5: zeta2=2.000 PO=  0.00% Ts=2.9725s Tr=1.6435s dist=-0.040000
+    Ka=   10: zeta2=1.414 PO=  0.00% Ts=1.3965s Tr=0.7669s dist=-0.020000
+    Ka=   20: zeta2=1.000 PO=  0.00% Ts=0.5787s Tr=0.3333s dist=-0.010000
+    Ka=   40: zeta2=0.707 PO=  4.60% Ts=0.4238s Tr=0.1504s dist=-0.005000
+    Ka=   80: zeta2=0.500 PO= 17.11% Ts=0.4091s Tr=0.0809s dist=-0.002500
+    Ka=  160: zeta2=0.354 PO= 32.19% Ts=0.3924s Tr=0.0486s dist=-0.001250
+    Ka=  500: zeta2=0.200 PO= 57.17% Ts=0.4504s Tr=0.0236s dist=-0.000400
+    Ka= 2000: zeta2=0.100 PO= 84.97% Ts=0.7644s Tr=0.0108s dist=-0.000100
+  [own] Ka for PO = 5%: 41.13 -> dist final -0.00486
+  [own] 2nd-order critical damping: 5Ka = 100 -> Ka = 20
+
+======================================================================
+E4  Engine speed with PI from PID Tuner (Project 1)  [plant fit is own]
+======================================================================
+frequency points read from the handout's 4 PID Tuner tables (|G|, phase) and the fit:
+   w= 2.950: |G|  190.12 fit  190.42; phase   -83.55 fit   -83.55
+   w=16.700: |G|   12.60 fit   12.63; phase  -172.54 fit  -172.54
+   w= 0.645: |G|  303.34 fit  303.02; phase   -20.70 fit   -20.65
+   w= 3.270: |G|  174.55 fit  173.72; phase   -90.00 fit   -90.10
+   w= 1.330: |G|  277.80 fit  278.36; phase   -41.84 fit   -41.76
+   w=15.000: |G|   15.44 fit   15.54; phase  -168.66 fit  -168.65
+   w=19.000: |G|    9.87 fit    9.83; phase  -176.99 fit  -177.11
+   w=60.300: |G|    1.00 fit    1.00; phase   134.35 fit   134.39
+FIT  G(s) = 311.2 e^(-15.0 ms·s) / (s²/3.418² + 2·0.935·s/3.418 + 1)
+     DC gain 311.2 rpm per unit throttle; wn=3.418 rad/s, zeta=0.935; delay 15.0 ms; poles [-3.196+1.212j -3.196-1.212j]
+PAGE MODEL (rounded): G(s) = 311·3.42²·e^(-0.015s)/(s² + 6.3954s + 11.6964)
+   poles [-3.1977+1.2129j -3.1977-1.2129j]  time constants [0.2734+0.1037j 0.2734-0.1037j] s
+initial  slider 0.678 s / 0.6: P=0.0042253, I=0.0092411; loop gain P·K = 1.314, I·K = 2.874 /s; integral time Ti = P/I = 0.4572 s
+   ours : Tr=0.450s Ts=1.961s OS=7.472% peak=1.0747 | PM 59.9° @ 2.954 | GM 25.4 dB @ 16.68
+   table: Tr=0.45s Ts=1.96s OS=7.5% peak=1.08 | PM 59.9° @ 2.95 | GM 25.4 dB @ 16.7
+   2/response time = 2.950 rad/s vs table crossover 2.95
+  CHECK E4 initial OS: ours 7.47244 vs handout 7.5 (tol 1) -> OK 
+  CHECK E4 initial Ts: ours 1.961 vs handout 1.96 (tol 0.25) -> OK 
+  CHECK E4 initial Tr: ours 0.4502 vs handout 0.45 (tol 0.1) -> OK 
+  CHECK E4 initial PM: ours 59.8817 vs handout 59.9 (tol 1.5) -> OK 
+slower   slider 3.1 s / 0.6: P=0.0, I=0.0021263; loop gain P·K = 0.000, I·K = 0.661 /s; integral time Ti = P/I = 0.0000 s
+   ours : Tr=2.070s Ts=3.467s OS=0.365% peak=1.0037 | PM 69.4° @ 0.644 | GM 18.9 dB @ 3.27
+   table: Tr=2.06s Ts=3.45s OS=0.401% peak=1.0 | PM 69.3° @ 0.645 | GM 18.9 dB @ 3.27
+   2/response time = 0.645 rad/s vs table crossover 0.645
+  CHECK E4 slower OS: ours 0.365358 vs handout 0.401 (tol 1) -> OK 
+  CHECK E4 slower Ts: ours 3.467 vs handout 3.45 (tol 0.25) -> OK 
+  CHECK E4 slower Tr: ours 2.0698 vs handout 2.06 (tol 0.1) -> OK 
+  CHECK E4 slower PM: ours 69.3912 vs handout 69.3 (tol 1.5) -> OK 
+final    slider 1.5 s / 0.72: P=0.0014551, I=0.0043791; loop gain P·K = 0.453, I·K = 1.362 /s; integral time Ti = P/I = 0.3323 s
+   ours : Tr=1.091s Ts=1.816s OS=0.000% peak=1.0000 | PM 72.1° @ 1.332 | GM 32.7 dB @ 14.99
+   table: Tr=1.09s Ts=1.81s OS=0.0% peak=0.999 | PM 72.0° @ 1.33 | GM 32.8 dB @ 15.0
+   2/response time = 1.333 rad/s vs table crossover 1.33
+  CHECK E4 final OS: ours 0 vs handout 0 (tol 1) -> OK 
+  CHECK E4 final Ts: ours 1.8158 vs handout 1.81 (tol 0.25) -> OK 
+  CHECK E4 final Tr: ours 1.0914 vs handout 1.09 (tol 0.1) -> OK 
+  CHECK E4 final PM: ours 72.0819 vs handout 72 (tol 1.5) -> OK 
+[own] emulated tuner rule: crossover = 2/response time; phase margin = 100 × robustness (degrees); P >= 0
+   initial : emulated P=0.0042220 I=0.0092107 clamped=False | handout P=0.0042253 I=0.0092411
+   slower  : emulated P=0.0000000 I=0.0021303 clamped=True | handout P=0.0 I=0.0021263
+   final   : emulated P=0.0014529 I=0.0043857 clamped=False | handout P=0.0014551 I=0.0043791
+   initial-design phase needed from PI at 0.645 rad/s with PM 60: -99.4° (< -90° impossible with P >= 0, so P -> 0, PM becomes 69.4°)
+[own] slider sweep (emulated): resp, rob -> P, I, OS%, Ts, Tr
+   resp=0.500 rob=0.60: P=0.006819 I=0.008346 OS=  3.38% Ts=2.598s Tr=0.357s PM=60.0° GM=23.0dB
+   resp=0.678 rob=0.60: P=0.004222 I=0.009211 OS=  7.36% Ts=1.962s Tr=0.451s PM=60.0° GM=25.4dB
+   resp=1.000 rob=0.60: P=0.002094 I=0.007059 OS=  8.38% Ts=1.987s Tr=0.652s PM=60.0° GM=28.6dB
+   resp=1.500 rob=0.60: P=0.000737 I=0.004693 OS=  8.33% Ts=2.945s Tr=0.961s PM=60.0° GM=25.7dB
+   resp=1.500 rob=0.72: P=0.001453 I=0.004386 OS=  0.00% Ts=1.806s Tr=1.089s PM=72.0° GM=32.7dB
+   resp=2.000 rob=0.60: P=0.000104 I=0.003424 OS=  7.83% Ts=3.743s Tr=1.209s PM=60.0° GM=16.4dB
+   resp=3.100 rob=0.60: P=0.000000 I=0.002130 (P clamped) OS=  0.38% Ts=3.455s Tr=2.065s PM=69.4° GM=18.9dB
+   resp=0.678 rob=0.40: P=0.002899 I=0.012915 OS= 28.42% Ts=3.163s Tr=0.418s PM=40.0° GM=22.2dB
+   resp=0.678 rob=0.80: P=0.005035 I=0.004396 OS=  0.00% Ts=4.728s Tr=1.918s PM=80.0° GM=26.2dB
+   resp=1.500 rob=0.90: P=0.002398 I=0.003572 OS=  0.00% Ts=4.107s Tr=1.982s PM=90.0° GM=31.6dB
+baseline P=I=1: PM -46.6° @ 60.2 rad/s, GM -20.0 dB @ 18.9 rad/s -> unstable (handout -46.6° @ 60.3, -19.9 dB @ 19)
+[own] P-only on the engine (no I): steady error = 1/(1 + P·K)
+   P=0.001: final 0.2372, error 0.7628 (formula 0.7628)
+   P=0.0042253: final 0.5679, error 0.4321 (formula 0.4321)
+   P=0.01: final 0.7567, error 0.2433 (formula 0.2433)
+final design on a 2000->3000 rpm step (linear model): 3000 reached within 2% (2980 rpm) at t0+1.82 s
+handout Fig p.6: nonlinear engine step at t = 2 s from 2000 to 3000 rpm (read from plot; not recomputed)
+[own] delay knob: final gains, plant delay 15 / 50 / 100 / 200 ms
+   delay   15 ms: OS=0.00% Ts=1.816s PM=72.1° GM=32.7 dB
+   delay   50 ms: OS=0.40% Ts=1.647s PM=69.4° GM=22.5 dB
+   delay  100 ms: OS=2.40% Ts=2.211s PM=65.6° GM=16.9 dB
+   delay  200 ms: OS=9.38% Ts=2.661s PM=58.0° GM=11.5 dB
+
+======================================================================
+EXTRA  numbers for quiz / review calculations [own unless noted]
+======================================================================
+motor: sag <= 0.005 rad/s per N·m needs b+KmKb/Ra+KmKaKt/Ra >= 200 -> Ka >= 19.85
+motor: open-loop sag for a 3 N·m load = -2.000 rad/s; closed (Ka=54) = -0.00554 rad/s
+motor: time to 98% open = 5.333 s, closed = 14.77 ms
+borer: ess <= 2% needs K >= 50 -> PO = 12.89%, Ts = 0.718 s
+borer: command step error = 1 - T(0) = 1 - K/K = 0 (any stable K)
+disk: |dist error| <= 0.001 needs 5Ka >= 1000 -> Ka >= 200 -> PO = 37.18%, Ts = 0.3563 s
+disk: Ka = 80 -> 2nd-order zeta = 0.500, wn = 20.0 rad/s; coil pole / arm pole = 50x
+engine: P-only at handout initial P: error 0.4321; the I term removes it
+engine: P loop gain initial 1.314, final 0.453
+emulated tuner at robustness 0.6: P reaches 0 at response time ≈ 2.12 s
+disk Ka = 10^3.6 = 3981: max pole real part -0.233 (stable, near the ceiling)
+
+======================================================================
+SUMMARY
+======================================================================
+handout checks flagged: ['E2 Ts K=20']
+Known handout text/figure mismatches (Project 1 text vs its own screenshots):
+  - text 'response time from 3.4 to 1.5 s'; screenshot p.4 shows 3.1 (2/3.1 = 0.645 = table crossover; 2/3.4 = 0.588)
+  - text 'settling time of 4 seconds', 'overshoot of zero'; table p.4: 3.45 s, 0.401 %
+  - Fig. 4.23(b) script sets f=0.5 but uses b in den1=[J,b] (undefined variable in a fresh session)
+  - Table 4.3 settling at K = 20: 1.0 s; exact 2 % settling 0.91 s
+EXIT 0

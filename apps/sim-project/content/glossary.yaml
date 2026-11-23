@@ -1,0 +1,48 @@
+# PROPOSED glossary.yaml for sim-project
+- { term: s, meaning: "Laplace variable: read it as \"rate of change\" (d/dt); 1/s adds up (integrates). Units 1/s.", section: Math }
+- { term: "s = jω", meaning: "Evaluating a fraction at s = jω gives what it does to a wiggle at ω rad/s.", section: Math }
+- { term: transfer function, meaning: "A block's rule as a fraction in s: output over input, starting from rest.", section: Blocks & loops }
+- { term: "tf, series, parallel, feedback", meaning: "MATLAB commands: make a block; chain two (multiply); add two side by side; close a loop G/(1 + GH).", section: Blocks & loops }
+- { term: minreal, meaning: "MATLAB: cancel factors shared by top and bottom of a fraction.", section: Blocks & loops }
+- { term: superposition, meaning: "In a linear system the response to two inputs is the sum of the responses to each alone (Dorf p.258).", section: Blocks & loops }
+- { term: feedback, meaning: "Measure the output, compare it with the command, correct the input.", section: Blocks & loops }
+- { term: loop gain, meaning: "Product of every gain once around the loop (at steady state here). Steady push errors divide by 1 + loop gain. Motor: 360.", section: Blocks & loops }
+- { term: "R, Y, E", meaning: "Command (reference), output, error E = R − Y.", section: Blocks & loops }
+- { term: "T_d", meaning: "Disturbance: a push nobody commands (load torque on the motor, rock on the boring machine, shock on the disk arm).", section: Blocks & loops }
+- { term: "ω (motor)", meaning: "Change in shaft speed, rad/s.", units: rad/s, section: Motor }
+- { term: J, meaning: "Inertia of motor and load: how hard it is to speed up or slow down. 2 kg·m².", units: kg·m², section: Motor }
+- { term: b, meaning: "Bearing friction. 0.5 N·m·s.", units: N·m·s, section: Motor }
+- { term: "Ra, Km", meaning: "Coil resistance (1 Ω) and torque per amp (10 N·m/A).", section: Motor }
+- { term: "Kb, back-EMF", meaning: "Voltage the spinning motor makes back, per rad/s (0.1 V·s); it acts like friction Km·Kb/Ra = 1 N·m·s.", section: Motor }
+- { term: "Ka (motor)", meaning: "Amplifier gain: volts to the motor per volt of speed shortfall. 54.", section: Motor }
+- { term: "Kt, tachometer", meaning: "A small generator on the shaft that measures speed: Kt = 1 V per rad/s.", section: Motor }
+- { term: "time constant τ", meaning: "For a one-store response: time to cover 63 % of the way; settled after about 4τ. Motor: 1.33 s open, 3.69 ms closed.", units: s, section: Motor }
+- { term: "K (boring machine)", meaning: "Proportional gain: the software spring. Handout compares 20 and 100.", section: Boring machine }
+- { term: "rate gain 11", meaning: "The 11s in K + 11s: steering per unit rate of error change, the software shock absorber (fixed in the handout).", section: Boring machine }
+- { term: integrator, meaning: "A 1/s block: its output keeps building as long as its input is non-zero (position builds from speed).", section: Boring machine }
+- { term: "damping ratio ζ", meaning: "Calmness of a two-store response: ζ ≥ 1 no swing from the poles; ζ = 0.6 about 9 % from the poles alone. Boring machine 6/√K; disk stand-in 10/√(5Ka).", section: Boring machine }
+- { term: "natural frequency ωₙ", meaning: "How fast the spring-mass would swing with no damping (rad/s). Boring machine √K.", units: rad/s, section: Boring machine }
+- { term: poles, meaning: "Roots of the denominator: each is one motion of the loop. Real: smooth; complex pair: a swing; right half: grows.", section: Boring machine }
+- { term: zero, meaning: "Root of the numerator; it weights the motions. The boring machine's zero at −K/11 adds a kick to steps.", section: Boring machine }
+- { term: overshoot, meaning: "How far the response goes past its final value, as a % of it.", section: Specs }
+- { term: "settling time T_s", meaning: "Time after which the response stays within ±2 % of its final value (Table 4.3 uses 2 %).", units: s, section: Specs }
+- { term: rise time, meaning: "Time to go from 10 % to 90 % of the final value (PID Tuner's table).", units: s, section: Specs }
+- { term: "steady-state error e_ss", meaning: "The error left once everything stops moving.", section: Specs }
+- { term: final-value theorem, meaning: "y(∞) = lim s·Y(s) as s → 0, valid only for a stable loop.", section: Specs }
+- { term: "sensitivity S", meaning: "Percent change in the loop per percent change in the machine; S = 1/(1 + Gc·G). Open loop: 1.", section: Specs }
+- { term: "G₁, G₂ (disk)", meaning: "Coil 5000/(s + 1000) (volts → force, 1 ms lag) and arm 1/(s(s + 20)) (force → position).", section: Disk head }
+- { term: "Ka (disk)", meaning: "Amplifier gain on the head loop. Handout compares 10 and 80.", section: Disk head }
+- { term: Routh test, meaning: "Stability check from the denominator's coefficients; for s³ + a₂s² + a₁s + a₀: all positive and a₂a₁ > a₀. (not in lab handout)", section: Disk head }
+- { term: stand-in, meaning: "A simpler model that behaves like the real one where it matters: the disk's coil-dropped 5Ka/(s² + 20s + 5Ka); the engine's fitted fraction. (not in lab handout)", section: Disk head }
+- { term: PID Tuner, meaning: "MATLAB tool that linearizes a Simulink model and designs PID gains from two sliders.", section: Engine & tuner }
+- { term: linearization, meaning: "A straight-line copy of a curved model, exact for small changes near one operating point.", section: Engine & tuner }
+- { term: operating point, meaning: "The steady condition (speed, throttle) around which the model is linearized.", section: Engine & tuner }
+- { term: "P, I", meaning: "PI controller gains in parallel form C = P + I/s (handout p.2): push on the error now; push on the error added up so far.", section: Engine & tuner }
+- { term: "integral time T_i", meaning: "P/I: seconds of steady error the I term needs to match P's push. (not in lab handout)", units: s, section: Engine & tuner }
+- { term: Response time, meaning: "PID Tuner slider (Slower ↔ Faster). In the handout's tables, crossover = 2/response time.", units: s, section: Engine & tuner }
+- { term: Transient behavior, meaning: "PID Tuner slider (Aggressive ↔ Robust); in the handout's tables the phase margin ≈ 100° × its value when P > 0.", section: Engine & tuner }
+- { term: "crossover frequency ω_c", meaning: "Where the loop gain |C·G| falls to 1; roughly how fast the loop reacts.", units: rad/s, section: Engine & tuner }
+- { term: phase margin (PM), meaning: "Extra lag the loop could take at crossover before it would swing forever; more margin, calmer. (not in lecture notes)", units: deg, section: Engine & tuner }
+- { term: gain margin (GM), meaning: "Factor (dB) the gain could rise before the loop swings forever, read where the phase is −180°. Negative: unstable.", units: dB, section: Engine & tuner }
+- { term: lag, meaning: "How far a wiggle coming out trails the wiggle going in, as an angle. Pure I lags 90°.", units: deg, section: Engine & tuner }
+- { term: Update Block, meaning: "PID Tuner button that writes the tuned P and I back into the Simulink PID block.", section: Engine & tuner }
