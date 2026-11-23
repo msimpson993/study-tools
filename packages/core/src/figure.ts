@@ -76,9 +76,21 @@ export function mountFigure(host: HTMLElement, def: FigureDef, panels0: FigurePa
     const btn = h('button', { class: 'tbtn on', dataset: { testid: 'play' }, 'aria-pressed': 'false' }, reduce ? 'Step ▶' : '▶ Play');
     const span = (cd.max ?? 1) - (cd.min ?? 0);
     const advance = (dv: number) => { let v = (controls.values[a.control] as number) + dv; if (v > (cd.max ?? 1)) v = a.loop === false ? (cd.max ?? 1) : (cd.min ?? 0); controls.set(a.control, v); return v < (cd.max ?? 1); };
-    const tick = (t: number) => { if (!playing) return; const dt = Math.min(0.05, (t - last) / 1000); last = t; if (!advance(a.speed * dt)) { if (a.loop === false) { setPlaying(false); return; } } raf = requestAnimationFrame(tick); };
+    // loop: false and already at the end: Play/Step starts again from the beginning (replay).
+    // Rewind is deferred to the first animation frame so the Play button can light immediately
+    // (a heavy first draw must not leave aria-pressed false).
+    const atEnd = () => (controls.values[a.control] as number) >= (cd.max ?? 1) - 1e-9;
+    const rewindIfDone = () => { if (atEnd()) controls.set(a.control, cd.min ?? 0); };
+    let replay = false;
+    const tick = (t: number) => {
+      if (!playing) return;
+      if (replay) { rewindIfDone(); replay = false; last = t; }
+      const dt = Math.min(0.05, (t - last) / 1000); last = t;
+      if (!advance(a.speed * dt)) { if (a.loop === false) { setPlaying(false); return; } }
+      raf = requestAnimationFrame(tick);
+    };
     const setPlaying = (on: boolean) => { playing = on; btn.textContent = on ? '⏸ Pause' : (reduce ? 'Step ▶' : '▶ Play'); btn.setAttribute('aria-pressed', String(on)); if (on) { last = performance.now(); raf = requestAnimationFrame(tick); } else cancelAnimationFrame(raf); };
-    btn.onclick = () => { if (reduce) advance(span / 20); else setPlaying(!playing); };
+    btn.onclick = () => { if (reduce) { rewindIfDone(); advance(span / 20); } else if (playing) setPlaying(false); else { replay = atEnd(); setPlaying(true); } };
     stopAnim = () => { playing = false; cancelAnimationFrame(raf); };
     stage.append(h('div', { class: 'fig-anim' }, btn, h('span', null, reduce ? 'Reduced motion: stepping instead of animating. ' : '', intro ? '' : `Scrub with the “${cd.label}” slider.`)));
   }

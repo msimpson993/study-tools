@@ -41,7 +41,9 @@ export function drawStepResponse(g: CanvasRenderingContext2D, w: number, h: numb
   if (t.length < 3) return null;
   const tEnd = s.tEnd ?? t[t.length - 1];
   const all = [...y, ...(s.ghost ? Array.from(s.ghost.y) : []), ref];
-  const yr: V2 = s.yRange ?? [Math.min(0, ...all) - 0.05 * Math.abs(ref), Math.max(ref * 1.15, Math.max(...all) * 1.06)];
+  let lo = 0, hiY = -Infinity;
+  for (const v of all) { if (v < lo) lo = v; if (v > hiY) hiY = v; }
+  const yr: V2 = s.yRange ?? [lo - 0.05 * Math.abs(ref), Math.max(ref * 1.15, hiY * 1.06)];
   const f = rangeFrame(w, h, [0, tEnd], yr, 46, 14, 10, 32);
   graphAxes(g, f, [0, tEnd], yr, s.xLabel ?? 'time (s)', s.yLabel ?? 'output');
   const m = stepMetrics(t, y, { ref, final: s.final, band });
@@ -355,7 +357,9 @@ export interface JwSliceSpec { G: TF; wmax: number; /** probe */ omega?: number;
 export function drawJwSlice(g: CanvasRenderingContext2D, w: number, h: number, s: JwSliceSpec) {
   wipe(g, w, h);
   const ws = Array.from({ length: 400 }, (_, i) => (s.wmax * i) / 399), val = (G: TF) => ws.map((x) => { const m = cabs(freqresp(G, x)); return s.db ? 20 * Math.log10(Math.max(1e-9, m)) : Math.min(m, 1e6); });
-  const ys = val(s.G), fin = ys.filter(Number.isFinite), top = Math.max(...fin), bot = Math.min(...fin);
+  const ys = val(s.G), fin = ys.filter(Number.isFinite);
+  let top = -Infinity, bot = Infinity;
+  for (const v of fin) { if (v > top) top = v; if (v < bot) bot = v; }
   const yr: V2 = s.db ? [Math.floor((bot - 3) / 10) * 10, Math.ceil((top + 3) / 10) * 10] : [0, Math.max(1e-6, top * 1.12)];
   const f = rangeFrame(w, h, [0, s.wmax], yr, 46, 12, 10, 32);
   graphAxes(g, f, [0, s.wmax], yr, s.xLabel ?? 'ω (rad/s) along the jω axis', s.db ? '|G(jω)| (dB)' : '|G(jω)|');
