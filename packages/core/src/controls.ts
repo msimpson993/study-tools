@@ -65,8 +65,8 @@ export class ControlSet {
   }
   private syncAll() { this.inputs.forEach((i) => i.sync()); this.presetBtns.forEach((b, id) => b.classList.toggle('on', id === this.active)); }
 
-  /** Render the control rail: presets, primary controls, a collapsed "More controls" drawer, and Reset. */
-  render(title = 'Controls'): HTMLElement {
+  /** Render the control rail: presets, primary controls, a collapsed "More controls" drawer (unless `flat`), and Reset. */
+  render(title = 'Controls', opts: { flat?: boolean } = {}): HTMLElement {
     const root = h('div', { class: 'st-ctl', dataset: { testid: 'controls' } }, h('h4', null, title));
     // on a tabbed page a single leftover preset is not a choice — keep it applied, but don't draw a one-button row
     const hideLonePreset = typeof document !== 'undefined' && document.documentElement.classList.contains('layout-tabs');
@@ -82,9 +82,10 @@ export class ControlSet {
     for (const d of this.defs) {
       const el = this.control(d);
       if (!el.childNodes.length) continue;
-      (d.group === 'primary' ? root : more).append(el);
+      if (opts.flat || d.group === 'primary') root.append(el);
+      else more.append(el);
     }
-    if (this.defs.some((d) => d.group === 'more')) root.append(h('details', { class: 'st-more', dataset: { testid: 'more-controls' } }, h('summary', null, 'More controls'), more));
+    if (!opts.flat && this.defs.some((d) => d.group === 'more')) root.append(h('details', { class: 'st-more', dataset: { testid: 'more-controls' } }, h('summary', null, 'More controls'), more));
     root.append(h('div', { class: 'actions' }, h('button', { class: 'tbtn', dataset: { testid: 'reset' }, onclick: () => this.reset() }, 'Reset')));
     this.syncAll();
     return root;

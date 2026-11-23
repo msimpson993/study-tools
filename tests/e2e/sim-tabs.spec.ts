@@ -187,4 +187,157 @@ test.describe('sim-project tabbed page', () => {
       }
     });
   }
+
+
+  test('each Motor (c) step is its own card with a local figure and preset', async ({ page }) => {
+    await page.setViewportSize({ width: 1280, height: 900 });
+    await open(page, 'sim-project', '#/tab/motor');
+    const cards = page.getByTestId('step-card');
+    await expect(cards).toHaveCount(6);
+    const want = ['open', 'closed', 'scale', 'kt2', 'sweep', 'heavy'];
+    for (let i = 0; i < want.length; i++) {
+      const card = cards.nth(i);
+      await card.evaluate((el) => el.scrollIntoView({ block: 'start' }));
+      await expect.poll(async () => card.locator('[data-testid=viz] canvas').count(), { timeout: 5000 }).toBeGreaterThan(0);
+      await expect(card).toHaveAttribute('data-preset', want[i]);
+      await expect(card.getByTestId('step-ind')).toHaveText(`Step ${i + 1} of 6`);
+      await expect(card.locator('[data-testid=viz]')).toHaveAttribute('data-figure', 'motor');
+    }
+    // sliders are local to the card: changing card 1 does not change card 2's preset
+    await cards.nth(0).evaluate((el) => el.scrollIntoView({ block: 'start' }));
+    await expect.poll(async () => cards.nth(0).locator('canvas').count()).toBeGreaterThan(0);
+    await cards.nth(0).locator('.st-presets [data-preset=kt2]').click();
+    await expect(cards.nth(0).locator('[data-testid=viz]')).toHaveAttribute('data-preset', 'kt2');
+    await cards.nth(1).evaluate((el) => el.scrollIntoView({ block: 'start' }));
+    await expect.poll(async () => cards.nth(1).locator('canvas').count()).toBeGreaterThan(0);
+    await expect(cards.nth(1)).toHaveAttribute('data-preset', 'closed');
+  });
+
+  for (const width of [923, 1280, 1920] as const) {
+    test(`section (c) uses a 40/60 text/figure split at ${width}px`, async ({ page }) => {
+      await page.setViewportSize({ width, height: width === 1920 ? 1080 : 900 });
+      await open(page, 'sim-project', '#/tab/motor');
+      const card = page.getByTestId('step-card').first();
+      await expect(card).toBeVisible();
+      const dims = await card.evaluate((el) => {
+        const text = el.querySelector('[data-testid=step-card-text]')!;
+        const fig = el.querySelector('[data-testid=step-card-fig]')!;
+        const tr = text.getBoundingClientRect();
+        const fr = fig.getBoundingClientRect();
+        return { textShare: tr.width / (tr.width + fr.width), tr: tr.width, fr: fr.width, sideBySide: fr.left > tr.right - 2 };
+      });
+      expect(dims.sideBySide, `columns should sit side by side at ${width}px`).toBe(true);
+      expect(dims.textShare, `text/(text+figure) ${dims.textShare} at ${width}px`).toBeGreaterThanOrEqual(0.37);
+      expect(dims.textShare).toBeLessThanOrEqual(0.43);
+    });
+  }
+
+  test('the text column scrolls while the figure stays put', async ({ page }) => {
+    // 720px leaves less than a full 900px column so step 2's long text has to scroll
+    await page.setViewportSize({ width: 1280, height: 720 });
+    await open(page, 'sim-project', '#/tab/motor');
+    const card = page.getByTestId('step-card').nth(1); // long step-2 text
+    await card.evaluate((el) => el.scrollIntoView({ block: 'start' }));
+    await expect.poll(async () => card.locator('canvas').count()).toBeGreaterThan(0);
+    const before = await card.evaluate((el) => {
+      const text = el.querySelector('[data-testid=step-card-text]') as HTMLElement;
+      const fig = el.querySelector('[data-testid=step-card-fig]') as HTMLElement;
+      return { figTop: fig.getBoundingClientRect().top, scrollTop: text.scrollTop, canScroll: text.scrollHeight > text.clientHeight + 8 };
+    });
+    expect(before.canScroll, 'step 2 text should overflow the text column').toBe(true);
+    await card.getByTestId('step-card-text').evaluate((el) => { (el as HTMLElement).scrollTop = (el as HTMLElement).scrollHeight; });
+    const after = await card.evaluate((el) => {
+      const text = el.querySelector('[data-testid=step-card-text]') as HTMLElement;
+      const fig = el.querySelector('[data-testid=step-card-fig]') as HTMLElement;
+      return { figTop: fig.getBoundingClientRect().top, scrollTop: text.scrollTop };
+    });
+    expect(Math.abs(after.figTop - before.figTop), 'figure top should stay fixed').toBeLessThan(2);
+    expect(after.scrollTop).toBeGreaterThan(before.scrollTop + 20);
+  });
+
+  test('scrolling from one card hands off and snaps to the next', async ({ page }) => {
+    await page.setViewportSize({ width: 1280, height: 900 });
+    await open(page, 'sim-project', '#/tab/motor');
+    const card2 = page.getByTestId('step-card').nth(1);
+    await card2.evaluate((el) => el.scrollIntoView({ block: 'start' }));
+    await page.waitForTimeout(400);
+    const top = await card2.evaluate((el) => el.getBoundingClientRect().top);
+    const chrome = await page.evaluate(() => {
+      const bar = document.querySelector('.tab-bar-wrap') as HTMLElement | null;
+      return bar ? bar.getBoundingClientRect().bottom : 88;
+    });
+    expect(Math.abs(top - chrome), `card 2 top ${top} vs chrome ${chrome}`).toBeLessThan(24);
+  });
+
+  test('Look-for stays in the card text, How to read is under the figure, and there is no More controls', async ({ page }) => {
+    await page.setViewportSize({ width: 1280, height: 900 });
+    await open(page, 'sim-project', '#/tab/motor');
+    const card = page.getByTestId('step-card').first();
+    await expect.poll(async () => card.locator('canvas').count()).toBeGreaterThan(0);
+    await expect(card.getByTestId('step-card-fig')).not.toContainText(/Look for/i);
+    await expect(card.getByTestId('step-card-text')).toContainText(/Look for/i);
+    await expect(card.getByTestId('how-to-read')).toBeVisible();
+    await expect(card.locator('[data-testid=more-controls]')).toHaveCount(0);
+    // every motor control is visible, including the ones that used to sit in "More controls"
+    await expect(card.getByTestId('controls')).toContainText('J (inertia');
+    await expect(card.getByTestId('controls')).toContainText('b (friction');
+    await expect(card.getByTestId('controls')).toContainText('Kb (back-EMF');
+  });
+
+  test('on a 390px phone the plot is about half the card and the controls sheet covers only the text', async ({ page }) => {
+    await page.setViewportSize({ width: 390, height: 844 });
+    await open(page, 'sim-project', '#/tab/motor');
+    const card = page.getByTestId('step-card').first();
+    await card.evaluate((el) => el.scrollIntoView({ block: 'start' }));
+    await expect.poll(async () => card.locator('canvas').count()).toBeGreaterThan(0);
+    const frac = await card.evaluate((el) => {
+      const body = el.querySelector('.step-card-body') as HTMLElement;
+      const fig = el.querySelector('[data-testid=step-card-fig]') as HTMLElement;
+      return fig.getBoundingClientRect().height / body.getBoundingClientRect().height;
+    });
+    expect(frac, `plot half ${frac}`).toBeGreaterThanOrEqual(0.4);
+    expect(frac).toBeLessThanOrEqual(0.6);
+    // stacked: plot above text
+    const stacked = await card.evaluate((el) => {
+      const text = el.querySelector('[data-testid=step-card-text]')!.getBoundingClientRect();
+      const fig = el.querySelector('[data-testid=step-card-fig]')!.getBoundingClientRect();
+      return fig.bottom <= text.top + 4;
+    });
+    expect(stacked).toBe(true);
+    await page.getByTestId('step-controls-open').first().click();
+    const sheet = page.getByTestId('step-controls-sheet').first();
+    await expect(sheet).toBeVisible();
+    const cover = await card.evaluate((el) => {
+      const fig = el.querySelector('[data-testid=step-card-fig]')!.getBoundingClientRect();
+      const text = el.querySelector('[data-testid=step-card-text]')!.getBoundingClientRect();
+      const sheet = el.querySelector('[data-testid=step-controls-sheet]')!.getBoundingClientRect();
+      return {
+        plotVisible: fig.height > 40 && fig.bottom > fig.top,
+        sheetOverText: sheet.top >= fig.bottom - 8 && Math.abs(sheet.top - text.top) < 24,
+        sheetNotOverPlot: sheet.top >= fig.bottom - 8,
+      };
+    });
+    expect(cover.plotVisible).toBe(true);
+    expect(cover.sheetNotOverPlot).toBe(true);
+    expect(cover.sheetOverText).toBe(true);
+    await expect(sheet.locator('[data-testid=more-controls]')).toHaveCount(0);
+    await page.getByTestId('step-controls-close').first().click();
+    await expect(sheet).toBeHidden();
+  });
+
+  test('lazy-mount keeps about three live figure instances', async ({ page }) => {
+    await page.setViewportSize({ width: 1280, height: 900 });
+    await open(page, 'sim-project', '#/tab/motor');
+    const live = () => page.evaluate(() =>
+      [...document.querySelectorAll('[data-testid=step-card] [data-testid=viz]')].filter((el) => el.querySelector('canvas')).length
+    );
+    await expect.poll(live, { timeout: 5000 }).toBeGreaterThan(0);
+    expect(await live()).toBeLessThanOrEqual(4);
+    const last = page.getByTestId('step-card').nth(5);
+    await last.evaluate((el) => el.scrollIntoView({ block: 'start' }));
+    await expect.poll(async () => last.locator('canvas').count(), { timeout: 5000 }).toBeGreaterThan(0);
+    expect(await live()).toBeLessThanOrEqual(4);
+    // the first card should have been unmounted
+    await expect.poll(async () => page.getByTestId('step-card').nth(0).locator('canvas').count()).toBe(0);
+  });
 });

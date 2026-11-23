@@ -62,7 +62,7 @@ const axesCaption = (p: { x?: string; y?: FigurePanel['y'] }, v?: Record<string,
 };
 /** `intro`: the compact form an Example node's introduction uses: only the named panels (the animated picture), with its
  *  play button but no controls rail and no "Look for" (those belong to the boxes that introduce what they show) */
-export interface FigureMountOpts { intro?: { panels?: string[] } }
+export interface FigureMountOpts { intro?: { panels?: string[] }; flatControls?: boolean }
 export function mountFigure(host: HTMLElement, def: FigureDef, panels0: FigurePanel[], controls: ControlSet, opts: FigureMountOpts = {}): { redraw(): void; open(ids: string[]): void; close(): void; destroy(): void } {
   const intro = opts.intro, panels = intro?.panels?.length ? panels0.filter((p) => intro.panels!.includes(p.id)) : panels0;
   const stage = h('div', { class: 'fig-stage', dataset: { testid: 'fig-stage' } });
@@ -102,7 +102,7 @@ export function mountFigure(host: HTMLElement, def: FigureDef, panels0: FigurePa
     stage.append(h('div', { class: 'fig-anim' }, btn, h('span', null, reduce ? 'Reduced motion: stepping instead of animating. ' : '', intro ? '' : `Scrub with the “${cd.label}” slider.`)));
   }
   stage.append(overlay);
-  const rail = controls.render('Controls');
+  const rail = controls.render('Controls', { flat: !!opts.flatControls });
   const layout = h('div', { class: `fig-layout${intro ? ' fig-intro' : ''}` }, stage, intro ? null : rail);
   host.append(layout);
 
@@ -136,16 +136,23 @@ export function mountFigure(host: HTMLElement, def: FigureDef, panels0: FigurePa
   // a long scroll below all four stacked panels. Desktop keeps the right-hand rail.
   const placeRail = () => {
     if (intro) return;
+    const landscapeShort = window.matchMedia('(orientation: landscape) and (max-height: 500px)').matches;
+    const inCard = !!host.closest('.step-card');
     const phoneTabs = document.documentElement.classList.contains('layout-tabs')
-      && window.matchMedia('(max-width: 700px)').matches;
+      && window.matchMedia('(max-width: 700px)').matches
+      && !landscapeShort;
     const first = inline.querySelector('.fig');
-    if (phoneTabs && first) first.after(rail);
+    // Card layout owns the rail (under the plots, or in the phone sheet).
+    if (inCard) layout.append(rail);
+    else if (phoneTabs && first) first.after(rail);
     else layout.append(rail);
   };
   placeRail();
   const mq = window.matchMedia('(max-width: 700px)');
+  const mqLand = window.matchMedia('(orientation: landscape) and (max-height: 500px)');
   const onRailMq = () => placeRail();
   mq.addEventListener?.('change', onRailMq);
+  mqLand.addEventListener?.('change', onRailMq);
 
   const slotCanvases: HTMLCanvasElement[] = [];
   function renderOverlay() {
@@ -192,7 +199,7 @@ export function mountFigure(host: HTMLElement, def: FigureDef, panels0: FigurePa
     redraw,
     open(ids: string[]) { openIds = ids; legendOpen = [false, false]; renderOverlay(); },
     close() { openIds = []; renderOverlay(); },
-    destroy() { stopAnim(); ro.disconnect(); window.removeEventListener('study-theme', onTheme); document.removeEventListener('keydown', onKey, true); mq.removeEventListener?.('change', onRailMq); },
+    destroy() { stopAnim(); ro.disconnect(); window.removeEventListener('study-theme', onTheme); document.removeEventListener('keydown', onKey, true); mq.removeEventListener?.('change', onRailMq); mqLand.removeEventListener?.('change', onRailMq); },
   };
   requestAnimationFrame(redraw);
   return api;

@@ -7,6 +7,7 @@ import { mountQuiz } from './quiz';
 import { createFullscreen, replaceUrl } from './fullscreen';
 import { setRefContent } from './copyref';
 import { embedFigureSlots } from './embed';
+import { applyCardLayout, layoutSetupSection } from './cardlayout';
 
 /** Short labels for the top tab bar (full titles stay as the page heading). */
 export const TAB_BAR_LABEL: Record<string, string> = {
@@ -132,8 +133,10 @@ export function mountTabbedApp(content: AppContent, hooks: AppHooks = {}): void 
       h('div', { class: 'tab-body', html: tab.html }),
     );
     main.append(art);
+    layoutSetupSection(art);
+    const cardStop = applyCardLayout(art, content, hooks, { frame });
     const stops = embedFigureSlots(art, content, hooks, { wrapPairs: true });
-    cleanup = () => { stops.forEach((s) => s()); };
+    cleanup = () => { cardStop(); stops.forEach((s) => s()); };
   }
 
   function renderGlossary() {
