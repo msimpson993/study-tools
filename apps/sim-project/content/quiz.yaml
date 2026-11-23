@@ -1,5 +1,5 @@
-# PROPOSED quiz.yaml for sim-project: 22 box asks (q-*), 20 dive checks (ck-*), 27 knob/practice questions (kn-*) = 69.
-# Every number is in numbers_output.txt. Tags: dive id + box id.
+# sim-project quiz: 22 box asks (q-*), 20 dive checks (ck-*), 27 knob/practice questions (kn-*) = 69.
+# Every number is in test/fixtures/numbers_output.txt. Tags: dive id + box id.
 # ---------------- box asks (one per box, the intuition question)
 - id: q-root
   tags: [root, knobs]
@@ -9,7 +9,7 @@
   - "Measure the output, compare it with the command, and use the difference to correct the input"
   - "Run the simulation twice and average the results"
   - "Feed the machine's input forward to its output to make it faster"
-  - "Let PID Tuner choose the gains"
+  - "Turn every gain up as high as it will go"
   answer: 0
   why: "Measure, compare, correct. Every machine on the map does this with a different sensor and knob."
 - id: q-blocks
@@ -37,6 +37,11 @@
 - id: q-closed
   tags: [speed, CLOSED]
   kind: recognize
+  figure:
+    id: lab-step
+    params: { sys: motor, loop: both, T: 7 }
+    alt: "Speed after a 1 N·m load on a 7 s axis: open loop sags to −0.667 rad/s; closed loop looks like a flat line at zero."
+    caption: "Open loop (grey) and closed loop, Ka = 54, on the open-loop plot's 7 s axis"
   q: "The handout's closed-loop plot (Fig. 4.24) runs for only 0.02 s, the open-loop plot for 7 s. Why?"
   choices:
   - "Feedback made the motor 361× faster, so on a 7 s axis the closed-loop curve would look like a flat line"
@@ -81,6 +86,11 @@
 - id: q-kstep
   tags: [borer, KSTEP]
   kind: recognize
+  figure:
+    id: lab-step
+    params: { sys: borer, input: command, K: 20 }
+    alt: "Boring machine, K = 20: position rises to a peak of 1.04, a 3.9 % overshoot, then settles at 1."
+    caption: "Step command, K = 20"
   q: "K = 20 gives two real poles (ζ = 1.34), yet the step response still overshoots by about 4 %. Why?"
   choices:
   - "The 11s term in the numerator kicks the machine when the command jumps"
@@ -114,9 +124,14 @@
 - id: q-sens
   tags: [sens, SENS]
   kind: recognize
+  figure:
+    id: lab-sens
+    params: { K: 20, panel: mag }
+    alt: "|S| against wiggle rate on log axes, K = 20: 0.005 at 0.1 rad/s, 0.063 at 1 rad/s, rising toward 1 above 10 rad/s."
+    caption: "|S| at K = 20 (solid) and the shortcut s/K (dashed)"
   q: "|S| = 0.063 at 1 rad/s for K = 20. What does that mean?"
   choices:
-  - "A 10 % change in the machine at that rate changes the loop's behaviour by about 0.6 %"
+  - "A 10 % change in the machine changes the loop's response to a 1 rad/s wiggle by about 0.6 %"
   - "The loop's output is 6.3 % of the command"
   - "The overshoot is 6.3 %"
   - "The machine changes 0.063 times per second"
@@ -296,7 +311,7 @@
   - "Same final sag; recovery twice as slow (τ 3.7 → 7.4 ms)"
   - "Half the sag, same speed"
   - "Double the sag, same speed"
-  - "The loop goes unstable"
+  - "The speed starts to swing back and forth"
   answer: 0
   why: "J appears only with s: it sets τ = J/drag, not the steady balance."
 - id: ck-borer-1
@@ -335,10 +350,10 @@
 - id: ck-sens-1
   tags: [sens]
   kind: recognize
-  q: "The shortcut S ≈ s/K is good for which changes in the machine?"
+  q: "The shortcut S ≈ s/K is good for which wiggle rates?"
   choices:
-  - "Slow ones (low frequency, below about 1 rad/s here)"
-  - "Fast ones (high frequency)"
+  - "Slow ones (below about 1 rad/s here)"
+  - "Fast ones (above about 10 rad/s)"
   - "All of them"
   - "Only changes in K"
   answer: 0
@@ -567,6 +582,11 @@
 - id: kn-10
   tags: [borer, TRADE]
   kind: action
+  figure:
+    id: lab-trade
+    params: { sys: borer }
+    alt: "Push offset against step overshoot as K runs from 5 to 400; K = 20 and K = 100 marked."
+    caption: "Each point is one K (rate gain 11)"
   q: "A spec says: overshoot ≤ 10 % and push offset ≤ 2 %. With only K to turn (rate gain 11), can you meet both?"
   choices:
   - "No: 10 % overshoot needs K ≤ 38.7 (offset ≥ 2.6 %), and 2 % offset needs K ≥ 50 (12.9 % overshoot)"
@@ -600,10 +620,15 @@
 - id: kn-13
   tags: [sens, SENS]
   kind: recognize
+  figure:
+    id: lab-sens
+    params: { K: 20, panel: path }
+    alt: "S at K = 20 drawn in the complex plane as the wiggle rate rises: an arc bulging up to 0.54j."
+    caption: "Fig. 4.27, top: S as a path in the complex plane, K = 20"
   q: "In Fig. 4.27's top plot (Imag S against Real S), where does the curve start and end?"
   choices:
-  - "Near 0 for slow changes, at 1 for fast changes"
-  - "At 1 for slow changes, at 0 for fast changes"
+  - "Near 0 for slow wiggles, at 1 for fast wiggles"
+  - "At 1 for slow wiggles, at 0 for fast wiggles"
   - "It's a full circle around the origin"
   - "At −1 and +1"
   answer: 0

@@ -1,5 +1,5 @@
-# PROPOSED graph.yaml for sim-project (staging). One map, root + 21 boxes, 21 lines (19 main chain + 2 side paths).
-# Every number here is printed by /workspace/cs-lab/numbers.py (see numbers_output.txt); "(not in lab handout)" marks my own material.
+# sim-project question map: one map, root + 21 boxes, 21 lines (19 main chain + 2 side paths).
+# Every number here is printed by the tutor's numbers.py (test/fixtures/numbers_output.txt); "(not in lab handout)" marks the tutor's own material.
 maps:
 - id: chain
   title: The question chain
@@ -27,7 +27,7 @@ maps:
     label: Blocks and signals
     detail: tf, series, feedback
     series: 0
-    short: "Draw each part as a box that turns one signal into another. Its rule, the *transfer function*, is a fraction in *s*, where s stands for \"rate of change\": a spinning load is 1/(Js + b), torque in, speed out. MATLAB builds one with `tf(num, den)`. Boxes in a row multiply (`series`), side-by-side paths add (`parallel`), and a loop collapses to one box (`feedback`)."
+    short: "Draw each part as a box that turns one signal into another. Its rule, the *transfer function*, is a fraction in *s*, where s stands for \"rate of change\" and 1/s for \"add up over time\": a spinning load is 1/(Js + b), torque in, speed out. MATLAB builds one with `tf(num, den)`. Boxes in a row multiply (`series`), side-by-side paths add (`parallel`), and a loop collapses to one box (`feedback`)."
     eq: "loop: G/(1 + GH)"
     dive: blocks
     live: figure:blocks
@@ -70,14 +70,18 @@ maps:
     label: Measure and correct
     detail: the tachometer loop
     series: 0
-    short: "The sag nearly vanishes. A *tachometer* (a small generator on the shaft, Kt = 1 V·s) turns speed into voltage; an amplifier (gain Ka = 54) multiplies the shortfall and drives the motor harder. To the load, the loop feels like 540 N·m·s of extra friction: the sag falls from −0.667 to −0.00185 rad/s per N·m, a ratio of 0.003, well under the 0.02 the handout expects. It also settles 361× faster: τ = 3.7 ms."
+    short: |-
+      The sag nearly vanishes.
+      - **What's added:** a *tachometer* (a small generator on the shaft, Kt = 1 V·s) turns speed into voltage; an amplifier (gain Ka = 54) multiplies the shortfall and drives the motor harder. To the load, the loop feels like 540 N·m·s of extra friction.
+      - **What it does to the sag:** −0.667 falls to −0.00185 rad/s per N·m. The handout's yardstick is the *0.02 rule*: closed-loop sag ÷ open-loop sag should be under 0.02, so the loop removes at least 98 % of the sag. Here the ratio is 0.003, about 7× inside the rule.
+      - **How fast:** it also recovers far quicker: τ = 3.7 ms instead of 1.33 s, 361× faster. The next box shows where the 361 comes from.
     eq: "ω/T_d = −1/(2s + 541.5)"
     dive: speed
     live: figure:motor?preset=closed
     quizTag: CLOSED
     examples: [motor]
     addsToExample: "Adds the tachometer and amplifier: the sag shrinks to 0.3 %."
-    accountsFor: Why the closed-loop plot in the handout needs a time axis 350× shorter.
+    accountsFor: "Why the handout's closed-loop plot needs a much shorter time axis (0.02 s instead of 7 s): the loop recovers 361× faster."
     pop:
       rough: "the loop adds 'electronic friction' Km·Ka·Kt/Ra"
       eqKey: "Ka = amplifier gain; Kt = tachometer gain (V·s); 541.5 = 1.5 + 540 (N·m·s)."
@@ -117,7 +121,7 @@ maps:
     dive: borer
     quizTag: PRICE
     examples: [motor, borer]
-    exampleWhy: "Why the motor never overshoots, and why the boring machine can."
+    exampleWhy: "Why the motor never swings past its new speed, however high the gain, and what kind of machine can."
     addsToExample: "Brings in the boring machine: the first machine where more gain can hurt."
     accountsFor: Why raising Ka on the motor never caused overshoot.
     pop:
@@ -125,7 +129,7 @@ maps:
       figures:
       - { id: lab-step, params: { sys: generic, order: 1 }, alt: "One store: a smooth rise to the final value, faster as gain rises.", caption: "(a)" }
       - { id: lab-step, params: { sys: generic, order: 2 }, alt: "Two stores: at high gain the curve rises past the final value and swings back.", caption: "(b)" }
-      figCaption: "<b>(a)</b> One energy store, three gains: faster, never past the line. <b>(b)</b> Two stores, three gains: faster, and past the line at high gain."
+      figCaption: "Two generic machines, not the project's, each step response at three gains (time across; dashed line = final value). <b>(a)</b> One energy store: faster, never past the line. <b>(b)</b> Two stores: faster, and past the line at high gain."
       example: "For the boring machine, two results decide the gain: how far it overshoots a new line, and how far the rock pushes it off."
       ask: q-price
 
@@ -133,7 +137,12 @@ maps:
     label: "The boring machine's loop"
     detail: K + 11s on 1/(s(s+1))
     series: 1
-    short: "Two blocks, two inputs. The machine, 1/(s(s + 1)), turns steering into position; its 1/s means position keeps building while it is steered (an *integrator*). The controller K + 11s pushes on the position error (K) and on how fast the error changes (11s, a damping term). Closed, it acts like a mass on a spring of stiffness K with a shock absorber of 12 (1 from the machine, 11 from the controller). The rock's push T_d is a second input; the loop is linear, so each input can be studied alone (*superposition*)."
+    short: |-
+      Two blocks, two inputs.
+      - **The machine,** 1/(s(s + 1)), turns steering into position. Its 1/s means position keeps building while it is steered (an *integrator*).
+      - **The controller,** K + 11s, pushes on the position error (K) and on how fast the error changes (11s, a damping term).
+      - **Closed:** the loop rule G/(1 + GH) from *Blocks and signals*, with top and bottom multiplied by s(s + 1), puts s² + 12s + K underneath. Read it as a mass (s²) on a spring of stiffness K, with a shock absorber of 12 (1 from the machine, 11 from the controller).
+      - **Two inputs:** the rock's push T_d is a second input. The loop is linear, so each input can be studied alone (*superposition*).
     eq: "Y = (K + 11s)/(s² + 12s + K)·R + 1/(s² + 12s + K)·T_d"
     dive: borer
     live: figure:borer
@@ -154,7 +163,12 @@ maps:
     label: K and the command
     detail: 4 % vs 22 %
     series: 1
-    short: "It speeds up and starts to swing: a stiffer spring with the same damper bounces. The *damping ratio* ζ = 6/√K measures calmness; at ζ ≥ 1 the roots of s² + 12s + K (the *poles*) are real and spring and damper alone never swing. K = 20: ζ = 1.34, overshoot 3.9 %, settled (within 2 %) in 0.91 s. K = 100: ζ = 0.6, overshoot 22 %, settled in 0.67 s. The small overshoot at K = 20 comes from the 11s term, which kicks the machine when the command jumps."
+    short: |-
+      It speeds up and starts to swing: a stiffer spring with the same damper bounces.
+      - **Calmness:** the *damping ratio* ζ = 6/√K. The roots of s² + 12s + K are the loop's *poles*; at ζ ≥ 1 they are real, and spring and damper alone never swing.
+      - **K = 20:** ζ = 1.34, overshoot 3.9 %, settled (within 2 %) in 0.91 s.
+      - **K = 100:** ζ = 0.6, overshoot 22 %, settled in 0.67 s.
+      - **Why K = 20 still overshoots a little:** the 11s term kicks the machine when the command jumps.
     eq: "ζ = 6/√K"
     dive: borer
     live: figure:borer?preset=k20
@@ -168,7 +182,7 @@ maps:
       figures:
       - { id: lab-step, params: { sys: borer, input: command, K: [20, 100] }, alt: "Step responses for K = 20 (rising to 1.04) and K = 100 (peaking at 1.22), overshoot and settling marked.", caption: "(a)" }
       - { id: lab-splane, params: { sys: borer, K: [20, 100] }, alt: "Poles: K = 20 two real poles at −2 and −10; K = 100 a pair at −6 ± 8j.", caption: "(b)" }
-      figCaption: "<b>(a)</b> A new planned line at K = 20 and K = 100, overshoot and settling marked. <b>(b)</b> Their poles: two real at K = 20, a swinging pair at K = 100."
+      figCaption: "<b>(a)</b> A new planned line at K = 20 and K = 100 (position y against time), overshoot (OS, how far past the final value) and settling time (Ts, when it stays within ±2 %) marked. <b>(b)</b> Their poles (×) and the zero (○) in the s-plane: two real poles at K = 20, a swinging pair at K = 100; dashed rays are lines of constant ζ, and the shaded right half is where a pole would grow instead of settle."
       example: "Table 4.3: 4 %, 1.0 s and 22 %, 0.7 s; exact: 3.9 %, 0.91 s and 22.0 %, 0.67 s."
       ask: q-kstep
 
@@ -176,7 +190,12 @@ maps:
     label: "K and the rock's push"
     detail: offset 1/K
     series: 1
-    short: "It shrinks the offset. A steady push stretches a spring until the spring pulls back as hard, so a unit push leaves the cutter 1/K off line: 5 % at K = 20, 1 % at K = 100. The handout finds this without simulating, with the *final-value theorem*: the final value is the limit of s·Y(s) as s → 0. The machine's own integrator doesn't remove the offset: it sits after the push, and the controller has none."
+    short: |-
+      It shrinks the offset, but never to zero.
+      - **Spring picture:** a steady push stretches a spring until the spring pulls back as hard, so a unit push leaves the cutter 1/K off line: 5 % at K = 20, 1 % at K = 100.
+      - **Signals in s:** a signal can be written as a fraction in s too (the *Laplace transform*): the cutter's position becomes Y(s), and a push that switches on and stays on is 1/s.
+      - **Final value without simulating:** the handout uses the *final-value theorem*: take s·Y(s) and let s → 0, which keeps only what is left once nothing is changing any more. It holds only for a *stable* loop: one that settles after a nudge instead of swinging ever wider.
+      - **Why the machine's own 1/s doesn't help:** to hold against a steady push, the controller must send a steady counter-push, and K + 11s sends one only while some error is left.
     eq: "y(∞) = lim s·1/(s² + 12s + K)·(1/s) = 1/K"
     dive: borer
     live: figure:borer?preset=push
@@ -216,21 +235,26 @@ maps:
     label: When the machine changes
     detail: sensitivity S
     series: 1
-    short: "The loop barely notices slow changes. The *sensitivity* S compares them: a 10 % change in the machine changes the loop's behaviour by |S| × 10 %. For slow changes S ≈ s/K, close to zero, so raising K helps here too. At K = 20 and 1 rad/s, |S| = 0.063: a 10 % drift moves the response 0.6 %. Fast wiggles get no such protection: above about 10 rad/s |S| nears 1, where feedback can't keep up."
+    short: |-
+      For anything slow, the loop barely notices.
+      - **Wiggles:** picture a command that wiggles back and forth, ω radians per second (1 rad/s is one full wiggle every 6.3 s). Putting s = jω (j = √−1) into a block's fraction tells what the block does to that wiggle: how much bigger or smaller it comes out, and how far behind.
+      - **Sensitivity S:** if the machine changes by 10 % (say its parts wear), the loop's response to a wiggle at ω changes by |S| × 10 %.
+      - **Slow motions are protected:** for slow wiggles S ≈ s/K, close to zero, so raising K helps here too. At K = 20 and 1 rad/s, |S| = 0.063: a 10 % change in the machine moves the response 0.6 %.
+      - **Fast ones are not:** above about 10 rad/s |S| nears 1, and feedback can't keep up.
     eq: "S = s(s + 1)/(s² + 12s + K) ≈ s/K"
     dive: sens
     live: figure:sens
     quizTag: SENS
     examples: [borer]
     addsToExample: "Asks how much the boring machine's loop cares if the machine itself drifts."
-    accountsFor: Why feedback hides slow wear in the machine but not fast changes.
+    accountsFor: Why a worn machine barely changes the loop's slow motions, but does change its fast ones.
     pop:
-      rough: "loop's change ÷ machine's change: small when slow"
-      eqKey: "S = sensitivity; s = jω, a change at ω rad/s; K = gain."
+      rough: "loop's change ÷ machine's change: small for slow motions"
+      eqKey: "S = sensitivity; s = jω, a wiggle at ω rad/s; K = gain."
       figures:
       - { id: lab-sens, params: { K: 20, panel: mag }, alt: "|S| against frequency on log axes, rising from 0.005 at 0.1 rad/s toward 1, with the dashed s/K line.", caption: "(a)" }
       - { id: lab-sens, params: { K: 20, panel: path }, alt: "S drawn in the complex plane as frequency rises: an arc from 0 up to 0.54j and back down to 1.", caption: "(b)" }
-      figCaption: "<b>(a)</b> |S| against frequency at K = 20 (solid) and the shortcut s/K (dashed), as in Fig. 4.27. <b>(b)</b> The same S as a path in the complex plane, from 0 (slow) to 1 (fast)."
+      figCaption: "<b>(a)</b> |S| against frequency at K = 20 (solid) and the shortcut s/K (dashed), as in Fig. 4.27. <b>(b)</b> The same S drawn the handout's way, as a path in the complex plane (across: real part, up: imaginary part; j = √−1). It starts near 0 for slow wiggles and ends at 1 for fast ones: the same story as (a)."
       example: "Handout Eq. 4.60 and Fig. 4.27, plotted for K = 20 (Dorf pp.263–264)."
       ask: q-sens
 
@@ -259,22 +283,26 @@ maps:
     label: "Ka: fast or calm"
     detail: Ka = 10 vs 80
     series: 2
-    short: "The boring machine's trade again: more gain, faster and swingier. The coil is 50× faster than the arm, so at moderate gain it hardly matters and the loop acts like s² + 20s + 5·Ka, with ζ = 10/√(5·Ka). Ka = 10: ζ = 1.41, no overshoot, settled in 1.40 s. Ka = 80: ζ = 0.5, overshoot 17 %, settled in 0.41 s, which the handout calls unacceptably oscillatory."
+    short: |-
+      The boring machine's trade again: more gain, faster and swingier.
+      - **Shortcut:** the coil is 50× faster than the arm, so at moderate gain it hardly matters and the loop acts like s² + 20s + 5·Ka, with ζ = 10/√(5·Ka).
+      - **Ka = 10:** ζ = 1.41, no overshoot, settled in 1.40 s.
+      - **Ka = 80:** ζ = 0.5, overshoot 17 %, settled in 0.41 s, which the handout calls unacceptably oscillatory.
     eq: "ζ ≈ 10/√(5·Ka)"
     dive: disk
     live: figure:disk?preset=ka80
     quizTag: KA
     examples: [disk, borer]
-    exampleWhy: "The disk's Ka trades speed against swing exactly as the boring machine's K did."
+    exampleWhy: "The same speed-against-swing trade as K, on a machine with one more part."
     addsToExample: "Turns the disk head's Ka knob for a track seek: 10 vs 80."
     accountsFor: Why the fast seek at Ka = 80 rings.
     pop:
       rough: ignore the fast coil → spring 5·Ka with damper 20
-      eqKey: "ζ = damping ratio of the stand-in; 5 = coil's steady gain (5000/1000)."
+      eqKey: "ζ = damping ratio of the stand-in (0.5 at Ka = 80; the exact pair of poles gives 0.49); 5 = coil's steady gain (5000/1000)."
       figures:
       - { id: lab-step, params: { sys: disk, input: command, Ka: [10, 80] }, alt: "Track seeks: Ka = 10 rises smoothly over 1.4 s; Ka = 80 peaks at 1.17 at 0.18 s.", caption: "(a)" }
       - { id: lab-splane, params: { sys: disk, Ka: [10, 80] }, alt: "The arm's poles: two real at Ka = 10, a swinging pair at Ka = 80; the coil pole at −1000 is off to the left.", caption: "(b)" }
-      figCaption: "<b>(a)</b> Track seeks at Ka = 10 and 80, as in Fig. 4.30. <b>(b)</b> The arm's two poles, real at Ka = 10, a swinging pair at Ka = 80; the coil's pole is far left at −1000."
+      figCaption: "<b>(a)</b> Track seeks at Ka = 10 and 80, as in Fig. 4.30. <b>(b)</b> The arm's two poles (×), real at Ka = 10, a swinging pair at Ka = 80 (ζ = 0.49); the coil's pole is far left at −1000. Dashed rays are lines of constant ζ."
       example: "Fig. 4.30's Ka = 80 curve peaks near 1.2; exact: 1.17 at 0.18 s."
       ask: q-ka
 
@@ -304,7 +332,12 @@ maps:
     label: The ceiling on Ka
     detail: Ka < 4080
     series: 2
-    short: "There is a ceiling. The two-part stand-in says any Ka is stable, just swingier. The real loop also has the coil's 1 ms lag, and three parts in a ring can feed a swing faster than they damp it. A quick check on the polynomial, the *Routh test* (for s³ + a₂s² + a₁s + a₀: all coefficients positive and a₂·a₁ > a₀), gives 1020 × 20000 > 5000·Ka: Ka < 4080. At the ceiling the head rings forever at 141 rad/s. (not in lab handout)"
+    short: |-
+      There is a ceiling. The two-part stand-in says any Ka is stable, just swingier. The real loop also has the coil's 1 ms lag, and three parts in a ring can feed a swing faster than they damp it.
+      - **The test:** the *Routh test* checks a polynomial without solving it: s³ + a₂s² + a₁s + a₀ is stable when all its coefficients are positive and a₂·a₁ > a₀.
+      - **The result:** 1020 × 20000 > 5000·Ka, so Ka < 4080. At the ceiling the head rings forever at 141 rad/s.
+
+      (not in lab handout)
     eq: "1020 · 20000 > 5000·Ka  ⇒  Ka < 4080"
     dive: disk
     live: figure:disk?preset=limit
@@ -322,7 +355,7 @@ maps:
     label: "Too messy? Let PID Tuner"
     detail: engine speed, Project 1
     series: 3
-    short: "Let MATLAB build the fraction. Project 1's engine model turns a throttle angle into speed through air intake, combustion and the car's drag, with curves no single fraction captures. The *PID Tuner* makes a straight-line copy of it near the current operating point (*linearization*: small changes behave proportionally), then picks gains for a *PI controller*, P + I/s. The goals: settle in under 5 s, with zero steady-state error to a step in commanded speed."
+    short: "Let MATLAB build the fraction. Project 1's engine model turns a throttle angle into speed through air intake, combustion and the car's drag, with curves no single fraction captures. MATLAB's *PID Tuner* (PID: proportional, integral, derivative; the project uses only P and I) makes a straight-line copy of it near the current operating point (*linearization*: small changes behave proportionally), then picks gains for a *PI controller*, P + I/s. The goals: settle in under 5 s, with zero steady-state error to a step in commanded speed."
     eq: "C(s) = P + I/s"
     dive: tuner
     live: figure:tuner
@@ -349,7 +382,7 @@ maps:
     live: figure:pi
     quizTag: NEEDI
     examples: [engine, motor, borer, disk]
-    exampleWhy: "Why a position (boring machine, disk head) reaches its target with P alone, and a speed (motor, engine) needs I."
+    exampleWhy: "Why holding a position needs less help from the controller than holding a speed."
     addsToExample: "Explains the engine's I term: zero steady error."
     accountsFor: Why Project 1 asks for PI rather than P.
     pop:
@@ -365,7 +398,12 @@ maps:
     label: "Two sliders: speed and calm"
     detail: response time, robustness
     series: 3
-    short: "Speed and calmness; the tool finds P and I to match. *Response time* sets how fast the loop reacts: in all three handout tables the *crossover frequency* (where the loop gain falls to 1) is 2 ÷ response time. *Transient behavior* (Aggressive ↔ Robust) sets the *phase margin*: how far the loop is from swinging forever, as an angle; more margin, less overshoot. To be both fast and calm, move both."
+    short: |-
+      Speed and calmness; the tool finds P and I to match.
+      - **Loop gain for a wiggle:** on the motor the loop gain was one number, 360, for a steady load. For a wiggle it depends on the wiggle rate: big for slow wiggles, small for fast ones the machine can't follow.
+      - **Response time sets the crossover:** the *crossover frequency* is the wiggle rate at which the loop gain has fallen to 1; above it, feedback stops helping. In all three handout tables it is 2 ÷ response time: a shorter response time gives a higher crossover and a faster loop.
+      - **Transient behavior sets the phase margin:** each part also makes a wiggle come out late, its *lag*, counted in degrees of one full wiggle (360°). At 180° of lag the correction arrives upside down and pushes the wrong way, and if the loop gain is 1 there, the loop swings forever. The *phase margin* is how far short of 180° the loop's lag is at crossover: more margin, less overshoot.
+      - **To be both fast and calm,** move both sliders.
     eq: "ω_c = 2/t_resp,  PM ≈ 100° × robustness"
     dive: tuner
     live: figure:tuner?preset=initial
@@ -377,8 +415,8 @@ maps:
       rough: left slider = speed; right slider = calmness
       eqKey: "ω_c = crossover (rad/s); t_resp = response time (s); PM = phase margin (°). Rules read from the handout's tables (not in lab handout)."
       figures:
-      - { id: lab-tuner, params: { resp: 0.678, rob: 0.6 }, alt: "The two sliders at 0.678 s and 0.6 above the stand-in engine's step response with 7.5 % overshoot." }
-      figCaption: "The two sliders at the handout's first setting, and the response they give on the stand-in engine."
+      - { id: lab-tuner, params: { resp: 0.678, rob: 0.6 }, alt: "The two sliders at 0.678 s and 0.6 above the stand-in engine's step response with 7.4 % overshoot." }
+      figCaption: "The two sliders at the handout's first setting, and the response they give on the stand-in engine. The emulated tuner picks P = 0.0042220, I = 0.0092107, which overshoot 7.4 %; the handout's own P and I give 7.5 %, as in its table (not in lab handout). Tp = time of the peak; Ts = settling time (stays within ±2 %)."
       example: "First setting 0.678 s, 0.6: crossover 2.95 rad/s, margin 59.9° (handout p.3)."
       ask: q-sliders
 
@@ -403,7 +441,7 @@ maps:
       figures:
       - { id: lab-step, params: { sys: engine, design: [initial, slower, final] }, alt: "Three step responses on the stand-in engine: initial peaks at 1.07, slower rises over 3.5 s, final rises smoothly in 1.8 s.", caption: "(a)" }
       - { id: lab-table, params: { table: tuner3 }, alt: "Table of the handout's three designs: settings, P, I, rise, settling, overshoot, margins.", caption: "(b)" }
-      figCaption: "<b>(a)</b> The three designs on the stand-in engine, which matches every rise, settling and overshoot in the handout's tables within 0.02 s and 0.05 %. <b>(b)</b> The handout's numbers."
+      figCaption: "<b>(a)</b> The three designs on the stand-in engine, which matches every rise, settling and overshoot in the handout's tables within 0.02 s and 0.05 %. <b>(b)</b> The handout's numbers. resp = response time (s); rob = robustness; Tr = rise time (10 % to 90 %); Ts = settling time (within ±2 %); OS = overshoot; PM = phase margin; GM = gain margin, how many times larger the loop gain could get before the loop swings forever, in dB (20 dB = 10×)."
       example: "The handout's text says 3.4 s for the slower design; its screenshot shows 3.1 s."
       ask: q-three
 
@@ -411,7 +449,14 @@ maps:
     label: Why P went to zero
     detail: integral-only
     series: 3
-    short: "Because PI can't add enough lag. At the slow crossover, 0.645 rad/s, the engine itself delays a wiggle passing through it by only 21° (its *lag*). To land the requested 60° margin, the controller would have to add 99° of lag, but a PI controller adds between 0° (all P) and 90° (all I). The closest it can get is all I: P = 0, and the margin comes out at 69.3°, exactly the handout's table. More margin, so overshoot fell to 0.4 %. (reconstruction; not in lab handout)"
+    short: |-
+      Because PI can't add enough lag.
+      1. **The budget:** a 60° margin means the whole loop may lag 180° − 60° = 120° at crossover (180° is where the correction arrives upside down).
+      2. **The engine's share:** at the slow crossover, 0.645 rad/s, the engine lags a wiggle by only 21°.
+      3. **The controller's share:** 120° − 21° = 99°, but a PI controller lags between 0° (all P) and 90° (all I).
+      4. **The best it can do:** all I, so P = 0. The loop then lags 90° + 21° = 111°, a margin of about 69°: the handout's table shows 69.3°. More margin, so the overshoot fell to 0.4 %.
+
+      (reconstruction; not in lab handout)
     eq: "needed lag = 180° − 60° − 21° = 99° > 90°"
     dive: tuner
     live: figure:tuner?preset=slower
@@ -452,7 +497,7 @@ maps:
       - **Rejects pushes:** the motor's sag fell to 0.3 %.
       - **Shapes the response:** K set the boring machine's overshoot and settling.
       - **Shrugs off changes in the machine:** the boring machine's sensitivity is about s/K.
-      - **Removes steady error:** the disk's integrator, the engine's I term.
+      - **Removes steady error to a command:** the integrators in the boring machine and the disk head, and the engine's I term.
       The price is the same everywhere: more gain swings more, and past a limit it never settles. Choosing the knobs is choosing a point on that trade.
     dive: knobs
     live: figure:knobs
@@ -569,7 +614,7 @@ maps:
   - from: TRADE
     to: SENS
     label: machine drifts
-    question: What if the machine itself changes, say its parts wear or the rock gets softer?
+    question: What if the machine itself changes, say its parts wear and it steers less sharply?
     idea: "Feedback makes the loop care less: a change in the machine reaches the output scaled by S, about s/K for slow changes."
     why: |-
       **Still open:** so far the machine's model was exact, and only outside pushes disturbed it.
@@ -585,9 +630,9 @@ maps:
     why: |-
       **Still open:** the boring machine has two energy stores. Real machines often have a fast electrical part too.
 
-      **Why it matters:** the disk drive is the third worked example in Project 2, and it shows when a part can be ignored.
+      **Why it matters:** Project 2's third worked example is a machine like this, and it shows when a fast part can be ignored.
 
-      **What we want:** its loop, its steady-state error, and what the extra part changes.
+      **What we want:** its loop, its *steady-state error* (the error left once everything stops moving), and what the extra part changes.
   - from: DISK
     to: KA
     label: turn up Ka
@@ -626,11 +671,11 @@ maps:
     to: TUNER
     label: too messy to write
     question: What if the machine is too complicated to write as one fraction?
-    idea: "Let software do it: PID Tuner makes a straight-line copy of the Simulink model at its operating point and designs the gains."
+    idea: "Let software do it: a tuning tool makes a straight-line copy of the model near where the machine is running, and picks the gains on that copy."
     why: |-
       **Still open:** for the motor, the boring machine and the disk head we had the fraction, so we could see what each gain does.
 
-      **Why it matters:** Project 1's engine has a throttle, an intake manifold, a combustion delay and the car's drag, all curved; nobody writes that as one fraction by hand.
+      **Why it matters:** Project 1's machine has several curved parts and a delay; nobody writes that as one fraction by hand.
 
       **What we want:** a way to get good gains anyway, and to understand what the tool does.
   - from: TUNER

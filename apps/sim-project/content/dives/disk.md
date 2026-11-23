@@ -12,6 +12,12 @@ accountsFor: Why the fast seek at Ka = 80 rings, and why the coil can be ignored
 
 **The question:** what does the amplifier gain Ka do to the disk head, and when does the fast coil matter? These are the boxes *A third part: the disk head*, *Ka: fast or calm*, *Ka and a shock* and the side box *The ceiling on Ka*.
 
+````callout:short In short
+- **Answer:** a step command ends with zero error for any stable Ka. Ka trades the seek's speed against its swing (Ka = 10: no overshoot, 1.40 s; Ka = 80: 17 %, 0.41 s), and a steady shock leaves −1/(5·Ka).
+- **Knobs:** Ka; the coil speed (1000), the arm damping (20) and the coil gain (5).
+- **The hard limit:** the real loop goes unstable past Ka = 4080 (not in lab handout).
+````
+
 ### The big idea
 
 - **Zero step error comes free:** the arm builds position (its 1/s), so the head ends exactly on a new track for any stable Ka, even if the parts drift.
@@ -57,7 +63,7 @@ Routh, s³ + a₂s² + a₁s + a₀:  stable ⇔ all aᵢ > 0 and a₂·a₁ > a
 
 | Knob | What it is, physically | Turn it up | Turn it down |
 |---|---|---|---|
-| **Ka** | amplifier volts per unit of track error | faster seek, smaller shock offset, more overshoot (Ka = 160: 32 %); unstable past 4080 | slower, calmer; Ka = 20 is the stand-in's critical damping (no overshoot) |
+| **Ka** | amplifier volts per unit of track error | faster seek, smaller shock offset, more overshoot (Ka = 160: 32 %); unstable past 4080 | slower, calmer; at Ka = 20 the stand-in is *critically damped* (ζ = 1: the quickest it can be with no swing) |
 | **1000** (coil speed) | how fast the coil's current builds (R/L) | ceiling rises; the stand-in fits better | ceiling falls; the coil starts to matter at lower Ka |
 | **20** (arm damping) | bearing friction ÷ arm inertia | calmer seek at a given Ka | swingier |
 | **5000/1000 = 5** (coil gain) | force per volt, steady | acts like more Ka | acts like less Ka |

@@ -12,6 +12,12 @@ accountsFor: Why Project 1 asks for PI rather than P.
 
 **The question:** the boring machine and the disk head reached a commanded position with no I term. Why does the engine need one? This is the box *Why the engine needs I*.
 
+````callout:short In short
+- **Answer:** a speed needs a push held on it, and P pushes only while there is an error, so P alone leaves one. I adds the error up over time and keeps pushing until it is zero.
+- **Knobs:** P (push on the error now) and I (push on the error so far).
+- **Number to keep:** on the stand-in engine, the initial P alone stops 43 % short (not in lab handout).
+````
+
 ### The big idea
 
 - **P pushes in proportion to the error now.** No error, no push.
@@ -55,4 +61,4 @@ integral time:   T_i = P/I   (how many seconds of error I needs to match P's pus
 
 Choosing P and I by hand needs the plant, which Project 1 never writes down. The PID Tuner chooses them from two sliders instead: *Two sliders: speed and calm*.
 
-<p class="src">Sources: PID Tuner handout pp.1–2 (PI controller, P + I/s, zero steady-state error requirement); Dorf Example 4.5 (1/K push offset). Not in lab handout: the stand-in engine model and its numbers, T_i, and the position/speed argument as stated. Course background: Control Systems › <a href="../control-systems/#/dive/integral">Integral action: removing the steady error</a>, <a href="../control-systems/#/dive/sse">Why it stops short</a>.</p>
+<p class="src">Sources: PID Tuner handout pp.1–2 (PI controller, P + I/s, zero steady-state error requirement); Dorf Example 4.5 (1/K push offset). Not in lab handout: the stand-in engine model and its numbers, T_i, and the position/speed argument as stated. Course background: Control Systems › <a href="../control-systems/#/dive/integral">Integral action: removing the steady error</a>, <a href="../control-systems/#/dive/sse">Why it ends up off target</a>.</p>

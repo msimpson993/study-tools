@@ -194,6 +194,27 @@ emulated tuner at robustness 0.6: P reaches 0 at response time ≈ 2.12 s
 disk Ka = 10^3.6 = 3981: max pole real part -0.233 (stable, near the ceiling)
 
 ======================================================================
+PASS1  numbers for the pass-1 fixes [own]
+======================================================================
+motor: speed-up tau_o/tau_c = 361.0; handout plot axes 7 s / 0.02 s = 350 (an axis choice, not a model number); closed 4tau = 14.8 ms fits in 20 ms
+motor: 0.02 rule = closed sag / open sag; Ka=54 ratio 0.0028 = 1/361; 0.02/ratio = 7.2x inside the rule
+engine initial, handout gains: P=0.0042253 I=0.0092411 OS=7.472% (1 dp 7.5) Tp=0.925s Ts=1.961s Tr=0.450s
+engine initial, emulated gains: P=0.0042220 I=0.0092107 OS=7.362% (1 dp 7.4) Tp=0.925s Ts=1.962s Tr=0.451s
+engine initial loop gain |L(j0.3)| = 9.614, phase -91.8 deg
+engine initial loop gain |L(j1.0)| = 2.966, phase -97.2 deg
+engine initial loop gain |L(j2.954)| = 1.000, phase -120.1 deg
+engine initial loop gain |L(j10.0)| = 0.144, phase -165.0 deg
+engine initial loop gain |L(j16.68)| = 0.054, phase -180.0 deg
+pi figure preset P=0.0042 I=0.0092 (slider step 0.0001): OS=7.380% Ts=1.963s
+pi figure preset P=0.0 I=0.0021 (slider step 0.0001): OS=0.289% Ts=3.544s
+pi figure preset P=0.0042 I=0: final 0.5664, short by 0.4336
+wiggle: 1 rad/s = one full wiggle every 2*pi = 6.28 s; 10 rad/s every 0.63 s
+slower design lag budget: engine lag 20.64 deg; allowed total 180-60 = 120; controller needs 99.36 > 90; with pure I total 110.64, PM 69.36 (handout 69.3)
+disk Ka=80 exact dominant pair zeta = 0.490 (stand-in 0.500)
+disk Ka=400: PO=52.42% offset -0.00050; stand-in zeta 0.224
+trade-off slider range 5..400: borer PO 0% -> 43.80% (offset 0.2 -> 0.0025); disk PO 0% -> see Ka=400 line (offset 0.04 -> 0.0005)
+
+======================================================================
 SUMMARY
 ======================================================================
 handout checks flagged: ['E2 Ts K=20']

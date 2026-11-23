@@ -12,6 +12,12 @@ accountsFor: Why every Project 2 script is just tf, series, parallel and feedbac
 
 **The question:** how do we write a machine down so MATLAB can simulate it? This is the box *Blocks and signals*, the first box on the map.
 
+````callout:short In short
+- **Answer:** each part is a block whose rule is a fraction in s; `tf` makes one, `series` multiplies, `parallel` adds, `feedback` turns a loop into G/(1 + GH).
+- **Knobs:** none yet; this is the toolkit every Project 2 script uses.
+- **Watch for:** the typo in Fig. 4.23(b): it sets `f` and uses `b`.
+````
+
 ### The big idea
 
 - **A block is a rule:** one signal in, one signal out. The rule is a fraction in *s*, the *transfer function*.

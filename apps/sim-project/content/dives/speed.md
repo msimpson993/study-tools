@@ -7,10 +7,16 @@ neighbors: [blocks, borer]
 level: Worked calculation
 check: [ck-speed-1, ck-speed-2, ck-speed-3]
 addsToExample: "Adds the tachometer and amplifier: the sag shrinks to 0.3 %."
-accountsFor: Why the closed-loop plot in the handout needs a time axis 350× shorter.
+accountsFor: "Why the handout's closed-loop plot needs a much shorter time axis (0.02 s instead of 7 s): the loop recovers 361× faster."
 ---
 
 **The question:** a load brakes the motor. How much speed does it lose without feedback, how much with, and which knobs set the difference? These are the boxes *No feedback: the load wins*, *Measure and correct* and *The loop-gain rule*.
+
+````callout:short In short
+- **Answer:** open loop, a 1 N·m load costs 0.667 rad/s over about 5 s; the tachometer loop cuts that to 0.00185 rad/s (ratio 0.003, inside the handout's 0.02 rule) and recovers in 3.7 ms.
+- **Knobs:** Ka and Kt do the same job; Km/Ra, Kb and b change the drag; J changes only the speed of recovery.
+- **One number to keep:** the loop gain, 360. Sag and time constant both divide by 361.
+````
 
 ### The big idea
 
@@ -44,7 +50,7 @@ final sag (unit load) = −1/(total drag);   time constant τ = J/(total drag)
 | Time constant τ | 1.33 s | 3.69 ms |
 | Settled (4τ) | 5.3 s | 14.8 ms |
 
-- **Ratio:** 0.00185/0.667 = 0.0028; the handout rounds to 0.003 and compares it with the usual target of 0.02.
+- **Ratio:** 0.00185/0.667 = 0.0028; the handout rounds to 0.003 and compares it with its rule of thumb, "we generally expect" closed-loop sag ÷ open-loop sag < 0.02 (Dorf p.259). 0.0028 is about 7× inside it.
 - **Loop gain:** Km·Ka·Kt/(Ra·1.5) = 540/1.5 = 360, and 1 + 360 = 361 = 1.33 s ÷ 3.69 ms.
 - **Smallest Ka for the 0.02 target:** 7.35 (not in lab handout).
 

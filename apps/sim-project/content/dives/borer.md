@@ -12,6 +12,12 @@ accountsFor: Why the handout ends Example 4.5 without picking a K.
 
 **The question:** what does the gain K do to the boring machine, and why can't one K be best? These are the boxes *Gain has a price*, *The boring machine's loop*, *K and the command*, *K and the rock's push* and *One knob, two goals*.
 
+````callout:short In short
+- **Answer:** K is a spring and 12 a shock absorber. Raising K from 20 to 100 lifts the overshoot from 3.9 % to 22 % and cuts the push offset from 0.05 to 0.01; no K is best at both.
+- **Knobs:** K (the handout's), and the rate gain 11 (fixed in the handout).
+- **Formulas to keep:** ζ = 6/√K; push offset 1/K.
+````
+
 ### The big idea
 
 - **A software spring and shock absorber:** closed, the loop behaves like a mass on a spring of stiffness K with a damper of 12 (1 from the machine, 11 from the controller's rate term).
@@ -76,4 +82,4 @@ Values for K = 10, 200 and for other rate gains are mine (not in lab handout).
 - **Hold the line exactly:** a steady push always leaves 1/K, because nothing in the controller adds up the error over time. Removing the offset would need a controller term that does.
 - **Say how much a change in the machine itself matters:** that is the next box, *When the machine changes*.
 
-<p class="src">Sources: Dorf Example 4.5, Eq. 4.57, Figs. 4.25–4.26, Table 4.3, final-value theorem (pp.260–263). Not in lab handout: the spring/damper reading, ζ and ωₙ, the zero's role, the rate-gain knob, and all values outside K = 20 and 100. Course background: Control Systems › <a href="../control-systems/#/dive/second">Two poles: ζ and ωₙ</a>, <a href="../control-systems/#/dive/sse">Why it stops short</a>; the boring machine is also Mini exam 2, Problem 3.</p>
+<p class="src">Sources: Dorf Example 4.5, Eq. 4.57, Figs. 4.25–4.26, Table 4.3, final-value theorem (pp.260–263). Not in lab handout: the spring/damper reading, ζ and ωₙ, the zero's role, the rate-gain knob, and all values outside K = 20 and 100. Course background: Control Systems › <a href="../control-systems/#/dive/second">Two poles: ζ and ωₙ</a>, <a href="../control-systems/#/dive/sse">Why it ends up off target</a>; the boring machine is also Mini exam 2, Problem 3.</p>

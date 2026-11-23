@@ -1,4 +1,4 @@
-# PROPOSED subject.yaml for the new page (slug: sim-project). Staging copy, not in the repo.
+# sim-project: EECE5130 Simulation Project. Every number on the page is printed by the tutor's numbers.py (fixture: test/fixtures/numbers_output.txt).
 id: sim-project
 title: "Simulation Project (EECE5130): feedback on four machines"
 quizOrder: chain
@@ -47,7 +47,7 @@ runningExample:
       question: Meet the second running example
       figure: borer
       panels: [scene]
-      caption: "<b>The boring machine</b>, seen from above: the cutter head steers toward the planned line; the rock pushes it sideways (T_d). Press play to watch it steer."
+      caption: "<b>The boring machine</b>, seen from above: the cutter head steers toward the planned line; the rock pushes it sideways (T_d). The readout y is the cutter's position off the line. Press play to watch it steer."
       about: |
         - **In:** the planned position R, and the rock's sideways push T_d.
         - **Out:** the machine's actual position Y.

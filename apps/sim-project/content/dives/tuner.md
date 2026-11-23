@@ -12,6 +12,12 @@ accountsFor: Why the handout's final design is both quicker and calmer than the 
 
 **The question:** what is PID Tuner doing when it turns two sliders into P and I, and what happened in the handout's three designs? These are the boxes *Too messy? Let PID Tuner*, *Two sliders: speed and calm*, *Three designs*, the side box *Why P went to zero*, and *Check it on the real engine*.
 
+````callout:short In short
+- **Answer:** the tuner makes a straight-line copy of the model, sets the crossover from Response time and the phase margin from Transient behavior, and solves for P and I. You then check the result on the full model.
+- **Knobs:** Response time, Transient behavior, Update Block.
+- **Numbers to keep:** initial 7.5 % overshoot and 1.96 s; slower 0.401 % and 3.45 s with P = 0; final 0 % and 1.81 s.
+````
+
 ### The big idea
 
 - **Linearize, tune, verify:** the tuner makes a straight-line copy of the Simulink engine at its operating point, designs on the copy, and you check the result on the full model.

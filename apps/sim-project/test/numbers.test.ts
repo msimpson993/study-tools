@@ -195,3 +195,27 @@ describe('engine stand-in and emulated tuner (not in lab handout)', () => {
     nearAbs(M.metrics(d200.t, d200.y, 1).os, 9.38, 0.15);
   });
 });
+
+describe('pass-1 numbers used by the staged content', () => {
+  it('PI figure presets use the exact handout gains (I-only 0.4 %, 3.47 s)', () => {
+    const initial = M.engineStep(0.0042253, 0.0092411, 8);
+    const ionly = M.engineStep(0, 0.0021263, 12);
+    nearAbs(initial.m.os, grab(/engine initial, handout gains: P=0\.0042253 I=0\.0092411 OS=([\d.]+)%/), 0.05);
+    nearAbs(initial.m.ts, grab(/engine initial, handout gains:[\s\S]*?Ts=([\d.]+)s/), 0.006);
+    expect(+initial.m.os.toFixed(1)).toBe(7.5);
+    // stand-in at the exact slower gains: 0.4 % and 3.47 s (handout table 0.401 %, 3.45 s)
+    nearAbs(ionly.m.os, 0.4, 0.08);
+    nearAbs(ionly.m.ts, 3.47, 0.03);
+    expect(+ionly.m.os.toFixed(1)).toBe(0.4);
+    expect(+ionly.m.ts.toFixed(2)).toBe(3.47);
+  });
+  it('pins the new PASS1 figures: 361× vs 350, ζ = 0.49 at Ka = 80, 7.4 vs 7.5 %', () => {
+    nearAbs(grab(/speed-up tau_o\/tau_c = ([\d.]+)/), 361, 0.05);
+    nearAbs(grab(/handout plot axes 7 s \/ 0\.02 s = ([\d.]+)/), 350, 0.05);
+    nearAbs(grab(/disk Ka=80 exact dominant pair zeta = ([\d.]+)/), 0.49, 0.001);
+    const poles = M.diskPoles(80).filter((q) => q.re > -40 && Math.abs(q.im) > 0.5);
+    const z = Math.abs(poles[0].re) / Math.hypot(poles[0].re, poles[0].im);
+    nearAbs(z, 0.49, 0.002);
+    nearAbs(grab(/engine initial, emulated gains:[\s\S]*?OS=([\d.]+)%/), 7.362, 0.02);
+  });
+});

@@ -12,6 +12,12 @@ accountsFor: Why the report's discussion can be organised around four advantages
 
 **The question:** what did feedback buy across the four machines, and what does each knob trade? This is the box *What feedback bought*, and the root's central question.
 
+````callout:short In short
+- **Answer:** four advantages, one per machine: rejecting pushes, shaping the response, shrugging off changes in the machine, removing steady error. One price everywhere: more gain swings more.
+- **Knobs:** the table below lists every knob on the four machines.
+- **Use it for:** the report's discussion section.
+````
+
 ### The big idea
 
 - **Four advantages, one machine each:** reject pushes (motor), shape the response (boring machine), shrug off changes in the machine (boring machine's sensitivity), remove steady error (disk head's integrator, engine's I term).

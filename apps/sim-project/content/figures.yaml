@@ -1,4 +1,4 @@
-# PROPOSED figures.yaml for sim-project. Drawing behaviour per figure: ../FIGURES.md. Models: numbers.py (port to src/model, pin in test/numbers.test.ts).
+# sim-project live figures. Models: src/model (ported from the tutor's numbers.py, pinned in test/numbers.test.ts).
 - id: blocks
   title: "Reading a script: each line builds a block"
   x: block diagram · fraction so far
@@ -68,7 +68,7 @@
   x: step overshoot (%)
   y: push offset (per unit push)
   legend:
-    - { label: "every K (5 to 400)", color: "var(--muted)" }
+    - { label: "every gain (5 to 400)", color: "var(--muted)" }
     - { label: your K, color: "var(--acc)" }
     - { label: "handout's K values", color: "var(--yel)" }
   howToRead: "Each point on the curve is one gain: how far the response overshoots a new command (across) and how far a unit push leaves it off (up). The dot is your gain; the yellow marks are the handout's two settings. For the disk head the axes are seek overshoot and shock offset."
@@ -89,10 +89,10 @@
     - { label: "shortcut s/K", color: "var(--muted)", dash: true }
     - { label: "probe ω", color: "var(--yel)" }
   howToRead: "Left (the handout's Fig. 4.27 top): S drawn in the complex plane as ω runs from 0.1 to 1000 rad/s; it starts near 0 and ends at 1. Right (Fig. 4.27 bottom): |S| against ω on log axes, solid, with the shortcut s/K dashed. The yellow probe marks your ω on both; the readout says what a 10 % change in the machine at that ω does to the loop."
-  lookFor: "Raise K: the left end of the |S| curve drops (slow drift hidden better); the right end stays at 1."
+  lookFor: "Raise K: the left end of the |S| curve drops (slow motions protected better); the right end stays at 1."
   controls:
     - { id: K, label: "K (gain)", type: range, min: 5, max: 200, step: 1, default: 20, group: primary }
-    - { id: w, label: "probe ω (rad/s, log)", type: range, min: -1, max: 3, step: 0.01, default: 0, group: primary }
+    - { id: w, label: "probe ω", type: range, min: -1, max: 3, step: 0.01, default: 0, group: primary, unit: "rad/s", display: pow10 }
   presets:
     - { id: fig427, label: "Fig. 4.27 (K = 20)", set: { K: 20, w: 0 } }
     - { id: k100, label: "K = 100", set: { K: 100, w: 1.27 }, about: "|S| peaks at 1.04 near 19 rad/s (not in lab handout)." }
@@ -108,7 +108,7 @@
   lookFor: "At Ka = 80 the stand-in (dashed) sits on the real curve; near Ka = 4000 it stays calm while the real loop rings."
   animate: { control: t, speed: 0.4, loop: false }
   controls:
-    - { id: lgKa, label: "Ka (log)", type: range, min: 0, max: 3.7, step: 0.01, default: 1.903, group: primary }
+    - { id: lgKa, label: Ka, type: range, min: 0, max: 3.7, step: 0.01, default: 1.903, group: primary, display: pow10 }
     - { id: input, label: show, type: seg, options: [seek, shock, both], default: both, group: primary }
     - { id: stand, label: drop the coil, type: toggle, default: false, group: primary }
     - { id: ghosts, label: "Ka = 10, 80 ghosts", type: toggle, default: true, group: more }
@@ -129,12 +129,12 @@
   howToRead: "Top: engine speed after a unit step in commanded speed, on the stand-in engine (not in lab handout). Bottom: the throttle command split into P × error and I × accumulated error. With I = 0 the speed stops short by 1/(1 + P·K_e); with I > 0 the I part grows until it holds the throttle alone and the error is zero."
   lookFor: "At the end, the P part is zero and the I part carries the whole throttle."
   controls:
-    - { id: P, label: "P", type: range, min: 0, max: 0.012, step: 0.0001, default: 0.0042, group: primary }
-    - { id: I, label: "I", type: range, min: 0, max: 0.02, step: 0.0001, default: 0.0092, group: primary }
+    - { id: P, label: "P", type: range, min: 0, max: 0.012, step: 0.0000001, default: 0.0042253, group: primary }
+    - { id: I, label: "I", type: range, min: 0, max: 0.02, step: 0.0000001, default: 0.0092411, group: primary }
   presets:
-    - { id: ponly, label: "P only (initial P)", set: { P: 0.0042, I: 0 }, about: "Stops 43 % short (stand-in)." }
-    - { id: initial, label: "initial design", set: { P: 0.0042, I: 0.0092 }, about: "7.5 % overshoot, 1.96 s." }
-    - { id: ionly, label: "I only (slower design)", set: { P: 0, I: 0.0021 }, about: "0.4 %, 3.45 s." }
+    - { id: ponly, label: "P only (initial P)", set: { P: 0.0042253, I: 0 }, about: "Stops 43 % short (stand-in)." }
+    - { id: initial, label: "initial design", set: { P: 0.0042253, I: 0.0092411 }, about: "Stand-in: 7.5 % overshoot, 1.96 s (handout: 7.5 %, 1.96 s)." }
+    - { id: ionly, label: "I only (slower design)", set: { P: 0, I: 0.0021263 }, about: "Stand-in: 0.4 %, 3.47 s (handout: 0.401 %, 3.45 s)." }
 - id: tuner
   title: "PID Tuner, emulated: two sliders on the stand-in engine"
   x: time (s) · ω (rad/s)
@@ -168,7 +168,7 @@
   controls:
     - { id: machine, label: machine, type: select, options: [motor, boring machine, disk head, engine], default: motor, group: primary }
     - { id: knob, label: knob, type: select, options: [Ka, Kt, J, b, K, rate gain, disk Ka, response time, robustness, P, I], default: Ka, group: primary }
-    - { id: x, label: "knob value (× handout setting, log)", type: range, min: -1, max: 1, step: 0.01, default: 0, group: primary }
+    - { id: x, label: "knob value (× handout setting)", type: range, min: -1, max: 1, step: 0.01, default: 0, group: primary, display: pow10 }
   presets:
     - { id: motorKa, label: "motor Ka × 2", set: { machine: motor, knob: Ka, x: 0.301 } }
     - { id: borerK, label: "boring machine K × 5", set: { machine: boring machine, knob: K, x: 0.699 } }
