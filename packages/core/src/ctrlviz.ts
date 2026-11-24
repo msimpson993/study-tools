@@ -1,7 +1,7 @@
 import { C, cabs, type Cx } from './dsp/complex';
 import { type TF, type StepMetrics, type Margins, type Bode, bode, margins, stepMetrics, tfEval, logspace, tfPoles, tfZeros, freqresp } from './dsp/tf';
 import { type RLocus, rlocusPolesAt, rlocusNearest } from './dsp/rlocus';
-import { col, planeFrame, rangeFrame, wipe, text, tline, polyline, dot, cross, graphAxes, curve, clipBox, heat, axes2, tickLabel, type Frame, type V2 } from './viz';
+import { col, planeFrame, rangeFrame, wipe, text, tline, polyline, dot, cross, graphAxes, curve, clipBox, heat, axes2, tickLabel, isThumb, type Frame, type V2 } from './viz';
 import { withLabelRole, labelsOn } from './labels';
 import type { PanelPointer } from './figure';
 
@@ -20,7 +20,7 @@ import type { PanelPointer } from './figure';
  *   splaneDrag / locusDrag   pointer hooks to drag poles/zeros in the s-plane, or to drag the gain along a locus
  */
 export const BRANCH_COLORS = (): string[] => [col.a(), col.b(), col.c(), col.d(), col.e(), '#ff7eb9', col.accent(), col.muted()];
-const fmtN = (v: number, d = 2) => (Number.isFinite(v) ? String(+v.toFixed(d)) : '—');
+const fmtN = (v: number, d = 2) => (Number.isFinite(v) ? String(+v.toFixed(d)).replace('-', '−') : '—');
 const fmtC = (z: Cx) => (Math.abs(z.im) < 1e-9 ? fmtN(z.re) : `${fmtN(z.re)}${z.im < 0 ? '−' : '+'}j${fmtN(Math.abs(z.im))}`);
 const niceStep = (span: number, n: number) => { const raw = span / n, p = Math.pow(10, Math.floor(Math.log10(raw))), m = raw / p; return (m < 1.5 ? 1 : m < 3.5 ? 2 : m < 7.5 ? 5 : 10) * p; };
 
@@ -46,7 +46,9 @@ export function drawStepResponse(g: CanvasRenderingContext2D, w: number, h: numb
   let lo = 0, hiY = -Infinity;
   for (const v of all) { if (v < lo) lo = v; if (v > hiY) hiY = v; }
   const yr: V2 = s.yRange ?? [lo - 0.05 * Math.abs(ref), Math.max(ref * 1.15, hiY * 1.06)];
-  const f = rangeFrame(w, h, [0, tEnd], yr, s.pads?.l ?? 46, s.pads?.r ?? 14, s.pads?.t ?? 10, s.pads?.b ?? 32);
+  const thumb = isThumb(g);
+  const pad = (v: number | undefined, full: number, compact: number) => thumb ? Math.min(v ?? compact, compact) : (v ?? full);
+  const f = rangeFrame(w, h, [0, tEnd], yr, pad(s.pads?.l, 46, 32), pad(s.pads?.r, 14, 10), pad(s.pads?.t, 10, 8), pad(s.pads?.b, 32, 20));
   graphAxes(g, f, [0, tEnd], yr, s.xLabel ?? 'time (s)', s.yLabel ?? 'output');
   const m = stepMetrics(t, y, { ref, final: s.final, band });
   const yf = m.yFinal;
@@ -79,9 +81,23 @@ export function drawStepResponse(g: CanvasRenderingContext2D, w: number, h: numb
     const xe = tEnd * 0.985; tline(g, f, [xe, yf], [xe, ref], col.bad(), 3);
     const essText = s.essLabel ?? `final sag ${fmtN(m.ess, 3)}`;
     // sit just above the final-value line at the right, or below it when a nearby
-    // reference / zero line would strike through the label (Motor step 5, sag ≈ 0).
+    // reference / zero line or the response curve would strike through the label
+    // (Motor steps 3/5/6 at a narrow width, sag ≈ 0).
     const ySag = f.Y(yf), yRef = f.Y(ref);
-    const essY = Math.abs(ySag - 8 - yRef) < 12 ? ySag + 14 : ySag - 8;
+    g.font = '10.5px system-ui,sans-serif';
+    const tw = g.measureText(essText).width, x0 = f.box.r - 4 - tw, x1 = f.box.r - 4;
+    const hits = (yy: number, half = 7) => {
+      if (Math.abs(yy - yRef) < 12 || Math.abs(yy - ySag) < 6) return true;
+      for (let i = 0; i < t.length; i++) {
+        const px = f.X(t[i]);
+        if (px < x0 - 2 || px > x1 + 2) continue;
+        if (Math.abs(f.Y(y[i]) - yy) < half + 2) return true;
+      }
+      return false;
+    };
+    const cands = [ySag - 8, ySag + 14, ySag - 18, ySag + 22, ySag - 28, ySag + 32];
+    const essY = cands.find((yy) => yy > f.box.t + 6 && yy < f.box.b - 6 && !hits(yy))
+      ?? (Math.abs(ySag - 8 - yRef) < 12 ? ySag + 14 : ySag - 8);
     lbl(essText, f.box.r - 4, essY, col.bad(), 'right');
   }
   return m;
@@ -99,13 +115,15 @@ export interface SPlaneSpec {
   marks?: SPlaneMark[];
   /** rings drawn around draggable poles/zeros so the affordance is visible */ handles?: Cx[];
   xLabel?: string; yLabel?: string;
+  /** plane-frame pad in px (default 6); a larger pad keeps poles and the jω title apart */
+  pad?: number;
 }
 /** The frame every s-plane panel with the same (w, h, range, reCenter) uses; dragging code calls this too so hits line up with pixels. */
-export const splaneFrame = (w: number, h: number, range: number, reCenter = -0.3 * range): Frame => planeFrame(w, h, range, reCenter, 0, 6);
+export const splaneFrame = (w: number, h: number, range: number, reCenter = -0.3 * range, pad = 6): Frame => planeFrame(w, h, range, reCenter, 0, pad);
 
 export function drawSPlane(g: CanvasRenderingContext2D, w: number, h: number, s: SPlaneSpec): Frame {
   wipe(g, w, h);
-  const f = splaneFrame(w, h, s.range, s.reCenter), R = Math.hypot(w, h) / Math.min(f.sx, f.sy);
+  const f = splaneFrame(w, h, s.range, s.reCenter, s.pad), R = Math.hypot(w, h) / Math.min(f.sx, f.sy);
   const x0 = f.X(0), y0 = f.Y(0);
   if (s.shadeUnstable !== false) { g.save(); clipBox(g, f); g.fillStyle = col.bad(); g.globalAlpha = 0.07; g.fillRect(Math.max(x0, f.box.l), f.box.t, f.box.r - Math.max(x0, f.box.l), f.box.b - f.box.t); g.restore(); }
   // the axis names first, so the grid numbers and notes keep clear of them
@@ -172,15 +190,34 @@ export function drawSPlane(g: CanvasRenderingContext2D, w: number, h: number, s:
   // a pole's value goes right of it, or left when a ζ ray runs through that spot (pass 3: a pole on a ray had its value on the ray)
   const zr = (s.zetaRays ?? []).map((zz) => Math.acos(Math.min(1, Math.max(0, zz))));
   const onRay = (x0b: number, x1b: number, y0b: number, y1b: number) => zr.some((t2) => [1, -1].some((sg) => { for (let k = 0; k <= 80; k++) { const q = (k / 80) * R, X = f.X(-Math.cos(t2) * q), Y = f.Y(sg * Math.sin(t2) * q); if (X > x0b - 2 && X < x1b + 2 && Y > y0b - 2 && Y < y1b + 2) return true; } return false; }));
-  for (const p of s.poles ?? []) {
+  g.font = '11px system-ui, sans-serif';
+  const sw = g.measureText(s.xLabel ?? 'σ (1/s)').width, jwLab = s.yLabel ?? 'jω (rad/s)', jwW = g.measureText(jwLab).width, jwX = f.X(0) + 6;
+  const onSigma = (a: number, b2: number, c: number, d: number) => b2 > f.box.r - 2 - sw - 3 && a < f.box.r && d > y0 - 8 - 12 && c < y0 - 8 + 4;
+  const onJw = (a: number, b2: number, c: number, d: number) => b2 > jwX - 2 && a < jwX + jwW + 2 && d > f.box.t && c < f.box.t + 16;
+  const hitsUnstable = (a: number, b2: number, c: number, d: number) => !!(unstableBox && b2 > unstableBox.x0 - 2 && a < unstableBox.x1 + 2 && d > unstableBox.y0 - 2 && c < unstableBox.y1 + 2);
+  const poles = s.poles ?? [];
+  const labelled: { p: Cx; lab: string }[] = [];
+  const used = new Set<number>();
+  for (let i = 0; i < poles.length; i++) {
+    const p = poles[i];
     cross(g, f, [p.re, p.im], col.b(), 6);
-    if (!(s.labels && p.im >= -1e-9)) continue;
-    const lab = fmtC(p), X = f.X(p.re), Y = f.Y(p.im) + (p.im > 1e-9 ? 14 : -12); g.font = '10px system-ui, sans-serif'; const tw = g.measureText(lab).width;
-    // …and clear of the σ axis name at the right end of the real axis (pass 3: "0+j6.32" sat on "σ (1/s)")
-    g.font = '11px system-ui, sans-serif'; const sw = g.measureText(s.xLabel ?? 'σ (1/s)').width; g.font = '10px system-ui, sans-serif';
-    const onSigma = (a: number, b2: number, c: number, d: number) => b2 > f.box.r - 2 - sw - 3 && a < f.box.r && d > y0 - 8 - 12 && c < y0 - 8 + 4;
-    const hitsUnstable = (a: number, b2: number, c: number, d: number) => !!(unstableBox && b2 > unstableBox.x0 - 2 && a < unstableBox.x1 + 2 && d > unstableBox.y0 - 2 && c < unstableBox.y1 + 2);
-    const blockedR = onRay(X + 9, X + 9 + tw, Y - 9, Y + 2) || onSigma(X + 9, X + 9 + tw, Y - 9, Y + 2) || hitsUnstable(X + 9, X + 9 + tw, Y - 9, Y + 2), blockedL = onRay(X - 9 - tw, X - 9, Y - 9, Y + 2) || X - 9 - tw < f.box.l + 2 || hitsUnstable(X - 9 - tw, X - 9, Y - 9, Y + 2);
+    if (!(s.labels && p.im >= -1e-9) || used.has(i)) continue;
+    if (Math.abs(p.im) < 1e-9) {
+      const pals = poles.map((q, j) => ({ q, j })).filter(({ q }) => Math.abs(q.im) < 1e-9 && Math.abs(q.re - p.re) < 1e-6);
+      pals.forEach(({ j }) => used.add(j));
+      const n = pals.length;
+      const fold = n === 2 ? 'double' : n === 3 ? 'triple' : n > 3 ? `${n}-fold` : '';
+      labelled.push({ p, lab: fold ? `${fmtN(p.re)} (${fold})` : fmtC(p) });
+    } else {
+      used.add(i);
+      labelled.push({ p, lab: fmtC(p) });
+    }
+  }
+  for (const { p, lab } of labelled) {
+    const X = f.X(p.re), Y = f.Y(p.im) + (p.im > 1e-9 ? 14 : -12); g.font = '10px system-ui, sans-serif'; const tw = g.measureText(lab).width;
+    // …and clear of the σ axis name, the jω title, and the 'unstable' tag
+    const blockedR = onRay(X + 9, X + 9 + tw, Y - 9, Y + 2) || onSigma(X + 9, X + 9 + tw, Y - 9, Y + 2) || onJw(X + 9, X + 9 + tw, Y - 9, Y + 2) || hitsUnstable(X + 9, X + 9 + tw, Y - 9, Y + 2);
+    const blockedL = onRay(X - 9 - tw, X - 9, Y - 9, Y + 2) || X - 9 - tw < f.box.l + 2 || onJw(X - 9 - tw, X - 9, Y - 9, Y + 2) || hitsUnstable(X - 9 - tw, X - 9, Y - 9, Y + 2);
     const right = !blockedR || blockedL;
     text(g, lab, right ? X + 9 : X - 9, Y, col.b(), right ? 'left' : 'right', 10);
     taken.push(right ? { x0: X + 9, x1: X + 9 + tw, y0: Y - 9, y1: Y + 2 } : { x0: X - 9 - tw, x1: X - 9, y0: Y - 9, y1: Y + 2 });

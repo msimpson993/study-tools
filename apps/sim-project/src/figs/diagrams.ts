@@ -413,7 +413,7 @@ export function drawLabDiagram(g: CanvasRenderingContext2D, w: number, h: number
       // leave a right margin for Tload, N, and the rpm label
       const plantX = 18, plantW = 52;
       const s1 = { x: X(14), y: Y(7.5) };
-      text(g, 'Speed Ref', Math.max(4, s1.x - r - 8), s1.y - 4, col.text(), 'right', typeSize);
+      text(g, 'Speed Ref', s1.x, s1.y - r - 8, col.text(), 'center', typeSize);
       const pi = boxAt('PI', 22, 7.5 - boxH / 2, 58, boxH, L('PI', 'P + I', 'error now + so far', 'in: speed error. out: throttle command. what it does: P and I make a throttle from the error now and the error so far'));
       const th = boxAt('throttle', plantX, 22.5 - boxH / 2, plantW, boxH, L('Throttle & Manifold', 'nonlinear', 'throttle → air', 'in: throttle command and engine speed N. out: air charge. what it does: throttle angle and speed to air charge'));
       const del = boxAt('delay', plantX, 37.5 - boxH / 2, plantW, boxH, L('Induction delay', 'e^{−0.015s}', 'air arrives late', 'in: air charge. out: delayed air charge. what it does: air takes time to reach the cylinders'));

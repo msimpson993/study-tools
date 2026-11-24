@@ -1,7 +1,7 @@
 /** Figures `borer`, `tradeoff`, `sens`. */
 import { figureOf, drawStepResponse, drawSPlane, col, text, wipe, rangeFrame, graphAxes, curve, tline, dot, type FigurePanel } from '@study/core';
 import { C } from '@study/core/dsp';
-import { f, lin, num, on, str, fmtPow10, type V } from './util';
+import { f, lin, num, on, str, fmtPow10, isThumb, type V } from './util';
 import { borerPoles, borerPush, borerS, borerStep, borerWnZeta, borerZero, diskSeek, diskShock } from '../model/plants';
 import { drawBorer } from './scenes';
 
@@ -24,7 +24,7 @@ export const borerPanels = (): FigurePanel[] => [
       const ghosts = on(v, 'ghosts');
       const g20 = ghosts ? borerStep(20, Kd, 4, 4001) : undefined;
       const g100 = ghosts ? borerStep(100, Kd, 4, 4001) : undefined;
-      const head = 22;
+      const head = isThumb(g) ? 0 : 22;
       wipe(g, w, h);
       g.save(); g.translate(0, head);
       const settled = r.m.ts < 2 * 0.98;
@@ -41,7 +41,7 @@ export const borerPanels = (): FigurePanel[] => [
     id: 'push', title: 'Unit rock push', x: 'time (s)', y: 'y(t)',
     draw(g, w, h, v: V) {
       const { K, Kd } = borerOf(v), r = borerPush(K, Kd, 4, 8001);
-      const head = 22;
+      const head = isThumb(g) ? 0 : 22;
       wipe(g, w, h);
       g.save(); g.translate(0, head);
       const settled = r.m.ts < 2.5 * 0.98;
@@ -111,7 +111,7 @@ export const tradeoffPanels = (): FigurePanel[] => [
       const machine = str(v, 'machine', 'boring machine'), g0 = num(v, 'g', 100);
       const isDisk = machine.includes('disk');
       const r = isDisk ? diskSeek(g0, 3, 4001) : borerStep(g0, 11, 6, 4001);
-      const head = 22;
+      const head = isThumb(g) ? 0 : 22;
       wipe(g, w, h);
       text(g, `${isDisk ? 'Ka' : 'K'} = ${f(g0, 1)}  OS ${f(r.m.os, 2)} %  Ts ${f(r.m.ts, 3)} s`, 8, 14, col.text(), 'left', 10);
       g.save(); g.translate(0, head);
@@ -155,14 +155,14 @@ export const sensPanels = (): FigurePanel[] => [
       const mag = ws.map((ww) => borerS(K, { re: 0, im: ww }).mag);
       const approx = ws.map((ww) => ww / K);
       const xr: [number, number] = [-1, 3], yr: [number, number] = [-3, 0.3];
-      const head = 36;
+      const head = isThumb(g) ? 10 : 36;
       const fr = rangeFrame(w, h, xr, yr, 48, 12, head, 30);
       graphAxes(g, fr, xr, yr, 'ω (rad/s)', '|S|', 1, 1, fmtPow10, fmtPow10);
       curve(g, fr, ws.map(Math.log10), mag.map((m) => Math.log10(Math.max(m, 1e-6))), col.a(), 2);
       curve(g, fr, ws.map(Math.log10), approx.map((m) => Math.log10(Math.max(m, 1e-6))), col.muted(), 1.6, [6, 4]);
       tline(g, fr, [Math.log10(w0), yr[0]], [Math.log10(w0), yr[1]], col.e(), 1.2, [4, 3]);
       const S = borerS(K, { re: 0, im: w0 }).mag;
-      text(g, `|S| = ${f(S, 4)} at ω = ${f(w0, 2)}.  A 10 % change in the machine at this rate changes the loop by ${f(10 * S, 2)} %.`, 8, 14, col.text(), 'left', 10);
+      text(g, `|S| = ${f(S, 4)} at ω = ${f(w0, 2)}.  A 10 % change in the machine at this rate changes the loop by ${f(10 * S, 2)} %.`, fr.box.l, 14, col.text(), 'left', 10);
     },
   },
 ];

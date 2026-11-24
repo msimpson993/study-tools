@@ -1,6 +1,6 @@
 /** Figure `motor`: load step, open and closed loop. */
 import { figureOf, drawStepResponse, col, text, wipe, rangeFrame, graphAxes, curve, tline, clipBox, type FigurePanel } from '@study/core';
-import { f, lin, num, str, type V } from './util';
+import { f, lin, num, str, isThumb, type V } from './util';
 import { motorNumbers } from '../model/plants';
 import { drawMotor } from './scenes';
 import { motorPlotLayout, type LoopView } from './motorScale';
@@ -34,7 +34,7 @@ export const motorPanels = (): FigurePanel[] => [
       const show = { ess: true };
       const essLabel = Math.abs(Math.abs(n.wcInf) - 0.002) < 3.5e-4 ? "handout’s −0.002" : `final sag ${f(n.wcInf, 5)}`;
       const yLabel = 'ω (rad/s per N·m)';
-      const head = 44;
+      const head = isThumb(g) ? 0 : 44;
       const inner = Math.max(0, h - head);
       const insetH = layout.inset
         ? Math.round(Math.min(inner * 0.55, Math.max(w < 500 ? 80 : 96, inner * (w < 500 ? 0.48 : 0.36))))

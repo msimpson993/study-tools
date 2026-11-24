@@ -67,10 +67,17 @@ export function fitText(g: CanvasRenderingContext2D, s: string, x: number, align
   [a0, a1] = span(w, x);
   return { size: z, x, lines, x0: a0, x1: a1 };
 }
+/** True when this canvas is a compact tile, not the expanded overlay or a full-size fig box. */
+export function isThumb(g: CanvasRenderingContext2D): boolean {
+  const cv = g.canvas as HTMLCanvasElement | undefined;
+  return !!cv && typeof cv.closest === 'function' && !!cv.closest('.tile-frame') && !cv.closest('.fig-overlay, .fig-box');
+}
 export function text(g: CanvasRenderingContext2D, s: string, x: number, y: number, color = col.text(), align: CanvasTextAlign = 'left', size = 11, base: CanvasTextBaseline = 'middle') {
   const f = fitText(g, s, x, align, size);
   // keep clear of the labels already drawn on this canvas (see labels.ts): ticks give way, notes slide by whole lines, axis names stay
   const m = typeof g.getTransform === 'function' ? g.getTransform() : null, cv = g.canvas as HTMLCanvasElement | undefined, role = labelRole();
+  // compact tiles: drop crowded notes and axis titles; keep ticks and the UNSTABLE banner
+  if (isThumb(g) && (role === 'note' || role === 'axis') && !/UNSTABLE/i.test(s)) { logText(g, s, f, size, x, null, 0, true); return; }
   let rect: LabelRect | null = null, dy = 0, dx = 0;
   if (m && cv && Math.abs(m.b) < 1e-9 && Math.abs(m.c) < 1e-9 && m.d > 0) {
     const n = f.lines.length, z = f.size, ext = base === 'top' || base === 'hanging' ? [0, 1.1] : base === 'middle' ? [-0.55, 0.55] : [-0.9, 0.25];

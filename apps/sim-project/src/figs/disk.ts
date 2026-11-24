@@ -1,7 +1,7 @@
 /** Figure `disk`: seek, shock, poles, stand-in and the Ka ceiling. */
 import { figureOf, drawStepResponse, drawSPlane, col, text, wipe, type FigurePanel } from '@study/core';
 import { C } from '@study/core/dsp';
-import { f, num, on, str, type V } from './util';
+import { f, num, on, str, isThumb, type V } from './util';
 import { diskKaMax, diskOscW, diskPoles, diskSeek, diskShock, diskStand } from '../model/plants';
 import { drawDisk } from './scenes';
 
@@ -30,7 +30,7 @@ export const diskPanels = (): FigurePanel[] => [
       // metrics from a long enough run (Ka near the ceiling settles in ~17 s); the plot stays at 2 s
       const r = diskSeek(Ka, 30, 60001);
       const stand = on(v, 'stand') ? diskStand(Ka, 30, 60001) : undefined;
-      const head = 22, tEnd = 2;
+      const head = isThumb(g) ? 0 : 22, tEnd = 2;
       wipe(g, w, h);
       g.save(); g.translate(0, head);
       const settled = r.m.ts < tEnd * 0.98;
@@ -54,7 +54,7 @@ export const diskPanels = (): FigurePanel[] => [
         return;
       }
       const r = diskShock(Ka, 2, 8001), off = -1 / (5 * Ka);
-      const head = 22;
+      const head = isThumb(g) ? 0 : 22;
       wipe(g, w, h);
       g.save(); g.translate(0, head);
       const settled = r.m.ts < 2 * 0.98;
@@ -76,20 +76,24 @@ export const diskPanels = (): FigurePanel[] => [
       const arm = poles.filter((p) => p !== coil);
       const imMax = Math.max(8, ...arm.map((p) => Math.abs(p.im)));
       const reExt = Math.max(8, ...arm.map((p) => Math.abs(p.re)));
-      const range = Math.max(20, imMax * 1.25, reExt * 1.15);
+      const range = Math.max(20, imMax * 1.4, reExt * 1.25);
       const zetaOf = (p: { re: number; im: number }) => { const wn = Math.hypot(p.re, p.im); return wn > 1e-9 ? Math.abs(p.re) / wn : 1; };
       const armZ = arm.filter((p) => Math.abs(p.im) > 0.5).map((p) => zetaOf(p));
       const rays = [...new Set(armZ.map((z) => Math.abs(z) < 0.005 ? null : Number(z.toPrecision(2))).filter((z): z is number => z != null))];
-      drawSPlane(g, w, h, {
-        range, reCenter: -range * 0.4, poles: arm, zeros: [], labels: true, zetaRays: rays.length ? rays : undefined,
+      const topBand = 32, botBand = 24;
+      wipe(g, w, h);
+      g.save(); g.translate(0, topBand);
+      drawSPlane(g, w, h - topBand - botBand, {
+        range, reCenter: -range * 0.4, poles: arm, zeros: [], labels: true, zetaRays: rays.length ? rays : undefined, pad: 12,
       });
-      if (armZ.some((z) => Math.abs(z) < 0.005)) text(g, 'ζ ≈ 0', 8, 30, col.text(), 'left', 10);
-      text(g, `coil pole at ${f(coil.re, 1)}  (off scale)`, 8, 16, col.muted(), 'left', 10);
+      g.restore();
+      text(g, `coil pole at ${f(coil.re, 1)}  (off scale)`, 8, 12, col.muted(), 'left', 10);
+      if (armZ.some((z) => Math.abs(z) < 0.005)) text(g, 'ζ ≈ 0', 8, 24, col.text(), 'left', 10);
       const ceil = diskKaMax, ratio = ceil / Math.max(Ka, 1e-6);
       const ofCeil = ratio >= 10 ? `1/${f(ratio, 0)}` : f(1 / ratio, 2);
       const msg = Ka >= ceil ? 'UNSTABLE'
         : `ceiling Ka = 4080; Ka = ${f(Ka, 0)} is ${ofCeil} of the ceiling.  ω = ${f(diskOscW, 1)} rad/s`;
-      text(g, msg, 8, h - 8, Ka >= ceil ? col.bad() : col.text(), 'left', 10);
+      text(g, msg, 8, h - 10, Ka >= ceil ? col.bad() : col.text(), 'left', 10);
     },
   },
 ];

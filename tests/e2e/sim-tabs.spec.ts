@@ -723,4 +723,15 @@ test.describe('sim-project tabbed page', () => {
     expect(timeVisible, 'gear sheet should hide the time slider when no picture is mounted').toBe(false);
   });
 
+  test('a named lone preset stays visible when the card text names it', async ({ page }) => {
+    await page.setViewportSize({ width: 1280, height: 900 });
+    await open(page, 'sim-project', '#/tab/disk');
+    const card = page.locator('[data-testid=step-card][data-step="4"]');
+    await card.evaluate((el) => el.scrollIntoView({ block: 'start' }));
+    await expect.poll(async () => card.locator('canvas[data-fig=curve]').count()).toBeGreaterThan(0);
+    const btn = card.locator('.st-presets [data-preset=disk]');
+    await expect(btn, 'Disk step 4 should show the “disk head, Ka = 80” preset the Look-for names').toBeVisible();
+    await expect(btn).toHaveText(/disk head, Ka = 80/);
+  });
+
 });

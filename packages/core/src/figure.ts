@@ -126,7 +126,8 @@ export function mountFigure(host: HTMLElement, def: FigureDef, panels0: FigurePa
   overlay.addEventListener('click', (e) => {
     if (e.target === overlay) api.close();
   });
-  const rail = controls.render('Controls', { flat: !!opts.flatControls, panels: want });
+  const cardText = stepCard?.querySelector('.step-card-text')?.textContent ?? '';
+  const rail = controls.render('Controls', { flat: !!opts.flatControls, panels: want, cardText });
   const layout = h('div', { class: `fig-layout${intro ? ' fig-intro' : ''}` }, stage, intro ? null : rail);
   host.append(layout);
 

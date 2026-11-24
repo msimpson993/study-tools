@@ -673,7 +673,7 @@ html.layout-tabs .tab-body > h2,html.layout-tabs .tab-sec-setup > h2,html.layout
   .more-plots,.pics-nav{display:none !important}
   .step-thumbs{flex:0 0 auto;min-width:0;overflow:visible;gap:.4rem;grid-template-columns:repeat(2,minmax(0,1fr));grid-auto-rows:auto;align-content:start}
   .step-thumbs.one{grid-template-columns:minmax(0,18rem)}
-  .step-thumbs .tile-frame{aspect-ratio:5/4}
+  .step-thumbs .tile-frame{aspect-ratio:5/4;min-height:7.5rem}
   .step-card .st-ctl{display:block}
   .step-how{display:none} /* lives in the sheet on phones once moved */
   .step-sheet-body > .step-how{display:block;margin-top:.5rem}
@@ -739,4 +739,9 @@ html.layout-tabs .tab-body > h2,html.layout-tabs .tab-sec-setup > h2,html.layout
   .step-card .st-ctl{display:grid}
   .more-plots{padding:.15rem 0 .1rem;font-size:.72rem}
   .step-how{display:block}
+  /* cap a single wide tile so 4/3 of the column can't outgrow the short fig pane */
+  .step-thumbs .tile-frame{
+    max-height:calc(100dvh - var(--tab-chrome,5.5rem) - 3.25rem);
+    max-width:min(100%, calc((100dvh - var(--tab-chrome,5.5rem) - 3.25rem) * 4 / 3));
+  }
 }

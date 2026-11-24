@@ -2,7 +2,7 @@
 import { figureOf, col, text, wipe, rangeFrame, graphAxes, curve, type FigurePanel } from '@study/core';
 import { engineGjw } from '../model/plants';
 import { ENGINE } from '../model/params';
-import { fmtPow10 } from './util';
+import { fmtPow10, isThumb } from './util';
 
 /** Handout-derived points (ω rad/s, |G|, phase °). The last phase is plotted unwrapped at −225.65°. */
 export const FIT_POINTS: { w: number; mag: number; phase: number; plotPhase: number }[] = [
@@ -59,9 +59,9 @@ function engineFitPanels(): FigurePanel[] {
         const magOn = xs.map((lw) => Math.log10(Math.max(1e-6, engineFitAt(10 ** lw, true).mag)));
         const magOff = xs.map((lw) => Math.log10(Math.max(1e-6, engineFitAt(10 ** lw, false).mag)));
         const yr: [number, number] = [-0.2, Math.log10(400)];
-        const head = 22, foot = 16;
+        const thumb = isThumb(g), head = thumb ? 0 : 22, foot = thumb ? 0 : 16;
         g.save(); g.translate(0, head);
-        const fr = rangeFrame(w, h - head - foot, [W_MIN, W_MAX], yr, 50, 12, 14, 44);
+        const fr = rangeFrame(w, h - head - foot, [W_MIN, W_MAX], yr, thumb ? 28 : 50, thumb ? 8 : 12, thumb ? 8 : 14, thumb ? 20 : 44);
         graphAxes(g, fr, [W_MIN, W_MAX], yr, 'ω (rad/s)', '|G|', 0.5, 1,
           (x) => fmtPow10(x), (y) => fmtPow10(y));
         curve(g, fr, xs, magOn, col.a(), 2);
@@ -91,9 +91,9 @@ function engineFitPanels(): FigurePanel[] {
         const phOn = unwrap(xs.map((lw) => engineFitAt(10 ** lw, true).plotPhase));
         const phOff = unwrap(xs.map((lw) => engineFitAt(10 ** lw, false).plotPhase));
         const yr: [number, number] = [-240, 20];
-        const head = 22, foot = 16;
+        const thumb = isThumb(g), head = thumb ? 0 : 22, foot = thumb ? 0 : 16;
         g.save(); g.translate(0, head);
-        const fr = rangeFrame(w, h - head - foot, [W_MIN, W_MAX], yr, 50, 12, 14, 44);
+        const fr = rangeFrame(w, h - head - foot, [W_MIN, W_MAX], yr, thumb ? 28 : 50, thumb ? 8 : 12, thumb ? 8 : 14, thumb ? 20 : 44);
         graphAxes(g, fr, [W_MIN, W_MAX], yr, 'ω (rad/s)', 'phase (°)', 0.5, 45,
           (x) => fmtPow10(x), (y) => String(y));
         curve(g, fr, xs, phOn, col.a(), 2);
