@@ -1,5 +1,5 @@
 /** Figures `pi` and `tuner`: stand-in engine, P/I split, emulated PID Tuner. */
-import { figureOf, drawStepResponse, col, text, wipe, rangeFrame, graphAxes, curve, tline, withPersistentLabels, isTileCanvas, isPortraitPhone, PLOT_HEAD, type FigurePanel } from '@study/core';
+import { figureOf, drawStepResponse, col, text, wipe, rangeFrame, graphAxes, curve, tline, withPersistentLabels, PLOT_HEAD, type FigurePanel } from '@study/core';
 import { ENGINE, DESIGNS, type DesignName } from '../model/params';
 import { engineMargins, enginePError, engineStep, simEngine, tuner, metrics, engineLoopJw, firstCrossing } from '../model/plants';
 import { f, lin, num, on, str, fmtPow10, drawKeyValueTable, isThumb, type V } from './util';
@@ -43,16 +43,12 @@ export const piPanels = (): FigurePanel[] => [
       }
       const all = [...pPart, ...iPart];
       const yr: [number, number] = [Math.min(0, ...all) * 1.1, Math.max(0.01, ...all) * 1.15];
-      const fr = rangeFrame(w, h, [0, 8], yr, 48, 12, 10, 40);
+      const fr = rangeFrame(w, h, [0, 8], yr, 56, 12, 10, 40);
       graphAxes(g, fr, [0, 8], yr, 'time (s)', 'throttle');
       curve(g, fr, r.t, pPart, col.e(), 2);
       curve(g, fr, r.t, iPart, col.c(), 2);
-      const tile = isTileCanvas(g) ? ((g.canvas.closest('.tile-frame') as HTMLElement | null) ?? g.canvas).getBoundingClientRect() : null;
-      // portrait phones: keep the key if the tile is tall enough; landscape phones stay bare
-      const keyFits = isPortraitPhone()
-        ? ((tile?.height ?? 0) >= 118 && (tile?.width ?? 0) >= 120)
-        : !isThumb(g);
-      if (keyFits) withPersistentLabels(() => {
+      // labelled tiles and the expanded view only: bare (phone) tiles show no key
+      if (!isThumb(g)) withPersistentLabels(() => {
         text(g, 'P·e', fr.box.l + 8, fr.box.t + 12, col.e(), 'left', 10);
         text(g, 'I·∫e', fr.box.l + 8, fr.box.t + 26, col.c(), 'left', 10);
       });
@@ -135,7 +131,7 @@ export const tunerPanels = (): FigurePanel[] => [
         wipe(g, w, h);
         if (!thumb) text(g, piLine, 8, 14, col.text(), 'left', 10);
         g.save(); g.translate(0, head);
-        const fr = rangeFrame(w, h - head, [0, tEnd], [1500, 3500], 48, 12, 14, 30);
+        const fr = rangeFrame(w, h - head, [0, tEnd], [1500, 3500], 56, 12, 14, 30);
         graphAxes(g, fr, [0, tEnd], [1500, 3500], 'time (s)', 'rpm', 5, 500);
         curve(g, fr, tPlot, yPlot, col.a(), 2);
         g.strokeStyle = col.e(); g.lineWidth = 1; g.setLineDash([4, 4]);

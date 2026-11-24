@@ -52,7 +52,7 @@ export function drawStepResponse(g: CanvasRenderingContext2D, w: number, h: numb
   const yr: V2 = s.yRange ?? [lo - 0.05 * Math.abs(ref), Math.max(ref * 1.15, hiY * 1.06)];
   const thumb = isThumb(g);
   const pad = (v: number | undefined, full: number, compact: number) => thumb ? Math.min(v ?? compact, compact) : (v ?? full);
-  const f = rangeFrame(w, h, [0, tEnd], yr, pad(s.pads?.l, 46, 32), pad(s.pads?.r, 14, 10), pad(s.pads?.t, 14, 8), pad(s.pads?.b, 38, 20));
+  const f = rangeFrame(w, h, [0, tEnd], yr, pad(s.pads?.l, 56, 32), pad(s.pads?.r, 14, 10), pad(s.pads?.t, 14, 8), pad(s.pads?.b, 38, 20));
   graphAxes(g, f, [0, tEnd], yr, s.xLabel ?? 'time (s)', s.yLabel ?? 'output');
   const m = stepMetrics(t, y, { ref, final: s.final, band });
   const yf = m.yFinal;
@@ -66,7 +66,19 @@ export function drawStepResponse(g: CanvasRenderingContext2D, w: number, h: numb
     const y10 = yf * 0.1, y90 = yf * 0.9;
     tline(g, f, [m.t10, y10], [m.t10, 0], col.e(), 1, [2, 3]); tline(g, f, [m.t90, y90], [m.t90, 0], col.e(), 1, [2, 3]);
     g.strokeStyle = col.e(); g.lineWidth = 2; g.beginPath(); g.moveTo(f.X(m.t10), f.Y(yr[0]) - 14); g.lineTo(f.X(m.t90), f.Y(yr[0]) - 14); g.stroke();
-    lbl(`Tr ${fmtN(m.riseTime)} s`, f.X(m.t90) + 6, f.Y((y10 + y90) / 2), col.e(), 'left');
+    const trLab = `Tr ${fmtN(m.riseTime)} s`;
+    g.font = '10.5px system-ui,sans-serif';
+    const trW = g.measureText(trLab).width;
+    // centre on the rise, and keep the whole label left of the dotted Tp line (and of Ts)
+    const trMid = (f.X(m.t10) + f.X(m.t90)) / 2, trY = f.Y((y10 + y90) / 2);
+    const tpX = (show.overshoot && Number.isFinite(m.peakTime) && m.overshootPct > 0.05) ? f.X(m.peakTime) : Infinity;
+    const tsX = (show.settling && m.settled && Number.isFinite(m.settlingTime)) ? f.X(m.settlingTime) : Infinity;
+    const trRight = Math.min(tpX, tsX, f.box.r) - 5;
+    let trX = trMid;
+    if (trX + trW / 2 > trRight) trX = trRight - trW / 2;
+    if (trX - trW / 2 < f.box.l + 4) trX = f.box.l + 4 + trW / 2;
+    if (trX + trW / 2 > tpX - 5) trX = Math.max(f.box.l + 4 + trW / 2, tpX - 5 - trW / 2);
+    lbl(trLab, trX, trY, col.e(), 'center');
   }
   let osBox: { x0: number; x1: number; y: number } | null = null;
   if (show.overshoot && Number.isFinite(m.peak) && m.overshootPct > 0.05) {
@@ -123,18 +135,33 @@ export interface SPlaneSpec {
   xLabel?: string; yLabel?: string;
   /** plane-frame pad in px (default 6); a larger pad keeps poles and the jω title apart */
   pad?: number;
+  /** cap the plane's width:height so a short, wide canvas does not stretch the x-range (1 = square) */
+  maxAspect?: number;
+  /** when false, draw on top of the current canvas (used for a zoom inset) */
+  clear?: boolean;
+  /** a tight zoom window drawn in a free corner / side margin, around a close pole–zero pair */
+  inset?: { range: number; reCenter?: number; label?: string };
 }
 /** The frame every s-plane panel with the same (w, h, range, reCenter) uses; dragging code calls this too so hits line up with pixels. */
 export const splaneFrame = (w: number, h: number, range: number, reCenter = -0.3 * range, pad = 6): Frame => planeFrame(w, h, range, reCenter, 0, pad);
 
 export function drawSPlane(g: CanvasRenderingContext2D, w: number, h: number, s: SPlaneSpec): Frame {
-  const f0 = splaneFrame(Math.max(w, 1), Math.max(h, 1), Math.max(s.range, 1e-6), s.reCenter, s.pad);
-  if (!(w > 0) || !(h > 0) || !Number.isFinite(s.range) || s.range <= 0) { wipe(g, Math.max(w, 0), Math.max(h, 0)); return f0; }
-  wipe(g, w, h);
   const pad = Math.max(18, s.pad ?? 18);
-  const f = splaneFrame(w, h, s.range, s.reCenter, pad), R = Math.hypot(w, h) / Math.max(Math.min(f.sx, f.sy), 1e-9);
+  let vw = w, vh = h, ox = 0, oy = 0;
+  if (s.maxAspect && s.maxAspect > 0 && w > 2 * pad && h > 2 * pad) {
+    const iw = w - 2 * pad, ih = h - 2 * pad;
+    if (iw / ih > s.maxAspect) { vw = s.maxAspect * ih + 2 * pad; ox = (w - vw) / 2; }
+    else if (ih / iw > s.maxAspect) { vh = s.maxAspect * iw + 2 * pad; oy = (h - vh) / 2; }
+  }
+  const f0 = splaneFrame(Math.max(vw, 1), Math.max(vh, 1), Math.max(s.range, 1e-6), s.reCenter, s.pad);
+  if (!(w > 0) || !(h > 0) || !Number.isFinite(s.range) || s.range <= 0) { if (s.clear !== false) wipe(g, Math.max(w, 0), Math.max(h, 0)); return f0; }
+  if (s.clear !== false) wipe(g, w, h);
+  g.save();
+  g.translate(ox, oy);
+  const f = splaneFrame(vw, vh, s.range, s.reCenter, pad), R = Math.hypot(vw, vh) / Math.max(Math.min(f.sx, f.sy), 1e-9);
   const x0 = f.X(0), y0 = f.Y(0);
   if (s.shadeUnstable !== false) { g.save(); clipBox(g, f); g.fillStyle = col.bad(); g.globalAlpha = 0.07; g.fillRect(Math.max(x0, f.box.l), f.box.t, f.box.r - Math.max(x0, f.box.l), f.box.b - f.box.t); g.restore(); }
+  const cv = g.canvas as HTMLCanvasElement | undefined, m = typeof g.getTransform === 'function' ? g.getTransform() : null;
   // the axis names first, so the grid numbers and notes keep clear of them
   axes2(g, f, s.xLabel ?? 'σ (1/s)', s.yLabel ?? 'jω (rad/s)');
   // grid: at least ~26 px between numbers, so a narrow panel shows fewer of them instead of a smear
@@ -199,7 +226,12 @@ export function drawSPlane(g: CanvasRenderingContext2D, w: number, h: number, s:
       const rays = (s.zetaRays ?? []).map((zz) => Math.acos(Math.min(1, Math.max(0, zz))));
       const boxAt = (q: number, side: 1 | -1) => { const X = f.X(-Math.cos(th) * q), Y = f.Y(Math.sin(th) * q); return side === 1 ? { x0: X + 5, x1: X + 5 + tw, y0: Y - 14, y1: Y - 3 } : { x0: X - 5 - tw, x1: X - 5, y0: Y + 3, y1: Y + 14 }; };
       const hitsRay = (b: { x0: number; x1: number; y0: number; y1: number }) => rays.some((t2) => [1, -1].some((sg) => { for (let k = 0; k <= 80; k++) { const q = (k / 80) * R, X = f.X(-Math.cos(t2) * q), Y = f.Y(sg * Math.sin(t2) * q); if (X > b.x0 - 2 && X < b.x1 + 2 && Y > b.y0 - 2 && Y < b.y1 + 2) return true; } return false; }));
-      const okBox = (b: { x0: number; x1: number; y0: number; y1: number }) => b.x0 > f.box.l + 2 && b.x1 < f.box.r - 2 && b.y0 > f.box.t + 2 && b.y1 < f.box.b - 2 && marks.every((p) => { const X = f.X(p.re), Y = f.Y(p.im); return X < b.x0 - 9 || X > b.x1 + 9 || Y < b.y0 - 9 || Y > b.y1 + 9; }) && !hitsRay(b) && taken.every((t) => b.x1 < t.x0 - 2 || b.x0 > t.x1 + 2 || b.y1 < t.y0 - 2 || b.y0 > t.y1 + 2) && !(b.x0 < x0 + 3 && b.x1 > x0 - 3);
+      const hitsLabel = (b: { x0: number; x1: number; y0: number; y1: number }) => {
+        if (!cv || !m || Math.abs(m.b) > 1e-9) return false;
+        const r = { x0: m.a * b.x0 + m.e, x1: m.a * b.x1 + m.e, y0: m.d * b.y0 + m.f, y1: m.d * b.y1 + m.f };
+        return labelsOn(cv).some((o) => Math.min(o.x1, r.x1) - Math.max(o.x0, r.x0) > 1 && Math.min(o.y1, r.y1) - Math.max(o.y0, r.y0) > 1);
+      };
+      const okBox = (b: { x0: number; x1: number; y0: number; y1: number }) => b.x0 > f.box.l + 2 && b.x1 < f.box.r - 2 && b.y0 > f.box.t + 2 && b.y1 < f.box.b - 2 && marks.every((p) => { const X = f.X(p.re), Y = f.Y(p.im); return X < b.x0 - 9 || X > b.x1 + 9 || Y < b.y0 - 9 || Y > b.y1 + 9; }) && !hitsRay(b) && taken.every((t) => b.x1 < t.x0 - 3 || b.x0 > t.x1 + 3 || b.y1 < t.y0 - 3 || b.y0 > t.y1 + 3) && !(b.x0 < x0 + 3 && b.x1 > x0 - 3) && !hitsLabel(b);
       let spot: { x0: number; y1: number } | null = null;
       for (const k of [0.45, 0.6, 0.3, 0.75, 0.9, 0.2]) { for (const side of [1, -1] as const) { const b = boxAt(Math.min(s.range * k, R), side); if (okBox(b)) { spot = b; break; } } if (spot) break; }
       if (!spot) { const rl = Math.min(s.range * 0.45, R); spot = { x0: f.X(-Math.cos(th) * rl) + 4, y1: f.Y(Math.sin(th) * rl) + 2 + 3 }; }
@@ -217,7 +249,6 @@ export function drawSPlane(g: CanvasRenderingContext2D, w: number, h: number, s:
   for (const hd of s.handles ?? []) for (const sg of Math.abs(hd.im) < 1e-9 ? [1] : [1, -1]) { g.strokeStyle = col.accent(); g.globalAlpha = sg === 1 ? 0.9 : 0.4; g.lineWidth = 1.5; g.setLineDash([3, 3]); g.beginPath(); g.arc(f.X(hd.re), f.Y(sg * hd.im), 11, 0, 2 * Math.PI); g.stroke(); g.setLineDash([]); g.globalAlpha = 1; }
   for (const z of s.zeros ?? []) dot(g, f, [z.re, z.im], col.c(), 5, true);
   // pole crosses and zero rings are recorded with the labels (role 'axis'), so notes drawn afterwards slide clear of them
-  const cv = g.canvas as HTMLCanvasElement | undefined, m = typeof g.getTransform === 'function' ? g.getTransform() : null;
   if (cv && m && Math.abs(m.b) < 1e-9 && Math.abs(m.c) < 1e-9 && m.d > 0) for (const p of [...(s.poles ?? []), ...(s.zeros ?? [])]) {
     const X = f.X(p.re), Y = f.Y(p.im); if (X < f.box.l || X > f.box.r || Y < f.box.t || Y > f.box.b) continue;
     labelsOn(cv).push({ x0: m.a * (X - 7) + m.e, x1: m.a * (X + 7) + m.e, y0: m.d * (Y - 7) + m.f, y1: m.d * (Y + 7) + m.f, role: 'axis' });
@@ -251,14 +282,38 @@ export function drawSPlane(g: CanvasRenderingContext2D, w: number, h: number, s:
   for (const { p, lab } of labelled) {
     const X = f.X(p.re), Y = f.Y(p.im) + (p.im > 1e-9 ? 14 : -12); g.font = '10px system-ui, sans-serif'; const tw = g.measureText(lab).width;
     // …and clear of the σ axis name, the jω title, and the 'unstable' tag
-    const blockedR = onRay(X + 9, X + 9 + tw, Y - 9, Y + 2) || onSigma(X + 9, X + 9 + tw, Y - 9, Y + 2) || onJw(X + 9, X + 9 + tw, Y - 9, Y + 2) || hitsUnstable(X + 9, X + 9 + tw, Y - 9, Y + 2);
-    const blockedL = onRay(X - 9 - tw, X - 9, Y - 9, Y + 2) || X - 9 - tw < f.box.l + 2 || onJw(X - 9 - tw, X - 9, Y - 9, Y + 2) || hitsUnstable(X - 9 - tw, X - 9, Y - 9, Y + 2);
-    const right = !blockedR || blockedL;
+    const inUnstable = (a: number, b2: number) => s.shadeUnstable !== false && b2 > x0 + 2;
+    const onAxis = (a: number, b2: number) => a < x0 + 4 && b2 > x0 - 4;
+    const blockedR = onRay(X + 9, X + 9 + tw, Y - 9, Y + 2) || onSigma(X + 9, X + 9 + tw, Y - 9, Y + 2) || onJw(X + 9, X + 9 + tw, Y - 9, Y + 2) || hitsUnstable(X + 9, X + 9 + tw, Y - 9, Y + 2) || inUnstable(X + 9, X + 9 + tw) || onAxis(X + 9, X + 9 + tw);
+    const blockedL = onRay(X - 9 - tw, X - 9, Y - 9, Y + 2) || X - 9 - tw < f.box.l + 2 || onJw(X - 9 - tw, X - 9, Y - 9, Y + 2) || hitsUnstable(X - 9 - tw, X - 9, Y - 9, Y + 2) || inUnstable(X - 9 - tw, X - 9) || onAxis(X - 9 - tw, X - 9);
+    const right = !blockedR || (blockedL && !inUnstable(X + 9, X + 9 + tw) && !onAxis(X + 9, X + 9 + tw));
     text(g, lab, right ? X + 9 : X - 9, Y, col.b(), right ? 'left' : 'right', 10);
     taken.push(right ? { x0: X + 9, x1: X + 9 + tw, y0: Y - 9, y1: Y + 2 } : { x0: X - 9 - tw, x1: X - 9, y0: Y - 9, y1: Y + 2 });
   }
   for (const zn of zetaNames) zn();
   g.restore();
+  g.restore();
+  if (s.inset && s.clear !== false) {
+    const iw = Math.round(Math.min(220, Math.max(128, Math.min(w, h) * 0.72, w * 0.36)));
+    const ih = iw;
+    const right = w - (ox + vw), left = ox;
+    let ix: number, iy: number;
+    if (right >= iw + 10) { ix = ox + vw + 6; iy = Math.max(8, oy + (vh - ih) / 2); }
+    else if (left >= iw + 10) { ix = 8; iy = Math.max(8, oy + (vh - ih) / 2); }
+    else { ix = Math.max(8, ox + vw - iw - 8); iy = Math.max(8, oy + vh - ih - 8); }
+    if (ix + iw <= w - 2 && iy + ih <= h - 2 && iw >= 110 && ih >= 110) {
+      g.save();
+      g.strokeStyle = col.strong(); g.lineWidth = 1; g.setLineDash([]);
+      g.strokeRect(ix + 0.5, iy + 0.5, iw - 1, ih - 1);
+      g.translate(ix, iy);
+      drawSPlane(g, iw, ih, {
+        range: s.inset.range, reCenter: s.inset.reCenter, poles: s.poles, zeros: s.zeros, labels: true,
+        pad: 16, maxAspect: 1, clear: false, shadeUnstable: s.shadeUnstable, xLabel: '', yLabel: '',
+      });
+      text(g, s.inset.label ?? 'zoom', 8, 10, col.muted(), 'left', 9);
+      g.restore();
+    }
+  }
   return f;
 }
 
@@ -355,7 +410,7 @@ export function drawBode(g: CanvasRenderingContext2D, w: number, h: number, s: B
   const lo = Math.log10(wmin), hi = Math.log10(wmax);
   const mr: V2 = s.magRange ?? [Math.floor(Math.min(-30, ...b.magDb.filter(Number.isFinite)) / 20) * 20, Math.ceil(Math.max(20, ...b.magDb.filter(Number.isFinite)) / 20) * 20];
   const ph = b.phaseDeg.filter(Number.isFinite), pr: V2 = s.phaseRange ?? [Math.floor(Math.min(-200, ...ph) / 90) * 90, Math.ceil(Math.max(0, ...ph) / 90) * 90];
-  const fm = rangeFrame(w, hTop, [lo, hi], mr, 46, 12, 8, 6), fp = rangeFrame(w, hBot, [lo, hi], pr, 46, 12, 6, 38);
+  const fm = rangeFrame(w, hTop, [lo, hi], mr, 56, 12, 8, 6), fp = rangeFrame(w, hBot, [lo, hi], pr, 56, 12, 6, 38);
   const decade = (f: Frame, yr: V2, ystep: number, ylab: string, bottom: boolean) => {
     g.lineWidth = 1; g.setLineDash([]);
     forTicks(Math.ceil(lo), hi, 1, (d) => { g.strokeStyle = col.grid(); g.beginPath(); g.moveTo(f.X(d), f.box.t); g.lineTo(f.X(d), f.box.b); g.stroke(); if (bottom) withLabelRole('tick', () => text(g, d === 0 ? '1' : d === 1 ? '10' : d === -1 ? '0.1' : `10^${d}`, f.X(d), f.box.b + 10, col.muted(), 'center', 10)); });
@@ -444,7 +499,7 @@ export function drawJwSlice(g: CanvasRenderingContext2D, w: number, h: number, s
   let top = -Infinity, bot = Infinity;
   for (const v of fin) { if (v > top) top = v; if (v < bot) bot = v; }
   const yr: V2 = s.db ? [Math.floor((bot - 3) / 10) * 10, Math.ceil((top + 3) / 10) * 10] : [0, Math.max(1e-6, top * 1.12)];
-  const f = rangeFrame(w, h, [0, s.wmax], yr, 46, 12, 10, 32);
+  const f = rangeFrame(w, h, [0, s.wmax], yr, 56, 12, 10, 32);
   graphAxes(g, f, [0, s.wmax], yr, s.xLabel ?? 'ω (rad/s) along the jω axis', s.db ? '|G(jω)| (dB)' : '|G(jω)|');
   if (s.ghost) curve(g, f, ws, val(s.ghost), col.muted(), 2, [6, 4]);
   curve(g, f, ws, ys, col.e(), 2.4);

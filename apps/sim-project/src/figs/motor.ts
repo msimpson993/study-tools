@@ -36,9 +36,13 @@ export const motorPanels = (): FigurePanel[] => [
       const yLabel = 'ω (rad/s per N·m)';
       const head = isThumb(g) ? 0 : 44;
       const inner = Math.max(0, h - head);
-      const insetH = layout.inset
+      let insetH = layout.inset
         ? Math.round(Math.min(inner * 0.55, Math.max(w < 500 ? 80 : 96, inner * (w < 500 ? 0.48 : 0.36))))
         : 0;
+      // keep the main pane tall enough for the y-title and the header readout
+      const minMain = 130;
+      if (insetH && inner - insetH < minMain) insetH = Math.max(0, inner - minMain);
+      if (insetH < 64) insetH = 0;
       wipe(g, w, h);
       g.save(); g.translate(0, head);
       const H = h - head - insetH;
@@ -53,7 +57,7 @@ export const motorPanels = (): FigurePanel[] => [
           ref: 0, final: n.wcInf, tEnd: axis, yRange: yr, color: col.a(), show, yLabel, essLabel,
         });
       }
-      if (layout.inset && layout.insetFor) {
+      if (layout.inset && layout.insetFor && insetH >= 64) {
         drawMotorInset(g, w, H, insetH, {
           t, tEnd: axis, yr: layout.inset, note: layout.note ?? 'y zoomed',
           open: { y: openY, final: n.woInf, color: col.muted() },

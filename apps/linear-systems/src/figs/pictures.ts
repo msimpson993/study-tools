@@ -84,7 +84,7 @@ const obsShadow: QuizFigureDef = { aspect: 2, maxWidth: 460, draw(g, w, h) {
   const A: [number, number] = [1.2, 1.4], B: [number, number] = [1.2, -1.1];
   for (const [p, c, lab] of [[A, col.a(), 'example state 1'], [B, col.b(), 'example state 2']] as const) { tline(g, f, p as [number, number], [p[0], 0], c, 1.4, [4, 3]); dot(g, f, p as [number, number], c, 5); text(g, lab, f.X(p[0]) + 8, f.Y(p[1]), c, 'left', 10); }
   dot(g, f, [1.2, 0], col.e(), 6);
-  text(g, 'same shadow: the sensor reads z = 1.2 cm for both', f.X(1.2) - 8, f.Y(0) + 14, col.e(), 'right', 10);
+  text(g, 'same shadow: the sensor reads z = 1.2 cm for both', f.X(1.2) + 10, f.Y(0) + 14, col.e(), 'left', 10);
   text(g, 'symmetric car: pitch never shows up at the centre', f.box.l + 6, f.box.t + 10, col.muted(), 'left', 10);
 } };
 

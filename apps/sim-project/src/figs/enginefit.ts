@@ -61,7 +61,7 @@ function engineFitPanels(): FigurePanel[] {
         const yr: [number, number] = [-0.2, Math.log10(400)];
         const thumb = isThumb(g), head = thumb ? 0 : PLOT_HEAD, foot = thumb ? 0 : 28;
         g.save(); g.translate(0, head);
-        const fr = rangeFrame(w, h - head - foot, [W_MIN, W_MAX], yr, thumb ? 28 : 50, thumb ? 8 : 12, thumb ? 8 : 14, thumb ? 20 : 44);
+        const fr = rangeFrame(w, h - head - foot, [W_MIN, W_MAX], yr, thumb ? 28 : 58, thumb ? 8 : 12, thumb ? 8 : 14, thumb ? 20 : 44);
         graphAxes(g, fr, [W_MIN, W_MAX], yr, 'ω (rad/s)', '|G|', 0.5, 1,
           (x) => fmtPow10(x), (y) => fmtPow10(y));
         curve(g, fr, xs, magOn, col.a(), 2);
@@ -93,7 +93,7 @@ function engineFitPanels(): FigurePanel[] {
         const yr: [number, number] = [-240, 20];
         const thumb = isThumb(g), head = thumb ? 0 : PLOT_HEAD, foot = thumb ? 0 : 28;
         g.save(); g.translate(0, head);
-        const fr = rangeFrame(w, h - head - foot, [W_MIN, W_MAX], yr, thumb ? 28 : 50, thumb ? 8 : 12, thumb ? 8 : 14, thumb ? 20 : 44);
+        const fr = rangeFrame(w, h - head - foot, [W_MIN, W_MAX], yr, thumb ? 28 : 58, thumb ? 8 : 12, thumb ? 8 : 14, thumb ? 20 : 44);
         graphAxes(g, fr, [W_MIN, W_MAX], yr, 'ω (rad/s)', 'phase (°)', 0.5, 45,
           (x) => fmtPow10(x), (y) => String(y));
         curve(g, fr, xs, phOn, col.a(), 2);

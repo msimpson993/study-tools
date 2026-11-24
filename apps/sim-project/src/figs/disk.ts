@@ -86,7 +86,7 @@ export const diskPanels = (): FigurePanel[] => [
       wipe(g, w, h);
       g.save(); g.translate(0, topBand);
       drawSPlane(g, w, h - topBand - botBand, {
-        range, reCenter: -range * 0.4, poles: arm, zeros: [], labels: true, zetaRays: rays.length ? rays : undefined, pad: 12,
+        range, reCenter: -range * 0.4, poles: arm, zeros: [], labels: true, zetaRays: rays.length ? rays : undefined, pad: 12, maxAspect: 1.35,
       });
       g.restore();
       text(g, `coil pole at ${f(coil.re, 1)}  (off scale)`, 8, 12, col.muted(), 'left', 10);

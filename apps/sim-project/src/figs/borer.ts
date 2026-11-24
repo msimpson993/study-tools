@@ -1,5 +1,5 @@
 /** Figures `borer`, `tradeoff`, `sens`. */
-import { figureOf, drawStepResponse, drawSPlane, col, text, wipe, rangeFrame, graphAxes, curve, tline, dot, type FigurePanel } from '@study/core';
+import { figureOf, drawStepResponse, drawSPlane, col, text, wipe, rangeFrame, graphAxes, curve, tline, dot, PLOT_HEAD, type FigurePanel } from '@study/core';
 import { C } from '@study/core/dsp';
 import { f, lin, num, on, str, fmtPow10, isThumb, type V } from './util';
 import { borerPoles, borerPush, borerS, borerStep, borerWnZeta, borerZero, diskSeek, diskShock } from '../model/plants';
@@ -60,11 +60,22 @@ export const borerPanels = (): FigurePanel[] => [
       const poles = borerPoles(K, Kd);
       const z = borerZero(K, Kd);
       const ghosts = on(v, 'ghosts') ? [...borerPoles(20, Kd), ...borerPoles(100, Kd)] : [];
+      const zeros = z === null ? [] : [C(z, 0)];
+      let inset: { range: number; reCenter: number; label: string } | undefined;
+      if (!isThumb(g) && z !== null && w >= 260 && h >= 200) {
+        const near = poles.reduce((a, p) => (Math.hypot(p.re - z, p.im) < Math.hypot(a.re - z, a.im) ? p : a), poles[0]);
+        const d = near ? Math.hypot(near.re - z, near.im) : 0;
+        if (d > 1e-6 && d < 1.2) {
+          const mid = (near.re + z) / 2;
+          inset = { range: Math.max(0.45, d * 2.4), reCenter: mid, label: 'zoom' };
+        }
+      }
       drawSPlane(g, w, h, {
         range: 14, reCenter: -7,
-        poles, zeros: z === null ? [] : [C(z, 0)],
+        poles, zeros,
         labels: true, zetaRays: [1, 0.6],
         marks: ghosts.map((p) => ({ s: p, label: '', color: col.muted() })),
+        maxAspect: 1.35, inset,
       });
     },
   },
@@ -89,7 +100,7 @@ export const tradeoffPanels = (): FigurePanel[] => [
       const xr: [number, number] = [0, Math.max(40, ...xs) * 1.05], yr: [number, number] = [Math.min(...ys) * 0.7, Math.max(...ys) * 1.15];
       // log y
       const yLog: [number, number] = [Math.log10(Math.max(yr[0], 1e-5)), Math.log10(yr[1])];
-      const fr = rangeFrame(w, h, xr, yLog, 52, 14, 12, 32);
+      const fr = rangeFrame(w, h, xr, yLog, 58, 14, 12, 32);
       graphAxes(g, fr, xr, yLog, 'overshoot (%)', isDisk ? '|shock offset|' : 'push offset', 0, 1, undefined, fmtPow10);
       curve(g, fr, xs, ys.map((y) => Math.log10(y)), col.muted(), 2);
       const liveX = isDisk ? diskSeek(g0, 3, 4001).m.os : borerStep(g0, 11, 6, 4001).m.os;
@@ -134,16 +145,17 @@ export const sensPanels = (): FigurePanel[] => [
       const ws = lin(-1, 3, 400).map((x) => 10 ** x);
       const pts = ws.map((ww) => borerS(K, { re: 0, im: ww }));
       const xr: [number, number] = [-0.2, 1.15], yr: [number, number] = [-0.15, 1.05];
-      const fr = rangeFrame(w, h, xr, yr, 40, 12, 10, 28);
+      const thumb = isThumb(g), head = thumb ? 0 : PLOT_HEAD;
+      const p = borerS(K, { re: 0, im: w0 });
+      if (!thumb) text(g, `ω = ${f(w0, 2)}  S = ${f(p.re, 3)} + j${f(p.im, 3)}`, 8, 14, col.text(), 'left', 10);
+      const fr = rangeFrame(w, h, xr, yr, 56, 12, thumb ? 10 : head, 28);
       graphAxes(g, fr, xr, yr, 'Re S', 'Im S');
       curve(g, fr, pts.map((p) => p.re), pts.map((p) => p.im), col.a(), 2);
       // a few direction arrows
       for (const i of [40, 120, 200, 280]) {
         if (i + 1 < pts.length) arrowHead(g, fr.X(pts[i].re), fr.Y(pts[i].im), fr.X(pts[i + 1].re), fr.Y(pts[i + 1].im), col.a());
       }
-      const p = borerS(K, { re: 0, im: w0 });
       dot(g, fr, [p.re, p.im], col.e(), 5);
-      text(g, `ω = ${f(w0, 2)}  S = ${f(p.re, 3)} + j${f(p.im, 3)}`, 48, 14, col.text(), 'left', 10);
     },
   },
   {
@@ -156,7 +168,7 @@ export const sensPanels = (): FigurePanel[] => [
       const approx = ws.map((ww) => ww / K);
       const xr: [number, number] = [-1, 3], yr: [number, number] = [-3, 0.3];
       const head = isThumb(g) ? 10 : 36;
-      const fr = rangeFrame(w, h, xr, yr, 48, 12, head, 30);
+      const fr = rangeFrame(w, h, xr, yr, 56, 12, head, 30);
       graphAxes(g, fr, xr, yr, 'ω (rad/s)', '|S|', 1, 1, fmtPow10, fmtPow10);
       curve(g, fr, ws.map(Math.log10), mag.map((m) => Math.log10(Math.max(m, 1e-6))), col.a(), 2);
       curve(g, fr, ws.map(Math.log10), approx.map((m) => Math.log10(Math.max(m, 1e-6))), col.muted(), 1.6, [6, 4]);
