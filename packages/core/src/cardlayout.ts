@@ -374,6 +374,7 @@ export function applyCardLayout(art: HTMLElement, content: AppContent, hooks: Fi
     }
     if (how) how.open = !phone && !isLandscapePhone();
     parkPlay(card);
+    paintThumbs(card);
     paintMorePlots(card);
   };
 
@@ -393,11 +394,20 @@ export function applyCardLayout(art: HTMLElement, content: AppContent, hooks: Fi
     }
   };
 
+  const paintThumbs = (card: HTMLElement) => {
+    const thumbs = card.querySelector('.step-thumbs') as HTMLElement | null;
+    if (!thumbs) return;
+    const n = thumbs.querySelectorAll('.fig').length;
+    thumbs.dataset.count = String(n);
+  };
+
   const paintMorePlots = (card: HTMLElement) => {
     const col = card.querySelector('.step-fig-scroll') as HTMLElement | null
       ?? card.querySelector('.step-card-fig') as HTMLElement | null;
     const hint = card.querySelector('.more-plots') as HTMLElement | null;
     if (!col || !hint) return;
+    // Portrait thumbs already show every plot, so the cue is not needed.
+    if (isPortraitPhone()) { hint.hidden = true; return; }
     const box = col.getBoundingClientRect();
     const plotBelow = [...col.querySelectorAll<HTMLElement>('.fig, canvas[data-fig]')].some((el) => {
       const r = el.getBoundingClientRect();
@@ -417,77 +427,10 @@ export function applyCardLayout(art: HTMLElement, content: AppContent, hooks: Fi
     body.innerHTML = bits.map((s) => `<p>${s}</p>`).join('');
   };
 
-  const startOnPlot = (pair: HTMLElement) => {
-    const figs = [...pair.querySelectorAll<HTMLElement>(':scope > .fig')];
-    const plot = figs.find((f) => f.querySelector('canvas[data-fig="plot"]'))
-      ?? figs.find((f) => !f.querySelector('canvas[data-fig="scene"]'))
-      ?? figs[0];
-    if (plot) pair.scrollLeft = plot.offsetLeft;
-  };
-
   const wirePics = (card: HTMLElement): () => void => {
     const nav = card.querySelector('.pics-nav') as HTMLElement | null;
-    const pairs = [...card.querySelectorAll<HTMLElement>('.pair2')];
-    const cleanups: (() => void)[] = [];
-    if (!nav) return () => {};
-    const paint = () => {
-      clear(nav);
-      const phone = isPortraitPhone();
-      const figs = pairs.flatMap((p) => [...p.querySelectorAll<HTMLElement>(':scope > .fig')]);
-      nav.hidden = !phone || figs.length < 2;
-      if (!phone || figs.length < 2) {
-        for (const p of pairs) p.classList.remove('pics-swipe');
-        return;
-      }
-      for (const p of pairs) p.classList.add('pics-swipe');
-      // dots across every panel in the card (one swipe row per pair, dots combined in order)
-      const items: { pair: HTMLElement; fig: HTMLElement }[] = [];
-      for (const p of pairs) for (const fig of p.querySelectorAll<HTMLElement>(':scope > .fig')) items.push({ pair: p, fig });
-      const dots = items.map((it, i) => {
-        const title = it.fig.querySelector('h4')?.textContent || `Picture ${i + 1}`;
-        const btn = h('button', { type: 'button', 'aria-label': title, dataset: { testid: 'pics-dot', index: String(i) } });
-        btn.addEventListener('click', () => {
-          const scroll = card.querySelector('.step-fig-scroll') as HTMLElement | null;
-          const host = it.fig.closest('.step-host') as HTMLElement | null;
-          if (scroll && host) {
-            const sR = scroll.getBoundingClientRect(), hR = host.getBoundingClientRect();
-            scroll.scrollTo({ top: scroll.scrollTop + (hR.top - sR.top), behavior: 'smooth' });
-          }
-          it.pair.scrollTo({ left: it.fig.offsetLeft, behavior: 'smooth' });
-        });
-        nav.append(btn);
-        return { btn, ...it };
-      });
-      const sync = () => {
-        // highlight the dot whose fig is most visible
-        let best = 0, bestVis = -1;
-        dots.forEach((d, i) => {
-          const r = d.fig.getBoundingClientRect();
-          const pr = d.pair.getBoundingClientRect();
-          const vis = Math.max(0, Math.min(r.right, pr.right) - Math.max(r.left, pr.left));
-          if (vis > bestVis) { bestVis = vis; best = i; }
-        });
-        dots.forEach((d, i) => d.btn.classList.toggle('on', i === best));
-      };
-      for (const p of pairs) {
-        p.addEventListener('scroll', sync, { passive: true });
-        cleanups.push(() => p.removeEventListener('scroll', sync));
-        startOnPlot(p);
-      }
-      sync();
-    };
-    paint();
-    const mq = window.matchMedia('(max-width: 699.98px)');
-    const mqLand = window.matchMedia('(orientation: landscape) and (max-height: 500px)');
-    const onMq = () => paint();
-    mq.addEventListener?.('change', onMq);
-    mqLand.addEventListener?.('change', onMq);
-    return () => {
-      mq.removeEventListener?.('change', onMq);
-      mqLand.removeEventListener?.('change', onMq);
-      for (const c of cleanups) c();
-      clear(nav);
-    };
+    if (nav) { clear(nav); nav.hidden = true; }
+    return () => {};
   };
 
   const unmount = (step: Step) => {
@@ -571,6 +514,7 @@ export function applyCardLayout(art: HTMLElement, content: AppContent, hooks: Fi
     }, '⚙ Controls');
     const toolbar = h('div', { class: 'step-toolbar' }, openCtl);
     figScroll.append(toolbar);
+    const thumbs = h('div', { class: 'step-thumbs', dataset: { testid: 'step-thumbs', count: '0' } });
     const hosts: HTMLElement[] = [];
     step.figs.forEach((fig, i) => {
       const host = h('div', {
@@ -580,9 +524,10 @@ export function applyCardLayout(art: HTMLElement, content: AppContent, hooks: Fi
       if (fig.params) host.dataset.params = fig.params;
       if (fig.panels?.length) host.dataset.panels = fig.panels.join(',');
       hosts.push(host);
-      figScroll.append(host);
+      thumbs.append(host);
       fig.slot.remove();
     });
+    figScroll.append(thumbs);
     const nav = h('div', { class: 'pics-nav', hidden: true, 'aria-label': 'Pictures', dataset: { testid: 'pics-nav' } });
     // nav is pinned under the scroll so the dots stay visible on phones
     const howBody = h('div', { class: 'step-how-body' });
@@ -616,6 +561,11 @@ export function applyCardLayout(art: HTMLElement, content: AppContent, hooks: Fi
     sheet.querySelector('.step-sheet-close')?.addEventListener('click', () => setSheet(false));
     backdrop.addEventListener('click', () => setSheet(false));
 
+    const head = h('header', { class: 'step-card-head' },
+      h('h3', null, `${step.n}. ${title}`),
+      h('span', { class: 'step-ind', dataset: { testid: 'step-ind' } }, `Step ${step.n} of ${total}`),
+    );
+    textCol.prepend(head);
     const card = h('article', {
       class: 'step-card',
       id: `step-card-${step.n}`,
@@ -625,12 +575,7 @@ export function applyCardLayout(art: HTMLElement, content: AppContent, hooks: Fi
         figure: step.figs.map((f) => f.id).join(','),
         preset: step.figs.map((f) => f.preset ?? '').join(','),
       },
-    },
-      h('header', { class: 'step-card-head' },
-        h('h3', null, `${step.n}. ${title}`),
-        h('span', { class: 'step-ind', dataset: { testid: 'step-ind' } }, `Step ${step.n} of ${total}`),
-      ),
-    );
+    });
     const body = h('div', { class: 'step-card-body' }, textCol, figCol, sheet, backdrop);
     card.append(body);
     const more = figCol.querySelector('.more-plots') as HTMLElement | null;
@@ -669,7 +614,7 @@ export function applyCardLayout(art: HTMLElement, content: AppContent, hooks: Fi
   const onResize = () => {
     setChromeVar();
     for (const s of alive.keys()) placeControls(s, s.el);
-    for (const s of steps) paintMorePlots(s.el);
+    for (const s of steps) { paintThumbs(s.el); paintMorePlots(s.el); }
   };
   const onKey = (e: KeyboardEvent) => {
     if (e.key !== 'Escape') return;

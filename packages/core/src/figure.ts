@@ -109,6 +109,15 @@ export function mountFigure(host: HTMLElement, def: FigureDef, panels0: FigurePa
     stage.append(h('div', { class: 'fig-anim' }, btn, h('span', null, reduce ? 'Reduced motion: stepping instead of animating. ' : '', intro ? '' : `Scrub with the “${cd.label}” slider.`)));
   }
   stage.append(overlay);
+  const phoneCardMq = window.matchMedia('(max-width: 699.98px) and (orientation: portrait)');
+  const stepCard = host.closest('.step-card') as HTMLElement | null;
+  function placeOverlay() {
+    const dest = (phoneCardMq.matches && stepCard) ? stepCard : stage;
+    if (overlay.parentElement !== dest) dest.append(overlay);
+  }
+  overlay.addEventListener('click', (e) => {
+    if (e.target === overlay) api.close();
+  });
   const rail = controls.render('Controls', { flat: !!opts.flatControls, panels: want });
   const layout = h('div', { class: `fig-layout${intro ? ' fig-intro' : ''}` }, stage, intro ? null : rail);
   host.append(layout);
@@ -180,13 +189,22 @@ export function mountFigure(host: HTMLElement, def: FigureDef, panels0: FigurePa
       const p = byId(id);
       const cv = h('canvas', { dataset: { big: id }, 'aria-label': p.title });
       slotCanvases.push(cv);
-      if (p.pointer) wirePointer(cv, p.pointer);
+      const wasDrag = p.pointer ? wirePointer(cv, p.pointer) : () => false;
+      (cv as HTMLCanvasElement & { wasDrag?: () => boolean }).wasDrag = wasDrag;
       const lg = h('div', { class: 'st-lgbox', hidden: !legendOpen[i], dataset: { testid: 'legend-box' } }, ...def.legend.map((l) => h('div', { class: 'li' }, h('i', { class: l.dash ? 'dash' : '', style: `--c:${l.color};border-top-color:${l.color}` }), l.label)));
       const chip = h('button', { class: 'chip', 'aria-expanded': String(legendOpen[i]), dataset: { testid: 'legend-chip' }, onclick: () => { legendOpen[i] = !legendOpen[i]; chip.setAttribute('aria-expanded', String(legendOpen[i])); lg.hidden = !legendOpen[i]; } }, 'Legend ▾');
       grid.append(h('div', { class: 'fig-slot' }, h('div', { class: 'sh' }, h('span', null, axesCaption(p, controls.values) ? `${p.title}  ·  ${axesCaption(p, controls.values).replace(' · ', '  ·  ')}` : p.title), chip), lg, cv));
     });
     box.append(grid, h('div', { class: 'fig-how', dataset: { testid: 'how-to-read' }, html: `<b>How to read this:</b> ${def.howToRead}` }));
     overlay.append(box);
+    // A second tap on the expanded plot shrinks it (a drag on a pointer plot does not).
+    slotCanvases.forEach((cv) => {
+      cv.addEventListener('click', () => {
+        const dragged = (cv as HTMLCanvasElement & { wasDrag?: () => boolean }).wasDrag?.() ?? false;
+        if (!dragged) api.close();
+      });
+    });
+    placeOverlay();
     requestAnimationFrame(redraw);
   }
 
@@ -197,6 +215,8 @@ export function mountFigure(host: HTMLElement, def: FigureDef, panels0: FigurePa
   controls.onChange(() => redraw());
   const ro = new ResizeObserver(() => redraw());
   ro.observe(stage);
+  for (const el of inline.querySelectorAll('.fig')) ro.observe(el);
+  if (host.parentElement) ro.observe(host.parentElement);
   const onTheme = () => redraw();
   window.addEventListener('study-theme', onTheme);
   const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape' && openIds.length) { api.close(); e.stopPropagation(); } };

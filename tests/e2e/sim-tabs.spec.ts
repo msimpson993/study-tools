@@ -285,7 +285,7 @@ test.describe('sim-project tabbed page', () => {
     await expect(card.getByTestId('controls')).toContainText('Kb (back-EMF');
   });
 
-  test('on a 390px phone the plot is about half the card and the controls sheet covers only the text', async ({ page }) => {
+  test('on a 390px phone the plots sit in the top 60% and the controls sheet covers only the text', async ({ page }) => {
     await page.setViewportSize({ width: 390, height: 844 });
     await open(page, 'sim-project', '#/tab/motor');
     const card = page.getByTestId('step-card').first();
@@ -296,7 +296,7 @@ test.describe('sim-project tabbed page', () => {
       const fig = el.querySelector('[data-testid=step-card-fig]') as HTMLElement;
       return fig.getBoundingClientRect().height / body.getBoundingClientRect().height;
     });
-    expect(frac, `plot half ${frac}`).toBeGreaterThanOrEqual(0.4);
+    expect(frac, `plot share ${frac}`).toBeGreaterThanOrEqual(0.45);
     expect(frac).toBeLessThanOrEqual(0.6);
     // stacked: plot above text
     const stacked = await card.evaluate((el) => {
@@ -525,31 +525,77 @@ test.describe('sim-project tabbed page', () => {
   });
 
 
-  test('on a 390px phone Engine step 4 and Disk step 4 keep their picture dots in view', async ({ page }) => {
+  test('on a 390px phone every panel of a step is a visible thumbnail, with no swipe dots', async ({ page }) => {
     await page.setViewportSize({ width: 390, height: 844 });
-    for (const tab of ['engine', 'disk'] as const) {
-      await open(page, 'sim-project', `#/tab/${tab}`);
-      const card = page.locator('[data-testid=step-card][data-step="4"]');
+    const cases: { tab: 'motor' | 'engine'; step: string; min: number }[] = [
+      { tab: 'motor', step: '1', min: 1 },
+      { tab: 'engine', step: '1', min: 2 },
+      { tab: 'engine', step: '3', min: 3 },
+    ];
+    for (const c of cases) {
+      await open(page, 'sim-project', `#/tab/${c.tab}`);
+      const card = page.locator(`[data-testid=step-card][data-step="${c.step}"]`);
       await card.evaluate((el) => el.scrollIntoView({ block: 'start' }));
-      await expect.poll(async () => card.locator('canvas').count(), { timeout: 5000 }).toBeGreaterThan(0);
-      const nav = card.getByTestId('pics-nav');
-      await expect(nav, `${tab} step 4 dots`).toBeVisible();
-      expect(await nav.locator('[data-testid=pics-dot]').count(), `${tab} step 4 dot count`).toBeGreaterThanOrEqual(2);
+      await expect.poll(async () => card.locator('[data-testid=step-thumbs] canvas').count(), { timeout: 5000 }).toBeGreaterThanOrEqual(c.min);
+      await expect(card.getByTestId('pics-nav')).toBeHidden();
+      await expect(card.locator('[data-testid=pics-dot]')).toHaveCount(0);
       const vis = await card.evaluate((el) => {
         const fig = el.querySelector('[data-testid=step-card-fig]')!.getBoundingClientRect();
-        const dots = el.querySelector('[data-testid=pics-nav]')!.getBoundingClientRect();
-        const hint = el.querySelector('[data-testid=more-plots]') as HTMLElement | null;
-        const hintBox = hint && !hint.hidden ? hint.getBoundingClientRect() : null;
+        const thumbs = [...el.querySelectorAll<HTMLElement>('.step-thumbs .fig, .step-thumbs canvas[data-fig]')];
+        const canvases = [...el.querySelectorAll<HTMLElement>('.step-thumbs canvas')];
         return {
-          dotsInPanel: dots.height > 0 && dots.top >= fig.top - 2 && dots.bottom <= fig.bottom + 4,
-          hintInPanel: hintBox ? hintBox.top >= fig.top - 2 && hintBox.bottom <= fig.bottom + 4 : false,
-          hintShown: !!(hint && !hint.hidden),
+          count: canvases.length,
+          allInFig: canvases.every((cv) => {
+            const r = cv.getBoundingClientRect();
+            return r.height > 24 && r.bottom <= fig.bottom + 4 && r.top >= fig.top - 4;
+          }),
         };
       });
-      expect(vis.dotsInPanel, `${tab} step 4 dots should sit inside the figure panel`).toBe(true);
-      expect(vis.hintInPanel || vis.dotsInPanel, `${tab} step 4 should show a more-plots cue or visible dots`).toBe(true);
+      expect(vis.count, `${c.tab} step ${c.step} thumb count`).toBeGreaterThanOrEqual(c.min);
+      expect(vis.allInFig, `${c.tab} step ${c.step} thumbs should all sit in the figure card`).toBe(true);
     }
   });
+
+  test('tapping a portrait thumbnail expands the plot, and tapping it again shrinks it', async ({ page }) => {
+    await page.setViewportSize({ width: 390, height: 844 });
+    await open(page, 'sim-project', '#/tab/motor');
+    const card = page.getByTestId('step-card').first();
+    await card.evaluate((el) => el.scrollIntoView({ block: 'start' }));
+    await expect.poll(async () => card.locator('.step-thumbs canvas').count(), { timeout: 5000 }).toBeGreaterThan(0);
+    await card.locator('.step-thumbs canvas').first().click();
+    const overlay = card.getByTestId('fig-overlay');
+    await expect(overlay).toBeVisible();
+    await expect(overlay.locator('canvas[data-big]')).toBeVisible();
+    await overlay.locator('canvas[data-big]').first().click();
+    await expect(overlay).toBeHidden();
+  });
+
+  for (const vp of [
+    { width: 1280, height: 720, label: '1280 desktop' },
+    { width: 923, height: 900, label: '923 tablet' },
+    { width: 390, height: 844, label: '390 phone' },
+  ] as const) {
+    test(`the text/figure gap matches the gap between step cards at ${vp.label}`, async ({ page }) => {
+      await page.setViewportSize({ width: vp.width, height: vp.height });
+      await open(page, 'sim-project', '#/tab/motor');
+      const first = page.getByTestId('step-card').first();
+      await first.evaluate((el) => el.scrollIntoView({ block: 'start' }));
+      const gaps = await page.evaluate(() => {
+        const cards = [...document.querySelectorAll<HTMLElement>('[data-testid=step-card]')];
+        const c1 = cards[0], c2 = cards[1];
+        const text = c1.querySelector('[data-testid=step-card-text]')!.getBoundingClientRect();
+        const fig = c1.querySelector('[data-testid=step-card-fig]')!.getBoundingClientRect();
+        const inner = fig.left >= text.right - 2
+          ? fig.left - text.right
+          : (text.top >= fig.bottom - 2 ? text.top - fig.bottom : fig.top - text.bottom);
+        const outer = c2.getBoundingClientRect().top - c1.getBoundingClientRect().bottom;
+        const raw = getComputedStyle(c1.closest('.step-cards') as HTMLElement).getPropertyValue('--step-card-gap');
+        return { inner, outer, raw };
+      });
+      expect(gaps.inner, `inner gap ${gaps.inner} (${gaps.raw}) at ${vp.label}`).toBeGreaterThan(4);
+      expect(Math.abs(gaps.inner - gaps.outer), `inner ${gaps.inner} vs between-step ${gaps.outer} at ${vp.label}`).toBeLessThan(1.5);
+    });
+  }
 
   test('each step card mounts only the panels that step discusses', async ({ page }) => {
     await page.setViewportSize({ width: 1280, height: 900 });

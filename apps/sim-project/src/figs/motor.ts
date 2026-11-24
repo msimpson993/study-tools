@@ -1,5 +1,5 @@
 /** Figure `motor`: load step, open and closed loop. */
-import { figureOf, drawStepResponse, col, text, wipe, rangeFrame, graphAxes, curve, tline, type FigurePanel } from '@study/core';
+import { figureOf, drawStepResponse, col, text, wipe, rangeFrame, graphAxes, curve, tline, clipBox, type FigurePanel } from '@study/core';
 import { f, lin, num, str, type V } from './util';
 import { motorNumbers } from '../model/plants';
 import { drawMotor } from './scenes';
@@ -54,10 +54,11 @@ export const motorPanels = (): FigurePanel[] => [
         });
       }
       if (layout.inset && layout.insetFor) {
-        const ys = layout.insetFor === 'closed' ? closedY : openY;
-        const final = layout.insetFor === 'closed' ? n.wcInf : n.woInf;
-        const color = layout.insetFor === 'closed' ? col.a() : col.muted();
-        drawMotorInset(g, w, H, insetH, { t, y: ys, tEnd: axis, yr: layout.inset, final, color, note: layout.note ?? 'y zoomed' });
+        drawMotorInset(g, w, H, insetH, {
+          t, tEnd: axis, yr: layout.inset, note: layout.note ?? 'y zoomed',
+          open: { y: openY, final: n.woInf, color: col.muted() },
+          closed: { y: closedY, final: n.wcInf, color: col.a() },
+        });
       }
       g.restore();
       const ratio = n.ratio, ok = ratio < 0.02;
@@ -71,9 +72,38 @@ export const motorPanels = (): FigurePanel[] => [
   },
 ];
 
+
+/** Arrow where a curve leaves the zoomed y-range, so the off-scale loop stays visible. */
+function markExit(
+  g: CanvasRenderingContext2D,
+  fr: { X: (x: number) => number; Y: (y: number) => number; box: { l: number; r: number; t: number; b: number } },
+  t: number[], y: number[], yr: [number, number], color: string,
+) {
+  const lo = Math.min(yr[0], yr[1]), hi = Math.max(yr[0], yr[1]);
+  let i = 1;
+  for (; i < t.length; i++) if (y[i] < lo || y[i] > hi) break;
+  if (i >= t.length) return;
+  const yOut = y[i] < lo ? lo : hi;
+  // Exits at t≈0 sit on the y-axis and vanish; nudge the arrow into the frame.
+  const x = Math.max(fr.X(t[i]), fr.box.l + 16);
+  const yPix = fr.Y(yOut);
+  const dir = y[i] < lo ? 1 : -1; // +1 = toward the bottom of the canvas
+  g.strokeStyle = color; g.fillStyle = color; g.lineWidth = 2;
+  g.beginPath(); g.moveTo(x, yPix - dir * 14); g.lineTo(x, yPix); g.stroke();
+  g.beginPath();
+  g.moveTo(x, yPix);
+  g.lineTo(x - 5, yPix - dir * 8);
+  g.lineTo(x + 5, yPix - dir * 8);
+  g.closePath(); g.fill();
+}
+
 function drawMotorInset(
   g: CanvasRenderingContext2D, w: number, plotH: number, insetH: number,
-  s: { t: number[]; y: number[]; tEnd: number; yr: [number, number]; final: number; color: string; note: string },
+  s: {
+    t: number[]; tEnd: number; yr: [number, number]; note: string;
+    open: { y: number[]; final: number; color: string };
+    closed: { y: number[]; final: number; color: string };
+  },
 ) {
   g.save();
   g.translate(0, plotH);
@@ -84,8 +114,19 @@ function drawMotorInset(
   text(g, s.note, 12, 13, col.text(), 'left', 10);
   const fr = rangeFrame(w, insetH, [0, s.tEnd], s.yr, 78, 12, 30, 36);
   graphAxes(g, fr, [0, s.tEnd], s.yr, 'time (s)', 'ω (rad/s)');
-  curve(g, fr, s.t, s.y, s.color, 2);
-  tline(g, fr, [0, s.final], [s.tEnd, s.final], s.color, 1, [5, 4]);
+  g.save();
+  clipBox(g, fr);
+  // both loops belong on the zoomed inset; the larger one may leave the frame
+  curve(g, fr, s.t, s.open.y, s.open.color, 2);
+  tline(g, fr, [0, s.open.final], [s.tEnd, s.open.final], s.open.color, 1, [5, 4]);
+  curve(g, fr, s.t, s.closed.y, s.closed.color, 2);
+  tline(g, fr, [0, s.closed.final], [s.tEnd, s.closed.final], s.closed.color, 1, [5, 4]);
+  g.restore();
+  markExit(g, fr, s.t, s.open.y, s.yr, s.open.color);
+  const lx = fr.box.r - 6;
+  const ly = fr.box.t + 12;
+  text(g, 'closed loop', lx, ly, s.closed.color, 'right', 10);
+  text(g, 'open loop', lx, ly + 13, s.open.color, 'right', 10);
   g.restore();
 }
 

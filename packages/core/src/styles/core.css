@@ -558,30 +558,36 @@ html.layout-tabs .tab-body > .step-cards,html.layout-tabs .tab-sec-figs{max-widt
 html.layout-tabs .tab-body > h2,html.layout-tabs .tab-sec-setup > h2,html.layout-tabs .tab-article h2{
   scroll-margin-top:calc(var(--tab-chrome,5.5rem) + 6px);
 }
-.step-cards{margin:.6rem 0 1.2rem;min-width:0}
+.step-cards{margin:.6rem 0 1.2rem;min-width:0;--step-card-gap:.7rem}
 .step-card{
   display:flex;flex-direction:column;min-width:0;min-height:0;
   height:calc(100dvh - var(--tab-chrome,5.5rem));
   max-height:calc(100dvh - var(--tab-chrome,5.5rem));
-  margin:0 0 .7rem;padding:.7rem .85rem .8rem;
-  border:1px solid color-mix(in srgb,var(--accent) 45%,var(--border));
-  border-radius:16px;background:var(--panel);
+  margin:0 0 var(--step-card-gap);padding:0;
+  border:none;border-radius:0;background:transparent;
   scroll-margin-top:var(--tab-chrome,5.5rem);
 }
-.step-card-head{display:flex;align-items:flex-start;justify-content:space-between;gap:.6rem;flex:0 0 auto;margin:0 0 .45rem}
+.step-card-head{display:flex;align-items:flex-start;justify-content:space-between;gap:.6rem;flex:0 0 auto;margin:0 0 .45rem;position:sticky;top:0;z-index:1;background:var(--panel)}
 .step-card-head h3{margin:0;flex:1 1 auto;min-width:0;font:750 1.05rem/1.3 system-ui,sans-serif}
 .step-ind{flex:0 0 auto;font:650 .72rem system-ui,sans-serif;color:var(--muted);border:1px solid var(--border);border-radius:999px;padding:.12rem .5rem;background:var(--panel2);white-space:nowrap}
 .step-card-body{
   flex:1 1 auto;min-height:0;min-width:0;display:grid;
   grid-template-columns:minmax(0,2fr) minmax(0,3fr);
   grid-template-areas:"text fig";
-  column-gap:1.25rem;gap:0 1.25rem;align-items:stretch;
+  gap:var(--step-card-gap);column-gap:var(--step-card-gap);align-items:stretch;
   position:relative;
 }
-.step-card-text{grid-area:text;min-width:0;min-height:0;overflow:auto;overscroll-behavior-y:auto;padding-right:.15rem}
+.step-card-text,.step-card-fig{
+  background:var(--panel);
+  border:1px solid color-mix(in srgb,var(--accent) 45%,var(--border));
+  border-radius:16px;
+  padding:.7rem .85rem .8rem;
+}
+.step-card-text{grid-area:text;min-width:0;min-height:0;overflow:auto;overscroll-behavior-y:auto}
 .step-card-fig{grid-area:fig;min-width:0;min-height:0;overflow:hidden;display:flex;flex-direction:column;position:relative}
 .step-fig-scroll{flex:1 1 auto;min-width:0;min-height:0;overflow:auto;overscroll-behavior-y:auto;display:flex;flex-direction:column}
-.step-card-text:focus,.step-card-fig:focus{outline:2px solid var(--accent);outline-offset:-2px}
+.step-card-text:focus,.step-card-fig:focus{outline:2px solid var(--accent);outline-offset:2px}
+.step-thumbs{display:flex;flex-direction:column;min-width:0;flex:0 0 auto}
 .step-card-prose{font:.95rem/1.5 system-ui,sans-serif}
 .step-card-prose ul,.step-card-prose ol{margin:.15rem 0 .3rem;padding-left:1.2rem}
 .step-card-prose li{margin:.18rem 0}
@@ -596,7 +602,6 @@ html.layout-tabs .tab-body > h2,html.layout-tabs .tab-sec-setup > h2,html.layout
 .step-card .pair2.one .fig canvas{height:min(52vh,440px)}
 .step-card .pair2:has(> :nth-child(3)) .fig canvas{height:min(28vh,200px)}
 .step-card .fig:has(canvas[data-fig="scene"]) canvas{height:min(24vh,180px)}
-.step-card-fig{padding-bottom:.35rem}
 .more-plots{flex:0 0 auto;z-index:3;text-align:center;font:700 .78rem system-ui,sans-serif;color:var(--accent);padding:.35rem 0 .3rem;background:linear-gradient(to top,color-mix(in srgb,var(--panel) 85%,transparent),var(--panel));cursor:pointer;border-top:1px solid var(--border)}
 .more-plots[hidden]{display:none}
 @media (min-width:700px) and (max-width:1399.98px) and (min-height:501px){
@@ -627,35 +632,49 @@ html.layout-tabs .tab-body > h2,html.layout-tabs .tab-sec-setup > h2,html.layout
 .step-sheet,.step-sheet-backdrop{display:none}
 .pics-nav{display:none}
 
-/* portrait phones: plot on top, text below, sheet over the text half */
+/* portrait phones: all plots as a thumbnail grid (top ≤60%), text below; no swipe */
 @media (max-width:699.98px){
-  .step-card-body{grid-template-columns:1fr;grid-template-rows:minmax(0,1fr) minmax(0,1fr);grid-template-areas:"fig" "text";gap:0}
-  .step-card-fig{overflow:hidden}
-  .step-fig-scroll{overflow:auto}
-  .step-card-text{overflow:auto;padding:.45rem .1rem .2rem;min-height:0}
+  .step-card-body{grid-template-columns:1fr;grid-template-rows:minmax(0,3fr) minmax(0,2fr);grid-template-areas:"fig" "text";gap:var(--step-card-gap);align-content:stretch}
+  .step-card-fig{overflow:hidden;height:100%;max-height:none;align-self:stretch;min-height:0;padding:.5rem .55rem .55rem}
+  .step-fig-scroll{overflow:hidden;min-height:0;flex:1 1 auto;display:flex;flex-direction:column;height:100%}
+  .step-card-text{overflow:auto;padding:.55rem .65rem .6rem;min-height:0}
+  .step-card-fig .st-ctl,.step-thumbs .st-ctl{display:none !important}
   .step-ctl-open{display:inline-flex}
   .step-toolbar{justify-content:flex-end;align-items:center;gap:.45rem;margin:0 0 .25rem}
   .step-toolbar [data-testid=play]{display:inline-flex;flex:0 0 auto}
   .step-card .fig-anim,.step-card .fig-axes{display:none}
   .step-card .fig-layout,.step-card .viz-slot .fig-layout{grid-template-columns:1fr}
-  .step-card .pair2,.step-card .pair2.one,.step-card .pair2:has(> :nth-child(3)){display:flex;flex-direction:row}
-  .step-card .pair2.pics-swipe{
-    display:flex;flex-direction:row;overflow-x:auto;overflow-y:hidden;
-    scroll-snap-type:x mandatory;-webkit-overflow-scrolling:touch;
-    flex:0 0 auto;min-height:0;
+  .more-plots,.pics-nav{display:none !important}
+  /* Lift every panel into one thumbnail grid (hosts/stage wrappers collapse). */
+  .step-thumbs{
+    flex:1 1 auto;min-width:0;min-height:0;overflow:auto;
+    display:grid;grid-template-columns:1fr;grid-auto-rows:minmax(0,1fr);
+    gap:.35rem;align-content:stretch;
   }
-  .step-card .pair2.pics-swipe > .fig{flex:0 0 100%;scroll-snap-align:start;min-width:0;min-height:0}
-  .step-card .pair2.pics-swipe .fig canvas,
-  .step-card .fig canvas,
-  .step-card .pair2.one .fig canvas,
-  .step-card .fig:has(canvas[data-fig="scene"]) canvas{height:max(168px,min(36vh,13.5rem));min-height:168px;max-height:none}
-  .step-card .step-host{flex:0 0 auto;min-height:0;margin:0;overflow:visible;display:flex;flex-direction:column}
-  .step-card .step-host .fig-layout{flex:0 0 auto;min-height:0}
+  .step-thumbs[data-count="2"],
+  .step-thumbs[data-count="3"],
+  .step-thumbs[data-count="4"],
+  .step-thumbs[data-count="5"],
+  .step-thumbs[data-count="6"]{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .step-thumbs[data-count="3"] .fig:last-child{grid-column:1/-1}
+  .step-thumbs .step-host,
+  .step-thumbs .fig-layout,
+  .step-thumbs .fig-stage,
+  .step-thumbs .pair2,
+  .step-thumbs .pair2.one,
+  .step-thumbs .pair2:has(> :nth-child(3)){display:contents}
+  .step-thumbs .fig{
+    min-width:0;min-height:0;overflow:hidden;
+    display:flex;flex-direction:column;height:100%;
+    background:var(--panel2);border:1px solid var(--border);border-radius:10px;padding:.15rem .2rem .2rem;
+  }
+  .step-card .step-thumbs .fig canvas,
+  .step-card .step-thumbs .pair2.one .fig canvas,
+  .step-card .step-thumbs .pair2:has(> :nth-child(3)) .fig canvas,
+  .step-card .step-thumbs .fig:has(canvas[data-fig="scene"]) canvas{
+    flex:1 1 auto;width:100%;height:100% !important;min-height:0 !important;max-height:none;
+  }
   .step-card .st-ctl{display:block}
-  .pics-nav{display:flex;justify-content:center;gap:.35rem;padding:.25rem 0 .1rem;flex:0 0 auto;flex-shrink:0}
-  .pics-nav[hidden]{display:none}
-  .pics-nav button{width:.55rem;height:.55rem;padding:0;border:0;border-radius:50%;background:var(--muted);opacity:.4;cursor:pointer}
-  .pics-nav button.on{opacity:1;background:var(--accent)}
   .step-how{display:none} /* lives in the sheet on phones once moved */
   .step-sheet-body > .step-how{display:block;margin-top:.5rem}
   .step-sheet{
@@ -671,17 +690,25 @@ html.layout-tabs .tab-body > h2,html.layout-tabs .tab-sec-setup > h2,html.layout
   .step-sheet-head strong{font:700 .9rem system-ui,sans-serif}
   .step-sheet .st-ctl > h4{display:none}
   .step-card-head h3{font-size:.98rem}
+  /* Expanded plot sits on the card, full screen under the tab chrome. */
+  .step-card > .fig-overlay{
+    position:fixed;inset:var(--tab-chrome,5.5rem) .4rem .4rem;z-index:30;
+    padding:.45rem;border-radius:14px;
+    background:color-mix(in srgb,var(--bg) 82%,#000);
+  }
 }
 
 /* short landscape: 40/60 inside the card, both columns scroll */
 @media (orientation:landscape) and (max-height:500px){
-  .step-card{height:calc(100dvh - var(--tab-chrome,5.5rem));max-height:calc(100dvh - var(--tab-chrome,5.5rem));padding:.28rem .55rem .3rem;margin:0 0 .3rem}
+  .step-cards{--step-card-gap:.3rem}
+  .step-card{height:calc(100dvh - var(--tab-chrome,5.5rem));max-height:calc(100dvh - var(--tab-chrome,5.5rem));padding:0;margin:0 0 var(--step-card-gap)}
+  .step-card-text,.step-card-fig{padding:.28rem .55rem .3rem}
   .step-card-head{margin:0 0 .25rem}
   .step-card-head h3{font-size:.92rem}
   .step-card-body{
     grid-template-columns:minmax(0,2fr) minmax(0,3fr);
     grid-template-areas:"text fig";
-    column-gap:1rem;gap:0 1rem;
+    gap:var(--step-card-gap);column-gap:var(--step-card-gap);
   }
   .step-card-text,.step-fig-scroll{overflow:auto;overscroll-behavior-y:auto}
   .step-card-fig{overflow:hidden}

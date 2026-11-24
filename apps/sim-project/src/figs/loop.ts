@@ -15,7 +15,12 @@ export function loopFigure(host: HTMLElement, def: FigureDef, controls: ControlS
 
   applyTabLocalControls('loop', host, controls);
   const machine = String(controls.values.machine ?? 'motor-open');
-  const heightFor = (m: string) => m === 'engine' ? 440 : 300;
+  // Engine on a phone is a vertical stack, so the canvas has to be taller than it is wide.
+  const heightFor = (m: string, width = 800) => {
+    if (m !== 'engine') return 300;
+    if (width < 560) return 600;
+    return 440;
+  };
   const panels: FigurePanel[] = [{
     id: 'diagram',
     title: 'Block diagram',
@@ -74,10 +79,13 @@ export function loopFigure(host: HTMLElement, def: FigureDef, controls: ControlS
     const m = String(controls.values.machine ?? 'motor-open');
     layout?.classList.toggle('fig-wide', m === 'engine');
     const cv = host.querySelector<HTMLCanvasElement>('canvas[data-fig="diagram"]');
-    if (cv) cv.style.height = `${heightFor(m)}px`;
+    const width = cv?.clientWidth || host.clientWidth || 800;
+    if (cv) cv.style.height = `${heightFor(m, width)}px`;
   };
   applySize();
-  requestAnimationFrame(() => api?.redraw());
+  const ro = new ResizeObserver(() => { applySize(); requestAnimationFrame(() => api?.redraw()); });
+  ro.observe(host);
+  requestAnimationFrame(() => { applySize(); api?.redraw(); });
   controls.onChange(() => { applySize(); requestAnimationFrame(() => api?.redraw()); });
-  return () => api?.destroy();
+  return () => { ro.disconnect(); api?.destroy(); };
 }
