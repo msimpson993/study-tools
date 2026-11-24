@@ -144,14 +144,6 @@ export function drawStepResponse(g: CanvasRenderingContext2D, w: number, h: numb
   const lbl = (str: string, px: number, py: number, color: string, align: CanvasTextAlign = 'left', z = 10.5) => text(g, str, px, py, color, align, z);
   let ghostBox: { x0: number; x1: number; y0: number; y1: number } | null = null;
   let dropGhost = false;
-  if (s.ghost?.label) {
-    g.font = '10px system-ui,sans-serif';
-    const gw = g.measureText(`┄ ${s.ghost.label}`).width, gy = Math.max(8, f.box.t - 10);
-    const left = { x0: f.box.l + 4, x1: f.box.l + 4 + gw, y0: gy - 6, y1: gy + 6 };
-    const right = { x0: f.box.r - 4 - gw, x1: f.box.r - 4, y0: gy - 6, y1: gy + 6 };
-    const px = (show.overshoot && Number.isFinite(m.peak) && m.overshootPct > 0.05) ? f.X(m.peakTime) : (f.box.l + f.box.r) / 2;
-    ghostBox = Math.abs((right.x0 + right.x1) / 2 - px) >= Math.abs((left.x0 + left.x1) / 2 - px) ? right : left;
-  }
   const ghostWouldHit = (a: number, b2: number, c: number, d: number) => !!(ghostBox && b2 > ghostBox.x0 - 4 && a < ghostBox.x1 + 4 && d > ghostBox.y0 - 4 && c < ghostBox.y1 + 4);
   if (show.timing && Number.isFinite(m.riseTime)) {
     const y10 = yf * 0.1, y90 = yf * 0.9;
@@ -263,33 +255,34 @@ export function drawStepResponse(g: CanvasRenderingContext2D, w: number, h: numb
     const gl = s.ghost, gLab = `┄ ${gl.label}`;
     g.font = '10px system-ui,sans-serif';
     const gw = g.measureText(gLab).width;
-    const leftSp = { x: f.box.l + 4, y: Math.max(8, f.box.t - 10), align: 'left' as CanvasTextAlign };
-    const rightSp = { x: f.box.r - 4, y: Math.max(8, f.box.t - 10), align: 'right' as CanvasTextAlign };
     const px = (show.overshoot && Number.isFinite(m.peak) && m.overshootPct > 0.05) ? f.X(m.peakTime) : (f.box.l + f.box.r) / 2;
-    const spots = Math.abs(rightSp.x - px) >= Math.abs(leftSp.x - px) ? [rightSp, leftSp] : [leftSp, rightSp];
+    const mk = (x: number, y: number, align: CanvasTextAlign) => ({ x, y, align });
+    const topL = mk(f.box.l + 4, Math.max(8, f.box.t - 10), 'left'), topR = mk(f.box.r - 4, Math.max(8, f.box.t - 10), 'right');
+    const inR = [mk(f.box.r - 4, f.box.t + 14, 'right'), mk(f.box.r - 4, f.box.t + 28, 'right')];
+    const inL = [mk(f.box.l + 4, f.box.t + 14, 'left'), mk(f.box.l + 4, f.box.t + 28, 'left')];
+    const farFirst = Math.abs(topR.x - px) >= Math.abs(topL.x - px);
+    const spots = farFirst ? [topR, topL, ...inR, ...inL] : [topL, topR, ...inL, ...inR];
     let placed = false;
     for (const sp of spots) {
       const a = sp.align === 'right' ? sp.x - gw : sp.x, b2 = a + gw, c = sp.y - 6, d = sp.y + 6;
       if (osBox && b2 > osBox.x0 - 4 && a < osBox.x1 + 4 && d > osBox.y - 8 && c < osBox.y + 8) continue;
+      if (hitsCurve(a, b2, c, d)) continue;
       ghostBox = { x0: a, x1: b2, y0: c, y1: d };
       withLabelRole('axis', () => { text(g, gLab, sp.x, sp.y, gl.color ?? col.muted(), sp.align, 10); });
       placed = true; break;
     }
     if (!placed && !tile) {
-      const fallbacks = [
-        { x: f.box.l + 4, y: Math.max(8, f.box.t - 10), align: 'left' as CanvasTextAlign },
-        { x: f.box.r - 4, y: Math.max(8, f.box.t - 10), align: 'right' as CanvasTextAlign },
-        { x: f.box.l + 4, y: f.box.t + 12, align: 'left' as CanvasTextAlign },
-      ];
-      let sp = fallbacks[0];
-      for (const cand of fallbacks) {
-        const a = cand.align === 'right' ? cand.x - gw : cand.x, b2 = a + gw, c0 = cand.y - 6, d0 = cand.y + 6;
+      g.font = `${MIN_FONT}px system-ui,sans-serif`;
+      const gw9 = g.measureText(gLab).width;
+      const extra = [mk(f.box.r - 4, (f.box.t + f.box.b) / 2, 'right'), mk(f.box.l + 4, (f.box.t + f.box.b) / 2, 'left')];
+      for (const sp of [...spots, ...extra]) {
+        const a = sp.align === 'right' ? sp.x - gw9 : sp.x, b2 = a + gw9, c0 = sp.y - 6, d0 = sp.y + 6;
         if (osBox && b2 > osBox.x0 - 4 && a < osBox.x1 + 4 && d0 > osBox.y - 8 && c0 < osBox.y + 8) continue;
-        sp = cand; break;
+        if (hitsCurve(a, b2, c0, d0)) continue;
+        ghostBox = { x0: a, x1: b2, y0: c0, y1: d0 };
+        withLabelRole('axis', () => { text(g, gLab, sp.x, sp.y, gl.color ?? col.muted(), sp.align, MIN_FONT); });
+        placed = true; break;
       }
-      const a = sp.align === 'right' ? sp.x - gw : sp.x;
-      ghostBox = { x0: a, x1: a + gw, y0: sp.y - 6, y1: sp.y + 6 };
-      withLabelRole('axis', () => { text(g, gLab, sp.x, sp.y, gl.color ?? col.muted(), sp.align, 10); });
     }
   }
   if (show.settling && m.settled && Number.isFinite(m.settlingTime)) {
