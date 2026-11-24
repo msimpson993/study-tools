@@ -43,6 +43,10 @@ const edgeDist = (b: TextBox, X: number, Y: number) => {
 /** Candidate boxes whose closest edge stays about `gap` px from (X, Y), around the clock. */
 const aroundMarker = (X: number, Y: number, tw: number, th: number, z: number, preferRight = true, gap = ANCHOR_GAP): TextBox[] => {
   const out: TextBox[] = [];
+  const cardinal: TextBox[] = preferRight
+    ? [textBox(X + gap, Y, tw, th, 'left', z), textBox(X - gap, Y, tw, th, 'right', z), textBox(X, Y - gap - z * 0.25, tw, th, 'center', z), textBox(X, Y + gap + z * 0.9, tw, th, 'center', z)]
+    : [textBox(X - gap, Y, tw, th, 'right', z), textBox(X + gap, Y, tw, th, 'left', z), textBox(X, Y - gap - z * 0.25, tw, th, 'center', z), textBox(X, Y + gap + z * 0.9, tw, th, 'center', z)];
+  for (const b of cardinal) if (edgeDist(b, X, Y) <= 16 && edgeDist(b, X, Y) >= 8) out.push(b);
   const start = preferRight ? 0 : Math.PI;
   for (let i = 0; i < 16; i++) {
     const ang = start + (i % 2 === 0 ? i / 2 : -Math.ceil(i / 2)) * (Math.PI / 8);
@@ -179,7 +183,9 @@ export function drawStepResponse(g: CanvasRenderingContext2D, w: number, h: numb
     const osShort = `OS ${fmtN(m.overshootPct, 1)}%  Tp ${fmtN(m.peakTime)} s`;
     const peakX = f.X(m.peakTime), peakY = f.Y(m.peak), yRef = f.Y(ref);
     const tryOs = (ignoreGhost: boolean) => {
-      for (const word of (tight || w < 420 ? [osShort] : [osFull, osShort])) {
+      g.font = '10.5px system-ui,sans-serif';
+      const fullWide = ((g.measureText(osFull).width * 0.09 + 2) / 2) > 3;
+      for (const word of (tight || w < 420 || fullWide ? [osShort, osFull] : [osFull, osShort])) {
         for (const z of [10.5, 10, MIN_FONT]) {
           g.font = `${z}px system-ui,sans-serif`;
           const tw = g.measureText(word).width, th = z + 3;
@@ -189,8 +195,10 @@ export function drawStepResponse(g: CanvasRenderingContext2D, w: number, h: numb
             if (c.c < f.box.t - 14) continue;
             if (!ignoreGhost && ghostWouldHit(I.a, I.b2, I.c, I.d)) continue;
             const cx = Math.max(I.a, Math.min(peakX, I.b2)), cy = Math.max(I.c, Math.min(peakY, I.d));
-            if (Math.hypot(cx - peakX, cy - peakY) < 6) continue;
+            if (Math.hypot(cx - peakX, cy - peakY) < 8) continue;
             if (I.c < yRef + 3 && I.d > yRef - 3) continue;
+            const hitsV = (tx: number) => tx > I.a - 2 && tx < I.b2 + 2 && I.d > Math.min(peakY, f.Y(yr[0])) - 2 && I.c < Math.max(peakY, f.box.b) + 2;
+            if (show.timing && (hitsV(f.X(m.t10)) || hitsV(f.X(m.t90)))) continue;
             if (hitsCurve(I.a, I.b2, I.c, I.d)) continue;
             return { word, c };
           }
@@ -215,7 +223,7 @@ export function drawStepResponse(g: CanvasRenderingContext2D, w: number, h: numb
         const I = inflateBox(cand);
         if (!inPlot(cand.a, cand.b2, cand.c, cand.d, 14) || cand.c < f.box.t - 14) continue;
         const cx = Math.max(I.a, Math.min(peakX, I.b2)), cy = Math.max(I.c, Math.min(peakY, I.d));
-        if (Math.hypot(cx - peakX, cy - peakY) < 6) continue;
+        if (Math.hypot(cx - peakX, cy - peakY) < 8) continue;
         if (I.c < yRef + 3 && I.d > yRef - 3) continue;
         if (hitsCurve(I.a, I.b2, I.c, I.d)) continue;
         c = cand; break;
