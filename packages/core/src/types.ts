@@ -134,6 +134,8 @@ export interface ControlDef {
   unit?: string;
   /** Stored range value is log₁₀ of the number shown in the box. */
   display?: 'pow10';
+  /** If set, this control is shown only when one of these figure panels is mounted. */
+  panels?: string[];
 }
 export interface PresetDef { id: string; label: string; set: Record<string, number | string | boolean>; about?: string }
 export interface FigureDef {

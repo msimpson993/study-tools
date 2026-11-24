@@ -62,9 +62,16 @@ const axesCaption = (p: { x?: string; y?: FigurePanel['y'] }, v?: Record<string,
 };
 /** `intro`: the compact form an Example node's introduction uses: only the named panels (the animated picture), with its
  *  play button but no controls rail and no "Look for" (those belong to the boxes that introduce what they show) */
-export interface FigureMountOpts { intro?: { panels?: string[] }; flatControls?: boolean }
+export interface FigureMountOpts {
+  intro?: { panels?: string[] };
+  flatControls?: boolean;
+  /** Mount only these panel ids (step cards). Unlike `intro`, the controls rail stays. */
+  panels?: string[];
+}
 export function mountFigure(host: HTMLElement, def: FigureDef, panels0: FigurePanel[], controls: ControlSet, opts: FigureMountOpts = {}): { redraw(): void; open(ids: string[]): void; close(): void; destroy(): void } {
-  const intro = opts.intro, panels = intro?.panels?.length ? panels0.filter((p) => intro.panels!.includes(p.id)) : panels0;
+  const intro = opts.intro;
+  const want = opts.panels?.length ? opts.panels : intro?.panels;
+  const panels = want?.length ? panels0.filter((p) => want.includes(p.id)) : panels0;
   const stage = h('div', { class: 'fig-stage', dataset: { testid: 'fig-stage' } });
   const inline = h('div', { class: `pair2${panels.length === 1 ? ' one' : ''}` });
   const overlay = h('div', { class: 'fig-overlay', hidden: true, dataset: { testid: 'fig-overlay' } });
@@ -102,7 +109,7 @@ export function mountFigure(host: HTMLElement, def: FigureDef, panels0: FigurePa
     stage.append(h('div', { class: 'fig-anim' }, btn, h('span', null, reduce ? 'Reduced motion: stepping instead of animating. ' : '', intro ? '' : `Scrub with the “${cd.label}” slider.`)));
   }
   stage.append(overlay);
-  const rail = controls.render('Controls', { flat: !!opts.flatControls });
+  const rail = controls.render('Controls', { flat: !!opts.flatControls, panels: want });
   const layout = h('div', { class: `fig-layout${intro ? ' fig-intro' : ''}` }, stage, intro ? null : rail);
   host.append(layout);
 

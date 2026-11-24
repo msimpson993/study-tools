@@ -38,7 +38,7 @@
     - { id: J, label: "J (inertia, kg·m²)", type: range, min: 0.5, max: 4, step: 0.1, default: 2, group: more }
     - { id: b, label: "b (friction, N·m·s)", type: range, min: 0.1, max: 2, step: 0.05, default: 0.5, group: more }
     - { id: Kb, label: "Kb (back-EMF, V·s)", type: range, min: 0, max: 0.3, step: 0.01, default: 0.1, group: more }
-    - { id: t, label: time, type: range, min: 0, max: 1, step: 0.01, default: 1, group: more }
+    - { id: t, label: time, type: range, min: 0, max: 1, step: 0.01, default: 1, group: more, panels: [scene, plot] }
   presets:
     - { id: open, label: "Fig. 4.23: open loop", set: { loop: open, axis: "7 s", Ka: 54, Kt: 1, J: 2, b: 0.5, Kb: 0.1 }, about: "Sag −0.667 rad/s, τ = 1.33 s." }
     - { id: closed, label: "Fig. 4.24: closed loop", set: { loop: closed, axis: "0.02 s", Ka: 54, Kt: 1, J: 2, b: 0.5, Kb: 0.1 }, about: "Sag −0.00185 rad/s, τ = 3.69 ms, ratio 0.0028." }
@@ -59,10 +59,10 @@
   animate: { control: t, speed: 0.5, loop: false }
   controls:
     - { id: K, label: "K (gain)", type: range, min: 5, max: 400, step: 1, default: 100, group: primary }
-    - { id: input, label: show, type: seg, options: [command, push, both], default: both, group: primary }
+    - { id: input, label: show, type: seg, options: [command, push, both], default: both, group: primary, panels: [scene] }
     - { id: Kd, label: "rate gain (handout: 11)", type: range, min: 0, max: 30, step: 0.5, default: 11, group: more }
-    - { id: ghosts, label: "K = 20, 100 ghosts", type: toggle, default: true, group: more }
-    - { id: t, label: time, type: range, min: 0, max: 2.5, step: 0.01, default: 2.5, group: more }
+    - { id: ghosts, label: "K = 20, 100 ghosts", type: toggle, default: true, group: more, panels: [step, splane] }
+    - { id: t, label: time, type: range, min: 0, max: 2.5, step: 0.01, default: 2.5, group: more, panels: [scene, step, push] }
   presets:
     - { id: k20, label: "K = 20", set: { K: 20, Kd: 11 }, about: "3.9 % overshoot, 0.91 s, offset 0.05 (handout: 4 %, 1.0 s, 5 %)." }
     - { id: k100, label: "K = 100", set: { K: 100, Kd: 11 }, about: "22.0 %, 0.67 s, offset 0.01 (handout: 22 %, 0.7 s, 1 %)." }
@@ -115,9 +115,9 @@
   animate: { control: t, speed: 0.4, loop: false }
   controls:
     - { id: lgKa, label: "Ka", type: range, min: 0, max: 3.7, step: 0.01, default: 1.903, group: primary, display: pow10 }
-    - { id: input, label: show, type: seg, options: [seek, shock, both], default: both, group: primary }
-    - { id: stand, label: drop the coil, type: toggle, default: false, group: primary }
-    - { id: t, label: time, type: range, min: 0, max: 2, step: 0.01, default: 2, group: more }
+    - { id: input, label: show, type: seg, options: [seek, shock, both], default: both, group: primary, panels: [scene] }
+    - { id: stand, label: drop the coil, type: toggle, default: false, group: primary, panels: [seek] }
+    - { id: t, label: time, type: range, min: 0, max: 2, step: 0.01, default: 2, group: more, panels: [scene, seek, shock] }
   presets:
     - { id: ka10, label: "Ka = 10", set: { lgKa: 1, stand: false }, about: "No overshoot, settles in 1.40 s." }
     - { id: ka80, label: "Ka = 80 (Fig. 4.30)", set: { lgKa: 1.903, stand: false }, about: "17.1 % overshoot (peak 1.17 at 0.18 s), settles in 0.41 s." }
@@ -156,9 +156,9 @@
   controls:
     - { id: resp, label: "Response time (s)", type: range, min: 0.3, max: 5, step: 0.001, default: 0.678, group: primary }
     - { id: rob, label: "Transient behavior (robustness)", type: range, min: 0.3, max: 0.9, step: 0.01, default: 0.6, group: primary }
-    - { id: hand, label: show handout table, type: toggle, default: true, group: primary }
-    - { id: rpm, label: "rpm axis (2000 → 3000 step)", type: toggle, default: false, group: more }
-    - { id: t, label: time, type: range, min: 0, max: 6, step: 0.01, default: 6, group: more }
+    - { id: hand, label: show handout table, type: toggle, default: true, group: primary, panels: [table] }
+    - { id: rpm, label: "rpm axis (2000 → 3000 step)", type: toggle, default: false, group: more, panels: [step] }
+    - { id: t, label: time, type: range, min: 0, max: 6, step: 0.01, default: 6, group: more, panels: [scene, step] }
   presets:
     - { id: initial, label: "initial (0.678 s, 0.6)", set: { resp: 0.678, rob: 0.6 }, about: "Handout p.3: 7.5 %, 1.96 s, PM 59.9°. The emulation gives about 7.4 %, 1.96 s, PM 60.0° (not in lab handout)." }
     - { id: slower, label: "slower (3.1 s, 0.6)", set: { resp: 3.1, rob: 0.6 }, about: "Handout p.4: P = 0, 0.401 %, 3.45 s, PM 69.3°. Emulation: 0.38 %, 3.455 s, PM 69.4°." }

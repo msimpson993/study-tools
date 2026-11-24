@@ -62,7 +62,7 @@ G(s) ≈ 311 · 3.42² · e^(−0.015s) / (s² + 6.40s + 11.70)      throttle �
      - in the throttle plot the I part stays at zero, so the P part has to hold the throttle open, and only a leftover error can keep it there;
      - click **initial design**: the I part grows until it carries the throttle, and the error is gone.
 
-```figure:pi preset=ponly
+```figure:pi preset=ponly panels=speed,throttle
 ```
 
 2. **The tuner makes a copy, then designs on it.**
@@ -73,7 +73,7 @@ G(s) ≈ 311 · 3.42² · e^(−0.015s) / (s² + 6.40s + 11.70)      throttle �
      - at the probe, ω = 2.95 rad/s, the engine's gain is about 190 and it lags about 84°;
      - the dashed curve without the 15 ms delay parts from the solid one only at the fast end, where the delay adds lag.
 
-```figure:engine-fit
+```figure:engine-fit panels=mag,phase
 ```
 
 3. **Two sliders, two targets.**
@@ -88,7 +88,7 @@ G(s) ≈ 311 · 3.42² · e^(−0.015s) / (s² + 6.40s + 11.70)      throttle �
      - the emulation's step readout shows about 7.4 % overshoot and 1.96 s settling; the handout's table says 7.5 % and 1.96 s;
      - the *Bode plot* (the loop's gain in dB on top and its phase below, against wiggle rate) has a PM bar reading 60.0° at 2.95 rad/s (handout: 59.9°) and a GM bar reading 25.4 dB.
 
-```figure:tuner preset=initial
+```figure:tuner preset=initial panels=step,bode,table
 ```
 
 4. **Slower design: P drops to 0.**
@@ -98,13 +98,13 @@ G(s) ≈ 311 · 3.42² · e^(−0.015s) / (s² + 6.40s + 11.70)      throttle �
    - **Result:** 0.401 % overshoot, but 3.45 s.
    - **Look for:** with **slower (3.1 s, 0.6)** set, the readout shows P = 0 "(P clamped)" and the step creeps up with almost no overshoot. The PM bar reads 69.4° at about 0.64 rad/s (handout: 69.3° at 0.645), more than the 60° the slider asked for.
 
-```figure:tuner preset=slower
+```figure:tuner preset=slower panels=step,bode
 ```
 
    - **The same design as P and I:** with P = 0, all of the throttle comes from I.
    - **Look for:** with **I only (slower design)** set, the P part of the throttle is flat at zero and the I part does all the work; the speed reaches 1 slowly, with about 0.4 % overshoot.
 
-```figure:pi preset=ionly
+```figure:pi preset=ionly panels=speed,throttle
 ```
 
 5. **Final design: faster and calmer together.**
@@ -113,7 +113,7 @@ G(s) ≈ 311 · 3.42² · e^(−0.015s) / (s² + 6.40s + 11.70)      throttle �
    - **For contrast (not in lab handout):** **aggressive (own)**, robustness 0.4, gives 28 % overshoot.
    - **Look for:** with **final (1.5 s, 0.72)** set, the step curve rises to 1 without going over and settles at about 1.80 s (the readout: Ts 1.802 s, Tr 1.088 s; the handout's table: 1.81 s and 1.09 s). The PM bar reads 72.0° at 1.33 rad/s and the GM bar 32.7 dB (handout: 32.8 dB).
 
-```figure:tuner preset=final
+```figure:tuner preset=final panels=step,bode,table
 ```
 
 6. **Write back and verify on the full engine.**
@@ -122,7 +122,7 @@ G(s) ≈ 311 · 3.42² · e^(−0.015s) / (s² + 6.40s + 11.70)      throttle �
    - **On the stand-in (not in lab handout):** the same step on the linear copy gets within 2 % of 3000 rpm about 1.8 s after the step (the figure shows 1.80 s; with the handout's gains it is 1.82 s).
    - **Look for:** with **final (1.5 s, 0.72)** set and *rpm axis* on, the speed sits at 2000 rpm, steps up at t = 2 s and crosses the dashed 2980 rpm line (the 2 % band) about 1.8 s later, without going over 3000.
 
-```figure:tuner preset=final rpm=true
+```figure:tuner preset=final rpm=true panels=step
 ```
 
 ## (d) Try it

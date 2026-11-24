@@ -40,12 +40,14 @@ export function createMarkdown(errors: MathErrors, where: () => string) {
         if (i > 0) params[tok.slice(0, i)] = tok.slice(i + 1);
       }
       const preset = params.preset;
+      const panels = params.panels;
       errors.figureRefs.push({ id, where: where(), ...(preset ? { preset } : {}), params });
       // optional body `lookFor: …` gives this embed its own look-for line (a figure reused by another dive)
       const look = /^lookFor:\s*([\s\S]+)$/.exec(t.content.trim())?.[1]?.trim();
-      const extra = Object.entries(params).filter(([k]) => k !== 'preset');
+      const extra = Object.entries(params).filter(([k]) => k !== 'preset' && k !== 'panels');
       const paramAttr = extra.length ? ` data-params="${esc(JSON.stringify(Object.fromEntries(extra)))}"` : '';
-      return `<div class="viz-slot" data-figure="${esc(id)}"${preset ? ` data-preset="${esc(preset)}"` : ''}${paramAttr}${look ? ` data-look="${esc(look)}"` : ''}></div>\n`;
+      const panelsAttr = panels ? ` data-panels="${esc(panels)}"` : '';
+      return `<div class="viz-slot" data-figure="${esc(id)}"${preset ? ` data-preset="${esc(preset)}"` : ''}${panelsAttr}${paramAttr}${look ? ` data-look="${esc(look)}"` : ''}></div>\n`;
     }
     if (info.startsWith('picture:')) { // a static captioned picture from the quiz-figure registry: ```picture:<id> Caption text```, body = alt text
       const [id, ...cap] = info.slice('picture:'.length).trim().split(/\s+/);

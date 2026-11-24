@@ -48,7 +48,7 @@ shock:  Y/T_d = −G₂/(1 + Ka·G₁·G₂)       (the handout prints it withou
    - **From the handout:** this holds "in spite of changes in the system parameters".
    - **Look for:** with **Ka = 10** set, the seek curve creeps up to exactly 1 with no swing (OS 0.00 %, settling 1.397 s).
 
-```figure:disk preset=ka10
+```figure:disk preset=ka10 panels=seek
 ```
 
 2. **Ka trades speed against swing.**
@@ -56,7 +56,7 @@ shock:  Y/T_d = −G₂/(1 + Ka·G₁·G₂)       (the handout prints it withou
    - **Ka = 80:** it gets there in 0.41 s but swings 17.1 % past the track first.
    - **Look for:** with **Ka = 80 (Fig. 4.30)** set, the seek curve shoots past 1 to a peak of 1.17 at 0.18 s, then settles at about 0.41 s (readout: 0.410 s).
 
-```figure:disk preset=ka80
+```figure:disk preset=ka80 panels=seek
 ```
 
 3. **Why it behaves like the boring machine: the coil is 50× faster than the arm.**
@@ -65,7 +65,7 @@ shock:  Y/T_d = −G₂/(1 + Ka·G₁·G₂)       (the handout prints it withou
    - **How close:** the stand-in predicts 16.3 % overshoot, against the real 17.1 %.
    - **Look for:** with **Ka = 80, coil dropped** set, the dashed stand-in curve sits almost on top of the real one, and the readout gives both: OS 17.10 % and stand-in 16.30 %.
 
-```figure:disk preset=ka80stand
+```figure:disk preset=ka80stand panels=seek
 ```
 
 4. **A shock leaves an offset of −1/(5·Ka).**
@@ -73,13 +73,13 @@ shock:  Y/T_d = −G₂/(1 + Ka·G₁·G₂)       (the handout prints it withou
    - **At Ka = 80:** the head dips to −0.0029 at 0.18 s and settles at −0.0025 (the handout's −2.5×10⁻³).
    - **Look for:** with **shock, Ka = 80 (Fig. 4.31)** set, the shock curve drops below zero, dips to −0.0029 and levels off at −0.0025 (the readout's offset), settling within about 0.41 s (the marked shock Ts).
 
-```figure:disk preset=shock
+```figure:disk preset=shock panels=shock
 ```
 
    - **The same trade as step 2:** halving that offset means doubling Ka, which means more swing on every seek.
    - **Look for:** with **disk head, Ka = 80** set, the dot sits on the yellow Ka = 80 mark (seek overshoot 17.1 %, shock offset 0.0025); the Ka = 10 mark has no overshoot but an offset of 0.02.
 
-```figure:tradeoff preset=disk
+```figure:tradeoff preset=disk panels=curve
 ```
 
 5. **The ceiling: past Ka = 4080 it goes unstable (not in lab handout).**
@@ -88,7 +88,7 @@ shock:  Y/T_d = −G₂/(1 + Ka·G₁·G₂)       (the handout prints it withou
    - **At the ceiling:** the head rings forever at √20000 = 141 rad/s.
    - **Look for:** with **near the ceiling (own)** set (Ka = 3981), the real seek curve rings fast and barely dies out (about 98.5 % overshoot; settling takes about 16.7 s, long after the plot ends). The dashed stand-in swings hard too (about 80 % overshoot) but dies out within 0.38 s. Only the real loop is close to ringing forever.
 
-```figure:disk preset=limit
+```figure:disk preset=limit panels=seek
 ```
 
 ## (d) Try it

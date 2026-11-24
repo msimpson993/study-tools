@@ -51,7 +51,7 @@ Y(s) = (K + 11s)/(s² + 12s + K) · R(s)  +  1/(s² + 12s + K) · T_d(s)
      - the grey dots are the poles at K = 20 (−2 and −10, on the horizontal axis) and K = 100 (−6 ± 8j, above and below it);
      - in the readout, ωn is the *natural frequency* (how fast it would swing with no damping), OS the *overshoot* (how far past the target it goes) and Ts the *settling time* (when it stays within 2 % of the target).
 
-```figure:borer preset=k36
+```figure:borer preset=k36 panels=splane,step
 ```
 
 2. **The command step: higher K is faster but overshoots.**
@@ -59,7 +59,7 @@ Y(s) = (K + 11s)/(s² + 12s + K) · R(s)  +  1/(s² + 12s + K) · T_d(s)
    - **Numbers:** K = 20 gives 3.9 % and 0.91 s; K = 100 gives 22 % and 0.67 s.
    - **Look for:** with **K = 100** set, the step curve rises past 1 to a peak about a fifth too high, then settles inside the 2 % band at 0.666 s. The grey curve is K = 20, slower but nearly flat on top.
 
-```figure:borer preset=k100
+```figure:borer preset=k100 panels=step
 ```
 
 3. **Why K = 20 overshoots at all (not in lab handout).**
@@ -68,7 +68,7 @@ Y(s) = (K + 11s)/(s² + 12s + K) · R(s)  +  1/(s² + 12s + K) · T_d(s)
    - **Numbers:** the poles alone give 0 % at K = 20 and 9.5 % at K = 100. Even at K = 36 (ζ = 1) the zero leaves 9.2 % overshoot.
    - **Look for:** with **K = 20** set, the poles plot shows the zero ○ at −1.82 just right of the slow pole × at −2, and the step curve peaks slightly above 1 (OS 3.86 %).
 
-```figure:borer preset=k20
+```figure:borer preset=k20 panels=splane,step
 ```
 
 4. **The rock: higher K gives a smaller offset.**
@@ -77,7 +77,7 @@ Y(s) = (K + 11s)/(s² + 12s + K) · R(s)  +  1/(s² + 12s + K) · T_d(s)
    - **Why it never reaches zero:** the controller only fights back in proportion to the error, so some error must remain to hold off the push.
    - **Look for:** with **rock push, K = 100** set, the push curve climbs to a peak of 0.01095 at 0.393 s and levels off at 1/K = 0.0100 (the readout's offset). Drag K to 20 and the offset grows to 0.0500.
 
-```figure:borer preset=push
+```figure:borer preset=push panels=push
 ```
 
 5. **The trade, on one chart.**
@@ -85,7 +85,7 @@ Y(s) = (K + 11s)/(s² + 12s + K) · R(s)  +  1/(s² + 12s + K) · T_d(s)
    - **A spec point (not in lab handout):** K = 38.7 is where overshoot hits 10 %, with offset 0.026.
    - **Look for:** with **boring machine, K = 100** set, the dot sits on the yellow K = 100 mark (OS 22.03 %, offset 0.01); the K = 20 mark is up and to the left. Then click **10 % overshoot (own)**.
 
-```figure:tradeoff preset=borer
+```figure:tradeoff preset=borer panels=curve
 ```
 
 6. **Sensitivity: higher K means changes in the machine matter less.**
@@ -98,7 +98,7 @@ Y(s) = (K + 11s)/(s² + 12s + K) · R(s)  +  1/(s² + 12s + K) · T_d(s)
      - in the |S| plot (Fig. 4.27 bottom), the solid curve rises from bottom left and levels off at 1, with the dashed s/K shortcut hugging it at low ω;
      - in the path plot (Fig. 4.27 top), S is drawn as a point: across is its *real part* (the axis labelled Re S) and up is its *imaginary part*, the j part (Im S). As ω rises it travels from near 0 out to 1.
 
-```figure:sens preset=fig427
+```figure:sens preset=fig427 panels=path,mag
 ```
 
 ## (d) Try it

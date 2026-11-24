@@ -593,7 +593,7 @@ html.layout-tabs .tab-body > h2,html.layout-tabs .tab-sec-setup > h2,html.layout
 .step-card .pair2{grid-template-columns:repeat(2,minmax(0,1fr));gap:.45rem}
 .step-card .pair2.one{grid-template-columns:1fr}
 .step-card .fig canvas{height:min(34vh,260px)}
-.step-card .pair2.one .fig canvas{height:min(42vh,320px)}
+.step-card .pair2.one .fig canvas{height:min(52vh,440px)}
 .step-card .pair2:has(> :nth-child(3)) .fig canvas{height:min(28vh,200px)}
 .step-card .fig:has(canvas[data-fig="scene"]) canvas{height:min(24vh,180px)}
 .step-card-fig{padding-bottom:.35rem}
@@ -602,7 +602,7 @@ html.layout-tabs .tab-body > h2,html.layout-tabs .tab-sec-setup > h2,html.layout
 @media (min-width:700px) and (max-width:1399.98px) and (min-height:501px){
   .step-card .pair2{grid-template-columns:1fr}
   .step-card .fig canvas{height:min(34vh,260px)}
-  .step-card .pair2.one .fig canvas{height:min(42vh,320px)}
+  .step-card .pair2.one .fig canvas{height:min(52vh,440px)}
   .step-card .fig:has(canvas[data-fig="scene"]) canvas{height:min(24vh,180px)}
   .step-card .pair2:has(> :nth-child(3)) .fig canvas{height:min(26vh,200px)}
 }

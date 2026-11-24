@@ -17,6 +17,7 @@ interface FigRef {
   id: string;
   preset?: string;
   params?: string;
+  panels?: string[];
   title: string;
   slot: HTMLElement;
 }
@@ -49,11 +50,28 @@ function figureTitle(content: AppContent, id: string): string {
   return content.figures.find((f) => f.id === id)?.title ?? id;
 }
 
+function parsePanels(slot: HTMLElement): string[] | undefined {
+  const raw = slot.dataset.panels;
+  if (raw) {
+    const ids = raw.split(',').map((s) => s.trim()).filter(Boolean);
+    return ids.length ? ids : undefined;
+  }
+  const p = slot.dataset.params;
+  if (!p) return undefined;
+  try {
+    const v = (JSON.parse(p) as { panels?: string }).panels;
+    if (!v) return undefined;
+    const ids = String(v).split(',').map((s) => s.trim()).filter(Boolean);
+    return ids.length ? ids : undefined;
+  } catch { return undefined; }
+}
+
 function refFromSlot(slot: HTMLElement, content: AppContent): FigRef {
   return {
     id: slot.dataset.figure || '',
     preset: slot.dataset.preset || undefined,
     params: slot.dataset.params || undefined,
+    panels: parsePanels(slot),
     title: figureTitle(content, slot.dataset.figure || ''),
     slot,
   };
@@ -140,49 +158,115 @@ export function lockStepJump(ms = 900): void {
   }, ms);
 }
 
-const SETTLE_IDLE_MS = 150;
-const SETTLE_BAND = 0.13;
+const SETTLE_IDLE_MS = 200;
+const SETTLE_MOSTLY = 0.45;
+const SETTLE_APPROACH = 0.5;
+const SETTLE_APPROACH_VIS = 0.35;
 
-/** After scrolling stops, flush a nearby card in the direction of travel — never against it. */
+export interface StepCardBox { top: number; bottom: number }
+
+/** Visible overlap of a card with the content viewport below the chrome. */
+function cardVisible(c: StepCardBox, pin: number, viewH: number): number {
+  return Math.max(0, Math.min(c.bottom, pin + viewH) - Math.max(c.top, pin));
+}
+
+/**
+ * After a scroll gesture, pick the card to snap flush to the chrome.
+ * Never returns the card the gesture started on (that would snap back against the scroll).
+ * A later (or earlier) card that is mostly in view, or whose top is approaching the pin
+ * in the direction of travel, is the landing card — including a small overshoot past its top.
+ */
+export function pickStepCardTarget(
+  cards: StepCardBox[],
+  pin: number,
+  viewH: number,
+  dir: 1 | -1,
+  startIndex: number,
+): number {
+  if (!cards.length || !dir) return -1;
+  const visOf = (i: number) => cardVisible(cards[i], pin, viewH);
+  const later = dir > 0;
+  let mostly = -1, mostlyVis = -1;
+  let approach = -1, approachDist = Infinity;
+  for (let i = 0; i < cards.length; i++) {
+    if (later ? i <= startIndex : i >= startIndex) continue;
+    const vis = visOf(i);
+    const delta = cards[i].top - pin;
+    if (vis >= SETTLE_MOSTLY * viewH && vis > mostlyVis) { mostly = i; mostlyVis = vis; }
+    const approaching = later ? (delta > 8 && delta <= SETTLE_APPROACH * viewH) : (delta < -8 && -delta <= SETTLE_APPROACH * viewH);
+    if (approaching && vis >= SETTLE_APPROACH_VIS * viewH) {
+      const dist = Math.abs(delta);
+      if (dist < approachDist) { approach = i; approachDist = dist; }
+    }
+  }
+  return mostly >= 0 ? mostly : approach;
+}
+
+/** After scrolling stops, flush the landing card — never back to the one the gesture started on. */
 function attachCardSettle(): () => void {
   let lastY = window.scrollY;
-  let dir = 0;
+  let dir: 0 | 1 | -1 = 0;
+  let startIndex = -1;
   let timer = 0;
   let settling = false;
+  const boxes = () => [...document.querySelectorAll<HTMLElement>('.step-card')].map((el) => {
+    const r = el.getBoundingClientRect();
+    return { el, top: r.top, bottom: r.bottom };
+  });
+  const nearest = (list: { el: HTMLElement; top: number; bottom: number }[], pin: number) => {
+    let best = 0, bestD = Infinity;
+    list.forEach((c, i) => {
+      const d = Math.abs(c.top - pin);
+      if (d < bestD) { bestD = d; best = i; }
+    });
+    return best;
+  };
+  const trySettle = () => {
+    if (settling) return;
+    if (document.documentElement.classList.contains('step-jumping')) return;
+    if (!document.documentElement.classList.contains('has-step-cards')) return;
+    if (!dir || startIndex < 0) return;
+    const pin = headerBottom();
+    const viewH = Math.max(1, window.innerHeight - pin);
+    const list = boxes();
+    const idx = pickStepCardTarget(list, pin, viewH, dir, startIndex);
+    startIndex = -1;
+    dir = 0;
+    if (idx < 0) return;
+    const target = list[idx].el;
+    const dest = window.scrollY + (target.getBoundingClientRect().top - pin);
+    if (Math.abs(dest - window.scrollY) < 2) return;
+    settling = true;
+    window.scrollTo({ top: Math.max(0, dest), behavior: 'smooth' });
+    window.setTimeout(() => { settling = false; lastY = window.scrollY; }, 500);
+  };
   const onScroll = () => {
     if (settling) return;
     const y = window.scrollY;
     const dy = y - lastY;
-    if (Math.abs(dy) > 0.5) dir = dy > 0 ? 1 : -1;
+    if (Math.abs(dy) > 0.5) {
+      dir = dy > 0 ? 1 : -1;
+      if (startIndex < 0) {
+        // Reconstruct positions from before this delta, so a single large
+        // wheel tick or scrollBy still captures the card the gesture started on.
+        const pin = headerBottom();
+        const startBoxes = boxes().map((c) => ({ ...c, top: c.top + dy, bottom: c.bottom + dy }));
+        startIndex = nearest(startBoxes, pin);
+      }
+    }
     lastY = y;
     if (timer) window.clearTimeout(timer);
     timer = window.setTimeout(trySettle, SETTLE_IDLE_MS);
   };
-  const trySettle = () => {
-    if (document.documentElement.classList.contains('step-jumping')) return;
-    if (!document.documentElement.classList.contains('has-step-cards')) return;
-    if (!dir) return;
-    const pin = headerBottom();
-    const band = window.innerHeight * SETTLE_BAND;
-    let target: HTMLElement | null = null;
-    let best = Infinity;
-    for (const card of document.querySelectorAll<HTMLElement>('.step-card')) {
-      const delta = card.getBoundingClientRect().top - pin;
-      if (dir > 0) {
-        if (delta > 1 && delta <= band && delta < best) { best = delta; target = card; }
-      } else if (delta < -1 && delta >= -band && -delta < best) {
-        best = -delta; target = card;
-      }
-    }
-    if (!target) return;
-    settling = true;
-    const dest = window.scrollY + (target.getBoundingClientRect().top - pin);
-    window.scrollTo({ top: Math.max(0, dest), behavior: 'smooth' });
-    window.setTimeout(() => { settling = false; lastY = window.scrollY; }, 420);
+  const onScrollEnd = () => {
+    if (timer) window.clearTimeout(timer);
+    trySettle();
   };
   window.addEventListener('scroll', onScroll, { passive: true });
+  window.addEventListener('scrollend', onScrollEnd);
   return () => {
     window.removeEventListener('scroll', onScroll);
+    window.removeEventListener('scrollend', onScrollEnd);
     if (timer) window.clearTimeout(timer);
   };
 }
@@ -252,7 +336,7 @@ export function applyCardLayout(art: HTMLElement, content: AppContent, hooks: Fi
       return null;
     }
     const controls = controlsForSlot(def, host);
-    const figOpts: FigureMountOpts = { flatControls: true };
+    const figOpts: FigureMountOpts = { flatControls: true, panels: fig.panels };
     const stop = mounter(host, { ...def, lookFor: undefined }, controls, figOpts);
     const saved = savedState.get(host.dataset.stateKey || '');
     if (saved) controls.restore(saved);
@@ -314,9 +398,13 @@ export function applyCardLayout(art: HTMLElement, content: AppContent, hooks: Fi
       ?? card.querySelector('.step-card-fig') as HTMLElement | null;
     const hint = card.querySelector('.more-plots') as HTMLElement | null;
     if (!col || !hint) return;
-    const overflow = col.scrollHeight > col.clientHeight + 24;
+    const box = col.getBoundingClientRect();
+    const plotBelow = [...col.querySelectorAll<HTMLElement>('.fig, canvas[data-fig]')].some((el) => {
+      const r = el.getBoundingClientRect();
+      return r.top > box.bottom - 12;
+    });
     const atEnd = col.scrollTop + col.clientHeight >= col.scrollHeight - 16;
-    hint.hidden = !(overflow && !atEnd);
+    hint.hidden = !(plotBelow && !atEnd);
   };
 
   const paintHow = (card: HTMLElement, figs: FigRef[]) => {
@@ -490,6 +578,7 @@ export function applyCardLayout(art: HTMLElement, content: AppContent, hooks: Fi
         dataset: { skipEmbed: '1', testid: 'viz', figure: fig.id, preset: fig.preset ?? '', stateKey: `${step.n}:${i}:${fig.id}` },
       }) as HTMLElement;
       if (fig.params) host.dataset.params = fig.params;
+      if (fig.panels?.length) host.dataset.panels = fig.panels.join(',');
       hosts.push(host);
       figScroll.append(host);
       fig.slot.remove();

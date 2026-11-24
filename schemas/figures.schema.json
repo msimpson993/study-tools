@@ -130,6 +130,11 @@
                 "pow10"
               ],
               "description": "Stored range value is log10 of the quantity shown in the number box."
+            },
+            "panels": {
+              "type": "array",
+              "items": { "type": "string" },
+              "description": "Show this control only when one of these figure panels is mounted."
             }
           }
         }

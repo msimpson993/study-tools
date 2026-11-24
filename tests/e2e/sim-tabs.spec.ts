@@ -411,30 +411,49 @@ test.describe('sim-project tabbed page', () => {
     });
   }
 
-  test('scrolling 600 px at 923 never ends parked oddly', async ({ page }) => {
+  test('scrolling 600 px at 923 snaps the next card flush', async ({ page }) => {
     await page.setViewportSize({ width: 923, height: 900 });
     await open(page, 'sim-project', '#/tab/motor');
-    const card = page.getByTestId('step-card').first();
-    await card.evaluate((el) => el.scrollIntoView({ block: 'start' }));
+    const card1 = page.getByTestId('step-card').first();
+    const card2 = page.getByTestId('step-card').nth(1);
+    await card1.evaluate((el) => el.scrollIntoView({ block: 'start' }));
     await page.waitForTimeout(450);
-    const before = await page.evaluate(() => window.scrollY);
     await page.evaluate(() => window.scrollBy(0, 600));
-    await page.waitForTimeout(400);
-    const after = await page.evaluate(() => {
+    await page.waitForTimeout(800);
+    const landed = await page.evaluate(() => {
       const pin = (() => {
         const bar = document.querySelector('.tab-bar-wrap') as HTMLElement | null;
         return bar ? bar.getBoundingClientRect().bottom : 88;
       })();
-      const band = window.innerHeight * 0.13;
-      const odd = [...document.querySelectorAll<HTMLElement>('.step-card')].some((el) => {
-        const d = el.getBoundingClientRect().top - pin;
-        // a card stuck a little off flush, but not far enough to look like a free scroll
-        return Math.abs(d) > 8 && Math.abs(d) <= band;
-      });
-      return { y: window.scrollY, odd };
+      const cards = [...document.querySelectorAll<HTMLElement>('.step-card')];
+      return {
+        pin,
+        c2: cards[1] ? cards[1].getBoundingClientRect().top - pin : 999,
+      };
     });
-    expect(Math.abs((after.y - before) - 600), `moved ${after.y - before}`).toBeLessThan(40);
-    expect(after.odd, 'a card ended parked in the settle band without being flush').toBe(false);
+    expect(Math.abs(landed.c2), `card 2 top vs chrome ${landed.c2}`).toBeLessThan(24);
+  });
+
+  test('a partway wheel scroll snaps the landing card flush', async ({ page }) => {
+    await page.setViewportSize({ width: 1280, height: 900 });
+    await open(page, 'sim-project', '#/tab/motor');
+    const card1 = page.getByTestId('step-card').first();
+    const card2 = page.getByTestId('step-card').nth(1);
+    await card1.evaluate((el) => el.scrollIntoView({ block: 'start' }));
+    await page.waitForTimeout(450);
+    const chrome = await page.evaluate(() => {
+      const bar = document.querySelector('.tab-bar-wrap') as HTMLElement | null;
+      return bar ? bar.getBoundingClientRect().bottom : 88;
+    });
+    const h = await card1.evaluate((el) => el.getBoundingClientRect().height);
+    const head = card1.locator('h3');
+    const box = await head.boundingBox();
+    expect(box, 'card heading should be on screen to receive the wheel').toBeTruthy();
+    await page.mouse.move(box!.x + box!.width / 2, box!.y + Math.min(8, box!.height / 2));
+    await page.mouse.wheel(0, Math.round(h * 0.58));
+    await page.waitForTimeout(800);
+    const top = await card2.evaluate((el) => el.getBoundingClientRect().top);
+    expect(Math.abs(top - chrome), `card 2 top ${top} vs chrome ${chrome}`).toBeLessThan(24);
   });
 
   test('slider and preset changes survive lazy unmount and remount', async ({ page }) => {
@@ -515,7 +534,7 @@ test.describe('sim-project tabbed page', () => {
       await expect.poll(async () => card.locator('canvas').count(), { timeout: 5000 }).toBeGreaterThan(0);
       const nav = card.getByTestId('pics-nav');
       await expect(nav, `${tab} step 4 dots`).toBeVisible();
-      expect(await nav.locator('[data-testid=pics-dot]').count(), `${tab} step 4 dot count`).toBeGreaterThan(2);
+      expect(await nav.locator('[data-testid=pics-dot]').count(), `${tab} step 4 dot count`).toBeGreaterThanOrEqual(2);
       const vis = await card.evaluate((el) => {
         const fig = el.querySelector('[data-testid=step-card-fig]')!.getBoundingClientRect();
         const dots = el.querySelector('[data-testid=pics-nav]')!.getBoundingClientRect();
@@ -530,6 +549,32 @@ test.describe('sim-project tabbed page', () => {
       expect(vis.dotsInPanel, `${tab} step 4 dots should sit inside the figure panel`).toBe(true);
       expect(vis.hintInPanel || vis.dotsInPanel, `${tab} step 4 should show a more-plots cue or visible dots`).toBe(true);
     }
+  });
+
+  test('each step card mounts only the panels that step discusses', async ({ page }) => {
+    await page.setViewportSize({ width: 1280, height: 900 });
+
+    await open(page, 'sim-project', '#/tab/motor');
+    const motor = page.getByTestId('step-card').first();
+    await motor.evaluate((el) => el.scrollIntoView({ block: 'start' }));
+    await expect.poll(async () => motor.locator('canvas[data-fig]').count()).toBeGreaterThan(0);
+    expect(await motor.locator('canvas[data-fig]').evaluateAll((els) => els.map((e) => e.getAttribute('data-fig')))).toEqual(['plot']);
+
+    await open(page, 'sim-project', '#/tab/engine');
+    const eng1 = page.getByTestId('step-card').first();
+    await eng1.evaluate((el) => el.scrollIntoView({ block: 'start' }));
+    await expect.poll(async () => eng1.locator('canvas[data-fig]').count()).toBeGreaterThan(0);
+    const eng1ids = await eng1.locator('canvas[data-fig]').evaluateAll((els) => els.map((e) => e.getAttribute('data-fig')));
+    expect(eng1ids.sort()).toEqual(['speed', 'throttle']);
+
+    const disk4 = page.locator('[data-testid=step-card][data-step="4"]');
+    await open(page, 'sim-project', '#/tab/disk');
+    await disk4.evaluate((el) => el.scrollIntoView({ block: 'start' }));
+    await expect.poll(async () => disk4.locator('canvas[data-fig]').count()).toBeGreaterThan(0);
+    const d4 = await disk4.locator('canvas[data-fig]').evaluateAll((els) => els.map((e) => e.getAttribute('data-fig')));
+    expect(d4.sort()).toEqual(['curve', 'shock']);
+    expect(d4).not.toContain('scene');
+    expect(d4).not.toContain('seek');
   });
 
 });
