@@ -141,9 +141,9 @@ export const tunerPanels = (): FigurePanel[] => [
         text(g, '2980 rpm (2 % band)', fr.box.r - 4, fr.Y(2980) + 12, col.e(), 'right', 10);
         if (Number.isFinite(tHit)) {
           g.fillStyle = col.e(); g.beginPath(); g.arc(fr.X(t0 + tHit), fr.Y(2980), 4, 0, Math.PI * 2); g.fill();
-          text(g, `reaches 2980 at t₀ + ${f(tHit, 2)} s`, 8, 16, col.text(), 'left', 10);
         }
         g.restore();
+        if (!thumb && Number.isFinite(tHit)) text(g, `reaches 2980 at t₀ + ${f(tHit, 2)} s`, 8, 28, col.text(), 'left', 10);
         if (!thumb) text(g, cap, 8, h - 8, col.muted(), 'left', 9);
         return;
       }

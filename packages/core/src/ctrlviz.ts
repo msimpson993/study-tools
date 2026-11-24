@@ -54,7 +54,7 @@ export function drawStepResponse(g: CanvasRenderingContext2D, w: number, h: numb
   const pad = (v: number | undefined, full: number, compact: number) => thumb ? Math.min(v ?? compact, compact) : (v ?? full);
   const tight = h < 260, needHead = !!(s.ghost?.label || show.overshoot);
   const topPad = (tight && needHead) ? pad(s.pads?.t, 28, 22) : pad(s.pads?.t, 14, 8);
-  const f = rangeFrame(w, h, [0, tEnd], yr, pad(s.pads?.l, 72, 32), pad(s.pads?.r, 14, 10), topPad, pad(s.pads?.b, 44, 24));
+  const f = rangeFrame(w, h, [0, tEnd], yr, pad(s.pads?.l, 72, 32), pad(s.pads?.r, 14, 10), topPad, pad(s.pads?.b, 52, 28));
   graphAxes(g, f, [0, tEnd], yr, s.xLabel ?? 'time (s)', s.yLabel ?? 'output');
   const m = stepMetrics(t, y, { ref, final: s.final, band });
   const yf = m.yFinal;
@@ -129,7 +129,7 @@ export function drawStepResponse(g: CanvasRenderingContext2D, w: number, h: numb
       // last resort: under the axis, in the bottom pad, clear of the curve and of ±2% at the right
       trX = Math.min(midX, f.box.r - 40 - trW / 2);
       if (trX - trW / 2 < f.box.l) trX = f.box.l + 4 + trW / 2;
-      trY = f.box.b + 28;
+      trY = f.box.b + 22;
     }
     withLabelRole('axis', () => { lbl(trLab, trX, trY, col.e(), 'center'); });
   }
@@ -153,8 +153,9 @@ export function drawStepResponse(g: CanvasRenderingContext2D, w: number, h: numb
         if (x0 < f.box.l + 3 || x1 > f.box.r - 3 || y0 < f.box.t + 3 || y1 > f.box.b - 3) return true;
         if (ghostBox && x1 > ghostBox.x0 - 4 && x0 < ghostBox.x1 + 4 && y1 > ghostBox.y0 - 4 && y0 < ghostBox.y1 + 4) return true;
         // keep a CI-glyph margin off the peak marker
-        const cx = Math.max(x0 - 2, Math.min(peakX, x1 + 2)), cy = Math.max(y0 - 2, Math.min(peakY, y1 + 2));
-        if (Math.hypot(cx - peakX, cy - peakY) < 12) return true;
+        const mx = (x1 - x0) * 0.045 + 2;
+        const cx = Math.max(x0 - mx, Math.min(peakX, x1 + mx)), cy = Math.max(y0 - 2, Math.min(peakY, y1 + 2));
+        if (Math.hypot(cx - peakX, cy - peakY) < 18) return true;
         for (let i = 0; i < t.length; i++) {
           const px = f.X(t[i]); if (px < x0 - 3 || px > x1 + 3) continue;
           if (f.Y(y[i]) > y0 - 3 && f.Y(y[i]) < y1 + 3) return true;
@@ -433,7 +434,7 @@ export function drawSPlane(g: CanvasRenderingContext2D, w: number, h: number, s:
         const r = { x0: m.a * b.x0 + m.e, x1: m.a * b.x1 + m.e, y0: m.d * b.y0 + m.f, y1: m.d * b.y1 + m.f };
         return labelsOn(cv).some((o) => Math.min(o.x1, r.x1) - Math.max(o.x0, r.x0) > 1 && Math.min(o.y1, r.y1) - Math.max(o.y0, r.y0) > 1);
       };
-      const okBox = (b: { x0: number; x1: number; y0: number; y1: number }) => b.x0 > f.box.l + 2 && b.x1 < f.box.r - 2 && b.y0 > f.box.t + 2 && b.y1 < f.box.b - 2 && marks.every((p) => { const X = f.X(p.re), Y = f.Y(p.im); return X < b.x0 - 9 || X > b.x1 + 9 || Y < b.y0 - 9 || Y > b.y1 + 9; }) && !hitsRay(b) && taken.every((t) => b.x1 < t.x0 - 3 || b.x0 > t.x1 + 3 || b.y1 < t.y0 - 3 || b.y0 > t.y1 + 3) && !(b.x0 < x0 + 3 && b.x1 > x0 - 3) && !hitsLabel(b);
+      const okBox = (b: { x0: number; x1: number; y0: number; y1: number }) => b.x0 > f.box.l + 2 && b.x1 < f.box.r - 2 && b.y0 > f.box.t + 2 && b.y1 < f.box.b - 2 && marks.every((p) => { const X = f.X(p.re), Y = f.Y(p.im); return X < b.x0 - 9 || X > b.x1 + 9 || Y < b.y0 - 9 || Y > b.y1 + 9; }) && !hitsRay(b) && taken.every((t) => b.x1 < t.x0 - 8 || b.x0 > t.x1 + 8 || b.y1 < t.y0 - 8 || b.y0 > t.y1 + 8) && !(b.x0 < x0 + 3 && b.x1 > x0 - 3) && !onSigma(b.x0, b.x1, b.y0, b.y1) && !onJw(b.x0, b.x1, b.y0, b.y1) && !hitsLabel(b);
       let spot: { x0: number; y1: number } | null = null;
       let zName = 10;
       for (const zsz of [10, 9, 8, 7]) {
@@ -500,6 +501,12 @@ export function drawSPlane(g: CanvasRenderingContext2D, w: number, h: number, s:
       labelled.push({ p, lab: fmtC(p) });
     }
   }
+  const allMarks = [...(s.poles ?? []), ...(s.zeros ?? [])].map((z) => ({ X: f.X(z.re), Y: f.Y(z.im) }));
+  const hitsAnyMark = (a: number, b2: number, c: number, d: number) => allMarks.some((mk) => {
+    if (mk.X < f.box.l - 8 || mk.X > f.box.r + 8) return false;
+    const cx = Math.max(a, Math.min(mk.X, b2)), cy = Math.max(c, Math.min(mk.Y, d));
+    return Math.hypot(cx - mk.X, cy - mk.Y) < 16;
+  });
   for (const { p, lab } of labelled) {
     const X = f.X(p.re), Yp = f.Y(p.im);
     if (X < f.box.l - 6 || X > f.box.r + 6 || Yp < f.box.t - 6 || Yp > f.box.b + 6) continue;
@@ -511,14 +518,34 @@ export function drawSPlane(g: CanvasRenderingContext2D, w: number, h: number, s:
       // hard-reject anything that leaves the plot or sits on the axis titles / 'unstable'
       if (!inside(a, b2, c, d) || onSigma(a, b2, c, d) || onJw(a, b2, c, d) || hitsUnstable(a, b2, c, d) || hitsTaken(a, b2, c, d)) return 1e6;
       let n = 0;
-      // hard-reject a box that covers the pole ×, a ζ ray, or the jω axis (BUG-45)
-      if (onAxis(a, b2) || onRay(a, b2, c, d)) return 1e6;
+      // hard-reject a box that covers any pole × / zero ○, a ζ ray, or the jω axis (BUG-45)
+      if (onAxis(a, b2) || onRay(a, b2, c, d) || hitsAnyMark(a, b2, c, d)) return 1e6;
       if (a < X + 22 && b2 > X - 22 && c < Yp + 22 && d > Yp - 22) return 1e6;
       // thin right half: the pole value stays left of the ×, so it cannot meet "unstable" at any glyph width
       if (thinRight && b2 > X - 22) return 1e6;
       if (inUnstable(a, b2)) n += 80;
       return n;
     };
+    // when the right half is thin, the plot often cannot hold the value beside the ×
+    // (and the conjugate × sits opposite). Park the value in the reserved head, left of "unstable".
+    if (unstableHead && thinRight) {
+      let headPick: { x: number; y: number; align: CanvasTextAlign; a: number; b2: number; c: number; d: number; z: number } | null = null;
+      const hy = -unstableHead / 2;
+      for (const z of [10, 9, 8, 7, 6]) {
+        g.font = `${z}px system-ui, sans-serif`;
+        const tw = g.measureText(lab).width, th = z + 4;
+        const x = 4, a = x, b2 = x + tw, c = hy - th * 0.55, d = hy + th * 0.55;
+        if (unstableBox && b2 > unstableBox.x0 - 8) continue;
+        if (b2 > vw - 8) continue;
+        headPick = { x, y: hy, align: 'left', a, b2, c, d, z };
+        break;
+      }
+      if (headPick) {
+        withLabelRole('axis', () => { text(g, lab, headPick.x, headPick.y, col.b(), headPick.align, headPick.z); });
+        taken.push({ x0: headPick.a, x1: headPick.b2, y0: headPick.c, y1: headPick.d });
+        continue;
+      }
+    }
     type Cand = { x: number; y: number; align: CanvasTextAlign; a: number; b2: number; c: number; d: number; z: number };
     let pick: Cand | null = null, best = 1e6;
     for (const z of [10, 9, 8, 7, 6]) {
@@ -582,7 +609,7 @@ export function drawSPlane(g: CanvasRenderingContext2D, w: number, h: number, s:
           let n = 0;
           if (!inside(a, b2, c, d)) n += 1000;
           if (onSigma(a, b2, c, d) || onJw(a, b2, c, d) || hitsUnstable(a, b2, c, d) || hitsTaken(a, b2, c, d)) n += 400;
-          if (onAxis(a, b2) || onRay(a, b2, c, d)) n += 2000;
+          if (onAxis(a, b2) || onRay(a, b2, c, d) || hitsAnyMark(a, b2, c, d)) n += 2000;
           if (a < X + 22 && b2 > X - 22 && c < Yp + 22 && d > Yp - 22) n += 2000;
           if (thinRight && b2 > X - 22) n += 2000;
           return n;
