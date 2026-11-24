@@ -62,7 +62,7 @@ export const borerPanels = (): FigurePanel[] => [
       const ghosts = on(v, 'ghosts') ? [...borerPoles(20, Kd), ...borerPoles(100, Kd)] : [];
       const zeros = z === null ? [] : [C(z, 0)];
       let inset: { range: number; reCenter: number; label: string } | undefined;
-      if (!isThumb(g) && z !== null && w >= 260 && h >= 200) {
+      if (!isThumb(g) && z !== null && w >= 360) {
         const near = poles.reduce((a, p) => (Math.hypot(p.re - z, p.im) < Math.hypot(a.re - z, a.im) ? p : a), poles[0]);
         const d = near ? Math.hypot(near.re - z, near.im) : 0;
         if (d > 1e-6 && d < 1.2) {

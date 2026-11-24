@@ -294,14 +294,14 @@ export function drawSPlane(g: CanvasRenderingContext2D, w: number, h: number, s:
   g.restore();
   g.restore();
   if (s.inset && s.clear !== false) {
-    const iw = Math.round(Math.min(220, Math.max(128, Math.min(w, h) * 0.72, w * 0.36)));
+    const iw = Math.round(Math.max(110, Math.min(220, h - 16, w * 0.32)));
     const ih = iw;
     const right = w - (ox + vw), left = ox;
     let ix: number, iy: number;
-    if (right >= iw + 10) { ix = ox + vw + 6; iy = Math.max(8, oy + (vh - ih) / 2); }
-    else if (left >= iw + 10) { ix = 8; iy = Math.max(8, oy + (vh - ih) / 2); }
-    else { ix = Math.max(8, ox + vw - iw - 8); iy = Math.max(8, oy + vh - ih - 8); }
-    if (ix + iw <= w - 2 && iy + ih <= h - 2 && iw >= 110 && ih >= 110) {
+    if (right >= iw + 10) { ix = ox + vw + 6; iy = Math.max(4, Math.min(h - ih - 4, oy + (vh - ih) / 2)); }
+    else if (left >= iw + 10) { ix = 8; iy = Math.max(4, Math.min(h - ih - 4, oy + (vh - ih) / 2)); }
+    else { ix = Math.max(8, ox + vw - iw - 8); iy = Math.max(4, oy + vh - ih - 8); }
+    if (ix + iw <= w - 2 && iy + ih <= h - 2 && iy >= 0 && iw >= 110 && ih >= 110) {
       g.save();
       g.strokeStyle = col.strong(); g.lineWidth = 1; g.setLineDash([]);
       g.strokeRect(ix + 0.5, iy + 0.5, iw - 1, ih - 1);
