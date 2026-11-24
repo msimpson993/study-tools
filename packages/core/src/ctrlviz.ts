@@ -121,12 +121,20 @@ export function drawStepResponse(g: CanvasRenderingContext2D, w: number, h: numb
   curve(g, f, t, y, s.color ?? col.a(), 2.4);
   const tile = isTileCanvas(g);
   // other markers' verticals are obstacles for each label (BUG-58)
-  const vertXs: number[] = [];
-  if (show.timing && Number.isFinite(m.riseTime)) { vertXs.push(f.X(m.t10), f.X(m.t90)); }
-  if (show.overshoot && Number.isFinite(m.peak) && m.overshootPct > 0.05) vertXs.push(f.X(m.peakTime));
-  if (show.settling && Number.isFinite(m.settlingTime)) vertXs.push(f.X(m.settlingTime));
+  const barY0 = f.Y(yr[0]) - 14;
+  const footY = (show.timing && Number.isFinite(m.riseTime)) ? barY0 - 4 : f.Y(yr[0]);
+  const vertSegs: { x: number; y0: number; y1: number }[] = [];
+  if (show.timing && Number.isFinite(m.riseTime)) {
+    vertSegs.push({ x: f.X(m.t10), y0: f.Y(yf * 0.1), y1: f.Y(0) });
+    vertSegs.push({ x: f.X(m.t90), y0: f.Y(yf * 0.9), y1: f.Y(0) });
+  }
+  if (show.overshoot && Number.isFinite(m.peak) && m.overshootPct > 0.05)
+    vertSegs.push({ x: f.X(m.peakTime), y0: f.Y(m.peak), y1: footY });
+  if (show.settling && Number.isFinite(m.settlingTime))
+    vertSegs.push({ x: f.X(m.settlingTime), y0: f.Y(yr[1]), y1: footY });
   const hitsOtherVert = (a: number, b2: number, c: number, d: number, own: number[] = []) =>
-    vertXs.some((tx) => own.some((o) => Math.abs(tx - o) < 1.5) ? false : (tx > a - 2 && tx < b2 + 2 && d > f.box.t - 2 && c < f.box.b + 2));
+    vertSegs.some((s) => own.some((o) => Math.abs(s.x - o) < 1.5) ? false
+      : (s.x > a - 2 && s.x < b2 + 2 && d > Math.min(s.y0, s.y1) - 2 && c < Math.max(s.y0, s.y1) + 2));
   const hitsCurve = (x0: number, x1: number, y0: number, y1: number) => {
     for (let i = 1; i < t.length; i++) {
       const ax = f.X(t[i - 1]), ay = f.Y(y[i - 1]), bx = f.X(t[i]), by = f.Y(y[i]);
@@ -173,7 +181,7 @@ export function drawStepResponse(g: CanvasRenderingContext2D, w: number, h: numb
         textBox(x0Bar - 6, barY, tw, th, 'right', z),
         textBox(x1Bar + 6, barY, tw, th, 'left', z),
         textBox(midX, barY - 18, tw, th, 'center', z),
-        textBox(midX, Math.min(f.box.b + 8, barY + 18), tw, th, 'center', z),
+        textBox(midX, barY + 16, tw, th, 'center', z),
         textBox(midX - tw * 0.6, barY + 10, tw, th, 'center', z),
         textBox(midX + tw * 0.6, barY + 10, tw, th, 'center', z),
         textBox(midX - tw * 0.6, barY - 10, tw, th, 'center', z),
@@ -190,26 +198,29 @@ export function drawStepResponse(g: CanvasRenderingContext2D, w: number, h: numb
       if (trPick) break;
     }
     if (!trPick) {
-      // required Tr stays by the bar, shifted off other verticals and the origin tick
+      // required Tr stays just under the bar, off the x-tick row and the curve
       g.font = `${MIN_FONT}px system-ui,sans-serif`;
       const tw = g.measureText(trLab).width, th = MIN_FONT + 3;
-      const ys = [Math.min(f.box.b + 8, barY + 16), barY + 10, barY - 10];
-      const xs: [number, CanvasTextAlign][] = [[midX, 'center'], [x1Bar + 6, 'left'], [x0Bar - 6, 'right'], [midX + tw * 0.6, 'center'], [midX - tw * 0.6, 'center']];
+      const ys = [barY + 10, barY + 16, barY - 10];
+      const xs: [number, CanvasTextAlign][] = [[midX, 'center'], [x1Bar + 6, 'left'], [x0Bar - 6, 'right'], [midX + tw * 0.55, 'center'], [midX - tw * 0.55, 'center']];
       for (const yy of ys) for (const [xx, al] of xs) {
         const c = textBox(xx, yy, tw, th, al, MIN_FONT);
         if (c.a < f.box.l + 2 || c.b2 > f.box.r - 2) continue;
+        if (c.d > f.box.b + 4) continue;
         if (hitsOtherVert(c.a, c.b2, c.c, c.d, [x0Bar, x1Bar])) continue;
+        if (hitsCurve(c.a, c.b2, c.c, c.d)) continue;
         if (c.a < f.box.l + 18 && c.d > f.box.b - 6) continue;
         trPick = c; break;
       }
-      if (!trPick) trPick = textBox(Math.min(f.box.r - tw / 2 - 4, midX + 12), Math.min(f.box.b + 8, barY + 16), tw, th, 'center', MIN_FONT);
+      if (!trPick) trPick = textBox(midX, barY + 10, tw, th, 'center', MIN_FONT);
     }
     if (trPick) withAnchor({ kind: 'bar', x: x0Bar, y: barY, x2: x1Bar, y2: barY }, () => {
       withLabelRole('axis', () => { lbl(trLab, trPick!.x, trPick!.y, col.e(), trPick!.align, trPick!.z); });
     })
   }
   if (show.overshoot && Number.isFinite(m.peak) && m.overshootPct > 0.05) {
-    tline(g, f, [m.peakTime, m.peak], [m.peakTime, yr[0]], col.b(), 1, [2, 3]); dot(g, f, [m.peakTime, m.peak], col.b(), 4);
+    const tpFoot = (show.timing && Number.isFinite(m.riseTime)) ? f.iy(f.Y(yr[0]) - 18) : yr[0];
+    tline(g, f, [m.peakTime, m.peak], [m.peakTime, tpFoot], col.b(), 1, [2, 3]); dot(g, f, [m.peakTime, m.peak], col.b(), 4);
     const osFull = `${fmtN(m.overshootPct, 1)}% overshoot  (Tp ${fmtN(m.peakTime)} s)`;
     const osShort = `OS ${fmtN(m.overshootPct, 1)}%  Tp ${fmtN(m.peakTime)} s`;
     const peakX = f.X(m.peakTime), peakY = f.Y(m.peak), yRef = f.Y(ref);
@@ -245,8 +256,8 @@ export function drawStepResponse(g: CanvasRenderingContext2D, w: number, h: numb
         withLabelRole('axis', () => { lbl(word, c.x, c.y, col.b(), c.align, c.z); });
       });
       osBox = { x0: c.a, x1: c.b2, y: c.y };
-    } else if (!tile) {
-      // expanded must keep OS next to the peak; still skip the curve and the reference line
+    } else {
+      // required OS/Tp stays next to the peak on tiles and expanded views; still skip the curve and the reference line
       let c: TextBox | null = null;
       g.font = `${MIN_FONT}px system-ui,sans-serif`;
       const tw = g.measureText(osShort).width, th = MIN_FONT + 3;
@@ -325,7 +336,8 @@ export function drawStepResponse(g: CanvasRenderingContext2D, w: number, h: numb
   if (show.settling && m.settled && Number.isFinite(m.settlingTime)) {
     // the dashed Ts line stops just under the overshoot label when it would run through it (it made "15.7 %" read "5.7 %")
     const tx = f.X(m.settlingTime), cut = osPlaced && tx > osPlaced.x0 - 3 && tx < osPlaced.x1 + 3 ? Math.min(yr[1], f.iy(osPlaced.y + 8)) : yr[1];
-    tline(g, f, [m.settlingTime, yr[0]], [m.settlingTime, cut], col.c(), 1.5, [5, 4]);
+    const tsFoot = (show.timing && Number.isFinite(m.riseTime)) ? f.iy(f.Y(yr[0]) - 18) : yr[0];
+    tline(g, f, [m.settlingTime, tsFoot], [m.settlingTime, cut], col.c(), 1.5, [5, 4]);
     {
       const tsLab = s.settlingLabel ?? `Ts ${fmtN(m.settlingTime)} s`;
       const lineX = f.X(m.settlingTime), yRef = f.Y(ref);
