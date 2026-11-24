@@ -7,7 +7,9 @@ import { open } from './helpers';
  * their clip (the plot box when clipped, otherwise the canvas), must not sit on a drawn curve
  * (__curveLog), and must not overlap drawn markers, dashed or target lines, or inset frames
  * (__obstacleLog). Required labels named in the card text / Look-for / How to read this must be
- * present on labelled tiles and in expanded views (not on bare phone tiles).
+ * present in expanded views (tiles may omit a label that will not fit near its
+ * anchor). Anchored labels that are drawn must stay near the marker, ray, or bar
+ * they name.
  *
  * Allow known intentional overlaps or curve-on-label cases only with an explicit, commented entry.
  */
@@ -16,6 +18,7 @@ interface L {
   skipped: boolean; gen: number; cv: number; id: string; W: number; H: number;
   where?: string; step?: string;
   clip?: { x0: number; y0: number; x1: number; y1: number } | null;
+  anchor?: { kind: 'marker' | 'ray' | 'bar' | 'line'; x: number; y: number; x2?: number; y2?: number };
 }
 interface C {
   pts: { x: number; y: number }[]; width: number; W: number; H: number;
@@ -40,7 +43,8 @@ const CURVE_ALLOWLIST: { comment: string; match: (lab: L, at: string) => boolean
 
 /**
  * Labels the card text, Look-for, or How to read this tells the reader to see, checked on
- * labelled tiles (923 / 1280 / 1920) and every expanded view — not on bare phone tiles.
+ * every expanded view. Tiles may omit a label per the anchor rule, so presence is
+ * not required on tiles.
  */
 const REQUIRED: { comment: string; tab: string; step?: string; fig: string; re: RegExp; name: string }[] = [
   // figures.yaml howToRead, borer / disk s-plane: "The lightly shaded region labelled 'unstable'"
@@ -212,6 +216,42 @@ const onObstacle = (labels: L[], marks: O[], at: string) => {
   return out;
 };
 
+const distToSeg = (px: number, py: number, x1: number, y1: number, x2: number, y2: number) => {
+  const dx = x2 - x1, dy = y2 - y1, l2 = dx * dx + dy * dy;
+  if (l2 < 1e-9) return Math.hypot(px - x1, py - y1);
+  const t = Math.max(0, Math.min(1, ((px - x1) * dx + (py - y1) * dy) / l2));
+  return Math.hypot(px - (x1 + t * dx), py - (y1 + t * dy));
+};
+const distToAnchor = (lab: L) => {
+  const a = lab.anchor, x0 = lab.x0, x1 = lab.x1, y0 = lab.y0 ?? 0, y1 = lab.y1 ?? 0;
+  if (!a) return 0;
+  const clamp = (v: number, lo: number, hi: number) => Math.max(lo, Math.min(hi, v));
+  if (a.x2 !== undefined && a.y2 !== undefined) {
+    const corners: [number, number][] = [[x0, y0], [x1, y0], [x0, y1], [x1, y1]];
+    let d = Math.min(...corners.map(([x, y]) => distToSeg(x, y, a.x, a.y, a.x2!, a.y2!)));
+    for (const [ex, ey] of [[a.x, a.y], [a.x2, a.y2]] as [number, number][]) {
+      d = Math.min(d, Math.hypot(clamp(ex, x0, x1) - ex, clamp(ey, y0, y1) - ey));
+    }
+    return d;
+  }
+  return Math.hypot(clamp(a.x, x0, x1) - a.x, clamp(a.y, y0, y1) - a.y);
+};
+/** "about 12 px" for a point marker or ray; a little more for a rise / settling bar. */
+const ANCHOR_MAX = (kind: string) => (kind === 'bar' || kind === 'line' ? 24 : 16);
+const farFromAnchor = (log: L[], at: string) => {
+  const out: string[] = [];
+  for (const lab of latest(log)) {
+    if (lab.skipped || !lab.s.trim() || !lab.anchor || lab.y0 === undefined) continue;
+    const d = distToAnchor(lab), max = ANCHOR_MAX(lab.anchor.kind);
+    if (d > max) out.push(`${at} ${lab.id || 'canvas'}: “${lab.s}” is ${d.toFixed(1)} px from its ${lab.anchor.kind} (max ${max})`);
+    if (lab.anchor.kind === 'ray' && lab.anchor.x2 !== undefined) {
+      const axisX = Math.max(lab.anchor.x, lab.anchor.x2);
+      if (lab.x0 > axisX + 2) out.push(`${at} ${lab.id || 'canvas'}: “${lab.s}” sits in the right half-plane, off its ray`);
+    }
+  }
+  return out;
+};
+
 const missingRequired = (labels: L[], at: string, tab: string, step: string, fig: string | null, check: boolean) => {
   if (!check) return [];
   const labs = latest(labels).filter((e) => !e.skipped && e.s.trim());
@@ -235,7 +275,7 @@ async function waitTiles(page: Page, card: ReturnType<Page['locator']>) {
 }
 
 for (const vp of VIEWPORTS) {
-  test(`sim-project @${vp.label}: step-card tiles and expanded views keep labels apart, on the clip, off curves and markers, and complete`, async ({ page }) => {
+  test(`sim-project @${vp.label}: step-card tiles and expanded views keep labels apart, on the clip, off curves and markers, near their anchors, and complete`, async ({ page }) => {
     test.setTimeout(420_000);
     await page.addInitScript(() => { (window as any).__textLog = []; (window as any).__textCanvases = []; (window as any).__curveLog = []; (window as any).__obstacleLog = []; });
     await page.setViewportSize({ width: vp.w, height: vp.h });
@@ -258,8 +298,8 @@ for (const vp of VIEWPORTS) {
         const tileObs = takenTiles.obstacles.filter((e) => e.where === 'tile' && e.step === step);
         seen += tiles.length;
         const atTile = `${tab} step ${step} tile @${vp.label}`;
-        bad.push(...collisions(tiles, atTile), ...clipped(tiles, atTile), ...onCurve(tiles, tileCurves, atTile), ...onObstacle(tiles, tileObs, atTile));
-        bad.push(...missingRequired(tiles, atTile, tab, step, null, vp.labelled));
+        bad.push(...collisions(tiles, atTile), ...clipped(tiles, atTile), ...onCurve(tiles, tileCurves, atTile), ...onObstacle(tiles, tileObs, atTile), ...farFromAnchor(tiles, atTile));
+        bad.push(...missingRequired(tiles, atTile, tab, step, null, false));
 
         const thumbs = card.locator('.step-thumbs canvas[data-fig]');
         const tcount = await thumbs.count();
@@ -281,7 +321,7 @@ for (const vp of VIEWPORTS) {
           const expObs = takenExp.obstacles.filter((e) => e.where === 'expand');
           seen += exp.length;
           const atExp = `${tab} step ${step} expand ${fig} @${vp.label}`;
-          bad.push(...collisions(exp, atExp), ...clipped(exp, atExp), ...onCurve(exp, expCurves, atExp), ...onObstacle(exp, expObs, atExp));
+          bad.push(...collisions(exp, atExp), ...clipped(exp, atExp), ...onCurve(exp, expCurves, atExp), ...onObstacle(exp, expObs, atExp), ...farFromAnchor(exp, atExp));
           bad.push(...missingRequired(exp, atExp, tab, step, fig, true));
           await overlay.locator('[data-testid=fig-close]').click();
           await expect(overlay).toHaveCount(0, { timeout: 8_000 });

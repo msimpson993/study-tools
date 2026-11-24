@@ -1,5 +1,5 @@
 import { cssVar } from './plot';
-import { labelRole, labelsOn, labelOverlaps, freeSpot, resetLabels, withLabelRole, labelGen, type LabelRect } from './labels';
+import { labelRole, labelAnchor, labelsOn, labelOverlaps, freeSpot, resetLabels, withLabelRole, labelGen, type LabelRect, type LabelAnchor } from './labels';
 import { mountFigure, type FigurePanel, type FigureMountOpts } from './figure';
 import type { ControlSet } from './controls';
 import type { FigureDef } from './types';
@@ -184,7 +184,7 @@ export function text(g: CanvasRenderingContext2D, s: string, x: number, y: numbe
     }
     const list = labelsOn(cv);
     if (axisAligned && role === 'tick') { if (labelOverlaps(list, rect, -3)) { /* a number touching another label (within 3 px) reads as one: leave it out */ logText(g, s, f, size, x, y, base, rect, 0, true); return; } }
-    else if (axisAligned && role === 'note') {
+    else if (axisAligned && role === 'note' && !labelAnchor()) {
       // whole lines down or up, nearest first; stay inside the plot clip when one is active (else the canvas)
       const clip = currentClip(g);
       const ymin = clip ? clip.y0 + 1 : 0, ymax = clip ? clip.y1 - 1 : (cv.height || 2000);
@@ -226,7 +226,17 @@ function logText(g: CanvasRenderingContext2D, s: string, f: TextFit, size: numbe
   }
   const card = cv.closest?.('[data-testid=step-card]') as HTMLElement | null;
   const where = cv.closest?.('.fig-overlay') ? 'expand' : cv.closest?.('.tile-frame') ? 'tile' : 'other';
-  log.push({ s, x0, x1, y0, y1, W: cv.width, H: cv.height, cv: ci, id: cv.closest?.('[data-fig]')?.getAttribute('data-fig') || cv.getAttribute?.('data-figure') || cv.getAttribute?.('data-big') || cv.id || '', fitted: f.lines.length > 1 || f.size < size - 0.01 || Math.abs(f.x - x) > 0.5, role: rect?.role, moved: Math.abs(dy) > 0.01, skipped, gen: labelGen(cv), where, step: card?.getAttribute('data-step') || '', clip: currentClip(g) ?? null });
+  const src = labelAnchor();
+  let anchor: (LabelAnchor) | undefined;
+  if (src) {
+    const ax = m.a * src.x + m.c * src.y + m.e, ay = m.b * src.x + m.d * src.y + m.f;
+    anchor = { kind: src.kind, x: ax, y: ay };
+    if (src.x2 !== undefined && src.y2 !== undefined) {
+      anchor.x2 = m.a * src.x2 + m.c * src.y2 + m.e;
+      anchor.y2 = m.b * src.x2 + m.d * src.y2 + m.f;
+    }
+  }
+  log.push({ s, x0, x1, y0, y1, W: cv.width, H: cv.height, cv: ci, id: cv.closest?.('[data-fig]')?.getAttribute('data-fig') || cv.getAttribute?.('data-figure') || cv.getAttribute?.('data-big') || cv.id || '', fitted: f.lines.length > 1 || f.size < size - 0.01 || Math.abs(f.x - x) > 0.5, role: rect?.role, moved: Math.abs(dy) > 0.01, skipped, gen: labelGen(cv), where, step: card?.getAttribute('data-step') || '', clip: currentClip(g) ?? null, anchor });
 }
 
 const logObstacle = (g: CanvasRenderingContext2D, rec: { kind: 'marker' | 'line' | 'inset'; pts?: { x: number; y: number }[]; width?: number; x?: number; y?: number; r?: number; device?: boolean }) => {
@@ -374,7 +384,7 @@ export function tickLabel(v: number, step: number): string {
   const dec = Math.max(0, Math.min(8, Math.ceil(-Math.log10(Math.abs(step) || 1) - 1e-12)));
   return String(+v.toFixed(dec)).replace('-', '−');
 }
-export function graphAxes(g: CanvasRenderingContext2D, f: Frame, xr: V2, yr: V2, xLabel: string, yLabel: string, xs = 0, ys = 0, xfmt?: (x: number) => string, yfmt?: (y: number) => string) {
+export function graphAxes(g: CanvasRenderingContext2D, f: Frame, xr: V2, yr: V2, xLabel: string, yLabel: string, xs = 0, ys = 0, xfmt?: (x: number) => string, yfmt?: (y: number) => string, avoid?: { x: number; y: number; r?: number }[]) {
   const nice = (span: number, n: number) => {
     if (!(span > 0) || !(n > 0)) return span > 0 ? span : 1;
     const raw = span / n, p = Math.pow(10, Math.floor(Math.log10(raw))), m = raw / p;
@@ -419,7 +429,8 @@ export function graphAxes(g: CanvasRenderingContext2D, f: Frame, xr: V2, yr: V2,
     forTicks(Math.ceil(yr[0] / sy) * sy, yr[1], sy, (y) => {
       g.strokeStyle = col.grid(); g.beginPath(); g.moveTo(f.box.l, f.Y(y)); g.lineTo(f.box.r, f.Y(y)); g.stroke();
       const lab = yfmt ? yfmt(y) : tickLabel(y, sy), py = f.Y(y);
-      if (lab && lab !== lastY && Math.abs(py - lastPy) >= 16) {
+      const onMark = (avoid ?? []).some((mk) => Math.hypot((mk.x ?? tickX) - tickX, (mk.y) - py) < (mk.r ?? 10));
+      if (lab && lab !== lastY && Math.abs(py - lastPy) >= 16 && !onMark) {
         g.font = '10px system-ui,sans-serif';
         const tSize = Math.max(7, Math.min(10, 10 * tickRoom / Math.max(1, g.measureText(lab).width)));
         text(g, lab, tickX, py, col.muted(), 'right', tSize); lastY = lab; lastPy = py;

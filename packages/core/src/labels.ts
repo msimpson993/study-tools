@@ -8,12 +8,18 @@
  */
 export type LabelRole = 'note' | 'tick' | 'axis';
 export interface LabelRect { x0: number; x1: number; y0: number; y1: number; role: LabelRole }
+/** The thing an annotation names, in the current user space (text() logs it in device px). */
+export type LabelAnchor = { kind: 'marker' | 'ray' | 'bar' | 'line'; x: number; y: number; x2?: number; y2?: number };
 const placed = new WeakMap<object, LabelRect[]>();
 let role: LabelRole = 'note';
+let anchor: LabelAnchor | null = null;
 
 /** draw fn with every label in it given this role (nests; restores the previous role) */
 export function withLabelRole<T>(r: LabelRole, fn: () => T): T { const old = role; role = r; try { return fn(); } finally { role = old; } }
 export const labelRole = (): LabelRole => role;
+/** bind a label to the marker / ray / bar it names; nests; the label is not free to slide */
+export function withAnchor<T>(a: LabelAnchor | null, fn: () => T): T { const old = anchor; anchor = a; try { return fn(); } finally { anchor = old; } }
+export const labelAnchor = (): LabelAnchor | null => anchor;
 /** forget the labels recorded on this canvas (a new draw starts) */
 export function resetLabels(cv: object | null | undefined) { if (cv) { placed.delete(cv); gens.set(cv, (gens.get(cv) ?? 0) + 1); } }
 const gens = new WeakMap<object, number>();
