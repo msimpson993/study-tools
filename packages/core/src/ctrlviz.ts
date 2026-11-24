@@ -261,12 +261,21 @@ export function drawStepResponse(g: CanvasRenderingContext2D, w: number, h: numb
     const inR = [mk(f.box.r - 4, f.box.t + 14, 'right'), mk(f.box.r - 4, f.box.t + 28, 'right')];
     const inL = [mk(f.box.l + 4, f.box.t + 14, 'left'), mk(f.box.l + 4, f.box.t + 28, 'left')];
     const farFirst = Math.abs(topR.x - px) >= Math.abs(topL.x - px);
-    const spots = farFirst ? [topR, topL, ...inR, ...inL] : [topL, topR, ...inL, ...inR];
+    // tiles: only the top pad — if those fail, drop the ghost rather than park it on the curve
+    const spots = tile
+      ? (farFirst ? [topR, topL] : [topL, topR])
+      : (farFirst ? [topR, topL, ...inR, ...inL] : [topL, topR, ...inL, ...inR]);
     let placed = false;
     for (const sp of spots) {
       const a = sp.align === 'right' ? sp.x - gw : sp.x, b2 = a + gw, c = sp.y - 6, d = sp.y + 6;
-      if (osBox && b2 > osBox.x0 - 4 && a < osBox.x1 + 4 && d > osBox.y - 8 && c < osBox.y + 8) continue;
-      if (hitsCurve(a, b2, c, d)) continue;
+      const I = inflateBox(textBox(sp.x, sp.y, gw, 13, sp.align, 10));
+      if (osBox && I.b2 > osBox.x0 - 4 && I.a < osBox.x1 + 4 && I.d > osBox.y - 10 && I.c < osBox.y + 10) continue;
+      if (hitsCurve(I.a, I.b2, I.c, I.d)) continue;
+      if (show.overshoot && Number.isFinite(m.peak)) {
+        const px0 = f.X(m.peakTime), py0 = f.Y(m.peak);
+        const cx = Math.max(I.a, Math.min(px0, I.b2)), cy = Math.max(I.c, Math.min(py0, I.d));
+        if (Math.hypot(cx - px0, cy - py0) < 8) continue;
+      }
       ghostBox = { x0: a, x1: b2, y0: c, y1: d };
       withLabelRole('axis', () => { text(g, gLab, sp.x, sp.y, gl.color ?? col.muted(), sp.align, 10); });
       placed = true; break;
