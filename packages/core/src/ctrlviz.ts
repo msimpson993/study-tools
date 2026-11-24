@@ -326,20 +326,27 @@ export function drawSPlane(g: CanvasRenderingContext2D, w: number, h: number, s:
     const shadeL = Math.max(x0, f.box.l), shadeR = f.box.r, word = 'unstable';
     if (shadeR - shadeL > 6 && f.box.b - f.box.t > 16) {
       const hitsMarksBox = (a: number, b2: number, c: number, d: number) =>
-        marks.some((m) => m.x < b2 + 20 && m.x > a - 20 && m.y < d + 20 && m.y > c - 20);
-      const jwW = (() => { g.font = '11px system-ui,sans-serif'; return g.measureText(s.yLabel ?? 'jω (rad/s)').width * 1.25; })();
-      const jwX = f.X(0) + 6;
-      const hitsJw = (a: number, b2: number, c: number, d: number) => b2 > jwX - 2 && a < jwX + jwW + 2 && d > f.box.t - 18 && c < f.box.t + 4;
+        marks.some((m) => m.x < b2 + 16 && m.x > a - 16 && m.y < d + 16 && m.y > c - 16);
+      const hitsAxisLabs = (a: number, b2: number, c: number, d: number) => {
+        if (!cv || !m || Math.abs(m.b) > 1e-9) return false;
+        const r = { x0: m.a * a + m.e, x1: m.a * b2 + m.e, y0: m.d * c + m.f, y1: m.d * d + m.f };
+        return labelsOn(cv).some((o) => o.role === 'axis' && Math.min(o.x1, r.x1) - Math.max(o.x0, r.x0) > 2 && Math.min(o.y1, r.y1) - Math.max(o.y0, r.y0) > 2);
+      };
       const zrU = (s.zetaRays ?? []).map((zz) => Math.acos(Math.min(1, Math.max(0, zz))));
-      const hitsRayU = (a: number, b2: number, c: number, d: number) => zrU.some((t2) => [1, -1].some((sg) => { for (let k = 0; k <= 80; k++) { const q = (k / 80) * R, X = f.X(-Math.cos(t2) * q), Y = f.Y(sg * Math.sin(t2) * q); if (X > a - 4 && X < b2 + 4 && Y > c - 4 && Y < d + 4) return true; } return false; }));
+      const hitsRayU = (a: number, b2: number, c: number, d: number) => zrU.some((t2) => [1, -1].some((sg) => { for (let k = 0; k <= 80; k++) { const q = (k / 80) * R, X = f.X(-Math.cos(t2) * q), Y = f.Y(sg * Math.sin(t2) * q); if (X < f.box.l || X > f.box.r || Y < f.box.t || Y > f.box.b) continue; if (X > a - 4 && X < b2 + 4 && Y > c - 4 && Y < d + 4) return true; } return false; }));
+      const blocked = (a: number, b2: number, c: number, d: number) => hitsMarksBox(a, b2, c, d) || hitsAxisLabs(a, b2, c, d) || hitsRayU(a, b2, c, d);
+      const put = (z0: number, tw0: number, x: number, y: number) => {
+        withLabelRole('axis', () => { text(g, word, x, y, col.bad(), 'right', z0); });
+        const th = z0 * 1.15;
+        unstableBox = { x0: x - tw0 - 10, x1: x + 6, y0: y - th / 2 - 8, y1: y + th / 2 + 8 };
+      };
       const tryPlace = (z0: number, tw0: number, x: number, yMin: number, yMax: number) => {
-        const th = z0 * 1.2, twPad = tw0 * 1.25;
+        const th = z0 * 1.15;
         for (let y = yMin; y <= yMax; y += 4) {
-          const a = x - twPad, b2 = x, c = y - th / 2, d = y + th / 2;
+          const a = x - tw0, b2 = x, c = y - th / 2, d = y + th / 2;
           if (c < f.box.t + 2 || d > f.box.b - 2) continue;
-          if (hitsMarksBox(a, b2, c, d) || hitsJw(a, b2, c, d) || hitsRayU(a, b2, c, d)) continue;
-          withLabelRole('axis', () => { text(g, word, x, y, col.bad(), 'right', z0); });
-          unstableBox = { x0: a - 10, x1: b2 + 6, y0: c - 10, y1: d + 10 };
+          if (blocked(a, b2, c, d)) continue;
+          put(z0, tw0, x, y);
           return true;
         }
         return false;
@@ -350,19 +357,16 @@ export function drawSPlane(g: CanvasRenderingContext2D, w: number, h: number, s:
       let placed = false;
       if (tw + 8 <= shadeR - shadeL) placed = tryPlace(z, tw, shadeR - 6, f.box.t + 11, f.box.b - 12);
       if (!placed) {
-        // strip too narrow for a horizontal word, or the top of the shade is blocked by a pole: sit just above, still horizontal
+        // strip too narrow, or the shade is blocked: sit just above, still horizontal, clear of the jω / σ names
         g.font = '9px system-ui,sans-serif'; tw = g.measureText(word).width;
-        const x = Math.min(f.box.r - 2, Math.max(x0 + jwW + 12, shadeR - 4));
         const y = Math.max(9, f.box.t - 8);
-        if (!hitsMarksBox(x - tw * 1.25, x, y - 8, y + 8) && !hitsJw(x - tw * 1.25, x, y - 8, y + 8) && !hitsRayU(x - tw * 1.25, x, y - 8, y + 8)) {
-          withLabelRole('axis', () => { text(g, word, x, y, col.bad(), 'right', 9); });
-          unstableBox = { x0: x - tw * 1.25 - 10, x1: x + 6, y0: y - 10, y1: y + 10 };
-          placed = true;
-        } else {
-          placed = tryPlace(9, tw, shadeR - 6, f.box.t + 20, f.box.b - 12);
+        const xs = [Math.min(f.box.r - 2, shadeR - 4), f.box.r - 2, Math.min(f.box.r - 2, Math.max(f.X(0) + 20 + tw, shadeR - 4))];
+        for (const x of xs) {
+          if (!blocked(x - tw, x, y - 6, y + 6)) { put(9, tw, x, y); placed = true; break; }
         }
+        if (!placed) placed = tryPlace(9, tw, shadeR - 6, f.box.t + 20, f.box.b - 12);
+        if (!placed) { put(9, tw, Math.min(f.box.r - 2, shadeR - 4), y); placed = true; } // required label: last resort, still horizontal
       }
-      void placed;
     }
   }
   // allowed region
