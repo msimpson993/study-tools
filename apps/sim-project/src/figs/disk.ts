@@ -80,7 +80,7 @@ export const diskPanels = (): FigurePanel[] => [
       const zetaOf = (p: { re: number; im: number }) => { const wn = Math.hypot(p.re, p.im); return wn > 1e-9 ? Math.abs(p.re) / wn : 1; };
       const armZ = arm.filter((p) => Math.abs(p.im) > 0.5).map((p) => zetaOf(p));
       const rays = [...new Set(armZ.map((z) => Math.abs(z) < 0.005 ? null : Number(z.toPrecision(2))).filter((z): z is number => z != null))];
-      const topBand = 32, botBand = 24;
+      const thumb = isThumb(g), topBand = thumb ? 0 : 32, botBand = thumb ? 0 : 24;
       wipe(g, w, h);
       g.save(); g.translate(0, topBand);
       drawSPlane(g, w, h - topBand - botBand, {
