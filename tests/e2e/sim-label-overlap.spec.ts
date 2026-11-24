@@ -274,29 +274,18 @@ const tickSizeMix = (log: L[], at: string) => {
     if (e.skipped || e.role !== 'tick' || e.size === undefined || e.y0 === undefined) continue;
     const a = by.get(e.cv) ?? []; a.push(e); by.set(e.cv, a);
   }
-  const groups = (labs: L[], key: (e: L) => number, tol: number) => {
-    const used = new Set<number>(), outG: L[][] = [];
-    for (let i = 0; i < labs.length; i++) {
-      if (used.has(i)) continue;
-      const g = [labs[i]]; used.add(i);
-      const k0 = key(labs[i]);
-      for (let j = i + 1; j < labs.length; j++) {
-        if (used.has(j)) continue;
-        if (Math.abs(key(labs[j]) - k0) <= tol) { g.push(labs[j]); used.add(j); }
-      }
-      if (g.length >= 2) outG.push(g);
-    }
-    return outG;
+  const horiz = (e: L) => !!(e.anchor && Math.abs(e.anchor.y - (e.anchor.y2 ?? e.anchor.y)) < 1 && Math.abs((e.anchor.x2 ?? e.anchor.x) - e.anchor.x) > 4);
+  const vert = (e: L) => !!(e.anchor && Math.abs(e.anchor.x - (e.anchor.x2 ?? e.anchor.x)) < 1 && Math.abs((e.anchor.y2 ?? e.anchor.y) - e.anchor.y) > 4);
+  const check = (g: L[], axis: string) => {
+    if (g.length < 2) return;
+    const sizes = [...new Set(g.map((e) => Math.round((e.size ?? 0) * 10) / 10))];
+    const small = g.filter((e) => (e.size ?? 0) < 9 - 0.01);
+    if (small.length) out.push(`${at} ${g[0].id || 'canvas'}: tick “${small[0].s}” is ${small[0].size!.toFixed(1)} px (min 9)`);
+    else if (sizes.length > 1) out.push(`${at} ${g[0].id || 'canvas'}: mixed tick sizes ${sizes.join(' / ')} px on the ${axis} axis (“${g.map((e) => e.s).join('”, “')}”)`);
   };
   for (const labs of by.values()) {
-    const midX = (e: L) => ((e.x0) + (e.x1)) / 2;
-    const midY = (e: L) => (((e.y0 ?? 0) + (e.y1 ?? 0)) / 2);
-    for (const g of [...groups(labs, midX, 24), ...groups(labs, midY, 16)]) {
-      const sizes = [...new Set(g.map((e) => Math.round((e.size ?? 0) * 10) / 10))];
-      const small = g.filter((e) => (e.size ?? 0) < 9 - 0.01);
-      if (small.length) out.push(`${at} ${g[0].id || 'canvas'}: tick “${small[0].s}” is ${small[0].size!.toFixed(1)} px (min 9)`);
-      else if (sizes.length > 1) out.push(`${at} ${g[0].id || 'canvas'}: mixed tick sizes ${sizes.join(' / ')} px on one axis (“${g.map((e) => e.s).join('”, “')}”)`);
-    }
+    check(labs.filter(horiz), 'y');
+    check(labs.filter(vert), 'x');
   }
   return out;
 };
@@ -329,27 +318,52 @@ const boxDistSeg = (e: L, x1: number, y1: number, x2: number, y2: number) => {
   return best;
 };
 
-/** A label must be ≥ 4 px closer to its own anchor than to any other marker or ray (BUG-64). */
+/** A pole / ζ label must be ≥ 4 px closer (by its centre) to its own mark than to any other ×, ○, or other ray (BUG-64). Ticks are not in this check. */
 const nearerThanOthers = (log: L[], marks: O[], at: string) => {
   const out: string[] = [];
-  const labs = latest(log).filter((e) => !e.skipped && e.anchor && e.y0 !== undefined && e.s.trim());
+  const labs = latest(log).filter((e) => !e.skipped && e.role === 'axis' && e.anchor && (e.anchor.kind === 'marker' || e.anchor.kind === 'ray') && e.y0 !== undefined && e.s.trim());
   const markers = latest(marks).filter((o) => o.kind === 'marker' && o.x !== undefined && o.y !== undefined);
+  const centre = (e: L) => ({ x: (e.x0 + e.x1) / 2, y: ((e.y0 ?? 0) + (e.y1 ?? 0)) / 2 });
+  const distPt = (e: L, x: number, y: number) => { const c = centre(e); return Math.hypot(c.x - x, c.y - y); };
+  const distSeg = (e: L, x1: number, y1: number, x2: number, y2: number) => {
+    const c = centre(e);
+    const n = Math.max(8, Math.ceil(Math.hypot(x2 - x1, y2 - y1) / 4));
+    let best = Infinity;
+    for (let k = 0; k <= n; k++) { const u = k / n; best = Math.min(best, Math.hypot(c.x - (x1 + (x2 - x1) * u), c.y - (y1 + (y2 - y1) * u))); }
+    return best;
+  };
+  const dOwnOf = (lab: L) => lab.anchor!.kind === 'ray' && lab.anchor!.x2 !== undefined
+    ? distSeg(lab, lab.anchor!.x, lab.anchor!.y, lab.anchor!.x2, lab.anchor!.y2!)
+    : distPt(lab, lab.anchor!.x, lab.anchor!.y);
   for (const lab of labs) {
-    const dOwn = distToAnchor(lab);
+    const dOwn = dOwnOf(lab);
     for (const mk of markers.filter((m) => m.cv === lab.cv)) {
       if (lab.anchor!.kind === 'marker' && Math.hypot((mk.x ?? 0) - lab.anchor!.x, (mk.y ?? 0) - lab.anchor!.y) < 5) continue;
-      const d = boxDistPt(lab, mk.x!, mk.y!);
+      // a ζ ray's own poles sit on the ray — they are not "another mark"
+      if (lab.anchor!.kind === 'ray' && lab.anchor!.x2 !== undefined) {
+        const dRay = (() => {
+          const n = Math.max(8, Math.ceil(Math.hypot(lab.anchor!.x2! - lab.anchor!.x, lab.anchor!.y2! - lab.anchor!.y) / 4));
+          let best = Infinity;
+          for (let k = 0; k <= n; k++) {
+            const u = k / n;
+            best = Math.min(best, Math.hypot((mk.x ?? 0) - (lab.anchor!.x + (lab.anchor!.x2! - lab.anchor!.x) * u), (mk.y ?? 0) - (lab.anchor!.y + (lab.anchor!.y2! - lab.anchor!.y) * u)));
+          }
+          return best;
+        })();
+        if (dRay < 10) continue;
+      }
+      const d = distPt(lab, mk.x!, mk.y!);
       if (d + 0.01 < dOwn + 4)
         out.push(`${at} ${lab.id || 'canvas'}: “${lab.s}” is ${d.toFixed(1)} px from another mark, only ${dOwn.toFixed(1)} from its own ${lab.anchor!.kind} (need ≥ 4 px closer)`);
     }
+    if (lab.anchor!.kind !== 'ray') continue;
     for (const other of labs) {
       if (other.cv !== lab.cv || other === lab || other.anchor?.kind !== 'ray' || other.anchor.x2 === undefined) continue;
-      if (lab.anchor!.kind === 'ray' && lab.anchor!.x2 !== undefined
-        && Math.hypot(lab.anchor!.x - other.anchor.x, lab.anchor!.y - other.anchor.y) < 2
+      if (Math.hypot(lab.anchor!.x - other.anchor.x, lab.anchor!.y - other.anchor.y) < 2
         && Math.hypot((lab.anchor!.x2 ?? 0) - (other.anchor.x2 ?? 0), (lab.anchor!.y2 ?? 0) - (other.anchor.y2 ?? 0)) < 2) continue;
-      const d = boxDistSeg(lab, other.anchor.x, other.anchor.y, other.anchor.x2!, other.anchor.y2!);
+      const d = distSeg(lab, other.anchor.x, other.anchor.y, other.anchor.x2!, other.anchor.y2!);
       if (d + 0.01 < dOwn + 4)
-        out.push(`${at} ${lab.id || 'canvas'}: “${lab.s}” is ${d.toFixed(1)} px from another ray, only ${dOwn.toFixed(1)} from its own ${lab.anchor!.kind} (need ≥ 4 px closer)`);
+        out.push(`${at} ${lab.id || 'canvas'}: “${lab.s}” is ${d.toFixed(1)} px from another ray, only ${dOwn.toFixed(1)} from its own ray (need ≥ 4 px closer)`);
     }
   }
   return out;

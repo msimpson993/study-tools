@@ -650,13 +650,30 @@ export function drawSPlane(g: CanvasRenderingContext2D, w: number, h: number, s:
         return best;
       };
       const nearerOwn = (c: TextBox) => {
-        const dOwn = boxDistSeg(c, ax0, ay0, ax1, ay1);
-        const others = marksZ.every((p) => boxDistPt(c, f.X(p.re), f.Y(p.im)) >= dOwn + 4);
+        // how the label reads: its centre should sit closer to this ray than to a different mark or ray
+        const mx = (c.a + c.b2) / 2, my = (c.c + c.d) / 2;
+        const distSeg = (ax: number, ay: number, bx: number, by: number) => {
+          const n = Math.max(8, Math.ceil(Math.hypot(bx - ax, by - ay) / 4));
+          let best = Infinity;
+          for (let k = 0; k <= n; k++) { const u = k / n; best = Math.min(best, Math.hypot(mx - (ax + (bx - ax) * u), my - (ay + (by - ay) * u))); }
+          return best;
+        };
+        const dOwn = distSeg(ax0, ay0, ax1, ay1);
+        const onThisRay = (X: number, Y: number) => {
+          const n = Math.max(8, Math.ceil(Math.hypot(ax1 - ax0, ay1 - ay0) / 4));
+          for (let k = 0; k <= n; k++) { const u = k / n; if (Math.hypot(X - (ax0 + (ax1 - ax0) * u), Y - (ay0 + (ay1 - ay0) * u)) < 10) return true; }
+          return false;
+        };
+        const others = marksZ.every((p) => {
+          const X = f.X(p.re), Y = f.Y(p.im);
+          if (onThisRay(X, Y)) return true; // the pole this ray names
+          return Math.hypot(mx - X, my - Y) >= dOwn + 4;
+        });
         const otherRays = rays.every((t2) => {
           if (Math.abs(t2 - th) < 1e-6) return true;
           const bx = f.X(-Math.cos(t2) * qMax), by = f.Y(Math.sin(t2) * qMax);
           const by2 = f.Y(-Math.sin(t2) * qMax);
-          return boxDistSeg(c, ax0, ay0, bx, by) >= dOwn + 4 && boxDistSeg(c, ax0, ay0, bx, by2) >= dOwn + 4;
+          return distSeg(ax0, ay0, bx, by) >= dOwn + 4 && distSeg(ax0, ay0, bx, by2) >= dOwn + 4;
         });
         return others && otherRays;
       };
@@ -826,12 +843,9 @@ export function drawSPlane(g: CanvasRenderingContext2D, w: number, h: number, s:
     const realPole = Math.abs(p.im) < 1e-9;
     const staysLHP = (c: TextBox) => !(p.re < -1e-9 && c.b2 > x0 - 1);
     const nearerPole = (c: TextBox) => {
-      const cx = Math.max(c.a, Math.min(X, c.b2)), cy = Math.max(c.c, Math.min(Yp, c.d));
-      const dOwn = Math.hypot(cx - X, cy - Yp);
-      return others.every((mk) => {
-        const mx = Math.max(c.a, Math.min(mk.X, c.b2)), my = Math.max(c.c, Math.min(mk.Y, c.d));
-        return Math.hypot(mx - mk.X, my - mk.Y) >= dOwn + 4;
-      });
+      const mx = (c.a + c.b2) / 2, my = (c.c + c.d) / 2;
+      const dOwn = Math.hypot(mx - X, my - Yp);
+      return others.every((mk) => Math.hypot(mx - mk.X, my - mk.Y) >= dOwn + 4);
     };
     let pick: TextBox | null = null;
     const poleSpots = (sz: number, tw0: number, th0: number): TextBox[] => {
@@ -879,7 +893,7 @@ export function drawSPlane(g: CanvasRenderingContext2D, w: number, h: number, s:
       if (!pick) {
         // last try: uninflated mark clearance, still off every ζ ray (required values may not sit on a dashed line)
         for (const c of raw) {
-          if (!inClip(c) || !staysLHP(c) || !nearerPole(c)) continue;
+          if (!inClip(c) || !staysLHP(c)) continue;
           if (hitsOtherMark(X, Yp, c.a, c.b2, c.c, c.d)) continue;
           if (onRay(c.a, c.b2, c.c, c.d)) continue;
           pick = c; break;
