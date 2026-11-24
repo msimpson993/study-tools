@@ -353,19 +353,30 @@ export function drawSPlane(g: CanvasRenderingContext2D, w: number, h: number, s:
       };
       g.font = '10px system-ui,sans-serif';
       let z = 10, tw = g.measureText(word).width;
-      while (z > 6 && tw + 8 > shadeR - shadeL) { z -= 1; g.font = `${z}px system-ui,sans-serif`; tw = g.measureText(word).width; }
+      while (z > 6 && tw + 2 > shadeR - shadeL) { z -= 1; g.font = `${z}px system-ui,sans-serif`; tw = g.measureText(word).width; }
       let placed = false;
-      if (tw + 8 <= shadeR - shadeL) placed = tryPlace(z, tw, shadeR - 6, f.box.t + 11, f.box.b - 12);
+      // always try inside the shade first, below the jω title, even if the word is a little wider than the strip
+      placed = tryPlace(z, tw, shadeR - 6, f.box.t + 14, f.box.b - 12);
       if (!placed) {
-        // strip too narrow, or the shade is blocked: sit just above, still horizontal, clear of the jω / σ names
         g.font = '9px system-ui,sans-serif'; tw = g.measureText(word).width;
-        const y = Math.max(9, f.box.t - 8);
-        const xs = [Math.min(f.box.r - 2, shadeR - 4), f.box.r - 2, Math.min(f.box.r - 2, Math.max(f.X(0) + 20 + tw, shadeR - 4))];
-        for (const x of xs) {
-          if (!blocked(x - tw, x, y - 6, y + 6)) { put(9, tw, x, y); placed = true; break; }
+        placed = tryPlace(9, tw, shadeR - 6, f.box.t + 14, f.box.b - 12);
+      }
+      if (!placed) {
+        // sit just above the shade, still horizontal, and never on the jω / σ names
+        const yPad = Math.max(9, f.box.t - 8);
+        const xs = [Math.min(f.box.r - 2, shadeR - 4), f.box.r - 2, Math.min(f.box.r - 2, f.X(0) - 8)];
+        for (const y of [yPad, Math.max(9, f.box.t - 16), f.box.t + 14]) {
+          for (const x of xs) {
+            if (!blocked(x - tw, x, y - 6, y + 6)) { put(9, tw, x, y); placed = true; break; }
+          }
+          if (placed) break;
         }
-        if (!placed) placed = tryPlace(9, tw, shadeR - 6, f.box.t + 20, f.box.b - 12);
-        if (!placed) { put(9, tw, Math.min(f.box.r - 2, shadeR - 4), y); placed = true; } // required label: last resort, still horizontal
+      }
+      if (!placed) {
+        // required label: lowest in the shade that stays off the jω title, even if other obstacles remain
+        const ySafe = Math.max(f.box.t + 16, 28);
+        put(z, tw, shadeR - 6, Math.min(ySafe, f.box.b - 12));
+        placed = true;
       }
     }
   }
