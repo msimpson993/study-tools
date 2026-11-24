@@ -7,7 +7,9 @@ import { open } from './helpers';
  * their clip (the plot box when clipped, otherwise the canvas), must not sit on a drawn curve
  * (__curveLog), and must not overlap drawn markers, dashed or target lines, or inset frames
  * (__obstacleLog). Required labels named in the card text / Look-for / How to read this must be
- * present in expanded views, and on tiles except the one allowed Disk 5 hide.
+ * present in every expanded view, and on labelled tiles (923 and up) except the
+ * one allowed Disk 5 hide. Phone tiles (320, 390, 844×390) are bare, so
+ * required-on-tile is not asserted there.
  * Font size stays at least 9 px. "unstable" must not appear in an all-stable inset.
  * Anchored labels that are drawn must stay near the marker, ray, or bar they name.
  *
@@ -43,8 +45,10 @@ const CURVE_ALLOWLIST: { comment: string; match: (lab: L, at: string) => boolean
 
 /**
  * Labels the card text, Look-for, or How to read this tells the reader to see.
- * Required on every expanded view, and on tiles except allowTileHide (Disk 5's
- * long pole value). Optional extras such as "unstable" stay expand-only.
+ * Required on every expanded view, and on labelled tiles (923 and up) except
+ * allowTileHide (Disk 5's long pole value). Phone tiles are bare, so
+ * required-on-tile is not asserted at 320, 390, or 844×390. Optional extras
+ * such as "unstable" stay expand-only.
  */
 const REQUIRED: { comment: string; tab: string; step?: string; fig: string; re: RegExp; name: string; expandOnly?: boolean; allowTileHide?: boolean }[] = [
   // figures.yaml howToRead, borer / disk s-plane: "The lightly shaded region labelled 'unstable'"
@@ -334,7 +338,7 @@ for (const vp of VIEWPORTS) {
         const atTile = `${tab} step ${step} tile @${vp.label}`;
         bad.push(...collisions(tiles, atTile), ...clipped(tiles, atTile), ...onCurve(tiles, tileCurves, atTile), ...onObstacle(tiles, tileObs, atTile), ...farFromAnchor(tiles, atTile));
         bad.push(...tooSmall(tiles, atTile), ...unstableInInset(tiles, tileObs, atTile));
-        bad.push(...missingRequired(tiles, atTile, tab, step, null, true));
+        bad.push(...missingRequired(tiles, atTile, tab, step, null, vp.labelled));
 
         const thumbs = card.locator('.step-thumbs canvas[data-fig]');
         const tcount = await thumbs.count();

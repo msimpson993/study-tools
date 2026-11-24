@@ -1,7 +1,7 @@
 import { C, cabs, type Cx } from './dsp/complex';
 import { type TF, type StepMetrics, type Margins, type Bode, bode, margins, stepMetrics, tfEval, logspace, tfPoles, tfZeros, freqresp } from './dsp/tf';
 import { type RLocus, rlocusPolesAt, rlocusNearest } from './dsp/rlocus';
-import { col, planeFrame, rangeFrame, wipe, text, tline, polyline, dot, cross, graphAxes, curve, clipBox, withClip, beginClip, endClip, heat, axes2, tickLabel, isThumb, isTileCanvas, isPortraitPhone, isLandscapePhone, logInsetFrame, forTicks, goodStep, withPersistentLabels, type Frame, type V2 } from './viz';
+import { col, planeFrame, rangeFrame, wipe, text, tline, polyline, dot, cross, graphAxes, curve, clipBox, withClip, beginClip, endClip, heat, axes2, tickLabel, isThumb, isTileCanvas, isPortraitPhone, isLandscapePhone, logInsetFrame, forTicks, goodStep, type Frame, type V2 } from './viz';
 import { withLabelRole, withAnchor, labelsOn } from './labels';
 import type { PanelPointer } from './figure';
 
@@ -168,7 +168,6 @@ export function drawStepResponse(g: CanvasRenderingContext2D, w: number, h: numb
   let osBox: { x0: number; x1: number; y: number } | null = null;
   let trBox: { x0: number; x1: number; y0: number; y1: number } | null = null;
   const ghostWouldHit = (a: number, b2: number, c: number, d: number) => !!(ghostBox && b2 > ghostBox.x0 - 4 && a < ghostBox.x1 + 4 && d > ghostBox.y0 - 4 && c < ghostBox.y1 + 4);
-  withPersistentLabels(() => {
   if (show.timing && Number.isFinite(m.riseTime)) {
     const y10 = yf * 0.1, y90 = yf * 0.9;
     const barAt = f.Y(yr[0]) - 14;
@@ -321,8 +320,7 @@ export function drawStepResponse(g: CanvasRenderingContext2D, w: number, h: numb
       }
     }
   }
-  });
-  // assignments to osBox inside withPersistentLabels are not visible to control-flow analysis
+  // assignments to osBox / trBox inside the branches above stay narrow for CFA
   const osPlaced = osBox as { x0: number; x1: number; y: number } | null;
   const trPlaced = trBox as { x0: number; x1: number; y0: number; y1: number } | null;
   const hitsTr = (a: number, b2: number, c: number, d: number) =>
@@ -370,7 +368,6 @@ export function drawStepResponse(g: CanvasRenderingContext2D, w: number, h: numb
       }
     }
   }
-  withPersistentLabels(() => {
   if (show.settling && m.settled && Number.isFinite(m.settlingTime)) {
     // the dashed Ts line stops just under the overshoot label when it would run through it (it made "15.7 %" read "5.7 %")
     const tx = f.X(m.settlingTime), cut = osPlaced && tx > osPlaced.x0 - 3 && tx < osPlaced.x1 + 3 ? Math.min(yr[1], f.iy(osPlaced.y + 8)) : yr[1];
@@ -384,11 +381,18 @@ export function drawStepResponse(g: CanvasRenderingContext2D, w: number, h: numb
       for (const z of [10.5, 10, MIN_FONT]) {
         g.font = `${z}px system-ui,sans-serif`;
         const tw = g.measureText(tsLab).width, th = z + 3;
-        const ys = [(yLo + yHi) / 2, yHi - 12, yHi + 12, yLo - 28, yLo - 18];
-        for (const yy of ys) for (const [x, al] of [[lineX + 8, 'left'], [lineX - 8, 'right']] as [number, CanvasTextAlign][]) {
+        const yTop = Math.min(yLo, yHi), yBot = Math.max(yLo, yHi);
+        const tsNear = (c: TextBox) => {
+          const dx = lineX < c.a ? c.a - lineX : lineX > c.b2 ? lineX - c.b2 : 0;
+          const dy = c.d < yTop ? yTop - c.d : c.c > yBot ? c.c - yBot : 0;
+          return Math.hypot(dx, dy) <= 23;
+        };
+        const ys = [(yTop + yBot) / 2, yTop + 14, yBot - 18, yBot - 28, yHi - 12];
+        for (const yy of ys) for (const [x, al] of [[lineX + 8, 'left'], [lineX + 12, 'left'], [lineX - 8, 'right']] as [number, CanvasTextAlign][]) {
           const c = textBox(x, yy, tw, th, al, z);
           if (!inPlot(c.a, c.b2, c.c, c.d, 8)) continue;
           if (Math.abs(yy - yRef) < 8) continue;
+          if (!tsNear(c)) continue;
           if (osPlaced && c.b2 > osPlaced.x0 - 6 && c.a < osPlaced.x1 + 6 && c.d > osPlaced.y - 12 && c.c < osPlaced.y + 12) continue;
           if (hitsTr(c.a, c.b2, c.c, c.d)) continue;
           if (hitsCurve(c.a, c.b2, c.c, c.d)) continue;
@@ -400,12 +404,18 @@ export function drawStepResponse(g: CanvasRenderingContext2D, w: number, h: numb
       if (!tsPick) {
         g.font = `${MIN_FONT}px system-ui,sans-serif`;
         const tw = g.measureText(tsLab).width, th = MIN_FONT + 3;
-        const ys = [yHi - 14, yHi - 24, (yLo + yHi) / 2, yLo - 28, yLo - 18, yLo - 8];
-        const xs: [number, CanvasTextAlign][] = [[lineX + 10, 'left'], [lineX - 10, 'right'], [lineX + 16, 'left'], [lineX - 16, 'right']];
-        if (trPlaced) xs.unshift([trPlaced.x1 + 8, 'left']);
+        const yTop = Math.min(yLo, yHi), yBot = Math.max(yLo, yHi);
+        const tsNear = (c: TextBox) => {
+          const dx = lineX < c.a ? c.a - lineX : lineX > c.b2 ? lineX - c.b2 : 0;
+          const dy = c.d < yTop ? yTop - c.d : c.c > yBot ? c.c - yBot : 0;
+          return Math.hypot(dx, dy) <= 23;
+        };
+        const ys = [(yTop + yBot) / 2, yTop + 14, yBot - 18, yBot - 28, yHi - 12];
+        const xs: [number, CanvasTextAlign][] = [[lineX + 8, 'left'], [lineX + 12, 'left'], [lineX - 8, 'right']];
         for (const yy of ys) for (const [x, al] of xs) {
           const c = textBox(x, yy, tw, th, al, MIN_FONT);
-          if (!inPlot(c.a, c.b2, c.c, c.d, 10)) continue;
+          if (!inPlot(c.a, c.b2, c.c, c.d, 12)) continue;
+          if (!tsNear(c)) continue;
           if (osPlaced && c.b2 > osPlaced.x0 - 6 && c.a < osPlaced.x1 + 6 && c.d > osPlaced.y - 12 && c.c < osPlaced.y + 12) continue;
           if (hitsTr(c.a, c.b2, c.c, c.d)) continue;
           if (hitsOtherVert(c.a, c.b2, c.c, c.d, [lineX])) continue;
@@ -418,7 +428,6 @@ export function drawStepResponse(g: CanvasRenderingContext2D, w: number, h: numb
       });
     }
   }
-  });
   if (show.ess && Number.isFinite(m.ess) && Math.abs(m.ess) > 1e-3 * Math.max(1, Math.abs(ref))) {
     const xe = tEnd * 0.985, xLine = f.X(xe);
     tline(g, f, [xe, yf], [xe, ref], col.bad(), 3);
@@ -718,7 +727,6 @@ export function drawSPlane(g: CanvasRenderingContext2D, w: number, h: number, s:
   });
   const tile = isTileCanvas(g);
   endClip(g);
-  withPersistentLabels(() => {
   for (const { p, lab } of labelled) {
     const X = f.X(p.re), Yp = f.Y(p.im);
     if (X < f.box.l - 6 || X > f.box.r + 6 || Yp < f.box.t - 6 || Yp > f.box.b + 6) continue;
@@ -785,7 +793,6 @@ export function drawSPlane(g: CanvasRenderingContext2D, w: number, h: number, s:
     taken.push({ x0: pick.a, x1: pick.b2, y0: pick.c, y1: pick.d });
   }
   for (const zn of zetaNames) zn();
-  });
   // unanchored "unstable": in the shade if a free spot remains; drop it on a tile rather than move a pole value
   if (s.shadeUnstable !== false && !isThumb(g)) {
     const shadeL = Math.max(x0, f.box.l), shadeR = f.box.r, word = 'unstable';
