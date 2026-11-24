@@ -468,16 +468,15 @@ export function drawSPlane(g: CanvasRenderingContext2D, w: number, h: number, s:
       // hard-reject anything that leaves the plot or sits on the axis titles / 'unstable'
       if (!inside(a, b2, c, d) || onSigma(a, b2, c, d) || onJw(a, b2, c, d) || hitsUnstable(a, b2, c, d) || hitsTaken(a, b2, c, d)) return 1e6;
       let n = 0;
-      if (inUnstable(a, b2)) n += 80;
-      if (onAxis(a, b2)) n += 70;
-      if (onRay(a, b2, c, d)) n += 20;
-      // hard-reject a box that covers the pole × (BUG-45)
+      // hard-reject a box that covers the pole ×, a ζ ray, or the jω axis (BUG-45)
+      if (onAxis(a, b2) || onRay(a, b2, c, d)) return 1e6;
       if (a < X + 13 && b2 > X - 13 && c < Yp + 13 && d > Yp - 13) return 1e6;
+      if (inUnstable(a, b2)) n += 80;
       return n;
     };
     type Cand = { x: number; y: number; align: CanvasTextAlign; a: number; b2: number; c: number; d: number; z: number };
     let pick: Cand | null = null, best = 1e6;
-    for (const z of [10, 9, 8, 7]) {
+    for (const z of [10, 9, 8, 7, 6]) {
       g.font = `${z}px system-ui, sans-serif`;
       const tw = g.measureText(lab).width * 1.15, th = z + 3;
       const cands: Cand[] = [];
@@ -529,6 +528,7 @@ export function drawSPlane(g: CanvasRenderingContext2D, w: number, h: number, s:
           let n = 0;
           if (!inside(a, b2, c, d)) n += 1000;
           if (onSigma(a, b2, c, d) || onJw(a, b2, c, d) || hitsUnstable(a, b2, c, d) || hitsTaken(a, b2, c, d)) n += 400;
+          if (onAxis(a, b2) || onRay(a, b2, c, d)) n += 2000;
           if (a < X + 13 && b2 > X - 13 && c < Yp + 13 && d > Yp - 13) n += 2000;
           return n;
         };
