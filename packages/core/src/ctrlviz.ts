@@ -171,7 +171,7 @@ export function drawStepResponse(g: CanvasRenderingContext2D, w: number, h: numb
   if (show.timing && Number.isFinite(m.riseTime)) {
     const y10 = yf * 0.1, y90 = yf * 0.9;
     const barAt = f.Y(yr[0]) - 14;
-    tline(g, f, [m.t10, y10], [m.t10, f.iy(barAt - 2)], col.e(), 1, [2, 3]); tline(g, f, [m.t90, y90], [m.t90, f.iy(barAt - 2)], col.e(), 1, [2, 3]);
+    tline(g, f, [m.t10, y10], [m.t10, f.iy(barAt - 2)], col.e(), 1, [2, 3], false); tline(g, f, [m.t90, y90], [m.t90, f.iy(barAt - 2)], col.e(), 1, [2, 3], false);
     g.strokeStyle = col.e(); g.lineWidth = 2; g.beginPath(); g.moveTo(f.X(m.t10), barAt); g.lineTo(f.X(m.t90), barAt); g.stroke();
     const trLab = `Tr ${fmtN(m.riseTime)} s`;
     const midX = (f.X(m.t10) + f.X(m.t90)) / 2, barY = f.Y(yr[0]) - 14, yRef = f.Y(ref);
