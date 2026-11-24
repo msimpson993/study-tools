@@ -431,7 +431,8 @@ export function drawSPlane(g: CanvasRenderingContext2D, w: number, h: number, s:
   const onRay = (x0b: number, x1b: number, y0b: number, y1b: number) => zr.some((t2) => [1, -1].some((sg) => { for (let k = 0; k <= 80; k++) { const q = (k / 80) * R, X = f.X(-Math.cos(t2) * q), Y = f.Y(sg * Math.sin(t2) * q); if (X > x0b - 2 && X < x1b + 2 && Y > y0b - 2 && Y < y1b + 2) return true; } return false; }));
   g.font = '11px system-ui, sans-serif';
   const sw = g.measureText(s.xLabel ?? 'σ (1/s)').width, jwLab = s.yLabel ?? 'jω (rad/s)', jwW = g.measureText(jwLab).width, jwX = f.X(0) + 6;
-  const sigY = y0 - 18, sigX0 = f.box.r - 2 - sw, sigX1 = f.box.r - 2;
+  const sigY = y0 - 18, sigRight = f.box.r - 2, sigAt = (sigRight - sw > f.X(0) + 14) ? sigRight : Math.max(f.box.l + 2 + sw, f.X(0) - 10);
+  const sigX0 = sigAt - sw, sigX1 = sigAt;
   const onSigma = (a: number, b2: number, c: number, d: number) => b2 > sigX0 - 5 && a < sigX1 + 5 && d > sigY - 10 && c < sigY + 10;
   const onJw = (a: number, b2: number, c: number, d: number) => b2 > jwX - 2 && a < jwX + jwW + 2 && d > f.box.t - 18 && c < f.box.t + 4;
   const hitsUnstable = (a: number, b2: number, c: number, d: number) => !!(unstableBox && b2 > unstableBox.x0 - 6 && a < unstableBox.x1 + 6 && d > unstableBox.y0 - 6 && c < unstableBox.y1 + 6);

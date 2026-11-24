@@ -313,7 +313,13 @@ export function axes2(g: CanvasRenderingContext2D, f: Frame, xl = '', yl = '', s
   tline(g, f, [f.ix(f.box.l), 0], [f.ix(f.box.r), 0], c, 1); tline(g, f, [0, f.iy(f.box.t)], [0, f.iy(f.box.b)], c, 1);
   g.restore();
   withLabelRole('axis', () => {
-    if (xl) text(g, xl, f.box.r - 2, f.Y(0) - 18, col.muted(), 'right', 11);
+    if (xl) {
+      // keep the σ name off the jω axis and any pole that sits on it (tight views have a thin right half-plane)
+      g.font = '11px system-ui,sans-serif';
+      const tw = g.measureText(xl).width, y = f.Y(0) - 18, xR = f.box.r - 2, xAxis = f.X(0);
+      const x = (xR - tw > xAxis + 14) ? xR : Math.max(f.box.l + 2 + tw, xAxis - 10);
+      text(g, xl, x, y, col.muted(), 'right', 11);
+    }
     if (yl) text(g, yl, f.X(0) + 6, Math.max(10, f.box.t - 10), col.muted(), 'left', 11);
   });
   void step;
