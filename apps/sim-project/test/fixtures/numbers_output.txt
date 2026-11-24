@@ -249,4 +249,23 @@ engine emulated final gains, dt=0.2 ms: OS=0.00% Ts(2%, sample after last exit)=
 engine emulated final gains, dt=1.0 ms: OS=0.00% Ts(2%, sample after last exit)=1.802s Tr=1.088s; 0.98 crossing (interpolated)=1.802s
 engine handout final gains, dt=0.2 ms: OS=0.00% Ts(2%, sample after last exit)=1.816s Tr=1.091s; 0.98 crossing (interpolated)=1.816s
 engine handout final gains, dt=1.0 ms: OS=0.00% Ts(2%, sample after last exit)=1.812s Tr=1.091s; 0.98 crossing (interpolated)=1.811s
+
+======================================================================
+PASS5  caption checks at the figures' own grids [own]
+======================================================================
+motor both, 7 s axis: open moves 0.66317, closed 0.001847 rad/s; closed covers 0.2% of the y range (inset if < 30%), open 83.3%; inset note 'closed loop x359 smaller'
+motor both, 0.02 s axis: open moves 0.00993, closed 0.001839 rad/s; closed covers 15.4% of the y range (inset if < 30%), open 83.3%; inset note 'closed loop x5 smaller'
+motor w_o(0.02 s) = -0.00993 rad/s (1.49% of its final sag); w_c(0.02 s) = -0.001839
+disk fig lgKa=1.0: Ka=10.00; seek OS=0.00% Ts=1.397s; stand-in OS=0.00%; shock offset -0.02000 dip -0.019932 at 2.000s Ts=1.40s; poles [-1000.05+0.j   -17.01+0.j    -2.94+0.j]; Ka/4080 = 1/408 = 0.00
+disk fig lgKa=1.903: Ka=79.98; seek OS=17.10% Ts=0.410s; stand-in OS=16.30%; shock offset -0.00250 dip -0.002928 at 0.180s Ts=0.41s; poles [-1000.41 +0.j      -9.8 -17.43j    -9.8 +17.43j]; Ka/4080 = 1/51 = 0.02
+disk fig lgKa=2.301: Ka=199.99; seek OS=37.17% Ts=0.356s; stand-in OS=35.09%; shock offset -0.00100 dip -0.001372 at 0.104s Ts=0.36s; poles [-1001.02 +0.j      -9.49-30.15j    -9.49+30.15j]; Ka/4080 = 1/20 = 0.05
+disk fig lgKa=3.6: Ka=3981.07; seek OS=98.55% Ts=16.707s; stand-in OS=79.97%; shock offset -0.00005 not settled by 2 s; poles [-1.01953e+03  +0.j   -2.30000e-01-139.73j -2.30000e-01+139.73j]; Ka/4080 = 1/1 = 0.98
+tuner table emulated row initial (dt 1 ms, 20001-pt margins): Tr=0.450s Ts=1.963s OS=7.43% peak=1.074 | GM 25.4 dB @ 16.69 | PM 60.0 deg @ 2.95
+tuner table emulated row slower (dt 1 ms, 20001-pt margins): Tr=2.063s Ts=3.452s OS=0.39% peak=1.004 | GM 18.9 dB @ 3.27 | PM 69.4 deg @ 0.64
+tuner table emulated row final (dt 1 ms, 20001-pt margins): Tr=1.088s Ts=1.802s OS=0.00% peak=1.000 | GM 32.7 dB @ 14.96 | PM 72.0 deg @ 1.33
+
+======================================================================
+PASS5b  motor caveat: steady speed per unit setting, closed loop [own]
+======================================================================
+motor closed loop, Ka=54 Kt=1: steady speed per volt of setting = 540/541.5 = 0.99723 rad/s per V; asked-for speed = setting/Kt; short by 0.28%
 EXIT 0

@@ -75,7 +75,7 @@ Y(s) = (K + 11s)/(s² + 12s + K) · R(s)  +  1/(s² + 12s + K) · T_d(s)
    - **The rule:** a steady push of 1 leaves the machine off by 1/K. That comes from the *final value theorem*, the handout's shortcut: set s = 0 in the model to read where it ends up.
    - **Numbers:** 0.05 at K = 20 and 0.01 at K = 100.
    - **Why it never reaches zero:** the controller only fights back in proportion to the error, so some error must remain to hold off the push.
-   - **Look for:** with **rock push, K = 100** set, the push curve climbs to a peak of 0.01095 at 0.393 s and settles on the marked 1/K = 0.0100 line. Drag K to 20 and the line moves up to 0.0500.
+   - **Look for:** with **rock push, K = 100** set, the push curve climbs to a peak of 0.01095 at 0.393 s and levels off at 1/K = 0.0100 (the readout's offset). Drag K to 20 and the offset grows to 0.0500.
 
 ```figure:borer preset=push
 ```

@@ -452,6 +452,15 @@ test.describe('sim-project tabbed page', () => {
     await first.evaluate((el) => el.scrollIntoView({ block: 'start' }));
     await expect.poll(async () => first.locator('canvas').count()).toBeGreaterThan(0);
     await expect(first.locator('[data-testid=viz]')).toHaveAttribute('data-preset', 'kt2');
+    // a preset that matches the control defaults must also be saved (Motor "both loops, 7 s axis")
+    await first.locator('.st-presets [data-preset=scale]').click();
+    await expect(first.locator('[data-testid=viz]')).toHaveAttribute('data-preset', 'scale');
+    await last.evaluate((el) => el.scrollIntoView({ block: 'start' }));
+    await expect.poll(async () => last.locator('canvas').count()).toBeGreaterThan(0);
+    await expect.poll(async () => first.locator('canvas').count()).toBe(0);
+    await first.evaluate((el) => el.scrollIntoView({ block: 'start' }));
+    await expect.poll(async () => first.locator('canvas').count()).toBeGreaterThan(0);
+    await expect(first.locator('[data-testid=viz]')).toHaveAttribute('data-preset', 'scale');
   });
 
   test('phone Contents links land on their own sections, not the last card', async ({ page }) => {
@@ -494,6 +503,33 @@ test.describe('sim-project tabbed page', () => {
     });
     expect(Math.abs(landedC.cTop), `section (c) top vs chrome ${landedC.cTop}`).toBeLessThan(64);
     expect(Math.abs(landedC.lastTop), 'jump to (c) should not land on the last card').toBeGreaterThan(80);
+  });
+
+
+  test('on a 390px phone Engine step 4 and Disk step 4 keep their picture dots in view', async ({ page }) => {
+    await page.setViewportSize({ width: 390, height: 844 });
+    for (const tab of ['engine', 'disk'] as const) {
+      await open(page, 'sim-project', `#/tab/${tab}`);
+      const card = page.locator('[data-testid=step-card][data-step="4"]');
+      await card.evaluate((el) => el.scrollIntoView({ block: 'start' }));
+      await expect.poll(async () => card.locator('canvas').count(), { timeout: 5000 }).toBeGreaterThan(0);
+      const nav = card.getByTestId('pics-nav');
+      await expect(nav, `${tab} step 4 dots`).toBeVisible();
+      expect(await nav.locator('[data-testid=pics-dot]').count(), `${tab} step 4 dot count`).toBeGreaterThan(2);
+      const vis = await card.evaluate((el) => {
+        const fig = el.querySelector('[data-testid=step-card-fig]')!.getBoundingClientRect();
+        const dots = el.querySelector('[data-testid=pics-nav]')!.getBoundingClientRect();
+        const hint = el.querySelector('[data-testid=more-plots]') as HTMLElement | null;
+        const hintBox = hint && !hint.hidden ? hint.getBoundingClientRect() : null;
+        return {
+          dotsInPanel: dots.height > 0 && dots.top >= fig.top - 2 && dots.bottom <= fig.bottom + 4,
+          hintInPanel: hintBox ? hintBox.top >= fig.top - 2 && hintBox.bottom <= fig.bottom + 4 : false,
+          hintShown: !!(hint && !hint.hidden),
+        };
+      });
+      expect(vis.dotsInPanel, `${tab} step 4 dots should sit inside the figure panel`).toBe(true);
+      expect(vis.hintInPanel || vis.dotsInPanel, `${tab} step 4 should show a more-plots cue or visible dots`).toBe(true);
+    }
   });
 
 });

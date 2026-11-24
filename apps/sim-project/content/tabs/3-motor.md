@@ -62,8 +62,8 @@ closed loop:  ω/T_d = −1/(J·s + b + Km·(Ka·Kt + Kb)/Ra) = −1/(2s + 541.5
    - **Careful: more real friction does not fix sag (not in lab handout).**
      - **What sag is:** only the change in speed that the load causes.
      - **Real friction shrinks everything:** raising b shrinks that change and the motor's response to your voltage by the same factor, because both are divided by the same drag. Turned up toward infinity, the motor barely moves at all, so "zero sag" would just mean there's nothing left to sag.
-     - **The tachometer loop is different:** it pushes back only when the speed strays from the voltage you set. The amplifier boosts that voltage as well, so the motor still reaches the speed that voltage asked for (closed-loop steady gain close to 1, not shown on this page), while the load's effect shrinks by 1 + 540/1.5 = 361.
-     - **So the name is a half-truth:** "electronic friction" acts like friction only against the load, not against the voltage you set. That holds while the loop's push-back (540) is much bigger than the real drag.
+     - **The tachometer loop is different:** it pushes back only when the measured speed strays from the speed you set (the input voltage, which the tachometer's 1 V per rad/s turns into a target speed). The amplifier boosts that input as well, so the motor still ends up within 0.3 % of the speed you set (not shown on this page), while the load's effect shrinks by 1 + 540 ÷ 1.5 = 361 (= 541.5 ÷ 1.5, the new total drag over the motor's own drag): the push-back measured against the motor's own drag.
+     - **So the name is a half-truth:** "electronic friction" acts like friction only against the load, not against the speed you set. That holds while the loop's push-back (540) is much bigger than the motor's own drag (1.5).
    - **Look for:** with **Fig. 4.24: closed loop** set, the time axis runs only 0.02 s and the curve settles at −0.00185 (the readout's second line: −0.001847). The marked final value is the exact one; the handout rounds it to −0.002.
 
 ```figure:motor preset=closed

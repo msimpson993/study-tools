@@ -109,7 +109,7 @@ G(s) ≈ 311 · 3.42² · e^(−0.015s) / (s² + 6.40s + 11.70)      throttle �
 
 5. **Final design: faster and calmer together.**
    - **The settings:** response time 1.5 s raises the crossover to 1.33 rad/s, and robustness 0.72 raises the margin to 72°.
-   - **Result:** 0 % overshoot, 1.81 s settling, P = 0.0014551, I = 0.0043791.
+   - **Result:** 0 % overshoot, 1.81 s settling, P = 0.0014551, I = 0.0043791 (the handout's table).
    - **For contrast (not in lab handout):** **aggressive (own)**, robustness 0.4, gives 28 % overshoot.
    - **Look for:** with **final (1.5 s, 0.72)** set, the step curve rises to 1 without going over and settles at about 1.80 s (the readout: Ts 1.802 s, Tr 1.088 s; the handout's table: 1.81 s and 1.09 s). The PM bar reads 72.0° at 1.33 rad/s and the GM bar 32.7 dB (handout: 32.8 dB).
 

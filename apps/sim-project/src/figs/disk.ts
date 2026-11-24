@@ -61,6 +61,7 @@ export const diskPanels = (): FigurePanel[] => [
       drawStepResponse(g, w, h - head, {
         t: r.t, y: r.y, final: off, ref: 0, tEnd: 2, show: { settling: settled, overshoot: false },
         color: col.a(), yLabel: 'y(t)',
+        pads: { l: 72 },
         settlingLabel: settled ? `shock Ts ${r.m.ts.toFixed(2)} s` : undefined,
       });
       g.restore();

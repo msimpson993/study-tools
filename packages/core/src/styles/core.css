@@ -652,7 +652,7 @@ html.layout-tabs .tab-body > h2,html.layout-tabs .tab-sec-setup > h2,html.layout
   .step-card .step-host{flex:0 0 auto;min-height:0;margin:0;overflow:visible;display:flex;flex-direction:column}
   .step-card .step-host .fig-layout{flex:0 0 auto;min-height:0}
   .step-card .st-ctl{display:block}
-  .pics-nav{display:flex;justify-content:center;gap:.35rem;padding:.25rem 0 .1rem;flex:0 0 auto}
+  .pics-nav{display:flex;justify-content:center;gap:.35rem;padding:.25rem 0 .1rem;flex:0 0 auto;flex-shrink:0}
   .pics-nav[hidden]{display:none}
   .pics-nav button{width:.55rem;height:.55rem;padding:0;border:0;border-radius:50%;background:var(--muted);opacity:.4;cursor:pointer}
   .pics-nav button.on{opacity:1;background:var(--accent)}
@@ -675,7 +675,7 @@ html.layout-tabs .tab-body > h2,html.layout-tabs .tab-sec-setup > h2,html.layout
 
 /* short landscape: 40/60 inside the card, both columns scroll */
 @media (orientation:landscape) and (max-height:500px){
-  .step-card{height:calc(100dvh - var(--tab-chrome,5.5rem));max-height:calc(100dvh - var(--tab-chrome,5.5rem));padding:.4rem .6rem .45rem;margin:0 0 .4rem}
+  .step-card{height:calc(100dvh - var(--tab-chrome,5.5rem));max-height:calc(100dvh - var(--tab-chrome,5.5rem));padding:.28rem .55rem .3rem;margin:0 0 .3rem}
   .step-card-head{margin:0 0 .25rem}
   .step-card-head h3{font-size:.92rem}
   .step-card-body{
@@ -687,14 +687,15 @@ html.layout-tabs .tab-body > h2,html.layout-tabs .tab-sec-setup > h2,html.layout
   .step-card-fig{overflow:hidden}
   .step-ctl-open{display:none}
   .step-sheet,.step-sheet-backdrop{display:none !important}
-  .step-toolbar{justify-content:flex-end;align-items:center}
+  .step-toolbar{justify-content:flex-end;align-items:center;margin:0 0 .1rem}
   .step-toolbar [data-testid=play]{display:inline-flex}
   .step-card .fig-layout,.step-card .viz-slot .fig-layout{grid-template-columns:1fr}
   .step-card .pair2{grid-template-columns:1fr;display:grid}
   .step-card .pair2.pics-swipe{display:grid;overflow:visible;scroll-snap-type:none}
   .step-card .pair2.pics-swipe > .fig{flex:none}
-  /* plot first, then scene, both full width of the figure column */
-  .step-card .fig:has(canvas[data-fig="plot"]){order:-1}
+  /* lead plot first (any panel that isn't the scene picture), then the scene */
+  .step-card .fig:has(canvas[data-fig]:not([data-fig="scene"])){order:1}
+  .step-card .fig:has(canvas[data-fig="scene"]){order:2}
   .step-card .fig-anim,.step-card .fig-axes{display:none}
   .step-card .fig canvas{height:max(160px,min(42vh,12rem));min-height:160px}
   .step-card .fig:has(canvas[data-fig="scene"]) canvas{height:max(140px,min(32vh,9rem));min-height:140px}
@@ -703,5 +704,6 @@ html.layout-tabs .tab-body > h2,html.layout-tabs .tab-sec-setup > h2,html.layout
   .step-card .fig h4{font-size:.72rem;margin:0 1.6rem .08rem 0}
   .pics-nav{display:none !important}
   .step-card .st-ctl{display:grid}
+  .more-plots{padding:.15rem 0 .1rem;font-size:.72rem}
   .step-how{display:block}
 }

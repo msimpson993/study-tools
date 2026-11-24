@@ -47,6 +47,7 @@ export class ControlSet {
   /** Only values that differ from defaults, as a query string. */
   serialize(): string {
     const q = new URLSearchParams();
+    if (this.active) q.set('preset', this.active);
     for (const d of this.defs) if (this.values[d.id] !== d.default) q.set(d.id, String(this.values[d.id]));
     return q.toString();
   }

@@ -71,7 +71,7 @@ shock:  Y/T_d = −G₂/(1 + Ka·G₁·G₂)       (the handout prints it withou
 4. **A shock leaves an offset of −1/(5·Ka).**
    - **Why:** a steady push needs a steady counter-force, and the loop only makes force from error.
    - **At Ka = 80:** the head dips to −0.0029 at 0.18 s and settles at −0.0025 (the handout's −2.5×10⁻³).
-   - **Look for:** with **shock, Ka = 80 (Fig. 4.31)** set, the shock curve drops below zero, dips to −0.0029 and settles on the marked −0.0025 line within about 0.41 s.
+   - **Look for:** with **shock, Ka = 80 (Fig. 4.31)** set, the shock curve drops below zero, dips to −0.0029 and levels off at −0.0025 (the readout's offset), settling within about 0.41 s (the marked shock Ts).
 
 ```figure:disk preset=shock
 ```

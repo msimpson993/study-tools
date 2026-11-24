@@ -34,6 +34,7 @@ export interface StepViewSpec {
   /** settling band fraction (default 0.02) */ band?: number;
   tEnd?: number; yRange?: V2; xLabel?: string; yLabel?: string; color?: string;
   /** override the Ts / ess marker text */ settlingLabel?: string; essLabel?: string;
+  /** left, right, top, bottom pads for the plot frame */ pads?: { l?: number; r?: number; t?: number; b?: number };
 }
 /** Draw a step response. Returns the metrics used for the markers (or null when the data has fewer than 3 samples). */
 export function drawStepResponse(g: CanvasRenderingContext2D, w: number, h: number, s: StepViewSpec): StepMetrics | null {
@@ -45,7 +46,7 @@ export function drawStepResponse(g: CanvasRenderingContext2D, w: number, h: numb
   let lo = 0, hiY = -Infinity;
   for (const v of all) { if (v < lo) lo = v; if (v > hiY) hiY = v; }
   const yr: V2 = s.yRange ?? [lo - 0.05 * Math.abs(ref), Math.max(ref * 1.15, hiY * 1.06)];
-  const f = rangeFrame(w, h, [0, tEnd], yr, 46, 14, 10, 32);
+  const f = rangeFrame(w, h, [0, tEnd], yr, s.pads?.l ?? 46, s.pads?.r ?? 14, s.pads?.t ?? 10, s.pads?.b ?? 32);
   graphAxes(g, f, [0, tEnd], yr, s.xLabel ?? 'time (s)', s.yLabel ?? 'output');
   const m = stepMetrics(t, y, { ref, final: s.final, band });
   const yf = m.yFinal;

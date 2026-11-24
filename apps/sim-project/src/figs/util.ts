@@ -6,7 +6,14 @@ export const num = (v: V, k: string, d = 0) => (typeof v[k] === 'number' ? (v[k]
 export const str = (v: V, k: string, d = '') => (v[k] === undefined ? d : String(v[k]));
 export const on = (v: V, k: string) => v[k] === true || v[k] === 'true' || v[k] === 1;
 /** Fixed decimals with a real minus sign; a value that rounds to zero prints as 0. */
-export const f = (x: number, d = 2) => (Number.isFinite(x) ? (Math.abs(x) < 0.5 * 10 ** -d ? 0 : x).toFixed(d).replace('-', '−') : '—');
+export const f = (x: number, d = 2) => {
+  if (!Number.isFinite(x)) return '—';
+  const k = 10 ** d;
+  // half-up, so 0.4095 at 3 d.p. becomes 0.410 (JS toFixed would print 0.409)
+  const r = Math.sign(x) * Math.round(Math.abs(x) * k + 1e-10) / k;
+  if (Math.abs(r) < 0.5 * 10 ** -d) return (0).toFixed(d);
+  return r.toFixed(d).replace('-', '−');
+};
 export const lin = (a: number, b: number, n: number) => Array.from({ length: n }, (_, i) => a + ((b - a) * i) / (n - 1));
 
 /** Comma-separated figure params (`K: [20, 100]` is joined to "20,100" by the content loader). */

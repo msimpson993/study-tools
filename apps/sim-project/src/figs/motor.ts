@@ -82,7 +82,7 @@ function drawMotorInset(
   g.lineWidth = 1;
   g.beginPath(); g.rect(4, 2, w - 8, insetH - 4); g.fill(); g.stroke();
   text(g, s.note, 12, 13, col.text(), 'left', 10);
-  const fr = rangeFrame(w, insetH, [0, s.tEnd], s.yr, 52, 12, 28, 26);
+  const fr = rangeFrame(w, insetH, [0, s.tEnd], s.yr, 78, 12, 30, 36);
   graphAxes(g, fr, [0, s.tEnd], s.yr, 'time (s)', 'ω (rad/s)');
   curve(g, fr, s.t, s.y, s.color, 2);
   tline(g, fr, [0, s.final], [s.tEnd, s.final], s.color, 1, [5, 4]);

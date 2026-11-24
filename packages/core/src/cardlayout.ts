@@ -314,8 +314,6 @@ export function applyCardLayout(art: HTMLElement, content: AppContent, hooks: Fi
       ?? card.querySelector('.step-card-fig') as HTMLElement | null;
     const hint = card.querySelector('.more-plots') as HTMLElement | null;
     if (!col || !hint) return;
-    const nav = card.querySelector('.pics-nav') as HTMLElement | null;
-    if (nav && !nav.hidden) { hint.hidden = true; return; }
     const overflow = col.scrollHeight > col.clientHeight + 24;
     const atEnd = col.scrollTop + col.clientHeight >= col.scrollHeight - 16;
     hint.hidden = !(overflow && !atEnd);
@@ -360,7 +358,15 @@ export function applyCardLayout(art: HTMLElement, content: AppContent, hooks: Fi
       const dots = items.map((it, i) => {
         const title = it.fig.querySelector('h4')?.textContent || `Picture ${i + 1}`;
         const btn = h('button', { type: 'button', 'aria-label': title, dataset: { testid: 'pics-dot', index: String(i) } });
-        btn.addEventListener('click', () => { it.pair.scrollTo({ left: it.fig.offsetLeft, behavior: 'smooth' }); });
+        btn.addEventListener('click', () => {
+          const scroll = card.querySelector('.step-fig-scroll') as HTMLElement | null;
+          const host = it.fig.closest('.step-host') as HTMLElement | null;
+          if (scroll && host) {
+            const sR = scroll.getBoundingClientRect(), hR = host.getBoundingClientRect();
+            scroll.scrollTo({ top: scroll.scrollTop + (hR.top - sR.top), behavior: 'smooth' });
+          }
+          it.pair.scrollTo({ left: it.fig.offsetLeft, behavior: 'smooth' });
+        });
         nav.append(btn);
         return { btn, ...it };
       });
@@ -489,13 +495,14 @@ export function applyCardLayout(art: HTMLElement, content: AppContent, hooks: Fi
       fig.slot.remove();
     });
     const nav = h('div', { class: 'pics-nav', hidden: true, 'aria-label': 'Pictures', dataset: { testid: 'pics-nav' } });
-    figScroll.append(nav);
+    // nav is pinned under the scroll so the dots stay visible on phones
     const howBody = h('div', { class: 'step-how-body' });
     const howBox = h('details', { class: 'step-how', dataset: { testid: 'how-to-read' } },
       h('summary', null, 'How to read this'),
       howBody);
     figScroll.append(howBox);
     figCol.append(figScroll);
+    figCol.append(nav);
     figCol.append(h('div', { class: 'more-plots', hidden: true, dataset: { testid: 'more-plots' } }, 'more plots ↓'));
     const sheetBody = h('div', { class: 'step-sheet-body', dataset: { testid: 'step-controls-body' } });
     const sheet = h('div', {
