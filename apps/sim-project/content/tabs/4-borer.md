@@ -114,7 +114,7 @@ Y(s) = (K + 11s)/(s² + 12s + K) · R(s)  +  1/(s² + 12s + K) · T_d(s)
 | Without the rate term (not in lab handout) | **no rate term (own)** | Kd = 0: 85 % overshoot, T_s 7.6 s |
 | The scripts, line by line | **Fig. 4.25 (command step)** and **Fig. 4.26 (rock push)** on the script figure in Check your work | each line lights its block |
 
-**Sliders to play with:** K (5–400), input (command, push, both), the rate gain Kd (0–30; the handout fixes 11).
+**Sliders to play with:** K (5–400), the rate gain Kd (0–30; the handout fixes 11), and the *K = 20, 100 ghosts* switch (the grey K = 20 curve on the step plot; the K = 20 and K = 100 poles on the s-plane).
 
 | Knob | Turn it up | Turn it down |
 |---|---|---|

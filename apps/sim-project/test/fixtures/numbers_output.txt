@@ -268,4 +268,23 @@ tuner table emulated row final (dt 1 ms, 20001-pt margins): Tr=1.088s Ts=1.802s 
 PASS5b  motor caveat: steady speed per unit setting, closed loop [own]
 ======================================================================
 motor closed loop, Ka=54 Kt=1: steady speed per volt of setting = 540/541.5 = 0.99723 rad/s per V; asked-for speed = setting/Kt; short by 0.28%
+
+======================================================================
+PASS5c  motor insets at steps 5-6 and borer Ts at the figure grid [own]
+======================================================================
+motor sweep Ka=7.5, both, 7 s axis: open at 7 s -0.6632; closed sag -0.013072; inset note 'closed loop x51 smaller'
+motor heavy J=4, both, 7 s axis: open at 7 s -0.6184; closed sag -0.001847; inset note 'closed loop x335 smaller'
+borer K=100 on the figure grid (4 s, 8001 points): Ts = 0.6665 s (a half-way grid point: 0.667 rounded half-up; exact 0.666 s above)
+
+======================================================================
+PASS5d  disk s-plane zeta label at steps 3 and 5 [own]
+======================================================================
+disk lgKa=1.903: arm pair -9.80 +/- 17.43j, zeta = 0.4900 -> label zeta 0.49; coil pole -1000.4
+disk lgKa=3.6: arm pair -0.23 +/- 139.73j, zeta = 0.0017 -> label zeta ~ 0 (under 0.005, no ray); coil pole -1019.5
+
+======================================================================
+PASS5e  disk Ka=80 overshoot: tradeoff (exact 80) vs seek preset (lgKa 1.903) [own]
+======================================================================
+disk tradeoff, Ka = 80 exactly = 80.0000 (3 s, 4001 points): OS = 17.1072% -> readout 17.11%
+disk seek preset, Ka = 10^1.903 = 79.9834 (3 s, 4001 points): OS = 17.1030% -> readout 17.10%
 EXIT 0

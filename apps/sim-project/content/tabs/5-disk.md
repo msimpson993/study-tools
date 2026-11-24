@@ -63,7 +63,7 @@ shock:  Y/T_d = −G₂/(1 + Ka·G₁·G₂)       (the handout prints it withou
    - **The stand-in (not in lab handout):** drop the coil but keep its steady gain 5, and the loop becomes 5·Ka/(s² + 20s + 5·Ka). That is a spring of stiffness 5·Ka with a damper of 20.
    - **Damping ratio:** its *damping ratio* ζ = 10/√(5·Ka) (how strongly swings are damped; below 1 means overshoot) is 1.41 at Ka = 10 and 0.50 at Ka = 80.
    - **How close:** the stand-in predicts 16.3 % overshoot, against the real 17.1 %.
-   - **Look for:** with **Ka = 80, coil dropped** set, the dashed stand-in curve sits almost on top of the real one, and the readout gives both: OS 17.10 % and stand-in 16.30 %. In the s-plane, the arm's pair sits at −9.80 ± 17.43j with ζ 0.49 (the stand-in's is 0.50), and the coil's pole is far off scale at −1000.4.
+   - **Look for:** with **Ka = 80, coil dropped** set, the dashed stand-in curve sits almost on top of the real one, and the readout gives both: OS 17.10 % and stand-in 16.30 %. In the s-plane, the arm's pair sits at −9.80 ± 17.43j (the upper pole is labelled −9.8 + j17.43), its ζ ray is labelled 0.49, and the coil's pole is far off scale at −1000.4.
 
 ```figure:disk preset=ka80stand panels=seek,splane
 ```
@@ -77,7 +77,7 @@ shock:  Y/T_d = −G₂/(1 + Ka·G₁·G₂)       (the handout prints it withou
 ```
 
    - **The same trade as step 2:** halving that offset means doubling Ka, which means more swing on every seek.
-   - **Look for:** with **disk head, Ka = 80** set, the dot sits on the yellow Ka = 80 mark (seek overshoot 17.1 %, shock offset 0.0025); the Ka = 10 mark has no overshoot but an offset of 0.02.
+   - **Look for:** with **disk head, Ka = 80** set, the dot sits on the yellow Ka = 80 mark (seek overshoot about 17.1 %, shock offset 0.0025; the readout's 17.11 % is at exactly Ka = 80, while the seek plots read 17.10 % because their log slider lands on Ka = 79.98); the Ka = 10 mark has no overshoot but an offset of 0.02.
 
 ```figure:tradeoff preset=disk panels=curve
 ```
@@ -86,7 +86,7 @@ shock:  Y/T_d = −G₂/(1 + Ka·G₁·G₂)       (the handout prints it withou
    - **Why the stand-in misses it:** the two-part stand-in is stable for every Ka. The real loop has three lags in a ring, and the coil's 1 ms lag is the third. Together they can add up to the 180° of lag that makes a loop swing forever (lag and 180° as in the Engine tab).
    - **The test:** the *Routh test* (a shortcut that checks stability straight from the polynomial's coefficients) says s³ + 1020s² + 20000s + 5000·Ka is stable only while 1020 × 20000 > 5000·Ka, so Ka < 4080.
    - **At the ceiling:** the head rings forever at √20000 = 141 rad/s.
-   - **Look for:** with **near the ceiling (own)** set (Ka = 3981), the real seek curve rings fast and barely dies out (about 98.5 % overshoot; settling takes about 16.7 s, long after the plot ends). The dashed stand-in swings hard too (about 80 % overshoot) but dies out within 0.38 s. Only the real loop is close to ringing forever. In the s-plane, the arm's pair sits almost on the jω axis at −0.23 ± 139.7j (its ζ rounds to 0), and the readout says Ka = 3981 is 0.98 of the ceiling, ringing at 141.4 rad/s there.
+   - **Look for:** with **near the ceiling (own)** set (Ka = 3981), the real seek curve rings fast and barely dies out (the readout's OS 98.55 %, which the plot's label rounds to 98.6 %; settling takes about 16.7 s, long after the plot ends). The dashed stand-in swings hard too (about 80 % overshoot) but dies out within 0.38 s. Only the real loop is close to ringing forever. In the s-plane, the arm's pair sits almost on the jω axis at −0.23 ± 139.73j (the upper pole is labelled −0.23 + j139.73). Its ζ is only 0.0017, so the panel draws no ζ ray and says 'ζ ≈ 0'. The readout says Ka = 3981 is 0.98 of the ceiling; its ω = 141.4 rad/s is the rate the loop would ring at on the ceiling itself (this pair rings at 139.7).
 
 ```figure:disk preset=limit panels=seek,splane
 ```
@@ -104,7 +104,7 @@ shock:  Y/T_d = −G₂/(1 + Ka·G₁·G₂)       (the handout prints it withou
 | The ceiling (not in lab handout) | **near the ceiling (own)** | real loop barely dies out at Ka = 3981; the stand-in swings but settles |
 | The scripts, line by line | **Fig. 4.30 (disk seek)** and **Fig. 4.31 (disk shock)** on the script figure in Check your work | each line lights its block |
 
-**Sliders to play with:** Ka (log scale, 1 to about 5000), input (seek, shock, both), *drop the coil* (overlays the two-part stand-in).
+**Sliders to play with:** Ka (log scale, 1 to about 5000), *drop the coil* (overlays the two-part stand-in).
 
 | Knob | Turn it up | Turn it down |
 |---|---|---|
