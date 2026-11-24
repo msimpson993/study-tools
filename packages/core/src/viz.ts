@@ -117,14 +117,14 @@ export function text(g: CanvasRenderingContext2D, s: string, x: number, y: numbe
   // keep clear of the labels already drawn on this canvas (see labels.ts): ticks give way, notes slide by whole lines, axis names stay
   const m = typeof g.getTransform === 'function' ? g.getTransform() : null, cv = g.canvas as HTMLCanvasElement | undefined, role = labelRole();
   // compact / too-small tiles: drop crowded notes and axis titles; keep ticks, UNSTABLE, and persistent keys
-  if (isThumb(g) && !persistLabels && (role === 'note' || role === 'axis') && !/UNSTABLE/i.test(s)) { logText(g, s, f, size, x, null, 0, true); return; }
+  if (isThumb(g) && !persistLabels && (role === 'note' || role === 'axis') && !/UNSTABLE/i.test(s)) { logText(g, s, f, size, x, y, base, null, 0, true); return; }
   let rect: LabelRect | null = null, dy = 0, dx = 0;
   if (m && cv && Math.abs(m.b) < 1e-9 && Math.abs(m.c) < 1e-9 && m.d > 0) {
     const n = f.lines.length, z = f.size, ext = base === 'top' || base === 'hanging' ? [0, 1.1] : base === 'middle' ? [-0.55, 0.55] : [-0.9, 0.25];
     const u0 = y - ((n - 1) / 2) * z * 1.15 + ext[0] * z, u1 = y + ((n - 1) / 2) * z * 1.15 + ext[1] * z;
     rect = { x0: m.a * f.x0 + m.e, x1: m.a * f.x1 + m.e, y0: m.d * u0 + m.f, y1: m.d * u1 + m.f, role };
     const list = labelsOn(cv);
-    if (role === 'tick') { if (labelOverlaps(list, rect, -3)) { /* a number touching another label (within 3 px) reads as one: leave it out */ logText(g, s, f, size, x, rect, 0, true); return; } }
+    if (role === 'tick') { if (labelOverlaps(list, rect, -3)) { /* a number touching another label (within 3 px) reads as one: leave it out */ logText(g, s, f, size, x, y, base, rect, 0, true); return; } }
     else if (role === 'note') {
       // whole lines down or up, nearest first, as far as the canvas goes; a note that only hits the numbers at its left end may step right
       const L = z * 1.15 * m.d, H = cv.height || 2000, dys = [0]; for (let k = 1; k * L < H; k++) dys.push(k * L, -k * L);
@@ -137,16 +137,29 @@ export function text(g: CanvasRenderingContext2D, s: string, x: number, y: numbe
   g.fillStyle = color; g.font = `${f.size}px system-ui,sans-serif`; g.textAlign = align; g.textBaseline = base;
   if (f.lines.length === 1) g.fillText(s, xx, yy);
   else f.lines.forEach((l, i) => g.fillText(l, xx, yy + (i - (f.lines.length - 1) / 2) * f.size * 1.15));
-  logText(g, s, f, size, x, rect, dy || dx, false);
+  logText(g, s, f, size, x, y, base, rect, dy || dx, false);
 }
-/** Test hook: when window.__textLog is an array, every label drawn records its extent against the canvas (device px). */
-function logText(g: CanvasRenderingContext2D, s: string, f: TextFit, size: number, x: number, rect: LabelRect | null = null, dy = 0, skipped = false) {
+/** Test hook: when window.__textLog is an array, every label drawn records its extent against the canvas (device px), including rotated axis titles. */
+function logText(g: CanvasRenderingContext2D, s: string, f: TextFit, size: number, x: number, y: number, base: CanvasTextBaseline, rect: LabelRect | null = null, dy = 0, skipped = false) {
   const log = (globalThis as unknown as { __textLog?: unknown[] }).__textLog; if (!Array.isArray(log)) return;
   const m = g.getTransform(); const cv = g.canvas as HTMLCanvasElement;
-  if (Math.abs(m.b) > 1e-9 || Math.abs(m.c) > 1e-9) return;
   const cvs = (globalThis as unknown as { __textCanvases?: HTMLCanvasElement[] }).__textCanvases; let ci = -1;
   if (Array.isArray(cvs)) { ci = cvs.indexOf(cv); if (ci < 0) { cvs.push(cv); ci = cvs.length - 1; } }
-  log.push({ s, x0: rect ? rect.x0 : m.a * f.x0 + m.e, x1: rect ? rect.x1 : m.a * f.x1 + m.e, W: cv.width, H: cv.height, cv: ci, id: cv.closest?.('[data-fig]')?.getAttribute('data-fig') || cv.getAttribute?.('data-figure') || cv.getAttribute?.('data-big') || cv.id || '', fitted: f.lines.length > 1 || f.size < size - 0.01 || Math.abs(f.x - x) > 0.5, y0: rect?.y0, y1: rect?.y1, role: rect?.role, moved: Math.abs(dy) > 0.01, skipped, gen: labelGen(cv) });
+  const n = f.lines.length, z = f.size;
+  const ext = base === 'top' || base === 'hanging' ? [0, 1.1] : base === 'middle' ? [-0.55, 0.55] : [-0.9, 0.25];
+  const u0 = y - ((n - 1) / 2) * z * 1.15 + ext[0] * z, u1 = y + ((n - 1) / 2) * z * 1.15 + ext[1] * z;
+  let x0: number, x1: number, y0: number, y1: number;
+  if (rect && Math.abs(m.b) < 1e-9 && Math.abs(m.c) < 1e-9) { x0 = rect.x0; x1 = rect.x1; y0 = rect.y0; y1 = rect.y1; }
+  else {
+    x0 = Infinity; x1 = -Infinity; y0 = Infinity; y1 = -Infinity;
+    for (const px of [f.x0, f.x1]) for (const py of [u0, u1]) {
+      const X = m.a * px + m.c * py + m.e, Y = m.b * px + m.d * py + m.f;
+      if (X < x0) x0 = X; if (X > x1) x1 = X; if (Y < y0) y0 = Y; if (Y > y1) y1 = Y;
+    }
+  }
+  const card = cv.closest?.('[data-testid=step-card]') as HTMLElement | null;
+  const where = cv.closest?.('.fig-overlay') ? 'expand' : cv.closest?.('.tile-frame') ? 'tile' : 'other';
+  log.push({ s, x0, x1, y0, y1, W: cv.width, H: cv.height, cv: ci, id: cv.closest?.('[data-fig]')?.getAttribute('data-fig') || cv.getAttribute?.('data-figure') || cv.getAttribute?.('data-big') || cv.id || '', fitted: f.lines.length > 1 || f.size < size - 0.01 || Math.abs(f.x - x) > 0.5, role: rect?.role, moved: Math.abs(dy) > 0.01, skipped, gen: labelGen(cv), where, step: card?.getAttribute('data-step') || '' });
 }
 export function tline(g: CanvasRenderingContext2D, f: Frame, a: V2, b: V2, color: string, width = 1.5, dash: number[] = []) {
   g.strokeStyle = color; g.lineWidth = width; g.setLineDash(dash); g.beginPath(); g.moveTo(f.X(a[0]), f.Y(a[1])); g.lineTo(f.X(b[0]), f.Y(b[1])); g.stroke(); g.setLineDash([]);
@@ -265,9 +278,11 @@ export function graphAxes(g: CanvasRenderingContext2D, f: Frame, xr: V2, yr: V2,
   // the axis names first, so tick numbers that would sit on them give way
   withLabelRole('axis', () => {
     text(g, xLabel, (f.box.l + f.box.r) / 2, f.h - 5, col.text(), 'center', 11);
-    // sit the y-title in the left margin, not on the plot or a header readout
-    const yx = Math.max(10, Math.min(f.box.l / 2, f.box.l - 6));
-    g.save(); g.translate(yx, (f.box.t + f.box.b) / 2); g.rotate(-Math.PI / 2); text(g, yLabel, 0, 0, col.text(), 'center', 11); g.restore();
+    // sit the y-title at the canvas edge, left of the tick-number column, and no taller than the plot box
+    const yx = 10, yMid = (f.box.t + f.box.b) / 2, yRoom = Math.max(8, f.box.b - f.box.t - 4);
+    g.font = '11px system-ui,sans-serif';
+    const ySize = Math.max(5, Math.min(11, 11 * yRoom / Math.max(1, g.measureText(yLabel).width)));
+    g.save(); g.translate(yx, yMid); g.rotate(-Math.PI / 2); text(g, yLabel, 0, 0, col.text(), 'center', ySize); g.restore();
   });
   withLabelRole('tick', () => {
     let lastX = '', lastPx = -Infinity;
