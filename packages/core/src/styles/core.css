@@ -177,6 +177,8 @@ details.fold>div{padding:0 .8rem .6rem}
 .fig .st-xp:hover{color:var(--text);border-color:var(--accent)}
 .fig-axes{font:.7rem system-ui,sans-serif;color:var(--muted);margin:.2rem 0 0}
 html.fig-overlay-open,html.fig-overlay-open body{overflow:hidden;overscroll-behavior:none}
+html.fig-overlay-open .topbar{position:fixed;top:0;left:0;right:0}
+html.fig-overlay-open .tab-bar-wrap{position:fixed;top:44px;left:0;right:0}
 .fig-overlay{position:absolute;inset:0;z-index:20;display:flex;padding:.45rem;border-radius:14px;background:color-mix(in srgb,var(--bg) 55%,transparent)}
 .fig-overlay[hidden]{display:none}
 .fig-box{flex:1;min-width:0;display:flex;flex-direction:column;background:var(--panel);border:2px solid var(--border-strong);border-radius:12px;padding:.45rem .6rem .55rem;box-shadow:0 8px 40px rgba(0,0,0,.55)}

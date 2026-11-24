@@ -585,6 +585,13 @@ test.describe('sim-project tabbed page', () => {
     await card.locator('.step-thumbs canvas').first().click();
     const overlay = card.getByTestId('fig-overlay');
     await expect(overlay).toBeVisible();
+    const chrome = await page.evaluate(() => {
+      const top = document.querySelector('.topbar')?.getBoundingClientRect();
+      const bar = document.querySelector('.tab-bar-wrap')?.getBoundingClientRect();
+      return { topY: top?.y ?? 999, barY: bar?.y ?? 999 };
+    });
+    expect(chrome.topY, 'topbar should stay at the top of the viewport while a plot is expanded').toBeCloseTo(0, 0);
+    expect(chrome.barY, 'tab bar should stay under the topbar while a plot is expanded').toBeCloseTo(44, 0);
     await expect(overlay.locator('canvas[data-big]')).toBeVisible();
     await overlay.locator('canvas[data-big]').first().click();
     await expect(overlay).toBeHidden();
@@ -667,6 +674,13 @@ test.describe('sim-project tabbed page', () => {
     const titles = overlay.locator('h4');
     await expect(titles).toHaveCount(1);
     await expect(overlay.locator('.sh')).not.toContainText(/Speed change after a 1 N·m load/i);
+    const chrome = await page.evaluate(() => {
+      const top = document.querySelector('.topbar')?.getBoundingClientRect();
+      const bar = document.querySelector('.tab-bar-wrap')?.getBoundingClientRect();
+      return { topY: top?.y ?? 999, barY: bar?.y ?? 999 };
+    });
+    expect(chrome.topY, 'topbar should stay at the top of the viewport while a plot is expanded').toBeCloseTo(0, 0);
+    expect(chrome.barY, 'tab bar should stay under the topbar while a plot is expanded').toBeCloseTo(44, 0);
   });
 
   test('no card shows a Play button that does nothing', async ({ page }) => {
