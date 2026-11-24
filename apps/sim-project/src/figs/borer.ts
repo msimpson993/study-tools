@@ -1,5 +1,5 @@
 /** Figures `borer`, `tradeoff`, `sens`. */
-import { figureOf, drawStepResponse, drawSPlane, col, text, wipe, rangeFrame, graphAxes, curve, tline, dot, PLOT_HEAD, type FigurePanel } from '@study/core';
+import { figureOf, drawStepResponse, drawSPlane, col, text, textReadout, wipe, rangeFrame, graphAxes, curve, tline, dot, PLOT_HEAD, type FigurePanel } from '@study/core';
 import { C } from '@study/core/dsp';
 import { f, lin, num, on, str, fmtPow10, isThumb, type V } from './util';
 import { borerPoles, borerPush, borerS, borerStep, borerWnZeta, borerZero, diskSeek, diskShock } from '../model/plants';
@@ -34,7 +34,7 @@ export const borerPanels = (): FigurePanel[] => [
       });
       g.restore();
       const z = borerWnZeta(K, Kd);
-      if (!thumb) text(g, `ζ = ${f(z.zeta, 3)}  ωn = ${f(z.wn, 2)}  OS ${f(r.m.os, 2)} %  Ts ${f(r.m.ts, 3)} s`, 8, 14, col.text(), 'left', 10);
+      if (!thumb) textReadout(g, `ζ = ${f(z.zeta, 3)}  ωn = ${f(z.wn, 2)}  OS ${f(r.m.os, 2)} %  Ts ${f(r.m.ts, 3)} s`, 8, 14, col.text(), 'left', 10);
     },
   },
   {
@@ -50,7 +50,7 @@ export const borerPanels = (): FigurePanel[] => [
         color: col.a(), yLabel: 'y(t)  (offset 1/K)',
       });
       g.restore();
-      if (!thumb) text(g, `offset 1/K = ${f(1 / K, 4)}   peak ${f(r.m.peak, 5)} at ${f(r.m.tp, 3)} s`, 8, 14, col.text(), 'left', 10);
+      if (!thumb) textReadout(g, `offset 1/K = ${f(1 / K, 4)}   peak ${f(r.m.peak, 5)} at ${f(r.m.tp, 3)} s`, 8, 14, col.text(), 'left', 10);
     },
   },
   {
@@ -114,7 +114,7 @@ export const tradeoffPanels = (): FigurePanel[] => [
         dot(g, fr, [x, Math.log10(y)], col.e(), 4);
         text(g, lab, fr.X(x) + 6, fr.Y(Math.log10(y)) - 4, col.e(), 'left', 10);
       }
-      if (!thumb) text(g, `${isDisk ? 'Ka' : 'K'} = ${f(g0, 1)}  →  OS ${f(liveX, 2)} %, offset ${f(liveY, 5)}`, 8, 14, col.text(), 'left', 10);
+      if (!thumb) textReadout(g, `${isDisk ? 'Ka' : 'K'} = ${f(g0, 1)}  →  OS ${f(liveX, 2)} %, offset ${f(liveY, 5)}`, 8, 14, col.text(), 'left', 10);
     },
   },
   {
@@ -125,7 +125,7 @@ export const tradeoffPanels = (): FigurePanel[] => [
       const r = isDisk ? diskSeek(g0, 3, 4001) : borerStep(g0, 11, 6, 4001);
       const thumb = isThumb(g), head = thumb ? 0 : PLOT_HEAD;
       wipe(g, w, h);
-      if (!isThumb(g)) text(g, `${isDisk ? 'Ka' : 'K'} = ${f(g0, 1)}  OS ${f(r.m.os, 2)} %  Ts ${f(r.m.ts, 3)} s`, 8, 14, col.text(), 'left', 10);
+      if (!isThumb(g)) textReadout(g, `${isDisk ? 'Ka' : 'K'} = ${f(g0, 1)}  OS ${f(r.m.os, 2)} %  Ts ${f(r.m.ts, 3)} s`, 8, 14, col.text(), 'left', 10);
       g.save(); g.translate(0, head);
       drawStepResponse(g, w, h - head, {
         t: r.t, y: r.y, final: 1, ref: 1, tEnd: isDisk ? 1.5 : 2.5,
@@ -148,7 +148,7 @@ export const sensPanels = (): FigurePanel[] => [
       const xr: [number, number] = [-0.2, 1.15], yr: [number, number] = [-0.15, 1.05];
       const thumb = isThumb(g), head = thumb ? 0 : PLOT_HEAD;
       const p = borerS(K, { re: 0, im: w0 });
-      if (!thumb) text(g, `ω = ${f(w0, 2)}  S = ${f(p.re, 3)} + j${f(p.im, 3)}`, 8, 14, col.text(), 'left', 10);
+      if (!thumb) textReadout(g, `ω = ${f(w0, 2)}  S = ${f(p.re, 3)} + j${f(p.im, 3)}`, 8, 14, col.text(), 'left', 10);
       const fr = rangeFrame(w, h, xr, yr, 72, 12, thumb ? 10 : head, 28);
       graphAxes(g, fr, xr, yr, 'Re S', 'Im S');
       curve(g, fr, pts.map((p) => p.re), pts.map((p) => p.im), col.a(), 2);
@@ -175,7 +175,7 @@ export const sensPanels = (): FigurePanel[] => [
       curve(g, fr, ws.map(Math.log10), approx.map((m) => Math.log10(Math.max(m, 1e-6))), col.muted(), 1.6, [6, 4]);
       tline(g, fr, [Math.log10(w0), yr[0]], [Math.log10(w0), yr[1]], col.e(), 1.2, [4, 3]);
       const S = borerS(K, { re: 0, im: w0 }).mag;
-      text(g, `|S| = ${f(S, 4)} at ω = ${f(w0, 2)}.  A 10 % change in the machine at this rate changes the loop by ${f(10 * S, 2)} %.`, fr.box.l, 14, col.text(), 'left', 10);
+      textReadout(g, `|S| = ${f(S, 4)} at ω = ${f(w0, 2)}.  A 10 % change in the machine at this rate changes the loop by ${f(10 * S, 2)} %.`, fr.box.l, 14, col.text(), 'left', 10);
     },
   },
 ];

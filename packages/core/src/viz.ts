@@ -1,5 +1,5 @@
 import { cssVar } from './plot';
-import { labelRole, labelAnchor, labelsOn, labelOverlaps, freeSpot, resetLabels, withLabelRole, labelGen, type LabelRect, type LabelAnchor } from './labels';
+import { labelRole, labelAnchor, labelsOn, labelOverlaps, freeSpot, resetLabels, withLabelRole, withAnchor, labelGen, type LabelRect, type LabelAnchor } from './labels';
 import { mountFigure, type FigurePanel, type FigureMountOpts } from './figure';
 import type { ControlSet } from './controls';
 import type { FigureDef } from './types';
@@ -42,6 +42,37 @@ export function rangeFrame(w: number, h: number, xr: V2, yr: V2, L = 40, R = 10,
 }
 
 export function wipe(g: CanvasRenderingContext2D, w: number, h: number) { g.setLineDash([]); g.clearRect(0, 0, w, h); resetLabels(g.canvas); }
+
+/** Paint the plot background over a box so a grid line cannot run through a label (BUG-66). */
+export function fillPlotBehind(g: CanvasRenderingContext2D, x0: number, y0: number, x1: number, y1: number, pad = 2) {
+  const a = Math.min(x0, x1) - pad, b = Math.max(x0, x1) + pad, c = Math.min(y0, y1) - pad, d = Math.max(y0, y1) + pad;
+  g.save(); g.fillStyle = cssVar('--plot-bg'); g.fillRect(a, c, b - a, d - c); g.restore();
+}
+
+/** Caption-named readout: never shrink below 9 px; wrap onto a second line if the row will not fit (BUG-60 rest). */
+export function textReadout(g: CanvasRenderingContext2D, s: string, x: number, y: number, color: string, align: CanvasTextAlign = 'left', size = 10, maxW?: number) {
+  const z = Math.max(9, size);
+  const m = typeof g.getTransform === 'function' ? g.getTransform() : { a: 1, e: 0 };
+  const k = m.a > 0 ? m.a : 1, W = (g.canvas?.width || 400) / k, ox = -(m.e || 0) / k;
+  const room = maxW ?? (align === 'right' ? x - ox - 4 : ox + W - x - 4);
+  g.font = `${z}px system-ui,sans-serif`;
+  let lines = [s];
+  if (room > 8 && g.measureText(s).width > room) {
+    const semi = s.indexOf('; ');
+    const cutAt = (at: number) => { lines = [s.slice(0, at).trim(), s.slice(at).replace(/^;\s*/, '').trim()]; };
+    if (semi > 0 && g.measureText(s.slice(0, semi + 1)).width <= room) cutAt(semi + 1);
+    else {
+      const mid = Math.floor(s.length * (room / Math.max(g.measureText(s).width, 1)));
+      const spaces = [...s.matchAll(/ /g)].map((q) => q.index as number);
+      const cut = spaces.filter((i) => g.measureText(s.slice(0, i)).width <= room).pop()
+        ?? spaces.reduce((best, i) => Math.abs(i - mid) < Math.abs(best - mid) ? i : best, spaces[0] ?? -1);
+      if (cut > 0) cutAt(cut);
+    }
+  }
+  const n = lines.length, gap = z * 1.15;
+  const y0 = y - ((n - 1) / 2) * gap;
+  for (let i = 0; i < n; i++) text(g, lines[i], x, y0 + i * gap, color, align, z, 'middle', 9);
+}
 
 /** Device-pixel axis-aligned clip, for the label-collision tests and for fitText. */
 export type ClipRect = { x0: number; y0: number; x1: number; y1: number };
@@ -98,7 +129,7 @@ const logCurve = (g: CanvasRenderingContext2D, pts: { x: number; y: number }[], 
 /** Where a label of this size fits inside the canvas: shrinks it (to 72% at most), then slides it in from the edge, then splits it
  * into two lines, so an in-plot note never runs off the panel. Works in device pixels, so translated or scaled sub-panels are handled. */
 export interface TextFit { size: number; x: number; lines: string[]; x0: number; x1: number }
-export function fitText(g: CanvasRenderingContext2D, s: string, x: number, align: CanvasTextAlign, size: number): TextFit {
+export function fitText(g: CanvasRenderingContext2D, s: string, x: number, align: CanvasTextAlign, size: number, minSize = 0): TextFit {
   const font = (z: number) => `${z}px system-ui,sans-serif`;
   const m = typeof g.getTransform === 'function' ? g.getTransform() : null;
   const k = m && m.a > 0 ? m.a : 1, e = m ? m.e : 0, W = (g.canvas?.width || Infinity) / k, ox = -e / k; // canvas in user units: [ox, ox + W]
@@ -108,9 +139,14 @@ export function fitText(g: CanvasRenderingContext2D, s: string, x: number, align
   const span = (w: number, xx: number) => (align === 'center' ? [xx - w / 2, xx + w / 2] : align === 'right' || align === 'end' ? [xx - w, xx] : [xx, xx + w]);
   g.font = font(size); let w = g.measureText(s).width, z = size, lines = [s];
   if (m && (Math.abs(m.b) > 1e-9 || Math.abs(m.c) > 1e-9)) { const [r0, r1] = span(w, x); return { size, x, lines, x0: r0, x1: r1 }; } // rotated (axis titles): leave as drawn
+  const role = labelRole();
   const room = (() => { const [a0, a1] = span(w, x); return w - Math.max(0, lo - a0) - Math.max(0, a1 - hi); })();
-  if (w > room + 0.5 && Number.isFinite(W)) {
-    z = Math.max(size * 0.72, size * Math.max(room, 1) / w); g.font = font(z); w = g.measureText(s).width;
+  // ticks never shrink or slide (BUG-61 / 65): one size, kept on their tick. Notes may shrink, but not below minSize (BUG-60 rest).
+  if (role !== 'tick' && w > room + 0.5 && Number.isFinite(W)) {
+    const floor = Math.max(0, minSize);
+    z = Math.max(floor, Math.max(size * 0.72, size * Math.max(room, 1) / w));
+    if (floor > 0) z = Math.max(z, floor);
+    g.font = font(z); w = g.measureText(s).width;
     if (w > hi - lo) { // still wider than the whole panel: two lines, split at the space nearest the middle
       const sp = [...s.matchAll(/ /g)].map((q) => q.index as number); const mid = s.length / 2;
       const cut = sp.length ? sp.reduce((p, q) => (Math.abs(q - mid) < Math.abs(p - mid) ? q : p)) : -1;
@@ -118,7 +154,10 @@ export function fitText(g: CanvasRenderingContext2D, s: string, x: number, align
     }
   }
   let [a0, a1] = span(w, x);
-  if (a0 < lo) { x += lo - a0; } else if (a1 > hi) { x -= a1 - hi; }
+  if (role !== 'tick') {
+    if (a0 < lo) { x += lo - a0; } else if (a1 > hi) { x -= a1 - hi; }
+    [a0, a1] = span(w, x);
+  }
   [a0, a1] = span(w, x);
   return { size: z, x, lines, x0: a0, x1: a1 };
 }
@@ -165,13 +204,22 @@ export function forTicks(lo: number, hi: number, step: number, fn: (v: number) =
   if (!Number.isFinite(n) || n > 10_000) return;
   for (let x = lo, i = 0; x <= hi + 1e-9 && i <= n + 2; x += step, i++) fn(x);
 }
-export function text(g: CanvasRenderingContext2D, s: string, x: number, y: number, color = col.text(), align: CanvasTextAlign = 'left', size = 11, base: CanvasTextBaseline = 'middle') {
-  const f = fitText(g, s, x, align, size);
+export function text(g: CanvasRenderingContext2D, s: string, x: number, y: number, color = col.text(), align: CanvasTextAlign = 'left', size = 11, base: CanvasTextBaseline = 'middle', minSize = 0) {
+  const f = fitText(g, s, x, align, size, minSize);
   // keep clear of the labels already drawn on this canvas (see labels.ts): ticks give way, notes slide by whole lines, axis names stay
   const m = typeof g.getTransform === 'function' ? g.getTransform() : null, cv = g.canvas as HTMLCanvasElement | undefined, role = labelRole();
   // compact / too-small tiles: drop crowded notes and axis titles; keep ticks, UNSTABLE, and persistent keys
   if (isThumb(g) && !persistLabels && (role === 'note' || role === 'axis') && !/UNSTABLE/i.test(s)) { logText(g, s, f, size, x, y, base, null, 0, true); return; }
   let rect: LabelRect | null = null, dy = 0, dx = 0;
+  if (m && cv && role === 'tick') {
+    const n = f.lines.length, z = f.size, ext = base === 'top' || base === 'hanging' ? [0, 1.1] : base === 'middle' ? [-0.55, 0.55] : [-0.9, 0.25];
+    const u0 = y - ((n - 1) / 2) * z * 1.15 + ext[0] * z, u1 = y + ((n - 1) / 2) * z * 1.15 + ext[1] * z;
+    const x0t = m.a * f.x0 + m.c * u0 + m.e, x1t = m.a * f.x1 + m.c * u1 + m.e;
+    const y0t = m.b * f.x0 + m.d * u0 + m.f, y1t = m.b * f.x1 + m.d * u1 + m.f;
+    const xa = Math.min(x0t, x1t), xb = Math.max(x0t, x1t), ya = Math.min(y0t, y1t), yb = Math.max(y0t, y1t);
+    const cw = cv.width || 0, ch = cv.height || 0;
+    if (xa < 1 || xb > cw - 1 || ya < 1 || yb > ch - 1) { logText(g, s, f, size, x, y, base, null, 0, true); return; }
+  }
   if (m && cv) {
     const n = f.lines.length, z = f.size, ext = base === 'top' || base === 'hanging' ? [0, 1.1] : base === 'middle' ? [-0.55, 0.55] : [-0.9, 0.25];
     const u0 = y - ((n - 1) / 2) * z * 1.15 + ext[0] * z, u1 = y + ((n - 1) / 2) * z * 1.15 + ext[1] * z;
@@ -320,6 +368,26 @@ export function spanLine(g: CanvasRenderingContext2D, f: Frame, d: V2, color: st
   const big = 100 / Math.max(Math.hypot(d[0], d[1]), 1e-9);
   g.save(); clipBox(g, f); tline(g, f, [p0[0] - d[0] * big, p0[1] - d[1] * big], [p0[0] + d[0] * big, p0[1] + d[1] * big], color, width, dash); g.restore();
 }
+/** Layout of the s-plane axis names (σ along the real axis, jω at the top of the imaginary axis). */
+export function axes2NameLayout(g: CanvasRenderingContext2D, f: Frame, xl = '', yl = '') {
+  const names: { s: string; x: number; y: number; z: number; align: CanvasTextAlign; x0: number; x1: number; y0: number; y1: number }[] = [];
+  if (xl) {
+    const y = f.Y(0) - 18, xR = f.box.r - 2, room = xR - (f.X(0) + 14);
+    let label = xl, z = 11;
+    g.font = `${z}px system-ui,sans-serif`;
+    let tw = g.measureText(label).width;
+    while (z > 9 && tw > room && room > 0) { z -= 1; g.font = `${z}px system-ui,sans-serif`; tw = g.measureText(label).width; }
+    if (tw > room) { label = 'σ'; z = Math.max(9, Math.min(11, z)); g.font = `${z}px system-ui,sans-serif`; tw = g.measureText(label).width; }
+    names.push({ s: label, x: xR, y, z, align: 'right', x0: xR - tw, x1: xR, y0: y - z * 0.55, y1: y + z * 0.55 });
+  }
+  if (yl) {
+    const y = Math.max(10, f.box.t - 10), x = f.X(0) + 6, z = 11;
+    g.font = `${z}px system-ui,sans-serif`;
+    const tw = g.measureText(yl).width;
+    names.push({ s: yl, x, y, z, align: 'left', x0: x, x1: x + tw, y0: y - z * 0.55, y1: y + z * 0.55 });
+  }
+  return names;
+}
 /** Axes with ticks at integers, optional labels. */
 export function axes2(g: CanvasRenderingContext2D, f: Frame, xl = '', yl = '', step = 1) {
   const c = col.strong();
@@ -327,20 +395,17 @@ export function axes2(g: CanvasRenderingContext2D, f: Frame, xl = '', yl = '', s
   tline(g, f, [f.ix(f.box.l), 0], [f.ix(f.box.r), 0], c, 1); tline(g, f, [0, f.iy(f.box.t)], [0, f.iy(f.box.b)], c, 1);
   g.restore();
   withLabelRole('axis', () => {
-    if (xl) {
-      // stay in the right half-plane, clear of the jω axis and any pole on it; shrink or use "σ" if the strip is thin
-      const y = f.Y(0) - 18, xR = f.box.r - 2, room = xR - (f.X(0) + 14);
-      let label = xl, z = 11;
-      g.font = `${z}px system-ui,sans-serif`;
-      let tw = g.measureText(label).width;
-      // never shrink below 9 px (BUG-60); fall back to "σ" if the full name still will not fit
-      while (z > 9 && tw > room && room > 0) { z -= 1; g.font = `${z}px system-ui,sans-serif`; tw = g.measureText(label).width; }
-      if (tw > room) { label = 'σ'; z = Math.max(9, Math.min(11, z)); g.font = `${z}px system-ui,sans-serif`; tw = g.measureText(label).width; }
-      text(g, label, xR, y, col.muted(), 'right', z);
-    }
-    if (yl) text(g, yl, f.X(0) + 6, Math.max(10, f.box.t - 10), col.muted(), 'left', 11);
+    for (const n of axes2NameLayout(g, f, xl, yl)) text(g, n.s, n.x, n.y, col.muted(), n.align, n.z);
   });
   void step;
+}
+/** After the grid is painted, punch a plot-background hole behind each axis name and redraw it (BUG-66). */
+export function knockOutAxes2Names(g: CanvasRenderingContext2D, f: Frame, xl = '', yl = '') {
+  for (const n of axes2NameLayout(g, f, xl, yl)) {
+    fillPlotBehind(g, n.x0, n.y0, n.x1, n.y1, 3);
+    g.fillStyle = col.muted(); g.font = `${n.z}px system-ui,sans-serif`; g.textAlign = n.align; g.textBaseline = 'middle';
+    g.fillText(n.s, n.x, n.y);
+  }
 }
 /** Tick numbers on a complex-plane frame (s-plane, z-plane): small ticks on the axes every `step` (x) and `ystep` (y), numbers inside the
  * box along its bottom and left edges so they never collide with the curves at the axes. Units belong in the axis names (axes2). */
@@ -429,26 +494,39 @@ export function graphAxes(g: CanvasRenderingContext2D, f: Frame, xr: V2, yr: V2,
       g.strokeStyle = col.grid(); g.beginPath(); g.moveTo(f.X(x), f.box.t); g.lineTo(f.X(x), f.box.b); g.stroke();
       const lab = xfmt ? xfmt(x) : tickLabel(x, sx), px = f.X(x);
       const onMarkX = (avoid ?? []).some((mk) => Math.hypot((mk.x ?? px) - px, (mk.y ?? (f.box.b + 9)) - (f.box.b + 9)) < (mk.r ?? 10));
-      if (lab && lab !== lastX && Math.abs(px - lastPx) >= 26 && !onMarkX) { text(g, lab, px, f.box.b + 9, col.muted(), 'center', 10); lastX = lab; lastPx = px; }
-    });
-    let lastY = '', lastPy = Infinity;
-    forTicks(Math.ceil(yr[0] / sy) * sy, yr[1], sy, (y) => {
-      g.strokeStyle = col.grid(); g.beginPath(); g.moveTo(f.box.l, f.Y(y)); g.lineTo(f.box.r, f.Y(y)); g.stroke();
-      const lab = yfmt ? yfmt(y) : tickLabel(y, sy), py = f.Y(y);
-      const onMark = (avoid ?? []).some((mk) => {
-        const r = mk.r ?? 10;
-        if (Math.abs(mk.y - py) >= r) return false;
-        return mk.x === undefined || mk.x < f.box.l + r + 20;
-      });
-      // keep 0 / 0.5 / 1 even when a peak sits near 1; nudge the tick rather than dropping it (BUG-59)
-      const keepY = lab === '0' || lab === '0.5' || lab === '1' || lab === '−0.5';
-      if (lab && lab !== lastY && Math.abs(py - lastPy) >= 14 && (!onMark || keepY)) {
-        g.font = '10px system-ui,sans-serif';
-        const tSize = Math.max(9, Math.min(10, 10 * tickRoom / Math.max(1, g.measureText(lab).width)));
-        const ty = onMark && keepY ? (py + 10 < (lastPy < py ? f.box.b : lastPy) - 4 ? py + 8 : py - 8) : py;
-        text(g, lab, tickX, ty, col.muted(), 'right', tSize); lastY = lab; lastPy = ty;
+      if (lab && lab !== lastX && Math.abs(px - lastPx) >= 26 && !onMarkX) {
+        withAnchor({ kind: 'line', x: px, y: f.box.t, x2: px, y2: f.box.b }, () => {
+          text(g, lab, px, f.box.b + 9, col.muted(), 'center', 10);
+        });
+        lastX = lab; lastPx = px;
       }
     });
+    // one size for every y tick, never below 9 (BUG-61); keep 0 / 1 / 2 on a 0–2 axis, centred on the line (BUG-65)
+    const yLabs: { lab: string; y: number; py: number }[] = [];
+    forTicks(Math.ceil(yr[0] / sy) * sy, yr[1], sy, (y) => {
+      g.strokeStyle = col.grid(); g.beginPath(); g.moveTo(f.box.l, f.Y(y)); g.lineTo(f.box.r, f.Y(y)); g.stroke();
+      const lab = yfmt ? yfmt(y) : tickLabel(y, sy);
+      if (lab) yLabs.push({ lab, y, py: f.Y(y) });
+    });
+    const keepY = (lab: string) => lab === '0' || lab === '0.5' || lab === '1' || lab === '2' || lab === '−0.5' || lab === '−1' || lab === '−2';
+    g.font = '10px system-ui,sans-serif';
+    const yWide = yLabs.reduce((w, t) => Math.max(w, g.measureText(t.lab).width), 0);
+    const ySize = yWide <= tickRoom + 0.5 ? 10 : 9;
+    let lastY = '', lastPy = Infinity;
+    for (const t of yLabs) {
+      const onMark = (avoid ?? []).some((mk) => {
+        const r = mk.r ?? 10;
+        if (Math.abs(mk.y - t.py) >= r) return false;
+        return mk.x === undefined || mk.x < f.box.l + r + 20;
+      });
+      if (t.lab === lastY) continue;
+      if (!keepY(t.lab) && (Math.abs(t.py - lastPy) < 14 || onMark)) continue;
+      // stay on the tick line (within ~2 px); a required tick is never dropped to dodge a nearby mark
+      withAnchor({ kind: 'line', x: f.box.l, y: t.py, x2: f.box.r, y2: t.py }, () => {
+        text(g, t.lab, tickX, t.py, col.muted(), 'right', ySize);
+      });
+      lastY = t.lab; lastPy = t.py;
+    }
   });
   g.strokeStyle = col.strong();
   if (yr[0] < 0 && yr[1] > 0) { g.beginPath(); g.moveTo(f.box.l, f.Y(0)); g.lineTo(f.box.r, f.Y(0)); g.stroke(); }

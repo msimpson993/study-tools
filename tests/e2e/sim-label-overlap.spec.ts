@@ -10,8 +10,9 @@ import { open } from './helpers';
  * present in every expanded view, and on labelled tiles (923 and up) except the
  * one allowed Disk 5 hide. Phone tiles (320, 390, 844×390) are bare, so
  * required-on-tile is not asserted there.
- * Font size stays at least 9 px. "unstable" must not appear in an all-stable inset.
- * Anchored labels that are drawn must stay near the marker, ray, or bar they name.
+ * Font size stays at least 9 px. Tick numbers on an axis are one size, ≥ 9 px, and sit on their line.
+ * Anchored labels must stay near their mark and be ≥ 4 px closer to it than to any other marker or ray.
+ * "unstable" must not appear in an all-stable inset.
  *
  * Allow known intentional overlaps or curve-on-label cases only with an explicit, commented entry.
  */
@@ -65,12 +66,17 @@ const REQUIRED: { comment: string; tab: string; step?: string; fig: string; re: 
   { comment: 'Engine 3 Look-for / readout terms: Tr', tab: 'engine', step: '3', fig: 'step', re: /^Tr\b/, name: 'Tr' },
   { comment: 'Engine 3 Look-for / readout terms: Tp', tab: 'engine', step: '3', fig: 'step', re: /\bTp\b/, name: 'Tp' },
   { comment: 'Engine 3 Look-for / readout terms: OS', tab: 'engine', step: '3', fig: 'step', re: /\bOS\b|% overshoot/, name: 'OS' },
-  { comment: 'Engine 3 Look-for / readout terms: Ts', tab: 'engine', step: '3', fig: 'step', re: /^Ts\b|\bTs\b/, name: 'Ts' },
+  { comment: 'Engine 3 Look-for / readout terms: Ts', tab: 'engine', step: '3', fig: 'step', re: /^Ts /, name: 'Ts' },
   { comment: 'Engine 4 readout terms: Tr', tab: 'engine', step: '4', fig: 'step', re: /^Tr\b/, name: 'Tr' },
-  { comment: 'Engine 4 readout terms: Ts', tab: 'engine', step: '4', fig: 'step', re: /^Ts\b|\bTs\b/, name: 'Ts' },
+  { comment: 'Engine 4 readout terms: Ts', tab: 'engine', step: '4', fig: 'step', re: /^Ts /, name: 'Ts' },
   { comment: 'Engine 5 Look-for: Tr 1.088 s', tab: 'engine', step: '5', fig: 'step', re: /^Tr\b/, name: 'Tr' },
-  { comment: 'Engine 5 Look-for: Ts 1.802 s', tab: 'engine', step: '5', fig: 'step', re: /^Ts\b|\bTs\b/, name: 'Ts' },
+  { comment: 'Engine 5 Look-for: Ts 1.802 s', tab: 'engine', step: '5', fig: 'step', re: /^Ts /, name: 'Ts' },
+  { comment: 'Disk s-plane caption: a line of text gives the ceiling Ka = 4080', tab: 'disk', fig: 'splane', re: /^ceiling Ka = 4080/, name: 'ceiling Ka = 4080' },
+  { comment: "Disk s-plane caption: the coil's pole value is written in the corner", tab: 'disk', fig: 'splane', re: /^coil pole at/, name: 'coil pole at' },
+  { comment: "Disk 5 s-plane caption: the panel says 'ζ ≈ 0'", tab: 'disk', step: '5', fig: 'splane', re: /^ζ ≈ 0/, name: 'ζ ≈ 0' },
+  { comment: 'Disk seek caption: the readout gives Ka, OS and Ts', tab: 'disk', fig: 'seek', re: /^Ka = .*OS /, name: 'Seek readout' },
 ];
+
 
 const TABS = ['engine', 'motor', 'borer', 'disk'] as const;
 const VIEWPORTS = [
@@ -260,6 +266,95 @@ const farFromAnchor = (log: L[], at: string) => {
   return out;
 };
 
+/** Every tick column / row on a canvas uses one size, all ≥ 9 px (BUG-61). */
+const tickSizeMix = (log: L[], at: string) => {
+  const out: string[] = [];
+  const by = new Map<number, L[]>();
+  for (const e of latest(log)) {
+    if (e.skipped || e.role !== 'tick' || e.size === undefined || e.y0 === undefined) continue;
+    const a = by.get(e.cv) ?? []; a.push(e); by.set(e.cv, a);
+  }
+  const groups = (labs: L[], key: (e: L) => number, tol: number) => {
+    const used = new Set<number>(), outG: L[][] = [];
+    for (let i = 0; i < labs.length; i++) {
+      if (used.has(i)) continue;
+      const g = [labs[i]]; used.add(i);
+      const k0 = key(labs[i]);
+      for (let j = i + 1; j < labs.length; j++) {
+        if (used.has(j)) continue;
+        if (Math.abs(key(labs[j]) - k0) <= tol) { g.push(labs[j]); used.add(j); }
+      }
+      if (g.length >= 2) outG.push(g);
+    }
+    return outG;
+  };
+  for (const labs of by.values()) {
+    const midX = (e: L) => ((e.x0) + (e.x1)) / 2;
+    const midY = (e: L) => (((e.y0 ?? 0) + (e.y1 ?? 0)) / 2);
+    for (const g of [...groups(labs, midX, 24), ...groups(labs, midY, 16)]) {
+      const sizes = [...new Set(g.map((e) => Math.round((e.size ?? 0) * 10) / 10))];
+      const small = g.filter((e) => (e.size ?? 0) < 9 - 0.01);
+      if (small.length) out.push(`${at} ${g[0].id || 'canvas'}: tick “${small[0].s}” is ${small[0].size!.toFixed(1)} px (min 9)`);
+      else if (sizes.length > 1) out.push(`${at} ${g[0].id || 'canvas'}: mixed tick sizes ${sizes.join(' / ')} px on one axis (“${g.map((e) => e.s).join('”, “')}”)`);
+    }
+  }
+  return out;
+};
+
+/** Y-axis tick labels stay within ~2 px of their tick line (BUG-65). */
+const tickAlign = (log: L[], at: string) => {
+  const out: string[] = [];
+  for (const lab of latest(log)) {
+    if (lab.skipped || lab.role !== 'tick' || !lab.anchor || lab.y0 === undefined || lab.anchor.y2 === undefined) continue;
+    const horiz = Math.abs(lab.anchor.y - lab.anchor.y2) < 1 && Math.abs((lab.anchor.x2 ?? lab.anchor.x) - lab.anchor.x) > 4;
+    if (!horiz) continue;
+    const mid = ((lab.y0 ?? 0) + (lab.y1 ?? 0)) / 2;
+    const d = Math.abs(mid - lab.anchor.y);
+    if (d > 2.5) out.push(`${at} ${lab.id || 'canvas'}: tick “${lab.s}” is ${d.toFixed(1)} px off its line (max 2 px)`);
+  }
+  return out;
+};
+
+const boxDistPt = (e: L, x: number, y: number) => {
+  const cx = Math.max(e.x0, Math.min(x, e.x1)), cy = Math.max(e.y0 ?? 0, Math.min(y, e.y1 ?? 0));
+  return Math.hypot(cx - x, cy - y);
+};
+const boxDistSeg = (e: L, x1: number, y1: number, x2: number, y2: number) => {
+  const n = Math.max(8, Math.ceil(Math.hypot(x2 - x1, y2 - y1) / 4));
+  let best = Infinity;
+  for (let k = 0; k <= n; k++) {
+    const u = k / n;
+    best = Math.min(best, boxDistPt(e, x1 + (x2 - x1) * u, y1 + (y2 - y1) * u));
+  }
+  return best;
+};
+
+/** A label must be ≥ 4 px closer to its own anchor than to any other marker or ray (BUG-64). */
+const nearerThanOthers = (log: L[], marks: O[], at: string) => {
+  const out: string[] = [];
+  const labs = latest(log).filter((e) => !e.skipped && e.anchor && e.y0 !== undefined && e.s.trim());
+  const markers = latest(marks).filter((o) => o.kind === 'marker' && o.x !== undefined && o.y !== undefined);
+  for (const lab of labs) {
+    const dOwn = distToAnchor(lab);
+    for (const mk of markers.filter((m) => m.cv === lab.cv)) {
+      if (lab.anchor!.kind === 'marker' && Math.hypot((mk.x ?? 0) - lab.anchor!.x, (mk.y ?? 0) - lab.anchor!.y) < 5) continue;
+      const d = boxDistPt(lab, mk.x!, mk.y!);
+      if (d + 0.01 < dOwn + 4)
+        out.push(`${at} ${lab.id || 'canvas'}: “${lab.s}” is ${d.toFixed(1)} px from another mark, only ${dOwn.toFixed(1)} from its own ${lab.anchor!.kind} (need ≥ 4 px closer)`);
+    }
+    for (const other of labs) {
+      if (other.cv !== lab.cv || other === lab || other.anchor?.kind !== 'ray' || other.anchor.x2 === undefined) continue;
+      if (lab.anchor!.kind === 'ray' && lab.anchor!.x2 !== undefined
+        && Math.hypot(lab.anchor!.x - other.anchor.x, lab.anchor!.y - other.anchor.y) < 2
+        && Math.hypot((lab.anchor!.x2 ?? 0) - (other.anchor.x2 ?? 0), (lab.anchor!.y2 ?? 0) - (other.anchor.y2 ?? 0)) < 2) continue;
+      const d = boxDistSeg(lab, other.anchor.x, other.anchor.y, other.anchor.x2!, other.anchor.y2!);
+      if (d + 0.01 < dOwn + 4)
+        out.push(`${at} ${lab.id || 'canvas'}: “${lab.s}” is ${d.toFixed(1)} px from another ray, only ${dOwn.toFixed(1)} from its own ${lab.anchor!.kind} (need ≥ 4 px closer)`);
+    }
+  }
+  return out;
+};
+
 const missingRequired = (labels: L[], at: string, tab: string, step: string, fig: string | null, check: boolean) => {
   if (!check) return [];
   const isTile = fig === null;
@@ -284,9 +379,10 @@ const tooSmall = (log: L[], at: string, tab: string, step: string, fig: string |
   const out: string[] = [];
   const isTile = fig === null;
   for (const e of latest(log)) {
-    if (e.skipped || !e.s.trim() || e.size === undefined || e.role === 'tick') continue;
+    if (e.skipped || !e.s.trim() || e.size === undefined) continue;
     if (e.size >= 9 - 0.01) continue;
-    // the 9 px floor is for caption-referenced required labels (BUG-60), not every fitted note
+    if (e.role === 'tick') { out.push(`${at} ${e.id || 'canvas'}: tick “${e.s}” is ${e.size.toFixed(1)} px (min 9)`); continue; }
+    // the 9 px floor is for caption-referenced required labels (BUG-60 rest), not every fitted note
     const needed = REQUIRED.some((req) => {
       if (req.tab !== tab) return false;
       if (req.step && req.step !== step) return false;
@@ -350,6 +446,7 @@ for (const vp of VIEWPORTS) {
         bad.push(...collisions(tiles, atTile), ...clipped(tiles, atTile), ...onCurve(tiles, tileCurves, atTile), ...onObstacle(tiles, tileObs, atTile), ...farFromAnchor(tiles, atTile));
         bad.push(...tooSmall(tiles, atTile, tab, step, null), ...unstableInInset(tiles, tileObs, atTile));
         bad.push(...missingRequired(tiles, atTile, tab, step, null, vp.labelled));
+        bad.push(...tickSizeMix(tiles, atTile), ...tickAlign(tiles, atTile), ...nearerThanOthers(tiles, tileObs, atTile));
 
         const thumbs = card.locator('.step-thumbs canvas[data-fig]');
         const tcount = await thumbs.count();
@@ -374,6 +471,7 @@ for (const vp of VIEWPORTS) {
           bad.push(...collisions(exp, atExp), ...clipped(exp, atExp), ...onCurve(exp, expCurves, atExp), ...onObstacle(exp, expObs, atExp), ...farFromAnchor(exp, atExp));
           bad.push(...tooSmall(exp, atExp, tab, step, fig), ...unstableInInset(exp, expObs, atExp));
           bad.push(...missingRequired(exp, atExp, tab, step, fig, true));
+          bad.push(...tickSizeMix(exp, atExp), ...tickAlign(exp, atExp), ...nearerThanOthers(exp, expObs, atExp));
           await overlay.locator('[data-testid=fig-close]').click();
           await expect(overlay).toHaveCount(0, { timeout: 8_000 });
         }

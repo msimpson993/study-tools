@@ -1,5 +1,5 @@
 /** Figure `disk`: seek, shock, poles, stand-in and the Ka ceiling. */
-import { figureOf, drawStepResponse, drawSPlane, col, text, wipe, PLOT_HEAD, type FigurePanel } from '@study/core';
+import { figureOf, drawStepResponse, drawSPlane, col, text, textReadout, wipe, PLOT_HEAD, type FigurePanel } from '@study/core';
 import { C } from '@study/core/dsp';
 import { f, num, on, str, isThumb, type V } from './util';
 import { diskKaMax, diskOscW, diskPoles, diskSeek, diskShock, diskStand } from '../model/plants';
@@ -41,7 +41,7 @@ export const diskPanels = (): FigurePanel[] => [
       });
       g.restore();
       const tsTxt = r.m.ts > tEnd ? `Ts ${f(r.m.ts, 1)}\u00a0s\u00a0(off plot)` : `Ts ${f(r.m.ts, 3)} s`;
-      if (head) text(g, `Ka = ${f(Ka, 1)}  OS ${f(r.m.os, 2)} %  ${tsTxt}` + (stand ? `  stand-in ${f(stand.m.os, 2)} %` : ''), 8, 14, col.text(), 'left', 10);
+      if (head) textReadout(g, `Ka = ${f(Ka, 1)}  OS ${f(r.m.os, 2)} %  ${tsTxt}` + (stand ? `  stand-in ${f(stand.m.os, 2)} %` : ''), 8, 14, col.text(), 'left', 10);
     },
   },
   {
@@ -65,7 +65,7 @@ export const diskPanels = (): FigurePanel[] => [
         settlingLabel: settled ? `shock Ts ${f(r.m.ts, 2)} s` : undefined,
       });
       g.restore();
-      if (head) text(g, `offset ${f(off, 5)}   dip ${f(r.m.peak, 6)} at ${f(r.m.tp, 3)} s`, 8, 14, col.text(), 'left', 10);
+      if (head) textReadout(g, `offset ${f(off, 5)}   dip ${f(r.m.peak, 6)} at ${f(r.m.tp, 3)} s`, 8, 14, col.text(), 'left', 10);
     },
   },
   {
@@ -81,20 +81,20 @@ export const diskPanels = (): FigurePanel[] => [
       const armZ = arm.filter((p) => Math.abs(p.im) > 0.5).map((p) => zetaOf(p));
       const rays = [...new Set(armZ.map((z) => Math.abs(z) < 0.005 ? null : Number(z.toPrecision(2))).filter((z): z is number => z != null))];
       const thumb = isThumb(g);
-      const topBand = thumb ? 0 : 24, botBand = thumb ? 0 : 24;
+      const topBand = thumb ? 0 : 28, botBand = thumb ? 0 : 30;
       wipe(g, w, h);
       g.save(); g.translate(0, topBand);
       drawSPlane(g, w, h - topBand - botBand, {
         range, reCenter: -range * 0.4, poles: arm, zeros: [], labels: true, zetaRays: rays.length ? rays : undefined, pad: 12, maxAspect: 1.35,
       });
       g.restore();
-      text(g, `coil pole at ${f(coil.re, 1)}  (off scale)`, 8, 12, col.muted(), 'left', 10);
-      if (armZ.some((z) => Math.abs(z) < 0.005)) text(g, 'ζ ≈ 0', 8, 24, col.text(), 'left', 10);
+      textReadout(g, `coil pole at ${f(coil.re, 1)}  (off scale)`, 8, 12, col.muted(), 'left', 10);
+      if (armZ.some((z) => Math.abs(z) < 0.005)) textReadout(g, 'ζ ≈ 0', 8, 24, col.text(), 'left', 10);
       const ceil = diskKaMax, ratio = ceil / Math.max(Ka, 1e-6);
       const ofCeil = ratio >= 10 ? `1/${f(ratio, 0)}` : f(1 / ratio, 2);
       const msg = Ka >= ceil ? 'UNSTABLE'
         : `ceiling Ka = 4080; Ka = ${f(Ka, 0)} is ${ofCeil} of the ceiling.  ω = ${f(diskOscW, 1)} rad/s`;
-      text(g, msg, 8, h - 10, Ka >= ceil ? col.bad() : col.text(), 'left', 10);
+      textReadout(g, msg, 8, h - (botBand > 24 ? 14 : 10), Ka >= ceil ? col.bad() : col.text(), 'left', 10);
     },
   },
 ];

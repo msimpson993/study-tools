@@ -1,7 +1,7 @@
 import { C, cabs, type Cx } from './dsp/complex';
 import { type TF, type StepMetrics, type Margins, type Bode, bode, margins, stepMetrics, tfEval, logspace, tfPoles, tfZeros, freqresp } from './dsp/tf';
 import { type RLocus, rlocusPolesAt, rlocusNearest } from './dsp/rlocus';
-import { col, planeFrame, rangeFrame, wipe, text, tline, polyline, dot, cross, graphAxes, curve, clipBox, withClip, beginClip, endClip, heat, axes2, tickLabel, isThumb, isTileCanvas, isPortraitPhone, isLandscapePhone, logInsetFrame, forTicks, goodStep, type Frame, type V2 } from './viz';
+import { col, planeFrame, rangeFrame, wipe, text, tline, polyline, dot, cross, graphAxes, curve, clipBox, withClip, beginClip, endClip, heat, axes2, tickLabel, isThumb, isTileCanvas, isPortraitPhone, isLandscapePhone, logInsetFrame, forTicks, goodStep, fillPlotBehind, knockOutAxes2Names, type Frame, type V2 } from './viz';
 import { withLabelRole, withAnchor, labelsOn } from './labels';
 import type { PanelPointer } from './figure';
 
@@ -358,7 +358,7 @@ export function drawStepResponse(g: CanvasRenderingContext2D, w: number, h: numb
           return Math.hypot(dx, dy) <= 23;
         };
         const ys = [yLo - 8, yLo - 4, yBot - 18, (yTop + yBot) / 2, yTop + 14, yHi - 12];
-        for (const yy of ys) for (const [x, al] of [[lineX + 8, 'left'], [lineX + 12, 'left'], [lineX - 8, 'right']] as [number, CanvasTextAlign][]) {
+        for (const yy of ys) for (const [x, al] of [[lineX + 8, 'left'], [lineX + 14, 'left'], [lineX + 20, 'left'], [lineX - 8, 'right'], [lineX - 14, 'right']] as [number, CanvasTextAlign][]) {
           const c = textBox(x, yy, tw, th, al, z);
           if (!inPlot(c.a, c.b2, c.c, c.d, 8)) continue;
           if (Math.abs(yy - yRef) < 8) continue;
@@ -381,7 +381,7 @@ export function drawStepResponse(g: CanvasRenderingContext2D, w: number, h: numb
           return Math.hypot(dx, dy) <= 23;
         };
         const ys = [yLo - 8, yLo - 4, yBot - 18, (yTop + yBot) / 2, yTop + 14, yHi - 12];
-        const xs: [number, CanvasTextAlign][] = [[lineX + 8, 'left'], [lineX + 12, 'left'], [lineX - 8, 'right']];
+        const xs: [number, CanvasTextAlign][] = [[lineX + 8, 'left'], [lineX + 14, 'left'], [lineX + 20, 'left'], [lineX - 8, 'right'], [lineX - 14, 'right']];
         for (const yy of ys) for (const [x, al] of xs) {
           const c = textBox(x, yy, tw, th, al, MIN_FONT);
           if (!inPlot(c.a, c.b2, c.c, c.d, 12)) continue;
@@ -392,6 +392,24 @@ export function drawStepResponse(g: CanvasRenderingContext2D, w: number, h: numb
           if (hitsCurve(c.a, c.b2, c.c, c.d)) continue;
           tsPick = c; break;
         }
+      }
+      if (!tsPick) {
+        // required Ts must stay (BUG-62): park under the bar, on the side away from Tr, at 9 px
+        g.font = `${MIN_FONT}px system-ui,sans-serif`;
+        const tw = g.measureText(tsLab).width, th = MIN_FONT + 3;
+        const trMid = trPlaced ? (trPlaced.x0 + trPlaced.x1) / 2 : lineX - 80;
+        const goRight = trMid <= lineX;
+        const cands = goRight
+          ? [textBox(lineX + 8, yLo - 10, tw, th, 'left', MIN_FONT), textBox(lineX + 16, yLo - 10, tw, th, 'left', MIN_FONT), textBox(lineX - 8, yLo - 10, tw, th, 'right', MIN_FONT)]
+          : [textBox(lineX - 8, yLo - 10, tw, th, 'right', MIN_FONT), textBox(lineX - 16, yLo - 10, tw, th, 'right', MIN_FONT), textBox(lineX + 8, yLo - 10, tw, th, 'left', MIN_FONT)];
+        for (const c of cands) {
+          if (c.a < 2 || c.b2 > w - 2 || c.d > f.h - 1 || c.c < 2) continue;
+          if (osPlaced && c.b2 > osPlaced.x0 - 4 && c.a < osPlaced.x1 + 4 && c.d > osPlaced.y - 10 && c.c < osPlaced.y + 10) continue;
+          if (hitsTr(c.a, c.b2, c.c, c.d)) continue;
+          if (hitsCurve(c.a, c.b2, c.c, c.d)) continue;
+          tsPick = c; break;
+        }
+        if (!tsPick) tsPick = cands[0];
       }
       if (tsPick) {
         withAnchor({ kind: 'line', x: lineX, y: yLo, x2: lineX, y2: yHi }, () => {
@@ -562,19 +580,38 @@ export function drawSPlane(g: CanvasRenderingContext2D, w: number, h: number, s:
     g.beginPath(); g.moveTo(f.box.l, f.Y(y)); g.lineTo(f.box.r, f.Y(y)); g.stroke();
   });
   g.restore();
-  // tick numbers sit in the pad, outside the grid, so lines never strike them
+  knockOutAxes2Names(g, f, s.xLabel ?? 'σ (1/s)', s.yLabel ?? 'jω (rad/s)');
+  // tick numbers: one size (9 px), inside the box with a knock-out so the grid cannot strike them (BUG-61 / 66)
+  const TICK_Z = 9;
   withLabelRole('tick', () => {
+    g.font = `${TICK_Z}px system-ui,sans-serif`;
     let lastX = '', lastPx = -Infinity;
     const realPx = (s.poles ?? []).filter((p) => Math.abs(p.im) < 1e-6).map((p) => f.X(p.re));
     const underPole = (px: number) => realPx.some((mx) => Math.abs(mx - px) < 16);
     forTicks(Math.ceil(f.ix(f.box.l) / st) * st, f.ix(f.box.r), st, (x) => {
-      const lab = tickLabel(x, st), px = f.X(x), tw = 5.6 * (lab ? lab.length : 0);
-      if (lab && lab !== lastX && px + tw / 2 <= f.box.r && Math.abs(px - lastPx) >= 26 && !hitsMark(px, f.box.b + 9, tw) && !underPole(px)) { text(g, lab, px, f.box.b + 9, col.muted(), 'center', 9); lastX = lab; lastPx = px; }
+      const lab = tickLabel(x, st), px = f.X(x);
+      if (!lab) return;
+      const tw = g.measureText(lab).width, y = f.box.b - 7;
+      if (lab !== lastX && px + tw / 2 <= f.box.r - 1 && px - tw / 2 >= f.box.l + 1 && Math.abs(px - lastPx) >= 26 && !hitsMark(px, y, tw) && !underPole(px)) {
+        fillPlotBehind(g, px - tw / 2, y - TICK_Z * 0.55, px + tw / 2, y + TICK_Z * 0.55, 2);
+        withAnchor({ kind: 'line', x: px, y: f.box.t, x2: px, y2: f.box.b }, () => {
+          text(g, lab, px, y, col.muted(), 'center', TICK_Z);
+        });
+        lastX = lab; lastPx = px;
+      }
     });
     let lastY = '', lastPy = Infinity;
     forTicks(Math.ceil(f.iy(f.box.b) / st) * st, f.iy(f.box.t), st, (y) => {
-      const lab = tickLabel(y, st), py = f.Y(y), tw = 5.6 * (lab ? lab.length : 0);
-      if (lab && lab !== '0' && lab !== lastY && py > f.box.t - 2 && py < f.box.b + 2 && Math.abs(py - lastPy) >= 16 && !hitsMark(f.box.l - 4 - tw, py, tw)) { text(g, lab, f.box.l - 4, py, col.muted(), 'right', 9); lastY = lab; lastPy = py; }
+      const lab = tickLabel(y, st), py = f.Y(y);
+      if (!lab || lab === '0') return;
+      const tw = g.measureText(lab).width, x = f.box.l + 3;
+      if (lab !== lastY && py > f.box.t + 4 && py < f.box.b - 4 && Math.abs(py - lastPy) >= 16 && !hitsMark(x, py, tw)) {
+        fillPlotBehind(g, x, py - TICK_Z * 0.55, x + tw, py + TICK_Z * 0.55, 2);
+        withAnchor({ kind: 'line', x: f.box.l, y: py, x2: f.box.r, y2: py }, () => {
+          text(g, lab, x, py, col.muted(), 'left', TICK_Z);
+        });
+        lastY = lab; lastPy = py;
+      }
     });
   });
   // "unstable" is unanchored: placed after pole and ζ labels, and dropped on a tile if it will not fit.
@@ -602,13 +639,36 @@ export function drawSPlane(g: CanvasRenderingContext2D, w: number, h: number, s:
       const rayHits = (b: { a: number; b2: number; c: number; d: number }, t2: number, pad = 3) =>
         [1, -1].some((sg) => { for (let k = 0; k <= 80; k++) { const q = (k / 80) * R, X = f.X(-Math.cos(t2) * q), Y = f.Y(sg * Math.sin(t2) * q); if (X > b.a - pad && X < b.b2 + pad && Y > b.c - pad && Y < b.d + pad) return true; } return false; });
       const otherRay = (b: { a: number; b2: number; c: number; d: number }) => rays.some((t2) => Math.abs(t2 - th) >= 1e-6 && rayHits(b, t2));
+      const boxDistPt = (b: TextBox, X: number, Y: number) => {
+        const cx = Math.max(b.a, Math.min(X, b.b2)), cy = Math.max(b.c, Math.min(Y, b.d));
+        return Math.hypot(cx - X, cy - Y);
+      };
+      const boxDistSeg = (b: TextBox, ax: number, ay: number, bx: number, by: number) => {
+        const n = Math.max(8, Math.ceil(Math.hypot(bx - ax, by - ay) / 4));
+        let best = Infinity;
+        for (let k = 0; k <= n; k++) { const u = k / n; best = Math.min(best, boxDistPt(b, ax + (bx - ax) * u, ay + (by - ay) * u)); }
+        return best;
+      };
+      const nearerOwn = (c: TextBox) => {
+        const dOwn = boxDistSeg(c, ax0, ay0, ax1, ay1);
+        const others = marksZ.every((p) => boxDistPt(c, f.X(p.re), f.Y(p.im)) >= dOwn + 4);
+        const otherRays = rays.every((t2) => {
+          if (Math.abs(t2 - th) < 1e-6) return true;
+          const bx = f.X(-Math.cos(t2) * qMax), by = f.Y(Math.sin(t2) * qMax);
+          const by2 = f.Y(-Math.sin(t2) * qMax);
+          return boxDistSeg(c, ax0, ay0, bx, by) >= dOwn + 4 && boxDistSeg(c, ax0, ay0, bx, by2) >= dOwn + 4;
+        });
+        return others && otherRays;
+      };
+      const offReal = (c: TextBox) => z >= 0.99 || Math.abs((c.c + c.d) / 2 - y0) >= 18;
       const ok = (c: TextBox, relaxOther = false, rawOwn = false, relaxTaken = false) => {
         const I = inflateBox(c);
         const own = rawOwn ? c : I;
         return c.a > f.box.l + 2 && c.b2 < Math.min(f.box.r - 2, x0 - 3) && c.c > f.box.t + 2 && c.d < f.box.b - 2
         && marksZ.every((p) => { const X = f.X(p.re), Y = f.Y(p.im); const cx = Math.max(I.a, Math.min(X, I.b2)), cy = Math.max(I.c, Math.min(Y, I.d)); return Math.hypot(cx - X, cy - Y) >= 8; })
         && (relaxTaken || taken.every((t) => I.b2 < t.x0 - 4 || I.a > t.x1 + 4 || I.d < t.y0 - 4 || I.c > t.y1 + 4))
-        && !rayHits(own, th, rawOwn ? 2 : 3) && (relaxOther || !otherRay(I));
+        && !rayHits(own, th, rawOwn ? 2 : 3) && (relaxOther || !otherRay(I))
+        && nearerOwn(c) && offReal(c);
       };
       const along = Math.hypot(ax1 - ax0, ay1 - ay0) || 1;
       const nx = -(ay1 - ay0) / along, ny = (ax1 - ax0) / along;
@@ -625,7 +685,7 @@ export function drawSPlane(g: CanvasRenderingContext2D, w: number, h: number, s:
         }
         return out;
       };
-      const ks = [0.22, 0.3, 0.38, 0.45, 0.52, 0.6, 0.68, 0.75, 0.82, 0.9, 0.15, 0.08, 0.12, 0.95];
+      const ks = [0.45, 0.52, 0.6, 0.68, 0.75, 0.38, 0.82, 0.3, 0.9, 0.22, 0.15, 0.95, 0.12, 0.08];
       const nearMark = (X: number, Y: number, lim: number) => marksZ.some((p) => Math.hypot(X - f.X(p.re), Y - f.Y(p.im)) < lim);
       const walk = (zsz: number, relax: boolean, raw: boolean, skipNear: number, relaxTaken = false) => {
         g.font = `${zsz}px system-ui,sans-serif`;
@@ -659,7 +719,8 @@ export function drawSPlane(g: CanvasRenderingContext2D, w: number, h: number, s:
                 if (!best && c.a > f.box.l + 1 && c.b2 < Math.min(f.box.r - 1, x0 - 1) && c.c > f.box.t + 1 && c.d < f.box.b - 1
                     && !rayHits(inflateBox(c), th, 3) && !otherRay(inflateBox(c))
                     && taken.every((t) => c.b2 < t.x0 - 3 || c.a > t.x1 + 3 || c.d < t.y0 - 3 || c.c > t.y1 + 3)
-                    && marksZ.every((p) => { const Xz = f.X(p.re), Yz = f.Y(p.im); const cx = Math.max(c.a, Math.min(Xz, c.b2)), cy = Math.max(c.c, Math.min(Yz, c.d)); return Math.hypot(cx - Xz, cy - Yz) >= 7; }))
+                    && marksZ.every((p) => { const Xz = f.X(p.re), Yz = f.Y(p.im); const cx = Math.max(c.a, Math.min(Xz, c.b2)), cy = Math.max(c.c, Math.min(Yz, c.d)); return Math.hypot(cx - Xz, cy - Yz) >= 7; })
+                    && nearerOwn(c) && offReal(c))
                   best = c;
               }
               if (pick) break;
@@ -761,8 +822,17 @@ export function drawSPlane(g: CanvasRenderingContext2D, w: number, h: number, s:
     if (X < f.box.l - 6 || X > f.box.r + 6 || Yp < f.box.t - 6 || Yp > f.box.b + 6) continue;
     const others = allMarks.filter((mk) => Math.hypot(mk.X - X, mk.Y - Yp) >= 4);
     const rightBusy = others.some((mk) => mk.X >= X - 2 && Math.abs(mk.Y - Yp) < 24 && mk.X - X < 48);
-    const preferRight = f.box.r - X >= 28 && !rightBusy;
+    const preferRight = f.box.r - X >= 28 && !rightBusy && !(p.re < -1e-9 && X > x0 - 28);
     const realPole = Math.abs(p.im) < 1e-9;
+    const staysLHP = (c: TextBox) => !(p.re < -1e-9 && c.b2 > x0 - 1);
+    const nearerPole = (c: TextBox) => {
+      const cx = Math.max(c.a, Math.min(X, c.b2)), cy = Math.max(c.c, Math.min(Yp, c.d));
+      const dOwn = Math.hypot(cx - X, cy - Yp);
+      return others.every((mk) => {
+        const mx = Math.max(c.a, Math.min(mk.X, c.b2)), my = Math.max(c.c, Math.min(mk.Y, c.d));
+        return Math.hypot(mx - mk.X, my - mk.Y) >= dOwn + 4;
+      });
+    };
     let pick: TextBox | null = null;
     const poleSpots = (sz: number, tw0: number, th0: number): TextBox[] => {
       const out: TextBox[] = [];
@@ -782,6 +852,7 @@ export function drawSPlane(g: CanvasRenderingContext2D, w: number, h: number, s:
       for (const c of ranked) {
         const I = inflateBox(c);
         if (c.a < 1 || c.b2 > vw - 1 || c.c < 1 || c.d > vh - 1) continue;
+        if (!staysLHP(c) || !nearerPole(c)) continue;
         if (onSigma(I.a, I.b2, I.c, I.d) || onJw(I.a, I.b2, I.c, I.d) || hitsTaken(I.a, I.b2, I.c, I.d)) continue;
         if (hitsOtherMark(X, Yp, I.a, I.b2, I.c, I.d)) continue;
         if (onRay(c.a, c.b2, c.c, c.d)) continue;
@@ -800,7 +871,7 @@ export function drawSPlane(g: CanvasRenderingContext2D, w: number, h: number, s:
       const inClip = (c: TextBox) => c.a >= 1 && c.b2 <= vw - 1 && c.c >= 1 && c.d <= vh - 1;
       for (const c of raw) {
         const I = inflateBox(c);
-        if (!inClip(c)) continue;
+        if (!inClip(c) || !staysLHP(c) || !nearerPole(c)) continue;
         if (hitsOtherMark(X, Yp, I.a, I.b2, I.c, I.d) || hitsTaken(I.a, I.b2, I.c, I.d)) continue;
         if (onRay(c.a, c.b2, c.c, c.d)) continue;
         pick = c; break;
@@ -808,7 +879,7 @@ export function drawSPlane(g: CanvasRenderingContext2D, w: number, h: number, s:
       if (!pick) {
         // last try: uninflated mark clearance, still off every ζ ray (required values may not sit on a dashed line)
         for (const c of raw) {
-          if (!inClip(c)) continue;
+          if (!inClip(c) || !staysLHP(c) || !nearerPole(c)) continue;
           if (hitsOtherMark(X, Yp, c.a, c.b2, c.c, c.d)) continue;
           if (onRay(c.a, c.b2, c.c, c.d)) continue;
           pick = c; break;
