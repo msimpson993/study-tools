@@ -5,6 +5,9 @@ export type V = Record<string, number | string | boolean>;
 export const num = (v: V, k: string, d = 0) => (typeof v[k] === 'number' ? (v[k] as number) : v[k] === undefined || v[k] === '' ? d : Number(v[k]));
 export const str = (v: V, k: string, d = '') => (v[k] === undefined ? d : String(v[k]));
 export const on = (v: V, k: string) => v[k] === true || v[k] === 'true' || v[k] === 1;
+/** True when this canvas is a compact tile, not the expanded overlay. */
+export const isThumb = (g: CanvasRenderingContext2D) =>
+  !!g.canvas.closest('.tile-frame') && !g.canvas.closest('.fig-overlay, .fig-box');
 /** Fixed decimals with a real minus sign; a value that rounds to zero prints as 0. */
 export const f = (x: number, d = 2) => {
   if (!Number.isFinite(x)) return '—';

@@ -2,7 +2,7 @@
 import { figureOf, drawStepResponse, col, text, wipe, rangeFrame, graphAxes, curve, tline, type FigurePanel } from '@study/core';
 import { ENGINE, DESIGNS, type DesignName } from '../model/params';
 import { engineMargins, enginePError, engineStep, simEngine, tuner, metrics, engineLoopJw, firstCrossing } from '../model/plants';
-import { f, lin, num, on, str, fmtPow10, drawKeyValueTable, type V } from './util';
+import { f, lin, num, on, str, fmtPow10, drawKeyValueTable, isThumb, type V } from './util';
 import { drawEngine, drawTunerSliders } from './scenes';
 
 const nearDesign = (resp: number, rob: number): DesignName | null => {
@@ -21,7 +21,7 @@ export const piPanels = (): FigurePanel[] => [
       const m = metrics(r.t, r.y, 1);
       drawStepResponse(g, w, h, { t: r.t, y: r.y, final: 1, ref: 1, tEnd: 8, show: { overshoot: true, band: true, settling: true, ess: I === 0 }, color: col.a() });
       const err = I === 0 ? enginePError(P) : 0;
-      text(g, I === 0 ? `P only: settles at ${f(1 - err, 3)}, error ${f(err, 3)} = 1/(1 + P·Kₑ)` : `OS ${f(m.os, 2)} %  Ts ${f(m.ts, 3)} s  (I > 0 ⇒ zero steady error)`, 8, 14, col.text(), 'left', 10);
+      if (!isThumb(g)) text(g, I === 0 ? `P only: settles at ${f(1 - err, 3)}, error ${f(err, 3)} = 1/(1 + P·Kₑ)` : `OS ${f(m.os, 2)} %  Ts ${f(m.ts, 3)} s  (I > 0 ⇒ zero steady error)`, 8, 14, col.text(), 'left', 10);
     },
   },
   {
@@ -105,7 +105,8 @@ export const tunerPanels = (): FigurePanel[] => [
       const resp = num(v, 'resp', 0.678), rob = num(v, 'rob', 0.6);
       const { P, I, clamped } = tuner(resp, rob);
       const rpmOn = !!v.rpm;
-      const head = 22;
+      const thumb = isThumb(g);
+      const head = thumb ? 0 : 22;
       const piLine = `P = ${f(P, 7)}  I = ${f(I, 7)}${clamped ? '  (P clamped)' : ''}`;
       if (rpmOn) {
         const r = engineStep(P, I, 20, 1e-3);
@@ -121,7 +122,7 @@ export const tunerPanels = (): FigurePanel[] => [
         const tPlot = [0, t0, ...tt], yPlot = [2000, 2000, ...yy];
         const tHit = firstCrossing(r.t, r.y, 0.98);
         wipe(g, w, h);
-        text(g, piLine, 8, 14, col.text(), 'left', 10);
+        if (!thumb) text(g, piLine, 8, 14, col.text(), 'left', 10);
         g.save(); g.translate(0, head);
         const fr = rangeFrame(w, h - head, [0, tEnd], [1500, 3500], 48, 12, 14, 30);
         graphAxes(g, fr, [0, tEnd], [1500, 3500], 'time (s)', 'rpm', 5, 500);
@@ -141,7 +142,7 @@ export const tunerPanels = (): FigurePanel[] => [
       const hit = nearDesign(resp, rob);
       const ghost = hit ? engineStep(DESIGNS[hit].P, DESIGNS[hit].I, 14, 1e-3) : undefined;
       wipe(g, w, h);
-      text(g, `${piLine}  OS ${f(r.m.os, 2)} %  Ts ${f(r.m.ts, 3)} s`, 8, 14, col.text(), 'left', 10);
+      if (!thumb) text(g, `${piLine}  OS ${f(r.m.os, 2)} %  Ts ${f(r.m.ts, 3)} s`, 8, 14, col.text(), 'left', 10);
       g.save(); g.translate(0, head);
       drawStepResponse(g, w, h - head, {
         t: r.t, y: r.y, final: 1, ref: 1, tEnd: 8, show: { overshoot: true, band: true, settling: true, timing: true },
