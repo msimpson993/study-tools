@@ -153,16 +153,20 @@ export function drawStepResponse(g: CanvasRenderingContext2D, w: number, h: numb
   const inPlot = (a: number, b2: number, c: number, d: number, extraB = 0) => a > f.box.l + 2 && b2 < f.box.r - 2 && c > f.box.t - 2 && d < f.box.b + extraB;
   // OS may sit in the figure header band above this translated frame, as long as it stays on the canvas and off the readout
   const osFits = (a: number, b2: number, c: number, d: number) => {
-    if (a <= f.box.l + 2 || b2 >= f.box.r - 2 || d >= f.box.b + 14) return false;
+    if (d >= f.box.b + 14) return false;
     const m = typeof g.getTransform === 'function' ? g.getTransform() : { a: 1, d: 1, e: 0, f: 0 };
     const x0 = m.a * a + m.e, x1 = m.a * b2 + m.e, y0 = m.d * c + m.f, y1 = m.d * d + m.f;
-    if (y0 < 2 || y1 > (g.canvas.height || 1e9) - 2) return false;
+    const cw = g.canvas.width || w, ch = g.canvas.height || h;
+    if (x0 < 2 || x1 > cw - 2 || y0 < 2 || y1 > ch - 2) return false;
+    // below the header, stay in the plot; the header itself may use the full canvas width
+    if (d > f.box.t + 2 && (a <= f.box.l + 2 || b2 >= f.box.r - 2)) return false;
     return labelsOn(g.canvas).every((r) => !r || x1 < r.x0 - 4 || x0 > r.x1 + 4 || y1 < r.y0 - 4 || y0 > r.y1 + 4);
   };
   const lbl = (str: string, px: number, py: number, color: string, align: CanvasTextAlign = 'left', z = 10.5) => text(g, str, px, py, color, align, z);
   let ghostBox: { x0: number; x1: number; y0: number; y1: number } | null = null;
   let dropGhost = false;
   let osBox: { x0: number; x1: number; y: number } | null = null;
+  let trBox: { x0: number; x1: number; y0: number; y1: number } | null = null;
   const ghostWouldHit = (a: number, b2: number, c: number, d: number) => !!(ghostBox && b2 > ghostBox.x0 - 4 && a < ghostBox.x1 + 4 && d > ghostBox.y0 - 4 && c < ghostBox.y1 + 4);
   withPersistentLabels(() => {
   if (show.timing && Number.isFinite(m.riseTime)) {
@@ -230,9 +234,12 @@ export function drawStepResponse(g: CanvasRenderingContext2D, w: number, h: numb
         trPick = c; break;
       }
     }
-    if (trPick) withAnchor({ kind: 'bar', x: x0Bar, y: barY, x2: x1Bar, y2: barY }, () => {
-      withLabelRole('axis', () => { lbl(trLab, trPick!.x, trPick!.y, col.e(), trPick!.align, trPick!.z); });
-    })
+    if (trPick) {
+      trBox = { x0: trPick.a, x1: trPick.b2, y0: trPick.c, y1: trPick.d };
+      withAnchor({ kind: 'bar', x: x0Bar, y: barY, x2: x1Bar, y2: barY }, () => {
+        withLabelRole('axis', () => { lbl(trLab, trPick!.x, trPick!.y, col.e(), trPick!.align, trPick!.z); });
+      });
+    }
   }
   if (show.overshoot && Number.isFinite(m.peak) && m.overshootPct > 0.05) {
     const tpFoot = (show.timing && Number.isFinite(m.riseTime)) ? f.iy(f.Y(yr[0]) - 18) : yr[0];
@@ -317,6 +324,9 @@ export function drawStepResponse(g: CanvasRenderingContext2D, w: number, h: numb
   });
   // assignments to osBox inside withPersistentLabels are not visible to control-flow analysis
   const osPlaced = osBox as { x0: number; x1: number; y: number } | null;
+  const trPlaced = trBox as { x0: number; x1: number; y0: number; y1: number } | null;
+  const hitsTr = (a: number, b2: number, c: number, d: number) =>
+    !!(trPlaced && b2 > trPlaced.x0 - 6 && a < trPlaced.x1 + 6 && d > trPlaced.y0 - 6 && c < trPlaced.y1 + 6);
   if (s.ghost?.label && !dropGhost) {
     const gl = s.ghost, gLab = `┄ ${gl.label}`;
     g.font = '10px system-ui,sans-serif';
@@ -374,12 +384,13 @@ export function drawStepResponse(g: CanvasRenderingContext2D, w: number, h: numb
       for (const z of [10.5, 10, MIN_FONT]) {
         g.font = `${z}px system-ui,sans-serif`;
         const tw = g.measureText(tsLab).width, th = z + 3;
-        const ys = [yLo - 18, (yLo + yHi) / 2, yHi + 12, yLo - 28, yHi - 12];
+        const ys = [(yLo + yHi) / 2, yHi - 12, yHi + 12, yLo - 28, yLo - 18];
         for (const yy of ys) for (const [x, al] of [[lineX + 8, 'left'], [lineX - 8, 'right']] as [number, CanvasTextAlign][]) {
           const c = textBox(x, yy, tw, th, al, z);
           if (!inPlot(c.a, c.b2, c.c, c.d, 8)) continue;
           if (Math.abs(yy - yRef) < 8) continue;
           if (osPlaced && c.b2 > osPlaced.x0 - 6 && c.a < osPlaced.x1 + 6 && c.d > osPlaced.y - 12 && c.c < osPlaced.y + 12) continue;
+          if (hitsTr(c.a, c.b2, c.c, c.d)) continue;
           if (hitsCurve(c.a, c.b2, c.c, c.d)) continue;
           if (hitsOtherVert(c.a, c.b2, c.c, c.d, [lineX])) continue;
           tsPick = c; break;
@@ -389,12 +400,13 @@ export function drawStepResponse(g: CanvasRenderingContext2D, w: number, h: numb
       if (!tsPick) {
         g.font = `${MIN_FONT}px system-ui,sans-serif`;
         const tw = g.measureText(tsLab).width, th = MIN_FONT + 3;
-        const ys = [yLo - 18, yLo - 28, yLo - 8, (yLo + yHi) / 2, yHi - 12, yHi + 10];
+        const ys = [(yLo + yHi) / 2, yHi - 12, yHi + 10, yLo - 28, yLo - 18, yLo - 8];
         const xs: [number, CanvasTextAlign][] = [[lineX + 10, 'left'], [lineX - 10, 'right'], [lineX + 16, 'left'], [lineX - 16, 'right']];
         for (const yy of ys) for (const [x, al] of xs) {
           const c = textBox(x, yy, tw, th, al, MIN_FONT);
           if (!inPlot(c.a, c.b2, c.c, c.d, 10)) continue;
           if (osPlaced && c.b2 > osPlaced.x0 - 6 && c.a < osPlaced.x1 + 6 && c.d > osPlaced.y - 12 && c.c < osPlaced.y + 12) continue;
+          if (hitsTr(c.a, c.b2, c.c, c.d)) continue;
           if (hitsOtherVert(c.a, c.b2, c.c, c.d, [lineX])) continue;
           if (hitsCurve(c.a, c.b2, c.c, c.d)) continue;
           tsPick = c; break;
@@ -589,7 +601,7 @@ export function drawSPlane(g: CanvasRenderingContext2D, w: number, h: number, s:
       for (const zsz of [10, MIN_FONT]) { pick = walk(zsz, false, false, 16); if (pick) break; }
       if (!pick) pick = walk(MIN_FONT, true, false, 14);
       if (!pick) pick = walk(MIN_FONT, true, true, 12);
-      if (!pick) pick = walk(MIN_FONT, true, true, 8, true);
+      if (!pick) pick = walk(MIN_FONT, true, true, 8);
       // required ζ names stay on tiles and expanded views (BUG-54 / 55 / 56), still off the stroke
       if (!pick) {
         g.font = `${MIN_FONT}px system-ui,sans-serif`;
@@ -607,6 +619,7 @@ export function drawSPlane(g: CanvasRenderingContext2D, w: number, h: number, s:
                 if (ok(c, true, true)) { pick = c; break; }
                 if (!best && c.a > f.box.l + 1 && c.b2 < Math.min(f.box.r - 1, x0 - 1) && c.c > f.box.t + 1 && c.d < f.box.b - 1
                     && !rayHits(inflateBox(c), th, 3) && !otherRay(inflateBox(c))
+                    && taken.every((t) => c.b2 < t.x0 - 3 || c.a > t.x1 + 3 || c.d < t.y0 - 3 || c.c > t.y1 + 3)
                     && marksZ.every((p) => { const Xz = f.X(p.re), Yz = f.Y(p.im); const cx = Math.max(c.a, Math.min(Xz, c.b2)), cy = Math.max(c.c, Math.min(Yz, c.d)); return Math.hypot(cx - Xz, cy - Yz) >= 7; }))
                   best = c;
               }
@@ -724,12 +737,12 @@ export function drawSPlane(g: CanvasRenderingContext2D, w: number, h: number, s:
     for (const z of [10, MIN_FONT]) {
       g.font = `${z}px system-ui,sans-serif`;
       const tw = g.measureText(lab).width, th = z + 4;
-      const explicit: TextBox[] = realPole ? poleSpots(z, tw, th) : [];
+      const explicit: TextBox[] = poleSpots(z, tw, th);
       const cands = aroundMarker(X, Yp, tw, th, z, preferRight);
-      const ranked = realPole ? [...explicit, ...cands] : cands;
+      const ranked = [...explicit, ...cands];
       for (const c of ranked) {
         const I = inflateBox(c);
-        if (c.a < f.box.l + 1 || c.b2 > f.box.r - 1 || c.c < f.box.t - 6 || c.d > f.box.b + 6) continue;
+        if (c.a < 1 || c.b2 > vw - 1 || c.c < 1 || c.d > vh - 1) continue;
         if (onSigma(I.a, I.b2, I.c, I.d) || onJw(I.a, I.b2, I.c, I.d) || hitsTaken(I.a, I.b2, I.c, I.d)) continue;
         if (hitsOtherMark(X, Yp, I.a, I.b2, I.c, I.d)) continue;
         if (onRay(c.a, c.b2, c.c, c.d)) continue;
@@ -743,9 +756,9 @@ export function drawSPlane(g: CanvasRenderingContext2D, w: number, h: number, s:
       // expanded (and every other tile) must keep the value beside the ×
       g.font = `${MIN_FONT}px system-ui,sans-serif`;
       const tw = g.measureText(lab).width, th = MIN_FONT + 4;
-      const explicit = realPole ? poleSpots(MIN_FONT, tw, th) : [];
+      const explicit = poleSpots(MIN_FONT, tw, th);
       const raw = [...explicit, ...aroundMarker(X, Yp, tw, th, MIN_FONT, preferRight), ...aroundMarker(X, Yp, tw, th, MIN_FONT, preferRight, 16), ...aroundMarker(X, Yp, tw, th, MIN_FONT, !preferRight)];
-      const inClip = (c: TextBox) => c.a >= f.box.l + 1 && c.b2 <= f.box.r - 1 && c.c >= f.box.t - 6 && c.d <= f.box.b + 6;
+      const inClip = (c: TextBox) => c.a >= 1 && c.b2 <= vw - 1 && c.c >= 1 && c.d <= vh - 1;
       for (const c of raw) {
         const I = inflateBox(c);
         if (!inClip(c)) continue;
