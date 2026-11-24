@@ -48,7 +48,7 @@ G(s) ≈ 311 · 3.42² · e^(−0.015s) / (s² + 6.40s + 11.70)      throttle �
 ```
 
 - **311:** the steady gain, rpm per unit throttle.
-- **The fraction s² + 6.40s + 11.70:** a sluggish response with *damping ratio* ζ = 0.935 (how quickly swings die out on their own; just under 1, so almost no swing).
+- **The fraction s² + 6.40s + 11.70:** a sluggish response with *damping ratio* ζ = 0.935 (how strongly swings are damped; just under 1, so almost no swing).
 - **e^(−0.015s):** a 15 ms delay, standing in for the induction-to-power-stroke delay. It adds lag but doesn't change the gain.
 
 ## (c) What's going on
@@ -71,7 +71,7 @@ G(s) ≈ 311 · 3.42² · e^(−0.015s) / (s² + 6.40s + 11.70)      throttle �
    - **Look for:**
      - the yellow dots (the points from the tables) sit on the solid stand-in curve in both plots: the gain falls as the wiggles get faster, and the lag grows;
      - at the probe, ω = 2.95 rad/s, the engine's gain is about 190 and it lags about 84°;
-     - the dashed curve without the 15 ms delay parts from the solid one only at the fast end, where the delay adds lag.
+     - in the phase plot, the dashed curve without the 15 ms delay parts from the solid one only at the fast end, where the delay adds lag; in the gain plot the two coincide, because a delay changes only the lag.
 
 ```figure:engine-fit panels=mag,phase
 ```

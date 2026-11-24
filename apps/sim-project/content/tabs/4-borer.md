@@ -43,7 +43,7 @@ Y(s) = (K + 11s)/(s² + 12s + K) · R(s)  +  1/(s² + 12s + K) · T_d(s)
 ## (c) What's going on
 
 1. **K sets how springy the response is.**
-   - **Damping ratio:** the denominator is the standard "mass on a spring with a damper" form. Its *damping ratio* ζ (zeta) says how fast swings die out: ζ ≥ 1 means the poles alone give no swing; a small ζ means a bouncy response.
+   - **Damping ratio:** the denominator is the standard "mass on a spring with a damper" form. Its *damping ratio* ζ (zeta) says how strongly swings are damped, so how far it overshoots and how many swings it makes: ζ ≥ 1 means the poles alone give no swing; a small ζ means a bouncy response.
    - **Here:** ζ = 6/√K (not in lab handout), so K = 20 gives ζ = 1.34 (heavily damped) and K = 100 gives ζ = 0.6 (bouncy).
    - **The dividing line:** *critical damping*, ζ = 1, is K = 36, where the two poles meet at −6.
    - **Look for:** with **K = 36 (ζ = 1)** set:
@@ -57,7 +57,7 @@ Y(s) = (K + 11s)/(s² + 12s + K) · R(s)  +  1/(s² + 12s + K) · T_d(s)
 2. **The command step: higher K is faster but overshoots.**
    - **Terms:** overshoot is P.O. in the handout and OS in the readout; settling time is T_s in the handout and Ts in the readout.
    - **Numbers:** K = 20 gives 3.9 % and 0.91 s; K = 100 gives 22 % and 0.67 s.
-   - **Look for:** with **K = 100** set, the step curve rises past 1 to a peak about a fifth too high, then settles inside the 2 % band at 0.666 s. The grey curve is K = 20, slower but nearly flat on top.
+   - **Look for:** with **K = 100** set, the step curve rises past 1 to a peak about a fifth too high, then settles inside the 2 % band at about 0.67 s (readout: 0.667 s). The grey curve is K = 20, slower but nearly flat on top.
 
 ```figure:borer preset=k100 panels=step
 ```

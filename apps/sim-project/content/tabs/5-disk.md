@@ -61,11 +61,11 @@ shock:  Y/T_d = −G₂/(1 + Ka·G₁·G₂)       (the handout prints it withou
 
 3. **Why it behaves like the boring machine: the coil is 50× faster than the arm.**
    - **The stand-in (not in lab handout):** drop the coil but keep its steady gain 5, and the loop becomes 5·Ka/(s² + 20s + 5·Ka). That is a spring of stiffness 5·Ka with a damper of 20.
-   - **Damping ratio:** its *damping ratio* ζ = 10/√(5·Ka) (how fast swings die out; below 1 means overshoot) is 1.41 at Ka = 10 and 0.50 at Ka = 80.
+   - **Damping ratio:** its *damping ratio* ζ = 10/√(5·Ka) (how strongly swings are damped; below 1 means overshoot) is 1.41 at Ka = 10 and 0.50 at Ka = 80.
    - **How close:** the stand-in predicts 16.3 % overshoot, against the real 17.1 %.
-   - **Look for:** with **Ka = 80, coil dropped** set, the dashed stand-in curve sits almost on top of the real one, and the readout gives both: OS 17.10 % and stand-in 16.30 %.
+   - **Look for:** with **Ka = 80, coil dropped** set, the dashed stand-in curve sits almost on top of the real one, and the readout gives both: OS 17.10 % and stand-in 16.30 %. In the s-plane, the arm's pair sits at −9.80 ± 17.43j with ζ 0.49 (the stand-in's is 0.50), and the coil's pole is far off scale at −1000.4.
 
-```figure:disk preset=ka80stand panels=seek
+```figure:disk preset=ka80stand panels=seek,splane
 ```
 
 4. **A shock leaves an offset of −1/(5·Ka).**
@@ -86,9 +86,9 @@ shock:  Y/T_d = −G₂/(1 + Ka·G₁·G₂)       (the handout prints it withou
    - **Why the stand-in misses it:** the two-part stand-in is stable for every Ka. The real loop has three lags in a ring, and the coil's 1 ms lag is the third. Together they can add up to the 180° of lag that makes a loop swing forever (lag and 180° as in the Engine tab).
    - **The test:** the *Routh test* (a shortcut that checks stability straight from the polynomial's coefficients) says s³ + 1020s² + 20000s + 5000·Ka is stable only while 1020 × 20000 > 5000·Ka, so Ka < 4080.
    - **At the ceiling:** the head rings forever at √20000 = 141 rad/s.
-   - **Look for:** with **near the ceiling (own)** set (Ka = 3981), the real seek curve rings fast and barely dies out (about 98.5 % overshoot; settling takes about 16.7 s, long after the plot ends). The dashed stand-in swings hard too (about 80 % overshoot) but dies out within 0.38 s. Only the real loop is close to ringing forever.
+   - **Look for:** with **near the ceiling (own)** set (Ka = 3981), the real seek curve rings fast and barely dies out (about 98.5 % overshoot; settling takes about 16.7 s, long after the plot ends). The dashed stand-in swings hard too (about 80 % overshoot) but dies out within 0.38 s. Only the real loop is close to ringing forever. In the s-plane, the arm's pair sits almost on the jω axis at −0.23 ± 139.7j (its ζ rounds to 0), and the readout says Ka = 3981 is 0.98 of the ceiling, ringing at 141.4 rad/s there.
 
-```figure:disk preset=limit panels=seek
+```figure:disk preset=limit panels=seek,splane
 ```
 
 ## (d) Try it

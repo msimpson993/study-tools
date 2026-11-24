@@ -62,9 +62,9 @@ closed loop:  ω/T_d = −1/(J·s + b + Km·(Ka·Kt + Kb)/Ra) = −1/(2s + 541.5
    - **Careful: more real friction does not fix sag (not in lab handout).**
      - **What sag is:** only the change in speed that the load causes.
      - **Real friction shrinks everything:** raising b shrinks that change and the motor's response to your voltage by the same factor, because both are divided by the same drag. Turned up toward infinity, the motor barely moves at all, so "zero sag" would just mean there's nothing left to sag.
-     - **The tachometer loop is different:** it pushes back only when the measured speed strays from the speed you set (the input voltage, which the tachometer's 1 V per rad/s turns into a target speed). The amplifier boosts that input as well, so the motor still ends up within 0.3 % of the speed you set (not shown on this page), while the load's effect shrinks by 1 + 540 ÷ 1.5 = 361 (= 541.5 ÷ 1.5, the new total drag over the motor's own drag): the push-back measured against the motor's own drag.
+     - **The tachometer loop is different:** it pushes back only when the measured speed strays from the speed you set (the input voltage, which the tachometer's 1 V per rad/s turns into a target speed). The amplifier boosts that input as well, so the motor still ends up within 0.3 % of the speed you set (not shown on this page), while the load's effect shrinks 361-fold: the new total drag over the motor's own drag, 541.5 ÷ 1.5 = 361, which is the same as 1 plus the push-back measured against that drag, 1 + 540 ÷ 1.5.
      - **So the name is a half-truth:** "electronic friction" acts like friction only against the load, not against the speed you set. That holds while the loop's push-back (540) is much bigger than the motor's own drag (1.5).
-   - **Look for:** with **Fig. 4.24: closed loop** set, the time axis runs only 0.02 s and the curve settles at −0.00185 (the readout's second line: −0.001847). The marked final value is the exact one; the handout rounds it to −0.002.
+   - **Look for:** with **Fig. 4.24: closed loop** set, the time axis runs only 0.02 s and the curve settles at −0.00185 (the readout's second line: −0.001847). The red mark sits at the exact −0.001847; its label gives the handout's rounded −0.002.
 
 ```figure:motor preset=closed panels=plot
 ```
@@ -90,7 +90,7 @@ closed loop:  ω/T_d = −1/(J·s + b + Km·(Ka·Kt + Kb)/Ra) = −1/(2s + 541.5
    - **The rule:** "we generally expect" closed-loop sag ÷ open-loop sag < 0.02 (Dorf p.259). In other words, the loop removes at least 98 % of the sag.
    - **Here:** the ratio is 0.0028 (the handout rounds it to 0.003), about 7× inside the rule.
    - **The threshold (not in lab handout):** the ratio equals 0.02 exactly at Ka = 7.35. Any Ka above that passes.
-   - **Look for:** with **just under 0.02** set (Ka = 7.5), the readout's third line is still green, but only just: ratio 0.01961, under 0.02 (at Ka = 54 it passed easily, at 0.0028). The closed curve now sags to −0.0131, visible even on the 7 s axis.
+   - **Look for:** with **just under 0.02** set (Ka = 7.5), the readout's third line is still green, but only just: ratio 0.01961, under 0.02 (at Ka = 54 it passed easily, at 0.0028). The closed curve now sags to −0.0131: still small on the 7 s axis, and the inset now says ×51 smaller instead of ×359.
 
 ```figure:motor preset=sweep panels=plot
 ```
@@ -98,7 +98,7 @@ closed loop:  ω/T_d = −1/(J·s + b + Km·(Ka·Kt + Kb)/Ra) = −1/(2s + 541.5
 6. **Inertia sets only the speed of recovery, never the final sag.**
    - **Why:** J appears only beside s. Once the speed stops changing, the s terms drop out.
    - **Numbers (not in lab handout):** doubling J to 4 makes τ 2.67 s open and 7.39 ms closed, with the same sag.
-   - **Look for:** with **double the inertia** set, the open-loop curve takes twice as long to reach the same −0.667 line, and the readout's τ values double while both sags stay put.
+   - **Look for:** with **double the inertia** set, the open-loop curve falls more slowly and is only at −0.618 by 7 s (the readout's first line; −0.663 before), the readout's τ values double (2.667 s and 7.387 ms) while both sags stay at −0.6667 and −0.001847, and the inset now says ×335 smaller.
 
 ```figure:motor preset=heavy panels=plot
 ```
