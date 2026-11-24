@@ -314,11 +314,14 @@ export function axes2(g: CanvasRenderingContext2D, f: Frame, xl = '', yl = '', s
   g.restore();
   withLabelRole('axis', () => {
     if (xl) {
-      // keep the σ name off the jω axis and any pole that sits on it (tight views have a thin right half-plane)
-      g.font = '11px system-ui,sans-serif';
-      const tw = g.measureText(xl).width, y = f.Y(0) - 18, xR = f.box.r - 2, xAxis = f.X(0);
-      const x = (xR - tw > xAxis + 14) ? xR : Math.max(f.box.l + 2 + tw, xAxis - 10);
-      text(g, xl, x, y, col.muted(), 'right', 11);
+      // stay in the right half-plane, clear of the jω axis and any pole on it; shrink or use "σ" if the strip is thin
+      const y = f.Y(0) - 18, xR = f.box.r - 2, room = xR - (f.X(0) + 14);
+      let label = xl, z = 11;
+      g.font = `${z}px system-ui,sans-serif`;
+      let tw = g.measureText(label).width;
+      while (z > 7 && tw > room && room > 0) { z -= 1; g.font = `${z}px system-ui,sans-serif`; tw = g.measureText(label).width; }
+      if (tw > room) { label = 'σ'; z = Math.min(11, Math.max(7, z)); g.font = `${z}px system-ui,sans-serif`; tw = g.measureText(label).width; }
+      if (tw <= room + 2 || room < 0) text(g, label, xR, y, col.muted(), 'right', z);
     }
     if (yl) text(g, yl, f.X(0) + 6, Math.max(10, f.box.t - 10), col.muted(), 'left', 11);
   });
