@@ -42,6 +42,8 @@ shock:  Y/T_d = −G₂/(1 + Ka·G₁·G₂)       (the handout prints it withou
 
 ## (c) What's going on
 
+On each step card the plots start as small tiles that show only the curves, marker lines, shaded bands, the s-plane's crosses and rays, and tick numbers. Tap a plot to open it full size with its readout, labels and axis names. The Look-for lines and the Try-it table quote that full-size view.
+
 1. **The head always lands on the track.**
    - **Why:** the arm's 1/s means any leftover error would keep the arm moving, so the loop can only come to rest at zero error.
    - **The shortcut:** the *final value theorem* (set s = 0 to read where a response ends up) gives e(∞) = 0 for any stable Ka. *Stable* means it settles after a nudge instead of swinging ever wider.
@@ -60,7 +62,7 @@ shock:  Y/T_d = −G₂/(1 + Ka·G₁·G₂)       (the handout prints it withou
 ```
 
 3. **Why it behaves like the boring machine: the coil is 50× faster than the arm.**
-   - **The stand-in (not in lab handout):** drop the coil but keep its steady gain 5, and the loop becomes 5·Ka/(s² + 20s + 5·Ka). That is a spring of stiffness 5·Ka with a damper of 20.
+   - **The stand-in (not in lab handout):** drop the coil but keep its steady gain 5, and the loop becomes the *two-part stand-in* 5·Ka/(s² + 20s + 5·Ka): its denominator stops at s², where the real loop's goes up to s³. That is a spring of stiffness 5·Ka with a damper of 20.
    - **Damping ratio:** its *damping ratio* ζ = 10/√(5·Ka) (how strongly swings are damped; below 1 means overshoot) is 1.41 at Ka = 10 and 0.50 at Ka = 80.
    - **How close:** the stand-in predicts 16.3 % overshoot, against the real 17.1 %.
    - **Look for:** with **Ka = 80, coil dropped** set, the dashed stand-in curve sits almost on top of the real one, and the readout gives both: OS 17.10 % and stand-in 16.30 %. In the s-plane, the arm's pair sits at −9.80 ± 17.43j (the upper pole is labelled −9.8 + j17.43), its ζ ray is labelled 0.49, and the coil's pole is far off scale at −1000.4.

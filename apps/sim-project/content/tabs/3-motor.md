@@ -48,6 +48,8 @@ closed loop:  ω/T_d = −1/(J·s + b + Km·(Ka·Kt + Kb)/Ra) = −1/(2s + 541.5
 
 ## (c) What's going on
 
+On each step card the plots start as small tiles that show only the curves, marker lines, shaded bands and tick numbers. Tap a plot to open it full size with its readout, labels and axis names. The Look-for lines and the Try-it table quote that full-size view.
+
 1. **No feedback: the speed falls until drag balances the load.**
    - **Why:** the only thing resisting the load is the motor's own drag, 0.5 + 1 = 1.5 N·m·s, so a 1 N·m load costs 1 ÷ 1.5 = 0.667 rad/s.
    - **How fast:** the *time constant* τ = J ÷ drag = 1.33 s is the time to cover about two-thirds of the way. Four time constants (5.3 s) gets within 2 %, which counts as "settled".

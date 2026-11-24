@@ -53,6 +53,8 @@ G(s) ≈ 311 · 3.42² · e^(−0.015s) / (s² + 6.40s + 11.70)      throttle �
 
 ## (c) What's going on
 
+On each step card the plots start as small tiles that show only the curves, marker lines, shaded bands and tick numbers; the tuner's table is behind the Parameters button. Tap a plot to open it full size with its readout, labels and axis names. The Look-for lines and the Try-it table quote that full-size view.
+
 1. **Why PI and not just P: a speed needs a held push.**
    - **Why:** the engine settles where torque balances drag, so holding a speed needs the throttle held open. P pushes only while there is an error, so with P alone a leftover error has to hold the throttle open.
    - **Number (not in lab handout):** on the stand-in, the initial design's P alone stops 43 % short.

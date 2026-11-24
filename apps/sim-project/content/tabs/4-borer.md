@@ -42,6 +42,8 @@ Y(s) = (K + 11s)/(s² + 12s + K) · R(s)  +  1/(s² + 12s + K) · T_d(s)
 
 ## (c) What's going on
 
+On each step card the plots start as small tiles that show only the curves, marker lines, shaded bands, the s-plane's crosses and rays, and tick numbers. Tap a plot to open it full size with its readout, labels and axis names. The Look-for lines and the Try-it table quote that full-size view.
+
 1. **K sets how springy the response is.**
    - **Damping ratio:** the denominator is the standard "mass on a spring with a damper" form. Its *damping ratio* ζ (zeta) says how strongly swings are damped, so how far it overshoots and how many swings it makes: ζ ≥ 1 means the poles alone give no swing; a small ζ means a bouncy response.
    - **Here:** ζ = 6/√K (not in lab handout), so K = 20 gives ζ = 1.34 (heavily damped) and K = 100 gives ζ = 0.6 (bouncy).
