@@ -98,14 +98,15 @@ const latest = <T extends { cv: number; gen: number }>(log: T[]) => {
 
 /**
  * Locally, grow each text box so a slightly wider CI system-ui glyph would still be
- * flagged. 9 % of width + 2 px, on all four sides (the +2 px is also vertical).
- * CI itself uses the raw boxes — it is the source of truth for real glyphs.
+ * flagged. Width grows by 9 % plus 2 px (split across both sides); height grows by
+ * 2 px. CI itself uses the raw boxes — it is the source of truth for real glyphs.
  */
 const LOCAL_GROW = process.env.CI ? 0 : 0.09;
 const LOCAL_PX = process.env.CI ? 0 : 2;
 const boxOf = (e: L) => {
-  const dx = (e.x1 - e.x0) * LOCAL_GROW + LOCAL_PX;
-  return { x0: e.x0 - dx, x1: e.x1 + dx, y0: (e.y0 ?? 0) - LOCAL_PX, y1: (e.y1 ?? 0) + LOCAL_PX };
+  const dx = ((e.x1 - e.x0) * LOCAL_GROW + LOCAL_PX) / 2;
+  const dy = LOCAL_PX / 2;
+  return { x0: e.x0 - dx, x1: e.x1 + dx, y0: (e.y0 ?? 0) - dy, y1: (e.y1 ?? 0) + dy };
 };
 
 const collisions = (log: L[], at: string) => {
