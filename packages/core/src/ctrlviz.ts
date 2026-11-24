@@ -33,9 +33,11 @@ const textBox = (x: number, y: number, tw: number, th: number, align: CanvasText
 /** Candidate boxes whose closest edge stays about `gap` px from (X, Y). */
 const aroundMarker = (X: number, Y: number, tw: number, th: number, z: number, preferRight = true, gap = ANCHOR_GAP): TextBox[] => {
   const g = gap, dy = Math.max(z * 0.9, 8);
+  // above: box bottom (y + 0.25z) = Y - g; below: box top (y - 0.9z) = Y + g
+  const yAbove = Y - g - z * 0.25, yBelow = Y + g + z * 0.9;
   const order: [number, number, CanvasTextAlign][] = preferRight
-    ? [[X + g, Y, 'left'], [X - g, Y, 'right'], [X + g, Y - dy, 'left'], [X - g, Y - dy, 'right'], [X + g, Y + dy, 'left'], [X - g, Y + dy, 'right'], [X, Y - g - z * 0.9, 'center'], [X, Y + g + z * 0.25, 'center']]
-    : [[X - g, Y, 'right'], [X + g, Y, 'left'], [X - g, Y - dy, 'right'], [X + g, Y - dy, 'left'], [X - g, Y + dy, 'right'], [X + g, Y + dy, 'left'], [X, Y - g - z * 0.9, 'center'], [X, Y + g + z * 0.25, 'center']];
+    ? [[X + g, Y, 'left'], [X - g, Y, 'right'], [X + g, Y - dy, 'left'], [X - g, Y - dy, 'right'], [X + g, Y + dy, 'left'], [X - g, Y + dy, 'right'], [X, yAbove, 'center'], [X, yBelow, 'center']]
+    : [[X - g, Y, 'right'], [X + g, Y, 'left'], [X - g, Y - dy, 'right'], [X + g, Y - dy, 'left'], [X - g, Y + dy, 'right'], [X + g, Y + dy, 'left'], [X, yAbove, 'center'], [X, yBelow, 'center']];
   return order.map(([x, y, al]) => textBox(x, y, tw, th, al, z));
 };
 const niceStep = (span: number, n: number) => {
@@ -97,11 +99,11 @@ export function drawStepResponse(g: CanvasRenderingContext2D, w: number, h: numb
   const hitsCurve = (x0: number, x1: number, y0: number, y1: number) => {
     for (let i = 1; i < t.length; i++) {
       const ax = f.X(t[i - 1]), ay = f.Y(y[i - 1]), bx = f.X(t[i]), by = f.Y(y[i]);
-      if (Math.max(ax, bx) < x0 - 6 || Math.min(ax, bx) > x1 + 6 || Math.max(ay, by) < y0 - 6 || Math.min(ay, by) > y1 + 6) continue;
+      if (Math.max(ax, bx) < x0 - 10 || Math.min(ax, bx) > x1 + 10 || Math.max(ay, by) < y0 - 10 || Math.min(ay, by) > y1 + 10) continue;
       const steps = Math.max(2, Math.ceil(Math.hypot(bx - ax, by - ay) / 3));
       for (let k = 0; k <= steps; k++) {
         const u = k / steps, px = ax + (bx - ax) * u, py = ay + (by - ay) * u;
-        if (px > x0 - 5 && px < x1 + 5 && py > y0 - 5 && py < y1 + 5) return true;
+        if (px > x0 - 8 && px < x1 + 8 && py > y0 - 8 && py < y1 + 8) return true;
       }
     }
     return false;
@@ -408,9 +410,9 @@ export function drawSPlane(g: CanvasRenderingContext2D, w: number, h: number, s:
       const rayHits = (b: { a: number; b2: number; c: number; d: number }, t2: number, pad = 3) =>
         [1, -1].some((sg) => { for (let k = 0; k <= 80; k++) { const q = (k / 80) * R, X = f.X(-Math.cos(t2) * q), Y = f.Y(sg * Math.sin(t2) * q); if (X > b.a - pad && X < b.b2 + pad && Y > b.c - pad && Y < b.d + pad) return true; } return false; });
       const otherRay = (b: { a: number; b2: number; c: number; d: number }) => rays.some((t2) => Math.abs(t2 - th) >= 1e-6 && rayHits(b, t2));
-      const ownRay = (b: { a: number; b2: number; c: number; d: number }) => rayHits(b, th, 5);
+      const ownRay = (b: { a: number; b2: number; c: number; d: number }) => rayHits(b, th, 6);
       const ok = (c: TextBox, relaxOther = false) => c.a > f.box.l + 2 && c.b2 < Math.min(f.box.r - 2, x0 - 3) && c.c > f.box.t + 2 && c.d < f.box.b - 2
-        && marksZ.every((p) => { const X = f.X(p.re), Y = f.Y(p.im); return X < c.a - 8 || X > c.b2 + 8 || Y < c.c - 8 || Y > c.d + 8; })
+        && marksZ.every((p) => { const X = f.X(p.re), Y = f.Y(p.im); const cx = Math.max(c.a, Math.min(X, c.b2)), cy = Math.max(c.c, Math.min(Y, c.d)); return Math.hypot(cx - X, cy - Y) >= 12; })
         && taken.every((t) => c.b2 < t.x0 - 6 || c.a > t.x1 + 6 || c.d < t.y0 - 6 || c.c > t.y1 + 6)
         && !ownRay(c) && (relaxOther || !otherRay(c));
       const along = Math.hypot(ax1 - ax0, ay1 - ay0) || 1;
