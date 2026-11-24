@@ -52,7 +52,7 @@ export function drawStepResponse(g: CanvasRenderingContext2D, w: number, h: numb
   const yr: V2 = s.yRange ?? [lo - 0.05 * Math.abs(ref), Math.max(ref * 1.15, hiY * 1.06)];
   const thumb = isThumb(g);
   const pad = (v: number | undefined, full: number, compact: number) => thumb ? Math.min(v ?? compact, compact) : (v ?? full);
-  const f = rangeFrame(w, h, [0, tEnd], yr, pad(s.pads?.l, 46, 32), pad(s.pads?.r, 14, 10), pad(s.pads?.t, 10, 8), pad(s.pads?.b, 32, 20));
+  const f = rangeFrame(w, h, [0, tEnd], yr, pad(s.pads?.l, 46, 32), pad(s.pads?.r, 14, 10), pad(s.pads?.t, 14, 8), pad(s.pads?.b, 38, 20));
   graphAxes(g, f, [0, tEnd], yr, s.xLabel ?? 'time (s)', s.yLabel ?? 'output');
   const m = stepMetrics(t, y, { ref, final: s.final, band });
   const yf = m.yFinal;
@@ -60,13 +60,13 @@ export function drawStepResponse(g: CanvasRenderingContext2D, w: number, h: numb
   tline(g, f, [0, ref], [tEnd, ref], col.muted(), 1, [5, 4]);
   if (s.ghost) curve(g, f, Array.from(s.ghost.t), Array.from(s.ghost.y), s.ghost.color ?? col.muted(), 2, [6, 4]);
   curve(g, f, t, y, s.color ?? col.a(), 2.4);
-  if (s.ghost?.label) text(g, `┄ ${s.ghost.label}`, f.box.r - 5, f.box.b - 8, s.ghost.color ?? col.muted(), 'right', 10);
+  if (s.ghost?.label) text(g, `┄ ${s.ghost.label}`, f.box.r - 4, Math.min(f.h - 14, f.box.b + 20), s.ghost.color ?? col.muted(), 'right', 10);
   const lbl = (str: string, px: number, py: number, color: string, align: CanvasTextAlign = 'left') => text(g, str, px, py, color, align, 10.5);
   if (show.timing && Number.isFinite(m.riseTime)) {
     const y10 = yf * 0.1, y90 = yf * 0.9;
     tline(g, f, [m.t10, y10], [m.t10, 0], col.e(), 1, [2, 3]); tline(g, f, [m.t90, y90], [m.t90, 0], col.e(), 1, [2, 3]);
     g.strokeStyle = col.e(); g.lineWidth = 2; g.beginPath(); g.moveTo(f.X(m.t10), f.Y(yr[0]) - 14); g.lineTo(f.X(m.t90), f.Y(yr[0]) - 14); g.stroke();
-    lbl(`Tr ${fmtN(m.riseTime)} s`, f.X((m.t10 + m.t90) / 2), f.Y(yr[0]) - 26, col.e(), 'center');
+    lbl(`Tr ${fmtN(m.riseTime)} s`, f.X(m.t90) + 6, f.Y((y10 + y90) / 2), col.e(), 'left');
   }
   let osBox: { x0: number; x1: number; y: number } | null = null;
   if (show.overshoot && Number.isFinite(m.peak) && m.overshootPct > 0.05) {
@@ -131,7 +131,8 @@ export function drawSPlane(g: CanvasRenderingContext2D, w: number, h: number, s:
   const f0 = splaneFrame(Math.max(w, 1), Math.max(h, 1), Math.max(s.range, 1e-6), s.reCenter, s.pad);
   if (!(w > 0) || !(h > 0) || !Number.isFinite(s.range) || s.range <= 0) { wipe(g, Math.max(w, 0), Math.max(h, 0)); return f0; }
   wipe(g, w, h);
-  const f = splaneFrame(w, h, s.range, s.reCenter, s.pad), R = Math.hypot(w, h) / Math.max(Math.min(f.sx, f.sy), 1e-9);
+  const pad = Math.max(18, s.pad ?? 18);
+  const f = splaneFrame(w, h, s.range, s.reCenter, pad), R = Math.hypot(w, h) / Math.max(Math.min(f.sx, f.sy), 1e-9);
   const x0 = f.X(0), y0 = f.Y(0);
   if (s.shadeUnstable !== false) { g.save(); clipBox(g, f); g.fillStyle = col.bad(); g.globalAlpha = 0.07; g.fillRect(Math.max(x0, f.box.l), f.box.t, f.box.r - Math.max(x0, f.box.l), f.box.b - f.box.t); g.restore(); }
   // the axis names first, so the grid numbers and notes keep clear of them
@@ -152,21 +153,26 @@ export function drawSPlane(g: CanvasRenderingContext2D, w: number, h: number, s:
   const hitsMark = (px: number, py: number, tw: number) =>
     marks.some((m) => m.x < px + tw + 10 && m.x > px - 8 && Math.abs(m.y - py) < 14);
   g.save(); clipBox(g, f); g.strokeStyle = col.grid(); g.lineWidth = 1;
+  forTicks(Math.ceil(f.ix(f.box.l) / st) * st, f.ix(f.box.r), st, (x) => {
+    g.beginPath(); g.moveTo(f.X(x), f.box.t); g.lineTo(f.X(x), f.box.b); g.stroke();
+  });
+  forTicks(Math.ceil(f.iy(f.box.b) / st) * st, f.iy(f.box.t), st, (y) => {
+    g.beginPath(); g.moveTo(f.box.l, f.Y(y)); g.lineTo(f.box.r, f.Y(y)); g.stroke();
+  });
+  g.restore();
+  // tick numbers sit in the pad, outside the grid, so lines never strike them
   withLabelRole('tick', () => {
     let lastX = '', lastPx = -Infinity;
     forTicks(Math.ceil(f.ix(f.box.l) / st) * st, f.ix(f.box.r), st, (x) => {
-      g.beginPath(); g.moveTo(f.X(x), f.box.t); g.lineTo(f.X(x), f.box.b); g.stroke();
       const lab = tickLabel(x, st), px = f.X(x), tw = 5.6 * (lab ? lab.length : 0);
-      if (lab && lab !== lastX && px + 2 + tw <= f.box.r && Math.abs(px - lastPx) >= 26 && !hitsMark(px + 2, f.box.b - 6, tw)) { text(g, lab, px + 2, f.box.b - 6, col.muted(), 'left', 9); lastX = lab; lastPx = px; }
+      if (lab && lab !== lastX && px + tw / 2 <= f.box.r && Math.abs(px - lastPx) >= 26 && !hitsMark(px, f.box.b + 9, tw)) { text(g, lab, px, f.box.b + 9, col.muted(), 'center', 9); lastX = lab; lastPx = px; }
     });
     let lastY = '', lastPy = Infinity;
     forTicks(Math.ceil(f.iy(f.box.b) / st) * st, f.iy(f.box.t), st, (y) => {
-      g.beginPath(); g.moveTo(f.box.l, f.Y(y)); g.lineTo(f.box.r, f.Y(y)); g.stroke();
       const lab = tickLabel(y, st), py = f.Y(y), tw = 5.6 * (lab ? lab.length : 0);
-      if (lab && lab !== '0' && lab !== lastY && Math.abs(py - lastPy) >= 16 && !hitsMark(f.box.l + 3, py - 6, tw)) { text(g, lab, f.box.l + 3, py - 6, col.muted(), 'left', 9); lastY = lab; lastPy = py; }
+      if (lab && lab !== '0' && lab !== lastY && py > f.box.t - 2 && py < f.box.b + 2 && Math.abs(py - lastPy) >= 16 && !hitsMark(f.box.l - 4 - tw, py, tw)) { text(g, lab, f.box.l - 4, py, col.muted(), 'right', 9); lastY = lab; lastPy = py; }
     });
   });
-  g.restore();
   // one row below the jω axis name, so the two never touch on a narrow panel (pass 3)
   const unstableBox = (s.shadeUnstable !== false && x0 < f.box.r - 70) ? { x0: f.box.r - 64, x1: f.box.r - 2, y0: f.box.t + 2, y1: f.box.t + 16 } : null;
   if (unstableBox) text(g, 'unstable', f.box.r - 6, f.box.t + 11, col.bad(), 'right', 10);
@@ -222,7 +228,7 @@ export function drawSPlane(g: CanvasRenderingContext2D, w: number, h: number, s:
   g.font = '11px system-ui, sans-serif';
   const sw = g.measureText(s.xLabel ?? 'σ (1/s)').width, jwLab = s.yLabel ?? 'jω (rad/s)', jwW = g.measureText(jwLab).width, jwX = f.X(0) + 6;
   const onSigma = (a: number, b2: number, c: number, d: number) => b2 > f.box.r - 2 - sw - 3 && a < f.box.r && d > y0 - 8 - 12 && c < y0 - 8 + 4;
-  const onJw = (a: number, b2: number, c: number, d: number) => b2 > jwX - 2 && a < jwX + jwW + 2 && d > f.box.t && c < f.box.t + 16;
+  const onJw = (a: number, b2: number, c: number, d: number) => b2 > jwX - 2 && a < jwX + jwW + 2 && d > f.box.t - 18 && c < f.box.t + 4;
   const hitsUnstable = (a: number, b2: number, c: number, d: number) => !!(unstableBox && b2 > unstableBox.x0 - 2 && a < unstableBox.x1 + 2 && d > unstableBox.y0 - 2 && c < unstableBox.y1 + 2);
   const poles = s.poles ?? [];
   const labelled: { p: Cx; lab: string }[] = [];

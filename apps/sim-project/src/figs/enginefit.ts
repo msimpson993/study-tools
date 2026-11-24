@@ -1,5 +1,5 @@
 /** Figure `engine-fit` (not in lab handout): the 8 tuner-table points against the stand-in G(jω). */
-import { figureOf, col, text, wipe, rangeFrame, graphAxes, curve, type FigurePanel } from '@study/core';
+import { figureOf, col, text, wipe, rangeFrame, graphAxes, curve, PLOT_HEAD, type FigurePanel } from '@study/core';
 import { engineGjw } from '../model/plants';
 import { ENGINE } from '../model/params';
 import { fmtPow10, isThumb } from './util';
@@ -40,7 +40,7 @@ function unwrap(vals: number[]): number[] {
 }
 /** Footnote sits under the plot box, not over the curves. */
 function corner(g: CanvasRenderingContext2D, _w: number, h: number) {
-  text(g, 'Stand-in, not in lab handout. Points from the handout\'s PID Tuner tables (pp.3–5).', 8, h - 6, col.muted(), 'left', 9);
+  text(g, 'Stand-in, not in lab handout. Points from the handout\'s PID Tuner tables (pp.3–5).', 8, h - 12, col.muted(), 'left', 9);
 }
 
 function nearPoint(w: number): typeof FIT_POINTS[number] | undefined {
@@ -59,7 +59,7 @@ function engineFitPanels(): FigurePanel[] {
         const magOn = xs.map((lw) => Math.log10(Math.max(1e-6, engineFitAt(10 ** lw, true).mag)));
         const magOff = xs.map((lw) => Math.log10(Math.max(1e-6, engineFitAt(10 ** lw, false).mag)));
         const yr: [number, number] = [-0.2, Math.log10(400)];
-        const thumb = isThumb(g), head = thumb ? 0 : 22, foot = thumb ? 0 : 16;
+        const thumb = isThumb(g), head = thumb ? 0 : PLOT_HEAD, foot = thumb ? 0 : 28;
         g.save(); g.translate(0, head);
         const fr = rangeFrame(w, h - head - foot, [W_MIN, W_MAX], yr, thumb ? 28 : 50, thumb ? 8 : 12, thumb ? 8 : 14, thumb ? 20 : 44);
         graphAxes(g, fr, [W_MIN, W_MAX], yr, 'ω (rad/s)', '|G|', 0.5, 1,
@@ -91,7 +91,7 @@ function engineFitPanels(): FigurePanel[] {
         const phOn = unwrap(xs.map((lw) => engineFitAt(10 ** lw, true).plotPhase));
         const phOff = unwrap(xs.map((lw) => engineFitAt(10 ** lw, false).plotPhase));
         const yr: [number, number] = [-240, 20];
-        const thumb = isThumb(g), head = thumb ? 0 : 22, foot = thumb ? 0 : 16;
+        const thumb = isThumb(g), head = thumb ? 0 : PLOT_HEAD, foot = thumb ? 0 : 28;
         g.save(); g.translate(0, head);
         const fr = rangeFrame(w, h - head - foot, [W_MIN, W_MAX], yr, thumb ? 28 : 50, thumb ? 8 : 12, thumb ? 8 : 14, thumb ? 20 : 44);
         graphAxes(g, fr, [W_MIN, W_MAX], yr, 'ω (rad/s)', 'phase (°)', 0.5, 45,

@@ -1,5 +1,5 @@
 /** Figures `pi` and `tuner`: stand-in engine, P/I split, emulated PID Tuner. */
-import { figureOf, drawStepResponse, col, text, wipe, rangeFrame, graphAxes, curve, tline, withPersistentLabels, isTileCanvas, type FigurePanel } from '@study/core';
+import { figureOf, drawStepResponse, col, text, wipe, rangeFrame, graphAxes, curve, tline, withPersistentLabels, isTileCanvas, isPortraitPhone, PLOT_HEAD, type FigurePanel } from '@study/core';
 import { ENGINE, DESIGNS, type DesignName } from '../model/params';
 import { engineMargins, enginePError, engineStep, simEngine, tuner, metrics, engineLoopJw, firstCrossing } from '../model/plants';
 import { f, lin, num, on, str, fmtPow10, drawKeyValueTable, isThumb, type V } from './util';
@@ -19,9 +19,13 @@ export const piPanels = (): FigurePanel[] => [
       const P = num(v, 'P', 0.0042253), I = num(v, 'I', 0.0092411);
       const r = simEngine(P, I, { T: 8, dt: 1e-3 });
       const m = metrics(r.t, r.y, 1);
-      drawStepResponse(g, w, h, { t: r.t, y: r.y, final: 1, ref: 1, tEnd: 8, show: { overshoot: true, band: true, settling: true, ess: I === 0 }, color: col.a() });
       const err = I === 0 ? enginePError(P) : 0;
-      if (!isThumb(g)) text(g, I === 0 ? `P only: settles at ${f(1 - err, 3)}, error ${f(err, 3)} = 1/(1 + P·Kₑ)` : `OS ${f(m.os, 2)} %  Ts ${f(m.ts, 3)} s  (I > 0 ⇒ zero steady error)`, 8, 14, col.text(), 'left', 10);
+      const head = isThumb(g) ? 0 : PLOT_HEAD;
+      wipe(g, w, h);
+      if (head) text(g, I === 0 ? `P only: settles at ${f(1 - err, 3)}, error ${f(err, 3)} = 1/(1 + P·Kₑ)` : `OS ${f(m.os, 2)} %  Ts ${f(m.ts, 3)} s  (I > 0 ⇒ zero steady error)`, 8, 14, col.text(), 'left', 10);
+      g.save(); g.translate(0, head);
+      drawStepResponse(g, w, h - head, { t: r.t, y: r.y, final: 1, ref: 1, tEnd: 8, show: { overshoot: true, band: true, settling: true, ess: I === 0 }, color: col.a() });
+      g.restore();
     },
   },
   {
@@ -44,7 +48,10 @@ export const piPanels = (): FigurePanel[] => [
       curve(g, fr, r.t, pPart, col.e(), 2);
       curve(g, fr, r.t, iPart, col.c(), 2);
       const tile = isTileCanvas(g) ? ((g.canvas.closest('.tile-frame') as HTMLElement | null) ?? g.canvas).getBoundingClientRect() : null;
-      const keyFits = !isThumb(g) || ((tile?.height ?? 0) >= 118 && (tile?.width ?? 0) >= 120);
+      // portrait phones: keep the key if the tile is tall enough; landscape phones stay bare
+      const keyFits = isPortraitPhone()
+        ? ((tile?.height ?? 0) >= 118 && (tile?.width ?? 0) >= 120)
+        : !isThumb(g);
       if (keyFits) withPersistentLabels(() => {
         text(g, 'P·e', fr.box.l + 8, fr.box.t + 12, col.e(), 'left', 10);
         text(g, 'I·∫e', fr.box.l + 8, fr.box.t + 26, col.c(), 'left', 10);
@@ -110,7 +117,7 @@ export const tunerPanels = (): FigurePanel[] => [
       const { P, I, clamped } = tuner(resp, rob);
       const rpmOn = !!v.rpm;
       const thumb = isThumb(g);
-      const head = thumb ? 0 : 22;
+      const head = thumb ? 0 : PLOT_HEAD;
       const piLine = `P = ${f(P, 7)}  I = ${f(I, 7)}${clamped ? '  (P clamped)' : ''}`;
       if (rpmOn) {
         const r = engineStep(P, I, 20, 1e-3);

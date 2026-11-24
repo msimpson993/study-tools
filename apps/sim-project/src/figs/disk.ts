@@ -1,5 +1,5 @@
 /** Figure `disk`: seek, shock, poles, stand-in and the Ka ceiling. */
-import { figureOf, drawStepResponse, drawSPlane, col, text, wipe, type FigurePanel } from '@study/core';
+import { figureOf, drawStepResponse, drawSPlane, col, text, wipe, PLOT_HEAD, type FigurePanel } from '@study/core';
 import { C } from '@study/core/dsp';
 import { f, num, on, str, isThumb, type V } from './util';
 import { diskKaMax, diskOscW, diskPoles, diskSeek, diskShock, diskStand } from '../model/plants';
@@ -30,7 +30,7 @@ export const diskPanels = (): FigurePanel[] => [
       // metrics from a long enough run (Ka near the ceiling settles in ~17 s); the plot stays at 2 s
       const r = diskSeek(Ka, 30, 60001);
       const stand = on(v, 'stand') ? diskStand(Ka, 30, 60001) : undefined;
-      const head = isThumb(g) ? 0 : 22, tEnd = 2;
+      const head = isThumb(g) ? 0 : PLOT_HEAD, tEnd = 2;
       wipe(g, w, h);
       g.save(); g.translate(0, head);
       const settled = r.m.ts < tEnd * 0.98;
@@ -40,7 +40,7 @@ export const diskPanels = (): FigurePanel[] => [
         color: col.a(),
       });
       g.restore();
-      const tsTxt = r.m.ts > tEnd ? `Ts ${f(r.m.ts, 1)} s (off plot)` : `Ts ${f(r.m.ts, 3)} s`;
+      const tsTxt = r.m.ts > tEnd ? `Ts ${f(r.m.ts, 1)}\u00a0s\u00a0(off plot)` : `Ts ${f(r.m.ts, 3)} s`;
       text(g, `Ka = ${f(Ka, 1)}  OS ${f(r.m.os, 2)} %  ${tsTxt}` + (stand ? `  stand-in ${f(stand.m.os, 2)} %` : ''), 8, 14, col.text(), 'left', 10);
     },
   },
@@ -54,7 +54,7 @@ export const diskPanels = (): FigurePanel[] => [
         return;
       }
       const r = diskShock(Ka, 2, 8001), off = -1 / (5 * Ka);
-      const head = isThumb(g) ? 0 : 22;
+      const head = isThumb(g) ? 0 : PLOT_HEAD;
       wipe(g, w, h);
       g.save(); g.translate(0, head);
       const settled = r.m.ts < 2 * 0.98;

@@ -75,15 +75,22 @@ export function isTileCanvas(g: CanvasRenderingContext2D): boolean {
   return !!cv && typeof cv.closest === 'function' && !!cv.closest('.tile-frame') && !cv.closest('.fig-overlay, .fig-box');
 }
 const TILE_MIN_W = 200, TILE_MIN_H = 140;
-/** Phone portrait (the 2-across tile layout), not short landscape. */
+/** Reserved band above a labelled plot for the header readout. */
+export const PLOT_HEAD = 34;
+/** Phone portrait (the 2-across tile layout). */
 export function isPortraitPhone(): boolean {
   return typeof window !== 'undefined' && typeof window.matchMedia === 'function'
     && window.matchMedia('(max-width: 699.98px)').matches;
 }
-/** Hide crowded notes and axis titles: phone portrait, or a tile too small to fit them (~200×140). Desktop / tablet 40/60 tiles, including two-tile cards, keep them. */
+/** Short landscape phones (e.g. 844×390), not a tall tablet. */
+export function isLandscapePhone(): boolean {
+  return typeof window !== 'undefined' && typeof window.matchMedia === 'function'
+    && window.matchMedia('(orientation: landscape) and (max-height: 500px)').matches;
+}
+/** Hide crowded notes and axis titles on any phone (portrait or short landscape), or a tile too small to fit them (~200×140). Tablet / desktop 40/60 tiles keep them. */
 export function isThumb(g: CanvasRenderingContext2D): boolean {
   if (!isTileCanvas(g)) return false;
-  if (isPortraitPhone()) return true;
+  if (isPortraitPhone() || isLandscapePhone()) return true;
   const box = (g.canvas.closest('.tile-frame') as HTMLElement | null) ?? g.canvas;
   const r = box.getBoundingClientRect();
   return r.width < TILE_MIN_W || r.height < TILE_MIN_H;
@@ -184,7 +191,7 @@ export function axes2(g: CanvasRenderingContext2D, f: Frame, xl = '', yl = '', s
   g.restore();
   withLabelRole('axis', () => {
     if (xl) text(g, xl, f.box.r - 2, f.Y(0) - 8, col.muted(), 'right', 11);
-    if (yl) text(g, yl, f.X(0) + 6, f.box.t + 6, col.muted(), 'left', 11);
+    if (yl) text(g, yl, f.X(0) + 6, f.box.t - 10, col.muted(), 'left', 11);
   });
   void step;
 }
@@ -256,7 +263,12 @@ export function graphAxes(g: CanvasRenderingContext2D, f: Frame, xr: V2, yr: V2,
   const sy = fitStep(yr[1] - yr[0], f.box.b - f.box.t, ys || nice(yr[1] - yr[0], 4), 22);
   g.lineWidth = 1; g.setLineDash([]);
   // the axis names first, so tick numbers that would sit on them give way
-  withLabelRole('axis', () => { text(g, xLabel, (f.box.l + f.box.r) / 2, f.h - 5, col.text(), 'center', 11); g.save(); g.translate(10, (f.box.t + f.box.b) / 2); g.rotate(-Math.PI / 2); text(g, yLabel, 0, 0, col.text(), 'center', 11); g.restore(); });
+  withLabelRole('axis', () => {
+    text(g, xLabel, (f.box.l + f.box.r) / 2, f.h - 5, col.text(), 'center', 11);
+    // sit the y-title in the left margin, not on the plot or a header readout
+    const yx = Math.max(10, Math.min(f.box.l / 2, f.box.l - 6));
+    g.save(); g.translate(yx, (f.box.t + f.box.b) / 2); g.rotate(-Math.PI / 2); text(g, yLabel, 0, 0, col.text(), 'center', 11); g.restore();
+  });
   withLabelRole('tick', () => {
     let lastX = '', lastPx = -Infinity;
     forTicks(Math.ceil(xr[0] / sx) * sx, xr[1], sx, (x) => {
