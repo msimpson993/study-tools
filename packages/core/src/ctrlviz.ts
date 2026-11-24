@@ -1,7 +1,7 @@
 import { C, cabs, type Cx } from './dsp/complex';
 import { type TF, type StepMetrics, type Margins, type Bode, bode, margins, stepMetrics, tfEval, logspace, tfPoles, tfZeros, freqresp } from './dsp/tf';
 import { type RLocus, rlocusPolesAt, rlocusNearest } from './dsp/rlocus';
-import { col, planeFrame, rangeFrame, wipe, text, tline, polyline, dot, cross, graphAxes, curve, clipBox, withClip, heat, axes2, tickLabel, isThumb, forTicks, goodStep, type Frame, type V2 } from './viz';
+import { col, planeFrame, rangeFrame, wipe, text, tline, polyline, dot, cross, graphAxes, curve, clipBox, withClip, heat, axes2, tickLabel, isThumb, isPortraitPhone, forTicks, goodStep, type Frame, type V2 } from './viz';
 import { withLabelRole, labelsOn } from './labels';
 import type { PanelPointer } from './figure';
 
@@ -90,11 +90,11 @@ export function drawStepResponse(g: CanvasRenderingContext2D, w: number, h: numb
     const hitsCurve = (x0: number, x1: number, y0: number, y1: number) => {
       for (let i = 1; i < t.length; i++) {
         const ax = f.X(t[i - 1]), ay = f.Y(y[i - 1]), bx = f.X(t[i]), by = f.Y(y[i]);
-        if (Math.max(ax, bx) < x0 - 2 || Math.min(ax, bx) > x1 + 2 || Math.max(ay, by) < y0 - 2 || Math.min(ay, by) > y1 + 2) continue;
+        if (Math.max(ax, bx) < x0 - 6 || Math.min(ax, bx) > x1 + 6 || Math.max(ay, by) < y0 - 6 || Math.min(ay, by) > y1 + 6) continue;
         const steps = Math.max(2, Math.ceil(Math.hypot(bx - ax, by - ay) / 3));
         for (let k = 0; k <= steps; k++) {
           const u = k / steps, px = ax + (bx - ax) * u, py = ay + (by - ay) * u;
-          if (px > x0 + 1 && px < x1 - 1 && py > y0 + 1 && py < y1 - 1) return true;
+          if (px > x0 - 5 && px < x1 + 5 && py > y0 - 5 && py < y1 + 5) return true;
         }
       }
       return false;
@@ -113,7 +113,8 @@ export function drawStepResponse(g: CanvasRenderingContext2D, w: number, h: numb
       Math.min(trRight - trW / 2, f.X(m.t90) - 8 - trW / 2),
     ];
     let trX = midX, trY = barY - 10, found = false;
-    for (const cx0 of xsTry) {
+    // short canvases (phone expands): the rise fills the plot — keep Tr in the bottom pad
+    if (!isPortraitPhone()) for (const cx0 of xsTry) {
       let x = cx0;
       if (x + trW / 2 > trRight) x = trRight - trW / 2;
       if (x - trW / 2 < f.box.l + 4) x = f.box.l + 4 + trW / 2;
@@ -206,19 +207,19 @@ export function drawStepResponse(g: CanvasRenderingContext2D, w: number, h: numb
     g.font = '10.5px system-ui,sans-serif';
     const tw = g.measureText(essText).width;
     const xLab = Math.min(f.box.r - 4, xLine - 6), x0 = xLab - tw, x1 = xLab;
-    const hits = (yy: number, half = 7) => {
-      if (Math.abs(yy - yRef) < 12 || Math.abs(yy - ySag) < 6) return true;
+    const hits = (yy: number, half = 12) => {
+      if (Math.abs(yy - yRef) < 12 || Math.abs(yy - ySag) < 10) return true;
       for (let i = 0; i < t.length; i++) {
         const px = f.X(t[i]);
-        if (px < x0 - 2 || px > x1 + 2) continue;
-        if (Math.abs(f.Y(y[i]) - yy) < half + 2) return true;
+        if (px < x0 - 4 || px > x1 + 4) continue;
+        if (Math.abs(f.Y(y[i]) - yy) < half) return true;
       }
       return false;
     };
-    const cands = [ySag - 8, ySag + 14, ySag - 18, ySag + 22, ySag - 28, ySag + 32];
+    const cands = [ySag + 18, ySag - 18, ySag + 28, ySag - 28, ySag + 38, ySag - 38, f.box.t + 12, f.box.b - 16];
     const essY = cands.find((yy) => yy > f.box.t + 6 && yy < f.box.b - 6 && !hits(yy))
-      ?? (Math.abs(ySag - 8 - yRef) < 12 ? ySag + 14 : ySag - 8);
-    lbl(essText, xLab, essY, col.bad(), 'right');
+      ?? Math.max(8, f.box.t - 10);
+    withLabelRole('axis', () => { lbl(essText, xLab, essY, col.bad(), 'right'); });
   }
   return m;
 }
@@ -322,7 +323,7 @@ export function drawSPlane(g: CanvasRenderingContext2D, w: number, h: number, s:
       if (tw + 8 <= shadeR - shadeL) {
         const x = shadeR - 6, y = f.box.t + 11;
         text(g, word, x, y, col.bad(), 'right', z);
-        unstableBox = { x0: x - tw, x1: x, y0: y - z * 0.55, y1: y + z * 0.55 };
+        unstableBox = { x0: x - tw - 8, x1: x + 4, y0: y - z * 0.55 - 6, y1: y + z * 0.55 + 6 };
       } else {
         // stand it up in the strip, keeping it above the σ axis name at (box.r, Y(0))
         const cap = Math.max(20, y0 - 14 - (f.box.t + 4));
@@ -332,7 +333,7 @@ export function drawSPlane(g: CanvasRenderingContext2D, w: number, h: number, s:
         if (tw <= cap + 2) {
           const mx = (shadeL + shadeR) / 2, my = f.box.t + 4 + tw / 2;
           g.save(); g.translate(mx, my); g.rotate(-Math.PI / 2); text(g, word, 0, 0, col.bad(), 'center', z2); g.restore();
-          unstableBox = { x0: mx - z2 * 0.55, x1: mx + z2 * 0.55, y0: my - tw / 2, y1: my + tw / 2 };
+          unstableBox = { x0: mx - z2 * 0.55 - 6, x1: mx + z2 * 0.55 + 6, y0: my - tw / 2 - 6, y1: my + tw / 2 + 6 };
         } else {
           // strip is too short: sit just above the shade, in the same column, clear of the jω title
           const jwW = g.measureText(s.yLabel ?? 'jω (rad/s)').width;
@@ -340,7 +341,7 @@ export function drawSPlane(g: CanvasRenderingContext2D, w: number, h: number, s:
           const x = Math.min(f.box.r - 2, Math.max(x0 + jwW + 12, shadeR - 4));
           const y = Math.max(9, f.box.t - 8);
           text(g, word, x, y, col.bad(), 'right', 9);
-          unstableBox = { x0: x - tw, x1: x, y0: y - 6, y1: y + 6 };
+          unstableBox = { x0: x - tw - 6, x1: x + 4, y0: y - 8, y1: y + 8 };
         }
       }
     }
@@ -416,7 +417,7 @@ export function drawSPlane(g: CanvasRenderingContext2D, w: number, h: number, s:
   const sigY = y0 - 8, sigX0 = f.box.r - 2 - sw, sigX1 = f.box.r - 2;
   const onSigma = (a: number, b2: number, c: number, d: number) => b2 > sigX0 - 5 && a < sigX1 + 5 && d > sigY - 10 && c < sigY + 10;
   const onJw = (a: number, b2: number, c: number, d: number) => b2 > jwX - 2 && a < jwX + jwW + 2 && d > f.box.t - 18 && c < f.box.t + 4;
-  const hitsUnstable = (a: number, b2: number, c: number, d: number) => !!(unstableBox && b2 > unstableBox.x0 - 2 && a < unstableBox.x1 + 2 && d > unstableBox.y0 - 2 && c < unstableBox.y1 + 2);
+  const hitsUnstable = (a: number, b2: number, c: number, d: number) => !!(unstableBox && b2 > unstableBox.x0 - 6 && a < unstableBox.x1 + 6 && d > unstableBox.y0 - 6 && c < unstableBox.y1 + 6);
   const hitsTaken = (a: number, b2: number, c: number, d: number) => taken.some((t) => b2 > t.x0 - 3 && a < t.x1 + 3 && d > t.y0 - 3 && c < t.y1 + 3);
   const poles = s.poles ?? [];
   const labelled: { p: Cx; lab: string }[] = [];
@@ -456,7 +457,7 @@ export function drawSPlane(g: CanvasRenderingContext2D, w: number, h: number, s:
     let pick: Cand | null = null, best = 1e6;
     for (const z of [10, 9, 8, 7]) {
       g.font = `${z}px system-ui, sans-serif`;
-      const tw = g.measureText(lab).width, th = z + 1;
+      const tw = g.measureText(lab).width * 1.15, th = z + 3;
       const cands: Cand[] = [];
       const add = (x: number, y: number, align: CanvasTextAlign) => {
         const a = align === 'left' ? x : align === 'right' ? x - tw : x - tw / 2;
