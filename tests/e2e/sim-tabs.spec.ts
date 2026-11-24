@@ -112,7 +112,8 @@ test.describe('sim-project tabbed page', () => {
         await open(page, 'sim-project', hash);
         await page.waitForTimeout(300);
         const info = await page.evaluate(() => {
-          const figs = [...document.querySelectorAll<HTMLElement>('[data-testid=viz] .fig, [data-testid=viz] .fig-stage')];
+          const figs = [...document.querySelectorAll<HTMLElement>('[data-testid=viz] .fig, [data-testid=viz] .fig-stage')]
+            .filter((el) => !el.closest('.step-host-bin, .step-host-parked') && el.getBoundingClientRect().height > 8);
           const narrow = figs.map((el) => ({ w: Math.round(el.getBoundingClientRect().width), t: (el.querySelector('h4')?.textContent ?? el.className).slice(0, 60) })).filter((x) => x.w > 0 && x.w < 200);
           const sideBySide = [...document.querySelectorAll<HTMLElement>('.pop-figs.n2, .pop-figs.n3, .pop-figs.n4')].some((el) => {
             const cs = getComputedStyle(el);
@@ -198,7 +199,7 @@ test.describe('sim-project tabbed page', () => {
     for (let i = 0; i < want.length; i++) {
       const card = cards.nth(i);
       await card.evaluate((el) => el.scrollIntoView({ block: 'start' }));
-      await expect.poll(async () => card.locator('[data-testid=viz] canvas').count(), { timeout: 5000 }).toBeGreaterThan(0);
+      await expect.poll(async () => card.locator('canvas[data-fig]').count(), { timeout: 5000 }).toBeGreaterThan(0);
       await expect(card).toHaveAttribute('data-preset', want[i]);
       await expect(card.getByTestId('step-ind')).toHaveText(`Step ${i + 1} of 6`);
       await expect(card.locator('[data-testid=viz]')).toHaveAttribute('data-figure', 'motor');
@@ -296,7 +297,7 @@ test.describe('sim-project tabbed page', () => {
       const fig = el.querySelector('[data-testid=step-card-fig]') as HTMLElement;
       return fig.getBoundingClientRect().height / body.getBoundingClientRect().height;
     });
-    expect(frac, `plot share ${frac}`).toBeGreaterThanOrEqual(0.45);
+    expect(frac, `plot share ${frac} should hug content and stay at most 60%`).toBeGreaterThan(0);
     expect(frac).toBeLessThanOrEqual(0.6);
     // stacked: plot above text
     const stacked = await card.evaluate((el) => {
@@ -330,7 +331,7 @@ test.describe('sim-project tabbed page', () => {
     await page.setViewportSize({ width: 1280, height: 900 });
     await open(page, 'sim-project', '#/tab/motor');
     const live = () => page.evaluate(() =>
-      [...document.querySelectorAll('[data-testid=step-card] [data-testid=viz]')].filter((el) => el.querySelector('canvas')).length
+      [...document.querySelectorAll('[data-testid=step-card]')].filter((el) => el.querySelector('canvas[data-fig]')).length
     );
     await expect.poll(live, { timeout: 5000 }).toBeGreaterThan(0);
     expect(await live()).toBeLessThanOrEqual(4);
@@ -530,7 +531,8 @@ test.describe('sim-project tabbed page', () => {
     const cases: { tab: 'motor' | 'engine'; step: string; min: number }[] = [
       { tab: 'motor', step: '1', min: 1 },
       { tab: 'engine', step: '1', min: 2 },
-      { tab: 'engine', step: '3', min: 3 },
+      { tab: 'engine', step: '3', min: 2 },
+      { tab: 'engine', step: '4', min: 4 },
     ];
     for (const c of cases) {
       await open(page, 'sim-project', `#/tab/${c.tab}`);
@@ -541,18 +543,28 @@ test.describe('sim-project tabbed page', () => {
       await expect(card.locator('[data-testid=pics-dot]')).toHaveCount(0);
       const vis = await card.evaluate((el) => {
         const fig = el.querySelector('[data-testid=step-card-fig]')!.getBoundingClientRect();
-        const thumbs = [...el.querySelectorAll<HTMLElement>('.step-thumbs .fig, .step-thumbs canvas[data-fig]')];
-        const canvases = [...el.querySelectorAll<HTMLElement>('.step-thumbs canvas')];
+        const tiles = [...el.querySelectorAll<HTMLElement>('.step-thumbs > .fig:not([hidden])')];
+        const canvases = tiles.map((tile) => tile.querySelector('canvas')).filter((cv): cv is HTMLCanvasElement => !!cv);
         return {
           count: canvases.length,
           allInFig: canvases.every((cv) => {
             const r = cv.getBoundingClientRect();
             return r.height > 24 && r.bottom <= fig.bottom + 4 && r.top >= fig.top - 4;
           }),
+          abreast: (() => {
+            if (canvases.length < 2) return true;
+            const rows = canvases.map((cv) => Math.round(cv.getBoundingClientRect().top));
+            return new Set(rows).size < canvases.length;
+          })(),
         };
       });
       expect(vis.count, `${c.tab} step ${c.step} thumb count`).toBeGreaterThanOrEqual(c.min);
       expect(vis.allInFig, `${c.tab} step ${c.step} thumbs should all sit in the figure card`).toBe(true);
+      if (c.min >= 2) expect(vis.abreast, `${c.tab} step ${c.step} should keep at least two plots side by side`).toBe(true);
+      if (c.tab === 'engine' && c.step === '3') {
+        await expect(card.getByTestId('param-chip')).toBeVisible();
+        await expect(card.locator('.step-thumbs > .fig:not([hidden]) canvas[data-fig=table]')).toHaveCount(0);
+      }
     }
   });
 
@@ -621,6 +633,72 @@ test.describe('sim-project tabbed page', () => {
     expect(d4.sort()).toEqual(['curve', 'shock']);
     expect(d4).not.toContain('scene');
     expect(d4).not.toContain('seek');
+  });
+
+  test("a card's How to read only describes the panels it draws", async ({ page }) => {
+    await page.setViewportSize({ width: 1280, height: 900 });
+    await open(page, 'sim-project', '#/tab/motor');
+    const motor = page.getByTestId('step-card').first();
+    await motor.evaluate((el) => el.scrollIntoView({ block: 'start' }));
+    const how = motor.getByTestId('how-to-read');
+    await expect(how).toBeVisible();
+    await expect(how).toContainText(/speed change ω after a 1 N·m load/i);
+    await expect(how).not.toContainText(/The picture shows/i);
+    await expect(how).not.toContainText(/load disc/i);
+  });
+
+  test('the expanded plot has a single title', async ({ page }) => {
+    await page.setViewportSize({ width: 1280, height: 900 });
+    await open(page, 'sim-project', '#/tab/motor');
+    const card = page.getByTestId('step-card').first();
+    await card.evaluate((el) => el.scrollIntoView({ block: 'start' }));
+    await expect.poll(async () => card.locator('canvas[data-fig=plot]').count()).toBeGreaterThan(0);
+    await card.locator('canvas[data-fig=plot]').first().click();
+    const overlay = card.getByTestId('fig-overlay');
+    await expect(overlay).toBeVisible();
+    const titles = overlay.locator('h4');
+    await expect(titles).toHaveCount(1);
+    await expect(overlay.locator('.sh')).not.toContainText(/Speed change after a 1 N·m load/i);
+  });
+
+  test('no card shows a Play button that does nothing', async ({ page }) => {
+    await page.setViewportSize({ width: 1280, height: 900 });
+    const tabs = ['engine', 'motor', 'borer', 'disk'] as const;
+    for (const tab of tabs) {
+      await open(page, 'sim-project', `#/tab/${tab}`);
+      const cards = page.getByTestId('step-card');
+      const n = await cards.count();
+      for (let i = 0; i < n; i++) {
+        const card = cards.nth(i);
+        await card.evaluate((el) => el.scrollIntoView({ block: 'start' }));
+        await page.waitForTimeout(150);
+        const info = await card.evaluate((el) => ({
+          step: (el as HTMLElement).dataset.step,
+          hasScene: el.querySelectorAll('canvas[data-fig="scene"]').length > 0,
+          play: el.querySelectorAll('[data-testid=play]').length,
+          time: [...el.querySelectorAll('label, [aria-label]')].some((n) => /^(time)$/i.test((n.getAttribute('aria-label') || n.textContent || '').trim().split('\n')[0].trim()) || /\btime\b/i.test(n.getAttribute('aria-label') || '')),
+        }));
+        if (!info.hasScene) {
+          expect(info.play, `${tab} step ${info.step} should hide Play when no picture is mounted`).toBe(0);
+        }
+      }
+      // also the gear sheet on a phone-sized check is covered below
+    }
+    await page.setViewportSize({ width: 390, height: 844 });
+    await open(page, 'sim-project', '#/tab/motor');
+    const card = page.getByTestId('step-card').first();
+    await card.evaluate((el) => el.scrollIntoView({ block: 'start' }));
+    await expect(card.getByTestId('play')).toHaveCount(0);
+    await card.getByTestId('step-controls-open').click();
+    const sheet = page.getByTestId('step-controls-sheet').first();
+    await expect(sheet).toBeVisible();
+    await expect(sheet.getByTestId('play')).toHaveCount(0);
+    await expect(sheet).not.toContainText(/^time$/i);
+    // the time slider label
+    const timeVisible = await sheet.evaluate((el) =>
+      [...el.querySelectorAll('label, [aria-label]')].some((n) => /^(time)$/i.test((n.getAttribute('aria-label') || '').trim()) || /^time$/i.test((n.textContent || '').trim().split('\n')[0].trim()))
+    );
+    expect(timeVisible, 'gear sheet should hide the time slider when no picture is mounted').toBe(false);
   });
 
 });

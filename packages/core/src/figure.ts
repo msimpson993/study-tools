@@ -1,5 +1,5 @@
 import { h, clear } from './dom';
-import type { FigureDef } from './types';
+import { howToReadFor, type FigureDef } from './types';
 import type { ControlSet } from './controls';
 import { fitCanvas } from './plot';
 import { copyRefButton, figureRefWithControls, refContent } from './copyref';
@@ -68,6 +68,13 @@ export interface FigureMountOpts {
   /** Mount only these panel ids (step cards). Unlike `intro`, the controls rail stays. */
   panels?: string[];
 }
+let scrollLocks = 0;
+function lockPageScroll(on: boolean): void {
+  if (on) {
+    if (scrollLocks++ === 0) document.documentElement.classList.add('fig-overlay-open');
+  } else if (scrollLocks > 0 && --scrollLocks === 0) document.documentElement.classList.remove('fig-overlay-open');
+}
+
 export function mountFigure(host: HTMLElement, def: FigureDef, panels0: FigurePanel[], controls: ControlSet, opts: FigureMountOpts = {}): { redraw(): void; open(ids: string[]): void; close(): void; destroy(): void } {
   const intro = opts.intro;
   const want = opts.panels?.length ? opts.panels : intro?.panels;
@@ -83,8 +90,10 @@ export function mountFigure(host: HTMLElement, def: FigureDef, panels0: FigurePa
   if (def.lookFor && !intro) stage.append(h('p', { class: 'fig-look', dataset: { testid: 'look-for' }, html: `<b>Look for:</b> ${def.lookFor}` }));
   // animation: play/pause drives one control (its own slider is the scrubber); reduced motion => explicit step button, no autoplay loop
   let stopAnim = () => {};
-  if (def.animate) {
-    const a = def.animate, cd = controls.defs.find((c) => c.id === a.control)!;
+  const animCtl = def.animate ? controls.defs.find((c) => c.id === def.animate!.control) : undefined;
+  const animShown = !!(def.animate && animCtl && (!animCtl.panels?.length || !want?.length || animCtl.panels.some((id) => want.includes(id))));
+  if (animShown && def.animate) {
+    const a = def.animate, cd = animCtl!;
     const reduce = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
     let raf = 0, last = 0, playing = false;
     const btn = h('button', { class: 'tbtn on', dataset: { testid: 'play' }, 'aria-pressed': 'false' }, reduce ? 'Step ▶' : '▶ Play');
@@ -109,10 +118,9 @@ export function mountFigure(host: HTMLElement, def: FigureDef, panels0: FigurePa
     stage.append(h('div', { class: 'fig-anim' }, btn, h('span', null, reduce ? 'Reduced motion: stepping instead of animating. ' : '', intro ? '' : `Scrub with the “${cd.label}” slider.`)));
   }
   stage.append(overlay);
-  const phoneCardMq = window.matchMedia('(max-width: 699.98px) and (orientation: portrait)');
   const stepCard = host.closest('.step-card') as HTMLElement | null;
   function placeOverlay() {
-    const dest = (phoneCardMq.matches && stepCard) ? stepCard : stage;
+    const dest = stepCard ?? stage;
     if (overlay.parentElement !== dest) dest.append(overlay);
   }
   overlay.addEventListener('click', (e) => {
@@ -137,7 +145,7 @@ export function mountFigure(host: HTMLElement, def: FigureDef, panels0: FigurePa
     cv.addEventListener('click', () => { if (!wasDrag()) open(); });
     const cap = axesCaption(p, controls.values);
     const axesEl = cap ? h('div', { class: 'fig-axes' }, cap) : null;
-    inline.append(h('div', { class: 'fig' },
+    inline.append(h('div', { class: 'fig', dataset: { figId: def.id, panel: p.id, testid: 'fig-tile' } },
       h('h4', null, p.title),
       h('button', { class: 'st-xp', 'aria-label': `Expand ${p.title}`, title: 'Expand', dataset: { expand: p.id }, onclick: open }, '⤢'),
       cv, axesEl));
@@ -193,9 +201,12 @@ export function mountFigure(host: HTMLElement, def: FigureDef, panels0: FigurePa
       (cv as HTMLCanvasElement & { wasDrag?: () => boolean }).wasDrag = wasDrag;
       const lg = h('div', { class: 'st-lgbox', hidden: !legendOpen[i], dataset: { testid: 'legend-box' } }, ...def.legend.map((l) => h('div', { class: 'li' }, h('i', { class: l.dash ? 'dash' : '', style: `--c:${l.color};border-top-color:${l.color}` }), l.label)));
       const chip = h('button', { class: 'chip', 'aria-expanded': String(legendOpen[i]), dataset: { testid: 'legend-chip' }, onclick: () => { legendOpen[i] = !legendOpen[i]; chip.setAttribute('aria-expanded', String(legendOpen[i])); lg.hidden = !legendOpen[i]; } }, 'Legend ▾');
-      grid.append(h('div', { class: 'fig-slot' }, h('div', { class: 'sh' }, h('span', null, axesCaption(p, controls.values) ? `${p.title}  ·  ${axesCaption(p, controls.values).replace(' · ', '  ·  ')}` : p.title), chip), lg, cv));
+      const cap = axesCaption(p, controls.values);
+      grid.append(h('div', { class: 'fig-slot' }, h('div', { class: 'sh' }, h('span', null, cap), chip), lg, cv));
     });
-    box.append(grid, h('div', { class: 'fig-how', dataset: { testid: 'how-to-read' }, html: `<b>How to read this:</b> ${def.howToRead}` }));
+    const howText = howToReadFor(def.howToRead, openIds);
+    box.append(grid);
+    if (howText) box.append(h('div', { class: 'fig-how', dataset: { testid: 'how-to-read' }, html: `<b>How to read this:</b> ${howText}` }));
     overlay.append(box);
     // A second tap on the expanded plot shrinks it (a drag on a pointer plot does not).
     slotCanvases.forEach((cv) => {
@@ -224,9 +235,9 @@ export function mountFigure(host: HTMLElement, def: FigureDef, panels0: FigurePa
 
   const api = {
     redraw,
-    open(ids: string[]) { openIds = ids; legendOpen = [false, false]; renderOverlay(); },
-    close() { openIds = []; renderOverlay(); },
-    destroy() { stopAnim(); ro.disconnect(); window.removeEventListener('study-theme', onTheme); document.removeEventListener('keydown', onKey, true); mq.removeEventListener?.('change', onRailMq); mqLand.removeEventListener?.('change', onRailMq); },
+    open(ids: string[]) { const wasOpen = openIds.length > 0; openIds = ids; legendOpen = [false, false]; renderOverlay(); if (!wasOpen && openIds.length) lockPageScroll(true); },
+    close() { const wasOpen = openIds.length > 0; openIds = []; renderOverlay(); if (wasOpen) lockPageScroll(false); },
+    destroy() { if (openIds.length) lockPageScroll(false); stopAnim(); ro.disconnect(); window.removeEventListener('study-theme', onTheme); document.removeEventListener('keydown', onKey, true); mq.removeEventListener?.('change', onRailMq); mqLand.removeEventListener?.('change', onRailMq); },
   };
   requestAnimationFrame(redraw);
   return api;

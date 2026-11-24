@@ -72,9 +72,11 @@ export class ControlSet {
     const showCtl = (d: ControlDef) => !d.panels?.length || !opts.panels?.length || d.panels.some((id) => opts.panels!.includes(id));
     // on a tabbed page a single leftover preset is not a choice — keep it applied, but don't draw a one-button row
     const hideLonePreset = typeof document !== 'undefined' && document.documentElement.classList.contains('layout-tabs');
-    if (this.presets.length > 1 || (this.presets.length === 1 && !hideLonePreset)) {
+    const showPreset = (p: { panels?: string[] }) => !p.panels?.length || !opts.panels?.length || p.panels.some((id) => opts.panels!.includes(id));
+    const visiblePresets = this.presets.filter(showPreset);
+    if (visiblePresets.length > 1 || (visiblePresets.length === 1 && !hideLonePreset)) {
       const row = h('div', { class: 'st-presets', role: 'group', 'aria-label': 'Presets' });
-      for (const p of this.presets) {
+      for (const p of visiblePresets) {
         const b = h('button', { dataset: { preset: p.id }, title: p.about ? p.about.replace(/<[^>]+>/g, '') : '', onclick: () => this.applyPreset(p.id) }, p.label);
         this.presetBtns.set(p.id, b); row.append(b);
       }

@@ -2,7 +2,7 @@
 import { h, clear } from './dom';
 import { controlsForSlot, type FigureHooks } from './embed';
 import type { ControlSet } from './controls';
-import type { AppContent } from './types';
+import { howToReadBlocks, type AppContent } from './types';
 import type { FigureMountOpts } from './figure';
 
 const SECTION_C = /c-what-s-going-on/;
@@ -348,7 +348,11 @@ export function applyCardLayout(art: HTMLElement, content: AppContent, hooks: Fi
       }
     };
     syncPreset();
-    controls.onChange(() => syncPreset());
+    controls.onChange(() => {
+      syncPreset();
+      const card = host.closest('.step-card') as HTMLElement | null;
+      if (card) paintThumbs(card);
+    });
     return { stop: typeof stop === 'function' ? stop : () => {}, host, controls };
   };
 
@@ -394,11 +398,70 @@ export function applyCardLayout(art: HTMLElement, content: AppContent, hooks: Fi
     }
   };
 
+  const shortTitle = (figure: string, panel: string, fallback: string) => {
+    if (panel === 'mag') return figure === 'sens' ? '|S|' : '|G|';
+    const map: Record<string, string> = {
+      step: 'Step', bode: 'Bode', speed: 'Speed', throttle: 'Throttle',
+      plot: 'Speed change', seek: 'Seek', shock: 'Shock', splane: 's-plane',
+      phase: 'Phase', path: 'Path', curve: 'Tradeoff', push: 'Push',
+      diagram: 'Diagram', scene: 'Scene', code: 'Script', diag: 'Block', frac: 'Fraction',
+    };
+    return map[panel] ?? fallback;
+  };
   const paintThumbs = (card: HTMLElement) => {
     const thumbs = card.querySelector('.step-thumbs') as HTMLElement | null;
     if (!thumbs) return;
-    const n = thumbs.querySelectorAll('.fig').length;
+    thumbs.querySelectorAll<HTMLElement>('.pop-figs').forEach((el) => { el.style.display = 'contents'; });
+    const figs = [...card.querySelectorAll<HTMLElement>('.step-thumbs .fig, .step-host .fig')];
+    let chip = thumbs.querySelector<HTMLButtonElement>('.param-chip');
+    let n = 0;
+    for (const fig of figs) {
+      const cv = fig.querySelector('canvas') as HTMLCanvasElement | null;
+      const panel = cv?.dataset.fig ?? fig.dataset.panel ?? '';
+      const host = cv?.closest('.step-host') as HTMLElement | null;
+      const figure = fig.dataset.figId ?? host?.dataset.figure ?? '';
+      if (figure) fig.dataset.figId = figure;
+      fig.dataset.panel = panel;
+      if (panel === 'table') {
+        fig.hidden = true;
+        const summary = cv?.dataset.summary || '';
+        if (!chip) {
+          chip = h('button', { type: 'button', class: 'param-chip', dataset: { testid: 'param-chip' } }) as HTMLButtonElement;
+          chip.addEventListener('click', () => {
+            const xp = fig.querySelector<HTMLButtonElement>('.st-xp');
+            if (xp) xp.click();
+            else fig.querySelector('canvas')?.click();
+          });
+        }
+        chip.replaceChildren();
+        chip.append(h('b', null, 'Parameters'));
+        if (summary) chip.append(document.createTextNode(`  ${summary}`));
+        chip.append(h('span', { class: 'hint' }, 'View'));
+        if (chip.parentElement !== thumbs) thumbs.append(chip);
+        continue;
+      }
+      fig.hidden = false;
+      const title = fig.querySelector('h4');
+      if (title) title.textContent = shortTitle(figure, panel, title.textContent || panel);
+      if (cv && !cv.parentElement?.classList.contains('tile-frame')) {
+        const frame = h('div', { class: 'tile-frame' });
+        cv.replaceWith(frame);
+        frame.append(cv);
+      }
+      if (fig.parentElement !== thumbs) thumbs.append(fig);
+      n++;
+    }
+    let bin = card.querySelector('.step-host-bin') as HTMLElement | null;
+    if (!bin) {
+      bin = h('div', { class: 'step-host-bin' });
+      thumbs.after(bin);
+    }
+    thumbs.querySelectorAll<HTMLElement>(':scope > .step-host').forEach((host) => { bin!.append(host); host.classList.remove('step-host-parked'); });
     thumbs.dataset.count = String(n);
+    thumbs.classList.toggle('one', n === 1);
+    if (!figs.some((f) => (f.querySelector('canvas') as HTMLCanvasElement | null)?.dataset.fig === 'table')) {
+      chip?.remove();
+    }
   };
 
   const paintMorePlots = (card: HTMLElement) => {
@@ -421,7 +484,14 @@ export function applyCardLayout(art: HTMLElement, content: AppContent, hooks: Fi
     const how = card.querySelector('.step-how') as HTMLDetailsElement | null;
     const body = card.querySelector('.step-how-body') as HTMLElement | null;
     if (!how || !body) return;
-    const bits = figs.map((f) => content.figures.find((d) => d.id === f.id)?.howToRead || '').filter(Boolean);
+    const bits: string[] = [];
+    for (const f of figs) {
+      const def = content.figures.find((d) => d.id === f.id);
+      const mounted = f.panels?.length
+        ? f.panels
+        : [...card.querySelectorAll<HTMLElement>(`.fig[data-fig-id="${f.id}"]`)].map((el) => el.dataset.panel || '').filter(Boolean);
+      bits.push(...howToReadBlocks(def?.howToRead, mounted));
+    }
     how.hidden = !bits.length;
     // howToRead is already HTML-escaped by the content pipeline (`>` → `&gt;`).
     body.innerHTML = bits.map((s) => `<p>${s}</p>`).join('');
@@ -438,6 +508,10 @@ export function applyCardLayout(art: HTMLElement, content: AppContent, hooks: Fi
     if (!mounts) return;
     unwirePics.get(step)?.();
     unwirePics.delete(step);
+    const card = step.el;
+    card.querySelector('.step-sheet-body')?.querySelectorAll('.st-ctl').forEach((el) => el.remove());
+    card.querySelector('.step-toolbar')?.querySelectorAll('[data-testid=play]').forEach((el) => el.remove());
+    card.querySelector('.step-thumbs')?.querySelectorAll(':scope > .fig, :scope > .param-chip').forEach((el) => el.remove());
     for (const m of mounts) {
       const key = m.host.dataset.stateKey;
       if (key) savedState.set(key, m.controls.serialize());
@@ -465,6 +539,7 @@ export function applyCardLayout(art: HTMLElement, content: AppContent, hooks: Fi
     }
     placeControls(step, card);
     paintHow(card, step.figs);
+    requestAnimationFrame(() => paintThumbs(card));
     unwirePics.get(step)?.();
     unwirePics.set(step, wirePics(card));
     paintMorePlots(card);
