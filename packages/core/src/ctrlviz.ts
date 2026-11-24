@@ -27,8 +27,8 @@ const MIN_FONT = 9;
 type TextBox = { x: number; y: number; align: CanvasTextAlign; a: number; b2: number; c: number; d: number; z: number };
 const textBox = (x: number, y: number, tw: number, th: number, align: CanvasTextAlign, z: number): TextBox => {
   const a = align === 'left' ? x : align === 'right' ? x - tw : x - tw / 2;
-  // match logText's alphabetic extents (ascent 0.9·size, descent 0.25·size)
-  return { x, y, align, a, b2: a + tw, c: y - z * 0.9, d: y + z * 0.25, z };
+  // match text()'s default middle baseline (logText extents ±0.55·size)
+  return { x, y, align, a, b2: a + tw, c: y - z * 0.55, d: y + z * 0.55, z };
 };
 /** Grow a box the same way the local overlap e2e does (9% + 2 px width, 2 px height). */
 const inflateBox = (b: TextBox): TextBox => {
@@ -44,8 +44,8 @@ const edgeDist = (b: TextBox, X: number, Y: number) => {
 const aroundMarker = (X: number, Y: number, tw: number, th: number, z: number, preferRight = true, gap = ANCHOR_GAP): TextBox[] => {
   const out: TextBox[] = [];
   const cardinal: TextBox[] = preferRight
-    ? [textBox(X + gap, Y, tw, th, 'left', z), textBox(X - gap, Y, tw, th, 'right', z), textBox(X, Y - gap - z * 0.25, tw, th, 'center', z), textBox(X, Y + gap + z * 0.9, tw, th, 'center', z)]
-    : [textBox(X - gap, Y, tw, th, 'right', z), textBox(X + gap, Y, tw, th, 'left', z), textBox(X, Y - gap - z * 0.25, tw, th, 'center', z), textBox(X, Y + gap + z * 0.9, tw, th, 'center', z)];
+    ? [textBox(X + gap, Y, tw, th, 'left', z), textBox(X - gap, Y, tw, th, 'right', z), textBox(X, Y - gap - z * 0.55, tw, th, 'center', z), textBox(X, Y + gap + z * 0.55, tw, th, 'center', z)]
+    : [textBox(X - gap, Y, tw, th, 'right', z), textBox(X + gap, Y, tw, th, 'left', z), textBox(X, Y - gap - z * 0.55, tw, th, 'center', z), textBox(X, Y + gap + z * 0.55, tw, th, 'center', z)];
   for (const b of cardinal) if (edgeDist(b, X, Y) <= 16 && edgeDist(b, X, Y) >= 8) out.push(b);
   const start = preferRight ? 0 : Math.PI;
   for (let i = 0; i < 16; i++) {
@@ -465,7 +465,7 @@ export function drawSPlane(g: CanvasRenderingContext2D, w: number, h: number, s:
       const nx = -(ay1 - ay0) / along, ny = (ax1 - ax0) / along;
       let pick: TextBox | null = null;
       const collect = (zsz: number, X: number, Y: number): TextBox[] => {
-        const twz = g.measureText(name).width, thz = zsz + 3, off = zsz * 0.9 + 7;
+        const twz = g.measureText(name).width, thz = zsz + 3, off = zsz * 0.55 + 7;
         return [
           textBox(X + nx * off, Y + ny * off, twz, thz, 'center', zsz),
           textBox(X - nx * off, Y - ny * off, twz, thz, 'center', zsz),
@@ -640,7 +640,7 @@ export function drawSPlane(g: CanvasRenderingContext2D, w: number, h: number, s:
         const spots = [f.box.t + 14, f.box.t + 24, f.box.b - 14, (f.box.t + f.box.b) / 2];
         let yPut: number | null = null;
         for (const y of spots) {
-          const a = shadeR - 6 - tw, c = y - MIN_FONT * 0.9, d = y + MIN_FONT * 0.25;
+          const a = shadeR - 6 - tw, c = y - MIN_FONT * 0.55, d = y + MIN_FONT * 0.55;
           if (c >= f.box.t + 1 && d <= f.box.b - 1 && !blocked(a, shadeR - 6, c, d)) { yPut = y; break; }
         }
         if (yPut === null) yPut = f.box.t + 14;
