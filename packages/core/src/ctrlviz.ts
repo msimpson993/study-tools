@@ -182,14 +182,23 @@ export function drawStepResponse(g: CanvasRenderingContext2D, w: number, h: numb
       const tw = g.measureText(trLab).width, th = z + 3;
       const padYOf = (c: TextBox) => Math.abs(((c.c + c.d) / 2) - barY) <= 24 ? 12 : 0;
       const hitsOriginTick = (c: TextBox) => c.a < f.box.l + 18 && c.d > f.box.b - 6;
-      const leftBar = midX < f.box.l + (f.box.r - f.box.l) * 0.28 && !(Number.isFinite(m.settlingTime) && show.settling && f.X(m.settlingTime) - x1Bar < tw + 16);
-      const spots: TextBox[] = leftBar
+      const nearTs = !!(Number.isFinite(m.settlingTime) && show.settling && f.X(m.settlingTime) - x1Bar < tw + 16);
+      const leftBar = midX < f.box.l + (f.box.r - f.box.l) * 0.28;
+      const spots: TextBox[] = leftBar && !nearTs
         ? [
-          textBox(x1Bar + 6, barY + 10, tw, th, 'left', z),
           textBox(x1Bar + 6, barY - 10, tw, th, 'left', z),
-          textBox(midX + tw * 0.7, barY + 10, tw, th, 'center', z),
+          textBox(x1Bar + 6, barY + 10, tw, th, 'left', z),
           textBox(midX + tw * 0.7, barY - 10, tw, th, 'center', z),
+          textBox(midX + tw * 0.7, barY + 10, tw, th, 'center', z),
           textBox(midX, barY - 10, tw, th, 'center', z),
+          textBox(midX, barY + 10, tw, th, 'center', z),
+        ]
+        : leftBar
+        ? [
+          // Ts is just to the right: stay under the rise, above the tick row so the 0 tick is clear
+          textBox(midX, barY - 10, tw, th, 'center', z),
+          textBox(Math.max(midX, f.box.l + 22 + tw / 2), barY - 10, tw, th, 'center', z),
+          textBox(midX + tw * 0.5, barY - 10, tw, th, 'center', z),
           textBox(midX, barY + 10, tw, th, 'center', z),
         ]
         : [
@@ -219,9 +228,12 @@ export function drawStepResponse(g: CanvasRenderingContext2D, w: number, h: numb
       g.font = `${MIN_FONT}px system-ui,sans-serif`;
       const tw = g.measureText(trLab).width, th = MIN_FONT + 3;
       const ys = [barY + 10, barY + 16, barY - 10];
-      const leftBar = midX < f.box.l + (f.box.r - f.box.l) * 0.28 && !(Number.isFinite(m.settlingTime) && show.settling && f.X(m.settlingTime) - x1Bar < tw + 16);
-      const xs: [number, CanvasTextAlign][] = leftBar
+      const nearTs = !!(Number.isFinite(m.settlingTime) && show.settling && f.X(m.settlingTime) - x1Bar < tw + 16);
+      const leftBar = midX < f.box.l + (f.box.r - f.box.l) * 0.28;
+      const xs: [number, CanvasTextAlign][] = leftBar && !nearTs
         ? [[x1Bar + 6, 'left'], [midX + tw * 0.7, 'center'], [x1Bar + 14, 'left'], [midX, 'center']]
+        : leftBar
+        ? [[midX, 'center'], [Math.max(midX, f.box.l + 22 + tw / 2), 'center'], [midX + tw * 0.5, 'center']]
         : [[midX, 'center'], [x1Bar + 6, 'left'], [x0Bar - 6, 'right'], [midX + tw * 0.55, 'center'], [midX - tw * 0.55, 'center']];
       for (const yy of ys) for (const [xx, al] of xs) {
         const c = textBox(xx, yy, tw, th, al, MIN_FONT);
@@ -387,7 +399,7 @@ export function drawStepResponse(g: CanvasRenderingContext2D, w: number, h: numb
           const dy = c.d < yTop ? yTop - c.d : c.c > yBot ? c.c - yBot : 0;
           return Math.hypot(dx, dy) <= 23;
         };
-        const ys = [yLo - 8, yLo - 4, yLo + 6, yBot - 18, (yTop + yBot) / 2, yTop + 14, yHi - 12];
+        const ys = [yLo - 8, yLo - 4, yBot - 18, (yTop + yBot) / 2, yTop + 14, yHi - 12];
         for (const yy of ys) for (const [x, al] of [[lineX + 8, 'left'], [lineX + 12, 'left'], [lineX - 8, 'right']] as [number, CanvasTextAlign][]) {
           const c = textBox(x, yy, tw, th, al, z);
           if (!inPlot(c.a, c.b2, c.c, c.d, 8)) continue;
@@ -410,7 +422,7 @@ export function drawStepResponse(g: CanvasRenderingContext2D, w: number, h: numb
           const dy = c.d < yTop ? yTop - c.d : c.c > yBot ? c.c - yBot : 0;
           return Math.hypot(dx, dy) <= 23;
         };
-        const ys = [yLo - 8, yLo - 4, yLo + 6, yBot - 18, (yTop + yBot) / 2, yTop + 14, yHi - 12];
+        const ys = [yLo - 8, yLo - 4, yBot - 18, (yTop + yBot) / 2, yTop + 14, yHi - 12];
         const xs: [number, CanvasTextAlign][] = [[lineX + 8, 'left'], [lineX + 12, 'left'], [lineX - 8, 'right']];
         for (const yy of ys) for (const [x, al] of xs) {
           const c = textBox(x, yy, tw, th, al, MIN_FONT);
