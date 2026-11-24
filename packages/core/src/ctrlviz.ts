@@ -167,6 +167,7 @@ export function drawStepResponse(g: CanvasRenderingContext2D, w: number, h: numb
   let dropGhost = false;
   let osBox: { x0: number; x1: number; y: number } | null = null;
   let trBox: { x0: number; x1: number; y0: number; y1: number } | null = null;
+  let tsBox: { x0: number; x1: number; y0: number; y1: number } | null = null;
   const ghostWouldHit = (a: number, b2: number, c: number, d: number) => !!(ghostBox && b2 > ghostBox.x0 - 4 && a < ghostBox.x1 + 4 && d > ghostBox.y0 - 4 && c < ghostBox.y1 + 4);
   if (show.timing && Number.isFinite(m.riseTime)) {
     const y10 = yf * 0.1, y90 = yf * 0.9;
@@ -337,49 +338,6 @@ export function drawStepResponse(g: CanvasRenderingContext2D, w: number, h: numb
   const trPlaced = trBox as { x0: number; x1: number; y0: number; y1: number } | null;
   const hitsTr = (a: number, b2: number, c: number, d: number) =>
     !!(trPlaced && b2 > trPlaced.x0 - 6 && a < trPlaced.x1 + 6 && d > trPlaced.y0 - 6 && c < trPlaced.y1 + 6);
-  if (s.ghost?.label && !dropGhost) {
-    const gl = s.ghost, gLab = `┄ ${gl.label}`;
-    g.font = '10px system-ui,sans-serif';
-    const gw = g.measureText(gLab).width;
-    const px = (show.overshoot && Number.isFinite(m.peak) && m.overshootPct > 0.05) ? f.X(m.peakTime) : (f.box.l + f.box.r) / 2;
-    const mk = (x: number, y: number, align: CanvasTextAlign) => ({ x, y, align });
-    const topL = mk(f.box.l + 4, Math.max(8, f.box.t - 10), 'left'), topR = mk(f.box.r - 4, Math.max(8, f.box.t - 10), 'right');
-    const inR = [mk(f.box.r - 4, f.box.t + 14, 'right'), mk(f.box.r - 4, f.box.t + 28, 'right')];
-    const inL = [mk(f.box.l + 4, f.box.t + 14, 'left'), mk(f.box.l + 4, f.box.t + 28, 'left')];
-    const farFirst = Math.abs(topR.x - px) >= Math.abs(topL.x - px);
-    // tiles: only the top pad — if those fail, drop the ghost rather than park it on the curve
-    const spots = tile
-      ? (farFirst ? [topR, topL] : [topL, topR])
-      : (farFirst ? [topR, topL, ...inR, ...inL] : [topL, topR, ...inL, ...inR]);
-    let placed = false;
-    for (const sp of spots) {
-      const a = sp.align === 'right' ? sp.x - gw : sp.x, b2 = a + gw, c = sp.y - 6, d = sp.y + 6;
-      const I = inflateBox(textBox(sp.x, sp.y, gw, 13, sp.align, 10));
-      if (osPlaced && I.b2 > osPlaced.x0 - 4 && I.a < osPlaced.x1 + 4 && I.d > osPlaced.y - 10 && I.c < osPlaced.y + 10) continue;
-      if (hitsCurve(a, b2, c, d)) continue;
-      if (show.overshoot && Number.isFinite(m.peak)) {
-        const px0 = f.X(m.peakTime), py0 = f.Y(m.peak);
-        const cx = Math.max(I.a, Math.min(px0, I.b2)), cy = Math.max(I.c, Math.min(py0, I.d));
-        if (Math.hypot(cx - px0, cy - py0) < 8) continue;
-      }
-      ghostBox = { x0: a, x1: b2, y0: c, y1: d };
-      withLabelRole('axis', () => { text(g, gLab, sp.x, sp.y, gl.color ?? col.muted(), sp.align, 10); });
-      placed = true; break;
-    }
-    if (!placed && !tile) {
-      g.font = `${MIN_FONT}px system-ui,sans-serif`;
-      const gw9 = g.measureText(gLab).width;
-      const extra = [mk(f.box.r - 4, (f.box.t + f.box.b) / 2, 'right'), mk(f.box.l + 4, (f.box.t + f.box.b) / 2, 'left')];
-      for (const sp of [...spots, ...extra]) {
-        const a = sp.align === 'right' ? sp.x - gw9 : sp.x, b2 = a + gw9, c0 = sp.y - 6, d0 = sp.y + 6;
-        if (osPlaced && b2 > osPlaced.x0 - 4 && a < osPlaced.x1 + 4 && d0 > osPlaced.y - 8 && c0 < osPlaced.y + 8) continue;
-        if (hitsCurve(a, b2, c0, d0)) continue;
-        ghostBox = { x0: a, x1: b2, y0: c0, y1: d0 };
-        withLabelRole('axis', () => { text(g, gLab, sp.x, sp.y, gl.color ?? col.muted(), sp.align, MIN_FONT); });
-        placed = true; break;
-      }
-    }
-  }
   if (show.settling && m.settled && Number.isFinite(m.settlingTime)) {
     // the dashed Ts line stops just under the overshoot label when it would run through it (it made "15.7 %" read "5.7 %")
     const tx = f.X(m.settlingTime), cut = osPlaced && tx > osPlaced.x0 - 3 && tx < osPlaced.x1 + 3 ? Math.min(yr[1], f.iy(osPlaced.y + 8)) : yr[1];
@@ -435,9 +393,68 @@ export function drawStepResponse(g: CanvasRenderingContext2D, w: number, h: numb
           tsPick = c; break;
         }
       }
-      if (tsPick) withAnchor({ kind: 'line', x: lineX, y: yLo, x2: lineX, y2: yHi }, () => {
-        withLabelRole('axis', () => { lbl(tsLab, tsPick!.x, tsPick!.y, col.c(), tsPick!.align, tsPick!.z); });
-      });
+      if (tsPick) {
+        withAnchor({ kind: 'line', x: lineX, y: yLo, x2: lineX, y2: yHi }, () => {
+          withLabelRole('axis', () => { lbl(tsLab, tsPick!.x, tsPick!.y, col.c(), tsPick!.align, tsPick!.z); });
+        });
+        tsBox = { x0: tsPick.a, x1: tsPick.b2, y0: tsPick.c, y1: tsPick.d };
+      }
+    }
+  }
+  // required Ts / OS / Tr first; the stand-in legend then takes a free corner (CI fonts can be slightly wider)
+  const tsPlaced = tsBox as { x0: number; x1: number; y0: number; y1: number } | null;
+  const GHOST_GAP = 8;
+  const ghostBlocked = (a: number, b2: number, c: number, d: number) => {
+    if (osPlaced && b2 > osPlaced.x0 - 4 && a < osPlaced.x1 + 4 && d > osPlaced.y - 10 && c < osPlaced.y + 10) return true;
+    if (tsPlaced && b2 > tsPlaced.x0 - GHOST_GAP && a < tsPlaced.x1 + GHOST_GAP && d > tsPlaced.y0 - GHOST_GAP && c < tsPlaced.y1 + GHOST_GAP) return true;
+    if (hitsCurve(a, b2, c, d)) return true;
+    if (hitsOtherVert(a, b2, c, d)) return true;
+    if (show.overshoot && Number.isFinite(m.peak)) {
+      const px0 = f.X(m.peakTime), py0 = f.Y(m.peak);
+      const cx = Math.max(a, Math.min(px0, b2)), cy = Math.max(c, Math.min(py0, d));
+      if (Math.hypot(cx - px0, cy - py0) < 8) return true;
+    }
+    return false;
+  };
+  if (s.ghost?.label && !dropGhost) {
+    const gl = s.ghost, gLab = `┄ ${gl.label}`;
+    g.font = '10px system-ui,sans-serif';
+    const gw = g.measureText(gLab).width;
+    const px = (show.overshoot && Number.isFinite(m.peak) && m.overshootPct > 0.05) ? f.X(m.peakTime) : (f.box.l + f.box.r) / 2;
+    const farFrom = (show.settling && Number.isFinite(m.settlingTime)) ? f.X(m.settlingTime) : px;
+    const mk = (x: number, y: number, align: CanvasTextAlign) => ({ x, y, align });
+    const topL = mk(f.box.l + 4, Math.max(8, f.box.t - 10), 'left'), topR = mk(f.box.r - 4, Math.max(8, f.box.t - 10), 'right');
+    const inR = [mk(f.box.r - 4, f.box.t + 14, 'right'), mk(f.box.r - 4, f.box.t + 28, 'right')];
+    const inL = [mk(f.box.l + 4, f.box.t + 14, 'left'), mk(f.box.l + 4, f.box.t + 28, 'left')];
+    const midR = mk(f.box.r - 4, (f.box.t + f.box.b) / 2, 'right'), midL = mk(f.box.l + 4, (f.box.t + f.box.b) / 2, 'left');
+    const farFirst = Math.abs(topR.x - farFrom) >= Math.abs(topL.x - farFrom);
+    // tiles: only the top pad — if those fail, drop the ghost rather than park it on the curve
+    const spots = tile
+      ? (farFirst ? [topR, topL] : [topL, topR])
+      : (farFirst ? [topR, topL, ...inR, midR, ...inL, midL] : [topL, topR, ...inL, midL, ...inR, midR]);
+    let placed = false;
+    for (const sp of spots) {
+      const a = sp.align === 'right' ? sp.x - gw : sp.x, b2 = a + gw, c = sp.y - 6, d = sp.y + 6;
+      if (ghostBlocked(a, b2, c, d)) continue;
+      ghostBox = { x0: a, x1: b2, y0: c, y1: d };
+      withLabelRole('axis', () => { text(g, gLab, sp.x, sp.y, gl.color ?? col.muted(), sp.align, 10); });
+      placed = true; break;
+    }
+    if (!placed && !tile) {
+      g.font = `${MIN_FONT}px system-ui,sans-serif`;
+      const gw9 = g.measureText(gLab).width;
+      const extra = [
+        midR, midL,
+        mk(f.box.r - 4, f.box.t + 44, 'right'), mk(f.box.l + 4, f.box.t + 44, 'left'),
+        mk(f.box.r - 4, f.box.t + (f.box.b - f.box.t) * 0.65, 'right'), mk(f.box.l + 4, f.box.t + (f.box.b - f.box.t) * 0.65, 'left'),
+      ];
+      for (const sp of [...spots, ...extra]) {
+        const a = sp.align === 'right' ? sp.x - gw9 : sp.x, b2 = a + gw9, c0 = sp.y - 6, d0 = sp.y + 6;
+        if (ghostBlocked(a, b2, c0, d0)) continue;
+        ghostBox = { x0: a, x1: b2, y0: c0, y1: d0 };
+        withLabelRole('axis', () => { text(g, gLab, sp.x, sp.y, gl.color ?? col.muted(), sp.align, MIN_FONT); });
+        placed = true; break;
+      }
     }
   }
   if (show.ess && Number.isFinite(m.ess) && Math.abs(m.ess) > 1e-3 * Math.max(1, Math.abs(ref))) {
