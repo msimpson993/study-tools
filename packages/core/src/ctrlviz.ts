@@ -176,23 +176,32 @@ export function drawStepResponse(g: CanvasRenderingContext2D, w: number, h: numb
       const tw = g.measureText(trLab).width, th = z + 3;
       const padYOf = (c: TextBox) => Math.abs(((c.c + c.d) / 2) - barY) <= 24 ? 12 : 0;
       const hitsOriginTick = (c: TextBox) => c.a < f.box.l + 18 && c.d > f.box.b - 6;
-      const spots: TextBox[] = [
-        textBox(midX, barY - 10, tw, th, 'center', z),
-        textBox(midX, barY + 10, tw, th, 'center', z),
-        textBox(x0Bar - 6, barY, tw, th, 'right', z),
-        textBox(x1Bar + 6, barY, tw, th, 'left', z),
-        textBox(midX, barY - 18, tw, th, 'center', z),
-        textBox(midX, barY + 16, tw, th, 'center', z),
-        textBox(midX - tw * 0.6, barY + 10, tw, th, 'center', z),
-        textBox(midX + tw * 0.6, barY + 10, tw, th, 'center', z),
-        textBox(midX - tw * 0.6, barY - 10, tw, th, 'center', z),
-        textBox(midX + tw * 0.6, barY - 10, tw, th, 'center', z),
-      ];
+      const leftBar = midX < f.box.l + (f.box.r - f.box.l) * 0.28;
+      const spots: TextBox[] = leftBar
+        ? [
+          textBox(x1Bar + 6, barY + 10, tw, th, 'left', z),
+          textBox(x1Bar + 6, barY - 10, tw, th, 'left', z),
+          textBox(midX + tw * 0.7, barY + 10, tw, th, 'center', z),
+          textBox(midX + tw * 0.7, barY - 10, tw, th, 'center', z),
+          textBox(midX, barY - 10, tw, th, 'center', z),
+          textBox(midX, barY + 10, tw, th, 'center', z),
+        ]
+        : [
+          textBox(midX, barY - 10, tw, th, 'center', z),
+          textBox(midX, barY + 10, tw, th, 'center', z),
+          textBox(x0Bar - 6, barY, tw, th, 'right', z),
+          textBox(x1Bar + 6, barY, tw, th, 'left', z),
+          textBox(midX, barY - 18, tw, th, 'center', z),
+          textBox(midX, barY + 16, tw, th, 'center', z),
+          textBox(midX - tw * 0.6, barY + 10, tw, th, 'center', z),
+          textBox(midX + tw * 0.6, barY + 10, tw, th, 'center', z),
+          textBox(midX - tw * 0.6, barY - 10, tw, th, 'center', z),
+          textBox(midX + tw * 0.6, barY - 10, tw, th, 'center', z),
+        ];
       for (const c of spots) {
         if (!inPlot(c.a, c.b2, c.c, c.d, padYOf(c))) continue;
         if (c.c < yRef + 6 && c.d > yRef - 6) continue;
-        const nearBar = Math.abs(((c.c + c.d) / 2) - barY) <= 22;
-        if (!nearBar && hitsCurve(c.a, c.b2, c.c, c.d)) continue;
+        if (hitsCurve(c.a, c.b2, c.c, c.d)) continue;
         if (hitsOtherVert(c.a, c.b2, c.c, c.d, [x0Bar, x1Bar])) continue;
         if (hitsOriginTick(c)) continue;
         trPick = c; break;
@@ -204,14 +213,16 @@ export function drawStepResponse(g: CanvasRenderingContext2D, w: number, h: numb
       g.font = `${MIN_FONT}px system-ui,sans-serif`;
       const tw = g.measureText(trLab).width, th = MIN_FONT + 3;
       const ys = [barY + 10, barY + 16, barY - 10];
-      const xs: [number, CanvasTextAlign][] = [[midX, 'center'], [x1Bar + 6, 'left'], [x0Bar - 6, 'right'], [midX + tw * 0.55, 'center'], [midX - tw * 0.55, 'center']];
+      const leftBar = midX < f.box.l + (f.box.r - f.box.l) * 0.28;
+      const xs: [number, CanvasTextAlign][] = leftBar
+        ? [[x1Bar + 6, 'left'], [midX + tw * 0.7, 'center'], [x1Bar + 14, 'left'], [midX, 'center']]
+        : [[midX, 'center'], [x1Bar + 6, 'left'], [x0Bar - 6, 'right'], [midX + tw * 0.55, 'center'], [midX - tw * 0.55, 'center']];
       for (const yy of ys) for (const [xx, al] of xs) {
         const c = textBox(xx, yy, tw, th, al, MIN_FONT);
         if (c.a < f.box.l + 2 || c.b2 > f.box.r - 2) continue;
         if (c.d > f.box.b + 4) continue;
         if (hitsOtherVert(c.a, c.b2, c.c, c.d, [x0Bar, x1Bar])) continue;
-        const nearBar = Math.abs(((c.c + c.d) / 2) - barY) <= 22;
-        if (!nearBar && hitsCurve(c.a, c.b2, c.c, c.d)) continue;
+        if (hitsCurve(c.a, c.b2, c.c, c.d)) continue;
         if (c.a < f.box.l + 18 && c.d > f.box.b - 6) continue;
         trPick = c; break;
       }
