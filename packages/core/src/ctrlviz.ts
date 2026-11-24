@@ -326,18 +326,20 @@ export function drawSPlane(g: CanvasRenderingContext2D, w: number, h: number, s:
     const shadeL = Math.max(x0, f.box.l), shadeR = f.box.r, word = 'unstable';
     if (shadeR - shadeL > 6 && f.box.b - f.box.t > 16) {
       const hitsMarksBox = (a: number, b2: number, c: number, d: number) =>
-        marks.some((m) => m.x < b2 + 13 && m.x > a - 13 && m.y < d + 13 && m.y > c - 13);
-      const jwW = (() => { g.font = '11px system-ui,sans-serif'; return g.measureText(s.yLabel ?? 'jω (rad/s)').width; })();
+        marks.some((m) => m.x < b2 + 20 && m.x > a - 20 && m.y < d + 20 && m.y > c - 20);
+      const jwW = (() => { g.font = '11px system-ui,sans-serif'; return g.measureText(s.yLabel ?? 'jω (rad/s)').width * 1.25; })();
       const jwX = f.X(0) + 6;
       const hitsJw = (a: number, b2: number, c: number, d: number) => b2 > jwX - 2 && a < jwX + jwW + 2 && d > f.box.t - 18 && c < f.box.t + 4;
+      const zrU = (s.zetaRays ?? []).map((zz) => Math.acos(Math.min(1, Math.max(0, zz))));
+      const hitsRayU = (a: number, b2: number, c: number, d: number) => zrU.some((t2) => [1, -1].some((sg) => { for (let k = 0; k <= 80; k++) { const q = (k / 80) * R, X = f.X(-Math.cos(t2) * q), Y = f.Y(sg * Math.sin(t2) * q); if (X > a - 4 && X < b2 + 4 && Y > c - 4 && Y < d + 4) return true; } return false; }));
       const tryPlace = (z0: number, tw0: number, x: number, yMin: number, yMax: number) => {
-        const th = z0 * 1.1;
+        const th = z0 * 1.2, twPad = tw0 * 1.25;
         for (let y = yMin; y <= yMax; y += 4) {
-          const a = x - tw0, b2 = x, c = y - th / 2, d = y + th / 2;
+          const a = x - twPad, b2 = x, c = y - th / 2, d = y + th / 2;
           if (c < f.box.t + 2 || d > f.box.b - 2) continue;
-          if (hitsMarksBox(a, b2, c, d) || hitsJw(a, b2, c, d)) continue;
-          text(g, word, x, y, col.bad(), 'right', z0);
-          unstableBox = { x0: a - 6, x1: b2 + 4, y0: c - 6, y1: d + 6 };
+          if (hitsMarksBox(a, b2, c, d) || hitsJw(a, b2, c, d) || hitsRayU(a, b2, c, d)) continue;
+          withLabelRole('axis', () => { text(g, word, x, y, col.bad(), 'right', z0); });
+          unstableBox = { x0: a - 10, x1: b2 + 6, y0: c - 10, y1: d + 10 };
           return true;
         }
         return false;
@@ -352,9 +354,9 @@ export function drawSPlane(g: CanvasRenderingContext2D, w: number, h: number, s:
         g.font = '9px system-ui,sans-serif'; tw = g.measureText(word).width;
         const x = Math.min(f.box.r - 2, Math.max(x0 + jwW + 12, shadeR - 4));
         const y = Math.max(9, f.box.t - 8);
-        if (!hitsMarksBox(x - tw, x, y - 6, y + 6) && !hitsJw(x - tw, x, y - 6, y + 6)) {
-          text(g, word, x, y, col.bad(), 'right', 9);
-          unstableBox = { x0: x - tw - 6, x1: x + 4, y0: y - 8, y1: y + 8 };
+        if (!hitsMarksBox(x - tw * 1.25, x, y - 8, y + 8) && !hitsJw(x - tw * 1.25, x, y - 8, y + 8) && !hitsRayU(x - tw * 1.25, x, y - 8, y + 8)) {
+          withLabelRole('axis', () => { text(g, word, x, y, col.bad(), 'right', 9); });
+          unstableBox = { x0: x - tw * 1.25 - 10, x1: x + 6, y0: y - 10, y1: y + 10 };
           placed = true;
         } else {
           placed = tryPlace(9, tw, shadeR - 6, f.box.t + 20, f.box.b - 12);
@@ -424,7 +426,7 @@ export function drawSPlane(g: CanvasRenderingContext2D, w: number, h: number, s:
   // pole crosses and zero rings are recorded with the labels (role 'axis'), so notes drawn afterwards slide clear of them
   if (cv && m && Math.abs(m.b) < 1e-9 && Math.abs(m.c) < 1e-9 && m.d > 0) for (const p of [...(s.poles ?? []), ...(s.zeros ?? [])]) {
     const X = f.X(p.re), Y = f.Y(p.im); if (X < f.box.l || X > f.box.r || Y < f.box.t || Y > f.box.b) continue;
-    labelsOn(cv).push({ x0: m.a * (X - 7) + m.e, x1: m.a * (X + 7) + m.e, y0: m.d * (Y - 7) + m.f, y1: m.d * (Y + 7) + m.f, role: 'axis' });
+    labelsOn(cv).push({ x0: m.a * (X - 12) + m.e, x1: m.a * (X + 12) + m.e, y0: m.d * (Y - 12) + m.f, y1: m.d * (Y + 12) + m.f, role: 'axis' });
   }
   // a pole's value goes right of it, or left when a ζ ray runs through that spot (pass 3: a pole on a ray had its value on the ray)
   const zr = (s.zetaRays ?? []).map((zz) => Math.acos(Math.min(1, Math.max(0, zz))));
@@ -438,7 +440,7 @@ export function drawSPlane(g: CanvasRenderingContext2D, w: number, h: number, s:
   const sigX0 = sigX1 - sw;
   const onSigma = (a: number, b2: number, c: number, d: number) => b2 > sigX0 - 5 && a < sigX1 + 5 && d > sigY - 10 && c < sigY + 10;
   const onJw = (a: number, b2: number, c: number, d: number) => b2 > jwX - 2 && a < jwX + jwW + 2 && d > f.box.t - 18 && c < f.box.t + 4;
-  const hitsUnstable = (a: number, b2: number, c: number, d: number) => !!(unstableBox && b2 > unstableBox.x0 - 6 && a < unstableBox.x1 + 6 && d > unstableBox.y0 - 6 && c < unstableBox.y1 + 6);
+  const hitsUnstable = (a: number, b2: number, c: number, d: number) => !!(unstableBox && b2 > unstableBox.x0 - 14 && a < unstableBox.x1 + 14 && d > unstableBox.y0 - 14 && c < unstableBox.y1 + 14);
   const hitsTaken = (a: number, b2: number, c: number, d: number) => taken.some((t) => b2 > t.x0 - 3 && a < t.x1 + 3 && d > t.y0 - 3 && c < t.y1 + 3);
   const poles = s.poles ?? [];
   const labelled: { p: Cx; lab: string }[] = [];
@@ -470,7 +472,7 @@ export function drawSPlane(g: CanvasRenderingContext2D, w: number, h: number, s:
       let n = 0;
       // hard-reject a box that covers the pole ×, a ζ ray, or the jω axis (BUG-45)
       if (onAxis(a, b2) || onRay(a, b2, c, d)) return 1e6;
-      if (a < X + 13 && b2 > X - 13 && c < Yp + 13 && d > Yp - 13) return 1e6;
+      if (a < X + 20 && b2 > X - 20 && c < Yp + 20 && d > Yp - 20) return 1e6;
       if (inUnstable(a, b2)) n += 80;
       return n;
     };
@@ -478,7 +480,7 @@ export function drawSPlane(g: CanvasRenderingContext2D, w: number, h: number, s:
     let pick: Cand | null = null, best = 1e6;
     for (const z of [10, 9, 8, 7, 6]) {
       g.font = `${z}px system-ui, sans-serif`;
-      const tw = g.measureText(lab).width * 1.15, th = z + 3;
+      const tw = g.measureText(lab).width * 1.25, th = z + 4;
       const cands: Cand[] = [];
       const add = (x: number, y: number, align: CanvasTextAlign) => {
         const a = align === 'left' ? x : align === 'right' ? x - tw : x - tw / 2;
@@ -489,6 +491,10 @@ export function drawSPlane(g: CanvasRenderingContext2D, w: number, h: number, s:
       add(X - 9, Yp + (p.im > 1e-9 ? 14 : -12), 'right');
       add(X + 16, Yp + (p.im > 1e-9 ? 16 : -16), 'left');
       add(X - 16, Yp + (p.im > 1e-9 ? 16 : -16), 'right');
+      add(X + 22, Yp + (p.im > 1e-9 ? 22 : -22), 'left');
+      add(X - 22, Yp + (p.im > 1e-9 ? 22 : -22), 'right');
+      add(X + 22, Yp - 22, 'left');
+      add(X - 22, Yp + 22, 'right');
       add(X + 9, Yp - 12, 'left');
       add(X - 9, Yp - 12, 'right');
       add(X, Yp - 22, 'center');
@@ -529,11 +535,11 @@ export function drawSPlane(g: CanvasRenderingContext2D, w: number, h: number, s:
           if (!inside(a, b2, c, d)) n += 1000;
           if (onSigma(a, b2, c, d) || onJw(a, b2, c, d) || hitsUnstable(a, b2, c, d) || hitsTaken(a, b2, c, d)) n += 400;
           if (onAxis(a, b2) || onRay(a, b2, c, d)) n += 2000;
-          if (a < X + 13 && b2 > X - 13 && c < Yp + 13 && d > Yp - 13) n += 2000;
+          if (a < X + 20 && b2 > X - 20 && c < Yp + 20 && d > Yp - 20) n += 2000;
           return n;
         };
         for (let yy = f.box.t + 8; yy < f.box.b - 8; yy += 8) {
-          for (const [x, align] of [[X + 16, 'left'], [X - 16, 'right'], [X + 9, 'left'], [X - 9, 'right'], [f.box.l + 4, 'left'], [f.box.r - 4, 'right']] as [number, CanvasTextAlign][]) {
+          for (const [x, align] of [[X + 22, 'left'], [X - 22, 'right'], [X + 16, 'left'], [X - 16, 'right'], [X + 9, 'left'], [X - 9, 'right'], [f.box.l + 4, 'left'], [f.box.r - 4, 'right']] as [number, CanvasTextAlign][]) {
             let a = align === 'left' ? x : x - tw, b2 = a + tw, c = yy - th / 2, d = c + th;
             a = Math.max(f.box.l + 2, Math.min(a, f.box.r - 2 - tw)); b2 = a + tw;
             c = Math.max(f.box.t + 2, Math.min(c, f.box.b - 2 - th)); d = c + th;
