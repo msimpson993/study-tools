@@ -43,7 +43,7 @@ export const piPanels = (): FigurePanel[] => [
       }
       const all = [...pPart, ...iPart];
       const yr: [number, number] = [Math.min(0, ...all) * 1.1, Math.max(0.01, ...all) * 1.15];
-      const fr = rangeFrame(w, h, [0, 8], yr, 56, 12, 10, 40);
+      const fr = rangeFrame(w, h, [0, 8], yr, 72, 12, 10, 40);
       graphAxes(g, fr, [0, 8], yr, 'time (s)', 'throttle');
       curve(g, fr, r.t, pPart, col.e(), 2);
       curve(g, fr, r.t, iPart, col.c(), 2);
@@ -73,8 +73,8 @@ function drawEngineBode(g: CanvasRenderingContext2D, w: number, h: number, P: nu
   const mrg = engineMargins(P, I, ENGINE.K, ENGINE.wn, ENGINE.zeta, ENGINE.tau, 20001);
   const gap = 8, hTop = Math.round((h - gap) * 0.52), hBot = h - gap - hTop;
   const lo = -2, hi = 3;
-  const fm = rangeFrame(w, hTop, [lo, hi], [-40, 40], 48, 12, 8, 6);
-  const fp = rangeFrame(w, hBot, [lo, hi], [-200, 20], 48, 12, 6, 32);
+  const fm = rangeFrame(w, hTop, [lo, hi], [-40, 40], 72, 12, 8, 6);
+  const fp = rangeFrame(w, hBot, [lo, hi], [-200, 20], 72, 12, 6, 32);
   const plot = (fr: typeof fm, xr: [number, number], yr: [number, number], xs: number[], ys: number[], ylab: string, bottom: boolean) => {
     graphAxes(g, fr, xr, yr, bottom ? 'ω (rad/s)' : '', ylab, 1, 0, fmtPow10);
     curve(g, fr, xs, ys, col.a(), 2);
@@ -131,7 +131,7 @@ export const tunerPanels = (): FigurePanel[] => [
         wipe(g, w, h);
         if (!thumb) text(g, piLine, 8, 14, col.text(), 'left', 10);
         g.save(); g.translate(0, head);
-        const fr = rangeFrame(w, h - head, [0, tEnd], [1500, 3500], 56, 12, 14, 30);
+        const fr = rangeFrame(w, h - head, [0, tEnd], [1500, 3500], 72, 12, 14, 30);
         graphAxes(g, fr, [0, tEnd], [1500, 3500], 'time (s)', 'rpm', 5, 500);
         curve(g, fr, tPlot, yPlot, col.a(), 2);
         g.strokeStyle = col.e(); g.lineWidth = 1; g.setLineDash([4, 4]);

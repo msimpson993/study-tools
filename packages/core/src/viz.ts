@@ -119,13 +119,23 @@ export function text(g: CanvasRenderingContext2D, s: string, x: number, y: numbe
   // compact / too-small tiles: drop crowded notes and axis titles; keep ticks, UNSTABLE, and persistent keys
   if (isThumb(g) && !persistLabels && (role === 'note' || role === 'axis') && !/UNSTABLE/i.test(s)) { logText(g, s, f, size, x, y, base, null, 0, true); return; }
   let rect: LabelRect | null = null, dy = 0, dx = 0;
-  if (m && cv && Math.abs(m.b) < 1e-9 && Math.abs(m.c) < 1e-9 && m.d > 0) {
+  if (m && cv) {
     const n = f.lines.length, z = f.size, ext = base === 'top' || base === 'hanging' ? [0, 1.1] : base === 'middle' ? [-0.55, 0.55] : [-0.9, 0.25];
     const u0 = y - ((n - 1) / 2) * z * 1.15 + ext[0] * z, u1 = y + ((n - 1) / 2) * z * 1.15 + ext[1] * z;
-    rect = { x0: m.a * f.x0 + m.e, x1: m.a * f.x1 + m.e, y0: m.d * u0 + m.f, y1: m.d * u1 + m.f, role };
+    const axisAligned = Math.abs(m.b) < 1e-9 && Math.abs(m.c) < 1e-9 && m.d > 0;
+    if (axisAligned) {
+      rect = { x0: m.a * f.x0 + m.e, x1: m.a * f.x1 + m.e, y0: m.d * u0 + m.f, y1: m.d * u1 + m.f, role };
+    } else {
+      let x0 = Infinity, x1 = -Infinity, y0 = Infinity, y1 = -Infinity;
+      for (const px of [f.x0, f.x1]) for (const py of [u0, u1]) {
+        const X = m.a * px + m.c * py + m.e, Y = m.b * px + m.d * py + m.f;
+        if (X < x0) x0 = X; if (X > x1) x1 = X; if (Y < y0) y0 = Y; if (Y > y1) y1 = Y;
+      }
+      rect = { x0, x1, y0, y1, role };
+    }
     const list = labelsOn(cv);
-    if (role === 'tick') { if (labelOverlaps(list, rect, -3)) { /* a number touching another label (within 3 px) reads as one: leave it out */ logText(g, s, f, size, x, y, base, rect, 0, true); return; } }
-    else if (role === 'note') {
+    if (axisAligned && role === 'tick') { if (labelOverlaps(list, rect, -3)) { /* a number touching another label (within 3 px) reads as one: leave it out */ logText(g, s, f, size, x, y, base, rect, 0, true); return; } }
+    else if (axisAligned && role === 'note') {
       // whole lines down or up, nearest first, as far as the canvas goes; a note that only hits the numbers at its left end may step right
       const L = z * 1.15 * m.d, H = cv.height || 2000, dys = [0]; for (let k = 1; k * L < H; k++) dys.push(k * L, -k * L);
       const spot = freeSpot(list, rect, dys, H, cv.width || Infinity) ?? [0, 0]; dx = spot[0]; dy = spot[1];
@@ -276,6 +286,7 @@ export function graphAxes(g: CanvasRenderingContext2D, f: Frame, xr: V2, yr: V2,
   const sy = fitStep(yr[1] - yr[0], f.box.b - f.box.t, ys || nice(yr[1] - yr[0], 4), 22);
   g.lineWidth = 1; g.setLineDash([]);
   // the axis names first, so tick numbers that would sit on them give way
+  let titleRight = 16;
   withLabelRole('axis', () => {
     text(g, xLabel, (f.box.l + f.box.r) / 2, f.h - 5, col.text(), 'center', 11);
     // sit the y-title at the canvas edge, left of the tick-number column, and no taller than the plot box
@@ -283,8 +294,12 @@ export function graphAxes(g: CanvasRenderingContext2D, f: Frame, xr: V2, yr: V2,
     g.font = '11px system-ui,sans-serif';
     const ySize = Math.max(5, Math.min(11, 11 * yRoom / Math.max(1, g.measureText(yLabel).width)));
     g.save(); g.translate(yx, yMid); g.rotate(-Math.PI / 2); text(g, yLabel, 0, 0, col.text(), 'center', ySize); g.restore();
+    // keep tick numbers to the right of the y-title strip (title AABB is ±0.55·size around yx)
+    titleRight = yx + ySize * 0.55 + 4;
   });
   withLabelRole('tick', () => {
+    const tickX = f.box.l - 4;
+    const tickRoom = Math.max(6, tickX - titleRight);
     let lastX = '', lastPx = -Infinity;
     forTicks(Math.ceil(xr[0] / sx) * sx, xr[1], sx, (x) => {
       g.strokeStyle = col.grid(); g.beginPath(); g.moveTo(f.X(x), f.box.t); g.lineTo(f.X(x), f.box.b); g.stroke();
@@ -295,7 +310,11 @@ export function graphAxes(g: CanvasRenderingContext2D, f: Frame, xr: V2, yr: V2,
     forTicks(Math.ceil(yr[0] / sy) * sy, yr[1], sy, (y) => {
       g.strokeStyle = col.grid(); g.beginPath(); g.moveTo(f.box.l, f.Y(y)); g.lineTo(f.box.r, f.Y(y)); g.stroke();
       const lab = yfmt ? yfmt(y) : tickLabel(y, sy), py = f.Y(y);
-      if (lab && lab !== lastY && Math.abs(py - lastPy) >= 16) { text(g, lab, f.box.l - 4, py, col.muted(), 'right', 10); lastY = lab; lastPy = py; }
+      if (lab && lab !== lastY && Math.abs(py - lastPy) >= 16) {
+        g.font = '10px system-ui,sans-serif';
+        const tSize = Math.max(7, Math.min(10, 10 * tickRoom / Math.max(1, g.measureText(lab).width)));
+        text(g, lab, tickX, py, col.muted(), 'right', tSize); lastY = lab; lastPy = py;
+      }
     });
   });
   g.strokeStyle = col.strong();

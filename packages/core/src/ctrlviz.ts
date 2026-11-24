@@ -52,7 +52,7 @@ export function drawStepResponse(g: CanvasRenderingContext2D, w: number, h: numb
   const yr: V2 = s.yRange ?? [lo - 0.05 * Math.abs(ref), Math.max(ref * 1.15, hiY * 1.06)];
   const thumb = isThumb(g);
   const pad = (v: number | undefined, full: number, compact: number) => thumb ? Math.min(v ?? compact, compact) : (v ?? full);
-  const f = rangeFrame(w, h, [0, tEnd], yr, pad(s.pads?.l, 56, 32), pad(s.pads?.r, 14, 10), pad(s.pads?.t, 14, 8), pad(s.pads?.b, 38, 20));
+  const f = rangeFrame(w, h, [0, tEnd], yr, pad(s.pads?.l, 72, 32), pad(s.pads?.r, 14, 10), pad(s.pads?.t, 14, 8), pad(s.pads?.b, 38, 20));
   graphAxes(g, f, [0, tEnd], yr, s.xLabel ?? 'time (s)', s.yLabel ?? 'output');
   const m = stepMetrics(t, y, { ref, final: s.final, band });
   const yf = m.yFinal;
@@ -410,7 +410,7 @@ export function drawBode(g: CanvasRenderingContext2D, w: number, h: number, s: B
   const lo = Math.log10(wmin), hi = Math.log10(wmax);
   const mr: V2 = s.magRange ?? [Math.floor(Math.min(-30, ...b.magDb.filter(Number.isFinite)) / 20) * 20, Math.ceil(Math.max(20, ...b.magDb.filter(Number.isFinite)) / 20) * 20];
   const ph = b.phaseDeg.filter(Number.isFinite), pr: V2 = s.phaseRange ?? [Math.floor(Math.min(-200, ...ph) / 90) * 90, Math.ceil(Math.max(0, ...ph) / 90) * 90];
-  const fm = rangeFrame(w, hTop, [lo, hi], mr, 56, 12, 8, 6), fp = rangeFrame(w, hBot, [lo, hi], pr, 56, 12, 6, 38);
+  const fm = rangeFrame(w, hTop, [lo, hi], mr, 72, 12, 8, 6), fp = rangeFrame(w, hBot, [lo, hi], pr, 72, 12, 6, 38);
   const decade = (f: Frame, yr: V2, ystep: number, ylab: string, bottom: boolean) => {
     g.lineWidth = 1; g.setLineDash([]);
     forTicks(Math.ceil(lo), hi, 1, (d) => { g.strokeStyle = col.grid(); g.beginPath(); g.moveTo(f.X(d), f.box.t); g.lineTo(f.X(d), f.box.b); g.stroke(); if (bottom) withLabelRole('tick', () => text(g, d === 0 ? '1' : d === 1 ? '10' : d === -1 ? '0.1' : `10^${d}`, f.X(d), f.box.b + 10, col.muted(), 'center', 10)); });
@@ -499,7 +499,7 @@ export function drawJwSlice(g: CanvasRenderingContext2D, w: number, h: number, s
   let top = -Infinity, bot = Infinity;
   for (const v of fin) { if (v > top) top = v; if (v < bot) bot = v; }
   const yr: V2 = s.db ? [Math.floor((bot - 3) / 10) * 10, Math.ceil((top + 3) / 10) * 10] : [0, Math.max(1e-6, top * 1.12)];
-  const f = rangeFrame(w, h, [0, s.wmax], yr, 56, 12, 10, 32);
+  const f = rangeFrame(w, h, [0, s.wmax], yr, 72, 12, 10, 32);
   graphAxes(g, f, [0, s.wmax], yr, s.xLabel ?? 'ω (rad/s) along the jω axis', s.db ? '|G(jω)| (dB)' : '|G(jω)|');
   if (s.ghost) curve(g, f, ws, val(s.ghost), col.muted(), 2, [6, 4]);
   curve(g, f, ws, ys, col.e(), 2.4);

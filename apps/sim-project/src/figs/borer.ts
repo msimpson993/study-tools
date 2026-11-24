@@ -100,7 +100,7 @@ export const tradeoffPanels = (): FigurePanel[] => [
       const xr: [number, number] = [0, Math.max(40, ...xs) * 1.05], yr: [number, number] = [Math.min(...ys) * 0.7, Math.max(...ys) * 1.15];
       // log y
       const yLog: [number, number] = [Math.log10(Math.max(yr[0], 1e-5)), Math.log10(yr[1])];
-      const fr = rangeFrame(w, h, xr, yLog, 58, 14, 12, 32);
+      const fr = rangeFrame(w, h, xr, yLog, 72, 14, 12, 32);
       graphAxes(g, fr, xr, yLog, 'overshoot (%)', isDisk ? '|shock offset|' : 'push offset', 0, 1, undefined, fmtPow10);
       curve(g, fr, xs, ys.map((y) => Math.log10(y)), col.muted(), 2);
       const liveX = isDisk ? diskSeek(g0, 3, 4001).m.os : borerStep(g0, 11, 6, 4001).m.os;
@@ -148,7 +148,7 @@ export const sensPanels = (): FigurePanel[] => [
       const thumb = isThumb(g), head = thumb ? 0 : PLOT_HEAD;
       const p = borerS(K, { re: 0, im: w0 });
       if (!thumb) text(g, `ω = ${f(w0, 2)}  S = ${f(p.re, 3)} + j${f(p.im, 3)}`, 8, 14, col.text(), 'left', 10);
-      const fr = rangeFrame(w, h, xr, yr, 56, 12, thumb ? 10 : head, 28);
+      const fr = rangeFrame(w, h, xr, yr, 72, 12, thumb ? 10 : head, 28);
       graphAxes(g, fr, xr, yr, 'Re S', 'Im S');
       curve(g, fr, pts.map((p) => p.re), pts.map((p) => p.im), col.a(), 2);
       // a few direction arrows
@@ -168,7 +168,7 @@ export const sensPanels = (): FigurePanel[] => [
       const approx = ws.map((ww) => ww / K);
       const xr: [number, number] = [-1, 3], yr: [number, number] = [-3, 0.3];
       const head = isThumb(g) ? 10 : 36;
-      const fr = rangeFrame(w, h, xr, yr, 56, 12, head, 30);
+      const fr = rangeFrame(w, h, xr, yr, 72, 12, head, 30);
       graphAxes(g, fr, xr, yr, 'ω (rad/s)', '|S|', 1, 1, fmtPow10, fmtPow10);
       curve(g, fr, ws.map(Math.log10), mag.map((m) => Math.log10(Math.max(m, 1e-6))), col.a(), 2);
       curve(g, fr, ws.map(Math.log10), approx.map((m) => Math.log10(Math.max(m, 1e-6))), col.muted(), 1.6, [6, 4]);

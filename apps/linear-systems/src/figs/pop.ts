@@ -5,7 +5,7 @@ import { popExpandFigures } from './popexpand';
 import { CAR, CAR_SYM, worn, carA, roadB, forceB, carModes, sim, bumpInput, minEnergy, DEG } from './car';
 
 const P = (p: Record<string, number | string | boolean>, k: string, d: number) => (p[k] === undefined ? d : Number(p[k]));
-const fr = (g: CanvasRenderingContext2D, w: number, h: number, xr: [number, number], yr: [number, number], xl: string, yl: string, L = 30) => {
+const fr = (g: CanvasRenderingContext2D, w: number, h: number, xr: [number, number], yr: [number, number], xl: string, yl: string, L = 56) => {
   g.clearRect(0, 0, w, h); const f = rangeFrame(w, h, xr, yr, L, 6, 16, 24); graphAxes(g, f, xr, yr, xl, yl); return f;
 };
 const title = (g: CanvasRenderingContext2D, s: string, w: number, color = col.text()) => text(g, s, w / 2, 8, color, 'center', 10.5);

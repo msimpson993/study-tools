@@ -219,7 +219,7 @@ const labTrade = {
     }
     wipe(g, w, h);
     const xr: [number, number] = [0, Math.max(30, ...xs)], yLog: [number, number] = [Math.log10(Math.min(...ys)), Math.log10(Math.max(...ys))];
-    const fr = rangeFrame(w, h, xr, yLog, 52, 10, 8, 26);
+    const fr = rangeFrame(w, h, xr, yLog, 68, 10, 8, 26);
     graphAxes(g, fr, xr, yLog, 'overshoot (%)', 'offset', 0, 1, undefined, fmtPow10);
     curve(g, fr, xs, ys.map((y) => Math.log10(y)), col.muted(), 2);
     const marks = isDisk ? [[10, 'Ka = 10'], [80, 'Ka = 80']] as const : [[20, 'K = 20'], [100, 'K = 100']] as const;
@@ -239,7 +239,7 @@ const labKnob = {
     const Kas = Array.from({ length: 40 }, (_, i) => 10 ** (-1 + (3 * i) / 39));
     const ratio = Kas.map((Ka) => motorNumbers({ Ka }).ratio);
     const xr: [number, number] = [-1, 2], yr: [number, number] = [-3, 0.2];
-    const fr = rangeFrame(w, h, xr, yr, 52, 10, 8, 28);
+    const fr = rangeFrame(w, h, xr, yr, 68, 10, 8, 28);
     graphAxes(g, fr, xr, yr, 'Ka', 'sag ratio', 1, 1, fmtPow10, fmtPow10);
     curve(g, fr, Kas.map(Math.log10), ratio.map((r) => Math.log10(r)), col.a(), 2);
     tline(g, fr, [-1, Math.log10(0.02)], [2, Math.log10(0.02)], col.e(), 1.2, [4, 3]);

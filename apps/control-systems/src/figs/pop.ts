@@ -13,7 +13,7 @@ import { quizFigures as pidQuiz } from './pidquiz';
 
 type G = CanvasRenderingContext2D; type P = Record<string, unknown>;
 const panel = (p: P) => String(p.panel ?? 'a');
-const fr = (g: G, w: number, h: number, xr: V2, yr: V2, xl: string, yl: string) => { g.setLineDash([]); g.clearRect(0, 0, w, h); const F = rangeFrame(w, h, xr, yr, 54, 8, 8, 26); graphAxes(g, F, xr, yr, xl, yl); return F; };
+const fr = (g: G, w: number, h: number, xr: V2, yr: V2, xl: string, yl: string) => { g.setLineDash([]); g.clearRect(0, 0, w, h); const F = rangeFrame(w, h, xr, yr, 68, 8, 8, 26); graphAxes(g, F, xr, yr, xl, yl); return F; };
 /** a text panel: rows of wrapped text, shrunk (down to 7.5 px) until every row fits the canvas height, so nothing is cut off */
 const lines = (g: G, w: number, rows: [string, string][], y0 = 16, size = 11) => {
   g.clearRect(0, 0, 9999, 9999);

@@ -6,7 +6,7 @@ import { popFigures } from './pop';
 import { reviewPictures } from './reviewpics';
 
 const TAU = 2 * Math.PI;
-const frameOf = (g: CanvasRenderingContext2D, w: number, h: number, xr: [number, number], yr: [number, number], xl: string, yl: string, L = 40) => {
+const frameOf = (g: CanvasRenderingContext2D, w: number, h: number, xr: [number, number], yr: [number, number], xl: string, yl: string, L = 56) => {
   g.clearRect(0, 0, w, h); const f = rangeFrame(w, h, xr, yr, L, 8, 10, 26); graphAxes(g, f, xr, yr, xl, yl); return f;
 };
 const arrowTo = (g: CanvasRenderingContext2D, f: Frame, a: [number, number], b: [number, number], color: string, width = 2) => {

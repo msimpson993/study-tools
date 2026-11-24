@@ -5,7 +5,7 @@ import { bilinearLowpass2, biquadRun, biquadMag, logSweep, logSweepFreq, chirp, 
 import { spk, hImp, Hf, cabs, UM_PER_V, XMAX_UM, TAU } from './ex';
 
 type G = CanvasRenderingContext2D;
-const fr = (g: G, w: number, h: number, xr: [number, number], yr: [number, number], xl: string, yl: string, L = 34) => {
+const fr = (g: G, w: number, h: number, xr: [number, number], yr: [number, number], xl: string, yl: string, L = 56) => {
   g.clearRect(0, 0, w, h); const f = rangeFrame(w, h, xr, yr, L, 6, 18, 24); graphAxes(g, f, xr, yr, xl, yl); return f;
 };
 /** The earbud's H(s) = a₀/(s² + a₁s + a₀) as a digital biquad (bilinear, prewarped at the natural frequency), damping scaled by `damp`. */
