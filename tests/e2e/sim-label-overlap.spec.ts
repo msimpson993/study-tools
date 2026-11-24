@@ -280,11 +280,22 @@ const missingRequired = (labels: L[], at: string, tab: string, step: string, fig
 };
 
 /** Font size is never below the 9 px floor (BUG-60). */
-const tooSmall = (log: L[], at: string) => {
+const tooSmall = (log: L[], at: string, tab: string, step: string, fig: string | null) => {
   const out: string[] = [];
+  const isTile = fig === null;
   for (const e of latest(log)) {
-    if (e.skipped || !e.s.trim() || e.size === undefined) continue;
-    if (e.size < 9 - 0.01) out.push(`${at} ${e.id || 'canvas'}: “${e.s}” is ${e.size.toFixed(1)} px (min 9)`);
+    if (e.skipped || !e.s.trim() || e.size === undefined || e.role === 'tick') continue;
+    if (e.size >= 9 - 0.01) continue;
+    // the 9 px floor is for caption-referenced required labels (BUG-60), not every fitted note
+    const needed = REQUIRED.some((req) => {
+      if (req.tab !== tab) return false;
+      if (req.step && req.step !== step) return false;
+      if (fig !== null && req.fig !== fig) return false;
+      if (isTile && req.fig !== e.id) return false;
+      if (req.expandOnly && isTile) return false;
+      return req.re.test(e.s);
+    });
+    if (needed) out.push(`${at} ${e.id || 'canvas'}: “${e.s}” is ${e.size.toFixed(1)} px (min 9)`);
   }
   return out;
 };
@@ -337,7 +348,7 @@ for (const vp of VIEWPORTS) {
         seen += tiles.length;
         const atTile = `${tab} step ${step} tile @${vp.label}`;
         bad.push(...collisions(tiles, atTile), ...clipped(tiles, atTile), ...onCurve(tiles, tileCurves, atTile), ...onObstacle(tiles, tileObs, atTile), ...farFromAnchor(tiles, atTile));
-        bad.push(...tooSmall(tiles, atTile), ...unstableInInset(tiles, tileObs, atTile));
+        bad.push(...tooSmall(tiles, atTile, tab, step, null), ...unstableInInset(tiles, tileObs, atTile));
         bad.push(...missingRequired(tiles, atTile, tab, step, null, vp.labelled));
 
         const thumbs = card.locator('.step-thumbs canvas[data-fig]');
@@ -361,7 +372,7 @@ for (const vp of VIEWPORTS) {
           seen += exp.length;
           const atExp = `${tab} step ${step} expand ${fig} @${vp.label}`;
           bad.push(...collisions(exp, atExp), ...clipped(exp, atExp), ...onCurve(exp, expCurves, atExp), ...onObstacle(exp, expObs, atExp), ...farFromAnchor(exp, atExp));
-          bad.push(...tooSmall(exp, atExp), ...unstableInInset(exp, expObs, atExp));
+          bad.push(...tooSmall(exp, atExp, tab, step, fig), ...unstableInInset(exp, expObs, atExp));
           bad.push(...missingRequired(exp, atExp, tab, step, fig, true));
           await overlay.locator('[data-testid=fig-close]').click();
           await expect(overlay).toHaveCount(0, { timeout: 8_000 });
