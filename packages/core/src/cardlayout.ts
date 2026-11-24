@@ -371,7 +371,9 @@ export function applyCardLayout(art: HTMLElement, content: AppContent, hooks: Fi
     if (!phone) setSheet?.(false);
     const mounts = alive.get(step) ?? [];
     if (phone && sheetBody) {
-      for (const m of mounts) m.host.querySelectorAll('.st-ctl').forEach((rail) => sheetBody.append(rail));
+      // Gather rails from the host or a leftover fig-layout, not only from
+      // m.host — after a desktop→phone resize they may still sit in the layout.
+      for (const rail of card.querySelectorAll('.st-ctl')) sheetBody.append(rail);
       if (how) sheetBody.append(how);
     } else {
       if (how) card.querySelector('.step-fig-scroll')?.append(how);

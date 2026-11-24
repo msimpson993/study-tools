@@ -169,8 +169,9 @@ export function mountFigure(host: HTMLElement, def: FigureDef, panels0: FigurePa
       && !landscapeShort;
     const first = inline.querySelector('.fig');
     // Card layout owns the rail (under the plots, or in the phone sheet).
-    if (inCard) layout.append(rail);
-    else if (phoneTabs && first) first.after(rail);
+    // Do not append it here: a media-query change would steal it back out of the sheet.
+    if (inCard) return;
+    if (phoneTabs && first) first.after(rail);
     else layout.append(rail);
   };
   placeRail();

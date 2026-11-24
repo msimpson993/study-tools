@@ -765,8 +765,10 @@ test.describe('sim-project tabbed page', () => {
     for (const s of ['1', '2', '3', '4', '5', '1', '3']) await go(s);
     await ping();
     const card = page.locator('[data-testid=step-card][data-step="3"]');
-    await card.getByTestId('step-controls-open').click();
-    const sheet = page.getByTestId('step-controls-sheet').first();
+    const openBtn = card.getByTestId('step-controls-open');
+    await expect(openBtn, 'Disk Controls button should be available after a remount').toBeVisible();
+    await openBtn.click();
+    const sheet = card.getByTestId('step-controls-sheet');
     await expect(sheet, 'Disk Controls sheet should open after a remount').toBeVisible();
     await expect(sheet.locator('.st-ctl')).toBeVisible();
     await expect(sheet).toContainText(/Ka/i);
