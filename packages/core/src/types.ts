@@ -137,14 +137,25 @@ export interface ControlDef {
   /** If set, this control is shown only when one of these figure panels is mounted. */
   panels?: string[];
 }
-export interface PresetDef { id: string; label: string; set: Record<string, number | string | boolean>; about?: string }
+export interface PresetDef { id: string; label: string; set: Record<string, number | string | boolean>; about?: string; /** If set, this preset is shown only when one of these figure panels is mounted. */ panels?: string[] }
+export type HowToRead = string | Record<string, string>;
+/** Blocks for the requested panels, in that order; all keys if panels is omitted. */
+export function howToReadBlocks(how: HowToRead | undefined, panels?: readonly string[]): string[] {
+  if (!how) return [];
+  if (typeof how === 'string') return [how];
+  const keys = panels?.length ? panels : Object.keys(how);
+  return keys.map((k) => how[k]).filter((s): s is string => !!s);
+}
+export function howToReadFor(how: HowToRead | undefined, panels?: readonly string[]): string {
+  return howToReadBlocks(how, panels).join(' ');
+}
 export interface FigureDef {
   id: string;
   title: string;
   x: string;
   y: string;
   legend: { label: string; color: string; dash?: boolean }[];
-  howToRead: string;
+  howToRead: HowToRead;
   controls: ControlDef[];
   presets: PresetDef[];
   pair?: { forward: string; inverse: string; forwardName: string; inverseName: string; strip?: string };

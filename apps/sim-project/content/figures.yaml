@@ -6,7 +6,10 @@
   legend:
     - { label: "block this line builds", color: "var(--yel)" }
     - { label: "already built", color: "var(--fg)" }
-  howToRead: "Pick a script from the handout. The slider steps through it one line at a time: the line is shown in code type, the block it builds is outlined in yellow on the diagram, and the fraction the script holds after that line is written underneath."
+  howToRead:
+    code: "The handout's script, one statement per row. The row the line slider has reached is highlighted, with a ⚠ note under it when that line has a catch."
+    diag: "The block diagram of the script's machine. The block the current line builds is outlined in yellow, and blocks already built are drawn in full. At the line that flips the sign it adds 'then flip the sign (load slows the output)'."
+    frac: "The transfer function (the fraction in s) the script holds after the current line."
   lookFor: "feedback(machine, rest-of-loop): for a push, the machine is the forward path and the controller is the return path."
   controls:
     - { id: script, label: script, type: select, options: [motor-open, motor-closed, borer-step, borer-push, disk-seek, disk-shock], default: motor-open, group: primary }
@@ -23,11 +26,14 @@
   x: time (s)
   y: speed change ω (rad/s per N·m of load)
   legend:
-    - { label: open loop, color: "var(--muted)" }
-    - { label: closed loop, color: "var(--acc)" }
-    - { label: "final sag", color: "var(--bad)" }
-    - { label: "speed before the load", color: "var(--muted)", dash: true }
-  howToRead: "The picture shows the motor and its load, with the tachometer and amplifier (Ka) drawn when the loop is on. After the load T_d hits at t = 0, the load disc turns by the speed lost so far, exaggerated by the factor written in the corner. The plot is the speed change after a 1 N·m load. When both loops are shown and one curve would be squashed small next to the other (at the handout's settings, the closed loop), a zoomed inset redraws it, and its note says how many times smaller it is. The readout gives, for each loop, the final sag, the time constant τ and the value where the handout reads its plot (7 s open, 0.02 s closed). Then it gives the loop gain (how hard the tachometer loop pushes back compared with the motor's own drag) and the ratio of closed to open sag, ticked against the handout's 0.02 rule (closed sag under 0.02 of open sag)."
+    - { label: "open loop (dashed on the main plot when both are shown)", color: "var(--muted)" }
+    - { label: closed loop, color: "var(--cyan)" }
+    - { label: "final sag (red bar and label)", color: "var(--bad)" }
+    - { label: "speed before the load (0)", color: "var(--muted)", dash: true }
+    - { label: "final values in the inset", color: "var(--cyan)", dash: true }
+  howToRead:
+    plot: "The speed change ω after a 1 N·m load hits at t = 0, in rad/s per N·m of load, for the open loop (no tachometer loop), the closed loop (with it), or both. When both are shown, the open loop is the grey dashed curve marked '┄ open'. The dashed line at 0 is the speed before the load. A red bar and label at the right mark the final sag, the speed the load takes away for good. The mark is for the closed loop whenever that loop is shown, and is left out when the sag is under 0.001. At the handout's settings its label reads \"handout's −0.002\", while the bar sits at the exact −0.001847. When both loops are shown and one curve would be squashed small next to the other (at the handout's settings, the closed loop), a zoomed inset redraws both curves at the small one's scale, each with its final value dashed in its own colour. The open loop runs off the inset, marked by an arrow, and the inset's note says how many times smaller the closed loop's change is. The readout gives, for each loop, the final sag, the time constant τ and the value where the handout reads its plot (7 s open, 0.02 s closed). Then it gives the loop gain (how hard the tachometer loop pushes back compared with the motor's own drag) and the ratio of closed to open sag, ticked against the handout's 0.02 rule (closed sag under 0.02 of open sag)."
+    scene: "The motor and its load disc, with the load T_d drawn as a brake pad. The tachometer (tach) and amplifier (Ka) are drawn when the tachometer loop is on. As the time slider plays, the disc turns by the speed lost so far, exaggerated by the factor written in the corner (×100 for the open loop, ×30000 for the closed)."
   lookFor: "The two loops differ by 361× in time: on the 7 s axis the closed loop looks flat (the inset says ×359, not 361, only because the open loop hasn't quite finished sagging by 7 s), and on the 0.02 s axis the closed loop has already levelled off at its final sag (zoomed in the inset), while the open loop is still falling in a near-straight line, only 1.5 % of the way to its final −0.667."
   animate: { control: t, speed: 1, loop: false }
   controls:
@@ -38,7 +44,7 @@
     - { id: J, label: "J (inertia, kg·m²)", type: range, min: 0.5, max: 4, step: 0.1, default: 2, group: more }
     - { id: b, label: "b (friction, N·m·s)", type: range, min: 0.1, max: 2, step: 0.05, default: 0.5, group: more }
     - { id: Kb, label: "Kb (back-EMF, V·s)", type: range, min: 0, max: 0.3, step: 0.01, default: 0.1, group: more }
-    - { id: t, label: time, type: range, min: 0, max: 1, step: 0.01, default: 1, group: more, panels: [scene, plot] }
+    - { id: t, label: time, type: range, min: 0, max: 1, step: 0.01, default: 1, group: more, panels: [scene] }
   presets:
     - { id: open, label: "Fig. 4.23: open loop", set: { loop: open, axis: "7 s", Ka: 54, Kt: 1, J: 2, b: 0.5, Kb: 0.1 }, about: "Sag −0.667 rad/s, τ = 1.33 s." }
     - { id: closed, label: "Fig. 4.24: closed loop", set: { loop: closed, axis: "0.02 s", Ka: 54, Kt: 1, J: 2, b: 0.5, Kb: 0.1 }, about: "Sag −0.00185 rad/s, τ = 3.69 ms, ratio 0.0028." }
@@ -54,7 +60,11 @@
     - { label: "planned line / final value", color: "var(--muted)", dash: true }
     - { label: "response at your K", color: "var(--acc)" }
     - { label: "K = 20 and K = 100 (ghosts)", color: "var(--muted)" }
-  howToRead: "The picture shows the machine from above, steering onto the planned line (command) or pushed sideways by the rock (push). One plot is the step response to a new planned line, with overshoot, 2 % band and settling time marked, and the K = 20 response in grey. Another is the response to a unit push; it levels off at the offset 1/K. The s-plane shows the poles (×) and the zero (○, a root of the top of the fraction, at −K/11 with the handout's rate gain) of the command response. The dashed line along the negative real axis is ζ = 1, and the two dashed rays either side of it are ζ = 0.6. The grey dots are the poles at K = 20 and K = 100 ('K = 20, 100 ghosts' turns them off). Readout above the step plot: ζ (damping ratio), ωn (natural frequency, rad/s), OS (overshoot, the handout's P.O.) and Ts (2 % settling time); the overshoot label on the plot adds Tp (the peak time, when the overshoot peaks). Above the push plot: the offset 1/K and the peak."
+  howToRead:
+    step: "The machine's position after a step to a new planned line (the command response). Marked: the 2 % band, the settling time Ts and, when there is overshoot, its size with Tp, the time of the highest point. With 'K = 20, 100 ghosts' on, the response at K = 20 is drawn dashed in grey for comparison. The readout gives ζ (damping ratio: how strongly the swing is damped; the bigger ζ, the less overshoot), ωn (natural frequency: how fast it would swing with no damping, rad/s), OS (overshoot, the handout's P.O.) and Ts (2 % settling time)."
+    push: "The machine's position after a steady unit push from the rock (the push response). The dashed line at 0 is the planned line. The curve rises to a peak, then levels off at the offset 1/K, how far off course the steady push leaves it. Its settling time is marked when it settles within the 2.5 s shown. The readout gives the offset 1/K and the peak with its time."
+    splane: "The s-plane: the horizontal axis is the real part σ and the vertical axis the j part jω. The × marks are the two poles of s² + (1 + Kd)s + K (s² + 12s + K with the handout's rate gain Kd = 11); a swinging pair has its upper pole's value written beside it. The ○ marks the zero of the command response at −K/Kd (−K/11 with the handout's rate gain): a root of the top of the fraction, which adds a kick at the start. The dashed line along the negative real axis (the horizontal axis, left of 0) is ζ = 1, and the two dashed rays either side of it are ζ = 0.6 (ζ is the damping ratio: how strongly the swing is damped). With 'K = 20, 100 ghosts' on, grey dots mark the poles at K = 20 (−2 and −10) and K = 100 (−6 ± 8j). The lightly shaded region labelled 'unstable', right of the jω axis, is where a pole would make the motion grow."
+    scene: "The machine from above, with its cutter head on the planned line (dashed) between the tunnel walls. With the command shown it steers onto a new planned line; with the push shown the rock (T_d) pushes it sideways. The time slider plays the motion, and y gives the sideways position, which is drawn exaggerated."
   lookFor: "As K rises past 36 the two real poles meet and split into a swinging pair; overshoot climbs while the push offset 1/K falls."
   animate: { control: t, speed: 0.5, loop: false }
   controls:
@@ -62,7 +72,7 @@
     - { id: input, label: show, type: seg, options: [command, push, both], default: both, group: primary, panels: [scene] }
     - { id: Kd, label: "rate gain (handout: 11)", type: range, min: 0, max: 30, step: 0.5, default: 11, group: more }
     - { id: ghosts, label: "K = 20, 100 ghosts", type: toggle, default: true, group: more, panels: [step, splane] }
-    - { id: t, label: time, type: range, min: 0, max: 2.5, step: 0.01, default: 2.5, group: more, panels: [scene, step, push] }
+    - { id: t, label: time, type: range, min: 0, max: 2.5, step: 0.01, default: 2.5, group: more, panels: [scene] }
   presets:
     - { id: k20, label: "K = 20", set: { K: 20, Kd: 11 }, about: "3.9 % overshoot, 0.91 s, offset 0.05 (handout: 4 %, 1.0 s, 5 %)." }
     - { id: k100, label: "K = 100", set: { K: 100, Kd: 11 }, about: "22.0 %, 0.67 s, offset 0.01 (handout: 22 %, 0.7 s, 1 %)." }
@@ -75,10 +85,12 @@
   x: step overshoot (%)
   y: push offset (per unit push)
   legend:
-    - { label: "every gain (5 to 400)", color: "var(--muted)" }
-    - { label: your K, color: "var(--acc)" }
+    - { label: "every gain (K 5 to 400; disk Ka 5 to 2000)", color: "var(--muted)" }
+    - { label: "your gain", color: "var(--cyan)" }
     - { label: "handout's K values", color: "var(--yel)" }
-  howToRead: "Each point on the curve is one gain: how far the response overshoots a new command (across) and how far a unit push leaves it off (up). The dot is your gain; the yellow marks are the handout's two settings. For the disk head the axes are seek overshoot and shock offset."
+  howToRead:
+    curve: "The trade for one gain knob. Each point on the grey curve is one gain: K from 5 to 400 for the boring machine, Ka from 5 to 2000 for the disk head. The horizontal axis is how far a new command overshoots (%); the vertical axis, on a log scale, is how far a unit push leaves it off (for the disk head, the size of the shock offset, 1/(5·Ka)). The blue dot is your gain. The yellow dots are the handout's two settings (K = 20 and 100, or Ka = 10 and 80). The readout gives your gain, its overshoot and its offset."
+    step: "The command step at your gain (the seek, for the disk head). Marked: the 2 % band, the settling time Ts and, when there is overshoot, its size with Tp, the time of the highest point. The readout gives the gain, OS and Ts."
   lookFor: "Sliding along the curve, one number always gets worse as the other gets better: there is no corner at the origin."
   controls:
     - { id: machine, label: machine, type: seg, options: [boring machine, disk head], default: boring machine, group: primary }
@@ -95,7 +107,9 @@
     - { label: "S(jω) = s(s + 1)/(s² + 12s + K)", color: "var(--acc)" }
     - { label: "shortcut s/K", color: "var(--muted)", dash: true }
     - { label: "probe ω", color: "var(--yel)" }
-  howToRead: "One plot (the handout's Fig. 4.27 top) draws S in the complex plane as ω runs from 0.1 to 1000 rad/s; it starts near 0 and ends at 1. The other (Fig. 4.27 bottom) is |S| against ω on log axes, solid, with the shortcut s/K dashed. The yellow probe marks your ω on both; the readout says what a 10 % change in the machine at that ω does to the loop. Re S (across) is the real part of S and Im S (up) its imaginary part, the j part; together they carry the size and the lag of the response to a wiggle."
+  howToRead:
+    path: "S(jω) drawn as a point in the complex plane (the handout's Fig. 4.27 top) as the wiggle rate ω runs from 0.1 to 1000 rad/s. The arrows show the direction of rising ω. The horizontal axis is the real part Re S and the vertical axis the imaginary part, the j part Im S; together they carry how much bigger or smaller a wiggle comes out and how far it trails. The path starts near 0 and ends near 1. The yellow dot is your probe ω; the readout gives ω and S there."
+    mag: "|S|, the size of S, against wiggle rate ω, both on log scales (the handout's Fig. 4.27 bottom). The solid curve is the exact |S|; the dashed one is the shortcut s/K, which hugs it for slow wiggles. The yellow dashed line is your probe ω. The readout gives |S| there and what a 10 % change in the machine at that rate does to the loop."
   lookFor: "Raise K: the left end of the |S| curve drops (slow motions protected better); the right end stays at 1."
   controls:
     - { id: K, label: "K (gain)", type: range, min: 5, max: 200, step: 1, default: 20, group: primary }
@@ -110,19 +124,23 @@
   legend:
     - { label: "response at your Ka", color: "var(--acc)" }
     - { label: "two-part stand-in (coil dropped)", color: "var(--yel)", dash: true }
-  howToRead: "The picture shows the drive from above, the arm swinging the head to a new track (seek) or knocked by a shock. One plot is the seek (command step), with overshoot, 2 % band and settling marked; with 'drop the coil' on, the two-part stand-in (a simpler model of the same loop, leaving the coil out) is drawn dashed beside it. Another is the shock response, with its settling marked; it levels off at the offset −1/(5·Ka). The s-plane shows the two slow poles, the arm's pair, with a dashed ray for their ζ (how quickly the swing dies out) when they form a swinging pair. The coil's pole, near −1000, is off scale; its value is written at the top. Readout: above the seek plot, Ka, overshoot, settling and the stand-in's overshoot (the overshoot label on the plot adds Tp, the peak time, when the overshoot peaks); above the shock plot, the offset and the dip; under the s-plane, your Ka as a fraction of the ceiling Ka = 4080 and the 141.4 rad/s the loop would ring at there."
+  howToRead:
+    seek: "The head's position after a seek, a step to a new track. Marked: the 2 % band, the settling time Ts and, when there is overshoot, its size with Tp, the time of the highest point. With 'drop the coil' on, the two-part stand-in (not in lab handout: a simpler model of the same loop that treats the coil as instant: same strength, no 1 ms delay) is drawn dashed. The readout gives Ka, OS (overshoot) and Ts (settling time; '(off plot)' when it settles after the 2 s shown) and, with the coil dropped, the stand-in's OS. Past the ceiling Ka = 4080 the plot is replaced by 'UNSTABLE'."
+    shock: "The head's position after a unit shock, a steady push on the arm. The shock enters with a minus sign, so the head moves below the dashed line at 0 (the track). It dips, then levels off at the offset −1/(5·Ka), how far off track the steady shock leaves it. Its settling time is marked ('shock Ts') when it settles within the 2 s shown. The readout gives the offset and the dip (the lowest point) with its time."
+    splane: "The s-plane: the horizontal axis is the real part σ and the vertical axis the j part jω. The × marks are the loop's two slow poles, the arm's pair; a swinging pair has its upper pole's value written beside it. When they form a swinging pair, a dashed ray through them is labelled with their ζ (damping ratio: how strongly the swing is damped; the bigger ζ, the less overshoot); near the ceiling it rounds to 0. The coil's pole, near −1000, is off scale, and its value is written in the panel's corner. A line of text gives the ceiling Ka = 4080, your Ka as a fraction of it, and ω = 141.4 rad/s, the rate the loop would ring at on the ceiling. Past the ceiling it says 'UNSTABLE'."
+    scene: "The drive from above: the arm swings the head across the tracks to a new one (seek), or a shock (T_d) knocks it. The time slider plays the motion."
   lookFor: "With the coil dropped, the dashed stand-in sits almost on the real curve at Ka = 80. Near the ceiling both swing hard, but only the real loop is close to ringing forever: the stand-in always dies out."
   animate: { control: t, speed: 0.4, loop: false }
   controls:
     - { id: lgKa, label: "Ka", type: range, min: 0, max: 3.7, step: 0.01, default: 1.903, group: primary, display: pow10 }
     - { id: input, label: show, type: seg, options: [seek, shock, both], default: both, group: primary, panels: [scene] }
     - { id: stand, label: drop the coil, type: toggle, default: false, group: primary, panels: [seek] }
-    - { id: t, label: time, type: range, min: 0, max: 2, step: 0.01, default: 2, group: more, panels: [scene, seek, shock] }
+    - { id: t, label: time, type: range, min: 0, max: 2, step: 0.01, default: 2, group: more, panels: [scene] }
   presets:
     - { id: ka10, label: "Ka = 10", set: { lgKa: 1, stand: false }, about: "No overshoot, settles in 1.40 s." }
     - { id: ka80, label: "Ka = 80 (Fig. 4.30)", set: { lgKa: 1.903, stand: false }, about: "17.1 % overshoot (peak 1.17 at 0.18 s), settles in 0.41 s." }
-    - { id: ka80stand, label: "Ka = 80, coil dropped", set: { lgKa: 1.903, stand: true, input: seek }, about: "Real 17.1 %, two-part stand-in 16.3 % (not in lab handout)." }
-    - { id: shock, label: "shock, Ka = 80 (Fig. 4.31)", set: { lgKa: 1.903, input: shock }, about: "Dip −0.0029 at 0.18 s, settles −0.0025." }
+    - { id: ka80stand, label: "Ka = 80, coil dropped", set: { lgKa: 1.903, stand: true, input: seek }, about: "Real 17.1 %, two-part stand-in 16.3 % (not in lab handout).", panels: [seek] }
+    - { id: shock, label: "shock, Ka = 80 (Fig. 4.31)", set: { lgKa: 1.903, input: shock }, about: "Dip −0.0029 at 0.18 s, settles −0.0025.", panels: [shock] }
     - { id: ka200, label: "shock target (own)", set: { lgKa: 2.301, input: both, stand: false }, about: "Ka = 200: shock offset −0.001, seek overshoot 37 %, 0.36 s (not in lab handout)." }
     - { id: limit, label: "near the ceiling (own)", set: { lgKa: 3.6, stand: true, input: seek }, about: "Ka = 3981: the real loop overshoots about 98.5 % and takes about 16.7 s to settle; the stand-in overshoots about 80 % but settles in 0.38 s (not in lab handout)." }
 - id: pi
@@ -133,7 +151,9 @@
     - { label: speed, color: "var(--acc)" }
     - { label: "P part of the throttle", color: "var(--yel)" }
     - { label: "I part of the throttle", color: "var(--grn)" }
-  howToRead: "One plot is engine speed after a unit step in commanded speed, on the stand-in engine (not in lab handout). The other is the throttle command split into P × error and I × accumulated error. With I = 0 the speed stops short by 1/(1 + P·Kₑ), where Kₑ = 311 rpm per unit throttle is the stand-in engine's steady gain; with I > 0 the I part grows until it holds the throttle alone and the error is zero."
+  howToRead:
+    speed: "Engine speed after a unit step in the commanded speed, as a fraction of the step, on the stand-in engine (not in lab handout). The 2 % band around 1 is shaded. When there is overshoot, its label also gives Tp, the time of the highest point, and the settling time Ts is marked. With I = 0 the speed levels off short of 1; the readout gives where it levels off and the error, 1/(1 + P·Kₑ), where Kₑ = 311 rpm per unit throttle is the stand-in engine's steady gain. With I > 0 the readout gives OS (overshoot) and Ts (settling time), and the error goes to zero."
+    throttle: "The throttle command split into its two parts: P × the error now (labelled P·e) and I × the error added up so far (labelled I·∫e), on the stand-in engine (not in lab handout). With I = 0 the I part stays at zero, so the P part has to hold the throttle open, and only a leftover error can keep it there. With I > 0 the I part grows until it carries the whole throttle, and the P part falls to zero along with the error."
   lookFor: "With I > 0, the I part grows until it carries the whole throttle and the P part (and the error) fall to zero. With I = 0, the P part has to hold the throttle, so an error is left."
   controls:
     - { id: P, label: "P", type: range, min: 0, max: 0.012, step: 0.0000001, default: 0.0042253, group: primary }
@@ -150,7 +170,11 @@
     - { label: "response at your sliders", color: "var(--acc)" }
     - { label: "baseline / previous design (ghost)", color: "var(--muted)" }
     - { label: "phase margin and gain margin bars", color: "var(--yel)" }
-  howToRead: "The picture shows the engine and throttle, and the two sliders drawn as in the tuner. The step plot is the response at your settings (the tuner's 'Step Plot: Reference tracking'). The Bode plot is the loop gain and phase against ω. A dashed line on the phase half marks the crossover and is labelled with the PM; a dashed line on the gain half marks where the phase reaches −180° and is labelled with the GM. The table lists P, I, rise, settling, overshoot, peak, GM, PM and whether the loop is stable, as in the tuner's 'Show Parameters'. The handout's values sit beside them when 'show handout table' is on and the sliders are on one of the handout's three designs. All values come from an emulation on a stand-in engine fitted to the handout's tables (not in lab handout)."
+  howToRead:
+    scene: "The stand-in engine (not in lab handout), with its throttle flap and rpm gauge, next to the tuner's two sliders, Response time and Transient behavior, drawn at your settings. The time slider plays the step."
+    step: "The speed after a unit step in the speed command at your slider settings, as a fraction of the step: the tuner's 'Step Plot: Reference tracking', here an emulation on the stand-in engine (not in lab handout). Marked: the 2 % band, the settling time Ts, the rise time Tr and, when there is overshoot, its size with Tp. When the sliders sit on one of the handout's three designs, the response with the handout's own gains is drawn dashed in grey. The readout gives P, I (plus '(P clamped)' when the tuner would want P below 0), OS and Ts. With 'rpm axis' on, the panel instead shows a 2000 → 3000 rpm step at t = 2 s, with the dashed 2980 rpm line (the 2 % band) and the time after the step at which the speed first reaches it."
+    bode: "The loop's Bode plot on the stand-in engine (not in lab handout). It has two parts sharing one ω axis: the loop gain |L| in dB and the loop phase in degrees, both with the exact 15 ms delay. In the phase part, a dashed yellow line (the PM bar) marks the crossover, where the loop gain is 0 dB (1×), and is labelled with the PM and the crossover rate. In the gain part, a dashed yellow line (the GM bar) marks the rate where the phase reaches −180°, and is labelled with the GM."
+    table: "The tuner's 'Show Parameters' table, emulated on the stand-in engine (not in lab handout): P, I, rise time Tr, settling time Ts, overshoot OS %, peak, GM dB, PM ° and whether the loop is stable. When 'show handout table' is on and the sliders sit on one of the handout's three designs, a second row gives the handout's own values."
   lookFor: "At robustness 0.6, slide response time past about 2.1 s and P reaches 0: from there on the margin comes out above what you asked for."
   animate: { control: t, speed: 1, loop: false }
   controls:
@@ -158,7 +182,7 @@
     - { id: rob, label: "Transient behavior (robustness)", type: range, min: 0.3, max: 0.9, step: 0.01, default: 0.6, group: primary }
     - { id: hand, label: show handout table, type: toggle, default: true, group: primary, panels: [table] }
     - { id: rpm, label: "rpm axis (2000 → 3000 step)", type: toggle, default: false, group: more, panels: [step] }
-    - { id: t, label: time, type: range, min: 0, max: 6, step: 0.01, default: 6, group: more, panels: [scene, step] }
+    - { id: t, label: time, type: range, min: 0, max: 6, step: 0.01, default: 6, group: more, panels: [scene] }
   presets:
     - { id: initial, label: "initial (0.678 s, 0.6)", set: { resp: 0.678, rob: 0.6 }, about: "Handout p.3: 7.5 %, 1.96 s, PM 59.9°. The emulation gives about 7.4 %, 1.96 s, PM 60.0° (not in lab handout)." }
     - { id: slower, label: "slower (3.1 s, 0.6)", set: { resp: 3.1, rob: 0.6 }, about: "Handout p.4: P = 0, 0.401 %, 3.45 s, PM 69.3°. Emulation: 0.38 %, 3.455 s, PM 69.4°." }
@@ -172,7 +196,8 @@
     - { label: "forward path (command → output)", color: "var(--acc)" }
     - { label: "feedback path (output → summer)", color: "var(--fg)" }
     - { label: "disturbance entry", color: "var(--org)" }
-  howToRead: "Signals flow along the arrows. The circle is the summer: its + and − say which signals are added and which subtracted. Each box shows its symbol, its handout value and one line in plain words; hover or tap a box to see what goes in and what comes out."
+  howToRead:
+    diagram: "The block diagram for this machine. Signals flow along the arrows. The circle is the summer: its + and − say which signals are added and which subtracted. Each box carries one label at a time, which the 'labels' control switches between plain words, symbols and handout values. Hover over or tap a box to see what goes in, what comes out, and what it does."
   lookFor: "Follow the loop round: where the output is measured, where it is compared with the command, and where an unplanned push enters (and with which sign)."
   controls:
     - { id: machine, label: machine, type: select, options: [motor-open, motor-closed, borer, disk, engine], default: motor-open, group: primary }
@@ -191,7 +216,9 @@
     - { label: "points read from the handout's four tuner tables", color: "var(--yel)" }
     - { label: "stand-in G(s) = 311·3.42²·e^(−0.015s)/(s² + 6.3954s + 11.6964)", color: "var(--acc)" }
     - { label: "same curve without the 15 ms delay", color: "var(--muted)", dash: true }
-  howToRead: "The two plots are the stand-in's (not in lab handout) gain |G| and its phase (the lag, drawn as a negative angle) against wiggle rate ω. Each tuner table gives, for known P and I, the wiggle rate where the loop's gain is 1 and the lag there, plus the rate where the lag reaches 180°. Each of those pins the engine's own gain and lag at one rate: 8 points in all. The curve is the simple model that passes through all 8 (within 0.5 %). The yellow dotted line is the probe ω set by the slider."
+  howToRead:
+    mag: "The stand-in engine's gain |G| (not in lab handout): how many times bigger the rpm wiggle is than the throttle wiggle, against wiggle rate ω, both on log scales. The yellow dots are 8 points worked out from the handout's four tuner tables. Each table gives, for known P and I, the wiggle rate where the loop's gain is 1 and the lag there, plus the rate where the lag reaches 180°, and each of those pins the engine's own gain and lag at one rate. The solid curve is the stand-in, which passes within 0.5 % of all 8. The dashed no-delay curve lies right on top of it here, because a pure delay changes only the lag, not the gain. The yellow dotted line is the probe ω set by the slider; the readout gives ω, the curve's |G| there and, when the probe sits on a point, that point's value."
+    phase: "The stand-in engine's phase (not in lab handout): the lag of the rpm wiggle behind the throttle wiggle, drawn as a negative angle (−90° is a quarter cycle late, −180° half a cycle), against wiggle rate ω on a log scale. The yellow dots are 8 points worked out from the handout's four tuner tables (each table pins the engine's own gain and lag at a few rates). The fastest one, at 60.3 rad/s, is drawn at −225.65°, the tables' +134.35° with one full cycle taken off. The solid curve is the stand-in with its 15 ms delay; the dashed curve is the same model without the delay. The two part only at the fast end: there the delay keeps adding lag, so the solid curve falls past −180° while the dashed one levels off at −180°. The yellow dotted line is the probe ω; the readout gives ω, the curve's phase there and, when the probe sits on a point, that point's phase."
   lookFor: "The phase keeps falling past −180° at high ω only because of the delay; without it the curve would level off at −180°."
   controls:
     - { id: delay, label: show the no-delay curve, type: toggle, default: true, group: primary }

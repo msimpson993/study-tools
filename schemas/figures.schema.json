@@ -56,8 +56,14 @@
         }
       },
       "howToRead": {
-        "type": "string",
-        "minLength": 20
+        "oneOf": [
+          { "type": "string", "minLength": 20 },
+          {
+            "type": "object",
+            "minProperties": 1,
+            "additionalProperties": { "type": "string", "minLength": 20 }
+          }
+        ]
       },
       "controls": {
         "type": "array",
@@ -160,6 +166,10 @@
             },
             "about": {
               "type": "string"
+            },
+            "panels": {
+              "type": "array",
+              "items": { "type": "string" }
             }
           },
           "additionalProperties": false

@@ -1,6 +1,6 @@
 import { h, s } from './dom';
 import { pathToRoot, edgeKey } from './maplayout';
-import type { AppContent, ControlDef, Dive, FigureDef, MapEdge, MapNode, Question } from './types';
+import { howToReadFor, type AppContent, type ControlDef, type Dive, type FigureDef, type MapEdge, type MapNode, type Question } from './types';
 import type { Values } from './controls';
 
 export const CONTEXT_MAX = 300;
@@ -202,7 +202,7 @@ export function figureReference(content: AppContent | null, def: FigureDef, valu
   const title = def.title;
   const pageTitle = content?.subject.title ?? 'study page';
   const path = content ? pathForFigure(content, def.id) : [];
-  const ctx = def.lookFor || def.howToRead || '';
+  const ctx = def.lookFor || howToReadFor(def.howToRead) || '';
   return buildReference({
     pageTitle,
     title,
@@ -221,7 +221,7 @@ export function figureRefWithControls(content: AppContent | null, def: FigureDef
     url: figureUrl(def.id, query),
     path: content ? pathForFigure(content, def.id) : [],
     viewing: viewingFigure(title, values, viewingPrefix),
-    context: def.lookFor || def.howToRead || '',
+    context: def.lookFor || howToReadFor(def.howToRead) || '',
   });
 }
 

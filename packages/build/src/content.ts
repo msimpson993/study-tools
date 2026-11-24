@@ -224,7 +224,13 @@ export function loadApp(appDir: string): { content: AppContent; warnings: string
   const figures: FigureDef[] = exists(path.join(cdir, 'figures.yaml')) ? (readYaml(path.join(cdir, 'figures.yaml')) as FigureDef[]) : [];
   normalizeFigureOptions(figures);
   checkSchema(problems, 'figures', figures, 'figures.yaml');
-  const figuresR = figures.map((f) => ({ ...f, howToRead: inline(f.howToRead, `figure ${f.id}`), presets: f.presets.map((p) => ({ ...p, about: p.about ? inline(p.about, `figure ${f.id}/${p.id}`) : undefined })) }));
+  const figuresR = figures.map((f) => ({
+    ...f,
+    howToRead: typeof f.howToRead === 'string'
+      ? inline(f.howToRead, `figure ${f.id}`)
+      : Object.fromEntries(Object.entries(f.howToRead ?? {}).map(([k, v]) => [k, inline(v, `figure ${f.id}/${k}`)])),
+    presets: f.presets.map((p) => ({ ...p, about: p.about ? inline(p.about, `figure ${f.id}/${p.id}`) : undefined })),
+  }));
   for (const f of figures) {
     const ids = new Set(f.controls.map((c) => c.id));
     for (const p of f.presets) for (const k of Object.keys(p.set)) if (!ids.has(k)) problems.push(`figures.yaml ${f.id}/${p.id}: preset sets "${k}", which is not a visible control`);
