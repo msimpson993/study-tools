@@ -213,7 +213,6 @@ export function drawStepResponse(g: CanvasRenderingContext2D, w: number, h: numb
         if (c.a < f.box.l + 18 && c.d > f.box.b - 6) continue;
         trPick = c; break;
       }
-      if (!trPick) trPick = textBox(midX, barY + 10, tw, th, 'center', MIN_FONT);
     }
     if (trPick) withAnchor({ kind: 'bar', x: x0Bar, y: barY, x2: x1Bar, y2: barY }, () => {
       withLabelRole('axis', () => { lbl(trLab, trPick!.x, trPick!.y, col.e(), trPick!.align, trPick!.z); });
@@ -279,12 +278,14 @@ export function drawStepResponse(g: CanvasRenderingContext2D, w: number, h: numb
         };
         c = pool.find((cand) => okish(cand) && !hitsCurve(inflateBox(cand).a, inflateBox(cand).b2, inflateBox(cand).c, inflateBox(cand).d))
           ?? pool.find(okish)
-          ?? pool[0];
+          ?? null;
       }
-      withAnchor({ kind: 'marker', x: peakX, y: peakY }, () => {
-        withLabelRole('axis', () => { lbl(osShort, c!.x, c!.y, col.b(), c!.align, MIN_FONT); });
-      });
-      osBox = { x0: c.a, x1: c.b2, y: c.y };
+      if (c) {
+        withAnchor({ kind: 'marker', x: peakX, y: peakY }, () => {
+          withLabelRole('axis', () => { lbl(osShort, c!.x, c!.y, col.b(), c!.align, MIN_FONT); });
+        });
+        osBox = { x0: c.a, x1: c.b2, y: c.y };
+      }
     }
   }
   });
@@ -704,7 +705,7 @@ export function drawSPlane(g: CanvasRenderingContext2D, w: number, h: number, s:
       // expanded (and every other tile) must keep the value beside the ×
       g.font = `${MIN_FONT}px system-ui,sans-serif`;
       const tw = g.measureText(lab).width, th = MIN_FONT + 4;
-      const raw = aroundMarker(X, Yp, tw, th, MIN_FONT, preferRight);
+      const raw = [...aroundMarker(X, Yp, tw, th, MIN_FONT, preferRight), ...aroundMarker(X, Yp, tw, th, MIN_FONT, preferRight, 16)];
       const cands = realPole ? [...raw].sort((a, b) => Math.abs((b.c + b.d) / 2 - Yp) - Math.abs((a.c + a.d) / 2 - Yp)) : raw;
       const inClip = (c: TextBox) => c.a >= f.box.l + 1 && c.b2 <= f.box.r - 1 && c.c >= f.box.t - 6 && c.d <= f.box.b + 6;
       for (const c of cands) {
@@ -720,6 +721,7 @@ export function drawSPlane(g: CanvasRenderingContext2D, w: number, h: number, s:
           const I = inflateBox(c);
           if (!inClip(c)) continue;
           if (hitsOtherMark(X, Yp, I.a, I.b2, I.c, I.d)) continue;
+          if (realPole && onRay(c.a, c.b2, c.c, c.d)) continue;
           pick = c; break;
         }
       }
