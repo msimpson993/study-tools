@@ -229,7 +229,7 @@ function logText(g: CanvasRenderingContext2D, s: string, f: TextFit, size: numbe
   log.push({ s, x0, x1, y0, y1, W: cv.width, H: cv.height, cv: ci, id: cv.closest?.('[data-fig]')?.getAttribute('data-fig') || cv.getAttribute?.('data-figure') || cv.getAttribute?.('data-big') || cv.id || '', fitted: f.lines.length > 1 || f.size < size - 0.01 || Math.abs(f.x - x) > 0.5, role: rect?.role, moved: Math.abs(dy) > 0.01, skipped, gen: labelGen(cv), where, step: card?.getAttribute('data-step') || '', clip: currentClip(g) ?? null });
 }
 
-const logObstacle = (g: CanvasRenderingContext2D, rec: { kind: 'marker' | 'line' | 'inset'; pts?: { x: number; y: number }[]; width?: number; x?: number; y?: number; r?: number }) => {
+const logObstacle = (g: CanvasRenderingContext2D, rec: { kind: 'marker' | 'line' | 'inset'; pts?: { x: number; y: number }[]; width?: number; x?: number; y?: number; r?: number; device?: boolean }) => {
   const log = (globalThis as unknown as { __obstacleLog?: unknown[] }).__obstacleLog; if (!Array.isArray(log)) return;
   const m = typeof g.getTransform === 'function' ? g.getTransform() : { a: 1, b: 0, c: 0, d: 1, e: 0, f: 0 };
   const cv = g.canvas as HTMLCanvasElement;
@@ -237,7 +237,7 @@ const logObstacle = (g: CanvasRenderingContext2D, rec: { kind: 'marker' | 'line'
   if (Array.isArray(cvs)) { ci = cvs.indexOf(cv); if (ci < 0) { cvs.push(cv); ci = cvs.length - 1; } }
   const card = cv.closest?.('[data-testid=step-card]') as HTMLElement | null;
   const where = cv.closest?.('.fig-overlay') ? 'expand' : cv.closest?.('.tile-frame') ? 'tile' : 'other';
-  const toDev = (p: { x: number; y: number }) => ({ x: m.a * p.x + m.c * p.y + m.e, y: m.b * p.x + m.d * p.y + m.f });
+  const toDev = (p: { x: number; y: number }) => rec.device ? p : ({ x: m.a * p.x + m.c * p.y + m.e, y: m.b * p.x + m.d * p.y + m.f });
   const pts = rec.pts?.map(toDev);
   const xy = rec.x !== undefined && rec.y !== undefined ? toDev({ x: rec.x, y: rec.y }) : null;
   log.push({ kind: rec.kind, pts, width: rec.width, x: xy?.x, y: xy?.y, r: rec.r, W: cv.width, H: cv.height, cv: ci, id: cv.closest?.('[data-fig]')?.getAttribute('data-fig') || cv.getAttribute?.('data-figure') || cv.getAttribute?.('data-big') || cv.id || '', gen: labelGen(cv), where, step: card?.getAttribute('data-step') || '' });
@@ -247,9 +247,29 @@ export function logInsetFrame(g: CanvasRenderingContext2D, x: number, y: number,
   logObstacle(g, { kind: 'inset', pts: [{ x, y }, { x: x + w, y }, { x: x + w, y: y + h }, { x, y: y + h }, { x, y }], width: 1.5 });
 }
 
-export function tline(g: CanvasRenderingContext2D, f: Frame, a: V2, b: V2, color: string, width = 1.5, dash: number[] = []) {
+const clipSeg = (a: { x: number; y: number }, b: { x: number; y: number }, r: { x0: number; y0: number; x1: number; y1: number }) => {
+  let t0 = 0, t1 = 1; const dx = b.x - a.x, dy = b.y - a.y;
+  const clip = (p: number, q: number) => {
+    if (p === 0) return q >= 0;
+    const t = q / p;
+    if (p < 0) { if (t > t1) return false; if (t > t0) t0 = t; }
+    else { if (t < t0) return false; if (t < t1) t1 = t; }
+    return true;
+  };
+  if (!clip(-dx, a.x - r.x0) || !clip(dx, r.x1 - a.x) || !clip(-dy, a.y - r.y0) || !clip(dy, r.y1 - a.y)) return null;
+  return [{ x: a.x + t0 * dx, y: a.y + t0 * dy }, { x: a.x + t1 * dx, y: a.y + t1 * dy }] as const;
+};
+export function tline(g: CanvasRenderingContext2D, f: Frame, a: V2, b: V2, color: string, width = 1.5, dash: number[] = [], log = true) {
   g.strokeStyle = color; g.lineWidth = width; g.setLineDash(dash); g.beginPath(); g.moveTo(f.X(a[0]), f.Y(a[1])); g.lineTo(f.X(b[0]), f.Y(b[1])); g.stroke(); g.setLineDash([]);
-  if (dash.length) logObstacle(g, { kind: 'line', pts: [{ x: f.X(a[0]), y: f.Y(a[1]) }, { x: f.X(b[0]), y: f.Y(b[1]) }], width });
+  if (log && dash.length) {
+    const m = typeof g.getTransform === 'function' ? g.getTransform() : { a: 1, b: 0, c: 0, d: 1, e: 0, f: 0 };
+    const toDev = (x: number, y: number) => ({ x: m.a * x + m.c * y + m.e, y: m.b * x + m.d * y + m.f });
+    let p1 = toDev(f.X(a[0]), f.Y(a[1])), p2 = toDev(f.X(b[0]), f.Y(b[1]));
+    const clip = currentClip(g);
+    if (clip) { const cut = clipSeg(p1, p2, clip); if (!cut) return; p1 = cut[0]; p2 = cut[1]; }
+    // already in device px — logObstacle will transform again, so pass via a device-space identity by logging after we disable that...
+    logObstacle(g, { kind: 'line', pts: [p1, p2], width, device: true });
+  }
 }
 export function polyline(g: CanvasRenderingContext2D, f: Frame, pts: V2[], color: string, width = 2, dash: number[] = [], close = false) {
   if (pts.length < 2) return;

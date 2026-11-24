@@ -73,8 +73,8 @@ function drawEngineBode(g: CanvasRenderingContext2D, w: number, h: number, P: nu
   const mrg = engineMargins(P, I, ENGINE.K, ENGINE.wn, ENGINE.zeta, ENGINE.tau, 20001);
   const gap = 8, hTop = Math.round((h - gap) * 0.52), hBot = h - gap - hTop;
   const lo = -2, hi = 3;
-  const fm = rangeFrame(w, hTop, [lo, hi], [-40, 40], 72, 12, 8, 6);
-  const fp = rangeFrame(w, hBot, [lo, hi], [-200, 20], 72, 12, 6, 32);
+  const fm = rangeFrame(w, hTop, [lo, hi], [-40, 40], 72, 12, 16, 6);
+  const fp = rangeFrame(w, hBot, [lo, hi], [-200, 20], 72, 12, 16, 32);
   const plot = (fr: typeof fm, xr: [number, number], yr: [number, number], xs: number[], ys: number[], ylab: string, bottom: boolean) => {
     graphAxes(g, fr, xr, yr, bottom ? 'ω (rad/s)' : '', ylab, 1, 0, fmtPow10);
     curve(g, fr, xs, ys, col.a(), 2);
@@ -82,24 +82,12 @@ function drawEngineBode(g: CanvasRenderingContext2D, w: number, h: number, P: nu
   g.save();
   plot(fm, [lo, hi], [-40, 40], ws.map(Math.log10), mag, '|L| (dB)', false);
   if (Number.isFinite(mrg.wp)) tline(g, fm, [Math.log10(mrg.wp), -40], [Math.log10(mrg.wp), 40], col.e(), 1.2, [4, 3]);
-  if (Number.isFinite(mrg.gm)) {
-    const lab = `GM ${f(mrg.gm, 1)} dB`;
-    g.font = '10px system-ui,sans-serif';
-    const tw = g.measureText(lab).width, lx = Number.isFinite(mrg.wp) ? fm.X(Math.log10(mrg.wp)) : -1e9;
-    if (lx > fm.box.r - tw - 14) text(g, lab, fm.box.l + 4, fm.box.t + 12, col.e(), 'left', 10);
-    else text(g, lab, fm.box.r - 4, fm.box.t + 12, col.e(), 'right', 10);
-  }
+  if (Number.isFinite(mrg.gm)) text(g, `GM ${f(mrg.gm, 1)} dB`, fm.box.r - 4, Math.max(8, fm.box.t - 8), col.e(), 'right', 10);
   g.restore();
   g.save(); g.translate(0, hTop + gap);
   plot(fp, [lo, hi], [-200, 20], ws.map(Math.log10), ph, 'phase (°)', true);
   if (Number.isFinite(mrg.wc)) tline(g, fp, [Math.log10(mrg.wc), -200], [Math.log10(mrg.wc), 20], col.e(), 1.2, [4, 3]);
-  if (Number.isFinite(mrg.pm)) {
-    const lab = `PM ${f(mrg.pm, 1)}° @ ${f(mrg.wc, 2)}`;
-    g.font = '10px system-ui,sans-serif';
-    const tw = g.measureText(lab).width, lx = Number.isFinite(mrg.wc) ? fp.X(Math.log10(mrg.wc)) : -1e9;
-    if (lx > fp.box.r - tw - 14) text(g, lab, fp.box.l + 4, fp.box.t + 12, col.e(), 'left', 10);
-    else text(g, lab, fp.box.r - 4, fp.box.t + 12, col.e(), 'right', 10);
-  }
+  if (Number.isFinite(mrg.pm)) text(g, `PM ${f(mrg.pm, 1)}° @ ${f(mrg.wc, 2)}`, fp.box.r - 4, Math.max(8, fp.box.t - 8), col.e(), 'right', 10);
   g.restore();
 }
 

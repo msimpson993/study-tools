@@ -135,7 +135,7 @@ export function drawStepResponse(g: CanvasRenderingContext2D, w: number, h: numb
   }
   let osBox: { x0: number; x1: number; y: number } | null = null;
   if (show.overshoot && Number.isFinite(m.peak) && m.overshootPct > 0.05) {
-    tline(g, f, [m.peakTime, m.peak], [m.peakTime, yr[0]], col.b(), 1, [2, 3]); dot(g, f, [m.peakTime, m.peak], col.b(), 4);
+    tline(g, f, [m.peakTime, m.peak], [m.peakTime, yr[0]], col.b(), 1, [2, 3], false); dot(g, f, [m.peakTime, m.peak], col.b(), 4);
     const osFull = `${fmtN(m.overshootPct, 1)}% overshoot  (Tp ${fmtN(m.peakTime)} s)`;
     const os = (tight || w < 420) ? `OS ${fmtN(m.overshootPct, 1)}%  Tp ${fmtN(m.peakTime)} s` : osFull;
     g.font = '10.5px system-ui,sans-serif';
@@ -182,7 +182,7 @@ export function drawStepResponse(g: CanvasRenderingContext2D, w: number, h: numb
   if (show.settling && m.settled && Number.isFinite(m.settlingTime)) {
     // the dashed Ts line stops just under the overshoot label when it would run through it (it made "15.7 %" read "5.7 %")
     const tx = f.X(m.settlingTime), cut = osBox && tx > osBox.x0 - 3 && tx < osBox.x1 + 3 ? Math.min(yr[1], f.iy(osBox.y + 8)) : yr[1];
-    tline(g, f, [m.settlingTime, yr[0]], [m.settlingTime, cut], col.c(), 1.5, [5, 4]);
+    tline(g, f, [m.settlingTime, yr[0]], [m.settlingTime, cut], col.c(), 1.5, [5, 4], false);
     {
       const tsLab = s.settlingLabel ?? `Ts ${fmtN(m.settlingTime)} s`;
       g.font = '10.5px system-ui,sans-serif';
