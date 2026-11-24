@@ -96,6 +96,18 @@ const latest = <T extends { cv: number; gen: number }>(log: T[]) => {
   return log.filter((e) => e.gen === last.get(e.cv));
 };
 
+/**
+ * Locally, grow each text box so a slightly wider CI system-ui glyph would still be
+ * flagged. 9 % of width + 2 px, on all four sides (the +2 px is also vertical).
+ * CI itself uses the raw boxes — it is the source of truth for real glyphs.
+ */
+const LOCAL_GROW = process.env.CI ? 0 : 0.09;
+const LOCAL_PX = process.env.CI ? 0 : 2;
+const boxOf = (e: L) => {
+  const dx = (e.x1 - e.x0) * LOCAL_GROW + LOCAL_PX;
+  return { x0: e.x0 - dx, x1: e.x1 + dx, y0: (e.y0 ?? 0) - LOCAL_PX, y1: (e.y1 ?? 0) + LOCAL_PX };
+};
+
 const collisions = (log: L[], at: string) => {
   const by = new Map<number, L[]>();
   for (const e of latest(log)) if (!e.skipped && e.y0 !== undefined && e.s.trim()) {
@@ -107,7 +119,8 @@ const collisions = (log: L[], at: string) => {
     if (p.role === 'tick' && q.role === 'tick') continue;
     if (p.s === q.s && Math.abs(p.x0 - q.x0) < 1 && Math.abs((p.y0 ?? 0) - (q.y0 ?? 0)) < 1) continue;
     if (allowed(p, q, at)) continue;
-    const w = Math.min(p.x1, q.x1) - Math.max(p.x0, q.x0), h = Math.min(p.y1!, q.y1!) - Math.max(p.y0!, q.y0!);
+    const P = boxOf(p), Q = boxOf(q);
+    const w = Math.min(P.x1, Q.x1) - Math.max(P.x0, Q.x0), h = Math.min(P.y1, Q.y1) - Math.max(P.y0, Q.y0);
     if (w > 1.5 && h > 1.5) out.push(`${at} ${p.id || 'canvas'}: “${p.s}” (${p.role ?? '?'}) × “${q.s}” (${q.role ?? '?'})`);
   }
   return out;
@@ -144,8 +157,9 @@ const onCurve = (labels: L[], curves: C[], at: string) => {
   const cvs = latest(curves);
   for (const lab of labs) {
     if (curveAllowed(lab, at)) continue;
-    const pad = 1.5;
-    const x0 = lab.x0 + pad, y0 = lab.y0! + pad, x1 = lab.x1 - pad, y1 = lab.y1! - pad;
+    const pad = process.env.CI ? 1.5 : 0;
+    const B = boxOf(lab);
+    const x0 = B.x0 + pad, y0 = B.y0 + pad, x1 = B.x1 - pad, y1 = B.y1 - pad;
     if (x1 - x0 < 2 || y1 - y0 < 2) continue;
     const hit = cvs.filter((c) => c.cv === lab.cv).some((c) => {
       const w = (c.width ?? 2) / 2;
@@ -162,8 +176,9 @@ const onCurve = (labels: L[], curves: C[], at: string) => {
 
 
 const hitsObstacle = (lab: L, o: O) => {
-  const pad = 1.5;
-  const x0 = lab.x0 + pad, y0 = lab.y0! + pad, x1 = lab.x1 - pad, y1 = lab.y1! - pad;
+  const pad = process.env.CI ? 1.5 : 0;
+  const B = boxOf(lab);
+  const x0 = B.x0 + pad, y0 = B.y0 + pad, x1 = B.x1 - pad, y1 = B.y1 - pad;
   if (x1 - x0 < 2 || y1 - y0 < 2) return false;
   if (o.kind === 'marker' && o.x !== undefined && o.y !== undefined) {
     const r = o.r ?? 5;

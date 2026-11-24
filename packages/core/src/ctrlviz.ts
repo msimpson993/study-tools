@@ -273,7 +273,29 @@ export function drawSPlane(g: CanvasRenderingContext2D, w: number, h: number, s:
   }
   const f0 = splaneFrame(Math.max(vw, 1), Math.max(vh, 1), Math.max(s.range, 1e-6), s.reCenter, s.pad);
   if (!(w > 0) || !(h > 0) || !Number.isFinite(s.range) || s.range <= 0) { if (s.clear !== false) wipe(g, Math.max(w, 0), Math.max(h, 0)); return f0; }
+  // a thin right half-plane cannot hold both "unstable" and a pole value at any glyph width:
+  // park "unstable" on its own row in a reserved top pad, above the plot (and the jω title)
+  let unstableHead = 0;
+  if (s.shadeUnstable !== false && s.clear !== false && !isThumb(g) && vh >= 80) {
+    const probe = splaneFrame(Math.max(vw, 1), Math.max(vh, 1), s.range, s.reCenter, pad);
+    const shadeW = probe.box.r - Math.max(probe.X(0), probe.box.l);
+    if (shadeW < 72) unstableHead = 20;
+  }
   if (s.clear !== false) wipe(g, w, h);
+  let unstableBox: { x0: number; x1: number; y0: number; y1: number } | null = null;
+  if (unstableHead) {
+    const word = 'unstable';
+    g.font = '10px system-ui,sans-serif';
+    let z = 10, tw = g.measureText(word).width;
+    while (z > 7 && tw + 8 > w - 8) { z -= 1; g.font = `${z}px system-ui,sans-serif`; tw = g.measureText(word).width; }
+    const ux = w - 4, uy = oy + unstableHead / 2;
+    withLabelRole('axis', () => { text(g, word, ux, uy, col.bad(), 'right', z); });
+    const th = z * 1.15;
+    oy += unstableHead;
+    vh -= unstableHead;
+    // reserved box in the same (translated) space the pole labels will use
+    unstableBox = { x0: ux - ox - tw - 4, x1: ux - ox + 4, y0: uy - oy - th / 2 - 2, y1: uy - oy + th / 2 + 2 };
+  }
   g.save();
   g.translate(ox, oy);
   const f = splaneFrame(vw, vh, s.range, s.reCenter, pad), R = Math.hypot(vw, vh) / Math.max(Math.min(f.sx, f.sy), 1e-9);
@@ -321,8 +343,8 @@ export function drawSPlane(g: CanvasRenderingContext2D, w: number, h: number, s:
     });
   });
   // labelled tiles and expanded views: always horizontal "unstable". Bare phone tiles stay bare (BUG-47).
-  let unstableBox: { x0: number; x1: number; y0: number; y1: number } | null = null;
-  if (s.shadeUnstable !== false && !isThumb(g)) {
+  // when the right half-plane was thin, the word is already in the reserved top pad
+  if (s.shadeUnstable !== false && !isThumb(g) && !unstableBox) {
     const shadeL = Math.max(x0, f.box.l), shadeR = f.box.r, word = 'unstable';
     if (shadeR - shadeL > 6 && f.box.b - f.box.t > 16) {
       const hitsMarksBox = (a: number, b2: number, c: number, d: number) =>
@@ -481,6 +503,7 @@ export function drawSPlane(g: CanvasRenderingContext2D, w: number, h: number, s:
     const inUnstable = (a: number, b2: number) => s.shadeUnstable !== false && b2 > x0 + 2;
     const onAxis = (a: number, b2: number) => a < x0 + 4 && b2 > x0 - 4;
     const inside = (a: number, b2: number, c: number, d: number) => a > f.box.l + 2 && b2 < f.box.r - 2 && c > f.box.t + 2 && d < f.box.b - 2;
+    const thinRight = f.box.r - Math.max(x0, f.box.l) < 72;
     const cost = (a: number, b2: number, c: number, d: number) => {
       // hard-reject anything that leaves the plot or sits on the axis titles / 'unstable'
       if (!inside(a, b2, c, d) || onSigma(a, b2, c, d) || onJw(a, b2, c, d) || hitsUnstable(a, b2, c, d) || hitsTaken(a, b2, c, d)) return 1e6;
@@ -488,6 +511,8 @@ export function drawSPlane(g: CanvasRenderingContext2D, w: number, h: number, s:
       // hard-reject a box that covers the pole ×, a ζ ray, or the jω axis (BUG-45)
       if (onAxis(a, b2) || onRay(a, b2, c, d)) return 1e6;
       if (a < X + 20 && b2 > X - 20 && c < Yp + 20 && d > Yp - 20) return 1e6;
+      // thin right half: the pole value stays left of the ×, so it cannot meet "unstable" at any glyph width
+      if (thinRight && b2 > X - 16) return 1e6;
       if (inUnstable(a, b2)) n += 80;
       return n;
     };
@@ -551,6 +576,7 @@ export function drawSPlane(g: CanvasRenderingContext2D, w: number, h: number, s:
           if (onSigma(a, b2, c, d) || onJw(a, b2, c, d) || hitsUnstable(a, b2, c, d) || hitsTaken(a, b2, c, d)) n += 400;
           if (onAxis(a, b2) || onRay(a, b2, c, d)) n += 2000;
           if (a < X + 20 && b2 > X - 20 && c < Yp + 20 && d > Yp - 20) n += 2000;
+          if (thinRight && b2 > X - 16) n += 2000;
           return n;
         };
         for (let yy = f.box.t + 8; yy < f.box.b - 8; yy += 8) {
