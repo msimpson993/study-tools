@@ -110,7 +110,7 @@ export function fitText(g: CanvasRenderingContext2D, s: string, x: number, align
   if (m && (Math.abs(m.b) > 1e-9 || Math.abs(m.c) > 1e-9)) { const [r0, r1] = span(w, x); return { size, x, lines, x0: r0, x1: r1 }; } // rotated (axis titles): leave as drawn
   const room = (() => { const [a0, a1] = span(w, x); return w - Math.max(0, lo - a0) - Math.max(0, a1 - hi); })();
   if (w > room + 0.5 && Number.isFinite(W)) {
-    z = Math.max(9, Math.min(size, Math.max(size * 0.72, size * Math.max(room, 1) / w))); g.font = font(z); w = g.measureText(s).width;
+    z = Math.max(size * 0.72, size * Math.max(room, 1) / w); g.font = font(z); w = g.measureText(s).width;
     if (w > hi - lo) { // still wider than the whole panel: two lines, split at the space nearest the middle
       const sp = [...s.matchAll(/ /g)].map((q) => q.index as number); const mid = s.length / 2;
       const cut = sp.length ? sp.reduce((p, q) => (Math.abs(q - mid) < Math.abs(p - mid) ? q : p)) : -1;
