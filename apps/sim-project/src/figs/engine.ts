@@ -131,7 +131,7 @@ export const tunerPanels = (): FigurePanel[] => [
         text(g, '2980 rpm (2 % band)', fr.box.r - 4, fr.Y(2980) - 5, col.e(), 'right', 10);
         if (Number.isFinite(tHit)) {
           g.fillStyle = col.e(); g.beginPath(); g.arc(fr.X(t0 + tHit), fr.Y(2980), 4, 0, Math.PI * 2); g.fill();
-          text(g, `reaches 2980 at t₀ + ${tHit.toFixed(2)} s`, 8, 16, col.text(), 'left', 10);
+          text(g, `reaches 2980 at t₀ + ${f(tHit, 2)} s`, 8, 16, col.text(), 'left', 10);
         }
         text(g, 'Linear stand-in, not the nonlinear Simulink engine (not in lab handout). The handout\'s scope (p.6) is the real check.', 8, h - head - 8, col.muted(), 'left', 9);
         g.restore();
@@ -179,6 +179,7 @@ export const tunerPanels = (): FigurePanel[] => [
         footer: 'Stand-in engine and emulated tuner (not in lab handout)',
         key: 'Tr rise  ·  Ts settling  ·  OS overshoot  ·  PM phase margin  ·  GM gain margin',
       });
+      g.canvas.dataset.summary = `OS ${f(r.m.os, 1)}%  Ts ${f(r.m.ts, 2)} s  PM ${f(mrg.pm, 0)}°  GM ${f(mrg.gm, 1)} dB`;
     },
   },
 ];

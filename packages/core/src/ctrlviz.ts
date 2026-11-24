@@ -78,8 +78,11 @@ export function drawStepResponse(g: CanvasRenderingContext2D, w: number, h: numb
   if (show.ess && Number.isFinite(m.ess) && Math.abs(m.ess) > 1e-3 * Math.max(1, Math.abs(ref))) {
     const xe = tEnd * 0.985; tline(g, f, [xe, yf], [xe, ref], col.bad(), 3);
     const essText = s.essLabel ?? `final sag ${fmtN(m.ess, 3)}`;
-    // sit just above the final-value line at the right, so the label is not on the curve
-    lbl(essText, f.box.r - 4, f.Y(yf) - 8, col.bad(), 'right');
+    // sit just above the final-value line at the right, or below it when a nearby
+    // reference / zero line would strike through the label (Motor step 5, sag ≈ 0).
+    const ySag = f.Y(yf), yRef = f.Y(ref);
+    const essY = Math.abs(ySag - 8 - yRef) < 12 ? ySag + 14 : ySag - 8;
+    lbl(essText, f.box.r - 4, essY, col.bad(), 'right');
   }
   return m;
 }

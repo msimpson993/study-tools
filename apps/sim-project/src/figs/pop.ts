@@ -176,7 +176,7 @@ const labSplane = {
       const imMax = Math.max(8, ...poles.map((q) => Math.abs(q.im)));
       const reExt = Math.max(8, ...poles.map((q) => Math.abs(q.re)));
       const range = Math.max(20, imMax * 1.25, reExt * 1.15);
-      const zetas = [...new Set(poles.filter((q) => Math.abs(q.im) > 0.5).map((q) => +zetaOf(q.re, q.im).toFixed(2)))];
+      const zetas = [...new Set(poles.filter((q) => Math.abs(q.im) > 0.5).map((q) => zetaOf(q.re, q.im)).map((z) => Math.abs(z) < 0.005 ? 0 : Number(z.toPrecision(2))).filter((z) => z !== 0))];
       drawSPlane(g, w, h, { range, reCenter: -range * 0.4, poles, labels: true, zetaRays: zetas.length ? zetas : undefined });
       text(g, 'coil pole at −1000 (off scale)', 8, 16, col.muted(), 'left', 9);
     }

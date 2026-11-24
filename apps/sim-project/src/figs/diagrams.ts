@@ -413,7 +413,7 @@ export function drawLabDiagram(g: CanvasRenderingContext2D, w: number, h: number
       // leave a right margin for Tload, N, and the rpm label
       const plantX = 18, plantW = 52;
       const s1 = { x: X(14), y: Y(7.5) };
-      text(g, 'Speed Ref', X(1), s1.y - r - 10, col.text(), 'left', typeSize);
+      text(g, 'Speed Ref', Math.max(4, s1.x - r - 8), s1.y - 4, col.text(), 'right', typeSize);
       const pi = boxAt('PI', 22, 7.5 - boxH / 2, 58, boxH, L('PI', 'P + I', 'error now + so far', 'in: speed error. out: throttle command. what it does: P and I make a throttle from the error now and the error so far'));
       const th = boxAt('throttle', plantX, 22.5 - boxH / 2, plantW, boxH, L('Throttle & Manifold', 'nonlinear', 'throttle → air', 'in: throttle command and engine speed N. out: air charge. what it does: throttle angle and speed to air charge'));
       const del = boxAt('delay', plantX, 37.5 - boxH / 2, plantW, boxH, L('Induction delay', 'e^{−0.015s}', 'air arrives late', 'in: air charge. out: delayed air charge. what it does: air takes time to reach the cylinders'));
@@ -447,19 +447,19 @@ export function drawLabDiagram(g: CanvasRenderingContext2D, w: number, h: number
       g.beginPath(); g.moveTo(nBus, comb.cy); g.lineTo(comb.r, comb.cy); g.stroke();
       text(g, 'N', nBus - 6, (th.cy + comb.cy) / 2, col.muted(), 'right', 10);
       g.setLineDash([]);
-      // measured rpm feeds back around the left edge to the summer
-      const leftX = Math.max(6, Math.min(s1.x - r - 8, X(4)));
+      // measured rpm feeds back around the bottom and up into the summer, so
+      // the − input is clearly distinct from the + reference arriving from the left.
       const botY = Math.min(Y(96), h - 10);
       g.strokeStyle = cf.color; g.lineWidth = cf.width;
       g.beginPath();
-      g.moveTo(outX, outY); g.lineTo(outX, botY); g.lineTo(leftX, botY); g.lineTo(leftX, s1.y); g.lineTo(s1.x - r - 1, s1.y);
+      g.moveTo(outX, outY); g.lineTo(outX, botY); g.lineTo(s1.x, botY); g.lineTo(s1.x, s1.y + r + 1);
       g.stroke();
-      intoSum(g, leftX, s1.y, s1.x, s1.y, '−', col.text(), r);
+      intoSum(g, s1.x, botY, s1.x, s1.y, '−', col.text(), r);
     } else {
       const r1 = 40;
       const boxH = 26;
       const s1 = { x: X(7), y: Y(r1) };
-      text(g, 'Speed Ref', X(0), Y(r1) - 18, col.text(), 'left', 10);
+      text(g, 'Speed Ref', Math.max(4, s1.x - r - 8), s1.y - 4, col.text(), 'right', 10);
       const pi = boxAt('PI', 11, r1 - boxH / 2, 13, boxH, L('PI', 'P + I', 'error now + so far', 'in: speed error. out: throttle command. what it does: P and I make a throttle from the error now and the error so far'));
       const th = boxAt('throttle', 26, r1 - boxH / 2, 16, boxH, L('Throttle & Manifold', 'nonlinear', 'throttle → air', 'in: throttle command and engine speed N. out: air charge. what it does: throttle angle and speed to air charge'));
       const del = boxAt('delay', 44, r1 - boxH / 2, 14, boxH, L('Induction delay', 'e^{−0.015s}', 'air arrives late', 'in: air charge. out: delayed air charge. what it does: air takes time to reach the cylinders'));

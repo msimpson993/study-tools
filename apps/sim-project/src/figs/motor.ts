@@ -32,7 +32,7 @@ export const motorPanels = (): FigurePanel[] => [
       const openY = t.map(n.wo), closedY = t.map(n.wc);
       const layout = motorPlotLayout(openY, closedY, loop);
       const show = { ess: true };
-      const essLabel = Math.abs(Math.abs(n.wcInf) - 0.002) < 3.5e-4 ? "handout’s −0.002" : `final sag ${n.wcInf.toFixed(5)}`;
+      const essLabel = Math.abs(Math.abs(n.wcInf) - 0.002) < 3.5e-4 ? "handout’s −0.002" : `final sag ${f(n.wcInf, 5)}`;
       const yLabel = 'ω (rad/s per N·m)';
       const head = 44;
       const inner = Math.max(0, h - head);
@@ -44,7 +44,7 @@ export const motorPanels = (): FigurePanel[] => [
       const H = h - head - insetH;
       const yr = layout.main;
       if (loop === 'open') {
-        drawStepResponse(g, w, H, { t, y: openY, ref: 0, final: n.woInf, tEnd: axis, yRange: yr, color: col.muted(), yLabel, show, essLabel: `final sag ${n.woInf.toFixed(3)}`, band: 0 });
+        drawStepResponse(g, w, H, { t, y: openY, ref: 0, final: n.woInf, tEnd: axis, yRange: yr, color: col.muted(), yLabel, show, essLabel: `final sag ${f(n.woInf, 3)}`, band: 0 });
       } else if (loop === 'closed') {
         drawStepResponse(g, w, H, { t, y: closedY, ref: 0, final: n.wcInf, tEnd: axis, yRange: yr, color: col.a(), show, essLabel, yLabel });
       } else {
@@ -84,12 +84,13 @@ function markExit(
   for (; i < t.length; i++) if (y[i] < lo || y[i] > hi) break;
   if (i >= t.length) return;
   const yOut = y[i] < lo ? lo : hi;
-  // Exits at t≈0 sit on the y-axis and vanish; nudge the arrow into the frame.
-  const x = Math.max(fr.X(t[i]), fr.box.l + 16);
-  const yPix = fr.Y(yOut);
+  // Sit just below the left of the zoomed frame, not on the closed curve that
+  // hugs the bottom of the inset, and not on the y-axis where a t≈0 exit vanishes.
   const dir = y[i] < lo ? 1 : -1; // +1 = toward the bottom of the canvas
+  const x = fr.box.l + 22;
+  const yPix = dir > 0 ? fr.box.b + 6 : fr.box.t - 6;
   g.strokeStyle = color; g.fillStyle = color; g.lineWidth = 2;
-  g.beginPath(); g.moveTo(x, yPix - dir * 14); g.lineTo(x, yPix); g.stroke();
+  g.beginPath(); g.moveTo(x, yPix - dir * 12); g.lineTo(x, yPix); g.stroke();
   g.beginPath();
   g.moveTo(x, yPix);
   g.lineTo(x - 5, yPix - dir * 8);

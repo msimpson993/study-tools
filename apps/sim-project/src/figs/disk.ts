@@ -62,7 +62,7 @@ export const diskPanels = (): FigurePanel[] => [
         t: r.t, y: r.y, final: off, ref: 0, tEnd: 2, show: { settling: settled, overshoot: false },
         color: col.a(), yLabel: 'y(t)',
         pads: { l: 72 },
-        settlingLabel: settled ? `shock Ts ${r.m.ts.toFixed(2)} s` : undefined,
+        settlingLabel: settled ? `shock Ts ${f(r.m.ts, 2)} s` : undefined,
       });
       g.restore();
       text(g, `offset ${f(off, 5)}   dip ${f(r.m.peak, 6)} at ${f(r.m.tp, 3)} s`, 8, 14, col.text(), 'left', 10);
@@ -78,10 +78,12 @@ export const diskPanels = (): FigurePanel[] => [
       const reExt = Math.max(8, ...arm.map((p) => Math.abs(p.re)));
       const range = Math.max(20, imMax * 1.25, reExt * 1.15);
       const zetaOf = (p: { re: number; im: number }) => { const wn = Math.hypot(p.re, p.im); return wn > 1e-9 ? Math.abs(p.re) / wn : 1; };
-      const zetas = [...new Set(arm.filter((p) => Math.abs(p.im) > 0.5).map((p) => +zetaOf(p).toFixed(2)))];
+      const armZ = arm.filter((p) => Math.abs(p.im) > 0.5).map((p) => zetaOf(p));
+      const rays = [...new Set(armZ.map((z) => Math.abs(z) < 0.005 ? null : Number(z.toPrecision(2))).filter((z): z is number => z != null))];
       drawSPlane(g, w, h, {
-        range, reCenter: -range * 0.4, poles: arm, zeros: [], labels: true, zetaRays: zetas.length ? zetas : undefined,
+        range, reCenter: -range * 0.4, poles: arm, zeros: [], labels: true, zetaRays: rays.length ? rays : undefined,
       });
+      if (armZ.some((z) => Math.abs(z) < 0.005)) text(g, 'ζ ≈ 0', 8, 30, col.text(), 'left', 10);
       text(g, `coil pole at ${f(coil.re, 1)}  (off scale)`, 8, 16, col.muted(), 'left', 10);
       const ceil = diskKaMax, ratio = ceil / Math.max(Ka, 1e-6);
       const ofCeil = ratio >= 10 ? `1/${f(ratio, 0)}` : f(1 / ratio, 2);
