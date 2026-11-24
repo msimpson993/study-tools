@@ -191,7 +191,8 @@ export function drawStepResponse(g: CanvasRenderingContext2D, w: number, h: numb
       for (const c of spots) {
         if (!inPlot(c.a, c.b2, c.c, c.d, padYOf(c))) continue;
         if (c.c < yRef + 6 && c.d > yRef - 6) continue;
-        if (hitsCurve(c.a, c.b2, c.c, c.d)) continue;
+        const nearBar = Math.abs(((c.c + c.d) / 2) - barY) <= 22;
+        if (!nearBar && hitsCurve(c.a, c.b2, c.c, c.d)) continue;
         if (hitsOtherVert(c.a, c.b2, c.c, c.d, [x0Bar, x1Bar])) continue;
         if (hitsOriginTick(c)) continue;
         trPick = c; break;
@@ -209,7 +210,8 @@ export function drawStepResponse(g: CanvasRenderingContext2D, w: number, h: numb
         if (c.a < f.box.l + 2 || c.b2 > f.box.r - 2) continue;
         if (c.d > f.box.b + 4) continue;
         if (hitsOtherVert(c.a, c.b2, c.c, c.d, [x0Bar, x1Bar])) continue;
-        if (hitsCurve(c.a, c.b2, c.c, c.d)) continue;
+        const nearBar = Math.abs(((c.c + c.d) / 2) - barY) <= 22;
+        if (!nearBar && hitsCurve(c.a, c.b2, c.c, c.d)) continue;
         if (c.a < f.box.l + 18 && c.d > f.box.b - 6) continue;
         trPick = c; break;
       }
@@ -685,13 +687,17 @@ export function drawSPlane(g: CanvasRenderingContext2D, w: number, h: number, s:
     for (const z of [10, MIN_FONT]) {
       g.font = `${z}px system-ui,sans-serif`;
       const tw = g.measureText(lab).width, th = z + 4;
+      const explicit: TextBox[] = realPole ? [
+        textBox(X, Yp - 12 - z * 0.55, tw, th, 'center', z),
+        textBox(X, Yp + 12 + z * 0.55, tw, th, 'center', z),
+        textBox(X, Yp - 16 - z * 0.55, tw, th, 'center', z),
+        textBox(X, Yp + 16 + z * 0.55, tw, th, 'center', z),
+      ] : [];
       const cands = aroundMarker(X, Yp, tw, th, z, preferRight);
-      // a real-axis pole sits on the ζ = 1 ray: try above/below before left/right
-      // sort: larger |cy - Yp| first (above/below), then the rest
-      const ranked = realPole ? [...cands].sort((a, b) => Math.abs((b.c + b.d) / 2 - Yp) - Math.abs((a.c + a.d) / 2 - Yp)) : cands;
+      const ranked = realPole ? [...explicit, ...cands].sort((a, b) => Math.abs((b.c + b.d) / 2 - Yp) - Math.abs((a.c + a.d) / 2 - Yp)) : cands;
       for (const c of ranked) {
         const I = inflateBox(c);
-        if (c.a < f.box.l + 2 || c.b2 > f.box.r - 2 || c.c < f.box.t + 2 || c.d > f.box.b - 2) continue;
+        if (c.a < f.box.l + 1 || c.b2 > f.box.r - 1 || c.c < f.box.t - 6 || c.d > f.box.b + 6) continue;
         if (onSigma(I.a, I.b2, I.c, I.d) || onJw(I.a, I.b2, I.c, I.d) || hitsTaken(I.a, I.b2, I.c, I.d)) continue;
         if (hitsOtherMark(X, Yp, I.a, I.b2, I.c, I.d)) continue;
         if (onRay(c.a, c.b2, c.c, c.d)) continue;
