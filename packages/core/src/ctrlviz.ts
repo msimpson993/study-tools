@@ -30,15 +30,30 @@ const textBox = (x: number, y: number, tw: number, th: number, align: CanvasText
   // match logText's alphabetic extents (ascent 0.9·size, descent 0.25·size)
   return { x, y, align, a, b2: a + tw, c: y - z * 0.9, d: y + z * 0.25, z };
 };
-/** Candidate boxes whose closest edge stays about `gap` px from (X, Y). */
+/** Closest-edge distance from a box to a point. */
+const edgeDist = (b: TextBox, X: number, Y: number) => {
+  const cx = Math.max(b.a, Math.min(X, b.b2)), cy = Math.max(b.c, Math.min(Y, b.d));
+  return Math.hypot(cx - X, cy - Y);
+};
+/** Candidate boxes whose closest edge stays about `gap` px from (X, Y), around the clock. */
 const aroundMarker = (X: number, Y: number, tw: number, th: number, z: number, preferRight = true, gap = ANCHOR_GAP): TextBox[] => {
-  const g = gap, dy = Math.max(z * 0.9, 8);
-  // above: box bottom (y + 0.25z) = Y - g; below: box top (y - 0.9z) = Y + g
-  const yAbove = Y - g - z * 0.25, yBelow = Y + g + z * 0.9;
-  const order: [number, number, CanvasTextAlign][] = preferRight
-    ? [[X + g, Y, 'left'], [X - g, Y, 'right'], [X + g, Y - dy, 'left'], [X - g, Y - dy, 'right'], [X + g, Y + dy, 'left'], [X - g, Y + dy, 'right'], [X, yAbove, 'center'], [X, yBelow, 'center']]
-    : [[X - g, Y, 'right'], [X + g, Y, 'left'], [X - g, Y - dy, 'right'], [X + g, Y - dy, 'left'], [X - g, Y + dy, 'right'], [X + g, Y + dy, 'left'], [X, yAbove, 'center'], [X, yBelow, 'center']];
-  return order.map(([x, y, al]) => textBox(x, y, tw, th, al, z));
+  const out: TextBox[] = [];
+  const start = preferRight ? 0 : Math.PI;
+  for (let i = 0; i < 16; i++) {
+    const ang = start + (i % 2 === 0 ? i / 2 : -Math.ceil(i / 2)) * (Math.PI / 8);
+    const ca = Math.cos(ang), sa = Math.sin(ang);
+    const align: CanvasTextAlign = ca > 0.35 ? 'left' : ca < -0.35 ? 'right' : 'center';
+    let x = X + ca * (gap + 8), y = Y + sa * (gap + 8);
+    let box = textBox(x, y, tw, th, align, z);
+    for (let k = 0; k < 8; k++) {
+      const d = edgeDist(box, X, Y), adj = gap - d;
+      if (Math.abs(adj) < 0.4) break;
+      x += ca * adj; y += sa * adj;
+      box = textBox(x, y, tw, th, align, z);
+    }
+    if (edgeDist(box, X, Y) <= 16 && edgeDist(box, X, Y) >= 8) out.push(box);
+  }
+  return out;
 };
 const niceStep = (span: number, n: number) => {
   if (!(span > 0) || !(n > 0)) return span > 0 ? span : 1;
@@ -163,16 +178,15 @@ export function drawStepResponse(g: CanvasRenderingContext2D, w: number, h: numb
         for (const z of [10.5, 10, MIN_FONT]) {
           g.font = `${z}px system-ui,sans-serif`;
           const tw = g.measureText(word).width, th = z + 3;
-          for (const gap of [ANCHOR_GAP, 15]) {
-          for (const c of aroundMarker(peakX, peakY, tw, th, z, true, gap)) {
-            if (!inPlot(c.a, c.b2, c.c, c.d, 8)) continue;
+          for (const c of aroundMarker(peakX, peakY, tw, th, z, true)) {
+            if (!inPlot(c.a, c.b2, c.c, c.d, 14)) continue;
+            if (c.c < f.box.t - 14) continue;
             if (!ignoreGhost && ghostWouldHit(c.a, c.b2, c.c, c.d)) continue;
             const cx = Math.max(c.a, Math.min(peakX, c.b2)), cy = Math.max(c.c, Math.min(peakY, c.d));
             if (Math.hypot(cx - peakX, cy - peakY) < 8) continue;
             if (c.c < yRef + 4 && c.d > yRef - 4) continue;
             if (hitsCurve(c.a, c.b2, c.c, c.d)) continue;
             return { word, c };
-          }
           }
         }
       }
@@ -191,20 +205,19 @@ export function drawStepResponse(g: CanvasRenderingContext2D, w: number, h: numb
       let c: TextBox | null = null;
       g.font = `${MIN_FONT}px system-ui,sans-serif`;
       const tw = g.measureText(osShort).width, th = MIN_FONT + 3;
-      for (const gap of [ANCHOR_GAP, 15]) {
-        for (const cand of aroundMarker(peakX, peakY, tw, th, MIN_FONT, true, gap)) {
-          if (!inPlot(cand.a, cand.b2, cand.c, cand.d, 8)) continue;
-          const cx = Math.max(cand.a, Math.min(peakX, cand.b2)), cy = Math.max(cand.c, Math.min(peakY, cand.d));
-          if (Math.hypot(cx - peakX, cy - peakY) < 8) continue;
-          if (cand.c < yRef + 4 && cand.d > yRef - 4) continue;
-          if (hitsCurve(cand.a, cand.b2, cand.c, cand.d)) continue;
-          c = cand; break;
-        }
-        if (c) break;
+      for (const cand of aroundMarker(peakX, peakY, tw, th, MIN_FONT, true)) {
+        if (!inPlot(cand.a, cand.b2, cand.c, cand.d, 14) || cand.c < f.box.t - 14) continue;
+        const cx = Math.max(cand.a, Math.min(peakX, cand.b2)), cy = Math.max(cand.c, Math.min(peakY, cand.d));
+        if (Math.hypot(cx - peakX, cy - peakY) < 8) continue;
+        if (cand.c < yRef + 4 && cand.d > yRef - 4) continue;
+        if (hitsCurve(cand.a, cand.b2, cand.c, cand.d)) continue;
+        c = cand; break;
       }
       if (!c) {
-        const pool = [12, 15].flatMap((gap) => aroundMarker(peakX, peakY, tw, th, MIN_FONT, true, gap));
-        c = pool.find((cand) => inPlot(cand.a, cand.b2, cand.c, cand.d, 8) && !(cand.c < yRef + 4 && cand.d > yRef - 4)) ?? pool[0];
+        const pool = aroundMarker(peakX, peakY, tw, th, MIN_FONT, true);
+        c = pool.find((cand) => (inPlot(cand.a, cand.b2, cand.c, cand.d, 14) || cand.c >= f.box.t - 14) && !(cand.c < yRef + 4 && cand.d > yRef - 4) && !hitsCurve(cand.a, cand.b2, cand.c, cand.d))
+          ?? pool.find((cand) => inPlot(cand.a, cand.b2, cand.c, cand.d, 14) && !(cand.c < yRef + 4 && cand.d > yRef - 4))
+          ?? pool[0];
       }
       withAnchor({ kind: 'marker', x: peakX, y: peakY }, () => {
         withLabelRole('axis', () => { lbl(osShort, c!.x, c!.y, col.b(), c!.align, MIN_FONT); });
@@ -527,17 +540,22 @@ export function drawSPlane(g: CanvasRenderingContext2D, w: number, h: number, s:
       if (pick) break;
     }
     if (!pick && !tile) {
-      // expanded must keep the value beside the ×; still prefer a spot off the ζ rays
-      for (const relaxRay of [false, true]) {
-        g.font = `${MIN_FONT}px system-ui,sans-serif`;
-        const tw = g.measureText(lab).width, th = MIN_FONT + 4;
-        for (const c of aroundMarker(X, Yp, tw, th, MIN_FONT, preferRight, 15)) {
-          if (c.a < f.box.l + 2 || c.b2 > f.box.r - 2 || c.c < f.box.t + 2 || c.d > f.box.b - 2) continue;
-          if (hitsOtherMark(X, Yp, c.a, c.b2, c.c, c.d) || hitsTaken(c.a, c.b2, c.c, c.d)) continue;
-          if (!relaxRay && onRay(c.a, c.b2, c.c, c.d)) continue;
+      // expanded must keep the value beside the × and still off the ζ rays
+      g.font = `${MIN_FONT}px system-ui,sans-serif`;
+      const tw = g.measureText(lab).width, th = MIN_FONT + 4;
+      for (const c of aroundMarker(X, Yp, tw, th, MIN_FONT, preferRight)) {
+        if (c.a < f.box.l + 2 || c.b2 > f.box.r - 2 || c.c < f.box.t - 4 || c.d > f.box.b + 4) continue;
+        if (hitsOtherMark(X, Yp, c.a, c.b2, c.c, c.d) || hitsTaken(c.a, c.b2, c.c, c.d)) continue;
+        if (onRay(c.a, c.b2, c.c, c.d)) continue;
+        pick = c; break;
+      }
+      if (!pick) {
+        for (const c of aroundMarker(X, Yp, tw, th, MIN_FONT, preferRight)) {
+          if (c.a < f.box.l + 2 || c.b2 > f.box.r - 2 || c.c < f.box.t - 4 || c.d > f.box.b + 4) continue;
+          if (hitsOtherMark(X, Yp, c.a, c.b2, c.c, c.d)) continue;
+          if (onRay(c.a, c.b2, c.c, c.d)) continue;
           pick = c; break;
         }
-        if (pick) break;
       }
     }
     if (!pick) continue; // tile: hide this anchored label rather than park it far away
