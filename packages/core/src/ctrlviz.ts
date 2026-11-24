@@ -1,7 +1,7 @@
 import { C, cabs, type Cx } from './dsp/complex';
 import { type TF, type StepMetrics, type Margins, type Bode, bode, margins, stepMetrics, tfEval, logspace, tfPoles, tfZeros, freqresp } from './dsp/tf';
 import { type RLocus, rlocusPolesAt, rlocusNearest } from './dsp/rlocus';
-import { col, planeFrame, rangeFrame, wipe, text, tline, polyline, dot, cross, graphAxes, curve, clipBox, withClip, heat, axes2, tickLabel, isThumb, isTileCanvas, isPortraitPhone, isLandscapePhone, logInsetFrame, forTicks, goodStep, withPersistentLabels, type Frame, type V2 } from './viz';
+import { col, planeFrame, rangeFrame, wipe, text, tline, polyline, dot, cross, graphAxes, curve, clipBox, withClip, beginClip, endClip, heat, axes2, tickLabel, isThumb, isTileCanvas, isPortraitPhone, isLandscapePhone, logInsetFrame, forTicks, goodStep, withPersistentLabels, type Frame, type V2 } from './viz';
 import { withLabelRole, withAnchor, labelsOn } from './labels';
 import type { PanelPointer } from './figure';
 
@@ -46,7 +46,7 @@ const aroundMarker = (X: number, Y: number, tw: number, th: number, z: number, p
   const cardinal: TextBox[] = preferRight
     ? [textBox(X + gap, Y, tw, th, 'left', z), textBox(X - gap, Y, tw, th, 'right', z), textBox(X, Y - gap - z * 0.55, tw, th, 'center', z), textBox(X, Y + gap + z * 0.55, tw, th, 'center', z)]
     : [textBox(X - gap, Y, tw, th, 'right', z), textBox(X + gap, Y, tw, th, 'left', z), textBox(X, Y - gap - z * 0.55, tw, th, 'center', z), textBox(X, Y + gap + z * 0.55, tw, th, 'center', z)];
-  for (const b of cardinal) if (edgeDist(b, X, Y) <= 16 && edgeDist(b, X, Y) >= 8) out.push(b);
+  for (const b of cardinal) if (edgeDist(b, X, Y) <= 15.5 && edgeDist(b, X, Y) >= 8) out.push(b);
   const start = preferRight ? 0 : Math.PI;
   for (let i = 0; i < 16; i++) {
     const ang = start + (i % 2 === 0 ? i / 2 : -Math.ceil(i / 2)) * (Math.PI / 8);
@@ -60,7 +60,7 @@ const aroundMarker = (X: number, Y: number, tw: number, th: number, z: number, p
       x += ca * adj; y += sa * adj;
       box = textBox(x, y, tw, th, align, z);
     }
-    if (edgeDist(box, X, Y) <= 16 && edgeDist(box, X, Y) >= 8) out.push(box);
+    if (edgeDist(box, X, Y) <= 15.5 && edgeDist(box, X, Y) >= 8) out.push(box);
   }
   return out;
 };
@@ -400,8 +400,9 @@ export function drawStepResponse(g: CanvasRenderingContext2D, w: number, h: numb
       if (!tsPick) {
         g.font = `${MIN_FONT}px system-ui,sans-serif`;
         const tw = g.measureText(tsLab).width, th = MIN_FONT + 3;
-        const ys = [(yLo + yHi) / 2, yHi - 12, yHi + 10, yLo - 28, yLo - 18, yLo - 8];
+        const ys = [yHi - 14, yHi - 24, (yLo + yHi) / 2, yLo - 28, yLo - 18, yLo - 8];
         const xs: [number, CanvasTextAlign][] = [[lineX + 10, 'left'], [lineX - 10, 'right'], [lineX + 16, 'left'], [lineX - 16, 'right']];
+        if (trPlaced) xs.unshift([trPlaced.x1 + 8, 'left']);
         for (const yy of ys) for (const [x, al] of xs) {
           const c = textBox(x, yy, tw, th, al, MIN_FONT);
           if (!inPlot(c.a, c.b2, c.c, c.d, 10)) continue;
@@ -547,7 +548,7 @@ export function drawSPlane(g: CanvasRenderingContext2D, w: number, h: number, s:
     if (r.wn !== undefined) { g.beginPath(); g.arc(x0, y0, r.wn * f.sx, 0, 2 * Math.PI); g.clip(); }
     g.fillStyle = col.ok(); g.globalAlpha = 0.13; g.fillRect(f.box.l, f.box.t, f.box.r - f.box.l, f.box.b - f.box.t); g.restore();
   }
-  withClip(g, f, () => {
+  beginClip(g, f.box);
   g.strokeStyle = col.strong(); g.lineWidth = 1.5; g.beginPath(); g.moveTo(x0, f.box.t); g.lineTo(x0, f.box.b); g.stroke(); // the jω axis: the edge of stability
   for (const wn of s.wnCircles ?? []) { g.strokeStyle = col.d(); g.globalAlpha = 0.7; g.lineWidth = 1; g.setLineDash([3, 4]); g.beginPath(); g.arc(x0, y0, wn * f.sx, Math.PI / 2, (3 * Math.PI) / 2); g.stroke(); g.setLineDash([]); g.globalAlpha = 1; text(g, `ωn ${fmtN(wn)}`, x0 - wn * f.sx + 3, y0 + 10, col.d(), 'left', 10); }
   const zetaNames: (() => void)[] = [], taken: { x0: number; x1: number; y0: number; y1: number }[] = [];
@@ -716,6 +717,7 @@ export function drawSPlane(g: CanvasRenderingContext2D, w: number, h: number, s:
     return Math.hypot(cx - mk.X, cy - mk.Y) < 10;
   });
   const tile = isTileCanvas(g);
+  endClip(g);
   withPersistentLabels(() => {
   for (const { p, lab } of labelled) {
     const X = f.X(p.re), Yp = f.Y(p.im);
@@ -728,7 +730,7 @@ export function drawSPlane(g: CanvasRenderingContext2D, w: number, h: number, s:
     const poleSpots = (sz: number, tw0: number, th0: number): TextBox[] => {
       const out: TextBox[] = [];
       // LHP: 'right' alignment extends the value left of the ×, clear of ζ rays that rise toward the origin
-      for (const gap of [16, 12]) for (const al of (['right', 'left', 'center'] as CanvasTextAlign[])) {
+      for (const gap of [14, 12]) for (const al of (['right', 'left', 'center'] as CanvasTextAlign[])) {
         out.push(textBox(X, Yp - gap - sz * 0.55, tw0, th0, al, sz));
         out.push(textBox(X, Yp + gap + sz * 0.55, tw0, th0, al, sz));
       }
@@ -757,7 +759,7 @@ export function drawSPlane(g: CanvasRenderingContext2D, w: number, h: number, s:
       g.font = `${MIN_FONT}px system-ui,sans-serif`;
       const tw = g.measureText(lab).width, th = MIN_FONT + 4;
       const explicit = poleSpots(MIN_FONT, tw, th);
-      const raw = [...explicit, ...aroundMarker(X, Yp, tw, th, MIN_FONT, preferRight), ...aroundMarker(X, Yp, tw, th, MIN_FONT, preferRight, 16), ...aroundMarker(X, Yp, tw, th, MIN_FONT, !preferRight)];
+      const raw = [...explicit, ...aroundMarker(X, Yp, tw, th, MIN_FONT, preferRight), ...aroundMarker(X, Yp, tw, th, MIN_FONT, preferRight, 14), ...aroundMarker(X, Yp, tw, th, MIN_FONT, !preferRight)];
       const inClip = (c: TextBox) => c.a >= 1 && c.b2 <= vw - 1 && c.c >= 1 && c.d <= vh - 1;
       for (const c of raw) {
         const I = inflateBox(c);
@@ -827,7 +829,6 @@ export function drawSPlane(g: CanvasRenderingContext2D, w: number, h: number, s:
     }
     }
   }
-  });
   g.restore();
   if (s.inset && s.clear !== false) {
     let ix: number, iy: number, iw: number, ih: number;

@@ -65,9 +65,13 @@ export const currentClip = (g: CanvasRenderingContext2D): ClipRect | null => {
 };
 export function clipBox(g: CanvasRenderingContext2D, f: Frame) { g.beginPath(); g.rect(f.box.l, f.box.t, f.box.r - f.box.l, f.box.b - f.box.t); g.clip(); }
 /** Clip to the frame box, record it for label tests and fitText, and restore both on exit. */
+export function beginClip(g: CanvasRenderingContext2D, box: { l: number; t: number; r: number; b: number }) {
+  g.save(); g.beginPath(); g.rect(box.l, box.t, box.r - box.l, box.b - box.t); g.clip(); pushClip(g, box);
+}
+export function endClip(g: CanvasRenderingContext2D) { popClip(g); g.restore(); }
 export function withClip<T>(g: CanvasRenderingContext2D, f: Frame, fn: () => T): T {
-  g.save(); clipBox(g, f); pushClip(g, f.box);
-  try { return fn(); } finally { popClip(g); g.restore(); }
+  beginClip(g, f.box);
+  try { return fn(); } finally { endClip(g); }
 }
 
 type CurveLog = { pts: { x: number; y: number }[]; width: number; W: number; H: number; cv: number; id: string; gen: number; where?: string; step?: string };
