@@ -423,13 +423,18 @@ export function graphAxes(g: CanvasRenderingContext2D, f: Frame, xr: V2, yr: V2,
     forTicks(Math.ceil(xr[0] / sx) * sx, xr[1], sx, (x) => {
       g.strokeStyle = col.grid(); g.beginPath(); g.moveTo(f.X(x), f.box.t); g.lineTo(f.X(x), f.box.b); g.stroke();
       const lab = xfmt ? xfmt(x) : tickLabel(x, sx), px = f.X(x);
-      if (lab && lab !== lastX && Math.abs(px - lastPx) >= 26) { text(g, lab, px, f.box.b + 9, col.muted(), 'center', 10); lastX = lab; lastPx = px; }
+      const onMarkX = (avoid ?? []).some((mk) => Math.hypot((mk.x ?? px) - px, (mk.y ?? (f.box.b + 9)) - (f.box.b + 9)) < (mk.r ?? 10));
+      if (lab && lab !== lastX && Math.abs(px - lastPx) >= 26 && !onMarkX) { text(g, lab, px, f.box.b + 9, col.muted(), 'center', 10); lastX = lab; lastPx = px; }
     });
     let lastY = '', lastPy = Infinity;
     forTicks(Math.ceil(yr[0] / sy) * sy, yr[1], sy, (y) => {
       g.strokeStyle = col.grid(); g.beginPath(); g.moveTo(f.box.l, f.Y(y)); g.lineTo(f.box.r, f.Y(y)); g.stroke();
       const lab = yfmt ? yfmt(y) : tickLabel(y, sy), py = f.Y(y);
-      const onMark = (avoid ?? []).some((mk) => Math.hypot((mk.x ?? tickX) - tickX, (mk.y) - py) < (mk.r ?? 10));
+      const onMark = (avoid ?? []).some((mk) => {
+        const r = mk.r ?? 10;
+        if (Math.abs(mk.y - py) >= r) return false;
+        return mk.x === undefined || mk.x < f.box.l + r + 20;
+      });
       if (lab && lab !== lastY && Math.abs(py - lastPy) >= 16 && !onMark) {
         g.font = '10px system-ui,sans-serif';
         const tSize = Math.max(7, Math.min(10, 10 * tickRoom / Math.max(1, g.measureText(lab).width)));
