@@ -117,7 +117,8 @@ export function drawSPlane(g: CanvasRenderingContext2D, w: number, h: number, s:
   });
   g.restore();
   // one row below the jω axis name, so the two never touch on a narrow panel (pass 3)
-  if (s.shadeUnstable !== false && x0 < f.box.r - 70) text(g, 'unstable', f.box.r - 5, f.box.t + 24, col.bad(), 'right', 10);
+  const unstableBox = (s.shadeUnstable !== false && x0 < f.box.r - 70) ? { x0: f.box.r - 64, x1: f.box.r - 2, y0: f.box.t + 2, y1: f.box.t + 16 } : null;
+  if (unstableBox) text(g, 'unstable', f.box.r - 6, f.box.t + 11, col.bad(), 'right', 10);
   // allowed region
   if (s.region) {
     const r = s.region; g.save(); clipBox(g, f);
@@ -174,7 +175,8 @@ export function drawSPlane(g: CanvasRenderingContext2D, w: number, h: number, s:
     // …and clear of the σ axis name at the right end of the real axis (pass 3: "0+j6.32" sat on "σ (1/s)")
     g.font = '11px system-ui, sans-serif'; const sw = g.measureText(s.xLabel ?? 'σ (1/s)').width; g.font = '10px system-ui, sans-serif';
     const onSigma = (a: number, b2: number, c: number, d: number) => b2 > f.box.r - 2 - sw - 3 && a < f.box.r && d > y0 - 8 - 12 && c < y0 - 8 + 4;
-    const blockedR = onRay(X + 9, X + 9 + tw, Y - 9, Y + 2) || onSigma(X + 9, X + 9 + tw, Y - 9, Y + 2), blockedL = onRay(X - 9 - tw, X - 9, Y - 9, Y + 2) || X - 9 - tw < f.box.l + 2;
+    const hitsUnstable = (a: number, b2: number, c: number, d: number) => !!(unstableBox && b2 > unstableBox.x0 - 2 && a < unstableBox.x1 + 2 && d > unstableBox.y0 - 2 && c < unstableBox.y1 + 2);
+    const blockedR = onRay(X + 9, X + 9 + tw, Y - 9, Y + 2) || onSigma(X + 9, X + 9 + tw, Y - 9, Y + 2) || hitsUnstable(X + 9, X + 9 + tw, Y - 9, Y + 2), blockedL = onRay(X - 9 - tw, X - 9, Y - 9, Y + 2) || X - 9 - tw < f.box.l + 2 || hitsUnstable(X - 9 - tw, X - 9, Y - 9, Y + 2);
     const right = !blockedR || blockedL;
     text(g, lab, right ? X + 9 : X - 9, Y, col.b(), right ? 'left' : 'right', 10);
     taken.push(right ? { x0: X + 9, x1: X + 9 + tw, y0: Y - 9, y1: Y + 2 } : { x0: X - 9 - tw, x1: X - 9, y0: Y - 9, y1: Y + 2 });

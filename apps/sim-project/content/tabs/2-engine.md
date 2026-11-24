@@ -83,7 +83,7 @@ G(s) ≈ 311 · 3.42² · e^(−0.015s) / (s² + 6.40s + 11.70)      throttle �
    - **Gain margin (GM):** at the rate where the lag reaches 180°, how many times the loop's gain could still grow before it reaches 1. It is quoted in *dB* (decibels, a log scale for ratios: 0 dB is 1×, +20 dB is 10×, and a negative value means already past the edge).
    - **The two rules (not in lab handout, read from all three tables):** **Response time sets the crossover, ω_c = 2/t_resp**, and **Transient behavior sets the margin, PM ≈ 100° × robustness**. The tuner solves for the P and I that hit both.
    - **The starting point:** at P = I = 1 the loop is *unstable* (its swings grow instead of dying out): phase margin −46.6° and gain margin −19.9 dB, both past the edge (the tuner reports "Closed-loop stability: Undefined").
-   - **Readout terms:** OS is the overshoot, Ts the settling time (2 % band) and *Tr the rise time*: how long the speed takes to go from 10 % to 90 % of the way to the new target.
+   - **Readout terms:** OS is the overshoot, Ts the settling time (2 % band), *Tr the rise time*: how long the speed takes to go from 10 % to 90 % of the way to the new target, and *Tp the peak time*: when the overshoot peaks.
    - **Look for:** with **initial (0.678 s, 0.6)** set:
      - the emulation's step readout shows about 7.4 % overshoot and 1.96 s settling; the handout's table says 7.5 % and 1.96 s;
      - the *Bode plot* (the loop's gain in dB on top and its phase below, against wiggle rate) has a PM bar reading 60.0° at 2.95 rad/s (handout: 59.9°) and a GM bar reading 25.4 dB.
@@ -111,7 +111,7 @@ G(s) ≈ 311 · 3.42² · e^(−0.015s) / (s² + 6.40s + 11.70)      throttle �
    - **The settings:** response time 1.5 s raises the crossover to 1.33 rad/s, and robustness 0.72 raises the margin to 72°.
    - **Result:** 0 % overshoot, 1.81 s settling, P = 0.0014551, I = 0.0043791.
    - **For contrast (not in lab handout):** **aggressive (own)**, robustness 0.4, gives 28 % overshoot.
-   - **Look for:** with **final (1.5 s, 0.72)** set, the step curve rises to 1 without going over and settles at about 1.80 s (the readout: Ts 1.802 s, Tr 1.09 s; the handout's table: 1.81 s and 1.09 s). The PM bar reads 72.0° at 1.33 rad/s and the GM bar 32.7 dB (handout: 32.8 dB).
+   - **Look for:** with **final (1.5 s, 0.72)** set, the step curve rises to 1 without going over and settles at about 1.80 s (the readout: Ts 1.802 s, Tr 1.088 s; the handout's table: 1.81 s and 1.09 s). The PM bar reads 72.0° at 1.33 rad/s and the GM bar 32.7 dB (handout: 32.8 dB).
 
 ```figure:tuner preset=final
 ```

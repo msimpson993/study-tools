@@ -34,7 +34,7 @@ export const motorPanels = (): FigurePanel[] => [
       const show = { ess: true };
       const essLabel = Math.abs(Math.abs(n.wcInf) - 0.002) < 3.5e-4 ? "handout’s −0.002" : `final sag ${n.wcInf.toFixed(5)}`;
       const yLabel = 'ω (rad/s per N·m)';
-      const head = 40;
+      const head = 44;
       const inner = Math.max(0, h - head);
       const insetH = layout.inset
         ? Math.round(Math.min(inner * 0.55, Math.max(w < 500 ? 80 : 96, inner * (w < 500 ? 0.48 : 0.36))))
@@ -81,8 +81,8 @@ function drawMotorInset(
   g.strokeStyle = col.muted();
   g.lineWidth = 1;
   g.beginPath(); g.rect(4, 2, w - 8, insetH - 4); g.fill(); g.stroke();
-  text(g, s.note, 12, 14, col.text(), 'left', 10);
-  const fr = rangeFrame(w, insetH, [0, s.tEnd], s.yr, 48, 12, 20, 22);
+  text(g, s.note, 12, 13, col.text(), 'left', 10);
+  const fr = rangeFrame(w, insetH, [0, s.tEnd], s.yr, 52, 12, 28, 26);
   graphAxes(g, fr, [0, s.tEnd], s.yr, 'time (s)', 'ω (rad/s)');
   curve(g, fr, s.t, s.y, s.color, 2);
   tline(g, fr, [0, s.final], [s.tEnd, s.final], s.color, 1, [5, 4]);

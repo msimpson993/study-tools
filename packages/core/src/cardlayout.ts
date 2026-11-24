@@ -129,6 +129,64 @@ function stepBodyNodes(ol: HTMLElement): Node[] {
   return nodes.length ? nodes : [...li.childNodes];
 }
 
+/** Lock the gentle card-settle while a Contents (or other) jump is in flight. */
+export function lockStepJump(ms = 900): void {
+  const root = document.documentElement;
+  root.classList.add('step-jumping');
+  const until = Date.now() + ms;
+  (lockStepJump as { until?: number }).until = until;
+  window.setTimeout(() => {
+    if (Date.now() >= ((lockStepJump as { until?: number }).until ?? 0)) root.classList.remove('step-jumping');
+  }, ms);
+}
+
+const SETTLE_IDLE_MS = 150;
+const SETTLE_BAND = 0.13;
+
+/** After scrolling stops, flush a nearby card in the direction of travel — never against it. */
+function attachCardSettle(): () => void {
+  let lastY = window.scrollY;
+  let dir = 0;
+  let timer = 0;
+  let settling = false;
+  const onScroll = () => {
+    if (settling) return;
+    const y = window.scrollY;
+    const dy = y - lastY;
+    if (Math.abs(dy) > 0.5) dir = dy > 0 ? 1 : -1;
+    lastY = y;
+    if (timer) window.clearTimeout(timer);
+    timer = window.setTimeout(trySettle, SETTLE_IDLE_MS);
+  };
+  const trySettle = () => {
+    if (document.documentElement.classList.contains('step-jumping')) return;
+    if (!document.documentElement.classList.contains('has-step-cards')) return;
+    if (!dir) return;
+    const pin = headerBottom();
+    const band = window.innerHeight * SETTLE_BAND;
+    let target: HTMLElement | null = null;
+    let best = Infinity;
+    for (const card of document.querySelectorAll<HTMLElement>('.step-card')) {
+      const delta = card.getBoundingClientRect().top - pin;
+      if (dir > 0) {
+        if (delta > 1 && delta <= band && delta < best) { best = delta; target = card; }
+      } else if (delta < -1 && delta >= -band && -delta < best) {
+        best = -delta; target = card;
+      }
+    }
+    if (!target) return;
+    settling = true;
+    const dest = window.scrollY + (target.getBoundingClientRect().top - pin);
+    window.scrollTo({ top: Math.max(0, dest), behavior: 'smooth' });
+    window.setTimeout(() => { settling = false; lastY = window.scrollY; }, 420);
+  };
+  window.addEventListener('scroll', onScroll, { passive: true });
+  return () => {
+    window.removeEventListener('scroll', onScroll);
+    if (timer) window.clearTimeout(timer);
+  };
+}
+
 /**
  * Rebuild section (c) as one viewport-tall card per step, each with its own
  * figure instance, local controls, and independently scrolling columns.
@@ -168,13 +226,18 @@ export function applyCardLayout(art: HTMLElement, content: AppContent, hooks: Fi
   if (!steps.length) return () => {};
 
   const total = steps.length;
+  // Leave the (c) heading where it is and insert the cards right after it,
+  // so (c) stays between (b) and (d). (A search for the first remaining H2
+  // would find (a), which used to put the cards at the top of the tab.)
+  const marker = document.createComment('step-cards-here');
+  sec.heading.after(marker);
   const cardsWrap = h('div', { class: 'step-cards', dataset: { testid: 'step-cards' } });
-  const snapFirst = h('div', { class: 'step-snap-first', dataset: { testid: 'step-snap-first' } });
 
   const openSheets = new Map<Step, (open: boolean) => void>();
   const unwirePics = new Map<Step, () => void>();
   const alive = new Map<Step, Mount[]>();
   const intersecting = new Set<Step>();
+  const savedState = new Map<string, string>();
 
   const mountFig = (host: HTMLElement, fig: FigRef): Mount | null => {
     host.hidden = false;
@@ -191,6 +254,8 @@ export function applyCardLayout(art: HTMLElement, content: AppContent, hooks: Fi
     const controls = controlsForSlot(def, host);
     const figOpts: FigureMountOpts = { flatControls: true };
     const stop = mounter(host, { ...def, lookFor: undefined }, controls, figOpts);
+    const saved = savedState.get(host.dataset.stateKey || '');
+    if (saved) controls.restore(saved);
     const syncPreset = () => {
       host.dataset.preset = controls.active ?? '';
       const card = host.closest('.step-card') as HTMLElement | null;
@@ -198,6 +263,7 @@ export function applyCardLayout(art: HTMLElement, content: AppContent, hooks: Fi
         card.dataset.preset = controls.active ?? '';
       }
     };
+    syncPreset();
     controls.onChange(() => syncPreset());
     return { stop: typeof stop === 'function' ? stop : () => {}, host, controls };
   };
@@ -215,7 +281,7 @@ export function applyCardLayout(art: HTMLElement, content: AppContent, hooks: Fi
       for (const m of mounts) m.host.querySelectorAll('.st-ctl').forEach((rail) => sheetBody.append(rail));
       if (how) sheetBody.append(how);
     } else {
-      if (how) card.querySelector('.step-card-fig')?.append(how);
+      if (how) card.querySelector('.step-fig-scroll')?.append(how);
       for (const m of mounts) {
         const rail = sheetBody?.querySelector(':scope > .st-ctl') ?? m.host.querySelector('.st-ctl');
         const layout = m.host.querySelector('.fig-layout');
@@ -223,6 +289,36 @@ export function applyCardLayout(art: HTMLElement, content: AppContent, hooks: Fi
       }
     }
     if (how) how.open = !phone && !isLandscapePhone();
+    parkPlay(card);
+    paintMorePlots(card);
+  };
+
+  const parkPlay = (card: HTMLElement) => {
+    const bar = card.querySelector('.step-toolbar') as HTMLElement | null;
+    if (!bar) return;
+    const phone = isPortraitPhone() || isLandscapePhone();
+    const plays = [...card.querySelectorAll<HTMLElement>('[data-testid=play]')];
+    for (const p of plays) {
+      if (phone) {
+        if (p.parentElement !== bar) bar.insertBefore(p, bar.querySelector('.step-ctl-open'));
+      } else {
+        const anim = p.closest('.fig-layout')?.querySelector('.fig-anim')
+          ?? card.querySelector('.fig-anim');
+        if (anim && p.parentElement !== anim) anim.prepend(p);
+      }
+    }
+  };
+
+  const paintMorePlots = (card: HTMLElement) => {
+    const col = card.querySelector('.step-fig-scroll') as HTMLElement | null
+      ?? card.querySelector('.step-card-fig') as HTMLElement | null;
+    const hint = card.querySelector('.more-plots') as HTMLElement | null;
+    if (!col || !hint) return;
+    const nav = card.querySelector('.pics-nav') as HTMLElement | null;
+    if (nav && !nav.hidden) { hint.hidden = true; return; }
+    const overflow = col.scrollHeight > col.clientHeight + 24;
+    const atEnd = col.scrollTop + col.clientHeight >= col.scrollHeight - 16;
+    hint.hidden = !(overflow && !atEnd);
   };
 
   const paintHow = (card: HTMLElement, figs: FigRef[]) => {
@@ -306,6 +402,8 @@ export function applyCardLayout(art: HTMLElement, content: AppContent, hooks: Fi
     unwirePics.get(step)?.();
     unwirePics.delete(step);
     for (const m of mounts) {
+      const key = m.host.dataset.stateKey;
+      if (key) savedState.set(key, m.controls.serialize());
       try { m.stop(); } catch { /* already gone */ }
       clear(m.host);
     }
@@ -325,10 +423,14 @@ export function applyCardLayout(art: HTMLElement, content: AppContent, hooks: Fi
       if (m) mounts.push(m);
     });
     alive.set(step, mounts);
+    for (const m of mounts) {
+      if (m.host.dataset.figure === 'tuner') m.host.classList.add('is-tuner');
+    }
     placeControls(step, card);
     paintHow(card, step.figs);
     unwirePics.get(step)?.();
     unwirePics.set(step, wirePics(card));
+    paintMorePlots(card);
   };
 
   const dist = (step: Step) => {
@@ -357,7 +459,7 @@ export function applyCardLayout(art: HTMLElement, content: AppContent, hooks: Fi
   for (const step of steps) {
     const title = stepTitle(step.ol);
     const bodyNodes = stepBodyNodes(step.ol);
-    const textCol = h('div', { class: 'step-card-text', dataset: { testid: 'step-card-text' } });
+    const textCol = h('div', { class: 'step-card-text', dataset: { testid: 'step-card-text' }, tabindex: '0' });
     if (bodyNodes.length) {
       const wrap = h('div', { class: 'step-card-prose' });
       for (const n of bodyNodes) wrap.append(n);
@@ -367,31 +469,34 @@ export function applyCardLayout(art: HTMLElement, content: AppContent, hooks: Fi
       if (extra.matches('.viz-slot[data-figure], .pop-figs')) continue;
       textCol.append(extra);
     }
-    const figCol = h('div', { class: 'step-card-fig', dataset: { testid: 'step-card-fig' } });
+    const figCol = h('div', { class: 'step-card-fig', dataset: { testid: 'step-card-fig' }, tabindex: '0' });
+    const figScroll = h('div', { class: 'step-fig-scroll' });
     const openCtl = h('button', {
       type: 'button', class: 'tbtn step-ctl-open', dataset: { testid: 'step-controls-open' },
       'aria-expanded': 'false', hidden: true,
     }, '⚙ Controls');
     const toolbar = h('div', { class: 'step-toolbar' }, openCtl);
-    figCol.append(toolbar);
+    figScroll.append(toolbar);
     const hosts: HTMLElement[] = [];
-    for (const fig of step.figs) {
+    step.figs.forEach((fig, i) => {
       const host = h('div', {
         class: 'viz-slot viz-embed step-host',
-        dataset: { skipEmbed: '1', testid: 'viz', figure: fig.id, preset: fig.preset ?? '' },
+        dataset: { skipEmbed: '1', testid: 'viz', figure: fig.id, preset: fig.preset ?? '', stateKey: `${step.n}:${i}:${fig.id}` },
       }) as HTMLElement;
       if (fig.params) host.dataset.params = fig.params;
       hosts.push(host);
-      figCol.append(host);
+      figScroll.append(host);
       fig.slot.remove();
-    }
+    });
     const nav = h('div', { class: 'pics-nav', hidden: true, 'aria-label': 'Pictures', dataset: { testid: 'pics-nav' } });
-    figCol.append(nav);
+    figScroll.append(nav);
     const howBody = h('div', { class: 'step-how-body' });
     const howBox = h('details', { class: 'step-how', dataset: { testid: 'how-to-read' } },
       h('summary', null, 'How to read this'),
       howBody);
-    figCol.append(howBox);
+    figScroll.append(howBox);
+    figCol.append(figScroll);
+    figCol.append(h('div', { class: 'more-plots', hidden: true, dataset: { testid: 'more-plots' } }, 'more plots ↓'));
     const sheetBody = h('div', { class: 'step-sheet-body', dataset: { testid: 'step-controls-body' } });
     const sheet = h('div', {
       class: 'step-sheet', hidden: true,
@@ -432,28 +537,21 @@ export function applyCardLayout(art: HTMLElement, content: AppContent, hooks: Fi
     );
     const body = h('div', { class: 'step-card-body' }, textCol, figCol, sheet, backdrop);
     card.append(body);
+    const more = figCol.querySelector('.more-plots') as HTMLElement | null;
+    more?.addEventListener('click', () => {
+      figScroll.scrollBy({ top: Math.max(80, figScroll.clientHeight * 0.6), behavior: 'smooth' });
+    });
+    figScroll.addEventListener('scroll', () => paintMorePlots(card), { passive: true });
     step.el = card;
   }
 
   for (const node of leftovers) {
     if (node.matches('.viz-slot[data-figure], .pop-figs')) node.remove();
-    else snapFirst.append(node);
+    else cardsWrap.append(node);
   }
-
-  snapFirst.prepend(sec.heading);
-  if (steps[0]) snapFirst.append(steps[0].el);
-  cardsWrap.append(snapFirst);
-  for (const s of steps.slice(1)) cardsWrap.append(s.el);
+  for (const s of steps) cardsWrap.append(s.el);
   for (const s of steps) s.ol.remove();
-  // heading was still in the tab body; snapFirst now holds it, so insert the wrap where the heading was.
-  // If heading is already inside snapFirst and snapFirst is not in the DOM, place wrap at the old heading spot.
-  const body = art.querySelector('.tab-body') ?? art;
-  // After prepend, heading's parent is snapFirst (not in DOM). Insert cardsWrap at the original location:
-  // leftovers / first step nodes were siblings of the heading; the next H2 follows. Use a marker:
-  // we still have a reference — insert before the first remaining sibling after section c, or append.
-  const after = [...body.children].find((el) => el.tagName === 'H2') ?? null;
-  if (after) after.before(cardsWrap);
-  else body.append(cardsWrap);
+  marker.replaceWith(cardsWrap);
 
   opts.frame?.classList.add('has-step-cards');
   document.documentElement.classList.add('has-step-cards');
@@ -475,20 +573,24 @@ export function applyCardLayout(art: HTMLElement, content: AppContent, hooks: Fi
   const onResize = () => {
     setChromeVar();
     for (const s of alive.keys()) placeControls(s, s.el);
+    for (const s of steps) paintMorePlots(s.el);
   };
   const onKey = (e: KeyboardEvent) => {
     if (e.key !== 'Escape') return;
     for (const s of steps) openSheets.get(s)?.(false);
   };
 
+  const stopSettle = attachCardSettle();
   requestAnimationFrame(() => { setChromeVar(); startIo(); syncMounts(); });
   window.addEventListener('resize', onResize);
   document.addEventListener('keydown', onKey);
 
   return () => {
     io?.disconnect();
+    stopSettle();
     window.removeEventListener('resize', onResize);
     document.removeEventListener('keydown', onKey);
+    document.documentElement.classList.remove('step-jumping');
     for (const s of [...alive.keys()]) unmount(s);
     opts.frame?.classList.remove('has-step-cards');
     document.documentElement.classList.remove('has-step-cards');

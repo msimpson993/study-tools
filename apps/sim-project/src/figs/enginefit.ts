@@ -59,7 +59,9 @@ function engineFitPanels(): FigurePanel[] {
         const magOn = xs.map((lw) => Math.log10(Math.max(1e-6, engineFitAt(10 ** lw, true).mag)));
         const magOff = xs.map((lw) => Math.log10(Math.max(1e-6, engineFitAt(10 ** lw, false).mag)));
         const yr: [number, number] = [-0.2, Math.log10(400)];
-        const fr = rangeFrame(w, h, [W_MIN, W_MAX], yr, 50, 12, 14, 44);
+        const head = 22, foot = 16;
+        g.save(); g.translate(0, head);
+        const fr = rangeFrame(w, h - head - foot, [W_MIN, W_MAX], yr, 50, 12, 14, 44);
         graphAxes(g, fr, [W_MIN, W_MAX], yr, 'ω (rad/s)', '|G|', 0.5, 1,
           (x) => fmtPow10(x), (y) => fmtPow10(y));
         curve(g, fr, xs, magOn, col.a(), 2);
@@ -71,6 +73,7 @@ function engineFitPanels(): FigurePanel[] {
         const lw = Math.log10(probe);
         g.strokeStyle = col.e(); g.lineWidth = 1; g.setLineDash([3, 3]);
         g.beginPath(); g.moveTo(fr.X(lw), fr.box.t); g.lineTo(fr.X(lw), fr.box.b); g.stroke(); g.setLineDash([]);
+        g.restore();
         const curveM = engineFitAt(probe, true).mag;
         const pt = nearPoint(probe);
         const bits = [`ω = ${probe.toPrecision(3)}`, `|G| curve ${curveM.toFixed(2)}`];
@@ -88,7 +91,9 @@ function engineFitPanels(): FigurePanel[] {
         const phOn = unwrap(xs.map((lw) => engineFitAt(10 ** lw, true).plotPhase));
         const phOff = unwrap(xs.map((lw) => engineFitAt(10 ** lw, false).plotPhase));
         const yr: [number, number] = [-240, 20];
-        const fr = rangeFrame(w, h, [W_MIN, W_MAX], yr, 50, 12, 14, 44);
+        const head = 22, foot = 16;
+        g.save(); g.translate(0, head);
+        const fr = rangeFrame(w, h - head - foot, [W_MIN, W_MAX], yr, 50, 12, 14, 44);
         graphAxes(g, fr, [W_MIN, W_MAX], yr, 'ω (rad/s)', 'phase (°)', 0.5, 45,
           (x) => fmtPow10(x), (y) => String(y));
         curve(g, fr, xs, phOn, col.a(), 2);
@@ -100,6 +105,7 @@ function engineFitPanels(): FigurePanel[] {
         const lw = Math.log10(probe);
         g.strokeStyle = col.e(); g.lineWidth = 1; g.setLineDash([3, 3]);
         g.beginPath(); g.moveTo(fr.X(lw), fr.box.t); g.lineTo(fr.X(lw), fr.box.b); g.stroke(); g.setLineDash([]);
+        g.restore();
         const curveP = engineFitAt(probe, true);
         const pt = nearPoint(probe);
         const bits = [`ω = ${probe.toPrecision(3)}`, `curve ${curveP.plotPhase.toFixed(2)}°`];

@@ -7,7 +7,7 @@ import { mountQuiz } from './quiz';
 import { createFullscreen, replaceUrl } from './fullscreen';
 import { setRefContent } from './copyref';
 import { embedFigureSlots } from './embed';
-import { applyCardLayout, layoutSetupSection } from './cardlayout';
+import { applyCardLayout, layoutSetupSection, lockStepJump } from './cardlayout';
 
 /** Short labels for the top tab bar (full titles stay as the page heading). */
 export const TAB_BAR_LABEL: Record<string, string> = {
@@ -114,7 +114,8 @@ export function mountTabbedApp(content: AppContent, hooks: AppHooks = {}): void 
     }
     requestAnimationFrame(() => {
       const on = tabBar.querySelector('a.on') as HTMLElement | null;
-      on?.scrollIntoView({ inline: 'nearest', block: 'nearest' });
+      const narrow = window.matchMedia('(max-width: 699.98px)').matches;
+      on?.scrollIntoView({ inline: narrow ? 'center' : 'nearest', block: 'nearest' });
       updateOverflow();
     });
   }
@@ -124,7 +125,7 @@ export function mountTabbedApp(content: AppContent, hooks: AppHooks = {}): void 
     const toc = tab.sections.length
       ? h('nav', { class: 'tab-toc', 'aria-label': 'On this tab', dataset: { testid: 'tab-toc' } },
           h('b', null, 'Contents'),
-          ...tab.sections.map((s) => h('a', { href: `#/tab/${tab.id}`, dataset: { jump: s.id }, onclick: (e: Event) => { e.preventDefault(); document.getElementById(s.id)?.scrollIntoView({ block: 'start' }); } }, s.title)))
+          ...tab.sections.map((s) => h('a', { href: `#/tab/${tab.id}`, dataset: { jump: s.id }, onclick: (e: Event) => { e.preventDefault(); lockStepJump(); document.getElementById(s.id)?.scrollIntoView({ block: 'start' }); } }, s.title)))
       : null;
     const art = h('article', { class: 'prose tab-article', dataset: { testid: 'tab-page', tab: tab.id } },
       h('h1', null, tab.title),

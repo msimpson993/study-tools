@@ -51,7 +51,7 @@ closed loop:  ω/T_d = −1/(J·s + b + Km·(Ka·Kt + Kb)/Ra) = −1/(2s + 541.5
 1. **No feedback: the speed falls until drag balances the load.**
    - **Why:** the only thing resisting the load is the motor's own drag, 0.5 + 1 = 1.5 N·m·s, so a 1 N·m load costs 1 ÷ 1.5 = 0.667 rad/s.
    - **How fast:** the *time constant* τ = J ÷ drag = 1.33 s is the time to cover about two-thirds of the way. Four time constants (5.3 s) gets within 2 %, which counts as "settled".
-   - **Look for:** with **Fig. 4.23: open loop** set, the speed curve slides smoothly down to the dashed final value at −0.667, and the readout's first line gives τ = 1.333 s and −0.6632 at 7 s.
+   - **Look for:** with **Fig. 4.23: open loop** set, the speed curve slides smoothly down to the red 'final sag −0.667' mark; the dashed line at 0 is the speed before the load, and the readout's first line gives τ = 1.333 s and −0.6632 at 7 s.
 
 ```figure:motor preset=open
 ```
@@ -62,8 +62,8 @@ closed loop:  ω/T_d = −1/(J·s + b + Km·(Ka·Kt + Kb)/Ra) = −1/(2s + 541.5
    - **Careful: more real friction does not fix sag (not in lab handout).**
      - **What sag is:** only the change in speed that the load causes.
      - **Real friction shrinks everything:** raising b shrinks that change and the motor's response to your voltage by the same factor, because both are divided by the same drag. Turned up toward infinity, the motor barely moves at all, so "zero sag" would just mean there's nothing left to sag.
-     - **The tachometer loop is different:** it pushes back only when the speed strays from what you commanded. The amplifier boosts the command as well, so the motor still reaches the speed you asked for (closed-loop steady gain close to 1), while the load's effect shrinks by 1 + loop gain = 361.
-     - **So the name is a half-truth:** "electronic friction" acts like friction only against the load, not against your command. That holds while the loop's push-back (540) is much bigger than the real drag.
+     - **The tachometer loop is different:** it pushes back only when the speed strays from the voltage you set. The amplifier boosts that voltage as well, so the motor still reaches the speed that voltage asked for (closed-loop steady gain close to 1, not shown on this page), while the load's effect shrinks by 1 + 540/1.5 = 361.
+     - **So the name is a half-truth:** "electronic friction" acts like friction only against the load, not against the voltage you set. That holds while the loop's push-back (540) is much bigger than the real drag.
    - **Look for:** with **Fig. 4.24: closed loop** set, the time axis runs only 0.02 s and the curve settles at −0.00185 (the readout's second line: −0.001847). The marked final value is the exact one; the handout rounds it to −0.002.
 
 ```figure:motor preset=closed
@@ -72,7 +72,7 @@ closed loop:  ω/T_d = −1/(J·s + b + Km·(Ka·Kt + Kb)/Ra) = −1/(2s + 541.5
 3. **It also recovers far faster: 361×.**
    - **Numbers:** τ = 2 ÷ 541.5 = 3.69 ms instead of 1.33 s.
    - **Why the handout's plots differ:** that is why Fig. 4.24 runs for only 0.02 s against 7 s for Fig. 4.23 ("Note the scale").
-   - **Look for:** with **both loops, 7 s axis** set, the open loop (grey) sags over seconds while the closed loop is a flat line at zero. Switch *time axis* to 0.02 s: now the closed loop is a full curve and the open loop has barely started to move.
+   - **Look for:** with **both loops, 7 s axis** set, the open loop (grey) sags over seconds while the closed loop looks like a flat line at zero (the inset says ×359, not 361, only because the open loop hasn't quite finished sagging by 7 s). Switch *time axis* to 0.02 s: the closed loop has already levelled off at its final sag (zoomed in the inset), while the open loop is still falling in a near-straight line, only 1.5 % of the way to its final −0.667.
 
 ```figure:motor preset=scale
 ```

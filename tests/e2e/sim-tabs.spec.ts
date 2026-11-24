@@ -273,6 +273,7 @@ test.describe('sim-project tabbed page', () => {
     await page.setViewportSize({ width: 1280, height: 900 });
     await open(page, 'sim-project', '#/tab/motor');
     const card = page.getByTestId('step-card').first();
+    await card.evaluate((el) => el.scrollIntoView({ block: 'start' }));
     await expect.poll(async () => card.locator('canvas').count()).toBeGreaterThan(0);
     await expect(card.getByTestId('step-card-fig')).not.toContainText(/Look for/i);
     await expect(card.getByTestId('step-card-text')).toContainText(/Look for/i);
@@ -340,4 +341,159 @@ test.describe('sim-project tabbed page', () => {
     // the first card should have been unmounted
     await expect.poll(async () => page.getByTestId('step-card').nth(0).locator('canvas').count()).toBe(0);
   });
+
+  for (const width of [390, 1280] as const) {
+    test(`section (c) comes after (b) and before (d) on every problem tab at ${width}px`, async ({ page }) => {
+      await page.setViewportSize({ width, height: width === 390 ? 844 : 900 });
+      for (const id of ['engine', 'motor', 'borer', 'disk'] as const) {
+        await open(page, 'sim-project', `#/tab/${id}`);
+        const order = await page.evaluate(() => {
+          const art = document.querySelector('.tab-article')!;
+          const items: { kind: string; id: string }[] = [];
+          const consider = (el: Element) => {
+            if (el.matches('h2')) items.push({ kind: 'h2', id: el.id || (el.textContent || '').trim() });
+            else if (el.matches('[data-testid=step-cards]')) items.push({ kind: 'cards', id: 'cards' });
+            else if (el.matches('.tab-sec-setup')) {
+              const h = el.querySelector('h2');
+              if (h) items.push({ kind: 'h2', id: h.id || (h.textContent || '').trim() });
+            } else if (el.matches('.tab-body, .tab-article')) {
+              for (const c of el.children) consider(c);
+            }
+          };
+          consider(art);
+          return items;
+        });
+        const ids = order.map((o) => o.id.toLowerCase());
+        const ia = ids.findIndex((s) => s.startsWith('a-') || /the idea/.test(s) || /what feedback/.test(s));
+        const ib = ids.findIndex((s) => s.startsWith('b-') || /the setup/.test(s));
+        const ic = ids.findIndex((s) => s.startsWith('c-') || /what.?s going on/.test(s));
+        const icards = ids.indexOf('cards');
+        const idd = ids.findIndex((s) => s.startsWith('d-') || /try it|the idea in the room|check/.test(s));
+        expect(ia, `${id} (a) at ${width}: ${ids.join(' | ')}`).toBeGreaterThanOrEqual(0);
+        expect(ib, `${id} (b)`).toBeGreaterThan(ia);
+        expect(ic, `${id} (c)`).toBeGreaterThan(ib);
+        expect(icards, `${id} cards`).toBeGreaterThan(ic);
+        if (idd >= 0) expect(idd, `${id} (d)`).toBeGreaterThan(icards);
+        const ys = await page.evaluate(() => {
+          const y = (sel: string) => {
+            const el = document.querySelector(sel) as HTMLElement | null;
+            return el ? el.getBoundingClientRect().top + window.scrollY : -1;
+          };
+          return {
+            a: y('h2[id^="a-"]'),
+            b: y('.tab-sec-setup h2, h2[id^="b-"]'),
+            c: y('h2[id^="c-"]'),
+            cards: y('[data-testid=step-cards]'),
+            d: y('h2[id^="d-"]'),
+          };
+        });
+        expect(ys.a, `${id} y(a)`).toBeGreaterThanOrEqual(0);
+        expect(ys.b).toBeGreaterThan(ys.a);
+        expect(ys.c).toBeGreaterThan(ys.b);
+        expect(ys.cards).toBeGreaterThan(ys.c);
+        if (ys.d >= 0) expect(ys.d).toBeGreaterThan(ys.cards);
+      }
+    });
+  }
+
+  for (const width of [923, 1280] as const) {
+    test(`a 100 px wheel scroll moves the page by about 100 px at ${width}`, async ({ page }) => {
+      await page.setViewportSize({ width, height: 900 });
+      await open(page, 'sim-project', '#/tab/motor');
+      const card = page.getByTestId('step-card').first();
+      await card.evaluate((el) => el.scrollIntoView({ block: 'start' }));
+      await page.waitForTimeout(450);
+      const before = await page.evaluate(() => window.scrollY);
+      await page.evaluate(() => window.scrollBy(0, 100));
+      await page.waitForTimeout(280);
+      const after = await page.evaluate(() => window.scrollY);
+      expect(Math.abs((after - before) - 100), `moved ${after - before} at ${width}`).toBeLessThan(20);
+    });
+  }
+
+  test('scrolling 600 px at 923 never ends parked oddly', async ({ page }) => {
+    await page.setViewportSize({ width: 923, height: 900 });
+    await open(page, 'sim-project', '#/tab/motor');
+    const card = page.getByTestId('step-card').first();
+    await card.evaluate((el) => el.scrollIntoView({ block: 'start' }));
+    await page.waitForTimeout(450);
+    const before = await page.evaluate(() => window.scrollY);
+    await page.evaluate(() => window.scrollBy(0, 600));
+    await page.waitForTimeout(400);
+    const after = await page.evaluate(() => {
+      const pin = (() => {
+        const bar = document.querySelector('.tab-bar-wrap') as HTMLElement | null;
+        return bar ? bar.getBoundingClientRect().bottom : 88;
+      })();
+      const band = window.innerHeight * 0.13;
+      const odd = [...document.querySelectorAll<HTMLElement>('.step-card')].some((el) => {
+        const d = el.getBoundingClientRect().top - pin;
+        // a card stuck a little off flush, but not far enough to look like a free scroll
+        return Math.abs(d) > 8 && Math.abs(d) <= band;
+      });
+      return { y: window.scrollY, odd };
+    });
+    expect(Math.abs((after.y - before) - 600), `moved ${after.y - before}`).toBeLessThan(40);
+    expect(after.odd, 'a card ended parked in the settle band without being flush').toBe(false);
+  });
+
+  test('slider and preset changes survive lazy unmount and remount', async ({ page }) => {
+    await page.setViewportSize({ width: 1280, height: 900 });
+    await open(page, 'sim-project', '#/tab/motor');
+    const first = page.getByTestId('step-card').nth(0);
+    await first.evaluate((el) => el.scrollIntoView({ block: 'start' }));
+    await expect.poll(async () => first.locator('canvas').count()).toBeGreaterThan(0);
+    await first.locator('.st-presets [data-preset=kt2]').click();
+    await expect(first.locator('[data-testid=viz]')).toHaveAttribute('data-preset', 'kt2');
+    const last = page.getByTestId('step-card').nth(5);
+    await last.evaluate((el) => el.scrollIntoView({ block: 'start' }));
+    await expect.poll(async () => last.locator('canvas').count()).toBeGreaterThan(0);
+    await expect.poll(async () => first.locator('canvas').count()).toBe(0);
+    await first.evaluate((el) => el.scrollIntoView({ block: 'start' }));
+    await expect.poll(async () => first.locator('canvas').count()).toBeGreaterThan(0);
+    await expect(first.locator('[data-testid=viz]')).toHaveAttribute('data-preset', 'kt2');
+  });
+
+  test('phone Contents links land on their own sections, not the last card', async ({ page }) => {
+    await page.setViewportSize({ width: 390, height: 844 });
+    await open(page, 'sim-project', '#/tab/motor');
+    const last = page.getByTestId('step-card').last();
+    await last.evaluate((el) => el.scrollIntoView({ block: 'start' }));
+    await page.waitForTimeout(300);
+    const tocLinks = page.getByTestId('tab-toc').locator('a[data-jump]');
+    expect(await tocLinks.count()).toBeGreaterThan(2);
+    await tocLinks.nth(0).click();
+    await page.waitForTimeout(500);
+    const landedA = await page.evaluate(() => {
+      const pin = (() => {
+        const bar = document.querySelector('.tab-bar-wrap') as HTMLElement | null;
+        return bar ? bar.getBoundingClientRect().bottom : 88;
+      })();
+      const a = document.querySelector('h2[id^="a-"]') as HTMLElement | null;
+      const lastCard = document.querySelector('[data-testid=step-card]:last-of-type') as HTMLElement | null;
+      return {
+        aTop: a ? a.getBoundingClientRect().top - pin : 999,
+        lastTop: lastCard ? lastCard.getBoundingClientRect().top - pin : 999,
+      };
+    });
+    expect(Math.abs(landedA.aTop), `section (a) top vs chrome ${landedA.aTop}`).toBeLessThan(48);
+    expect(Math.abs(landedA.lastTop), 'should not have landed on the last card').toBeGreaterThan(80);
+    await tocLinks.filter({ hasText: /going on/i }).click();
+    await page.waitForTimeout(500);
+    const landedC = await page.evaluate(() => {
+      const pin = (() => {
+        const bar = document.querySelector('.tab-bar-wrap') as HTMLElement | null;
+        return bar ? bar.getBoundingClientRect().bottom : 88;
+      })();
+      const c = document.querySelector('h2[id^="c-"]') as HTMLElement | null;
+      const lastCard = document.querySelector('[data-testid=step-card]:last-of-type') as HTMLElement | null;
+      return {
+        cTop: c ? c.getBoundingClientRect().top - pin : 999,
+        lastTop: lastCard ? lastCard.getBoundingClientRect().top - pin : 999,
+      };
+    });
+    expect(Math.abs(landedC.cTop), `section (c) top vs chrome ${landedC.cTop}`).toBeLessThan(64);
+    expect(Math.abs(landedC.lastTop), 'jump to (c) should not land on the last card').toBeGreaterThan(80);
+  });
+
 });

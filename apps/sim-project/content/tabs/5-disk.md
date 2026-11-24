@@ -54,7 +54,7 @@ shock:  Y/T_d = −G₂/(1 + Ka·G₁·G₂)       (the handout prints it withou
 2. **Ka trades speed against swing.**
    - **Ka = 10:** the head creeps in with no overshoot, settling (within 2 %) in 1.40 s.
    - **Ka = 80:** it gets there in 0.41 s but swings 17.1 % past the track first.
-   - **Look for:** with **Ka = 80 (Fig. 4.30)** set, the seek curve shoots past 1 to a peak of 1.17 at 0.18 s, then settles at 0.409 s. The grey ghosts are the handout's two settings, Ka = 10 and 80.
+   - **Look for:** with **Ka = 80 (Fig. 4.30)** set, the seek curve shoots past 1 to a peak of 1.17 at 0.18 s, then settles at about 0.41 s (readout: 0.410 s).
 
 ```figure:disk preset=ka80
 ```
@@ -63,7 +63,7 @@ shock:  Y/T_d = −G₂/(1 + Ka·G₁·G₂)       (the handout prints it withou
    - **The stand-in (not in lab handout):** drop the coil but keep its steady gain 5, and the loop becomes 5·Ka/(s² + 20s + 5·Ka). That is a spring of stiffness 5·Ka with a damper of 20.
    - **Damping ratio:** its *damping ratio* ζ = 10/√(5·Ka) (how fast swings die out; below 1 means overshoot) is 1.41 at Ka = 10 and 0.50 at Ka = 80.
    - **How close:** the stand-in predicts 16.3 % overshoot, against the real 17.1 %.
-   - **Look for:** with **Ka = 80, coil dropped** set, the dashed stand-in curve sits almost on top of the real one, and the readout gives both: OS 17.11 % and stand-in 16.30 %.
+   - **Look for:** with **Ka = 80, coil dropped** set, the dashed stand-in curve sits almost on top of the real one, and the readout gives both: OS 17.10 % and stand-in 16.30 %.
 
 ```figure:disk preset=ka80stand
 ```
