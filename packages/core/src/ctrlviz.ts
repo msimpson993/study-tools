@@ -53,7 +53,8 @@ export function drawStepResponse(g: CanvasRenderingContext2D, w: number, h: numb
   const thumb = isThumb(g);
   const pad = (v: number | undefined, full: number, compact: number) => thumb ? Math.min(v ?? compact, compact) : (v ?? full);
   const tight = h < 260, needHead = !!(s.ghost?.label || show.overshoot);
-  const topPad = needHead ? pad(s.pads?.t, 28, 22) : pad(s.pads?.t, 14, 8);
+  const twoHead = !!(s.ghost?.label && show.overshoot);
+  const topPad = needHead ? pad(s.pads?.t, twoHead ? 42 : 32, twoHead ? 32 : 24) : pad(s.pads?.t, 14, 8);
   const f = rangeFrame(w, h, [0, tEnd], yr, pad(s.pads?.l, 72, 32), pad(s.pads?.r, 14, 10), topPad, pad(s.pads?.b, 52, 28));
   graphAxes(g, f, [0, tEnd], yr, s.xLabel ?? 'time (s)', s.yLabel ?? 'output');
   const m = stepMetrics(t, y, { ref, final: s.final, band });
@@ -71,7 +72,7 @@ export function drawStepResponse(g: CanvasRenderingContext2D, w: number, h: numb
   if (s.ghost?.label) {
     const gl = s.ghost, gLab = `┄ ${gl.label}`;
     g.font = '10px system-ui,sans-serif';
-    const gw = g.measureText(gLab).width, gx = f.box.l + 4, gy = tight ? 10 : Math.max(8, f.box.t - 10);
+    const gw = g.measureText(gLab).width, gx = f.box.l + 4, gy = 10;
     ghostBox = { x0: gx, x1: gx + gw, y0: gy - 6, y1: gy + 6 };
     withLabelRole('axis', () => { text(g, gLab, gx, gy, gl.color ?? col.muted(), 'left', 10); });
   }
@@ -141,13 +142,11 @@ export function drawStepResponse(g: CanvasRenderingContext2D, w: number, h: numb
     g.font = '10.5px system-ui,sans-serif';
     const ow = g.measureText(os).width, oh = 12, peakX = f.X(m.peakTime), peakY = f.Y(m.peak);
     let ox = Math.min(peakX + 8, f.box.r - 4), oy = peakY - 18, oAlign: CanvasTextAlign = 'left', foundOs = false;
-    const peakNearTop = peakY < f.box.t + 28;
-    if (tight || peakNearTop || h < 300) {
-      // reserved two-row top pad: ghost stays on the first row, overshoot on the second (or the only row if no ghost)
+    const usePad = tight || peakY < f.box.t + 28 || h < 320 || isLandscapePhone();
+    if (usePad) {
+      // reserved pad: ghost on row 1, overshoot on row 2 (or row 1 if no ghost) — well above the peak marker
       ox = f.box.l + 4;
-      oy = ghostBox ? 22 : Math.max(8, f.box.t - 10);
-      if (ghostBox && ox < ghostBox.x1 + 8) ox = Math.min(ghostBox.x1 + 8, f.box.r - 4 - ow);
-      if (oy + 6 > f.box.t) oy = f.box.t - 7;
+      oy = ghostBox ? 26 : 10;
       oAlign = 'left';
       foundOs = true;
     } else {
@@ -468,6 +467,9 @@ export function drawSPlane(g: CanvasRenderingContext2D, w: number, h: number, s:
         }
       }
       text(g, name, spot.x0, spot.y1 - 3, col.e(), 'left', zName);
+      g.font = `${zName}px system-ui, sans-serif`;
+      const twDone = g.measureText(name).width;
+      taken.push({ x0: spot.x0, x1: spot.x0 + twDone, y0: spot.y1 - zName - 2, y1: spot.y1 + 2 });
     });
   }
   if (s.asymptotes) for (const a of s.asymptotes.anglesDeg) { const r = (a * Math.PI) / 180; tline(g, f, [s.asymptotes.centroid, 0], [s.asymptotes.centroid + Math.cos(r) * R, Math.sin(r) * R], col.muted(), 1.2, [6, 4]); }
