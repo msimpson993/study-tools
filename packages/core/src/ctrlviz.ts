@@ -53,7 +53,7 @@ export function drawStepResponse(g: CanvasRenderingContext2D, w: number, h: numb
   const thumb = isThumb(g);
   const pad = (v: number | undefined, full: number, compact: number) => thumb ? Math.min(v ?? compact, compact) : (v ?? full);
   const tight = h < 260, needHead = !!(s.ghost?.label || show.overshoot);
-  const topPad = (tight && needHead) ? pad(s.pads?.t, 28, 22) : pad(s.pads?.t, 14, 8);
+  const topPad = needHead ? pad(s.pads?.t, 28, 22) : pad(s.pads?.t, 14, 8);
   const f = rangeFrame(w, h, [0, tEnd], yr, pad(s.pads?.l, 72, 32), pad(s.pads?.r, 14, 10), topPad, pad(s.pads?.b, 52, 28));
   graphAxes(g, f, [0, tEnd], yr, s.xLabel ?? 'time (s)', s.yLabel ?? 'output');
   const m = stepMetrics(t, y, { ref, final: s.final, band });
@@ -141,10 +141,12 @@ export function drawStepResponse(g: CanvasRenderingContext2D, w: number, h: numb
     g.font = '10.5px system-ui,sans-serif';
     const ow = g.measureText(os).width, oh = 12, peakX = f.X(m.peakTime), peakY = f.Y(m.peak);
     let ox = Math.min(peakX + 8, f.box.r - 4), oy = peakY - 18, oAlign: CanvasTextAlign = 'left', foundOs = false;
-    if (tight) {
+    const peakNearTop = peakY < f.box.t + 28;
+    if (tight || peakNearTop || h < 300) {
       // reserved two-row top pad: ghost stays on the first row, overshoot on the second (or the only row if no ghost)
       ox = f.box.l + 4;
       oy = ghostBox ? 22 : Math.max(8, f.box.t - 10);
+      if (ghostBox && ox < ghostBox.x1 + 8) ox = Math.min(ghostBox.x1 + 8, f.box.r - 4 - ow);
       if (oy + 6 > f.box.t) oy = f.box.t - 7;
       oAlign = 'left';
       foundOs = true;
@@ -414,6 +416,7 @@ export function drawSPlane(g: CanvasRenderingContext2D, w: number, h: number, s:
     if (r.wn !== undefined) { g.beginPath(); g.arc(x0, y0, r.wn * f.sx, 0, 2 * Math.PI); g.clip(); }
     g.fillStyle = col.ok(); g.globalAlpha = 0.13; g.fillRect(f.box.l, f.box.t, f.box.r - f.box.l, f.box.b - f.box.t); g.restore();
   }
+  const padLabels: { lab: string; x: number; y: number; align: CanvasTextAlign; z: number }[] = [];
   withClip(g, f, () => {
   g.strokeStyle = col.strong(); g.lineWidth = 1.5; g.beginPath(); g.moveTo(x0, f.box.t); g.lineTo(x0, f.box.b); g.stroke(); // the jω axis: the edge of stability
   for (const wn of s.wnCircles ?? []) { g.strokeStyle = col.d(); g.globalAlpha = 0.7; g.lineWidth = 1; g.setLineDash([3, 4]); g.beginPath(); g.arc(x0, y0, wn * f.sx, Math.PI / 2, (3 * Math.PI) / 2); g.stroke(); g.setLineDash([]); g.globalAlpha = 1; text(g, `ωn ${fmtN(wn)}`, x0 - wn * f.sx + 3, y0 + 10, col.d(), 'left', 10); }
@@ -447,9 +450,22 @@ export function drawSPlane(g: CanvasRenderingContext2D, w: number, h: number, s:
       if (!spot) {
         g.font = '8px system-ui, sans-serif';
         const twz = g.measureText(name).width, th = 9;
-        const a = Math.max(f.box.l + 2, Math.min(f.X(-Math.cos(th) * Math.min(s.range * 0.45, R)) + 4, f.box.r - 2 - twz));
-        const c = Math.max(f.box.t + 2, Math.min(f.Y(Math.sin(th) * Math.min(s.range * 0.45, R)) - 6, f.box.b - 2 - th));
-        spot = { x0: a, y1: c + th }; zName = 8;
+        for (const k of [0.45, 0.6, 0.3, 0.75, 0.2, 0.9]) {
+          for (const side of [1, -1] as const) {
+            const X = f.X(-Math.cos(th) * Math.min(s.range * k, R)), Y = f.Y(Math.sin(th) * Math.min(s.range * k, R));
+            const cands = side === 1
+              ? [{ x0: X + 8, x1: X + 8 + twz, y0: Y - 16, y1: Y - 4 }, { x0: X + 8, x1: X + 8 + twz, y0: Y + 4, y1: Y + 16 }]
+              : [{ x0: X - 8 - twz, x1: X - 8, y0: Y + 4, y1: Y + 16 }, { x0: X - 8 - twz, x1: X - 8, y0: Y - 16, y1: Y - 4 }];
+            const b = cands.find((box) => box.x0 > f.box.l + 2 && box.x1 < f.box.r - 2 && box.y0 > f.box.t + 2 && box.y1 < f.box.b - 2 && !hitsRay(box) && !onSigma(box.x0, box.x1, box.y0, box.y1) && !onJw(box.x0, box.x1, box.y0, box.y1) && taken.every((t) => box.x1 < t.x0 - 8 || box.x0 > t.x1 + 8 || box.y1 < t.y0 - 8 || box.y0 > t.y1 + 8));
+            if (b) { spot = { x0: b.x0, y1: b.y1 }; zName = 8; break; }
+          }
+          if (spot) break;
+        }
+        if (!spot) {
+          const a = Math.max(f.box.l + 2, Math.min(f.X(-Math.cos(th) * Math.min(s.range * 0.45, R)) + 4, f.box.r - 2 - twz));
+          const c = Math.max(f.box.t + 2, Math.min(f.Y(Math.sin(th) * Math.min(s.range * 0.45, R)) - 18, f.box.b - 2 - th));
+          spot = { x0: a, y1: c + th }; zName = 8;
+        }
       }
       text(g, name, spot.x0, spot.y1 - 3, col.e(), 'left', zName);
     });
@@ -522,30 +538,9 @@ export function drawSPlane(g: CanvasRenderingContext2D, w: number, h: number, s:
       if (onAxis(a, b2) || onRay(a, b2, c, d) || hitsAnyMark(a, b2, c, d)) return 1e6;
       if (a < X + 22 && b2 > X - 22 && c < Yp + 22 && d > Yp - 22) return 1e6;
       // thin right half: the pole value stays left of the ×, so it cannot meet "unstable" at any glyph width
-      if (thinRight && b2 > X - 22) return 1e6;
       if (inUnstable(a, b2)) n += 80;
       return n;
     };
-    // when the right half is thin, the plot often cannot hold the value beside the ×
-    // (and the conjugate × sits opposite). Park the value in the reserved head, left of "unstable".
-    if (unstableHead && thinRight) {
-      let headPick: { x: number; y: number; align: CanvasTextAlign; a: number; b2: number; c: number; d: number; z: number } | null = null;
-      const hy = -unstableHead / 2;
-      for (const z of [10, 9, 8, 7, 6]) {
-        g.font = `${z}px system-ui, sans-serif`;
-        const tw = g.measureText(lab).width, th = z + 4;
-        const x = 4, a = x, b2 = x + tw, c = hy - th * 0.55, d = hy + th * 0.55;
-        if (unstableBox && b2 > unstableBox.x0 - 8) continue;
-        if (b2 > vw - 8) continue;
-        headPick = { x, y: hy, align: 'left', a, b2, c, d, z };
-        break;
-      }
-      if (headPick) {
-        withLabelRole('axis', () => { text(g, lab, headPick.x, headPick.y, col.b(), headPick.align, headPick.z); });
-        taken.push({ x0: headPick.a, x1: headPick.b2, y0: headPick.c, y1: headPick.d });
-        continue;
-      }
-    }
     type Cand = { x: number; y: number; align: CanvasTextAlign; a: number; b2: number; c: number; d: number; z: number };
     let pick: Cand | null = null, best = 1e6;
     for (const z of [10, 9, 8, 7, 6]) {
@@ -611,7 +606,6 @@ export function drawSPlane(g: CanvasRenderingContext2D, w: number, h: number, s:
           if (onSigma(a, b2, c, d) || onJw(a, b2, c, d) || hitsUnstable(a, b2, c, d) || hitsTaken(a, b2, c, d)) n += 400;
           if (onAxis(a, b2) || onRay(a, b2, c, d) || hitsAnyMark(a, b2, c, d)) n += 2000;
           if (a < X + 22 && b2 > X - 22 && c < Yp + 22 && d > Yp - 22) n += 2000;
-          if (thinRight && b2 > X - 22) n += 2000;
           return n;
         };
         for (let yy = f.box.t + 8; yy < f.box.b - 8; yy += 8) {
@@ -626,12 +620,32 @@ export function drawSPlane(g: CanvasRenderingContext2D, w: number, h: number, s:
         if (bestC) pick = bestC;
       }
     }
+    const unsafe = !pick || hitsAnyMark(pick.a, pick.b2, pick.c, pick.d);
+    if (unsafe && unstableHead) {
+      const hy = -unstableHead / 2;
+      let placed = false;
+      for (const z of [10, 9, 8, 7, 6]) {
+        g.font = `${z}px system-ui, sans-serif`;
+        const tw = g.measureText(lab).width, th = z + 4;
+        let x = 4;
+        for (const t of taken) if (t.y1 > hy - 12 && t.y0 < hy + 12) x = Math.max(x, t.x1 + 8);
+        const a = x, b2 = x + tw, c = hy - th * 0.55, d = hy + th * 0.55;
+        if (unstableBox && b2 > unstableBox.x0 - 8) continue;
+        if (b2 > vw - 8) continue;
+        padLabels.push({ lab, x, y: hy, align: 'left', z });
+        taken.push({ x0: a, x1: b2, y0: c, y1: d });
+        placed = true;
+        break;
+      }
+      if (placed) continue;
+    }
     if (!pick) continue;
     withLabelRole('axis', () => { text(g, lab, pick.x, pick.y, col.b(), pick.align, pick.z); });
     taken.push({ x0: pick.a, x1: pick.b2, y0: pick.c, y1: pick.d });
   }
   for (const zn of zetaNames) zn();
   });
+  for (const pl of padLabels) withLabelRole('axis', () => { text(g, pl.lab, pl.x, pl.y, col.b(), pl.align, pl.z); });
   g.restore();
   if (s.inset && s.clear !== false) {
     let ix: number, iy: number, iw: number, ih: number;
