@@ -133,6 +133,14 @@ export function drawStepResponse(g: CanvasRenderingContext2D, w: number, h: numb
     return false;
   };
   const inPlot = (a: number, b2: number, c: number, d: number, extraB = 0) => a > f.box.l + 2 && b2 < f.box.r - 2 && c > f.box.t - 2 && d < f.box.b + extraB;
+  // OS may sit in the figure header band above this translated frame, as long as it stays on the canvas and off the readout
+  const osFits = (a: number, b2: number, c: number, d: number) => {
+    if (a <= f.box.l + 2 || b2 >= f.box.r - 2 || d >= f.box.b + 14) return false;
+    const m = typeof g.getTransform === 'function' ? g.getTransform() : { a: 1, d: 1, e: 0, f: 0 };
+    const x0 = m.a * a + m.e, x1 = m.a * b2 + m.e, y0 = m.d * c + m.f, y1 = m.d * d + m.f;
+    if (y0 < 2 || y1 > (g.canvas.height || 1e9) - 2) return false;
+    return labelsOn(g.canvas).every((r) => !r || x1 < r.x0 - 4 || x0 > r.x1 + 4 || y1 < r.y0 - 4 || y0 > r.y1 + 4);
+  };
   const lbl = (str: string, px: number, py: number, color: string, align: CanvasTextAlign = 'left', z = 10.5) => text(g, str, px, py, color, align, z);
   let ghostBox: { x0: number; x1: number; y0: number; y1: number } | null = null;
   let dropGhost = false;
@@ -191,8 +199,7 @@ export function drawStepResponse(g: CanvasRenderingContext2D, w: number, h: numb
           const tw = g.measureText(word).width, th = z + 3;
           for (const c of aroundMarker(peakX, peakY, tw, th, z, true)) {
             const I = inflateBox(c);
-            if (!inPlot(c.a, c.b2, c.c, c.d, 14)) continue;
-            if (c.c < f.box.t - 14) continue;
+            if (!osFits(c.a, c.b2, c.c, c.d)) continue;
             if (!ignoreGhost && ghostWouldHit(I.a, I.b2, I.c, I.d)) continue;
             const cx = Math.max(I.a, Math.min(peakX, I.b2)), cy = Math.max(I.c, Math.min(peakY, I.d));
             if (Math.hypot(cx - peakX, cy - peakY) < 8) continue;
@@ -221,7 +228,7 @@ export function drawStepResponse(g: CanvasRenderingContext2D, w: number, h: numb
       const tw = g.measureText(osShort).width, th = MIN_FONT + 3;
       for (const cand of aroundMarker(peakX, peakY, tw, th, MIN_FONT, true)) {
         const I = inflateBox(cand);
-        if (!inPlot(cand.a, cand.b2, cand.c, cand.d, 14) || cand.c < f.box.t - 14) continue;
+        if (!osFits(cand.a, cand.b2, cand.c, cand.d)) continue;
         const cx = Math.max(I.a, Math.min(peakX, I.b2)), cy = Math.max(I.c, Math.min(peakY, I.d));
         if (Math.hypot(cx - peakX, cy - peakY) < 8) continue;
         if (I.c < yRef + 3 && I.d > yRef - 3) continue;
@@ -232,7 +239,7 @@ export function drawStepResponse(g: CanvasRenderingContext2D, w: number, h: numb
         const pool = aroundMarker(peakX, peakY, tw, th, MIN_FONT, true);
         const okish = (cand: TextBox) => {
           const I = inflateBox(cand);
-          return inPlot(cand.a, cand.b2, cand.c, cand.d, 14) && cand.c >= f.box.t - 14 && !(I.c < yRef + 3 && I.d > yRef - 3);
+          return osFits(cand.a, cand.b2, cand.c, cand.d) && !(I.c < yRef + 3 && I.d > yRef - 3);
         };
         c = pool.find((cand) => okish(cand) && !hitsCurve(inflateBox(cand).a, inflateBox(cand).b2, inflateBox(cand).c, inflateBox(cand).d))
           ?? pool.find(okish)
