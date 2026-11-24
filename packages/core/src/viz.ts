@@ -74,13 +74,13 @@ export function isTileCanvas(g: CanvasRenderingContext2D): boolean {
   const cv = g.canvas as HTMLCanvasElement | undefined;
   return !!cv && typeof cv.closest === 'function' && !!cv.closest('.tile-frame') && !cv.closest('.fig-overlay, .fig-box');
 }
-const TILE_MIN_W = 220, TILE_MIN_H = 150;
+const TILE_MIN_W = 200, TILE_MIN_H = 140;
 /** Phone portrait (the 2-across tile layout), not short landscape. */
 export function isPortraitPhone(): boolean {
   return typeof window !== 'undefined' && typeof window.matchMedia === 'function'
     && window.matchMedia('(max-width: 699.98px)').matches;
 }
-/** Hide crowded notes and axis titles: phone portrait, or a tile too small to fit them. Desktop / tablet 40/60 tiles keep them. */
+/** Hide crowded notes and axis titles: phone portrait, or a tile too small to fit them (~200×140). Desktop / tablet 40/60 tiles, including two-tile cards, keep them. */
 export function isThumb(g: CanvasRenderingContext2D): boolean {
   if (!isTileCanvas(g)) return false;
   if (isPortraitPhone()) return true;

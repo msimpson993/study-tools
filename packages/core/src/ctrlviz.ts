@@ -82,14 +82,16 @@ export function drawStepResponse(g: CanvasRenderingContext2D, w: number, h: numb
     lbl(s.settlingLabel ?? `Ts ${fmtN(m.settlingTime)} s`, f.X(m.settlingTime) + 4, f.box.b - 18, col.c());
   }
   if (show.ess && Number.isFinite(m.ess) && Math.abs(m.ess) > 1e-3 * Math.max(1, Math.abs(ref))) {
-    const xe = tEnd * 0.985; tline(g, f, [xe, yf], [xe, ref], col.bad(), 3);
+    const xe = tEnd * 0.985, xLine = f.X(xe);
+    tline(g, f, [xe, yf], [xe, ref], col.bad(), 3);
     const essText = s.essLabel ?? `final sag ${fmtN(m.ess, 3)}`;
-    // sit just above the final-value line at the right, or below it when a nearby
-    // reference / zero line or the response curve would strike through the label
-    // (Motor steps 3/5/6 at a narrow width, sag ≈ 0).
+    // sit just above the final-value line, to the left of the red sag marker, or
+    // below the line when a nearby reference / zero line or the response curve
+    // would strike through the label (Motor steps 3/5/6 at a narrow width, sag ≈ 0).
     const ySag = f.Y(yf), yRef = f.Y(ref);
     g.font = '10.5px system-ui,sans-serif';
-    const tw = g.measureText(essText).width, x0 = f.box.r - 4 - tw, x1 = f.box.r - 4;
+    const tw = g.measureText(essText).width;
+    const xLab = Math.min(f.box.r - 4, xLine - 6), x0 = xLab - tw, x1 = xLab;
     const hits = (yy: number, half = 7) => {
       if (Math.abs(yy - yRef) < 12 || Math.abs(yy - ySag) < 6) return true;
       for (let i = 0; i < t.length; i++) {
@@ -102,7 +104,7 @@ export function drawStepResponse(g: CanvasRenderingContext2D, w: number, h: numb
     const cands = [ySag - 8, ySag + 14, ySag - 18, ySag + 22, ySag - 28, ySag + 32];
     const essY = cands.find((yy) => yy > f.box.t + 6 && yy < f.box.b - 6 && !hits(yy))
       ?? (Math.abs(ySag - 8 - yRef) < 12 ? ySag + 14 : ySag - 8);
-    lbl(essText, f.box.r - 4, essY, col.bad(), 'right');
+    lbl(essText, xLab, essY, col.bad(), 'right');
   }
   return m;
 }
@@ -146,19 +148,22 @@ export function drawSPlane(g: CanvasRenderingContext2D, w: number, h: number, s:
   } else {
     st = s.range;
   }
+  const marks = [...(s.poles ?? []), ...(s.zeros ?? [])].map((z) => ({ x: f.X(z.re), y: f.Y(z.im) }));
+  const hitsMark = (px: number, py: number, tw: number) =>
+    marks.some((m) => m.x < px + tw + 10 && m.x > px - 8 && Math.abs(m.y - py) < 14);
   g.save(); clipBox(g, f); g.strokeStyle = col.grid(); g.lineWidth = 1;
   withLabelRole('tick', () => {
     let lastX = '', lastPx = -Infinity;
     forTicks(Math.ceil(f.ix(f.box.l) / st) * st, f.ix(f.box.r), st, (x) => {
       g.beginPath(); g.moveTo(f.X(x), f.box.t); g.lineTo(f.X(x), f.box.b); g.stroke();
-      const lab = tickLabel(x, st), px = f.X(x);
-      if (lab && lab !== lastX && px + 2 + 5.6 * lab.length <= f.box.r && Math.abs(px - lastPx) >= 26) { text(g, lab, px + 2, f.box.b - 6, col.muted(), 'left', 9); lastX = lab; lastPx = px; }
+      const lab = tickLabel(x, st), px = f.X(x), tw = 5.6 * (lab ? lab.length : 0);
+      if (lab && lab !== lastX && px + 2 + tw <= f.box.r && Math.abs(px - lastPx) >= 26 && !hitsMark(px + 2, f.box.b - 6, tw)) { text(g, lab, px + 2, f.box.b - 6, col.muted(), 'left', 9); lastX = lab; lastPx = px; }
     });
     let lastY = '', lastPy = Infinity;
     forTicks(Math.ceil(f.iy(f.box.b) / st) * st, f.iy(f.box.t), st, (y) => {
       g.beginPath(); g.moveTo(f.box.l, f.Y(y)); g.lineTo(f.box.r, f.Y(y)); g.stroke();
-      const lab = tickLabel(y, st), py = f.Y(y);
-      if (lab && lab !== '0' && lab !== lastY && Math.abs(py - lastPy) >= 16) { text(g, lab, f.box.l + 3, py - 6, col.muted(), 'left', 9); lastY = lab; lastPy = py; }
+      const lab = tickLabel(y, st), py = f.Y(y), tw = 5.6 * (lab ? lab.length : 0);
+      if (lab && lab !== '0' && lab !== lastY && Math.abs(py - lastPy) >= 16 && !hitsMark(f.box.l + 3, py - 6, tw)) { text(g, lab, f.box.l + 3, py - 6, col.muted(), 'left', 9); lastY = lab; lastPy = py; }
     });
   });
   g.restore();

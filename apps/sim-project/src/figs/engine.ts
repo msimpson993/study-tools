@@ -44,7 +44,7 @@ export const piPanels = (): FigurePanel[] => [
       curve(g, fr, r.t, pPart, col.e(), 2);
       curve(g, fr, r.t, iPart, col.c(), 2);
       const tile = isTileCanvas(g) ? ((g.canvas.closest('.tile-frame') as HTMLElement | null) ?? g.canvas).getBoundingClientRect() : null;
-      const keyFits = !isThumb(g) || ((tile?.height ?? 0) >= 130 && (tile?.width ?? 0) >= 120);
+      const keyFits = !isThumb(g) || ((tile?.height ?? 0) >= 118 && (tile?.width ?? 0) >= 120);
       if (keyFits) withPersistentLabels(() => {
         text(g, 'P·e', fr.box.l + 8, fr.box.t + 12, col.e(), 'left', 10);
         text(g, 'I·∫e', fr.box.l + 8, fr.box.t + 26, col.c(), 'left', 10);

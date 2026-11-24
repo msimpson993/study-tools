@@ -271,13 +271,13 @@ export function drawLabDiagram(g: CanvasRenderingContext2D, w: number, h: number
   const placeSpeedRef = (s1: { x: number; y: number }, pi: { l: number; t: number }, size: number) => {
     g.font = `${size}px system-ui, sans-serif`;
     const lab = 'Speed Ref', tw = g.measureText(lab).width;
-    let x = s1.x, y = s1.y - r - 8, align: CanvasTextAlign = 'center';
-    if (x + tw / 2 > pi.l - 3) {
+    // Sit just above the incoming arrow, not up at the top of a tall first block
+    // (that left a ~55 px gap on the wide 844×390 layout).
+    let x = s1.x, y = Math.max(size * 0.8, s1.y - r - 8), align: CanvasTextAlign = 'center';
+    if (x + tw / 2 > pi.l - 3 && y + size * 0.3 > pi.t) {
       x = Math.max(tw + 2, Math.min(s1.x - r - 4, pi.l - 4));
       align = 'right';
-      y = Math.min(y, pi.t - 8);
     }
-    if (y < size * 0.8) y = size * 0.8;
     text(g, lab, x, y, col.text(), align, size);
   };
 
