@@ -456,7 +456,8 @@ export function applyCardLayout(art: HTMLElement, content: AppContent, hooks: Fi
       bin = h('div', { class: 'step-host-bin' });
       thumbs.after(bin);
     }
-    thumbs.querySelectorAll<HTMLElement>(':scope > .step-host').forEach((host) => { bin!.append(host); host.classList.remove('step-host-parked'); });
+    thumbs.querySelectorAll<HTMLElement>('.step-host').forEach((host) => { bin!.append(host); host.classList.remove('step-host-parked'); });
+    thumbs.querySelectorAll('.pop-figs').forEach((el) => { if (!el.querySelector('.fig, .step-host, canvas')) el.remove(); });
     thumbs.dataset.count = String(n);
     thumbs.classList.toggle('one', n === 1);
     if (!figs.some((f) => (f.querySelector('canvas') as HTMLCanvasElement | null)?.dataset.fig === 'table')) {

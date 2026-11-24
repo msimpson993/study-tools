@@ -45,7 +45,9 @@ export function stepSuppliesLookFor(slot: HTMLElement): boolean {
 
 /** Wrap back-to-back ```figure:``` slots in .pop-figs so they sit side by side above 700 px and stack below. */
 export function wrapAdjacentFigureSlots(root: HTMLElement): void {
-  const slots = [...root.querySelectorAll<HTMLElement>('.viz-slot[data-figure]')];
+  const slots = [...root.querySelectorAll<HTMLElement>('.viz-slot[data-figure]')].filter(
+    (s) => s.dataset.skipEmbed !== '1' && !s.closest('.step-thumbs, .step-host-bin, .step-card-fig'),
+  );
   let i = 0;
   while (i < slots.length) {
     const run = [slots[i]];

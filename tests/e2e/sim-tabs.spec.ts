@@ -561,6 +561,14 @@ test.describe('sim-project tabbed page', () => {
       expect(vis.count, `${c.tab} step ${c.step} thumb count`).toBeGreaterThanOrEqual(c.min);
       expect(vis.allInFig, `${c.tab} step ${c.step} thumbs should all sit in the figure card`).toBe(true);
       if (c.min >= 2) expect(vis.abreast, `${c.tab} step ${c.step} should keep at least two plots side by side`).toBe(true);
+      const stray = await card.evaluate((el) =>
+        [...el.querySelectorAll<HTMLElement>('.step-thumbs .step-host, .step-thumbs .fig-stage')].filter((n) => {
+          const r = n.getBoundingClientRect();
+          const cs = getComputedStyle(n);
+          return cs.display !== 'none' && cs.visibility !== 'hidden' && r.width > 0 && r.height > 0;
+        }).length
+      );
+      expect(stray, `${c.tab} step ${c.step} should not show empty host shells in the tile grid`).toBe(0);
       if (c.tab === 'engine' && c.step === '3') {
         await expect(card.getByTestId('param-chip')).toBeVisible();
         await expect(card.locator('.step-thumbs > .fig:not([hidden]) canvas[data-fig=table]')).toHaveCount(0);
