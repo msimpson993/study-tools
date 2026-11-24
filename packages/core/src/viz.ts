@@ -228,8 +228,28 @@ function logText(g: CanvasRenderingContext2D, s: string, f: TextFit, size: numbe
   const where = cv.closest?.('.fig-overlay') ? 'expand' : cv.closest?.('.tile-frame') ? 'tile' : 'other';
   log.push({ s, x0, x1, y0, y1, W: cv.width, H: cv.height, cv: ci, id: cv.closest?.('[data-fig]')?.getAttribute('data-fig') || cv.getAttribute?.('data-figure') || cv.getAttribute?.('data-big') || cv.id || '', fitted: f.lines.length > 1 || f.size < size - 0.01 || Math.abs(f.x - x) > 0.5, role: rect?.role, moved: Math.abs(dy) > 0.01, skipped, gen: labelGen(cv), where, step: card?.getAttribute('data-step') || '', clip: currentClip(g) ?? null });
 }
+
+const logObstacle = (g: CanvasRenderingContext2D, rec: { kind: 'marker' | 'line' | 'inset'; pts?: { x: number; y: number }[]; width?: number; x?: number; y?: number; r?: number }) => {
+  const log = (globalThis as unknown as { __obstacleLog?: unknown[] }).__obstacleLog; if (!Array.isArray(log)) return;
+  const m = typeof g.getTransform === 'function' ? g.getTransform() : { a: 1, b: 0, c: 0, d: 1, e: 0, f: 0 };
+  const cv = g.canvas as HTMLCanvasElement;
+  const cvs = (globalThis as unknown as { __textCanvases?: HTMLCanvasElement[] }).__textCanvases; let ci = -1;
+  if (Array.isArray(cvs)) { ci = cvs.indexOf(cv); if (ci < 0) { cvs.push(cv); ci = cvs.length - 1; } }
+  const card = cv.closest?.('[data-testid=step-card]') as HTMLElement | null;
+  const where = cv.closest?.('.fig-overlay') ? 'expand' : cv.closest?.('.tile-frame') ? 'tile' : 'other';
+  const toDev = (p: { x: number; y: number }) => ({ x: m.a * p.x + m.c * p.y + m.e, y: m.b * p.x + m.d * p.y + m.f });
+  const pts = rec.pts?.map(toDev);
+  const xy = rec.x !== undefined && rec.y !== undefined ? toDev({ x: rec.x, y: rec.y }) : null;
+  log.push({ kind: rec.kind, pts, width: rec.width, x: xy?.x, y: xy?.y, r: rec.r, W: cv.width, H: cv.height, cv: ci, id: cv.closest?.('[data-fig]')?.getAttribute('data-fig') || cv.getAttribute?.('data-figure') || cv.getAttribute?.('data-big') || cv.id || '', gen: labelGen(cv), where, step: card?.getAttribute('data-step') || '' });
+};
+/** Device-space stroke of a zoom-inset frame, so label checks can treat the box as an obstacle. */
+export function logInsetFrame(g: CanvasRenderingContext2D, x: number, y: number, w: number, h: number) {
+  logObstacle(g, { kind: 'inset', pts: [{ x, y }, { x: x + w, y }, { x: x + w, y: y + h }, { x, y: y + h }, { x, y }], width: 1.5 });
+}
+
 export function tline(g: CanvasRenderingContext2D, f: Frame, a: V2, b: V2, color: string, width = 1.5, dash: number[] = []) {
   g.strokeStyle = color; g.lineWidth = width; g.setLineDash(dash); g.beginPath(); g.moveTo(f.X(a[0]), f.Y(a[1])); g.lineTo(f.X(b[0]), f.Y(b[1])); g.stroke(); g.setLineDash([]);
+  if (dash.length) logObstacle(g, { kind: 'line', pts: [{ x: f.X(a[0]), y: f.Y(a[1]) }, { x: f.X(b[0]), y: f.Y(b[1]) }], width });
 }
 export function polyline(g: CanvasRenderingContext2D, f: Frame, pts: V2[], color: string, width = 2, dash: number[] = [], close = false) {
   if (pts.length < 2) return;
@@ -244,10 +264,12 @@ export function fillPoly(g: CanvasRenderingContext2D, f: Frame, pts: V2[], color
 export function dot(g: CanvasRenderingContext2D, f: Frame, p: V2, color: string, r = 4, ring = false) {
   g.beginPath(); g.arc(f.X(p[0]), f.Y(p[1]), r, 0, Math.PI * 2);
   if (ring) { g.strokeStyle = color; g.lineWidth = 2; g.stroke(); } else { g.fillStyle = color; g.fill(); }
+  logObstacle(g, { kind: 'marker', x: f.X(p[0]), y: f.Y(p[1]), r: r + (ring ? 1 : 0) });
 }
 export function cross(g: CanvasRenderingContext2D, f: Frame, p: V2, color: string, r = 5) {
   g.strokeStyle = color; g.lineWidth = 2; const x = f.X(p[0]), y = f.Y(p[1]);
   g.beginPath(); g.moveTo(x - r, y - r); g.lineTo(x + r, y + r); g.moveTo(x - r, y + r); g.lineTo(x + r, y - r); g.stroke();
+  logObstacle(g, { kind: 'marker', x, y, r: r + 1 });
 }
 export function arrow(g: CanvasRenderingContext2D, f: Frame, a: V2, b: V2, color: string, width = 2, label?: string) {
   const x0 = f.X(a[0]), y0 = f.Y(a[1]), x1 = f.X(b[0]), y1 = f.Y(b[1]);

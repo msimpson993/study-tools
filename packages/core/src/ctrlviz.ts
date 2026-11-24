@@ -1,7 +1,7 @@
 import { C, cabs, type Cx } from './dsp/complex';
 import { type TF, type StepMetrics, type Margins, type Bode, bode, margins, stepMetrics, tfEval, logspace, tfPoles, tfZeros, freqresp } from './dsp/tf';
 import { type RLocus, rlocusPolesAt, rlocusNearest } from './dsp/rlocus';
-import { col, planeFrame, rangeFrame, wipe, text, tline, polyline, dot, cross, graphAxes, curve, clipBox, withClip, heat, axes2, tickLabel, isThumb, isPortraitPhone, forTicks, goodStep, type Frame, type V2 } from './viz';
+import { col, planeFrame, rangeFrame, wipe, text, tline, polyline, dot, cross, graphAxes, curve, clipBox, withClip, heat, axes2, tickLabel, isThumb, isPortraitPhone, isLandscapePhone, logInsetFrame, forTicks, goodStep, type Frame, type V2 } from './viz';
 import { withLabelRole, labelsOn } from './labels';
 import type { PanelPointer } from './figure';
 
@@ -99,10 +99,12 @@ export function drawStepResponse(g: CanvasRenderingContext2D, w: number, h: numb
       }
       return false;
     };
+    const yRef = f.Y(ref);
     const okTr = (cx: number, cy: number) => {
       const x0 = cx - trW / 2, x1 = cx + trW / 2, y0 = cy - trH / 2, y1 = cy + trH / 2;
       if (x0 < f.box.l + 3 || x1 > trRight || y0 < f.box.t + 3 || y1 > f.box.b - 3) return false;
       if (x1 > tpX - 5 || x1 > tsX - 4) return false;
+      if (y0 < yRef + 6 && y1 > yRef - 6) return false;
       return !hitsCurve(x0, x1, y0, y1);
     };
     const midX = (f.X(m.t10) + f.X(m.t90)) / 2;
@@ -113,8 +115,8 @@ export function drawStepResponse(g: CanvasRenderingContext2D, w: number, h: numb
       Math.min(trRight - trW / 2, f.X(m.t90) - 8 - trW / 2),
     ];
     let trX = midX, trY = barY - 10, found = false;
-    // short canvases (phone expands): the rise fills the plot — keep Tr in the bottom pad
-    if (!isPortraitPhone()) for (const cx0 of xsTry) {
+    // short canvases (portrait and short-landscape phone expands): the rise fills the plot — keep Tr in the bottom pad
+    if (!isPortraitPhone() && !isLandscapePhone()) for (const cx0 of xsTry) {
       let x = cx0;
       if (x + trW / 2 > trRight) x = trRight - trW / 2;
       if (x - trW / 2 < f.box.l + 4) x = f.box.l + 4 + trW / 2;
@@ -302,9 +304,11 @@ export function drawSPlane(g: CanvasRenderingContext2D, w: number, h: number, s:
   // tick numbers sit in the pad, outside the grid, so lines never strike them
   withLabelRole('tick', () => {
     let lastX = '', lastPx = -Infinity;
+    const realPx = (s.poles ?? []).filter((p) => Math.abs(p.im) < 1e-6).map((p) => f.X(p.re));
+    const underPole = (px: number) => realPx.some((mx) => Math.abs(mx - px) < 16);
     forTicks(Math.ceil(f.ix(f.box.l) / st) * st, f.ix(f.box.r), st, (x) => {
       const lab = tickLabel(x, st), px = f.X(x), tw = 5.6 * (lab ? lab.length : 0);
-      if (lab && lab !== lastX && px + tw / 2 <= f.box.r && Math.abs(px - lastPx) >= 26 && !hitsMark(px, f.box.b + 9, tw)) { text(g, lab, px, f.box.b + 9, col.muted(), 'center', 9); lastX = lab; lastPx = px; }
+      if (lab && lab !== lastX && px + tw / 2 <= f.box.r && Math.abs(px - lastPx) >= 26 && !hitsMark(px, f.box.b + 9, tw) && !underPole(px)) { text(g, lab, px, f.box.b + 9, col.muted(), 'center', 9); lastX = lab; lastPx = px; }
     });
     let lastY = '', lastPy = Infinity;
     forTicks(Math.ceil(f.iy(f.box.b) / st) * st, f.iy(f.box.t), st, (y) => {
@@ -312,38 +316,47 @@ export function drawSPlane(g: CanvasRenderingContext2D, w: number, h: number, s:
       if (lab && lab !== '0' && lab !== lastY && py > f.box.t - 2 && py < f.box.b + 2 && Math.abs(py - lastPy) >= 16 && !hitsMark(f.box.l - 4 - tw, py, tw)) { text(g, lab, f.box.l - 4, py, col.muted(), 'right', 9); lastY = lab; lastPy = py; }
     });
   });
-  // always label the shaded half-plane when it is drawn, even if the strip is narrow (BUG-41)
+  // labelled tiles and expanded views: always horizontal "unstable". Bare phone tiles stay bare (BUG-47).
   let unstableBox: { x0: number; x1: number; y0: number; y1: number } | null = null;
-  if (s.shadeUnstable !== false) {
+  if (s.shadeUnstable !== false && !isThumb(g)) {
     const shadeL = Math.max(x0, f.box.l), shadeR = f.box.r, word = 'unstable';
     if (shadeR - shadeL > 6 && f.box.b - f.box.t > 16) {
+      const hitsMarksBox = (a: number, b2: number, c: number, d: number) =>
+        marks.some((m) => m.x < b2 + 13 && m.x > a - 13 && m.y < d + 13 && m.y > c - 13);
+      const jwW = (() => { g.font = '11px system-ui,sans-serif'; return g.measureText(s.yLabel ?? 'jω (rad/s)').width; })();
+      const jwX = f.X(0) + 6;
+      const hitsJw = (a: number, b2: number, c: number, d: number) => b2 > jwX - 2 && a < jwX + jwW + 2 && d > f.box.t - 18 && c < f.box.t + 4;
+      const tryPlace = (z0: number, tw0: number, x: number, yMin: number, yMax: number) => {
+        const th = z0 * 1.1;
+        for (let y = yMin; y <= yMax; y += 4) {
+          const a = x - tw0, b2 = x, c = y - th / 2, d = y + th / 2;
+          if (c < f.box.t + 2 || d > f.box.b - 2) continue;
+          if (hitsMarksBox(a, b2, c, d) || hitsJw(a, b2, c, d)) continue;
+          text(g, word, x, y, col.bad(), 'right', z0);
+          unstableBox = { x0: a - 6, x1: b2 + 4, y0: c - 6, y1: d + 6 };
+          return true;
+        }
+        return false;
+      };
       g.font = '10px system-ui,sans-serif';
       let z = 10, tw = g.measureText(word).width;
-      while (z > 7 && tw + 8 > shadeR - shadeL) { z -= 1; g.font = `${z}px system-ui,sans-serif`; tw = g.measureText(word).width; }
-      if (tw + 8 <= shadeR - shadeL) {
-        const x = shadeR - 6, y = f.box.t + 11;
-        text(g, word, x, y, col.bad(), 'right', z);
-        unstableBox = { x0: x - tw - 8, x1: x + 4, y0: y - z * 0.55 - 6, y1: y + z * 0.55 + 6 };
-      } else {
-        // stand it up in the strip, keeping it above the σ axis name at (box.r, Y(0))
-        const cap = Math.max(20, y0 - 14 - (f.box.t + 4));
-        let z2 = Math.max(6, Math.min(9, (shadeR - shadeL) - 4));
-        g.font = `${z2}px system-ui,sans-serif`; tw = g.measureText(word).width;
-        while (z2 > 6 && tw > cap) { z2 -= 1; g.font = `${z2}px system-ui,sans-serif`; tw = g.measureText(word).width; }
-        if (tw <= cap + 2) {
-          const mx = (shadeL + shadeR) / 2, my = f.box.t + 4 + tw / 2;
-          g.save(); g.translate(mx, my); g.rotate(-Math.PI / 2); text(g, word, 0, 0, col.bad(), 'center', z2); g.restore();
-          unstableBox = { x0: mx - z2 * 0.55 - 6, x1: mx + z2 * 0.55 + 6, y0: my - tw / 2 - 6, y1: my + tw / 2 + 6 };
-        } else {
-          // strip is too short: sit just above the shade, in the same column, clear of the jω title
-          const jwW = g.measureText(s.yLabel ?? 'jω (rad/s)').width;
-          g.font = '9px system-ui,sans-serif'; tw = g.measureText(word).width;
-          const x = Math.min(f.box.r - 2, Math.max(x0 + jwW + 12, shadeR - 4));
-          const y = Math.max(9, f.box.t - 8);
+      while (z > 6 && tw + 8 > shadeR - shadeL) { z -= 1; g.font = `${z}px system-ui,sans-serif`; tw = g.measureText(word).width; }
+      let placed = false;
+      if (tw + 8 <= shadeR - shadeL) placed = tryPlace(z, tw, shadeR - 6, f.box.t + 11, f.box.b - 12);
+      if (!placed) {
+        // strip too narrow for a horizontal word, or the top of the shade is blocked by a pole: sit just above, still horizontal
+        g.font = '9px system-ui,sans-serif'; tw = g.measureText(word).width;
+        const x = Math.min(f.box.r - 2, Math.max(x0 + jwW + 12, shadeR - 4));
+        const y = Math.max(9, f.box.t - 8);
+        if (!hitsMarksBox(x - tw, x, y - 6, y + 6) && !hitsJw(x - tw, x, y - 6, y + 6)) {
           text(g, word, x, y, col.bad(), 'right', 9);
           unstableBox = { x0: x - tw - 6, x1: x + 4, y0: y - 8, y1: y + 8 };
+          placed = true;
+        } else {
+          placed = tryPlace(9, tw, shadeR - 6, f.box.t + 20, f.box.b - 12);
         }
       }
+      void placed;
     }
   }
   // allowed region
@@ -450,7 +463,8 @@ export function drawSPlane(g: CanvasRenderingContext2D, w: number, h: number, s:
       if (inUnstable(a, b2)) n += 80;
       if (onAxis(a, b2)) n += 70;
       if (onRay(a, b2, c, d)) n += 20;
-      if (a < X + 7 && b2 > X - 7 && c < Yp + 7 && d > Yp - 7) n += 40;
+      // hard-reject a box that covers the pole × (BUG-45)
+      if (a < X + 13 && b2 > X - 13 && c < Yp + 13 && d > Yp - 13) return 1e6;
       return n;
     };
     type Cand = { x: number; y: number; align: CanvasTextAlign; a: number; b2: number; c: number; d: number; z: number };
@@ -466,14 +480,18 @@ export function drawSPlane(g: CanvasRenderingContext2D, w: number, h: number, s:
       };
       add(X + 9, Yp + (p.im > 1e-9 ? 14 : -12), 'left');
       add(X - 9, Yp + (p.im > 1e-9 ? 14 : -12), 'right');
+      add(X + 16, Yp + (p.im > 1e-9 ? 16 : -16), 'left');
+      add(X - 16, Yp + (p.im > 1e-9 ? 16 : -16), 'right');
       add(X + 9, Yp - 12, 'left');
       add(X - 9, Yp - 12, 'right');
-      add(X, Yp - 16, 'center');
-      add(X, Yp + 16, 'center');
-      add(X + 9, Yp, 'left');
-      add(X - 9, Yp, 'right');
+      add(X, Yp - 22, 'center');
+      add(X, Yp + 22, 'center');
+      add(X + 16, Yp, 'left');
+      add(X - 16, Yp, 'right');
       add(X + 9, Yp - 22, 'left');
       add(X - 9, Yp + 22, 'right');
+      add(X + 9, Yp + 28, 'left');
+      add(X - 9, Yp - 28, 'right');
       add(X + 9, (f.box.t + Yp) / 2, 'left');
       add(X - 9, (f.box.t + Yp) / 2, 'right');
       for (const c of cands) {
@@ -503,10 +521,11 @@ export function drawSPlane(g: CanvasRenderingContext2D, w: number, h: number, s:
           let n = 0;
           if (!inside(a, b2, c, d)) n += 1000;
           if (onSigma(a, b2, c, d) || onJw(a, b2, c, d) || hitsUnstable(a, b2, c, d) || hitsTaken(a, b2, c, d)) n += 400;
+          if (a < X + 13 && b2 > X - 13 && c < Yp + 13 && d > Yp - 13) n += 2000;
           return n;
         };
         for (let yy = f.box.t + 8; yy < f.box.b - 8; yy += 8) {
-          for (const [x, align] of [[X + 9, 'left'], [X - 9, 'right'], [f.box.l + 4, 'left'], [f.box.r - 4, 'right']] as [number, CanvasTextAlign][]) {
+          for (const [x, align] of [[X + 16, 'left'], [X - 16, 'right'], [X + 9, 'left'], [X - 9, 'right'], [f.box.l + 4, 'left'], [f.box.r - 4, 'right']] as [number, CanvasTextAlign][]) {
             let a = align === 'left' ? x : x - tw, b2 = a + tw, c = yy - th / 2, d = c + th;
             a = Math.max(f.box.l + 2, Math.min(a, f.box.r - 2 - tw)); b2 = a + tw;
             c = Math.max(f.box.t + 2, Math.min(c, f.box.b - 2 - th)); d = c + th;
@@ -533,12 +552,13 @@ export function drawSPlane(g: CanvasRenderingContext2D, w: number, h: number, s:
       const right = w - (ox + vw), left = ox;
       if (right >= iw + 10) { ix = ox + vw + 6; iy = Math.max(4, Math.min(h - ih - 4, oy + (vh - ih) / 2)); }
       else if (left >= iw + 10) { ix = 8; iy = Math.max(4, Math.min(h - ih - 4, oy + (vh - ih) / 2)); }
-      else { ix = Math.max(8, ox + vw - iw - 8); iy = Math.max(4, oy + vh - ih - 8); }
+      else { ix = -1; iy = -1; iw = 0; ih = 0; } // no side room: hide the inset on this tile (BUG-44)
     }
-    if (ix + iw <= w - 2 && iy + ih <= h - 2 && iy >= 0 && iw >= 110 && ih >= 110) {
+    if (ix >= 0 && iy >= 0 && ix + iw <= w - 2 && iy + ih <= h - 2 && iw >= 110 && ih >= 110) {
       g.save();
       g.strokeStyle = col.strong(); g.lineWidth = 1; g.setLineDash([]);
       g.strokeRect(ix + 0.5, iy + 0.5, iw - 1, ih - 1);
+      logInsetFrame(g, ix + 0.5, iy + 0.5, iw - 1, ih - 1);
       g.translate(ix, iy);
       drawSPlane(g, iw, ih, {
         range: s.inset.range, reCenter: s.inset.reCenter, poles: s.poles, zeros: s.zeros, labels: true,

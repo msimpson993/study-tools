@@ -4,8 +4,9 @@ import { open } from './helpers';
 /**
  * Every Simulation Project step-card tile and its expanded view, at the sizes the reviews use:
  * drawn text boxes (from core text()'s __textLog) must not overlap each other, must stay inside
- * their clip (the plot box when clipped, otherwise the canvas), and must not sit on a drawn curve
- * (__curveLog). Required labels named in the card text / Look-for / How to read this must be
+ * their clip (the plot box when clipped, otherwise the canvas), must not sit on a drawn curve
+ * (__curveLog), and must not overlap drawn markers, dashed or target lines, or inset frames
+ * (__obstacleLog). Required labels named in the card text / Look-for / How to read this must be
  * present on labelled tiles and in expanded views (not on bare phone tiles).
  *
  * Allow known intentional overlaps or curve-on-label cases only with an explicit, commented entry.
@@ -19,6 +20,11 @@ interface L {
 interface C {
   pts: { x: number; y: number }[]; width: number; W: number; H: number;
   cv: number; id: string; gen: number; where?: string; step?: string;
+}
+interface O {
+  kind: 'marker' | 'line' | 'inset';
+  pts?: { x: number; y: number }[]; width?: number; x?: number; y?: number; r?: number;
+  W: number; H: number; cv: number; id: string; gen: number; where?: string; step?: string;
 }
 
 /** Intentional label-vs-label overlaps the check may see and should ignore. Tick-vs-tick and exact duplicate (outline) pairs are skipped in code, not here. */
@@ -68,17 +74,18 @@ const start = (page: Page) => page.evaluate(() => {
   (window as any).__textLog = [];
   (window as any).__textCanvases = [];
   (window as any).__curveLog = [];
+  (window as any).__obstacleLog = [];
 });
 const redraw = (page: Page) => page.evaluate(() => window.dispatchEvent(new Event('study-theme')));
 const take = (page: Page) => page.evaluate(() => {
-  const w = window as any, cvs: HTMLCanvasElement[] = w.__textCanvases, l = w.__textLog ?? [], c = w.__curveLog ?? [];
-  w.__textLog = []; w.__curveLog = [];
+  const w = window as any, cvs: HTMLCanvasElement[] = w.__textCanvases, l = w.__textLog ?? [], c = w.__curveLog ?? [], o = w.__obstacleLog ?? [];
+  w.__textLog = []; w.__curveLog = []; w.__obstacleLog = [];
   const live = (e: { cv: number; W: number; H: number }) => {
     const cv = cvs[e.cv];
     return cv && cv.isConnected && cv.width === e.W && cv.height === e.H && cv.getBoundingClientRect().width > 0;
   };
-  return { labels: (l as L[]).filter(live), curves: (c as C[]).filter(live) };
-}) as Promise<{ labels: L[]; curves: C[] }>;
+  return { labels: (l as L[]).filter(live), curves: (c as C[]).filter(live), obstacles: (o as O[]).filter(live) };
+}) as Promise<{ labels: L[]; curves: C[]; obstacles: O[] }>;
 
 const allowed = (p: L, q: L, at: string) => ALLOWLIST.some((a) => a.match(p, q, at));
 const curveAllowed = (lab: L, at: string) => CURVE_ALLOWLIST.some((a) => a.match(lab, at));
@@ -153,6 +160,42 @@ const onCurve = (labels: L[], curves: C[], at: string) => {
   return out;
 };
 
+
+const hitsObstacle = (lab: L, o: O) => {
+  const pad = 1.5;
+  const x0 = lab.x0 + pad, y0 = lab.y0! + pad, x1 = lab.x1 - pad, y1 = lab.y1! - pad;
+  if (x1 - x0 < 2 || y1 - y0 < 2) return false;
+  if (o.kind === 'marker' && o.x !== undefined && o.y !== undefined) {
+    const r = o.r ?? 5;
+    const cx = Math.max(x0, Math.min(o.x, x1));
+    const cy = Math.max(y0, Math.min(o.y, y1));
+    return Math.hypot(cx - o.x, cy - o.y) < r;
+  }
+  if ((o.kind === 'line' || o.kind === 'inset') && o.pts && o.pts.length >= 2) {
+    const w = (o.width ?? 1) / 2;
+    for (let i = 1; i < o.pts.length; i++) {
+      const a = o.pts[i - 1], b = o.pts[i];
+      if (segHits(a.x, a.y, b.x, b.y, x0 - w, y0 - w, x1 + w, y1 + w)) return true;
+    }
+  }
+  return false;
+};
+
+const onObstacle = (labels: L[], marks: O[], at: string) => {
+  const out: string[] = [];
+  const labs = latest(labels).filter((e) => !e.skipped && e.s.trim() && e.y0 !== undefined && e.role !== 'tick');
+  const obs = latest(marks);
+  for (const lab of labs) {
+    if (curveAllowed(lab, at)) continue;
+    const hit = obs.filter((o) => o.cv === lab.cv).find((o) => hitsObstacle(lab, o));
+    if (hit) {
+      const what = hit.kind === 'marker' ? 'marker' : hit.kind === 'inset' ? 'inset frame' : 'dashed or target line';
+      out.push(`${at} ${lab.id || 'canvas'}: “${lab.s}” sits on a ${what}`);
+    }
+  }
+  return out;
+};
+
 const missingRequired = (labels: L[], at: string, tab: string, step: string, fig: string | null, check: boolean) => {
   if (!check) return [];
   const labs = latest(labels).filter((e) => !e.skipped && e.s.trim());
@@ -176,9 +219,9 @@ async function waitTiles(page: Page, card: ReturnType<Page['locator']>) {
 }
 
 for (const vp of VIEWPORTS) {
-  test(`sim-project @${vp.label}: step-card tiles and expanded views keep labels apart, on the clip, off curves, and complete`, async ({ page }) => {
+  test(`sim-project @${vp.label}: step-card tiles and expanded views keep labels apart, on the clip, off curves and markers, and complete`, async ({ page }) => {
     test.setTimeout(420_000);
-    await page.addInitScript(() => { (window as any).__textLog = []; (window as any).__textCanvases = []; (window as any).__curveLog = []; });
+    await page.addInitScript(() => { (window as any).__textLog = []; (window as any).__textCanvases = []; (window as any).__curveLog = []; (window as any).__obstacleLog = []; });
     await page.setViewportSize({ width: vp.w, height: vp.h });
     const bad: string[] = [];
     let seen = 0;
@@ -196,9 +239,10 @@ for (const vp of VIEWPORTS) {
         const takenTiles = await take(page);
         const tiles = takenTiles.labels.filter((e) => e.where === 'tile' && e.step === step);
         const tileCurves = takenTiles.curves.filter((e) => e.where === 'tile' && e.step === step);
+        const tileObs = takenTiles.obstacles.filter((e) => e.where === 'tile' && e.step === step);
         seen += tiles.length;
         const atTile = `${tab} step ${step} tile @${vp.label}`;
-        bad.push(...collisions(tiles, atTile), ...clipped(tiles, atTile), ...onCurve(tiles, tileCurves, atTile));
+        bad.push(...collisions(tiles, atTile), ...clipped(tiles, atTile), ...onCurve(tiles, tileCurves, atTile), ...onObstacle(tiles, tileObs, atTile));
         bad.push(...missingRequired(tiles, atTile, tab, step, null, vp.labelled));
 
         const thumbs = card.locator('.step-thumbs canvas[data-fig]');
@@ -218,9 +262,10 @@ for (const vp of VIEWPORTS) {
           const takenExp = await take(page);
           const exp = takenExp.labels.filter((e) => e.where === 'expand');
           const expCurves = takenExp.curves.filter((e) => e.where === 'expand');
+          const expObs = takenExp.obstacles.filter((e) => e.where === 'expand');
           seen += exp.length;
           const atExp = `${tab} step ${step} expand ${fig} @${vp.label}`;
-          bad.push(...collisions(exp, atExp), ...clipped(exp, atExp), ...onCurve(exp, expCurves, atExp));
+          bad.push(...collisions(exp, atExp), ...clipped(exp, atExp), ...onCurve(exp, expCurves, atExp), ...onObstacle(exp, expObs, atExp));
           bad.push(...missingRequired(exp, atExp, tab, step, fig, true));
           await overlay.locator('[data-testid=fig-close]').click();
           await expect(overlay).toHaveCount(0, { timeout: 8_000 });
