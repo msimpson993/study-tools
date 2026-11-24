@@ -27,14 +27,15 @@ const MIN_FONT = 9;
 type TextBox = { x: number; y: number; align: CanvasTextAlign; a: number; b2: number; c: number; d: number; z: number };
 const textBox = (x: number, y: number, tw: number, th: number, align: CanvasTextAlign, z: number): TextBox => {
   const a = align === 'left' ? x : align === 'right' ? x - tw : x - tw / 2;
-  return { x, y, align, a, b2: a + tw, c: y - th * 0.55, d: y + th * 0.55, z };
+  // match logText's alphabetic extents (ascent 0.9·size, descent 0.25·size)
+  return { x, y, align, a, b2: a + tw, c: y - z * 0.9, d: y + z * 0.25, z };
 };
-/** Candidate boxes whose closest edge stays about ANCHOR_GAP px from (X, Y). */
-const aroundMarker = (X: number, Y: number, tw: number, th: number, z: number, preferRight = true): TextBox[] => {
-  const g = ANCHOR_GAP, dy = Math.max(th * 0.7, 8);
+/** Candidate boxes whose closest edge stays about `gap` px from (X, Y). */
+const aroundMarker = (X: number, Y: number, tw: number, th: number, z: number, preferRight = true, gap = ANCHOR_GAP): TextBox[] => {
+  const g = gap, dy = Math.max(z * 0.9, 8);
   const order: [number, number, CanvasTextAlign][] = preferRight
-    ? [[X + g, Y, 'left'], [X - g, Y, 'right'], [X + g, Y - dy, 'left'], [X - g, Y - dy, 'right'], [X + g, Y + dy, 'left'], [X - g, Y + dy, 'right'], [X, Y - g - th * 0.55, 'center'], [X, Y + g + th * 0.55, 'center']]
-    : [[X - g, Y, 'right'], [X + g, Y, 'left'], [X - g, Y - dy, 'right'], [X + g, Y - dy, 'left'], [X - g, Y + dy, 'right'], [X + g, Y + dy, 'left'], [X, Y - g - th * 0.55, 'center'], [X, Y + g + th * 0.55, 'center']];
+    ? [[X + g, Y, 'left'], [X - g, Y, 'right'], [X + g, Y - dy, 'left'], [X - g, Y - dy, 'right'], [X + g, Y + dy, 'left'], [X - g, Y + dy, 'right'], [X, Y - g - z * 0.9, 'center'], [X, Y + g + z * 0.25, 'center']]
+    : [[X - g, Y, 'right'], [X + g, Y, 'left'], [X - g, Y - dy, 'right'], [X + g, Y - dy, 'left'], [X - g, Y + dy, 'right'], [X + g, Y + dy, 'left'], [X, Y - g - z * 0.9, 'center'], [X, Y + g + z * 0.25, 'center']];
   return order.map(([x, y, al]) => textBox(x, y, tw, th, al, z));
 };
 const niceStep = (span: number, n: number) => {
@@ -160,7 +161,8 @@ export function drawStepResponse(g: CanvasRenderingContext2D, w: number, h: numb
         for (const z of [10.5, 10, MIN_FONT]) {
           g.font = `${z}px system-ui,sans-serif`;
           const tw = g.measureText(word).width, th = z + 3;
-          for (const c of aroundMarker(peakX, peakY, tw, th, z, true)) {
+          for (const gap of [ANCHOR_GAP, 15]) {
+          for (const c of aroundMarker(peakX, peakY, tw, th, z, true, gap)) {
             if (!inPlot(c.a, c.b2, c.c, c.d, 8)) continue;
             if (!ignoreGhost && ghostWouldHit(c.a, c.b2, c.c, c.d)) continue;
             const cx = Math.max(c.a, Math.min(peakX, c.b2)), cy = Math.max(c.c, Math.min(peakY, c.d));
@@ -168,6 +170,7 @@ export function drawStepResponse(g: CanvasRenderingContext2D, w: number, h: numb
             if (c.c < yRef + 4 && c.d > yRef - 4) continue;
             if (hitsCurve(c.a, c.b2, c.c, c.d)) continue;
             return { word, c };
+          }
           }
         }
       }
@@ -186,15 +189,21 @@ export function drawStepResponse(g: CanvasRenderingContext2D, w: number, h: numb
       let c: TextBox | null = null;
       g.font = `${MIN_FONT}px system-ui,sans-serif`;
       const tw = g.measureText(osShort).width, th = MIN_FONT + 3;
-      for (const cand of aroundMarker(peakX, peakY, tw, th, MIN_FONT, true)) {
-        if (!inPlot(cand.a, cand.b2, cand.c, cand.d, 8)) continue;
-        const cx = Math.max(cand.a, Math.min(peakX, cand.b2)), cy = Math.max(cand.c, Math.min(peakY, cand.d));
-        if (Math.hypot(cx - peakX, cy - peakY) < 8) continue;
-        if (cand.c < yRef + 4 && cand.d > yRef - 4) continue;
-        if (hitsCurve(cand.a, cand.b2, cand.c, cand.d)) continue;
-        c = cand; break;
+      for (const gap of [ANCHOR_GAP, 15]) {
+        for (const cand of aroundMarker(peakX, peakY, tw, th, MIN_FONT, true, gap)) {
+          if (!inPlot(cand.a, cand.b2, cand.c, cand.d, 8)) continue;
+          const cx = Math.max(cand.a, Math.min(peakX, cand.b2)), cy = Math.max(cand.c, Math.min(peakY, cand.d));
+          if (Math.hypot(cx - peakX, cy - peakY) < 8) continue;
+          if (cand.c < yRef + 4 && cand.d > yRef - 4) continue;
+          if (hitsCurve(cand.a, cand.b2, cand.c, cand.d)) continue;
+          c = cand; break;
+        }
+        if (c) break;
       }
-      if (!c) c = aroundMarker(peakX, peakY, tw, th, MIN_FONT, true).find((cand) => inPlot(cand.a, cand.b2, cand.c, cand.d, 8) && !(cand.c < yRef + 4 && cand.d > yRef - 4)) ?? aroundMarker(peakX, peakY, tw, th, MIN_FONT, true)[0];
+      if (!c) {
+        const pool = [12, 15].flatMap((gap) => aroundMarker(peakX, peakY, tw, th, MIN_FONT, true, gap));
+        c = pool.find((cand) => inPlot(cand.a, cand.b2, cand.c, cand.d, 8) && !(cand.c < yRef + 4 && cand.d > yRef - 4)) ?? pool[0];
+      }
       withAnchor({ kind: 'marker', x: peakX, y: peakY }, () => {
         withLabelRole('axis', () => { lbl(osShort, c!.x, c!.y, col.b(), c!.align, MIN_FONT); });
       });
@@ -399,7 +408,7 @@ export function drawSPlane(g: CanvasRenderingContext2D, w: number, h: number, s:
       const rayHits = (b: { a: number; b2: number; c: number; d: number }, t2: number, pad = 3) =>
         [1, -1].some((sg) => { for (let k = 0; k <= 80; k++) { const q = (k / 80) * R, X = f.X(-Math.cos(t2) * q), Y = f.Y(sg * Math.sin(t2) * q); if (X > b.a - pad && X < b.b2 + pad && Y > b.c - pad && Y < b.d + pad) return true; } return false; });
       const otherRay = (b: { a: number; b2: number; c: number; d: number }) => rays.some((t2) => Math.abs(t2 - th) >= 1e-6 && rayHits(b, t2));
-      const ownRay = (b: { a: number; b2: number; c: number; d: number }) => rayHits(b, th, 3);
+      const ownRay = (b: { a: number; b2: number; c: number; d: number }) => rayHits(b, th, 5);
       const ok = (c: TextBox, relaxOther = false) => c.a > f.box.l + 2 && c.b2 < Math.min(f.box.r - 2, x0 - 3) && c.c > f.box.t + 2 && c.d < f.box.b - 2
         && marksZ.every((p) => { const X = f.X(p.re), Y = f.Y(p.im); return X < c.a - 8 || X > c.b2 + 8 || Y < c.c - 8 || Y > c.d + 8; })
         && taken.every((t) => c.b2 < t.x0 - 6 || c.a > t.x1 + 6 || c.d < t.y0 - 6 || c.c > t.y1 + 6)
@@ -408,7 +417,7 @@ export function drawSPlane(g: CanvasRenderingContext2D, w: number, h: number, s:
       const nx = -(ay1 - ay0) / along, ny = (ax1 - ax0) / along;
       let pick: TextBox | null = null;
       const collect = (zsz: number, X: number, Y: number): TextBox[] => {
-        const twz = g.measureText(name).width, thz = zsz + 3, off = thz * 0.55 + 6;
+        const twz = g.measureText(name).width, thz = zsz + 3, off = zsz * 0.9 + 7;
         return [
           textBox(X + nx * off, Y + ny * off, twz, thz, 'center', zsz),
           textBox(X - nx * off, Y - ny * off, twz, thz, 'center', zsz),
@@ -516,15 +525,17 @@ export function drawSPlane(g: CanvasRenderingContext2D, w: number, h: number, s:
       if (pick) break;
     }
     if (!pick && !tile) {
-      // expanded must keep the value beside the × — first in-plot around-spot, even if a ray just grazes it
-      for (const z of [MIN_FONT]) {
-        g.font = `${z}px system-ui,sans-serif`;
-        const tw = g.measureText(lab).width, th = z + 4;
-        for (const c of aroundMarker(X, Yp, tw, th, z, preferRight)) {
+      // expanded must keep the value beside the ×; still prefer a spot off the ζ rays
+      for (const relaxRay of [false, true]) {
+        g.font = `${MIN_FONT}px system-ui,sans-serif`;
+        const tw = g.measureText(lab).width, th = MIN_FONT + 4;
+        for (const c of aroundMarker(X, Yp, tw, th, MIN_FONT, preferRight, 15)) {
           if (c.a < f.box.l + 2 || c.b2 > f.box.r - 2 || c.c < f.box.t + 2 || c.d > f.box.b - 2) continue;
           if (hitsOtherMark(X, Yp, c.a, c.b2, c.c, c.d) || hitsTaken(c.a, c.b2, c.c, c.d)) continue;
+          if (!relaxRay && onRay(c.a, c.b2, c.c, c.d)) continue;
           pick = c; break;
         }
+        if (pick) break;
       }
     }
     if (!pick) continue; // tile: hide this anchored label rather than park it far away
@@ -538,8 +549,7 @@ export function drawSPlane(g: CanvasRenderingContext2D, w: number, h: number, s:
   if (s.shadeUnstable !== false && !isThumb(g)) {
     const shadeL = Math.max(x0, f.box.l), shadeR = f.box.r, word = 'unstable';
     const blocked = (a: number, b2: number, c: number, d: number) =>
-      (d > f.box.t && a < x0 + 2)
-      || (d > f.box.t && onRay(a, b2, c, d))
+      onRay(a, b2, c, d)
       || taken.some((t) => b2 > t.x0 - 6 && a < t.x1 + 6 && d > t.y0 - 6 && c < t.y1 + 6)
       || allMarks.some((mk) => { const cx = Math.max(a, Math.min(mk.X, b2)), cy = Math.max(c, Math.min(mk.Y, d)); return Math.hypot(cx - mk.X, cy - mk.Y) < 12; });
     let placed = false;
@@ -563,8 +573,15 @@ export function drawSPlane(g: CanvasRenderingContext2D, w: number, h: number, s:
       tryPut(MIN_FONT, f.box.r - 2, [Math.max(9, f.box.t - 8), f.box.t + 16]);
       if (!placed) {
         g.font = `${MIN_FONT}px system-ui,sans-serif`;
-        const tw = g.measureText(word).width, y = Math.max(f.box.t + 16, 28), a = shadeR - 6 - tw, d = y + MIN_FONT * 0.6, c = y - MIN_FONT * 0.6;
-        if (!blocked(a, shadeR - 6, c, d)) withLabelRole('axis', () => { text(g, word, shadeR - 6, y, col.bad(), 'right', MIN_FONT); });
+        const tw = g.measureText(word).width;
+        const spots = [f.box.t + 14, f.box.t + 24, f.box.b - 14, (f.box.t + f.box.b) / 2];
+        let yPut: number | null = null;
+        for (const y of spots) {
+          const a = shadeR - 6 - tw, c = y - MIN_FONT * 0.9, d = y + MIN_FONT * 0.25;
+          if (c >= f.box.t + 1 && d <= f.box.b - 1 && !blocked(a, shadeR - 6, c, d)) { yPut = y; break; }
+        }
+        if (yPut === null) yPut = f.box.t + 14;
+        withLabelRole('axis', () => { text(g, word, shadeR - 6, yPut, col.bad(), 'right', MIN_FONT); });
       }
     }
   }
