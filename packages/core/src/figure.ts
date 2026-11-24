@@ -152,6 +152,7 @@ export function mountFigure(host: HTMLElement, def: FigureDef, panels0: FigurePa
       cv, axesEl));
     redrawers.push(() => {
       const f = fitCanvas(cv);
+      if (f.w < 8 || f.h < 8) return;
       p.draw(f.g, f.w, f.h, controls.values);
       if (axesEl) axesEl.textContent = axesCaption(p, controls.values);
     });
@@ -222,7 +223,7 @@ export function mountFigure(host: HTMLElement, def: FigureDef, panels0: FigurePa
 
   function redraw() {
     redrawers.forEach((f) => f());
-    slotCanvases.forEach((cv, i) => { const p = byId(openIds[i]); const f = fitCanvas(cv); p.draw(f.g, f.w, f.h, controls.values); });
+    slotCanvases.forEach((cv, i) => { const p = byId(openIds[i]); const f = fitCanvas(cv); if (f.w >= 8 && f.h >= 8) p.draw(f.g, f.w, f.h, controls.values); });
   }
   controls.onChange(() => redraw());
   const ro = new ResizeObserver(() => redraw());

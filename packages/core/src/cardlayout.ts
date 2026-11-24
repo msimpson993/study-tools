@@ -34,6 +34,8 @@ interface Mount {
   stop: () => void;
   host: HTMLElement;
   controls: ControlSet;
+  /** serialized state to apply after the tile frame exists, so the first remount draw is sized */
+  pendingRestore?: string;
 }
 
 /** Nodes of section (c), from its h2 up to (not including) the next h2. */
@@ -339,7 +341,10 @@ export function applyCardLayout(art: HTMLElement, content: AppContent, hooks: Fi
     const figOpts: FigureMountOpts = { flatControls: true, panels: fig.panels };
     const stop = mounter(host, { ...def, lookFor: undefined }, controls, figOpts);
     const saved = savedState.get(host.dataset.stateKey || '');
-    if (saved) controls.restore(saved);
+    // Restore after paintThumbs wraps the canvas in a tile-frame. Doing it here
+    // (restore → emit → redraw) used to draw the s-plane into a 0×0 / 40 px
+    // canvas with full-size header bands, sending the grid scale through zero
+    // and freezing the Disk tab on remount.
     const syncPreset = () => {
       host.dataset.preset = controls.active ?? '';
       const card = host.closest('.step-card') as HTMLElement | null;
@@ -353,7 +358,7 @@ export function applyCardLayout(art: HTMLElement, content: AppContent, hooks: Fi
       const card = host.closest('.step-card') as HTMLElement | null;
       if (card) paintThumbs(card);
     });
-    return { stop: typeof stop === 'function' ? stop : () => {}, host, controls };
+    return { stop: typeof stop === 'function' ? stop : () => {}, host, controls, pendingRestore: saved || undefined };
   };
 
   const placeControls = (step: Step, card: HTMLElement) => {
@@ -401,7 +406,7 @@ export function applyCardLayout(art: HTMLElement, content: AppContent, hooks: Fi
   const shortTitle = (figure: string, panel: string, fallback: string) => {
     if (panel === 'mag') return figure === 'sens' ? '|S|' : '|G|';
     const map: Record<string, string> = {
-      step: 'Step', bode: 'Bode', speed: 'Speed', throttle: 'Throttle',
+      step: 'Step', bode: 'Bode', speed: 'Speed step', throttle: 'Throttle',
       plot: 'Speed change', seek: 'Seek', shock: 'Shock', splane: 's-plane',
       phase: 'Phase', path: 'Path', curve: 'Tradeoff', push: 'Push',
       diagram: 'Diagram', scene: 'Scene', code: 'Script', diag: 'Block', frac: 'Fraction',
@@ -541,6 +546,9 @@ export function applyCardLayout(art: HTMLElement, content: AppContent, hooks: Fi
     placeControls(step, card);
     paintHow(card, step.figs);
     requestAnimationFrame(() => paintThumbs(card));
+    for (const m of mounts) {
+      if (m.pendingRestore) { m.controls.restore(m.pendingRestore); m.pendingRestore = undefined; }
+    }
     unwirePics.get(step)?.();
     unwirePics.set(step, wirePics(card));
     paintMorePlots(card);

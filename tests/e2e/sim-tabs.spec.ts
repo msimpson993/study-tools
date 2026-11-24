@@ -734,4 +734,42 @@ test.describe('sim-project tabbed page', () => {
     await expect(btn).toHaveText(/disk head, Ka = 80/);
   });
 
+  test('Disk cards stay responsive after remount, and the Controls sheet still opens', async ({ page }) => {
+    test.setTimeout(60_000);
+    const ping = async () => {
+      const t0 = Date.now();
+      const v = await page.evaluate(() => 1 + 1);
+      expect(v, 'page should still run script after a Disk remount').toBe(2);
+      expect(Date.now() - t0, 'page should answer a ping quickly after a Disk remount').toBeLessThan(1500);
+    };
+    const go = async (step: string) => {
+      const card = page.locator(`[data-testid=step-card][data-step="${step}"]`);
+      await card.evaluate((el) => el.scrollIntoView({ block: 'start' }));
+      await expect.poll(async () => card.locator('canvas[data-fig]').count(), { timeout: 8000 }).toBeGreaterThan(0);
+    };
+    const toTop = async () => { await page.evaluate(() => window.scrollTo(0, 0)); await page.waitForTimeout(200); };
+
+    await page.setViewportSize({ width: 1280, height: 900 });
+    await open(page, 'sim-project', '#/tab/disk');
+    for (const s of ['1', '2', '3', '4', '5', '1', '2', '3']) await go(s);
+    await ping();
+    for (const s of ['2', '3', '4']) {
+      await go(s);
+      await toTop();
+      await go(s);
+      await ping();
+    }
+
+    await page.setViewportSize({ width: 390, height: 844 });
+    await open(page, 'sim-project', '#/tab/disk');
+    for (const s of ['1', '2', '3', '4', '5', '1', '3']) await go(s);
+    await ping();
+    const card = page.locator('[data-testid=step-card][data-step="3"]');
+    await card.getByTestId('step-controls-open').click();
+    const sheet = page.getByTestId('step-controls-sheet').first();
+    await expect(sheet, 'Disk Controls sheet should open after a remount').toBeVisible();
+    await expect(sheet.locator('.st-ctl')).toBeVisible();
+    await expect(sheet).toContainText(/Ka/i);
+  });
+
 });

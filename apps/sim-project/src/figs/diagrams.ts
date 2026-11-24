@@ -268,6 +268,19 @@ export function drawLabDiagram(g: CanvasRenderingContext2D, w: number, h: number
   const L = (symbol: string, value: string, plain: string, tip: string): string | LabCaption =>
     opts.words ? { symbol, value, plain, tip } : symbol;
 
+  const placeSpeedRef = (s1: { x: number; y: number }, pi: { l: number; t: number }, size: number) => {
+    g.font = `${size}px system-ui, sans-serif`;
+    const lab = 'Speed Ref', tw = g.measureText(lab).width;
+    let x = s1.x, y = s1.y - r - 8, align: CanvasTextAlign = 'center';
+    if (x + tw / 2 > pi.l - 3) {
+      x = Math.max(tw + 2, Math.min(s1.x - r - 4, pi.l - 4));
+      align = 'right';
+      y = Math.min(y, pi.t - 8);
+    }
+    if (y < size * 0.8) y = size * 0.8;
+    text(g, lab, x, y, col.text(), align, size);
+  };
+
   const CAPTION: Record<string, string> = {
     'motor-open': 'drag felt by the load: b + Km·Kb/Ra = 1.5 N·m·s',
     'motor-closed': 'sag and time constant ÷ (1 + loop gain) = ÷ 361',
@@ -413,8 +426,8 @@ export function drawLabDiagram(g: CanvasRenderingContext2D, w: number, h: number
       // leave a right margin for Tload, N, and the rpm label
       const plantX = 18, plantW = 52;
       const s1 = { x: X(14), y: Y(7.5) };
-      text(g, 'Speed Ref', s1.x, s1.y - r - 8, col.text(), 'center', typeSize);
       const pi = boxAt('PI', 22, 7.5 - boxH / 2, 58, boxH, L('PI', 'P + I', 'error now + so far', 'in: speed error. out: throttle command. what it does: P and I make a throttle from the error now and the error so far'));
+      placeSpeedRef(s1, pi, typeSize);
       const th = boxAt('throttle', plantX, 22.5 - boxH / 2, plantW, boxH, L('Throttle & Manifold', 'nonlinear', 'throttle → air', 'in: throttle command and engine speed N. out: air charge. what it does: throttle angle and speed to air charge'));
       const del = boxAt('delay', plantX, 37.5 - boxH / 2, plantW, boxH, L('Induction delay', 'e^{−0.015s}', 'air arrives late', 'in: air charge. out: delayed air charge. what it does: air takes time to reach the cylinders'));
       const comb = boxAt('combustion', plantX, 52.5 - boxH / 2, plantW, boxH, L('Combustion', 'nonlinear', 'air → torque', 'in: delayed air charge and engine speed N. out: combustion torque. what it does: air charge to torque'));
@@ -459,8 +472,8 @@ export function drawLabDiagram(g: CanvasRenderingContext2D, w: number, h: number
       const r1 = 40;
       const boxH = 26;
       const s1 = { x: X(7), y: Y(r1) };
-      text(g, 'Speed Ref', Math.max(4, s1.x - r - 8), s1.y - 4, col.text(), 'right', 10);
       const pi = boxAt('PI', 11, r1 - boxH / 2, 13, boxH, L('PI', 'P + I', 'error now + so far', 'in: speed error. out: throttle command. what it does: P and I make a throttle from the error now and the error so far'));
+      placeSpeedRef(s1, pi, typeSize);
       const th = boxAt('throttle', 26, r1 - boxH / 2, 16, boxH, L('Throttle & Manifold', 'nonlinear', 'throttle → air', 'in: throttle command and engine speed N. out: air charge. what it does: throttle angle and speed to air charge'));
       const del = boxAt('delay', 44, r1 - boxH / 2, 14, boxH, L('Induction delay', 'e^{−0.015s}', 'air arrives late', 'in: air charge. out: delayed air charge. what it does: air takes time to reach the cylinders'));
       const comb = boxAt('combustion', 60, r1 - boxH / 2, 13, boxH, L('Combustion', 'nonlinear', 'air → torque', 'in: delayed air charge and engine speed N. out: combustion torque. what it does: air charge to torque'));

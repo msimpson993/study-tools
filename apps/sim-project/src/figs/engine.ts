@@ -1,5 +1,5 @@
 /** Figures `pi` and `tuner`: stand-in engine, P/I split, emulated PID Tuner. */
-import { figureOf, drawStepResponse, col, text, wipe, rangeFrame, graphAxes, curve, tline, type FigurePanel } from '@study/core';
+import { figureOf, drawStepResponse, col, text, wipe, rangeFrame, graphAxes, curve, tline, withPersistentLabels, isTileCanvas, type FigurePanel } from '@study/core';
 import { ENGINE, DESIGNS, type DesignName } from '../model/params';
 import { engineMargins, enginePError, engineStep, simEngine, tuner, metrics, engineLoopJw, firstCrossing } from '../model/plants';
 import { f, lin, num, on, str, fmtPow10, drawKeyValueTable, isThumb, type V } from './util';
@@ -43,8 +43,12 @@ export const piPanels = (): FigurePanel[] => [
       graphAxes(g, fr, [0, 8], yr, 'time (s)', 'throttle');
       curve(g, fr, r.t, pPart, col.e(), 2);
       curve(g, fr, r.t, iPart, col.c(), 2);
-      text(g, 'P·e', fr.box.l + 8, fr.box.t + 12, col.e(), 'left', 10);
-      text(g, 'I·∫e', fr.box.l + 8, fr.box.t + 26, col.c(), 'left', 10);
+      const tile = isTileCanvas(g) ? ((g.canvas.closest('.tile-frame') as HTMLElement | null) ?? g.canvas).getBoundingClientRect() : null;
+      const keyFits = !isThumb(g) || ((tile?.height ?? 0) >= 130 && (tile?.width ?? 0) >= 120);
+      if (keyFits) withPersistentLabels(() => {
+        text(g, 'P·e', fr.box.l + 8, fr.box.t + 12, col.e(), 'left', 10);
+        text(g, 'I·∫e', fr.box.l + 8, fr.box.t + 26, col.c(), 'left', 10);
+      });
     },
   },
 ];

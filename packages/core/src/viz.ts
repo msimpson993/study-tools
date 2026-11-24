@@ -26,8 +26,8 @@ export const col = {
 
 /** Equal-aspect frame (a unit step is the same length in x and y) centred on (cx, cy) showing at least ±r in both directions. */
 export function planeFrame(w: number, h: number, r = 3, cx = 0, cy = 0, pad = 8, equal = true): Frame {
-  const l = pad, t = pad, rr = w - pad, b = h - pad;
-  const bw = rr - l, bh = b - t;
+  const l = pad, t = pad, rr = Math.max(l + 1, w - pad), b = Math.max(t + 1, h - pad);
+  const bw = Math.max(1, rr - l), bh = Math.max(1, b - t);
   const s = equal ? Math.min(bw, bh) / (2 * r) : 0;
   const sx = equal ? s : bw / (2 * r), sy = equal ? s : bh / (2 * r);
   const mx = l + bw / 2, my = t + bh / 2;
@@ -35,8 +35,10 @@ export function planeFrame(w: number, h: number, r = 3, cx = 0, cy = 0, pad = 8,
 }
 /** Free frame with independent x/y ranges (used for ordinary graphs inside a figure). */
 export function rangeFrame(w: number, h: number, xr: V2, yr: V2, L = 40, R = 10, T = 8, B = 28): Frame {
-  const sx = (w - L - R) / (xr[1] - xr[0]), sy = (h - T - B) / (yr[1] - yr[0]);
-  return { w, h, sx, sy, box: { l: L, t: T, r: w - R, b: h - B }, X: (x) => L + (x - xr[0]) * sx, Y: (y) => h - B - (y - yr[0]) * sy, ix: (px) => xr[0] + (px - L) / sx, iy: (py) => yr[0] + (h - B - py) / sy };
+  const bw = Math.max(1, w - L - R), bh = Math.max(1, h - T - B);
+  const dx = (xr[1] - xr[0]) || 1, dy = (yr[1] - yr[0]) || 1;
+  const sx = bw / dx, sy = bh / dy;
+  return { w, h, sx, sy, box: { l: L, t: T, r: L + bw, b: T + bh }, X: (x) => L + (x - xr[0]) * sx, Y: (y) => T + bh - (y - yr[0]) * sy, ix: (px) => xr[0] + (px - L) / sx, iy: (py) => yr[0] + (T + bh - py) / sy };
 }
 
 export function wipe(g: CanvasRenderingContext2D, w: number, h: number) { g.setLineDash([]); g.clearRect(0, 0, w, h); resetLabels(g.canvas); }
@@ -67,17 +69,48 @@ export function fitText(g: CanvasRenderingContext2D, s: string, x: number, align
   [a0, a1] = span(w, x);
   return { size: z, x, lines, x0: a0, x1: a1 };
 }
-/** True when this canvas is a compact tile, not the expanded overlay or a full-size fig box. */
-export function isThumb(g: CanvasRenderingContext2D): boolean {
+/** The canvas is a compact tile, not the expanded overlay or a full-size fig box. */
+export function isTileCanvas(g: CanvasRenderingContext2D): boolean {
   const cv = g.canvas as HTMLCanvasElement | undefined;
   return !!cv && typeof cv.closest === 'function' && !!cv.closest('.tile-frame') && !cv.closest('.fig-overlay, .fig-box');
+}
+const TILE_MIN_W = 220, TILE_MIN_H = 150;
+/** Phone portrait (the 2-across tile layout), not short landscape. */
+export function isPortraitPhone(): boolean {
+  return typeof window !== 'undefined' && typeof window.matchMedia === 'function'
+    && window.matchMedia('(max-width: 699.98px)').matches;
+}
+/** Hide crowded notes and axis titles: phone portrait, or a tile too small to fit them. Desktop / tablet 40/60 tiles keep them. */
+export function isThumb(g: CanvasRenderingContext2D): boolean {
+  if (!isTileCanvas(g)) return false;
+  if (isPortraitPhone()) return true;
+  const box = (g.canvas.closest('.tile-frame') as HTMLElement | null) ?? g.canvas;
+  const r = box.getBoundingClientRect();
+  return r.width < TILE_MIN_W || r.height < TILE_MIN_H;
+}
+let persistLabels = 0;
+/** Draw labels even on a compact tile (short keys that still fit). */
+export function withPersistentLabels<T>(fn: () => T): T {
+  persistLabels++;
+  try { return fn(); } finally { persistLabels--; }
+}
+/** A usable, finite, strictly positive increment for a tick / grid loop. */
+export function goodStep(step: number): boolean {
+  return Number.isFinite(step) && step > 0;
+}
+/** Walk ticks from lo to hi; no-ops when the step is not a finite positive number (avoids a hung page). */
+export function forTicks(lo: number, hi: number, step: number, fn: (v: number) => void): void {
+  if (!Number.isFinite(lo) || !Number.isFinite(hi) || !goodStep(step) || hi < lo) return;
+  const n = Math.floor((hi - lo) / step);
+  if (!Number.isFinite(n) || n > 10_000) return;
+  for (let x = lo, i = 0; x <= hi + 1e-9 && i <= n + 2; x += step, i++) fn(x);
 }
 export function text(g: CanvasRenderingContext2D, s: string, x: number, y: number, color = col.text(), align: CanvasTextAlign = 'left', size = 11, base: CanvasTextBaseline = 'middle') {
   const f = fitText(g, s, x, align, size);
   // keep clear of the labels already drawn on this canvas (see labels.ts): ticks give way, notes slide by whole lines, axis names stay
   const m = typeof g.getTransform === 'function' ? g.getTransform() : null, cv = g.canvas as HTMLCanvasElement | undefined, role = labelRole();
-  // compact tiles: drop crowded notes and axis titles; keep ticks and the UNSTABLE banner
-  if (isThumb(g) && (role === 'note' || role === 'axis') && !/UNSTABLE/i.test(s)) { logText(g, s, f, size, x, null, 0, true); return; }
+  // compact / too-small tiles: drop crowded notes and axis titles; keep ticks, UNSTABLE, and persistent keys
+  if (isThumb(g) && !persistLabels && (role === 'note' || role === 'axis') && !/UNSTABLE/i.test(s)) { logText(g, s, f, size, x, null, 0, true); return; }
   let rect: LabelRect | null = null, dy = 0, dx = 0;
   if (m && cv && Math.abs(m.b) < 1e-9 && Math.abs(m.c) < 1e-9 && m.d > 0) {
     const n = f.lines.length, z = f.size, ext = base === 'top' || base === 'hanging' ? [0, 1.1] : base === 'middle' ? [-0.55, 0.55] : [-0.9, 0.25];
@@ -161,14 +194,14 @@ export function planeTicks(g: CanvasRenderingContext2D, f: Frame, step: number, 
   const x0 = f.ix(f.box.l), x1 = f.ix(f.box.r), y0 = f.iy(f.box.b), y1 = f.iy(f.box.t), lab = (v: number) => String(+v.toFixed(3)).replace('-', '−');
   const ax = Math.min(Math.max(f.Y(0), f.box.t), f.box.b), ay = Math.min(Math.max(f.X(0), f.box.l), f.box.r);
   g.save(); g.strokeStyle = col.strong(); g.lineWidth = 1; g.setLineDash([]);
-  for (let x = Math.ceil(x0 / step) * step; x <= x1 + 1e-9; x += step) {
+  forTicks(Math.ceil(x0 / step) * step, x1, step, (x) => {
     const px = f.X(x); g.beginPath(); g.moveTo(px, ax - 3); g.lineTo(px, ax + 3); g.stroke();
     if (Math.abs(x) > 1e-9) withLabelRole('tick', () => text(g, lab(x), px, f.box.b - 7, col.muted(), 'center', 10));
-  }
-  for (let y = Math.ceil(y0 / ystep) * ystep; y <= y1 + 1e-9; y += ystep) {
+  });
+  forTicks(Math.ceil(y0 / ystep) * ystep, y1, ystep, (y) => {
     const py = f.Y(y); g.beginPath(); g.moveTo(ay - 3, py); g.lineTo(ay + 3, py); g.stroke();
     if (Math.abs(y) > 1e-9) withLabelRole('tick', () => text(g, lab(y), f.box.l + 3, py, col.muted(), 'left', 10));
-  }
+  });
   g.restore();
 }
 /** The integer grid pushed through M (a plane transformation): the 3Blue1Brown picture of a matrix. */
@@ -203,24 +236,40 @@ export function tickLabel(v: number, step: number): string {
   return String(+v.toFixed(dec)).replace('-', '−');
 }
 export function graphAxes(g: CanvasRenderingContext2D, f: Frame, xr: V2, yr: V2, xLabel: string, yLabel: string, xs = 0, ys = 0, xfmt?: (x: number) => string, yfmt?: (y: number) => string) {
-  const nice = (span: number, n: number) => { const raw = span / n, p = Math.pow(10, Math.floor(Math.log10(raw))), m = raw / p; return (m < 1.5 ? 1 : m < 3.5 ? 2 : m < 7.5 ? 5 : 10) * p; };
-  const sx = xs || nice(xr[1] - xr[0], 6), sy = ys || nice(yr[1] - yr[0], 4);
+  const nice = (span: number, n: number) => {
+    if (!(span > 0) || !(n > 0)) return span > 0 ? span : 1;
+    const raw = span / n, p = Math.pow(10, Math.floor(Math.log10(raw))), m = raw / p;
+    return (m < 1.5 ? 1 : m < 3.5 ? 2 : m < 7.5 ? 5 : 10) * p;
+  };
+  const fitStep = (span: number, px: number, start: number, minPx: number) => {
+    let st = start;
+    if (!goodStep(st) || !(span > 0) || !(px > 0)) return goodStep(st) ? st : (span > 0 ? span : 1);
+    let guard = 0;
+    while ((st / span) * px < minPx && st < span && guard++ < 24) {
+      const nxt = nice(st * 2.01, 1);
+      if (!goodStep(nxt) || nxt <= st) break;
+      st = nxt;
+    }
+    return st;
+  };
+  const sx = fitStep(xr[1] - xr[0], f.box.r - f.box.l, xs || nice(xr[1] - xr[0], 6), 28);
+  const sy = fitStep(yr[1] - yr[0], f.box.b - f.box.t, ys || nice(yr[1] - yr[0], 4), 22);
   g.lineWidth = 1; g.setLineDash([]);
   // the axis names first, so tick numbers that would sit on them give way
   withLabelRole('axis', () => { text(g, xLabel, (f.box.l + f.box.r) / 2, f.h - 5, col.text(), 'center', 11); g.save(); g.translate(10, (f.box.t + f.box.b) / 2); g.rotate(-Math.PI / 2); text(g, yLabel, 0, 0, col.text(), 'center', 11); g.restore(); });
   withLabelRole('tick', () => {
-    let lastX = '';
-    for (let x = Math.ceil(xr[0] / sx) * sx; x <= xr[1] + 1e-9; x += sx) {
+    let lastX = '', lastPx = -Infinity;
+    forTicks(Math.ceil(xr[0] / sx) * sx, xr[1], sx, (x) => {
       g.strokeStyle = col.grid(); g.beginPath(); g.moveTo(f.X(x), f.box.t); g.lineTo(f.X(x), f.box.b); g.stroke();
-      const lab = xfmt ? xfmt(x) : tickLabel(x, sx);
-      if (lab && lab !== lastX) { text(g, lab, f.X(x), f.box.b + 9, col.muted(), 'center', 10); lastX = lab; }
-    }
-    let lastY = '';
-    for (let y = Math.ceil(yr[0] / sy) * sy; y <= yr[1] + 1e-9; y += sy) {
+      const lab = xfmt ? xfmt(x) : tickLabel(x, sx), px = f.X(x);
+      if (lab && lab !== lastX && Math.abs(px - lastPx) >= 26) { text(g, lab, px, f.box.b + 9, col.muted(), 'center', 10); lastX = lab; lastPx = px; }
+    });
+    let lastY = '', lastPy = Infinity;
+    forTicks(Math.ceil(yr[0] / sy) * sy, yr[1], sy, (y) => {
       g.strokeStyle = col.grid(); g.beginPath(); g.moveTo(f.box.l, f.Y(y)); g.lineTo(f.box.r, f.Y(y)); g.stroke();
-      const lab = yfmt ? yfmt(y) : tickLabel(y, sy);
-      if (lab && lab !== lastY) { text(g, lab, f.box.l - 4, f.Y(y), col.muted(), 'right', 10); lastY = lab; }
-    }
+      const lab = yfmt ? yfmt(y) : tickLabel(y, sy), py = f.Y(y);
+      if (lab && lab !== lastY && Math.abs(py - lastPy) >= 16) { text(g, lab, f.box.l - 4, py, col.muted(), 'right', 10); lastY = lab; lastPy = py; }
+    });
   });
   g.strokeStyle = col.strong();
   if (yr[0] < 0 && yr[1] > 0) { g.beginPath(); g.moveTo(f.box.l, f.Y(0)); g.lineTo(f.box.r, f.Y(0)); g.stroke(); }

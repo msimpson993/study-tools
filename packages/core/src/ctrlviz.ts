@@ -1,7 +1,7 @@
 import { C, cabs, type Cx } from './dsp/complex';
 import { type TF, type StepMetrics, type Margins, type Bode, bode, margins, stepMetrics, tfEval, logspace, tfPoles, tfZeros, freqresp } from './dsp/tf';
 import { type RLocus, rlocusPolesAt, rlocusNearest } from './dsp/rlocus';
-import { col, planeFrame, rangeFrame, wipe, text, tline, polyline, dot, cross, graphAxes, curve, clipBox, heat, axes2, tickLabel, isThumb, type Frame, type V2 } from './viz';
+import { col, planeFrame, rangeFrame, wipe, text, tline, polyline, dot, cross, graphAxes, curve, clipBox, heat, axes2, tickLabel, isThumb, forTicks, goodStep, type Frame, type V2 } from './viz';
 import { withLabelRole, labelsOn } from './labels';
 import type { PanelPointer } from './figure';
 
@@ -22,7 +22,11 @@ import type { PanelPointer } from './figure';
 export const BRANCH_COLORS = (): string[] => [col.a(), col.b(), col.c(), col.d(), col.e(), '#ff7eb9', col.accent(), col.muted()];
 const fmtN = (v: number, d = 2) => (Number.isFinite(v) ? String(+v.toFixed(d)).replace('-', '−') : '—');
 const fmtC = (z: Cx) => (Math.abs(z.im) < 1e-9 ? fmtN(z.re) : `${fmtN(z.re)}${z.im < 0 ? '−' : '+'}j${fmtN(Math.abs(z.im))}`);
-const niceStep = (span: number, n: number) => { const raw = span / n, p = Math.pow(10, Math.floor(Math.log10(raw))), m = raw / p; return (m < 1.5 ? 1 : m < 3.5 ? 2 : m < 7.5 ? 5 : 10) * p; };
+const niceStep = (span: number, n: number) => {
+  if (!(span > 0) || !(n > 0)) return span > 0 ? span : 1;
+  const raw = span / n, p = Math.pow(10, Math.floor(Math.log10(raw))), m = raw / p;
+  return (m < 1.5 ? 1 : m < 3.5 ? 2 : m < 7.5 ? 5 : 10) * p;
+};
 
 /* ═════════════════════════════ step response ═════════════════════════════ */
 export interface StepViewSpec {
@@ -122,20 +126,40 @@ export interface SPlaneSpec {
 export const splaneFrame = (w: number, h: number, range: number, reCenter = -0.3 * range, pad = 6): Frame => planeFrame(w, h, range, reCenter, 0, pad);
 
 export function drawSPlane(g: CanvasRenderingContext2D, w: number, h: number, s: SPlaneSpec): Frame {
+  const f0 = splaneFrame(Math.max(w, 1), Math.max(h, 1), Math.max(s.range, 1e-6), s.reCenter, s.pad);
+  if (!(w > 0) || !(h > 0) || !Number.isFinite(s.range) || s.range <= 0) { wipe(g, Math.max(w, 0), Math.max(h, 0)); return f0; }
   wipe(g, w, h);
-  const f = splaneFrame(w, h, s.range, s.reCenter, s.pad), R = Math.hypot(w, h) / Math.min(f.sx, f.sy);
+  const f = splaneFrame(w, h, s.range, s.reCenter, s.pad), R = Math.hypot(w, h) / Math.max(Math.min(f.sx, f.sy), 1e-9);
   const x0 = f.X(0), y0 = f.Y(0);
   if (s.shadeUnstable !== false) { g.save(); clipBox(g, f); g.fillStyle = col.bad(); g.globalAlpha = 0.07; g.fillRect(Math.max(x0, f.box.l), f.box.t, f.box.r - Math.max(x0, f.box.l), f.box.b - f.box.t); g.restore(); }
   // the axis names first, so the grid numbers and notes keep clear of them
   axes2(g, f, s.xLabel ?? 'σ (1/s)', s.yLabel ?? 'jω (rad/s)');
   // grid: at least ~26 px between numbers, so a narrow panel shows fewer of them instead of a smear
-  let st = niceStep(2 * s.range, 6); while (st * f.sx < 26) st = niceStep(st * 2.01, 1);
+  let st = niceStep(2 * s.range, 6);
+  if (goodStep(f.sx) && goodStep(st)) {
+    let guard = 0;
+    while (st * f.sx < 26 && guard++ < 40) {
+      const nxt = niceStep(st * 2.01, 1);
+      if (!goodStep(nxt) || nxt <= st) break;
+      st = nxt;
+    }
+  } else {
+    st = s.range;
+  }
   g.save(); clipBox(g, f); g.strokeStyle = col.grid(); g.lineWidth = 1;
   withLabelRole('tick', () => {
-    let lastX = '';
-    for (let x = Math.ceil(f.ix(f.box.l) / st) * st; x <= f.ix(f.box.r); x += st) { g.beginPath(); g.moveTo(f.X(x), f.box.t); g.lineTo(f.X(x), f.box.b); g.stroke(); const lab = tickLabel(x, st); if (lab && lab !== lastX && f.X(x) + 2 + 5.6 * lab.length <= f.box.r) { text(g, lab, f.X(x) + 2, f.box.b - 6, col.muted(), 'left', 9); lastX = lab; } }
-    let lastY = '';
-    for (let y = Math.ceil(f.iy(f.box.b) / st) * st; y <= f.iy(f.box.t); y += st) { g.beginPath(); g.moveTo(f.box.l, f.Y(y)); g.lineTo(f.box.r, f.Y(y)); g.stroke(); const lab = tickLabel(y, st); if (lab && lab !== '0' && lab !== lastY) { text(g, lab, f.box.l + 3, f.Y(y) - 6, col.muted(), 'left', 9); lastY = lab; } }
+    let lastX = '', lastPx = -Infinity;
+    forTicks(Math.ceil(f.ix(f.box.l) / st) * st, f.ix(f.box.r), st, (x) => {
+      g.beginPath(); g.moveTo(f.X(x), f.box.t); g.lineTo(f.X(x), f.box.b); g.stroke();
+      const lab = tickLabel(x, st), px = f.X(x);
+      if (lab && lab !== lastX && px + 2 + 5.6 * lab.length <= f.box.r && Math.abs(px - lastPx) >= 26) { text(g, lab, px + 2, f.box.b - 6, col.muted(), 'left', 9); lastX = lab; lastPx = px; }
+    });
+    let lastY = '', lastPy = Infinity;
+    forTicks(Math.ceil(f.iy(f.box.b) / st) * st, f.iy(f.box.t), st, (y) => {
+      g.beginPath(); g.moveTo(f.box.l, f.Y(y)); g.lineTo(f.box.r, f.Y(y)); g.stroke();
+      const lab = tickLabel(y, st), py = f.Y(y);
+      if (lab && lab !== '0' && lab !== lastY && Math.abs(py - lastPy) >= 16) { text(g, lab, f.box.l + 3, py - 6, col.muted(), 'left', 9); lastY = lab; lastPy = py; }
+    });
   });
   g.restore();
   // one row below the jω axis name, so the two never touch on a narrow panel (pass 3)
@@ -323,8 +347,8 @@ export function drawBode(g: CanvasRenderingContext2D, w: number, h: number, s: B
   const fm = rangeFrame(w, hTop, [lo, hi], mr, 46, 12, 8, 6), fp = rangeFrame(w, hBot, [lo, hi], pr, 46, 12, 6, 38);
   const decade = (f: Frame, yr: V2, ystep: number, ylab: string, bottom: boolean) => {
     g.lineWidth = 1; g.setLineDash([]);
-    for (let d = Math.ceil(lo); d <= hi; d++) { g.strokeStyle = col.grid(); g.beginPath(); g.moveTo(f.X(d), f.box.t); g.lineTo(f.X(d), f.box.b); g.stroke(); if (bottom) withLabelRole('tick', () => text(g, d === 0 ? '1' : d === 1 ? '10' : d === -1 ? '0.1' : `10^${d}`, f.X(d), f.box.b + 10, col.muted(), 'center', 10)); }
-    for (let y = Math.ceil(yr[0] / ystep) * ystep; y <= yr[1]; y += ystep) { g.strokeStyle = col.grid(); g.beginPath(); g.moveTo(f.box.l, f.Y(y)); g.lineTo(f.box.r, f.Y(y)); g.stroke(); withLabelRole('tick', () => text(g, String(y), f.box.l - 4, f.Y(y), col.muted(), 'right', 10)); }
+    forTicks(Math.ceil(lo), hi, 1, (d) => { g.strokeStyle = col.grid(); g.beginPath(); g.moveTo(f.X(d), f.box.t); g.lineTo(f.X(d), f.box.b); g.stroke(); if (bottom) withLabelRole('tick', () => text(g, d === 0 ? '1' : d === 1 ? '10' : d === -1 ? '0.1' : `10^${d}`, f.X(d), f.box.b + 10, col.muted(), 'center', 10)); });
+    forTicks(Math.ceil(yr[0] / ystep) * ystep, yr[1], ystep, (y) => { g.strokeStyle = col.grid(); g.beginPath(); g.moveTo(f.box.l, f.Y(y)); g.lineTo(f.box.r, f.Y(y)); g.stroke(); withLabelRole('tick', () => text(g, String(y), f.box.l - 4, f.Y(y), col.muted(), 'right', 10)); });
     g.save(); g.translate(10, (f.box.t + f.box.b) / 2); g.rotate(-Math.PI / 2); text(g, ylab, 0, 0, col.text(), 'center', 11); g.restore();
   };
   const top = (fn: () => void) => { g.save(); fn(); g.restore(); };
