@@ -144,6 +144,14 @@ export function drawStepResponse(g: CanvasRenderingContext2D, w: number, h: numb
   const lbl = (str: string, px: number, py: number, color: string, align: CanvasTextAlign = 'left', z = 10.5) => text(g, str, px, py, color, align, z);
   let ghostBox: { x0: number; x1: number; y0: number; y1: number } | null = null;
   let dropGhost = false;
+  if (s.ghost?.label) {
+    g.font = '10px system-ui,sans-serif';
+    const gw = g.measureText(`┄ ${s.ghost.label}`).width, gy = Math.max(8, f.box.t - 10);
+    const left = { x0: f.box.l + 4, x1: f.box.l + 4 + gw, y0: gy - 6, y1: gy + 6 };
+    const right = { x0: f.box.r - 4 - gw, x1: f.box.r - 4, y0: gy - 6, y1: gy + 6 };
+    const px = (show.overshoot && Number.isFinite(m.peak) && m.overshootPct > 0.05) ? f.X(m.peakTime) : (f.box.l + f.box.r) / 2;
+    ghostBox = Math.abs((right.x0 + right.x1) / 2 - px) >= Math.abs((left.x0 + left.x1) / 2 - px) ? right : left;
+  }
   const ghostWouldHit = (a: number, b2: number, c: number, d: number) => !!(ghostBox && b2 > ghostBox.x0 - 4 && a < ghostBox.x1 + 4 && d > ghostBox.y0 - 4 && c < ghostBox.y1 + 4);
   if (show.timing && Number.isFinite(m.riseTime)) {
     const y10 = yf * 0.1, y90 = yf * 0.9;
@@ -255,10 +263,10 @@ export function drawStepResponse(g: CanvasRenderingContext2D, w: number, h: numb
     const gl = s.ghost, gLab = `┄ ${gl.label}`;
     g.font = '10px system-ui,sans-serif';
     const gw = g.measureText(gLab).width;
-    const spots = [
-      { x: f.box.l + 4, y: Math.max(8, f.box.t - 10), align: 'left' as CanvasTextAlign },
-      { x: f.box.r - 4, y: Math.max(8, f.box.t - 10), align: 'right' as CanvasTextAlign },
-    ];
+    const leftSp = { x: f.box.l + 4, y: Math.max(8, f.box.t - 10), align: 'left' as CanvasTextAlign };
+    const rightSp = { x: f.box.r - 4, y: Math.max(8, f.box.t - 10), align: 'right' as CanvasTextAlign };
+    const px = (show.overshoot && Number.isFinite(m.peak) && m.overshootPct > 0.05) ? f.X(m.peakTime) : (f.box.l + f.box.r) / 2;
+    const spots = Math.abs(rightSp.x - px) >= Math.abs(leftSp.x - px) ? [rightSp, leftSp] : [leftSp, rightSp];
     let placed = false;
     for (const sp of spots) {
       const a = sp.align === 'right' ? sp.x - gw : sp.x, b2 = a + gw, c = sp.y - 6, d = sp.y + 6;
