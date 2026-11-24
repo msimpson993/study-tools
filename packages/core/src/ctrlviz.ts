@@ -165,6 +165,8 @@ export function drawStepResponse(g: CanvasRenderingContext2D, w: number, h: numb
     for (const z of [10.5, 10, MIN_FONT]) {
       g.font = `${z}px system-ui,sans-serif`;
       const tw = g.measureText(trLab).width, th = z + 3;
+      const padYOf = (c: TextBox) => Math.abs(((c.c + c.d) / 2) - barY) <= 24 ? 12 : 0;
+      const hitsOriginTick = (c: TextBox) => c.a < f.box.l + 18 && c.d > f.box.b - 6;
       const spots: TextBox[] = [
         textBox(midX, barY - 10, tw, th, 'center', z),
         textBox(midX, barY + 10, tw, th, 'center', z),
@@ -172,27 +174,39 @@ export function drawStepResponse(g: CanvasRenderingContext2D, w: number, h: numb
         textBox(x1Bar + 6, barY, tw, th, 'left', z),
         textBox(midX, barY - 18, tw, th, 'center', z),
         textBox(midX, Math.min(f.box.b + 8, barY + 18), tw, th, 'center', z),
+        textBox(midX - tw * 0.6, barY + 10, tw, th, 'center', z),
+        textBox(midX + tw * 0.6, barY + 10, tw, th, 'center', z),
+        textBox(midX - tw * 0.6, barY - 10, tw, th, 'center', z),
+        textBox(midX + tw * 0.6, barY - 10, tw, th, 'center', z),
       ];
       for (const c of spots) {
-        const padY = Math.abs(((c.c + c.d) / 2) - barY) <= 24 ? 12 : 0;
-        if (!inPlot(c.a, c.b2, c.c, c.d, padY)) continue;
+        if (!inPlot(c.a, c.b2, c.c, c.d, padYOf(c))) continue;
         if (c.c < yRef + 6 && c.d > yRef - 6) continue;
         if (hitsCurve(c.a, c.b2, c.c, c.d)) continue;
         if (hitsOtherVert(c.a, c.b2, c.c, c.d, [x0Bar, x1Bar])) continue;
+        if (hitsOriginTick(c)) continue;
         trPick = c; break;
       }
       if (trPick) break;
     }
+    if (!trPick) {
+      // required Tr stays by the bar, shifted off other verticals and the origin tick
+      g.font = `${MIN_FONT}px system-ui,sans-serif`;
+      const tw = g.measureText(trLab).width, th = MIN_FONT + 3;
+      const ys = [Math.min(f.box.b + 8, barY + 16), barY + 10, barY - 10];
+      const xs: [number, CanvasTextAlign][] = [[midX, 'center'], [x1Bar + 6, 'left'], [x0Bar - 6, 'right'], [midX + tw * 0.6, 'center'], [midX - tw * 0.6, 'center']];
+      for (const yy of ys) for (const [xx, al] of xs) {
+        const c = textBox(xx, yy, tw, th, al, MIN_FONT);
+        if (c.a < f.box.l + 2 || c.b2 > f.box.r - 2) continue;
+        if (hitsOtherVert(c.a, c.b2, c.c, c.d, [x0Bar, x1Bar])) continue;
+        if (c.a < f.box.l + 18 && c.d > f.box.b - 6) continue;
+        trPick = c; break;
+      }
+      if (!trPick) trPick = textBox(Math.min(f.box.r - tw / 2 - 4, midX + 12), Math.min(f.box.b + 8, barY + 16), tw, th, 'center', MIN_FONT);
+    }
     if (trPick) withAnchor({ kind: 'bar', x: x0Bar, y: barY, x2: x1Bar, y2: barY }, () => {
       withLabelRole('axis', () => { lbl(trLab, trPick!.x, trPick!.y, col.e(), trPick!.align, trPick!.z); });
-    });
-    else if (!tile) {
-      // expanded: still by the bar, just under it in the pad
-      g.font = `${MIN_FONT}px system-ui,sans-serif`;
-      withAnchor({ kind: 'bar', x: x0Bar, y: barY, x2: x1Bar, y2: barY }, () => {
-        withLabelRole('axis', () => { lbl(trLab, midX, Math.min(f.box.b + 8, barY + 16), col.e(), 'center', MIN_FONT); });
-      });
-    }
+    })
   }
   if (show.overshoot && Number.isFinite(m.peak) && m.overshootPct > 0.05) {
     tline(g, f, [m.peakTime, m.peak], [m.peakTime, yr[0]], col.b(), 1, [2, 3]); dot(g, f, [m.peakTime, m.peak], col.b(), 4);
@@ -332,14 +346,21 @@ export function drawStepResponse(g: CanvasRenderingContext2D, w: number, h: numb
         }
         if (tsPick) break;
       }
+      if (!tsPick) {
+        g.font = `${MIN_FONT}px system-ui,sans-serif`;
+        const tw = g.measureText(tsLab).width, th = MIN_FONT + 3;
+        const ys = [yLo - 18, yLo - 28, (yLo + yHi) / 2, yHi - 12];
+        for (const yy of ys) for (const [x, al] of [[lineX + 10, 'left'], [lineX - 10, 'right']] as [number, CanvasTextAlign][]) {
+          const c = textBox(x, yy, tw, th, al, MIN_FONT);
+          if (!inPlot(c.a, c.b2, c.c, c.d, 10)) continue;
+          if (hitsOtherVert(c.a, c.b2, c.c, c.d, [lineX])) continue;
+          tsPick = c; break;
+        }
+        if (!tsPick) tsPick = textBox(lineX + 10, yLo - 18, tw, th, 'left', MIN_FONT);
+      }
       if (tsPick) withAnchor({ kind: 'line', x: lineX, y: yLo, x2: lineX, y2: yHi }, () => {
         withLabelRole('axis', () => { lbl(tsLab, tsPick!.x, tsPick!.y, col.c(), tsPick!.align, tsPick!.z); });
       });
-      else if (!tile) {
-        withAnchor({ kind: 'line', x: lineX, y: yLo, x2: lineX, y2: yHi }, () => {
-          withLabelRole('axis', () => { lbl(tsLab, lineX + 8, yLo - 18, col.c(), 'left', MIN_FONT); });
-        });
-      }
     }
   }
   });
@@ -526,23 +547,33 @@ export function drawSPlane(g: CanvasRenderingContext2D, w: number, h: number, s:
       for (const zsz of [10, MIN_FONT]) { pick = walk(zsz, false, false, 16); if (pick) break; }
       if (!pick) pick = walk(MIN_FONT, true, false, 14);
       if (!pick) pick = walk(MIN_FONT, true, true, 12);
-      // required ζ names stay on tiles and expanded views (BUG-54 / 55 / 56)
+      // required ζ names stay on tiles and expanded views (BUG-54 / 55 / 56), still off the stroke
       if (!pick) {
         g.font = `${MIN_FONT}px system-ui,sans-serif`;
-        let best: { c: TextBox; score: number } | null = null;
+        const twz = g.measureText(name).width;
+        const need = (twz / 2) * Math.abs(nx) + (MIN_FONT * 0.55) * Math.abs(ny) + 5;
+        let best: TextBox | null = null;
         for (const k of ks) {
           const q = Math.min(s.range * k, R), X = f.X(-Math.cos(th) * q), Y = f.Y(Math.sin(th) * q);
-          if (X >= x0 - 4) continue;
-          for (const c of collect(MIN_FONT, X, Y)) {
-            if (c.a <= f.box.l + 1 || c.b2 >= Math.min(f.box.r - 1, x0 - 1) || c.c <= f.box.t + 1 || c.d >= f.box.b - 1) continue;
-            if (marksZ.some((p) => { const Xz = f.X(p.re), Yz = f.Y(p.im); const cx = Math.max(c.a, Math.min(Xz, c.b2)), cy = Math.max(c.c, Math.min(Yz, c.d)); return Math.hypot(cx - Xz, cy - Yz) < 7; })) continue;
-            const midX = (c.a + c.b2) / 2, midY = (c.c + c.d) / 2;
-            const dRay = Math.abs((midX - ax0) * (ay1 - ay0) - (midY - ay0) * (ax1 - ax0)) / (Math.hypot(ax1 - ax0, ay1 - ay0) || 1);
-            const score = dRay + (nearMark(X, Y, 16) ? 40 : 0);
-            if (!best || score < best.score) best = { c, score };
+          if (X >= x0 - 4 || nearMark(X, Y, 14)) continue;
+          for (const off of [need, need + 4, need + 8, 14, 18]) {
+            for (const sg of [1, -1]) {
+              const px = X + nx * off * sg, py = Y + ny * off * sg;
+              for (const al of ['center', 'left', 'right'] as CanvasTextAlign[]) {
+                const c = textBox(px, py, twz, MIN_FONT + 3, al, MIN_FONT);
+                if (ok(c, true, true)) { pick = c; break; }
+                if (!best && c.a > f.box.l + 1 && c.b2 < Math.min(f.box.r - 1, x0 - 1) && c.c > f.box.t + 1 && c.d < f.box.b - 1
+                    && !rayHits(c, th, 2)
+                    && marksZ.every((p) => { const Xz = f.X(p.re), Yz = f.Y(p.im); const cx = Math.max(c.a, Math.min(Xz, c.b2)), cy = Math.max(c.c, Math.min(Yz, c.d)); return Math.hypot(cx - Xz, cy - Yz) >= 7; }))
+                  best = c;
+              }
+              if (pick) break;
+            }
+            if (pick) break;
           }
+          if (pick) break;
         }
-        if (best) pick = best.c;
+        if (!pick) pick = best;
       }
       if (pick) {
         withAnchor({ kind: 'ray', x: ax0, y: ay0, x2: ax1, y2: ay1 }, () => {
@@ -635,11 +666,16 @@ export function drawSPlane(g: CanvasRenderingContext2D, w: number, h: number, s:
     const others = allMarks.filter((mk) => Math.hypot(mk.X - X, mk.Y - Yp) >= 4);
     const rightBusy = others.some((mk) => mk.X >= X - 2 && Math.abs(mk.Y - Yp) < 24 && mk.X - X < 48);
     const preferRight = f.box.r - X >= 28 && !rightBusy;
+    const realPole = Math.abs(p.im) < 1e-9;
     let pick: TextBox | null = null;
     for (const z of [10, MIN_FONT]) {
       g.font = `${z}px system-ui,sans-serif`;
       const tw = g.measureText(lab).width, th = z + 4;
-      for (const c of aroundMarker(X, Yp, tw, th, z, preferRight)) {
+      const cands = aroundMarker(X, Yp, tw, th, z, preferRight);
+      // a real-axis pole sits on the ζ = 1 ray: try above/below before left/right
+      // sort: larger |cy - Yp| first (above/below), then the rest
+      const ranked = realPole ? [...cands].sort((a, b) => Math.abs((b.c + b.d) / 2 - Yp) - Math.abs((a.c + a.d) / 2 - Yp)) : cands;
+      for (const c of ranked) {
         const I = inflateBox(c);
         if (c.a < f.box.l + 2 || c.b2 > f.box.r - 2 || c.c < f.box.t + 2 || c.d > f.box.b - 2) continue;
         if (onSigma(I.a, I.b2, I.c, I.d) || onJw(I.a, I.b2, I.c, I.d) || hitsTaken(I.a, I.b2, I.c, I.d)) continue;
@@ -655,7 +691,8 @@ export function drawSPlane(g: CanvasRenderingContext2D, w: number, h: number, s:
       // expanded (and every other tile) must keep the value beside the ×
       g.font = `${MIN_FONT}px system-ui,sans-serif`;
       const tw = g.measureText(lab).width, th = MIN_FONT + 4;
-      const cands = aroundMarker(X, Yp, tw, th, MIN_FONT, preferRight);
+      const raw = aroundMarker(X, Yp, tw, th, MIN_FONT, preferRight);
+      const cands = realPole ? [...raw].sort((a, b) => Math.abs((b.c + b.d) / 2 - Yp) - Math.abs((a.c + a.d) / 2 - Yp)) : raw;
       const inClip = (c: TextBox) => c.a >= f.box.l + 1 && c.b2 <= f.box.r - 1 && c.c >= f.box.t - 6 && c.d <= f.box.b + 6;
       for (const c of cands) {
         const I = inflateBox(c);
