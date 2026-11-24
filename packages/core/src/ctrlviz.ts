@@ -523,7 +523,22 @@ export function drawSPlane(g: CanvasRenderingContext2D, w: number, h: number, s:
   for (const m of s.marks ?? []) {
     const c = m.color ?? col.accent(), p: V2 = [m.s.re, m.s.im];
     if (m.shape === 'ring') dot(g, f, p, c, 5, true); else if (m.shape === 'diamond') { const X = f.X(p[0]), Y = f.Y(p[1]); g.fillStyle = c; g.beginPath(); g.moveTo(X, Y - 6); g.lineTo(X + 5, Y); g.lineTo(X, Y + 6); g.lineTo(X - 5, Y); g.closePath(); g.fill(); } else dot(g, f, p, c, 5);
-    if (m.label) withAnchor({ kind: 'marker', x: f.X(p[0]), y: f.Y(p[1]) }, () => { text(g, m.label!, f.X(p[0]) + 8, f.Y(p[1]) - 9, c, 'left', 10); });
+    if (m.label) {
+      const X = f.X(p[0]), Y = f.Y(p[1]);
+      g.font = '10px system-ui,sans-serif';
+      const tw = g.measureText(m.label).width, th = 13;
+      let pick: TextBox | null = null;
+      for (const cand of aroundMarker(X, Y, tw, th, 10, true)) {
+        if (cand.a < f.box.l + 2 || cand.b2 > f.box.r - 2 || cand.c < f.box.t + 2 || cand.d > f.box.b - 2) continue;
+        if (taken.some((t) => cand.b2 > t.x0 - 4 && cand.a < t.x1 + 4 && cand.d > t.y0 - 4 && cand.c < t.y1 + 4)) continue;
+        pick = cand; break;
+      }
+      const at = pick ?? textBox(X + 8, Y - 9, tw, th, 'left', 10);
+      withAnchor({ kind: 'marker', x: X, y: Y }, () => {
+        withLabelRole('axis', () => { text(g, m.label!, at.x, at.y, c, at.align, at.z); });
+      });
+      taken.push({ x0: at.a, x1: at.b2, y0: at.c, y1: at.d });
+    }
   }
   for (const hd of s.handles ?? []) for (const sg of Math.abs(hd.im) < 1e-9 ? [1] : [1, -1]) { g.strokeStyle = col.accent(); g.globalAlpha = sg === 1 ? 0.9 : 0.4; g.lineWidth = 1.5; g.setLineDash([3, 3]); g.beginPath(); g.arc(f.X(hd.re), f.Y(sg * hd.im), 11, 0, 2 * Math.PI); g.stroke(); g.setLineDash([]); g.globalAlpha = 1; }
   for (const z of s.zeros ?? []) dot(g, f, [z.re, z.im], col.c(), 5, true);
