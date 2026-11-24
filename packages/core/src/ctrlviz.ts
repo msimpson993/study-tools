@@ -125,8 +125,8 @@ export function drawStepResponse(g: CanvasRenderingContext2D, w: number, h: numb
   const footY = (show.timing && Number.isFinite(m.riseTime)) ? barY0 - 4 : f.Y(yr[0]);
   const vertSegs: { x: number; y0: number; y1: number }[] = [];
   if (show.timing && Number.isFinite(m.riseTime)) {
-    vertSegs.push({ x: f.X(m.t10), y0: f.Y(yf * 0.1), y1: f.Y(0) });
-    vertSegs.push({ x: f.X(m.t90), y0: f.Y(yf * 0.9), y1: f.Y(0) });
+    vertSegs.push({ x: f.X(m.t10), y0: f.Y(yf * 0.1), y1: footY });
+    vertSegs.push({ x: f.X(m.t90), y0: f.Y(yf * 0.9), y1: footY });
   }
   if (show.overshoot && Number.isFinite(m.peak) && m.overshootPct > 0.05)
     vertSegs.push({ x: f.X(m.peakTime), y0: f.Y(m.peak), y1: footY });
@@ -164,8 +164,9 @@ export function drawStepResponse(g: CanvasRenderingContext2D, w: number, h: numb
   withPersistentLabels(() => {
   if (show.timing && Number.isFinite(m.riseTime)) {
     const y10 = yf * 0.1, y90 = yf * 0.9;
-    tline(g, f, [m.t10, y10], [m.t10, 0], col.e(), 1, [2, 3]); tline(g, f, [m.t90, y90], [m.t90, 0], col.e(), 1, [2, 3]);
-    g.strokeStyle = col.e(); g.lineWidth = 2; g.beginPath(); g.moveTo(f.X(m.t10), f.Y(yr[0]) - 14); g.lineTo(f.X(m.t90), f.Y(yr[0]) - 14); g.stroke();
+    const barAt = f.Y(yr[0]) - 14;
+    tline(g, f, [m.t10, y10], [m.t10, f.iy(barAt - 2)], col.e(), 1, [2, 3]); tline(g, f, [m.t90, y90], [m.t90, f.iy(barAt - 2)], col.e(), 1, [2, 3]);
+    g.strokeStyle = col.e(); g.lineWidth = 2; g.beginPath(); g.moveTo(f.X(m.t10), barAt); g.lineTo(f.X(m.t90), barAt); g.stroke();
     const trLab = `Tr ${fmtN(m.riseTime)} s`;
     const midX = (f.X(m.t10) + f.X(m.t90)) / 2, barY = f.Y(yr[0]) - 14, yRef = f.Y(ref);
     const x0Bar = f.X(m.t10), x1Bar = f.X(m.t90);
@@ -220,7 +221,7 @@ export function drawStepResponse(g: CanvasRenderingContext2D, w: number, h: numb
   }
   if (show.overshoot && Number.isFinite(m.peak) && m.overshootPct > 0.05) {
     const tpFoot = (show.timing && Number.isFinite(m.riseTime)) ? f.iy(f.Y(yr[0]) - 18) : yr[0];
-    tline(g, f, [m.peakTime, m.peak], [m.peakTime, tpFoot], col.b(), 1, [2, 3]); dot(g, f, [m.peakTime, m.peak], col.b(), 4);
+    tline(g, f, [m.peakTime, m.peak], [m.peakTime, tpFoot], col.b(), 1, [2, 3], false); dot(g, f, [m.peakTime, m.peak], col.b(), 4);
     const osFull = `${fmtN(m.overshootPct, 1)}% overshoot  (Tp ${fmtN(m.peakTime)} s)`;
     const osShort = `OS ${fmtN(m.overshootPct, 1)}%  Tp ${fmtN(m.peakTime)} s`;
     const peakX = f.X(m.peakTime), peakY = f.Y(m.peak), yRef = f.Y(ref);
@@ -337,7 +338,7 @@ export function drawStepResponse(g: CanvasRenderingContext2D, w: number, h: numb
     // the dashed Ts line stops just under the overshoot label when it would run through it (it made "15.7 %" read "5.7 %")
     const tx = f.X(m.settlingTime), cut = osPlaced && tx > osPlaced.x0 - 3 && tx < osPlaced.x1 + 3 ? Math.min(yr[1], f.iy(osPlaced.y + 8)) : yr[1];
     const tsFoot = (show.timing && Number.isFinite(m.riseTime)) ? f.iy(f.Y(yr[0]) - 18) : yr[0];
-    tline(g, f, [m.settlingTime, tsFoot], [m.settlingTime, cut], col.c(), 1.5, [5, 4]);
+    tline(g, f, [m.settlingTime, tsFoot], [m.settlingTime, cut], col.c(), 1.5, [5, 4], false);
     {
       const tsLab = s.settlingLabel ?? `Ts ${fmtN(m.settlingTime)} s`;
       const lineX = f.X(m.settlingTime), yRef = f.Y(ref);
