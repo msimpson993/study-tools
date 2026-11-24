@@ -130,8 +130,10 @@ export const tunerPanels = (): FigurePanel[] => [
         const tHit = firstCrossing(r.t, r.y, 0.98);
         wipe(g, w, h);
         if (!thumb) text(g, piLine, 8, 14, col.text(), 'left', 10);
+        const cap = 'Linear stand-in, not the nonlinear Simulink engine (not in lab handout). The handout\'s scope (p.6) is the real check.';
+        const capBand = thumb ? 0 : 18;
         g.save(); g.translate(0, head);
-        const fr = rangeFrame(w, h - head, [0, tEnd], [1500, 3500], 72, 12, 14, 30);
+        const fr = rangeFrame(w, h - head - capBand, [0, tEnd], [1500, 3500], 72, 12, 14, 30);
         graphAxes(g, fr, [0, tEnd], [1500, 3500], 'time (s)', 'rpm', 5, 500);
         curve(g, fr, tPlot, yPlot, col.a(), 2);
         g.strokeStyle = col.e(); g.lineWidth = 1; g.setLineDash([4, 4]);
@@ -141,8 +143,8 @@ export const tunerPanels = (): FigurePanel[] => [
           g.fillStyle = col.e(); g.beginPath(); g.arc(fr.X(t0 + tHit), fr.Y(2980), 4, 0, Math.PI * 2); g.fill();
           text(g, `reaches 2980 at t₀ + ${f(tHit, 2)} s`, 8, 16, col.text(), 'left', 10);
         }
-        text(g, 'Linear stand-in, not the nonlinear Simulink engine (not in lab handout). The handout\'s scope (p.6) is the real check.', 8, h - head - 8, col.muted(), 'left', 9);
         g.restore();
+        if (!thumb) text(g, cap, 8, h - 8, col.muted(), 'left', 9);
         return;
       }
       const r = engineStep(P, I, 14, 1e-3);
