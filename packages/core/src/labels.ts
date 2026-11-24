@@ -31,16 +31,16 @@ export function freeShift(list: LabelRect[], r: LabelRect, dys: number[], ymax: 
 }
 /** first [dx, dy] (device px) that clears every recorded label: each vertical shift in `dys` as drawn, then (when allowed) nudged right
  * past the labels it would sit on at its left end (the tick numbers down a plot's left edge); null if nothing fits inside the canvas */
-export function freeSpot(list: LabelRect[], r: LabelRect, dys: number[], ymax: number, xmax: number, pad = 0.5, sideways = true): [number, number] | null {
+export function freeSpot(list: LabelRect[], r: LabelRect, dys: number[], ymax: number, xmax: number, pad = 0.5, sideways = true, ymin = 0, xmin = 0): [number, number] | null {
   for (const dy of dys) {
     const c = { ...r, y0: r.y0 + dy, y1: r.y1 + dy };
-    if (dy !== 0 && (c.y0 < 0 || c.y1 > ymax)) continue;
+    if (dy !== 0 && (c.y0 < ymin || c.y1 > ymax)) continue;
     const on = list.filter((o) => hit(o, c, pad));
     if (!on.length) return [0, dy];
     if (!sideways) continue;
     const left = on.filter((o) => o.x0 <= c.x0 + 4); if (left.length !== on.length) continue;
     const dx = Math.max(...left.map((o) => o.x1)) - c.x0 + 3, d = { ...c, x0: c.x0 + dx, x1: c.x1 + dx };
-    if (d.x1 <= xmax && !list.some((o) => hit(o, d, pad))) return [dx, dy];
+    if (d.x0 >= xmin && d.x1 <= xmax && !list.some((o) => hit(o, d, pad))) return [dx, dy];
   }
   return null;
 }

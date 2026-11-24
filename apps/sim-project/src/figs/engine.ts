@@ -136,7 +136,7 @@ export const tunerPanels = (): FigurePanel[] => [
         curve(g, fr, tPlot, yPlot, col.a(), 2);
         g.strokeStyle = col.e(); g.lineWidth = 1; g.setLineDash([4, 4]);
         g.beginPath(); g.moveTo(fr.box.l, fr.Y(2980)); g.lineTo(fr.box.r, fr.Y(2980)); g.stroke(); g.setLineDash([]);
-        text(g, '2980 rpm (2 % band)', fr.box.r - 4, fr.Y(2980) - 5, col.e(), 'right', 10);
+        text(g, '2980 rpm (2 % band)', fr.box.r - 4, fr.Y(2980) + 12, col.e(), 'right', 10);
         if (Number.isFinite(tHit)) {
           g.fillStyle = col.e(); g.beginPath(); g.arc(fr.X(t0 + tHit), fr.Y(2980), 4, 0, Math.PI * 2); g.fill();
           text(g, `reaches 2980 at t₀ + ${f(tHit, 2)} s`, 8, 16, col.text(), 'left', 10);

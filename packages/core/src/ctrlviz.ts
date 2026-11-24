@@ -1,7 +1,7 @@
 import { C, cabs, type Cx } from './dsp/complex';
 import { type TF, type StepMetrics, type Margins, type Bode, bode, margins, stepMetrics, tfEval, logspace, tfPoles, tfZeros, freqresp } from './dsp/tf';
 import { type RLocus, rlocusPolesAt, rlocusNearest } from './dsp/rlocus';
-import { col, planeFrame, rangeFrame, wipe, text, tline, polyline, dot, cross, graphAxes, curve, clipBox, heat, axes2, tickLabel, isThumb, forTicks, goodStep, type Frame, type V2 } from './viz';
+import { col, planeFrame, rangeFrame, wipe, text, tline, polyline, dot, cross, graphAxes, curve, clipBox, withClip, heat, axes2, tickLabel, isThumb, forTicks, goodStep, type Frame, type V2 } from './viz';
 import { withLabelRole, labelsOn } from './labels';
 import type { PanelPointer } from './figure';
 
@@ -52,15 +52,29 @@ export function drawStepResponse(g: CanvasRenderingContext2D, w: number, h: numb
   const yr: V2 = s.yRange ?? [lo - 0.05 * Math.abs(ref), Math.max(ref * 1.15, hiY * 1.06)];
   const thumb = isThumb(g);
   const pad = (v: number | undefined, full: number, compact: number) => thumb ? Math.min(v ?? compact, compact) : (v ?? full);
-  const f = rangeFrame(w, h, [0, tEnd], yr, pad(s.pads?.l, 72, 32), pad(s.pads?.r, 14, 10), pad(s.pads?.t, 14, 8), pad(s.pads?.b, 38, 20));
+  const tight = h < 260, needHead = !!(s.ghost?.label || show.overshoot);
+  const topPad = (tight && needHead) ? pad(s.pads?.t, 28, 22) : pad(s.pads?.t, 14, 8);
+  const f = rangeFrame(w, h, [0, tEnd], yr, pad(s.pads?.l, 72, 32), pad(s.pads?.r, 14, 10), topPad, pad(s.pads?.b, 38, 20));
   graphAxes(g, f, [0, tEnd], yr, s.xLabel ?? 'time (s)', s.yLabel ?? 'output');
   const m = stepMetrics(t, y, { ref, final: s.final, band });
   const yf = m.yFinal;
-  if (show.band && Number.isFinite(yf)) { g.save(); clipBox(g, f); g.fillStyle = col.ok(); g.globalAlpha = 0.14; g.fillRect(f.box.l, f.Y(yf * (1 + band)), f.box.r - f.box.l, f.Y(yf * (1 - band)) - f.Y(yf * (1 + band))); g.restore(); text(g, `±${fmtN(band * 100, 0)}%`, f.box.r - 4, f.Y(yf * (1 - band)) + 12, col.ok(), 'right', 10) /* at the right end, where the response has settled inside the band (pass 3: at the left it sat on the rising curve) */; }
+  if (show.band && Number.isFinite(yf)) {
+    g.save(); clipBox(g, f); g.fillStyle = col.ok(); g.globalAlpha = 0.14; g.fillRect(f.box.l, f.Y(yf * (1 + band)), f.box.r - f.box.l, f.Y(yf * (1 - band)) - f.Y(yf * (1 + band))); g.restore();
+    const bandLab = `±${fmtN(band * 100, 0)}%`;
+    // in the bottom-right pad, under the axis — never on the settled / ringing curve
+    withLabelRole('axis', () => { text(g, bandLab, f.box.r - 4, f.box.b + 20, col.ok(), 'right', 10); });
+  }
   tline(g, f, [0, ref], [tEnd, ref], col.muted(), 1, [5, 4]);
   if (s.ghost) curve(g, f, Array.from(s.ghost.t), Array.from(s.ghost.y), s.ghost.color ?? col.muted(), 2, [6, 4]);
   curve(g, f, t, y, s.color ?? col.a(), 2.4);
-  if (s.ghost?.label) text(g, `┄ ${s.ghost.label}`, f.box.r - 4, Math.min(f.h - 14, f.box.b + 20), s.ghost.color ?? col.muted(), 'right', 10);
+  let ghostBox: { x0: number; x1: number; y0: number; y1: number } | null = null;
+  if (s.ghost?.label) {
+    const gl = s.ghost, gLab = `┄ ${gl.label}`;
+    g.font = '10px system-ui,sans-serif';
+    const gw = g.measureText(gLab).width, gx = f.box.l + 4, gy = tight ? 10 : Math.max(8, f.box.t - 10);
+    ghostBox = { x0: gx, x1: gx + gw, y0: gy - 6, y1: gy + 6 };
+    withLabelRole('axis', () => { text(g, gLab, gx, gy, gl.color ?? col.muted(), 'left', 10); });
+  }
   const lbl = (str: string, px: number, py: number, color: string, align: CanvasTextAlign = 'left') => text(g, str, px, py, color, align, 10.5);
   if (show.timing && Number.isFinite(m.riseTime)) {
     const y10 = yf * 0.1, y90 = yf * 0.9;
@@ -68,30 +82,118 @@ export function drawStepResponse(g: CanvasRenderingContext2D, w: number, h: numb
     g.strokeStyle = col.e(); g.lineWidth = 2; g.beginPath(); g.moveTo(f.X(m.t10), f.Y(yr[0]) - 14); g.lineTo(f.X(m.t90), f.Y(yr[0]) - 14); g.stroke();
     const trLab = `Tr ${fmtN(m.riseTime)} s`;
     g.font = '10.5px system-ui,sans-serif';
-    const trW = g.measureText(trLab).width;
-    // centre on the rise, and keep the whole label left of the dotted Tp line (and of Ts)
-    const trMid = (f.X(m.t10) + f.X(m.t90)) / 2, trY = f.Y((y10 + y90) / 2);
+    const trW = g.measureText(trLab).width, trH = 12;
     const tpX = (show.overshoot && Number.isFinite(m.peakTime) && m.overshootPct > 0.05) ? f.X(m.peakTime) : Infinity;
     const tsX = (show.settling && m.settled && Number.isFinite(m.settlingTime)) ? f.X(m.settlingTime) : Infinity;
     const trRight = Math.min(tpX, tsX, f.box.r) - 5;
-    let trX = trMid;
-    if (trX + trW / 2 > trRight) trX = trRight - trW / 2;
-    if (trX - trW / 2 < f.box.l + 4) trX = f.box.l + 4 + trW / 2;
-    if (trX + trW / 2 > tpX - 5) trX = Math.max(f.box.l + 4 + trW / 2, tpX - 5 - trW / 2);
-    lbl(trLab, trX, trY, col.e(), 'center');
+    const barY = f.Y(yr[0]) - 14;
+    const hitsCurve = (x0: number, x1: number, y0: number, y1: number) => {
+      for (let i = 1; i < t.length; i++) {
+        const ax = f.X(t[i - 1]), ay = f.Y(y[i - 1]), bx = f.X(t[i]), by = f.Y(y[i]);
+        if (Math.max(ax, bx) < x0 - 2 || Math.min(ax, bx) > x1 + 2 || Math.max(ay, by) < y0 - 2 || Math.min(ay, by) > y1 + 2) continue;
+        const steps = Math.max(2, Math.ceil(Math.hypot(bx - ax, by - ay) / 3));
+        for (let k = 0; k <= steps; k++) {
+          const u = k / steps, px = ax + (bx - ax) * u, py = ay + (by - ay) * u;
+          if (px > x0 + 1 && px < x1 - 1 && py > y0 + 1 && py < y1 - 1) return true;
+        }
+      }
+      return false;
+    };
+    const okTr = (cx: number, cy: number) => {
+      const x0 = cx - trW / 2, x1 = cx + trW / 2, y0 = cy - trH / 2, y1 = cy + trH / 2;
+      if (x0 < f.box.l + 3 || x1 > trRight || y0 < f.box.t + 3 || y1 > f.box.b - 3) return false;
+      if (x1 > tpX - 5 || x1 > tsX - 4) return false;
+      return !hitsCurve(x0, x1, y0, y1);
+    };
+    const midX = (f.X(m.t10) + f.X(m.t90)) / 2;
+    const xsTry = [
+      Math.max(f.box.l + 4 + trW / 2, f.X(m.t10) - trW / 2 - 10),
+      f.X(m.t10) + 4 + trW / 2,
+      midX,
+      Math.min(trRight - trW / 2, f.X(m.t90) - 8 - trW / 2),
+    ];
+    let trX = midX, trY = barY - 10, found = false;
+    for (const cx0 of xsTry) {
+      let x = cx0;
+      if (x + trW / 2 > trRight) x = trRight - trW / 2;
+      if (x - trW / 2 < f.box.l + 4) x = f.box.l + 4 + trW / 2;
+      for (let cy = f.box.b - 16; cy > f.box.t + 10; cy -= 5) {
+        if (okTr(x, cy)) { trX = x; trY = cy; found = true; break; }
+      }
+      if (found) break;
+    }
+    if (!found) {
+      // last resort: under the axis, in the bottom pad, clear of the curve and of ±2% at the right
+      trX = Math.min(midX, f.box.r - 40 - trW / 2);
+      if (trX - trW / 2 < f.box.l) trX = f.box.l + 4 + trW / 2;
+      trY = f.box.b + 20;
+    }
+    withLabelRole('axis', () => { lbl(trLab, trX, trY, col.e(), 'center'); });
   }
   let osBox: { x0: number; x1: number; y: number } | null = null;
   if (show.overshoot && Number.isFinite(m.peak) && m.overshootPct > 0.05) {
     tline(g, f, [m.peakTime, m.peak], [m.peakTime, yr[0]], col.b(), 1, [2, 3]); dot(g, f, [m.peakTime, m.peak], col.b(), 4);
-    const os = `${fmtN(m.overshootPct, 1)}% overshoot  (Tp ${fmtN(m.peakTime)} s)`, ox = Math.min(f.X(m.peakTime) + 8, f.box.r - 4), oy = f.Y(m.peak) - 8, right = f.X(m.peakTime) > w * 0.6;
-    lbl(os, ox, oy, col.b(), right ? 'right' : 'left');
-    g.font = '10.5px system-ui,sans-serif'; const ow = g.measureText(os).width; osBox = { x0: right ? ox - ow : ox, x1: right ? ox : ox + ow, y: oy };
+    const osFull = `${fmtN(m.overshootPct, 1)}% overshoot  (Tp ${fmtN(m.peakTime)} s)`;
+    const os = (tight || w < 420) ? `OS ${fmtN(m.overshootPct, 1)}%  Tp ${fmtN(m.peakTime)} s` : osFull;
+    g.font = '10.5px system-ui,sans-serif';
+    const ow = g.measureText(os).width, oh = 12, peakX = f.X(m.peakTime), peakY = f.Y(m.peak);
+    let ox = Math.min(peakX + 8, f.box.r - 4), oy = peakY - 18, oAlign: CanvasTextAlign = 'left', foundOs = false;
+    if (tight) {
+      // reserved two-row top pad: ghost stays on the first row, overshoot on the second (or the only row if no ghost)
+      ox = f.box.l + 4;
+      oy = ghostBox ? 22 : Math.max(8, f.box.t - 10);
+      if (oy + 6 > f.box.t) oy = f.box.t - 7;
+      oAlign = 'left';
+      foundOs = true;
+    } else {
+      const osHits = (x0: number, y0: number, x1: number, y1: number) => {
+        if (x0 < f.box.l + 3 || x1 > f.box.r - 3 || y0 < f.box.t + 3 || y1 > f.box.b - 3) return true;
+        if (ghostBox && x1 > ghostBox.x0 - 4 && x0 < ghostBox.x1 + 4 && y1 > ghostBox.y0 - 4 && y0 < ghostBox.y1 + 4) return true;
+        for (let i = 0; i < t.length; i++) {
+          const px = f.X(t[i]); if (px < x0 - 3 || px > x1 + 3) continue;
+          if (f.Y(y[i]) > y0 - 3 && f.Y(y[i]) < y1 + 3) return true;
+        }
+        return false;
+      };
+      const tryAt = (x: number, y: number, align: CanvasTextAlign) => {
+        const x0 = align === 'right' ? x - ow : x, x1 = x0 + ow, y0 = y - oh / 2, y1 = y + oh / 2;
+        if (osHits(x0, y0, x1, y1)) return false;
+        ox = x; oy = y; oAlign = align; return true;
+      };
+      for (let y = f.box.t + 12; y < f.box.b - 10; y += 6) {
+        if (tryAt(Math.min(peakX + 10, f.box.r - 4), y, 'left')) { foundOs = true; break; }
+        if (tryAt(Math.max(peakX - 10, f.box.l + 4 + ow), y, 'right')) { foundOs = true; break; }
+        if (tryAt(f.box.r - 4, y, 'right')) { foundOs = true; break; }
+        if (tryAt(f.box.l + 4, y, 'left')) { foundOs = true; break; }
+      }
+      if (!foundOs) {
+        const gy = Math.max(8, f.box.t - 10);
+        const gx1 = ghostBox ? ghostBox.x1 + 8 : f.box.l + 4;
+        if (gx1 + ow <= f.box.r - 2) { ox = gx1; oy = gy; oAlign = 'left'; }
+        else { ox = f.box.l + 4; oy = Math.min(f.box.t - 8, gy + 12); oAlign = 'left'; }
+      }
+    }
+        withLabelRole('axis', () => { lbl(os, ox, oy, col.b(), oAlign); });
+    { const side = String(oAlign); osBox = { x0: side === 'right' ? ox - ow : ox, x1: side === 'right' ? ox : ox + ow, y: oy }; }
   }
   if (show.settling && m.settled && Number.isFinite(m.settlingTime)) {
     // the dashed Ts line stops just under the overshoot label when it would run through it (it made "15.7 %" read "5.7 %")
     const tx = f.X(m.settlingTime), cut = osBox && tx > osBox.x0 - 3 && tx < osBox.x1 + 3 ? Math.min(yr[1], f.iy(osBox.y + 8)) : yr[1];
     tline(g, f, [m.settlingTime, yr[0]], [m.settlingTime, cut], col.c(), 1.5, [5, 4]);
-    lbl(s.settlingLabel ?? `Ts ${fmtN(m.settlingTime)} s`, f.X(m.settlingTime) + 4, f.box.b - 18, col.c());
+    {
+      const tsLab = s.settlingLabel ?? `Ts ${fmtN(m.settlingTime)} s`;
+      g.font = '10.5px system-ui,sans-serif';
+      const tw = g.measureText(tsLab).width, tx = f.X(m.settlingTime) + 4;
+      const tsHits = (yy: number) => {
+        for (let i = 0; i < t.length; i++) {
+          const px = f.X(t[i]); if (px < tx - 2 || px > tx + tw + 2) continue;
+          if (Math.abs(f.Y(y[i]) - yy) < 9) return true;
+        }
+        return false;
+      };
+      const tsY = [f.box.b - 18, f.box.b - 28, f.box.b - 8, f.box.b - 38].find((yy) => yy > f.box.t + 8 && !tsHits(yy)) ?? f.box.b - 18;
+      lbl(tsLab, tx, tsY, col.c());
+    }
   }
   if (show.ess && Number.isFinite(m.ess) && Math.abs(m.ess) > 1e-3 * Math.max(1, Math.abs(ref))) {
     const xe = tEnd * 0.985, xLine = f.X(xe);
@@ -148,9 +250,18 @@ export const splaneFrame = (w: number, h: number, range: number, reCenter = -0.3
 export function drawSPlane(g: CanvasRenderingContext2D, w: number, h: number, s: SPlaneSpec): Frame {
   const pad = Math.max(18, s.pad ?? 18);
   let vw = w, vh = h, ox = 0, oy = 0;
-  if (s.maxAspect && s.maxAspect > 0 && w > 2 * pad && h > 2 * pad) {
-    const iw = w - 2 * pad, ih = h - 2 * pad;
-    if (iw / ih > s.maxAspect) { vw = s.maxAspect * ih + 2 * pad; ox = (w - vw) / 2; }
+  let reserved: { ix: number; iy: number; iw: number; ih: number } | null = null;
+  // leave a side band for the zoom inset so a mid-size tile can show it without covering the main plane
+  if (s.inset && s.clear !== false) {
+    const sw = Math.round(Math.max(110, Math.min(200, h - 16, w * 0.36)));
+    if (sw >= 110 && w >= sw + 130 && h >= sw + 8) {
+      reserved = { iw: sw, ih: sw, ix: w - sw - 4, iy: Math.max(4, Math.min(h - sw - 4, (h - sw) / 2)) };
+      vw = reserved.ix - 6;
+    }
+  }
+  if (s.maxAspect && s.maxAspect > 0 && vw > 2 * pad && h > 2 * pad) {
+    const iw = vw - 2 * pad, ih = h - 2 * pad;
+    if (iw / ih > s.maxAspect) { const nw = s.maxAspect * ih + 2 * pad; ox += (vw - nw) / 2; vw = nw; }
     else if (ih / iw > s.maxAspect) { vh = s.maxAspect * iw + 2 * pad; oy = (h - vh) / 2; }
   }
   const f0 = splaneFrame(Math.max(vw, 1), Math.max(vh, 1), Math.max(s.range, 1e-6), s.reCenter, s.pad);
@@ -200,9 +311,40 @@ export function drawSPlane(g: CanvasRenderingContext2D, w: number, h: number, s:
       if (lab && lab !== '0' && lab !== lastY && py > f.box.t - 2 && py < f.box.b + 2 && Math.abs(py - lastPy) >= 16 && !hitsMark(f.box.l - 4 - tw, py, tw)) { text(g, lab, f.box.l - 4, py, col.muted(), 'right', 9); lastY = lab; lastPy = py; }
     });
   });
-  // one row below the jω axis name, so the two never touch on a narrow panel (pass 3)
-  const unstableBox = (s.shadeUnstable !== false && x0 < f.box.r - 70) ? { x0: f.box.r - 64, x1: f.box.r - 2, y0: f.box.t + 2, y1: f.box.t + 16 } : null;
-  if (unstableBox) text(g, 'unstable', f.box.r - 6, f.box.t + 11, col.bad(), 'right', 10);
+  // always label the shaded half-plane when it is drawn, even if the strip is narrow (BUG-41)
+  let unstableBox: { x0: number; x1: number; y0: number; y1: number } | null = null;
+  if (s.shadeUnstable !== false) {
+    const shadeL = Math.max(x0, f.box.l), shadeR = f.box.r, word = 'unstable';
+    if (shadeR - shadeL > 6 && f.box.b - f.box.t > 16) {
+      g.font = '10px system-ui,sans-serif';
+      let z = 10, tw = g.measureText(word).width;
+      while (z > 7 && tw + 8 > shadeR - shadeL) { z -= 1; g.font = `${z}px system-ui,sans-serif`; tw = g.measureText(word).width; }
+      if (tw + 8 <= shadeR - shadeL) {
+        const x = shadeR - 6, y = f.box.t + 11;
+        text(g, word, x, y, col.bad(), 'right', z);
+        unstableBox = { x0: x - tw, x1: x, y0: y - z * 0.55, y1: y + z * 0.55 };
+      } else {
+        // stand it up in the strip, keeping it above the σ axis name at (box.r, Y(0))
+        const cap = Math.max(20, y0 - 14 - (f.box.t + 4));
+        let z2 = Math.max(6, Math.min(9, (shadeR - shadeL) - 4));
+        g.font = `${z2}px system-ui,sans-serif`; tw = g.measureText(word).width;
+        while (z2 > 6 && tw > cap) { z2 -= 1; g.font = `${z2}px system-ui,sans-serif`; tw = g.measureText(word).width; }
+        if (tw <= cap + 2) {
+          const mx = (shadeL + shadeR) / 2, my = f.box.t + 4 + tw / 2;
+          g.save(); g.translate(mx, my); g.rotate(-Math.PI / 2); text(g, word, 0, 0, col.bad(), 'center', z2); g.restore();
+          unstableBox = { x0: mx - z2 * 0.55, x1: mx + z2 * 0.55, y0: my - tw / 2, y1: my + tw / 2 };
+        } else {
+          // strip is too short: sit just above the shade, in the same column, clear of the jω title
+          const jwW = g.measureText(s.yLabel ?? 'jω (rad/s)').width;
+          g.font = '9px system-ui,sans-serif'; tw = g.measureText(word).width;
+          const x = Math.min(f.box.r - 2, Math.max(x0 + jwW + 12, shadeR - 4));
+          const y = Math.max(9, f.box.t - 8);
+          text(g, word, x, y, col.bad(), 'right', 9);
+          unstableBox = { x0: x - tw, x1: x, y0: y - 6, y1: y + 6 };
+        }
+      }
+    }
+  }
   // allowed region
   if (s.region) {
     const r = s.region; g.save(); clipBox(g, f);
@@ -211,7 +353,7 @@ export function drawSPlane(g: CanvasRenderingContext2D, w: number, h: number, s:
     if (r.wn !== undefined) { g.beginPath(); g.arc(x0, y0, r.wn * f.sx, 0, 2 * Math.PI); g.clip(); }
     g.fillStyle = col.ok(); g.globalAlpha = 0.13; g.fillRect(f.box.l, f.box.t, f.box.r - f.box.l, f.box.b - f.box.t); g.restore();
   }
-  g.save(); clipBox(g, f);
+  withClip(g, f, () => {
   g.strokeStyle = col.strong(); g.lineWidth = 1.5; g.beginPath(); g.moveTo(x0, f.box.t); g.lineTo(x0, f.box.b); g.stroke(); // the jω axis: the edge of stability
   for (const wn of s.wnCircles ?? []) { g.strokeStyle = col.d(); g.globalAlpha = 0.7; g.lineWidth = 1; g.setLineDash([3, 4]); g.beginPath(); g.arc(x0, y0, wn * f.sx, Math.PI / 2, (3 * Math.PI) / 2); g.stroke(); g.setLineDash([]); g.globalAlpha = 1; text(g, `ωn ${fmtN(wn)}`, x0 - wn * f.sx + 3, y0 + 10, col.d(), 'left', 10); }
   const zetaNames: (() => void)[] = [], taken: { x0: number; x1: number; y0: number; y1: number }[] = [];
@@ -233,9 +375,22 @@ export function drawSPlane(g: CanvasRenderingContext2D, w: number, h: number, s:
       };
       const okBox = (b: { x0: number; x1: number; y0: number; y1: number }) => b.x0 > f.box.l + 2 && b.x1 < f.box.r - 2 && b.y0 > f.box.t + 2 && b.y1 < f.box.b - 2 && marks.every((p) => { const X = f.X(p.re), Y = f.Y(p.im); return X < b.x0 - 9 || X > b.x1 + 9 || Y < b.y0 - 9 || Y > b.y1 + 9; }) && !hitsRay(b) && taken.every((t) => b.x1 < t.x0 - 3 || b.x0 > t.x1 + 3 || b.y1 < t.y0 - 3 || b.y0 > t.y1 + 3) && !(b.x0 < x0 + 3 && b.x1 > x0 - 3) && !hitsLabel(b);
       let spot: { x0: number; y1: number } | null = null;
-      for (const k of [0.45, 0.6, 0.3, 0.75, 0.9, 0.2]) { for (const side of [1, -1] as const) { const b = boxAt(Math.min(s.range * k, R), side); if (okBox(b)) { spot = b; break; } } if (spot) break; }
-      if (!spot) { const rl = Math.min(s.range * 0.45, R); spot = { x0: f.X(-Math.cos(th) * rl) + 4, y1: f.Y(Math.sin(th) * rl) + 2 + 3 }; }
-      text(g, name, spot.x0, spot.y1 - 3, col.e(), 'left', 10);
+      let zName = 10;
+      for (const zsz of [10, 9, 8, 7]) {
+        g.font = `${zsz}px system-ui, sans-serif`;
+        const twz = g.measureText(name).width;
+        const boxAtZ = (q: number, side: 1 | -1) => { const X = f.X(-Math.cos(th) * q), Y = f.Y(Math.sin(th) * q); return side === 1 ? { x0: X + 5, x1: X + 5 + twz, y0: Y - 14, y1: Y - 3 } : { x0: X - 5 - twz, x1: X - 5, y0: Y + 3, y1: Y + 14 }; };
+        for (const k of [0.45, 0.6, 0.3, 0.75, 0.9, 0.2]) { for (const side of [1, -1] as const) { const b = boxAtZ(Math.min(s.range * k, R), side); if (okBox(b)) { spot = b; zName = zsz; break; } } if (spot) break; }
+        if (spot) break;
+      }
+      if (!spot) {
+        g.font = '8px system-ui, sans-serif';
+        const twz = g.measureText(name).width, th = 9;
+        const a = Math.max(f.box.l + 2, Math.min(f.X(-Math.cos(th) * Math.min(s.range * 0.45, R)) + 4, f.box.r - 2 - twz));
+        const c = Math.max(f.box.t + 2, Math.min(f.Y(Math.sin(th) * Math.min(s.range * 0.45, R)) - 6, f.box.b - 2 - th));
+        spot = { x0: a, y1: c + th }; zName = 8;
+      }
+      text(g, name, spot.x0, spot.y1 - 3, col.e(), 'left', zName);
     });
   }
   if (s.asymptotes) for (const a of s.asymptotes.anglesDeg) { const r = (a * Math.PI) / 180; tline(g, f, [s.asymptotes.centroid, 0], [s.asymptotes.centroid + Math.cos(r) * R, Math.sin(r) * R], col.muted(), 1.2, [6, 4]); }
@@ -258,9 +413,11 @@ export function drawSPlane(g: CanvasRenderingContext2D, w: number, h: number, s:
   const onRay = (x0b: number, x1b: number, y0b: number, y1b: number) => zr.some((t2) => [1, -1].some((sg) => { for (let k = 0; k <= 80; k++) { const q = (k / 80) * R, X = f.X(-Math.cos(t2) * q), Y = f.Y(sg * Math.sin(t2) * q); if (X > x0b - 2 && X < x1b + 2 && Y > y0b - 2 && Y < y1b + 2) return true; } return false; }));
   g.font = '11px system-ui, sans-serif';
   const sw = g.measureText(s.xLabel ?? 'σ (1/s)').width, jwLab = s.yLabel ?? 'jω (rad/s)', jwW = g.measureText(jwLab).width, jwX = f.X(0) + 6;
-  const onSigma = (a: number, b2: number, c: number, d: number) => b2 > f.box.r - 2 - sw - 3 && a < f.box.r && d > y0 - 8 - 12 && c < y0 - 8 + 4;
+  const sigY = y0 - 8, sigX0 = f.box.r - 2 - sw, sigX1 = f.box.r - 2;
+  const onSigma = (a: number, b2: number, c: number, d: number) => b2 > sigX0 - 5 && a < sigX1 + 5 && d > sigY - 10 && c < sigY + 10;
   const onJw = (a: number, b2: number, c: number, d: number) => b2 > jwX - 2 && a < jwX + jwW + 2 && d > f.box.t - 18 && c < f.box.t + 4;
   const hitsUnstable = (a: number, b2: number, c: number, d: number) => !!(unstableBox && b2 > unstableBox.x0 - 2 && a < unstableBox.x1 + 2 && d > unstableBox.y0 - 2 && c < unstableBox.y1 + 2);
+  const hitsTaken = (a: number, b2: number, c: number, d: number) => taken.some((t) => b2 > t.x0 - 3 && a < t.x1 + 3 && d > t.y0 - 3 && c < t.y1 + 3);
   const poles = s.poles ?? [];
   const labelled: { p: Cx; lab: string }[] = [];
   const used = new Set<number>();
@@ -280,27 +437,103 @@ export function drawSPlane(g: CanvasRenderingContext2D, w: number, h: number, s:
     }
   }
   for (const { p, lab } of labelled) {
-    const X = f.X(p.re), Y = f.Y(p.im) + (p.im > 1e-9 ? 14 : -12); g.font = '10px system-ui, sans-serif'; const tw = g.measureText(lab).width;
-    // …and clear of the σ axis name, the jω title, and the 'unstable' tag
+    const X = f.X(p.re), Yp = f.Y(p.im);
+    if (X < f.box.l - 6 || X > f.box.r + 6 || Yp < f.box.t - 6 || Yp > f.box.b + 6) continue;
     const inUnstable = (a: number, b2: number) => s.shadeUnstable !== false && b2 > x0 + 2;
     const onAxis = (a: number, b2: number) => a < x0 + 4 && b2 > x0 - 4;
-    const blockedR = onRay(X + 9, X + 9 + tw, Y - 9, Y + 2) || onSigma(X + 9, X + 9 + tw, Y - 9, Y + 2) || onJw(X + 9, X + 9 + tw, Y - 9, Y + 2) || hitsUnstable(X + 9, X + 9 + tw, Y - 9, Y + 2) || inUnstable(X + 9, X + 9 + tw) || onAxis(X + 9, X + 9 + tw);
-    const blockedL = onRay(X - 9 - tw, X - 9, Y - 9, Y + 2) || X - 9 - tw < f.box.l + 2 || onJw(X - 9 - tw, X - 9, Y - 9, Y + 2) || hitsUnstable(X - 9 - tw, X - 9, Y - 9, Y + 2) || inUnstable(X - 9 - tw, X - 9) || onAxis(X - 9 - tw, X - 9);
-    const right = !blockedR || (blockedL && !inUnstable(X + 9, X + 9 + tw) && !onAxis(X + 9, X + 9 + tw));
-    text(g, lab, right ? X + 9 : X - 9, Y, col.b(), right ? 'left' : 'right', 10);
-    taken.push(right ? { x0: X + 9, x1: X + 9 + tw, y0: Y - 9, y1: Y + 2 } : { x0: X - 9 - tw, x1: X - 9, y0: Y - 9, y1: Y + 2 });
+    const inside = (a: number, b2: number, c: number, d: number) => a > f.box.l + 2 && b2 < f.box.r - 2 && c > f.box.t + 2 && d < f.box.b - 2;
+    const cost = (a: number, b2: number, c: number, d: number) => {
+      // hard-reject anything that leaves the plot or sits on the axis titles / 'unstable'
+      if (!inside(a, b2, c, d) || onSigma(a, b2, c, d) || onJw(a, b2, c, d) || hitsUnstable(a, b2, c, d) || hitsTaken(a, b2, c, d)) return 1e6;
+      let n = 0;
+      if (inUnstable(a, b2)) n += 80;
+      if (onAxis(a, b2)) n += 70;
+      if (onRay(a, b2, c, d)) n += 20;
+      if (a < X + 7 && b2 > X - 7 && c < Yp + 7 && d > Yp - 7) n += 40;
+      return n;
+    };
+    type Cand = { x: number; y: number; align: CanvasTextAlign; a: number; b2: number; c: number; d: number; z: number };
+    let pick: Cand | null = null, best = 1e6;
+    for (const z of [10, 9, 8, 7]) {
+      g.font = `${z}px system-ui, sans-serif`;
+      const tw = g.measureText(lab).width, th = z + 1;
+      const cands: Cand[] = [];
+      const add = (x: number, y: number, align: CanvasTextAlign) => {
+        const a = align === 'left' ? x : align === 'right' ? x - tw : x - tw / 2;
+        const b2 = a + tw, c = y - th * 0.55, d = y + th * 0.55;
+        cands.push({ x, y, align, a, b2, c, d, z });
+      };
+      add(X + 9, Yp + (p.im > 1e-9 ? 14 : -12), 'left');
+      add(X - 9, Yp + (p.im > 1e-9 ? 14 : -12), 'right');
+      add(X + 9, Yp - 12, 'left');
+      add(X - 9, Yp - 12, 'right');
+      add(X, Yp - 16, 'center');
+      add(X, Yp + 16, 'center');
+      add(X + 9, Yp, 'left');
+      add(X - 9, Yp, 'right');
+      add(X + 9, Yp - 22, 'left');
+      add(X - 9, Yp + 22, 'right');
+      add(X + 9, (f.box.t + Yp) / 2, 'left');
+      add(X - 9, (f.box.t + Yp) / 2, 'right');
+      for (const c of cands) {
+        const n = cost(c.a, c.b2, c.c, c.d);
+        if (n < best) { best = n; pick = c; }
+      }
+      if (best < 1e6) break;
+    }
+    if (!pick || best >= 1e6) {
+      g.font = '8px system-ui, sans-serif';
+      const tw = g.measureText(lab).width, th = 9;
+      const ys = [Yp + 12, Yp - 12, Yp + 22, Yp - 22, f.box.t + 8 + th / 2, (f.box.t + f.box.b) / 2, f.box.b - 8 - th / 2];
+      let found: Cand | null = null;
+      for (const yy of ys) {
+        for (const [x, align] of [[X + 9, 'left'], [X - 9, 'right']] as [number, CanvasTextAlign][]) {
+          let a = align === 'left' ? x : x - tw, b2 = a + tw, c = yy - th / 2, d = c + th;
+          a = Math.max(f.box.l + 2, Math.min(a, f.box.r - 2 - tw)); b2 = a + tw;
+          c = Math.max(f.box.t + 2, Math.min(c, f.box.b - 2 - th)); d = c + th;
+          if (cost(a, b2, c, d) < 1e6) { found = { x: align === 'left' ? a : b2, y: (c + d) / 2, align, a, b2, c, d, z: 8 }; break; }
+        }
+        if (found) break;
+      }
+      if (found) pick = found;
+      else {
+        let bestC: Cand | null = null, bestN = Infinity;
+        const soft = (a: number, b2: number, c: number, d: number) => {
+          let n = 0;
+          if (!inside(a, b2, c, d)) n += 1000;
+          if (onSigma(a, b2, c, d) || onJw(a, b2, c, d) || hitsUnstable(a, b2, c, d) || hitsTaken(a, b2, c, d)) n += 400;
+          return n;
+        };
+        for (let yy = f.box.t + 8; yy < f.box.b - 8; yy += 8) {
+          for (const [x, align] of [[X + 9, 'left'], [X - 9, 'right'], [f.box.l + 4, 'left'], [f.box.r - 4, 'right']] as [number, CanvasTextAlign][]) {
+            let a = align === 'left' ? x : x - tw, b2 = a + tw, c = yy - th / 2, d = c + th;
+            a = Math.max(f.box.l + 2, Math.min(a, f.box.r - 2 - tw)); b2 = a + tw;
+            c = Math.max(f.box.t + 2, Math.min(c, f.box.b - 2 - th)); d = c + th;
+            const n = soft(a, b2, c, d);
+            if (n < bestN) { bestN = n; bestC = { x: align === 'left' ? a : b2, y: (c + d) / 2, align, a, b2, c, d, z: 8 }; }
+          }
+        }
+        if (bestC) pick = bestC;
+      }
+    }
+    if (!pick) continue;
+    withLabelRole('axis', () => { text(g, lab, pick.x, pick.y, col.b(), pick.align, pick.z); });
+    taken.push({ x0: pick.a, x1: pick.b2, y0: pick.c, y1: pick.d });
   }
   for (const zn of zetaNames) zn();
-  g.restore();
+  });
   g.restore();
   if (s.inset && s.clear !== false) {
-    const iw = Math.round(Math.max(110, Math.min(220, h - 16, w * 0.32)));
-    const ih = iw;
-    const right = w - (ox + vw), left = ox;
-    let ix: number, iy: number;
-    if (right >= iw + 10) { ix = ox + vw + 6; iy = Math.max(4, Math.min(h - ih - 4, oy + (vh - ih) / 2)); }
-    else if (left >= iw + 10) { ix = 8; iy = Math.max(4, Math.min(h - ih - 4, oy + (vh - ih) / 2)); }
-    else { ix = Math.max(8, ox + vw - iw - 8); iy = Math.max(4, oy + vh - ih - 8); }
+    let ix: number, iy: number, iw: number, ih: number;
+    if (reserved) ({ ix, iy, iw, ih } = reserved);
+    else {
+      iw = Math.round(Math.max(110, Math.min(220, h - 16, w * 0.32)));
+      ih = iw;
+      const right = w - (ox + vw), left = ox;
+      if (right >= iw + 10) { ix = ox + vw + 6; iy = Math.max(4, Math.min(h - ih - 4, oy + (vh - ih) / 2)); }
+      else if (left >= iw + 10) { ix = 8; iy = Math.max(4, Math.min(h - ih - 4, oy + (vh - ih) / 2)); }
+      else { ix = Math.max(8, ox + vw - iw - 8); iy = Math.max(4, oy + vh - ih - 8); }
+    }
     if (ix + iw <= w - 2 && iy + ih <= h - 2 && iy >= 0 && iw >= 110 && ih >= 110) {
       g.save();
       g.strokeStyle = col.strong(); g.lineWidth = 1; g.setLineDash([]);

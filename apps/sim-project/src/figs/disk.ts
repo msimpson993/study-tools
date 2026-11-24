@@ -41,7 +41,7 @@ export const diskPanels = (): FigurePanel[] => [
       });
       g.restore();
       const tsTxt = r.m.ts > tEnd ? `Ts ${f(r.m.ts, 1)}\u00a0s\u00a0(off plot)` : `Ts ${f(r.m.ts, 3)} s`;
-      text(g, `Ka = ${f(Ka, 1)}  OS ${f(r.m.os, 2)} %  ${tsTxt}` + (stand ? `  stand-in ${f(stand.m.os, 2)} %` : ''), 8, 14, col.text(), 'left', 10);
+      if (head) text(g, `Ka = ${f(Ka, 1)}  OS ${f(r.m.os, 2)} %  ${tsTxt}` + (stand ? `  stand-in ${f(stand.m.os, 2)} %` : ''), 8, 14, col.text(), 'left', 10);
     },
   },
   {
@@ -65,7 +65,7 @@ export const diskPanels = (): FigurePanel[] => [
         settlingLabel: settled ? `shock Ts ${f(r.m.ts, 2)} s` : undefined,
       });
       g.restore();
-      text(g, `offset ${f(off, 5)}   dip ${f(r.m.peak, 6)} at ${f(r.m.tp, 3)} s`, 8, 14, col.text(), 'left', 10);
+      if (head) text(g, `offset ${f(off, 5)}   dip ${f(r.m.peak, 6)} at ${f(r.m.tp, 3)} s`, 8, 14, col.text(), 'left', 10);
     },
   },
   {

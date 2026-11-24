@@ -24,7 +24,7 @@ export const borerPanels = (): FigurePanel[] => [
       const ghosts = on(v, 'ghosts');
       const g20 = ghosts ? borerStep(20, Kd, 4, 4001) : undefined;
       const g100 = ghosts ? borerStep(100, Kd, 4, 4001) : undefined;
-      const head = isThumb(g) ? 0 : 22;
+      const thumb = isThumb(g), head = thumb ? 0 : PLOT_HEAD;
       wipe(g, w, h);
       g.save(); g.translate(0, head);
       const settled = r.m.ts < 2 * 0.98;
@@ -34,14 +34,14 @@ export const borerPanels = (): FigurePanel[] => [
       });
       g.restore();
       const z = borerWnZeta(K, Kd);
-      text(g, `ζ = ${f(z.zeta, 3)}  ωn = ${f(z.wn, 2)}  OS ${f(r.m.os, 2)} %  Ts ${f(r.m.ts, 3)} s`, 8, 14, col.text(), 'left', 10);
+      if (!thumb) text(g, `ζ = ${f(z.zeta, 3)}  ωn = ${f(z.wn, 2)}  OS ${f(r.m.os, 2)} %  Ts ${f(r.m.ts, 3)} s`, 8, 14, col.text(), 'left', 10);
     },
   },
   {
     id: 'push', title: 'Unit rock push', x: 'time (s)', y: 'y(t)',
     draw(g, w, h, v: V) {
       const { K, Kd } = borerOf(v), r = borerPush(K, Kd, 4, 8001);
-      const head = isThumb(g) ? 0 : 22;
+      const thumb = isThumb(g), head = thumb ? 0 : PLOT_HEAD;
       wipe(g, w, h);
       g.save(); g.translate(0, head);
       const settled = r.m.ts < 2.5 * 0.98;
@@ -50,7 +50,7 @@ export const borerPanels = (): FigurePanel[] => [
         color: col.a(), yLabel: 'y(t)  (offset 1/K)',
       });
       g.restore();
-      text(g, `offset 1/K = ${f(1 / K, 4)}   peak ${f(r.m.peak, 5)} at ${f(r.m.tp, 3)} s`, 8, 14, col.text(), 'left', 10);
+      if (!thumb) text(g, `offset 1/K = ${f(1 / K, 4)}   peak ${f(r.m.peak, 5)} at ${f(r.m.tp, 3)} s`, 8, 14, col.text(), 'left', 10);
     },
   },
   {
@@ -62,7 +62,7 @@ export const borerPanels = (): FigurePanel[] => [
       const ghosts = on(v, 'ghosts') ? [...borerPoles(20, Kd), ...borerPoles(100, Kd)] : [];
       const zeros = z === null ? [] : [C(z, 0)];
       let inset: { range: number; reCenter: number; label: string } | undefined;
-      if (!isThumb(g) && z !== null && w >= 360) {
+      if (!isThumb(g) && z !== null && w >= 200) {
         const near = poles.reduce((a, p) => (Math.hypot(p.re - z, p.im) < Math.hypot(a.re - z, a.im) ? p : a), poles[0]);
         const d = near ? Math.hypot(near.re - z, near.im) : 0;
         if (d > 1e-6 && d < 1.2) {
@@ -100,7 +100,8 @@ export const tradeoffPanels = (): FigurePanel[] => [
       const xr: [number, number] = [0, Math.max(40, ...xs) * 1.05], yr: [number, number] = [Math.min(...ys) * 0.7, Math.max(...ys) * 1.15];
       // log y
       const yLog: [number, number] = [Math.log10(Math.max(yr[0], 1e-5)), Math.log10(yr[1])];
-      const fr = rangeFrame(w, h, xr, yLog, 72, 14, 12, 32);
+      const thumb = isThumb(g), head = thumb ? 0 : PLOT_HEAD;
+      const fr = rangeFrame(w, h, xr, yLog, 72, 14, thumb ? 12 : head, 32);
       graphAxes(g, fr, xr, yLog, 'overshoot (%)', isDisk ? '|shock offset|' : 'push offset', 0, 1, undefined, fmtPow10);
       curve(g, fr, xs, ys.map((y) => Math.log10(y)), col.muted(), 2);
       const liveX = isDisk ? diskSeek(g0, 3, 4001).m.os : borerStep(g0, 11, 6, 4001).m.os;
@@ -113,7 +114,7 @@ export const tradeoffPanels = (): FigurePanel[] => [
         dot(g, fr, [x, Math.log10(y)], col.e(), 4);
         text(g, lab, fr.X(x) + 6, fr.Y(Math.log10(y)) - 4, col.e(), 'left', 10);
       }
-      text(g, `${isDisk ? 'Ka' : 'K'} = ${f(g0, 1)}  →  OS ${f(liveX, 2)} %, offset ${f(liveY, 5)}`, 56, 16, col.text(), 'left', 10);
+      if (!thumb) text(g, `${isDisk ? 'Ka' : 'K'} = ${f(g0, 1)}  →  OS ${f(liveX, 2)} %, offset ${f(liveY, 5)}`, 8, 14, col.text(), 'left', 10);
     },
   },
   {
@@ -122,9 +123,9 @@ export const tradeoffPanels = (): FigurePanel[] => [
       const machine = str(v, 'machine', 'boring machine'), g0 = num(v, 'g', 100);
       const isDisk = machine.includes('disk');
       const r = isDisk ? diskSeek(g0, 3, 4001) : borerStep(g0, 11, 6, 4001);
-      const head = isThumb(g) ? 0 : 22;
+      const thumb = isThumb(g), head = thumb ? 0 : PLOT_HEAD;
       wipe(g, w, h);
-      text(g, `${isDisk ? 'Ka' : 'K'} = ${f(g0, 1)}  OS ${f(r.m.os, 2)} %  Ts ${f(r.m.ts, 3)} s`, 8, 14, col.text(), 'left', 10);
+      if (!isThumb(g)) text(g, `${isDisk ? 'Ka' : 'K'} = ${f(g0, 1)}  OS ${f(r.m.os, 2)} %  Ts ${f(r.m.ts, 3)} s`, 8, 14, col.text(), 'left', 10);
       g.save(); g.translate(0, head);
       drawStepResponse(g, w, h - head, {
         t: r.t, y: r.y, final: 1, ref: 1, tEnd: isDisk ? 1.5 : 2.5,

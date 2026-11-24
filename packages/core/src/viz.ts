@@ -42,7 +42,54 @@ export function rangeFrame(w: number, h: number, xr: V2, yr: V2, L = 40, R = 10,
 }
 
 export function wipe(g: CanvasRenderingContext2D, w: number, h: number) { g.setLineDash([]); g.clearRect(0, 0, w, h); resetLabels(g.canvas); }
+
+/** Device-pixel axis-aligned clip, for the label-collision tests and for fitText. */
+export type ClipRect = { x0: number; y0: number; x1: number; y1: number };
+const clipStack = new WeakMap<CanvasRenderingContext2D, ClipRect[]>();
+const boxToDevice = (g: CanvasRenderingContext2D, box: { l: number; t: number; r: number; b: number }): ClipRect => {
+  const m = typeof g.getTransform === 'function' ? g.getTransform() : { a: 1, b: 0, c: 0, d: 1, e: 0, f: 0 };
+  let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity;
+  for (const px of [box.l, box.r]) for (const py of [box.t, box.b]) {
+    const X = m.a * px + m.c * py + m.e, Y = m.b * px + m.d * py + m.f;
+    if (X < x0) x0 = X; if (X > x1) x1 = X; if (Y < y0) y0 = Y; if (Y > y1) y1 = Y;
+  }
+  return { x0, y0, x1, y1 };
+};
+const pushClip = (g: CanvasRenderingContext2D, box: { l: number; t: number; r: number; b: number }) => {
+  const s = clipStack.get(g) ?? []; s.push(boxToDevice(g, box)); clipStack.set(g, s);
+};
+const popClip = (g: CanvasRenderingContext2D) => { const s = clipStack.get(g); if (s && s.length) s.pop(); };
+/** The innermost tracked clip in device pixels, if a withClip / tracked clipBox is active. */
+export const currentClip = (g: CanvasRenderingContext2D): ClipRect | null => {
+  const s = clipStack.get(g); return s && s.length ? s[s.length - 1] : null;
+};
 export function clipBox(g: CanvasRenderingContext2D, f: Frame) { g.beginPath(); g.rect(f.box.l, f.box.t, f.box.r - f.box.l, f.box.b - f.box.t); g.clip(); }
+/** Clip to the frame box, record it for label tests and fitText, and restore both on exit. */
+export function withClip<T>(g: CanvasRenderingContext2D, f: Frame, fn: () => T): T {
+  g.save(); clipBox(g, f); pushClip(g, f.box);
+  try { return fn(); } finally { popClip(g); g.restore(); }
+}
+
+type CurveLog = { pts: { x: number; y: number }[]; width: number; W: number; H: number; cv: number; id: string; gen: number; where?: string; step?: string };
+const logCurve = (g: CanvasRenderingContext2D, pts: { x: number; y: number }[], width: number) => {
+  const log = (globalThis as unknown as { __curveLog?: unknown[] }).__curveLog; if (!Array.isArray(log) || pts.length < 2) return;
+  const m = typeof g.getTransform === 'function' ? g.getTransform() : { a: 1, b: 0, c: 0, d: 1, e: 0, f: 0 };
+  const cv = g.canvas as HTMLCanvasElement;
+  const cvs = (globalThis as unknown as { __textCanvases?: HTMLCanvasElement[] }).__textCanvases; let ci = -1;
+  if (Array.isArray(cvs)) { ci = cvs.indexOf(cv); if (ci < 0) { cvs.push(cv); ci = cvs.length - 1; } }
+  const out: { x: number; y: number }[] = [];
+  const step = Math.max(1, Math.ceil(pts.length / 80));
+  for (let i = 0; i < pts.length; i += step) {
+    const p = pts[i];
+    out.push({ x: m.a * p.x + m.c * p.y + m.e, y: m.b * p.x + m.d * p.y + m.f });
+  }
+  const last = pts[pts.length - 1], L = out[out.length - 1];
+  const lx = m.a * last.x + m.c * last.y + m.e, ly = m.b * last.x + m.d * last.y + m.f;
+  if (!L || Math.hypot(L.x - lx, L.y - ly) > 0.5) out.push({ x: lx, y: ly });
+  const card = cv.closest?.('[data-testid=step-card]') as HTMLElement | null;
+  const where = cv.closest?.('.fig-overlay') ? 'expand' : cv.closest?.('.tile-frame') ? 'tile' : 'other';
+  log.push({ pts: out, width, W: cv.width, H: cv.height, cv: ci, id: cv.closest?.('[data-fig]')?.getAttribute('data-fig') || cv.getAttribute?.('data-figure') || cv.getAttribute?.('data-big') || cv.id || '', gen: labelGen(cv), where, step: card?.getAttribute('data-step') || '' } satisfies CurveLog);
+};
 
 /** Where a label of this size fits inside the canvas: shrinks it (to 72% at most), then slides it in from the edge, then splits it
  * into two lines, so an in-plot note never runs off the panel. Works in device pixels, so translated or scaled sub-panels are handled. */
@@ -51,7 +98,9 @@ export function fitText(g: CanvasRenderingContext2D, s: string, x: number, align
   const font = (z: number) => `${z}px system-ui,sans-serif`;
   const m = typeof g.getTransform === 'function' ? g.getTransform() : null;
   const k = m && m.a > 0 ? m.a : 1, e = m ? m.e : 0, W = (g.canvas?.width || Infinity) / k, ox = -e / k; // canvas in user units: [ox, ox + W]
-  const lo = ox + 2, hi = ox + W - 2;
+  const clip = currentClip(g);
+  // when a plot clip is active, stay inside it (not just the canvas) so a letterboxed s-plane does not hide a minus in the gutter
+  const lo = clip ? (clip.x0 - e) / k + 2 : ox + 2, hi = clip ? (clip.x1 - e) / k - 2 : ox + W - 2;
   const span = (w: number, xx: number) => (align === 'center' ? [xx - w / 2, xx + w / 2] : align === 'right' || align === 'end' ? [xx - w, xx] : [xx, xx + w]);
   g.font = font(size); let w = g.measureText(s).width, z = size, lines = [s];
   if (m && (Math.abs(m.b) > 1e-9 || Math.abs(m.c) > 1e-9)) { const [r0, r1] = span(w, x); return { size, x, lines, x0: r0, x1: r1 }; } // rotated (axis titles): leave as drawn
@@ -136,10 +185,18 @@ export function text(g: CanvasRenderingContext2D, s: string, x: number, y: numbe
     const list = labelsOn(cv);
     if (axisAligned && role === 'tick') { if (labelOverlaps(list, rect, -3)) { /* a number touching another label (within 3 px) reads as one: leave it out */ logText(g, s, f, size, x, y, base, rect, 0, true); return; } }
     else if (axisAligned && role === 'note') {
-      // whole lines down or up, nearest first, as far as the canvas goes; a note that only hits the numbers at its left end may step right
-      const L = z * 1.15 * m.d, H = cv.height || 2000, dys = [0]; for (let k = 1; k * L < H; k++) dys.push(k * L, -k * L);
-      const spot = freeSpot(list, rect, dys, H, cv.width || Infinity) ?? [0, 0]; dx = spot[0]; dy = spot[1];
-      rect = { ...rect, x0: rect.x0 + dx, x1: rect.x1 + dx, y0: rect.y0 + dy, y1: rect.y1 + dy };
+      // whole lines down or up, nearest first; stay inside the plot clip when one is active (else the canvas)
+      const clip = currentClip(g);
+      const ymin = clip ? clip.y0 + 1 : 0, ymax = clip ? clip.y1 - 1 : (cv.height || 2000);
+      const xmin = clip ? clip.x0 + 1 : 0, xmax = clip ? clip.x1 - 1 : (cv.width || Infinity);
+      const L = z * 1.15 * m.d, dys = [0]; for (let k = 1; k * L < Math.max(8, ymax - ymin); k++) dys.push(k * L, -k * L);
+      const spot = freeSpot(list, rect, dys, ymax, xmax, 0.5, true, ymin, xmin);
+      if (spot) {
+        const moved = { ...rect, x0: rect.x0 + spot[0], x1: rect.x1 + spot[0], y0: rect.y0 + spot[1], y1: rect.y1 + spot[1] };
+        if (moved.x0 >= xmin - 0.5 && moved.x1 <= xmax + 0.5 && moved.y0 >= ymin - 0.5 && moved.y1 <= ymax + 0.5) {
+          dx = spot[0]; dy = spot[1]; rect = moved;
+        }
+      }
     }
     list.push(rect);
   }
@@ -169,7 +226,7 @@ function logText(g: CanvasRenderingContext2D, s: string, f: TextFit, size: numbe
   }
   const card = cv.closest?.('[data-testid=step-card]') as HTMLElement | null;
   const where = cv.closest?.('.fig-overlay') ? 'expand' : cv.closest?.('.tile-frame') ? 'tile' : 'other';
-  log.push({ s, x0, x1, y0, y1, W: cv.width, H: cv.height, cv: ci, id: cv.closest?.('[data-fig]')?.getAttribute('data-fig') || cv.getAttribute?.('data-figure') || cv.getAttribute?.('data-big') || cv.id || '', fitted: f.lines.length > 1 || f.size < size - 0.01 || Math.abs(f.x - x) > 0.5, role: rect?.role, moved: Math.abs(dy) > 0.01, skipped, gen: labelGen(cv), where, step: card?.getAttribute('data-step') || '' });
+  log.push({ s, x0, x1, y0, y1, W: cv.width, H: cv.height, cv: ci, id: cv.closest?.('[data-fig]')?.getAttribute('data-fig') || cv.getAttribute?.('data-figure') || cv.getAttribute?.('data-big') || cv.id || '', fitted: f.lines.length > 1 || f.size < size - 0.01 || Math.abs(f.x - x) > 0.5, role: rect?.role, moved: Math.abs(dy) > 0.01, skipped, gen: labelGen(cv), where, step: card?.getAttribute('data-step') || '', clip: currentClip(g) ?? null });
 }
 export function tline(g: CanvasRenderingContext2D, f: Frame, a: V2, b: V2, color: string, width = 1.5, dash: number[] = []) {
   g.strokeStyle = color; g.lineWidth = width; g.setLineDash(dash); g.beginPath(); g.moveTo(f.X(a[0]), f.Y(a[1])); g.lineTo(f.X(b[0]), f.Y(b[1])); g.stroke(); g.setLineDash([]);
@@ -179,6 +236,7 @@ export function polyline(g: CanvasRenderingContext2D, f: Frame, pts: V2[], color
   g.strokeStyle = color; g.lineWidth = width; g.setLineDash(dash); g.beginPath();
   pts.forEach((p, i) => (i ? g.lineTo(f.X(p[0]), f.Y(p[1])) : g.moveTo(f.X(p[0]), f.Y(p[1]))));
   if (close) g.closePath(); g.stroke(); g.setLineDash([]);
+  logCurve(g, pts.map((p) => ({ x: f.X(p[0]), y: f.Y(p[1]) })), width);
 }
 export function fillPoly(g: CanvasRenderingContext2D, f: Frame, pts: V2[], color: string) {
   g.fillStyle = color; g.beginPath(); pts.forEach((p, i) => (i ? g.lineTo(f.X(p[0]), f.Y(p[1])) : g.moveTo(f.X(p[0]), f.Y(p[1])))); g.closePath(); g.fill();
@@ -322,10 +380,12 @@ export function graphAxes(g: CanvasRenderingContext2D, f: Frame, xr: V2, yr: V2,
   if (xr[0] < 0 && xr[1] > 0) { g.beginPath(); g.moveTo(f.X(0), f.box.t); g.lineTo(f.X(0), f.box.b); g.stroke(); }
 }
 export function curve(g: CanvasRenderingContext2D, f: Frame, xs: ArrayLike<number>, ys: ArrayLike<number>, color: string, width = 2, dash: number[] = []) {
+  const pts: { x: number; y: number }[] = [];
   g.save(); clipBox(g, f); g.strokeStyle = color; g.lineWidth = width; g.setLineDash(dash); g.beginPath();
   let pen = false;
-  for (let i = 0; i < xs.length; i++) { if (!Number.isFinite(ys[i])) { pen = false; continue; } const px = f.X(xs[i]), py = f.Y(ys[i]); if (pen) g.lineTo(px, py); else { g.moveTo(px, py); pen = true; } }
+  for (let i = 0; i < xs.length; i++) { if (!Number.isFinite(ys[i])) { pen = false; continue; } const px = f.X(xs[i]), py = f.Y(ys[i]); pts.push({ x: px, y: py }); if (pen) g.lineTo(px, py); else { g.moveTo(px, py); pen = true; } }
   g.stroke(); g.restore(); g.setLineDash([]);
+  logCurve(g, pts.filter((p) => p.x >= f.box.l - 1 && p.x <= f.box.r + 1 && p.y >= f.box.t - 1 && p.y <= f.box.b + 1), width);
 }
 export function fillBetween(g: CanvasRenderingContext2D, f: Frame, xs: ArrayLike<number>, ys: ArrayLike<number>, color: string, base = 0) {
   g.save(); clipBox(g, f); g.fillStyle = color; g.beginPath(); g.moveTo(f.X(xs[0]), f.Y(base));
