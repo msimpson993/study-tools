@@ -96,7 +96,7 @@ export function drawStepResponse(g: CanvasRenderingContext2D, w: number, h: numb
   const pad = (v: number | undefined, full: number, compact: number) => thumb ? Math.min(v ?? compact, compact) : (v ?? full);
   const tight = h < 260, needHead = !!(s.ghost?.label || show.overshoot);
   // slim pads: anchored OS / Tr stay by their markers, not in a reserved two-row band (BUG-51)
-  const topPad = needHead ? pad(s.pads?.t, 18, 12) : pad(s.pads?.t, 14, 8);
+  const topPad = needHead ? pad(s.pads?.t, 24, 24) : pad(s.pads?.t, 14, 8);
   const f = rangeFrame(w, h, [0, tEnd], yr, pad(s.pads?.l, 72, 32), pad(s.pads?.r, 14, 10), topPad, pad(s.pads?.b, 38, 20));
   const m = stepMetrics(t, y, { ref, final: s.final, band });
   const avoid = (show.overshoot && Number.isFinite(m.peak) && m.overshootPct > 0.05)
@@ -136,13 +136,16 @@ export function drawStepResponse(g: CanvasRenderingContext2D, w: number, h: numb
     vertSegs.some((s) => own.some((o) => Math.abs(s.x - o) < 1.5) ? false
       : (s.x > a - 2 && s.x < b2 + 2 && d > Math.min(s.y0, s.y1) - 2 && c < Math.max(s.y0, s.y1) + 2));
   const hitsCurve = (x0: number, x1: number, y0: number, y1: number) => {
+    // match the local overlap e2e (9%+2 px width, 2 px height) plus the stroke half-width
+    const dx = ((x1 - x0) * 0.09 + 2) / 2, dy = 1;
+    const a = x0 - dx, b2 = x1 + dx, c = y0 - dy, d = y1 + dy;
     for (let i = 1; i < t.length; i++) {
       const ax = f.X(t[i - 1]), ay = f.Y(y[i - 1]), bx = f.X(t[i]), by = f.Y(y[i]);
-      if (Math.max(ax, bx) < x0 - 10 || Math.min(ax, bx) > x1 + 10 || Math.max(ay, by) < y0 - 10 || Math.min(ay, by) > y1 + 10) continue;
+      if (Math.max(ax, bx) < a - 10 || Math.min(ax, bx) > b2 + 10 || Math.max(ay, by) < c - 10 || Math.min(ay, by) > d + 10) continue;
       const steps = Math.max(2, Math.ceil(Math.hypot(bx - ax, by - ay) / 3));
       for (let k = 0; k <= steps; k++) {
         const u = k / steps, px = ax + (bx - ax) * u, py = ay + (by - ay) * u;
-        if (px > x0 - 3 && px < x1 + 3 && py > y0 - 3 && py < y1 + 3) return true;
+        if (px > a - 2 && px < b2 + 2 && py > c - 2 && py < d + 2) return true;
       }
     }
     return false;
@@ -244,7 +247,10 @@ export function drawStepResponse(g: CanvasRenderingContext2D, w: number, h: numb
         for (const z of [10.5, 10, MIN_FONT]) {
           g.font = `${z}px system-ui,sans-serif`;
           const tw = g.measureText(word).width, th = z + 3;
-          for (const c of aroundMarker(peakX, peakY, tw, th, z, true)) {
+          const above: TextBox[] = [];
+          for (const gap of [12, 16]) for (const al of ['center', 'right', 'left'] as CanvasTextAlign[])
+            above.push(textBox(peakX, peakY - gap - z * 0.55, tw, th, al, z));
+          for (const c of [...above, ...aroundMarker(peakX, peakY, tw, th, z, true)]) {
             const I = inflateBox(c);
             if (!osFits(c.a, c.b2, c.c, c.d)) continue;
             if (!ignoreGhost && ghostWouldHit(I.a, I.b2, I.c, I.d)) continue;
@@ -254,7 +260,7 @@ export function drawStepResponse(g: CanvasRenderingContext2D, w: number, h: numb
             const hitsV = (tx: number) => tx > I.a - 2 && tx < I.b2 + 2 && I.d > Math.min(peakY, f.Y(yr[0])) - 2 && I.c < Math.max(peakY, f.box.b) + 2;
             if (show.timing && (hitsV(f.X(m.t10)) || hitsV(f.X(m.t90)))) continue;
             if (hitsOtherVert(I.a, I.b2, I.c, I.d, [peakX])) continue;
-            if (hitsCurve(I.a, I.b2, I.c, I.d)) continue;
+            if (hitsCurve(c.a, c.b2, c.c, c.d)) continue;
             return { word, c };
           }
         }
@@ -280,18 +286,25 @@ export function drawStepResponse(g: CanvasRenderingContext2D, w: number, h: numb
         const cx = Math.max(I.a, Math.min(peakX, I.b2)), cy = Math.max(I.c, Math.min(peakY, I.d));
         if (Math.hypot(cx - peakX, cy - peakY) < 8) continue;
         if (I.c < yRef + 3 && I.d > yRef - 3) continue;
-        if (hitsCurve(I.a, I.b2, I.c, I.d)) continue;
+        if (hitsCurve(cand.a, cand.b2, cand.c, cand.d)) continue;
         c = cand; break;
       }
       if (!c) {
-        const pool = aroundMarker(peakX, peakY, tw, th, MIN_FONT, true);
+        const z = MIN_FONT;
+        const above: TextBox[] = [];
+        for (const gap of [12, 16]) for (const al of ['center', 'right', 'left'] as CanvasTextAlign[])
+          above.push(textBox(peakX, peakY - gap - z * 0.55, tw, th, al, z));
+        const pool = [...above, ...aroundMarker(peakX, peakY, tw, th, z, true), ...aroundMarker(peakX, peakY, tw, th, z, false)];
         const okish = (cand: TextBox) => {
           const I = inflateBox(cand);
-          return osFits(cand.a, cand.b2, cand.c, cand.d) && !(I.c < yRef + 3 && I.d > yRef - 3);
+          if (!osFits(cand.a, cand.b2, cand.c, cand.d)) return false;
+          const cx = Math.max(I.a, Math.min(peakX, I.b2)), cy = Math.max(I.c, Math.min(peakY, I.d));
+          if (Math.hypot(cx - peakX, cy - peakY) < 8) return false;
+          if (I.c < yRef + 3 && I.d > yRef - 3) return false;
+          if (hitsCurve(cand.a, cand.b2, cand.c, cand.d)) return false;
+          return true;
         };
-        c = pool.find((cand) => okish(cand) && !hitsCurve(inflateBox(cand).a, inflateBox(cand).b2, inflateBox(cand).c, inflateBox(cand).d))
-          ?? pool.find(okish)
-          ?? null;
+        c = pool.find(okish) ?? null;
       }
       if (c) {
         withAnchor({ kind: 'marker', x: peakX, y: peakY }, () => {
@@ -323,7 +336,7 @@ export function drawStepResponse(g: CanvasRenderingContext2D, w: number, h: numb
       const a = sp.align === 'right' ? sp.x - gw : sp.x, b2 = a + gw, c = sp.y - 6, d = sp.y + 6;
       const I = inflateBox(textBox(sp.x, sp.y, gw, 13, sp.align, 10));
       if (osPlaced && I.b2 > osPlaced.x0 - 4 && I.a < osPlaced.x1 + 4 && I.d > osPlaced.y - 10 && I.c < osPlaced.y + 10) continue;
-      if (hitsCurve(I.a, I.b2, I.c, I.d)) continue;
+      if (hitsCurve(a, b2, c, d)) continue;
       if (show.overshoot && Number.isFinite(m.peak)) {
         const px0 = f.X(m.peakTime), py0 = f.Y(m.peak);
         const cx = Math.max(I.a, Math.min(px0, I.b2)), cy = Math.max(I.c, Math.min(py0, I.d));
@@ -376,14 +389,16 @@ export function drawStepResponse(g: CanvasRenderingContext2D, w: number, h: numb
       if (!tsPick) {
         g.font = `${MIN_FONT}px system-ui,sans-serif`;
         const tw = g.measureText(tsLab).width, th = MIN_FONT + 3;
-        const ys = [yLo - 18, yLo - 28, (yLo + yHi) / 2, yHi - 12];
-        for (const yy of ys) for (const [x, al] of [[lineX + 10, 'left'], [lineX - 10, 'right']] as [number, CanvasTextAlign][]) {
+        const ys = [yLo - 18, yLo - 28, yLo - 8, (yLo + yHi) / 2, yHi - 12, yHi + 10];
+        const xs: [number, CanvasTextAlign][] = [[lineX + 10, 'left'], [lineX - 10, 'right'], [lineX + 16, 'left'], [lineX - 16, 'right']];
+        for (const yy of ys) for (const [x, al] of xs) {
           const c = textBox(x, yy, tw, th, al, MIN_FONT);
           if (!inPlot(c.a, c.b2, c.c, c.d, 10)) continue;
+          if (osPlaced && c.b2 > osPlaced.x0 - 6 && c.a < osPlaced.x1 + 6 && c.d > osPlaced.y - 12 && c.c < osPlaced.y + 12) continue;
           if (hitsOtherVert(c.a, c.b2, c.c, c.d, [lineX])) continue;
+          if (hitsCurve(c.a, c.b2, c.c, c.d)) continue;
           tsPick = c; break;
         }
-        if (!tsPick) tsPick = textBox(lineX + 10, yLo - 18, tw, th, 'left', MIN_FONT);
       }
       if (tsPick) withAnchor({ kind: 'line', x: lineX, y: yLo, x2: lineX, y2: yHi }, () => {
         withLabelRole('axis', () => { lbl(tsLab, tsPick!.x, tsPick!.y, col.c(), tsPick!.align, tsPick!.z); });
@@ -536,12 +551,12 @@ export function drawSPlane(g: CanvasRenderingContext2D, w: number, h: number, s:
       const rayHits = (b: { a: number; b2: number; c: number; d: number }, t2: number, pad = 3) =>
         [1, -1].some((sg) => { for (let k = 0; k <= 80; k++) { const q = (k / 80) * R, X = f.X(-Math.cos(t2) * q), Y = f.Y(sg * Math.sin(t2) * q); if (X > b.a - pad && X < b.b2 + pad && Y > b.c - pad && Y < b.d + pad) return true; } return false; });
       const otherRay = (b: { a: number; b2: number; c: number; d: number }) => rays.some((t2) => Math.abs(t2 - th) >= 1e-6 && rayHits(b, t2));
-      const ok = (c: TextBox, relaxOther = false, rawOwn = false) => {
+      const ok = (c: TextBox, relaxOther = false, rawOwn = false, relaxTaken = false) => {
         const I = inflateBox(c);
         const own = rawOwn ? c : I;
         return c.a > f.box.l + 2 && c.b2 < Math.min(f.box.r - 2, x0 - 3) && c.c > f.box.t + 2 && c.d < f.box.b - 2
         && marksZ.every((p) => { const X = f.X(p.re), Y = f.Y(p.im); const cx = Math.max(I.a, Math.min(X, I.b2)), cy = Math.max(I.c, Math.min(Y, I.d)); return Math.hypot(cx - X, cy - Y) >= 8; })
-        && taken.every((t) => I.b2 < t.x0 - 4 || I.a > t.x1 + 4 || I.d < t.y0 - 4 || I.c > t.y1 + 4)
+        && (relaxTaken || taken.every((t) => I.b2 < t.x0 - 4 || I.a > t.x1 + 4 || I.d < t.y0 - 4 || I.c > t.y1 + 4))
         && !rayHits(own, th, rawOwn ? 2 : 3) && (relaxOther || !otherRay(I));
       };
       const along = Math.hypot(ax1 - ax0, ay1 - ay0) || 1;
@@ -559,21 +574,22 @@ export function drawSPlane(g: CanvasRenderingContext2D, w: number, h: number, s:
         }
         return out;
       };
-      const ks = [0.22, 0.3, 0.38, 0.45, 0.52, 0.6, 0.68, 0.75, 0.82, 0.9, 0.15];
+      const ks = [0.22, 0.3, 0.38, 0.45, 0.52, 0.6, 0.68, 0.75, 0.82, 0.9, 0.15, 0.08, 0.12, 0.95];
       const nearMark = (X: number, Y: number, lim: number) => marksZ.some((p) => Math.hypot(X - f.X(p.re), Y - f.Y(p.im)) < lim);
-      const walk = (zsz: number, relax: boolean, raw: boolean, skipNear: number) => {
+      const walk = (zsz: number, relax: boolean, raw: boolean, skipNear: number, relaxTaken = false) => {
         g.font = `${zsz}px system-ui,sans-serif`;
         for (const k of ks) {
           const q = Math.min(s.range * k, R), X = f.X(-Math.cos(th) * q), Y = f.Y(Math.sin(th) * q);
           if (X >= x0 - 4) continue;
           if (skipNear && nearMark(X, Y, skipNear)) continue;
-          for (const c of collect(zsz, X, Y)) if (ok(c, relax, raw)) return c;
+          for (const c of collect(zsz, X, Y)) if (ok(c, relax, raw, relaxTaken)) return c;
         }
         return null;
       };
       for (const zsz of [10, MIN_FONT]) { pick = walk(zsz, false, false, 16); if (pick) break; }
       if (!pick) pick = walk(MIN_FONT, true, false, 14);
       if (!pick) pick = walk(MIN_FONT, true, true, 12);
+      if (!pick) pick = walk(MIN_FONT, true, true, 8, true);
       // required ζ names stay on tiles and expanded views (BUG-54 / 55 / 56), still off the stroke
       if (!pick) {
         g.font = `${MIN_FONT}px system-ui,sans-serif`;
@@ -590,7 +606,7 @@ export function drawSPlane(g: CanvasRenderingContext2D, w: number, h: number, s:
                 const c = textBox(px, py, twz, MIN_FONT + 3, al, MIN_FONT);
                 if (ok(c, true, true)) { pick = c; break; }
                 if (!best && c.a > f.box.l + 1 && c.b2 < Math.min(f.box.r - 1, x0 - 1) && c.c > f.box.t + 1 && c.d < f.box.b - 1
-                    && !rayHits(c, th, 2)
+                    && !rayHits(inflateBox(c), th, 3) && !otherRay(inflateBox(c))
                     && marksZ.every((p) => { const Xz = f.X(p.re), Yz = f.Y(p.im); const cx = Math.max(c.a, Math.min(Xz, c.b2)), cy = Math.max(c.c, Math.min(Yz, c.d)); return Math.hypot(cx - Xz, cy - Yz) >= 7; }))
                   best = c;
               }
@@ -645,7 +661,8 @@ export function drawSPlane(g: CanvasRenderingContext2D, w: number, h: number, s:
   const zr = (s.zetaRays ?? []).map((zz) => Math.acos(Math.min(1, Math.max(0, zz))));
   const onRay = (x0b: number, x1b: number, y0b: number, y1b: number) => zr.some((t2) => [1, -1].some((sg) => {
     const ax = x0, ay = y0, bx = f.X(-Math.cos(t2) * R), by = f.Y(sg * Math.sin(t2) * R);
-    const pad = 2, a = x0b - pad, b2 = x1b + pad, c = y0b - pad, d = y1b + pad;
+    const dx = ((x1b - x0b) * 0.09 + 2) / 2, dy = 1;
+    const pad = 2, a = x0b - dx - pad, b2 = x1b + dx + pad, c = y0b - dy - pad, d = y1b + dy + pad;
     if (Math.max(ax, bx) < a || Math.min(ax, bx) > b2 || Math.max(ay, by) < c || Math.min(ay, by) > d) return false;
     const n = Math.max(2, Math.ceil(Math.hypot(bx - ax, by - ay) / 2));
     for (let k = 0; k <= n; k++) { const u = k / n, X = ax + (bx - ax) * u, Y = ay + (by - ay) * u; if (X > a && X < b2 && Y > c && Y < d) return true; }
@@ -695,17 +712,21 @@ export function drawSPlane(g: CanvasRenderingContext2D, w: number, h: number, s:
     const preferRight = f.box.r - X >= 28 && !rightBusy;
     const realPole = Math.abs(p.im) < 1e-9;
     let pick: TextBox | null = null;
+    const poleSpots = (sz: number, tw0: number, th0: number): TextBox[] => {
+      const out: TextBox[] = [];
+      // LHP: 'right' alignment extends the value left of the ×, clear of ζ rays that rise toward the origin
+      for (const gap of [16, 12]) for (const al of (['right', 'left', 'center'] as CanvasTextAlign[])) {
+        out.push(textBox(X, Yp - gap - sz * 0.55, tw0, th0, al, sz));
+        out.push(textBox(X, Yp + gap + sz * 0.55, tw0, th0, al, sz));
+      }
+      return out;
+    };
     for (const z of [10, MIN_FONT]) {
       g.font = `${z}px system-ui,sans-serif`;
       const tw = g.measureText(lab).width, th = z + 4;
-      const explicit: TextBox[] = realPole ? [
-        textBox(X, Yp - 12 - z * 0.55, tw, th, 'center', z),
-        textBox(X, Yp + 12 + z * 0.55, tw, th, 'center', z),
-        textBox(X, Yp - 16 - z * 0.55, tw, th, 'center', z),
-        textBox(X, Yp + 16 + z * 0.55, tw, th, 'center', z),
-      ] : [];
+      const explicit: TextBox[] = realPole ? poleSpots(z, tw, th) : [];
       const cands = aroundMarker(X, Yp, tw, th, z, preferRight);
-      const ranked = realPole ? [...explicit, ...cands].sort((a, b) => Math.abs((b.c + b.d) / 2 - Yp) - Math.abs((a.c + a.d) / 2 - Yp)) : cands;
+      const ranked = realPole ? [...explicit, ...cands] : cands;
       for (const c of ranked) {
         const I = inflateBox(c);
         if (c.a < f.box.l + 1 || c.b2 > f.box.r - 1 || c.c < f.box.t - 6 || c.d > f.box.b + 6) continue;
@@ -722,10 +743,10 @@ export function drawSPlane(g: CanvasRenderingContext2D, w: number, h: number, s:
       // expanded (and every other tile) must keep the value beside the ×
       g.font = `${MIN_FONT}px system-ui,sans-serif`;
       const tw = g.measureText(lab).width, th = MIN_FONT + 4;
-      const raw = [...aroundMarker(X, Yp, tw, th, MIN_FONT, preferRight), ...aroundMarker(X, Yp, tw, th, MIN_FONT, preferRight, 16)];
-      const cands = realPole ? [...raw].sort((a, b) => Math.abs((b.c + b.d) / 2 - Yp) - Math.abs((a.c + a.d) / 2 - Yp)) : raw;
+      const explicit = realPole ? poleSpots(MIN_FONT, tw, th) : [];
+      const raw = [...explicit, ...aroundMarker(X, Yp, tw, th, MIN_FONT, preferRight), ...aroundMarker(X, Yp, tw, th, MIN_FONT, preferRight, 16), ...aroundMarker(X, Yp, tw, th, MIN_FONT, !preferRight)];
       const inClip = (c: TextBox) => c.a >= f.box.l + 1 && c.b2 <= f.box.r - 1 && c.c >= f.box.t - 6 && c.d <= f.box.b + 6;
-      for (const c of cands) {
+      for (const c of raw) {
         const I = inflateBox(c);
         if (!inClip(c)) continue;
         if (hitsOtherMark(X, Yp, I.a, I.b2, I.c, I.d) || hitsTaken(I.a, I.b2, I.c, I.d)) continue;
@@ -733,12 +754,11 @@ export function drawSPlane(g: CanvasRenderingContext2D, w: number, h: number, s:
         pick = c; break;
       }
       if (!pick) {
-        // a pole that sits on a ζ ray: stay by the × and off other marks, even if the ray clips a corner
-        for (const c of cands) {
-          const I = inflateBox(c);
+        // last try: uninflated mark clearance, still off every ζ ray (required values may not sit on a dashed line)
+        for (const c of raw) {
           if (!inClip(c)) continue;
-          if (hitsOtherMark(X, Yp, I.a, I.b2, I.c, I.d)) continue;
-          if (realPole && onRay(c.a, c.b2, c.c, c.d)) continue;
+          if (hitsOtherMark(X, Yp, c.a, c.b2, c.c, c.d)) continue;
+          if (onRay(c.a, c.b2, c.c, c.d)) continue;
           pick = c; break;
         }
       }
