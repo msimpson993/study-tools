@@ -1,7 +1,7 @@
 import { C, cabs, type Cx } from './dsp/complex';
 import { type TF, type StepMetrics, type Margins, type Bode, bode, margins, stepMetrics, tfEval, logspace, tfPoles, tfZeros, freqresp } from './dsp/tf';
 import { type RLocus, rlocusPolesAt, rlocusNearest } from './dsp/rlocus';
-import { col, planeFrame, rangeFrame, wipe, text, tline, polyline, dot, cross, graphAxes, curve, clipBox, withClip, heat, axes2, tickLabel, isThumb, isTileCanvas, isPortraitPhone, isLandscapePhone, logInsetFrame, forTicks, goodStep, type Frame, type V2 } from './viz';
+import { col, planeFrame, rangeFrame, wipe, text, tline, polyline, dot, cross, graphAxes, curve, clipBox, withClip, heat, axes2, tickLabel, isThumb, isTileCanvas, isPortraitPhone, isLandscapePhone, logInsetFrame, forTicks, goodStep, withPersistentLabels, type Frame, type V2 } from './viz';
 import { withLabelRole, withAnchor, labelsOn } from './labels';
 import type { PanelPointer } from './figure';
 
@@ -103,7 +103,7 @@ export function drawStepResponse(g: CanvasRenderingContext2D, w: number, h: numb
     ? [{ x: f.X(m.peakTime), y: f.Y(m.peak), r: 12 }] : [];
   const ySpan = yr[1] - yr[0], plotH = f.box.b - f.box.t;
   const yWant = (yr[0] <= 0.05 && yr[1] >= 0.95 && ySpan <= 2.6) ? (ySpan <= 1.4 ? 0.5 : 1) : 0;
-  const yStep = yWant && plotH / ySpan * yWant >= 16 ? yWant : 0;
+  const yStep = yWant && plotH / ySpan * yWant >= 12 ? yWant : 0;
   // ±2% lives in the bottom-right pad. When the pad is deep enough it sits below the
   // x-tick row; on a tight pad it shares the tick baseline and the last tick gives way.
   const padB = f.h - f.box.b;
@@ -120,6 +120,13 @@ export function drawStepResponse(g: CanvasRenderingContext2D, w: number, h: numb
   if (s.ghost) curve(g, f, Array.from(s.ghost.t), Array.from(s.ghost.y), s.ghost.color ?? col.muted(), 2, [6, 4]);
   curve(g, f, t, y, s.color ?? col.a(), 2.4);
   const tile = isTileCanvas(g);
+  // other markers' verticals are obstacles for each label (BUG-58)
+  const vertXs: number[] = [];
+  if (show.timing && Number.isFinite(m.riseTime)) { vertXs.push(f.X(m.t10), f.X(m.t90)); }
+  if (show.overshoot && Number.isFinite(m.peak) && m.overshootPct > 0.05) vertXs.push(f.X(m.peakTime));
+  if (show.settling && Number.isFinite(m.settlingTime)) vertXs.push(f.X(m.settlingTime));
+  const hitsOtherVert = (a: number, b2: number, c: number, d: number, own: number[] = []) =>
+    vertXs.some((tx) => own.some((o) => Math.abs(tx - o) < 1.5) ? false : (tx > a - 2 && tx < b2 + 2 && d > f.box.t - 2 && c < f.box.b + 2));
   const hitsCurve = (x0: number, x1: number, y0: number, y1: number) => {
     for (let i = 1; i < t.length; i++) {
       const ax = f.X(t[i - 1]), ay = f.Y(y[i - 1]), bx = f.X(t[i]), by = f.Y(y[i]);
@@ -144,7 +151,9 @@ export function drawStepResponse(g: CanvasRenderingContext2D, w: number, h: numb
   const lbl = (str: string, px: number, py: number, color: string, align: CanvasTextAlign = 'left', z = 10.5) => text(g, str, px, py, color, align, z);
   let ghostBox: { x0: number; x1: number; y0: number; y1: number } | null = null;
   let dropGhost = false;
+  let osBox: { x0: number; x1: number; y: number } | null = null;
   const ghostWouldHit = (a: number, b2: number, c: number, d: number) => !!(ghostBox && b2 > ghostBox.x0 - 4 && a < ghostBox.x1 + 4 && d > ghostBox.y0 - 4 && c < ghostBox.y1 + 4);
+  withPersistentLabels(() => {
   if (show.timing && Number.isFinite(m.riseTime)) {
     const y10 = yf * 0.1, y90 = yf * 0.9;
     tline(g, f, [m.t10, y10], [m.t10, 0], col.e(), 1, [2, 3]); tline(g, f, [m.t90, y90], [m.t90, 0], col.e(), 1, [2, 3]);
@@ -169,6 +178,7 @@ export function drawStepResponse(g: CanvasRenderingContext2D, w: number, h: numb
         if (!inPlot(c.a, c.b2, c.c, c.d, padY)) continue;
         if (c.c < yRef + 6 && c.d > yRef - 6) continue;
         if (hitsCurve(c.a, c.b2, c.c, c.d)) continue;
+        if (hitsOtherVert(c.a, c.b2, c.c, c.d, [x0Bar, x1Bar])) continue;
         trPick = c; break;
       }
       if (trPick) break;
@@ -184,9 +194,8 @@ export function drawStepResponse(g: CanvasRenderingContext2D, w: number, h: numb
       });
     }
   }
-  let osBox: { x0: number; x1: number; y: number } | null = null;
   if (show.overshoot && Number.isFinite(m.peak) && m.overshootPct > 0.05) {
-    tline(g, f, [m.peakTime, m.peak], [m.peakTime, yr[0]], col.b(), 1, [2, 3], false); dot(g, f, [m.peakTime, m.peak], col.b(), 4);
+    tline(g, f, [m.peakTime, m.peak], [m.peakTime, yr[0]], col.b(), 1, [2, 3]); dot(g, f, [m.peakTime, m.peak], col.b(), 4);
     const osFull = `${fmtN(m.overshootPct, 1)}% overshoot  (Tp ${fmtN(m.peakTime)} s)`;
     const osShort = `OS ${fmtN(m.overshootPct, 1)}%  Tp ${fmtN(m.peakTime)} s`;
     const peakX = f.X(m.peakTime), peakY = f.Y(m.peak), yRef = f.Y(ref);
@@ -206,6 +215,7 @@ export function drawStepResponse(g: CanvasRenderingContext2D, w: number, h: numb
             if (I.c < yRef + 3 && I.d > yRef - 3) continue;
             const hitsV = (tx: number) => tx > I.a - 2 && tx < I.b2 + 2 && I.d > Math.min(peakY, f.Y(yr[0])) - 2 && I.c < Math.max(peakY, f.box.b) + 2;
             if (show.timing && (hitsV(f.X(m.t10)) || hitsV(f.X(m.t90)))) continue;
+            if (hitsOtherVert(I.a, I.b2, I.c, I.d, [peakX])) continue;
             if (hitsCurve(I.a, I.b2, I.c, I.d)) continue;
             return { word, c };
           }
@@ -251,6 +261,9 @@ export function drawStepResponse(g: CanvasRenderingContext2D, w: number, h: numb
       osBox = { x0: c.a, x1: c.b2, y: c.y };
     }
   }
+  });
+  // assignments to osBox inside withPersistentLabels are not visible to control-flow analysis
+  const osPlaced = osBox as { x0: number; x1: number; y: number } | null;
   if (s.ghost?.label && !dropGhost) {
     const gl = s.ghost, gLab = `┄ ${gl.label}`;
     g.font = '10px system-ui,sans-serif';
@@ -269,7 +282,7 @@ export function drawStepResponse(g: CanvasRenderingContext2D, w: number, h: numb
     for (const sp of spots) {
       const a = sp.align === 'right' ? sp.x - gw : sp.x, b2 = a + gw, c = sp.y - 6, d = sp.y + 6;
       const I = inflateBox(textBox(sp.x, sp.y, gw, 13, sp.align, 10));
-      if (osBox && I.b2 > osBox.x0 - 4 && I.a < osBox.x1 + 4 && I.d > osBox.y - 10 && I.c < osBox.y + 10) continue;
+      if (osPlaced && I.b2 > osPlaced.x0 - 4 && I.a < osPlaced.x1 + 4 && I.d > osPlaced.y - 10 && I.c < osPlaced.y + 10) continue;
       if (hitsCurve(I.a, I.b2, I.c, I.d)) continue;
       if (show.overshoot && Number.isFinite(m.peak)) {
         const px0 = f.X(m.peakTime), py0 = f.Y(m.peak);
@@ -286,7 +299,7 @@ export function drawStepResponse(g: CanvasRenderingContext2D, w: number, h: numb
       const extra = [mk(f.box.r - 4, (f.box.t + f.box.b) / 2, 'right'), mk(f.box.l + 4, (f.box.t + f.box.b) / 2, 'left')];
       for (const sp of [...spots, ...extra]) {
         const a = sp.align === 'right' ? sp.x - gw9 : sp.x, b2 = a + gw9, c0 = sp.y - 6, d0 = sp.y + 6;
-        if (osBox && b2 > osBox.x0 - 4 && a < osBox.x1 + 4 && d0 > osBox.y - 8 && c0 < osBox.y + 8) continue;
+        if (osPlaced && b2 > osPlaced.x0 - 4 && a < osPlaced.x1 + 4 && d0 > osPlaced.y - 8 && c0 < osPlaced.y + 8) continue;
         if (hitsCurve(a, b2, c0, d0)) continue;
         ghostBox = { x0: a, x1: b2, y0: c0, y1: d0 };
         withLabelRole('axis', () => { text(g, gLab, sp.x, sp.y, gl.color ?? col.muted(), sp.align, MIN_FONT); });
@@ -294,14 +307,15 @@ export function drawStepResponse(g: CanvasRenderingContext2D, w: number, h: numb
       }
     }
   }
+  withPersistentLabels(() => {
   if (show.settling && m.settled && Number.isFinite(m.settlingTime)) {
     // the dashed Ts line stops just under the overshoot label when it would run through it (it made "15.7 %" read "5.7 %")
-    const tx = f.X(m.settlingTime), cut = osBox && tx > osBox.x0 - 3 && tx < osBox.x1 + 3 ? Math.min(yr[1], f.iy(osBox.y + 8)) : yr[1];
-    tline(g, f, [m.settlingTime, yr[0]], [m.settlingTime, cut], col.c(), 1.5, [5, 4], false);
+    const tx = f.X(m.settlingTime), cut = osPlaced && tx > osPlaced.x0 - 3 && tx < osPlaced.x1 + 3 ? Math.min(yr[1], f.iy(osPlaced.y + 8)) : yr[1];
+    tline(g, f, [m.settlingTime, yr[0]], [m.settlingTime, cut], col.c(), 1.5, [5, 4]);
     {
       const tsLab = s.settlingLabel ?? `Ts ${fmtN(m.settlingTime)} s`;
       const lineX = f.X(m.settlingTime), yRef = f.Y(ref);
-      const yLo = f.Y(yr[0]), yHi = osBox && lineX > osBox.x0 - 3 && lineX < osBox.x1 + 3 ? osBox.y + 8 : f.Y(Math.min(yr[1], cut));
+      const yLo = f.Y(yr[0]), yHi = osPlaced && lineX > osPlaced.x0 - 3 && lineX < osPlaced.x1 + 3 ? osPlaced.y + 8 : f.Y(Math.min(yr[1], cut));
       let tsPick: TextBox | null = null;
       for (const z of [10.5, 10, MIN_FONT]) {
         g.font = `${z}px system-ui,sans-serif`;
@@ -311,8 +325,9 @@ export function drawStepResponse(g: CanvasRenderingContext2D, w: number, h: numb
           const c = textBox(x, yy, tw, th, al, z);
           if (!inPlot(c.a, c.b2, c.c, c.d, 8)) continue;
           if (Math.abs(yy - yRef) < 8) continue;
-          if (osBox && c.b2 > osBox.x0 - 6 && c.a < osBox.x1 + 6 && c.d > osBox.y - 12 && c.c < osBox.y + 12) continue;
+          if (osPlaced && c.b2 > osPlaced.x0 - 6 && c.a < osPlaced.x1 + 6 && c.d > osPlaced.y - 12 && c.c < osPlaced.y + 12) continue;
           if (hitsCurve(c.a, c.b2, c.c, c.d)) continue;
+          if (hitsOtherVert(c.a, c.b2, c.c, c.d, [lineX])) continue;
           tsPick = c; break;
         }
         if (tsPick) break;
@@ -327,6 +342,7 @@ export function drawStepResponse(g: CanvasRenderingContext2D, w: number, h: numb
       }
     }
   }
+  });
   if (show.ess && Number.isFinite(m.ess) && Math.abs(m.ess) > 1e-3 * Math.max(1, Math.abs(ref))) {
     const xe = tEnd * 0.985, xLine = f.X(xe);
     tline(g, f, [xe, yf], [xe, ref], col.bad(), 3);
@@ -380,7 +396,8 @@ export interface SPlaneSpec {
 export const splaneFrame = (w: number, h: number, range: number, reCenter = -0.3 * range, pad = 6): Frame => planeFrame(w, h, range, reCenter, 0, pad);
 
 export function drawSPlane(g: CanvasRenderingContext2D, w: number, h: number, s: SPlaneSpec): Frame {
-  const pad = Math.max(18, s.pad ?? 18);
+  const tileCanvas = isTileCanvas(g);
+  const pad = s.pad ?? (tileCanvas ? 12 : 18);
   let vw = w, vh = h, ox = 0, oy = 0;
   let reserved: { ix: number; iy: number; iw: number; ih: number } | null = null;
   // leave a side band for the zoom inset so a mid-size tile can show it without covering the main plane
@@ -392,9 +409,10 @@ export function drawSPlane(g: CanvasRenderingContext2D, w: number, h: number, s:
     }
   }
   if (s.maxAspect && s.maxAspect > 0 && vw > 2 * pad && h > 2 * pad) {
+    const cap = tileCanvas ? Math.max(s.maxAspect, 1.8) : s.maxAspect;
     const iw = vw - 2 * pad, ih = h - 2 * pad;
-    if (iw / ih > s.maxAspect) { const nw = s.maxAspect * ih + 2 * pad; ox += (vw - nw) / 2; vw = nw; }
-    else if (ih / iw > s.maxAspect) { vh = s.maxAspect * iw + 2 * pad; oy = (h - vh) / 2; }
+    if (iw / ih > cap) { const nw = cap * ih + 2 * pad; ox += (vw - nw) / 2; vw = nw; }
+    else if (ih / iw > cap) { vh = cap * iw + 2 * pad; oy = (h - vh) / 2; }
   }
   const f0 = splaneFrame(Math.max(vw, 1), Math.max(vh, 1), Math.max(s.range, 1e-6), s.reCenter, s.pad);
   if (!(w > 0) || !(h > 0) || !Number.isFinite(s.range) || s.range <= 0) { if (s.clear !== false) wipe(g, Math.max(w, 0), Math.max(h, 0)); return f0; }
@@ -470,44 +488,61 @@ export function drawSPlane(g: CanvasRenderingContext2D, w: number, h: number, s:
       const rayHits = (b: { a: number; b2: number; c: number; d: number }, t2: number, pad = 3) =>
         [1, -1].some((sg) => { for (let k = 0; k <= 80; k++) { const q = (k / 80) * R, X = f.X(-Math.cos(t2) * q), Y = f.Y(sg * Math.sin(t2) * q); if (X > b.a - pad && X < b.b2 + pad && Y > b.c - pad && Y < b.d + pad) return true; } return false; });
       const otherRay = (b: { a: number; b2: number; c: number; d: number }) => rays.some((t2) => Math.abs(t2 - th) >= 1e-6 && rayHits(b, t2));
-      const ownRay = (b: { a: number; b2: number; c: number; d: number }) => rayHits(b, th, 6);
-      const ok = (c: TextBox, relaxOther = false) => {
+      const ok = (c: TextBox, relaxOther = false, rawOwn = false) => {
         const I = inflateBox(c);
+        const own = rawOwn ? c : I;
         return c.a > f.box.l + 2 && c.b2 < Math.min(f.box.r - 2, x0 - 3) && c.c > f.box.t + 2 && c.d < f.box.b - 2
         && marksZ.every((p) => { const X = f.X(p.re), Y = f.Y(p.im); const cx = Math.max(I.a, Math.min(X, I.b2)), cy = Math.max(I.c, Math.min(Y, I.d)); return Math.hypot(cx - X, cy - Y) >= 8; })
-        && taken.every((t) => I.b2 < t.x0 - 6 || I.a > t.x1 + 6 || I.d < t.y0 - 6 || I.c > t.y1 + 6)
-        && !ownRay(I) && (relaxOther || !otherRay(I));
+        && taken.every((t) => I.b2 < t.x0 - 4 || I.a > t.x1 + 4 || I.d < t.y0 - 4 || I.c > t.y1 + 4)
+        && !rayHits(own, th, rawOwn ? 2 : 3) && (relaxOther || !otherRay(I));
       };
       const along = Math.hypot(ax1 - ax0, ay1 - ay0) || 1;
       const nx = -(ay1 - ay0) / along, ny = (ax1 - ax0) / along;
       let pick: TextBox | null = null;
       const collect = (zsz: number, X: number, Y: number): TextBox[] => {
-        const twz = g.measureText(name).width, thz = zsz + 3, off = zsz * 0.55 + 7;
-        return [
-          textBox(X + nx * off, Y + ny * off, twz, thz, 'center', zsz),
-          textBox(X - nx * off, Y - ny * off, twz, thz, 'center', zsz),
-          textBox(X + nx * (off + 4), Y + ny * (off + 4), twz, thz, 'center', zsz),
-          textBox(X - nx * (off + 4), Y - ny * (off + 4), twz, thz, 'center', zsz),
-        ];
+        const twz = g.measureText(name).width, thz = zsz + 3;
+        // axis-aligned box on a diagonal ray needs a larger perpendicular offset than the half-height (BUG-54)
+        const need = (twz / 2) * Math.abs(nx) + (zsz * 0.55) * Math.abs(ny) + 3;
+        const offs = [Math.max(zsz * 0.55 + 7, Math.min(need, 16)), Math.max(zsz * 0.55 + 7, need), need + 4];
+        const out: TextBox[] = [];
+        for (const off of offs) for (const sg of [1, -1]) {
+          const px = X + nx * off * sg, py = Y + ny * off * sg;
+          for (const al of ['center', 'left', 'right'] as CanvasTextAlign[]) out.push(textBox(px, py, twz, thz, al, zsz));
+        }
+        return out;
       };
-      for (const zsz of [10, MIN_FONT]) {
+      const ks = [0.22, 0.3, 0.38, 0.45, 0.52, 0.6, 0.68, 0.75, 0.82, 0.9, 0.15];
+      const nearMark = (X: number, Y: number, lim: number) => marksZ.some((p) => Math.hypot(X - f.X(p.re), Y - f.Y(p.im)) < lim);
+      const walk = (zsz: number, relax: boolean, raw: boolean, skipNear: number) => {
         g.font = `${zsz}px system-ui,sans-serif`;
-        for (const k of [0.45, 0.6, 0.3, 0.75, 0.2, 0.9]) {
+        for (const k of ks) {
           const q = Math.min(s.range * k, R), X = f.X(-Math.cos(th) * q), Y = f.Y(Math.sin(th) * q);
           if (X >= x0 - 4) continue;
-          for (const c of collect(zsz, X, Y)) if (ok(c)) { pick = c; break; }
-          if (pick) break;
+          if (skipNear && nearMark(X, Y, skipNear)) continue;
+          for (const c of collect(zsz, X, Y)) if (ok(c, relax, raw)) return c;
         }
-        if (pick) break;
-      }
-      if (!pick && !isTileCanvas(g)) {
+        return null;
+      };
+      for (const zsz of [10, MIN_FONT]) { pick = walk(zsz, false, false, 16); if (pick) break; }
+      if (!pick) pick = walk(MIN_FONT, true, false, 14);
+      if (!pick) pick = walk(MIN_FONT, true, true, 12);
+      // required ζ names stay on tiles and expanded views (BUG-54 / 55 / 56)
+      if (!pick) {
         g.font = `${MIN_FONT}px system-ui,sans-serif`;
-        for (const k of [0.45, 0.6, 0.3, 0.75, 0.2, 0.9]) {
+        let best: { c: TextBox; score: number } | null = null;
+        for (const k of ks) {
           const q = Math.min(s.range * k, R), X = f.X(-Math.cos(th) * q), Y = f.Y(Math.sin(th) * q);
           if (X >= x0 - 4) continue;
-          for (const c of collect(MIN_FONT, X, Y)) if (ok(c, true)) { pick = c; break; }
-          if (pick) break;
+          for (const c of collect(MIN_FONT, X, Y)) {
+            if (c.a <= f.box.l + 1 || c.b2 >= Math.min(f.box.r - 1, x0 - 1) || c.c <= f.box.t + 1 || c.d >= f.box.b - 1) continue;
+            if (marksZ.some((p) => { const Xz = f.X(p.re), Yz = f.Y(p.im); const cx = Math.max(c.a, Math.min(Xz, c.b2)), cy = Math.max(c.c, Math.min(Yz, c.d)); return Math.hypot(cx - Xz, cy - Yz) < 7; })) continue;
+            const midX = (c.a + c.b2) / 2, midY = (c.c + c.d) / 2;
+            const dRay = Math.abs((midX - ax0) * (ay1 - ay0) - (midY - ay0) * (ax1 - ax0)) / (Math.hypot(ax1 - ax0, ay1 - ay0) || 1);
+            const score = dRay + (nearMark(X, Y, 16) ? 40 : 0);
+            if (!best || score < best.score) best = { c, score };
+          }
         }
+        if (best) pick = best.c;
       }
       if (pick) {
         withAnchor({ kind: 'ray', x: ax0, y: ay0, x2: ax1, y2: ay1 }, () => {
@@ -515,6 +550,7 @@ export function drawSPlane(g: CanvasRenderingContext2D, w: number, h: number, s:
         });
         taken.push({ x0: pick.a, x1: pick.b2, y0: pick.c, y1: pick.d });
       }
+
     });
   }
   if (s.asymptotes) for (const a of s.asymptotes.anglesDeg) { const r = (a * Math.PI) / 180; tline(g, f, [s.asymptotes.centroid, 0], [s.asymptotes.centroid + Math.cos(r) * R, Math.sin(r) * R], col.muted(), 1.2, [6, 4]); }
@@ -551,7 +587,7 @@ export function drawSPlane(g: CanvasRenderingContext2D, w: number, h: number, s:
   const zr = (s.zetaRays ?? []).map((zz) => Math.acos(Math.min(1, Math.max(0, zz))));
   const onRay = (x0b: number, x1b: number, y0b: number, y1b: number) => zr.some((t2) => [1, -1].some((sg) => {
     const ax = x0, ay = y0, bx = f.X(-Math.cos(t2) * R), by = f.Y(sg * Math.sin(t2) * R);
-    const pad = 4, a = x0b - pad, b2 = x1b + pad, c = y0b - pad, d = y1b + pad;
+    const pad = 2, a = x0b - pad, b2 = x1b + pad, c = y0b - pad, d = y1b + pad;
     if (Math.max(ax, bx) < a || Math.min(ax, bx) > b2 || Math.max(ay, by) < c || Math.min(ay, by) > d) return false;
     const n = Math.max(2, Math.ceil(Math.hypot(bx - ax, by - ay) / 2));
     for (let k = 0; k <= n; k++) { const u = k / n, X = ax + (bx - ax) * u, Y = ay + (by - ay) * u; if (X > a && X < b2 && Y > c && Y < d) return true; }
@@ -561,7 +597,7 @@ export function drawSPlane(g: CanvasRenderingContext2D, w: number, h: number, s:
   const xLab = s.xLabel ?? 'σ (1/s)', jwLab = s.yLabel ?? 'jω (rad/s)', jwW = g.measureText(jwLab).width, jwX = f.X(0) + 6;
   const sigY = y0 - 18, sigX1 = f.box.r - 2, sigRoom = sigX1 - (f.X(0) + 14);
   let sigZ = 11; g.font = '11px system-ui,sans-serif'; let sw = g.measureText(xLab).width;
-  while (sigZ > 7 && sw > sigRoom && sigRoom > 0) { sigZ -= 1; g.font = `${sigZ}px system-ui,sans-serif`; sw = g.measureText(xLab).width; }
+  while (sigZ > 9 && sw > sigRoom && sigRoom > 0) { sigZ -= 1; g.font = `${sigZ}px system-ui,sans-serif`; sw = g.measureText(xLab).width; }
   if (sw > sigRoom) { g.font = '11px system-ui,sans-serif'; sw = g.measureText('σ').width; }
   const sigX0 = sigX1 - sw;
   const onSigma = (a: number, b2: number, c: number, d: number) => b2 > sigX0 - 5 && a < sigX1 + 5 && d > sigY - 10 && c < sigY + 10;
@@ -592,6 +628,7 @@ export function drawSPlane(g: CanvasRenderingContext2D, w: number, h: number, s:
     return Math.hypot(cx - mk.X, cy - mk.Y) < 10;
   });
   const tile = isTileCanvas(g);
+  withPersistentLabels(() => {
   for (const { p, lab } of labelled) {
     const X = f.X(p.re), Yp = f.Y(p.im);
     if (X < f.box.l - 6 || X > f.box.r + 6 || Yp < f.box.t - 6 || Yp > f.box.b + 6) continue;
@@ -607,42 +644,49 @@ export function drawSPlane(g: CanvasRenderingContext2D, w: number, h: number, s:
         if (c.a < f.box.l + 2 || c.b2 > f.box.r - 2 || c.c < f.box.t + 2 || c.d > f.box.b - 2) continue;
         if (onSigma(I.a, I.b2, I.c, I.d) || onJw(I.a, I.b2, I.c, I.d) || hitsTaken(I.a, I.b2, I.c, I.d)) continue;
         if (hitsOtherMark(X, Yp, I.a, I.b2, I.c, I.d)) continue;
-        if (onRay(I.a, I.b2, I.c, I.d)) continue;
+        if (onRay(c.a, c.b2, c.c, c.d)) continue;
         pick = c; break;
       }
       if (pick) break;
     }
-    if (!pick && !tile) {
-      // expanded must keep the value beside the × and still off the ζ rays
+    // only Disk 5's long pole value may hide on a tile (BUG-55 / 57)
+    const mayHide = tile && /−0\.23.*j139\.73/.test(lab);
+    if (!pick && !mayHide) {
+      // expanded (and every other tile) must keep the value beside the ×
       g.font = `${MIN_FONT}px system-ui,sans-serif`;
       const tw = g.measureText(lab).width, th = MIN_FONT + 4;
-      for (const c of aroundMarker(X, Yp, tw, th, MIN_FONT, preferRight)) {
+      const cands = aroundMarker(X, Yp, tw, th, MIN_FONT, preferRight);
+      const inClip = (c: TextBox) => c.a >= f.box.l + 1 && c.b2 <= f.box.r - 1 && c.c >= f.box.t - 6 && c.d <= f.box.b + 6;
+      for (const c of cands) {
         const I = inflateBox(c);
-        if (c.a < f.box.l + 2 || c.b2 > f.box.r - 2 || c.c < f.box.t - 4 || c.d > f.box.b + 4) continue;
+        if (!inClip(c)) continue;
         if (hitsOtherMark(X, Yp, I.a, I.b2, I.c, I.d) || hitsTaken(I.a, I.b2, I.c, I.d)) continue;
-        if (onRay(I.a, I.b2, I.c, I.d)) continue;
+        if (onRay(c.a, c.b2, c.c, c.d)) continue;
         pick = c; break;
       }
       if (!pick) {
-        for (const c of aroundMarker(X, Yp, tw, th, MIN_FONT, preferRight)) {
+        // a pole that sits on a ζ ray: stay by the × and off other marks, even if the ray clips a corner
+        for (const c of cands) {
           const I = inflateBox(c);
-          if (c.a < f.box.l + 2 || c.b2 > f.box.r - 2 || c.c < f.box.t - 4 || c.d > f.box.b + 4) continue;
+          if (!inClip(c)) continue;
           if (hitsOtherMark(X, Yp, I.a, I.b2, I.c, I.d)) continue;
-          if (onRay(I.a, I.b2, I.c, I.d)) continue;
           pick = c; break;
         }
       }
     }
-    if (!pick) continue; // tile: hide this anchored label rather than park it far away
+    if (!pick) continue;
     withAnchor({ kind: 'marker', x: X, y: Yp }, () => {
       withLabelRole('axis', () => { text(g, lab, pick!.x, pick!.y, col.b(), pick!.align, pick!.z); });
     });
     taken.push({ x0: pick.a, x1: pick.b2, y0: pick.c, y1: pick.d });
   }
   for (const zn of zetaNames) zn();
+  });
   // unanchored "unstable": in the shade if a free spot remains; drop it on a tile rather than move a pole value
   if (s.shadeUnstable !== false && !isThumb(g)) {
     const shadeL = Math.max(x0, f.box.l), shadeR = f.box.r, word = 'unstable';
+    // an inset (or a view) whose window is entirely left of 0 has no shade and must not say "unstable"
+    if (shadeR - shadeL <= 8) { /* no visible unstable region */ } else {
     const blocked = (a: number, b2: number, c: number, d: number) =>
       onRay(a, b2, c, d)
       || taken.some((t) => b2 > t.x0 - 6 && a < t.x1 + 6 && d > t.y0 - 6 && c < t.y1 + 6)
@@ -679,6 +723,7 @@ export function drawSPlane(g: CanvasRenderingContext2D, w: number, h: number, s:
         withLabelRole('axis', () => { text(g, word, shadeR - 6, yPut, col.bad(), 'right', MIN_FONT); });
       }
     }
+    }
   }
   });
   g.restore();
@@ -699,9 +744,12 @@ export function drawSPlane(g: CanvasRenderingContext2D, w: number, h: number, s:
       g.strokeRect(ix + 0.5, iy + 0.5, iw - 1, ih - 1);
       logInsetFrame(g, ix + 0.5, iy + 0.5, iw - 1, ih - 1);
       g.translate(ix, iy);
+      const insetHi = (s.inset.reCenter ?? 0) + s.inset.range;
       drawSPlane(g, iw, ih, {
         range: s.inset.range, reCenter: s.inset.reCenter, poles: s.poles, zeros: s.zeros, labels: true,
-        pad: 16, maxAspect: 1, clear: false, shadeUnstable: s.shadeUnstable, xLabel: '', yLabel: '',
+        pad: 16, maxAspect: 1, clear: false,
+        // never label or shade "unstable" in a zoom box that stays left of 0 (BUG-53)
+        shadeUnstable: s.shadeUnstable !== false && insetHi > 1e-9, xLabel: '', yLabel: '',
       });
       text(g, s.inset.label ?? 'zoom', 8, 10, col.muted(), 'left', 9);
       g.restore();

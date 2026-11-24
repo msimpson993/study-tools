@@ -7,16 +7,16 @@ import { open } from './helpers';
  * their clip (the plot box when clipped, otherwise the canvas), must not sit on a drawn curve
  * (__curveLog), and must not overlap drawn markers, dashed or target lines, or inset frames
  * (__obstacleLog). Required labels named in the card text / Look-for / How to read this must be
- * present in expanded views (tiles may omit a label that will not fit near its
- * anchor). Anchored labels that are drawn must stay near the marker, ray, or bar
- * they name.
+ * present in expanded views, and on tiles except the one allowed Disk 5 hide.
+ * Font size stays at least 9 px. "unstable" must not appear in an all-stable inset.
+ * Anchored labels that are drawn must stay near the marker, ray, or bar they name.
  *
  * Allow known intentional overlaps or curve-on-label cases only with an explicit, commented entry.
  */
 interface L {
   s: string; x0: number; x1: number; y0?: number; y1?: number; role?: string;
   skipped: boolean; gen: number; cv: number; id: string; W: number; H: number;
-  where?: string; step?: string;
+  where?: string; step?: string; size?: number;
   clip?: { x0: number; y0: number; x1: number; y1: number } | null;
   anchor?: { kind: 'marker' | 'ray' | 'bar' | 'line'; x: number; y: number; x2?: number; y2?: number };
 }
@@ -42,21 +42,25 @@ const CURVE_ALLOWLIST: { comment: string; match: (lab: L, at: string) => boolean
 ];
 
 /**
- * Labels the card text, Look-for, or How to read this tells the reader to see, checked on
- * every expanded view. Tiles may omit a label per the anchor rule, so presence is
- * not required on tiles.
+ * Labels the card text, Look-for, or How to read this tells the reader to see.
+ * Required on every expanded view, and on tiles except allowTileHide (Disk 5's
+ * long pole value). Optional extras such as "unstable" stay expand-only.
  */
-const REQUIRED: { comment: string; tab: string; step?: string; fig: string; re: RegExp; name: string }[] = [
+const REQUIRED: { comment: string; tab: string; step?: string; fig: string; re: RegExp; name: string; expandOnly?: boolean; allowTileHide?: boolean }[] = [
   // figures.yaml howToRead, borer / disk s-plane: "The lightly shaded region labelled 'unstable'"
-  { comment: "Borer s-plane how-to-read: labelled 'unstable'", tab: 'borer', fig: 'splane', re: /unstable/i, name: 'unstable' },
-  { comment: "Disk s-plane how-to-read: labelled 'unstable'", tab: 'disk', fig: 'splane', re: /unstable/i, name: 'unstable' },
-  // Disk 3 Look-for: "the upper pole is labelled −9.8 + j17.43"
+  { comment: "Borer s-plane how-to-read: labelled 'unstable'", tab: 'borer', fig: 'splane', re: /unstable/i, name: 'unstable', expandOnly: true },
+  { comment: "Disk s-plane how-to-read: labelled 'unstable'", tab: 'disk', fig: 'splane', re: /unstable/i, name: 'unstable', expandOnly: true },
   { comment: 'Disk 3 Look-for: pole labelled −9.8 + j17.43', tab: 'disk', step: '3', fig: 'splane', re: /−9\.8\s*\+?\s*j17\.43/, name: '−9.8+j17.43' },
-  // Disk 5 Look-for: "the upper pole is labelled −0.23 + j139.73"
-  { comment: 'Disk 5 Look-for: pole labelled −0.23 + j139.73', tab: 'disk', step: '5', fig: 'splane', re: /−0\.23\s*\+?\s*j139\.73/, name: '−0.23+j139.73' },
-  // Engine readout terms / Look-for: Tr, Tp (when there is overshoot), Ts
+  { comment: 'Disk 3 how-to-read: ray labelled with ζ to 2 s.f.', tab: 'disk', step: '3', fig: 'splane', re: /ζ\s*0\.49/, name: 'ζ 0.49' },
+  { comment: 'Disk 5 Look-for: pole labelled −0.23 + j139.73', tab: 'disk', step: '5', fig: 'splane', re: /−0\.23\s*\+?\s*j139\.73/, name: '−0.23+j139.73', allowTileHide: true },
+  { comment: 'Borer 1: double pole value −6 (double)', tab: 'borer', step: '1', fig: 'splane', re: /−6\s*\(double\)/, name: '−6 (double)' },
+  { comment: 'Borer 1 / 3 how-to-read: ζ = 0.6 rays labelled', tab: 'borer', fig: 'splane', re: /ζ\s*0\.6/, name: 'ζ 0.6' },
+  { comment: 'Borer 1 / 3 how-to-read: ζ = 1 ray labelled', tab: 'borer', fig: 'splane', re: /ζ\s*1\b/, name: 'ζ 1' },
+  { comment: 'Borer 3: pole at −2 next to the zero', tab: 'borer', step: '3', fig: 'splane', re: /^−2$/, name: '−2' },
+  { comment: 'Borer 3: pole at −10', tab: 'borer', step: '3', fig: 'splane', re: /^−10$/, name: '−10' },
   { comment: 'Engine 3 Look-for / readout terms: Tr', tab: 'engine', step: '3', fig: 'step', re: /^Tr\b/, name: 'Tr' },
   { comment: 'Engine 3 Look-for / readout terms: Tp', tab: 'engine', step: '3', fig: 'step', re: /\bTp\b/, name: 'Tp' },
+  { comment: 'Engine 3 Look-for / readout terms: OS', tab: 'engine', step: '3', fig: 'step', re: /\bOS\b|% overshoot/, name: 'OS' },
   { comment: 'Engine 3 Look-for / readout terms: Ts', tab: 'engine', step: '3', fig: 'step', re: /^Ts\b|\bTs\b/, name: 'Ts' },
   { comment: 'Engine 4 readout terms: Tr', tab: 'engine', step: '4', fig: 'step', re: /^Tr\b/, name: 'Tr' },
   { comment: 'Engine 4 readout terms: Ts', tab: 'engine', step: '4', fig: 'step', re: /^Ts\b|\bTs\b/, name: 'Ts' },
@@ -254,16 +258,46 @@ const farFromAnchor = (log: L[], at: string) => {
 
 const missingRequired = (labels: L[], at: string, tab: string, step: string, fig: string | null, check: boolean) => {
   if (!check) return [];
-  const labs = latest(labels).filter((e) => !e.skipped && e.s.trim());
+  const isTile = fig === null;
+  const labs = latest(labels).filter((e) => !e.skipped && e.s.trim() && e.role !== 'tick');
   const out: string[] = [];
   for (const req of REQUIRED) {
     if (req.tab !== tab) continue;
     if (req.step && req.step !== step) continue;
     if (fig !== null && req.fig !== fig) continue;
+    if (req.expandOnly && isTile) continue;
+    if (req.allowTileHide && isTile) continue;
     // a tile check has fig=null and must find the label on the matching fig's canvas
     const pool = fig !== null ? labs : labs.filter((e) => e.id === req.fig);
     if (fig === null && !pool.length && !labs.some((e) => e.id === req.fig)) continue; // that fig is not on this tile view
     if (!pool.some((e) => req.re.test(e.s))) out.push(`${at}: missing required label “${req.name}” (${req.comment})`);
+  }
+  return out;
+};
+
+/** Font size is never below the 9 px floor (BUG-60). */
+const tooSmall = (log: L[], at: string) => {
+  const out: string[] = [];
+  for (const e of latest(log)) {
+    if (e.skipped || !e.s.trim() || e.size === undefined) continue;
+    if (e.size < 9 - 0.01) out.push(`${at} ${e.id || 'canvas'}: “${e.s}” is ${e.size.toFixed(1)} px (min 9)`);
+  }
+  return out;
+};
+
+/** "unstable" must not appear inside a zoom inset whose window is the stable half-plane (BUG-53). */
+const unstableInInset = (labels: L[], marks: O[], at: string) => {
+  const out: string[] = [];
+  const labs = latest(labels).filter((e) => !e.skipped && /unstable/i.test(e.s) && e.y0 !== undefined);
+  const insets = latest(marks).filter((o) => o.kind === 'inset' && o.pts && o.pts.length >= 4);
+  for (const lab of labs) {
+    const B = { x0: lab.x0, x1: lab.x1, y0: lab.y0 ?? 0, y1: lab.y1 ?? 0 };
+    for (const inset of insets.filter((o) => o.cv === lab.cv)) {
+      const xs = inset.pts!.map((p) => p.x), ys = inset.pts!.map((p) => p.y);
+      const x0 = Math.min(...xs), x1 = Math.max(...xs), y0 = Math.min(...ys), y1 = Math.max(...ys);
+      if (B.x0 >= x0 - 1 && B.x1 <= x1 + 1 && B.y0 >= y0 - 1 && B.y1 <= y1 + 1)
+        out.push(`${at}: “${lab.s}” drawn inside a zoom inset`);
+    }
   }
   return out;
 };
@@ -275,7 +309,7 @@ async function waitTiles(page: Page, card: ReturnType<Page['locator']>) {
 }
 
 for (const vp of VIEWPORTS) {
-  test(`sim-project @${vp.label}: step-card tiles and expanded views keep labels apart, on the clip, off curves and markers, near their anchors, and complete`, async ({ page }) => {
+  test(`sim-project @${vp.label}: step-card tiles and expanded views keep labels apart, on the clip, off curves and markers, near their anchors, complete, and at least 9 px`, async ({ page }) => {
     test.setTimeout(420_000);
     await page.addInitScript(() => { (window as any).__textLog = []; (window as any).__textCanvases = []; (window as any).__curveLog = []; (window as any).__obstacleLog = []; });
     await page.setViewportSize({ width: vp.w, height: vp.h });
@@ -299,7 +333,8 @@ for (const vp of VIEWPORTS) {
         seen += tiles.length;
         const atTile = `${tab} step ${step} tile @${vp.label}`;
         bad.push(...collisions(tiles, atTile), ...clipped(tiles, atTile), ...onCurve(tiles, tileCurves, atTile), ...onObstacle(tiles, tileObs, atTile), ...farFromAnchor(tiles, atTile));
-        bad.push(...missingRequired(tiles, atTile, tab, step, null, false));
+        bad.push(...tooSmall(tiles, atTile), ...unstableInInset(tiles, tileObs, atTile));
+        bad.push(...missingRequired(tiles, atTile, tab, step, null, true));
 
         const thumbs = card.locator('.step-thumbs canvas[data-fig]');
         const tcount = await thumbs.count();
@@ -322,6 +357,7 @@ for (const vp of VIEWPORTS) {
           seen += exp.length;
           const atExp = `${tab} step ${step} expand ${fig} @${vp.label}`;
           bad.push(...collisions(exp, atExp), ...clipped(exp, atExp), ...onCurve(exp, expCurves, atExp), ...onObstacle(exp, expObs, atExp), ...farFromAnchor(exp, atExp));
+          bad.push(...tooSmall(exp, atExp), ...unstableInInset(exp, expObs, atExp));
           bad.push(...missingRequired(exp, atExp, tab, step, fig, true));
           await overlay.locator('[data-testid=fig-close]').click();
           await expect(overlay).toHaveCount(0, { timeout: 8_000 });

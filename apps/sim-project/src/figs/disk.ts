@@ -81,7 +81,7 @@ export const diskPanels = (): FigurePanel[] => [
       const armZ = arm.filter((p) => Math.abs(p.im) > 0.5).map((p) => zetaOf(p));
       const rays = [...new Set(armZ.map((z) => Math.abs(z) < 0.005 ? null : Number(z.toPrecision(2))).filter((z): z is number => z != null))];
       const thumb = isThumb(g);
-      const topBand = thumb ? 0 : 32, botBand = thumb ? 0 : 24;
+      const topBand = thumb ? 0 : 22, botBand = thumb ? 0 : 16;
       wipe(g, w, h);
       g.save(); g.translate(0, topBand);
       drawSPlane(g, w, h - topBand - botBand, {

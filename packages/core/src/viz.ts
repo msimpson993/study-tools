@@ -106,7 +106,7 @@ export function fitText(g: CanvasRenderingContext2D, s: string, x: number, align
   if (m && (Math.abs(m.b) > 1e-9 || Math.abs(m.c) > 1e-9)) { const [r0, r1] = span(w, x); return { size, x, lines, x0: r0, x1: r1 }; } // rotated (axis titles): leave as drawn
   const room = (() => { const [a0, a1] = span(w, x); return w - Math.max(0, lo - a0) - Math.max(0, a1 - hi); })();
   if (w > room + 0.5 && Number.isFinite(W)) {
-    z = Math.max(size * 0.72, size * Math.max(room, 1) / w); g.font = font(z); w = g.measureText(s).width;
+    z = Math.max(9, Math.min(size, Math.max(size * 0.72, size * Math.max(room, 1) / w))); g.font = font(z); w = g.measureText(s).width;
     if (w > hi - lo) { // still wider than the whole panel: two lines, split at the space nearest the middle
       const sp = [...s.matchAll(/ /g)].map((q) => q.index as number); const mid = s.length / 2;
       const cut = sp.length ? sp.reduce((p, q) => (Math.abs(q - mid) < Math.abs(p - mid) ? q : p)) : -1;
@@ -236,7 +236,7 @@ function logText(g: CanvasRenderingContext2D, s: string, f: TextFit, size: numbe
       anchor.y2 = m.b * src.x2 + m.d * src.y2 + m.f;
     }
   }
-  log.push({ s, x0, x1, y0, y1, W: cv.width, H: cv.height, cv: ci, id: cv.closest?.('[data-fig]')?.getAttribute('data-fig') || cv.getAttribute?.('data-figure') || cv.getAttribute?.('data-big') || cv.id || '', fitted: f.lines.length > 1 || f.size < size - 0.01 || Math.abs(f.x - x) > 0.5, role: rect?.role, moved: Math.abs(dy) > 0.01, skipped, gen: labelGen(cv), where, step: card?.getAttribute('data-step') || '', clip: currentClip(g) ?? null, anchor });
+  log.push({ s, x0, x1, y0, y1, size: z, W: cv.width, H: cv.height, cv: ci, id: cv.closest?.('[data-fig]')?.getAttribute('data-fig') || cv.getAttribute?.('data-figure') || cv.getAttribute?.('data-big') || cv.id || '', fitted: f.lines.length > 1 || f.size < size - 0.01 || Math.abs(f.x - x) > 0.5, role: rect?.role, moved: Math.abs(dy) > 0.01, skipped, gen: labelGen(cv), where, step: card?.getAttribute('data-step') || '', clip: currentClip(g) ?? null, anchor });
 }
 
 const logObstacle = (g: CanvasRenderingContext2D, rec: { kind: 'marker' | 'line' | 'inset'; pts?: { x: number; y: number }[]; width?: number; x?: number; y?: number; r?: number; device?: boolean }) => {
@@ -329,9 +329,10 @@ export function axes2(g: CanvasRenderingContext2D, f: Frame, xl = '', yl = '', s
       let label = xl, z = 11;
       g.font = `${z}px system-ui,sans-serif`;
       let tw = g.measureText(label).width;
-      while (z > 7 && tw > room && room > 0) { z -= 1; g.font = `${z}px system-ui,sans-serif`; tw = g.measureText(label).width; }
-      if (tw > room) { label = 'σ'; z = Math.min(11, Math.max(7, z)); g.font = `${z}px system-ui,sans-serif`; tw = g.measureText(label).width; }
-      if (tw <= room + 2 || room < 0) text(g, label, xR, y, col.muted(), 'right', z);
+      // never shrink below 9 px (BUG-60); fall back to "σ" if the full name still will not fit
+      while (z > 9 && tw > room && room > 0) { z -= 1; g.font = `${z}px system-ui,sans-serif`; tw = g.measureText(label).width; }
+      if (tw > room) { label = 'σ'; z = Math.max(9, Math.min(11, z)); g.font = `${z}px system-ui,sans-serif`; tw = g.measureText(label).width; }
+      text(g, label, xR, y, col.muted(), 'right', z);
     }
     if (yl) text(g, yl, f.X(0) + 6, Math.max(10, f.box.t - 10), col.muted(), 'left', 11);
   });
@@ -411,7 +412,7 @@ export function graphAxes(g: CanvasRenderingContext2D, f: Frame, xr: V2, yr: V2,
     // sit the y-title at the canvas edge, left of the tick-number column, and no taller than the plot box
     const yx = 10, yMid = (f.box.t + f.box.b) / 2, yRoom = Math.max(8, f.box.b - f.box.t - 4);
     g.font = '11px system-ui,sans-serif';
-    const ySize = Math.max(5, Math.min(11, 11 * yRoom / Math.max(1, g.measureText(yLabel).width)));
+    const ySize = Math.max(9, Math.min(11, 11 * yRoom / Math.max(1, g.measureText(yLabel).width)));
     g.save(); g.translate(yx, yMid); g.rotate(-Math.PI / 2); text(g, yLabel, 0, 0, col.text(), 'center', ySize); g.restore();
     // keep tick numbers to the right of the y-title strip (title AABB is ±0.55·size around yx)
     titleRight = yx + ySize * 0.55 + 4;
@@ -435,10 +436,13 @@ export function graphAxes(g: CanvasRenderingContext2D, f: Frame, xr: V2, yr: V2,
         if (Math.abs(mk.y - py) >= r) return false;
         return mk.x === undefined || mk.x < f.box.l + r + 20;
       });
-      if (lab && lab !== lastY && Math.abs(py - lastPy) >= 16 && !onMark) {
+      // keep 0 / 0.5 / 1 even when a peak sits near 1; nudge the tick rather than dropping it (BUG-59)
+      const keepY = lab === '0' || lab === '0.5' || lab === '1' || lab === '−0.5';
+      if (lab && lab !== lastY && Math.abs(py - lastPy) >= 14 && (!onMark || keepY)) {
         g.font = '10px system-ui,sans-serif';
-        const tSize = Math.max(7, Math.min(10, 10 * tickRoom / Math.max(1, g.measureText(lab).width)));
-        text(g, lab, tickX, py, col.muted(), 'right', tSize); lastY = lab; lastPy = py;
+        const tSize = Math.max(9, Math.min(10, 10 * tickRoom / Math.max(1, g.measureText(lab).width)));
+        const ty = onMark && keepY ? (py + 10 < (lastPy < py ? f.box.b : lastPy) - 4 ? py + 8 : py - 8) : py;
+        text(g, lab, tickX, ty, col.muted(), 'right', tSize); lastY = lab; lastPy = ty;
       }
     });
   });
