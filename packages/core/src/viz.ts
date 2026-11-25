@@ -48,6 +48,60 @@ export function fillPlotBehind(g: CanvasRenderingContext2D, x0: number, y0: numb
   const a = Math.min(x0, x1) - pad, b = Math.max(x0, x1) + pad, c = Math.min(y0, y1) - pad, d = Math.max(y0, y1) + pad;
   g.save(); g.fillStyle = cssVar('--plot-bg'); g.fillRect(a, c, b - a, d - c); g.restore();
 }
+/** Stroke, then fill, a string so the glyph stays readable without a filled knock-out box (BUG-72). */
+export function fillWithHalo(g: CanvasRenderingContext2D, s: string, x: number, y: number) {
+  const z = parseFloat(g.font) || 10;
+  g.save();
+  g.strokeStyle = cssVar('--bg') || '#000';
+  g.lineJoin = 'round';
+  g.miterLimit = 2;
+  g.lineWidth = Math.max(3, z * 0.3);
+  g.strokeText(s, x, y);
+  g.fillText(s, x, y);
+  g.restore();
+}
+const NB = '\u00a0';
+/** Join a name with its value, and the tokens of a formula, so wrap cannot split them (BUG-71). */
+export function lockReadout(s: string): string {
+  let t = s;
+  t = t.replace(/ceiling\s+Ka\s*=\s*[\d.]+/g, (m) => m.replace(/ /g, NB));
+  t = t.replace(/1\/\([^)]+\)/g, (m) => m.replace(/ /g, NB));
+  t = t.replace(/\d+\/\d+/g, (m) => m.replace(/ /g, NB));
+  t = t.replace(
+    /\b(Ts|Tr|Tp|OS|Ka|K|ζ|ωn|ω|error|sag|offset|dip|τ|ratio|S|P|I)\s*(?:=|→)?\s*[+\-−]?\d[\d.]*\s*(?:\/\s*[\d.]+)?\s*(?:%|ms|s|rad\/s)?/g,
+    (m) => m.replace(/ /g, NB),
+  );
+  return t;
+}
+/** At least `min` well-separated nice values on [lo, hi], always including 0 when it is in range (BUG-68). */
+export function minNiceTicks(lo: number, hi: number, already: number[], min = 2): number[] {
+  const inRange = (v: number) => Number.isFinite(v) && v >= lo - 1e-9 && v <= hi + 1e-9;
+  const out: number[] = [];
+  const add = (v: number) => {
+    if (!inRange(v)) return;
+    if (out.some((u) => Math.abs(u - v) < 1e-8)) return;
+    out.push(v);
+  };
+  for (const v of already) add(v);
+  if (lo <= 0 && 0 <= hi) add(0);
+  const niceEnd = (v: number) => {
+    if (!Number.isFinite(v)) return v;
+    if (Math.abs(v) < 1e-12) return 0;
+    const sign = v < 0 ? -1 : 1, a = Math.abs(v);
+    const p = Math.pow(10, Math.floor(Math.log10(a)));
+    const m = a / p;
+    const cand = (m < 1.5 ? 1 : m < 3.5 ? 2 : m < 7.5 ? 5 : 10) * p * sign;
+    if (inRange(cand)) return cand;
+    const down = (m < 1.5 ? 0.5 : m < 3.5 ? 1 : m < 7.5 ? 2 : 5) * p * sign;
+    if (inRange(down)) return down;
+    return v;
+  };
+  if (out.length < min) add(niceEnd(lo));
+  if (out.length < min) add(niceEnd(hi));
+  if (out.length < min) add(lo);
+  if (out.length < min) add(hi);
+  return out;
+}
 
 /** Wrap a readout to a measured pixel width (never an estimated character count). Prefer a sentence or '; ' cut, then a greedy word wrap. */
 const wrapReadout = (g: CanvasRenderingContext2D, s: string, room: number, z: number): string[] => {
@@ -94,6 +148,7 @@ const wrapReadout = (g: CanvasRenderingContext2D, s: string, room: number, z: nu
 /** Caption-named readout: never shrink below 9 px; wrap if the row will not fit; do not slide into the plot (BUG-60 rest).
  *  Wrapped lines use a line height of at least 1.2× the font size and are logged as one block so the lines cannot collide with each other. */
 export function textReadout(g: CanvasRenderingContext2D, s: string, x: number, y: number, color: string, align: CanvasTextAlign = 'left', size = 10, maxW?: number, maxBot?: number) {
+  s = lockReadout(s);
   const m = typeof g.getTransform === 'function' ? g.getTransform() : { a: 1, b: 0, c: 0, d: 1, e: 0, f: 0 };
   const k = m.a > 0 ? m.a : 1, W = (g.canvas?.width || 400) / k, ox = -(m.e || 0) / k;
   const lo = ox + 2, hi = ox + W - 2;
@@ -134,7 +189,7 @@ export function textReadout(g: CanvasRenderingContext2D, s: string, x: number, y
     };
     if (cv) labelsOn(cv).push(rect);
     g.fillStyle = color; g.textAlign = align; g.textBaseline = 'middle';
-    for (let i = 0; i < n; i++) g.fillText(lines[i], x, y0 + i * gap);
+    for (let i = 0; i < n; i++) fillWithHalo(g, lines[i], x, y0 + i * gap);
     const fit = { size: z, x, lines, x0: a0, x1: a0 + tw };
     logText(g, s, fit, z, x, y0, 'middle', rect, 0, false);
   });
@@ -330,8 +385,8 @@ export function text(g: CanvasRenderingContext2D, s: string, x: number, y: numbe
   }
   const yy = y + (m && dy ? dy / m.d : 0), xx = f.x + (m && dx ? dx / m.a : 0);
   g.fillStyle = color; g.font = `${f.size}px system-ui,sans-serif`; g.textAlign = align; g.textBaseline = base;
-  if (f.lines.length === 1) g.fillText(s, xx, yy);
-  else f.lines.forEach((l, i) => g.fillText(l, xx, yy + (i - (f.lines.length - 1) / 2) * f.size * 1.15));
+  if (f.lines.length === 1) fillWithHalo(g, s, xx, yy);
+  else f.lines.forEach((l, i) => fillWithHalo(g, l, xx, yy + (i - (f.lines.length - 1) / 2) * f.size * 1.15));
   logText(g, s, f, size, x, y, base, rect, dy || dx, false);
 }
 /** Test hook: when window.__textLog is an array, every label drawn records its extent against the canvas (device px), including rotated axis titles. */
@@ -475,12 +530,12 @@ export function axes2(g: CanvasRenderingContext2D, f: Frame, xl = '', yl = '', s
   });
   void step;
 }
-/** After the grid is painted, punch a plot-background hole behind each axis name and redraw it (BUG-66). */
+/** After the grid is painted, redraw each axis name with a text halo so the grid cannot strike the glyphs (BUG-66 / 72). Phone tiles stay bare (BUG-67). */
 export function knockOutAxes2Names(g: CanvasRenderingContext2D, f: Frame, xl = '', yl = '') {
+  if (isThumb(g) && !persistLabels) return;
   for (const n of axes2NameLayout(g, f, xl, yl)) {
-    fillPlotBehind(g, n.x0, n.y0, n.x1, n.y1, 3);
     g.fillStyle = col.muted(); g.font = `${n.z}px system-ui,sans-serif`; g.textAlign = n.align; g.textBaseline = 'middle';
-    g.fillText(n.s, n.x, n.y);
+    fillWithHalo(g, n.s, n.x, n.y);
   }
 }
 /** Tick numbers on a complex-plane frame (s-plane, z-plane): small ticks on the axes every `step` (x) and `ystep` (y), numbers inside the
@@ -530,6 +585,25 @@ export function tickLabel(v: number, step: number): string {
   const dec = Math.max(0, Math.min(8, Math.ceil(-Math.log10(Math.abs(step) || 1) - 1e-12)));
   return String(+v.toFixed(dec)).replace('-', '−');
 }
+/** Test hook: plot box in device px, plus the data range, when window.__plotLog is an array. */
+export function logPlotFrame(g: CanvasRenderingContext2D, f: Frame) {
+  const log = (globalThis as unknown as { __plotLog?: unknown[] }).__plotLog; if (!Array.isArray(log)) return;
+  const m = typeof g.getTransform === 'function' ? g.getTransform() : { a: 1, b: 0, c: 0, d: 1, e: 0, f: 0 };
+  const toDev = (x: number, y: number) => ({ x: m.a * x + m.c * y + m.e, y: m.b * x + m.d * y + m.f });
+  const p1 = toDev(f.box.l, f.box.t), p2 = toDev(f.box.r, f.box.b);
+  const cv = g.canvas as HTMLCanvasElement;
+  const cvs = (globalThis as unknown as { __textCanvases?: HTMLCanvasElement[] }).__textCanvases; let ci = -1;
+  if (Array.isArray(cvs)) { ci = cvs.indexOf(cv); if (ci < 0) { cvs.push(cv); ci = cvs.length - 1; } }
+  const card = cv.closest?.('[data-testid=step-card]') as HTMLElement | null;
+  const where = cv.closest?.('.fig-overlay') ? 'expand' : cv.closest?.('.tile-frame') ? 'tile' : 'other';
+  log.push({
+    x0: Math.min(p1.x, p2.x), y0: Math.min(p1.y, p2.y), x1: Math.max(p1.x, p2.x), y1: Math.max(p1.y, p2.y),
+    W: cv.width, H: cv.height, cv: ci,
+    id: cv.closest?.('[data-fig]')?.getAttribute('data-fig') || cv.getAttribute?.('data-figure') || cv.getAttribute?.('data-big') || cv.id || '',
+    gen: labelGen(cv), where, step: card?.getAttribute('data-step') || '',
+    xr: [f.ix(f.box.l), f.ix(f.box.r)], yr: [f.iy(f.box.b), f.iy(f.box.t)],
+  });
+}
 export function graphAxes(g: CanvasRenderingContext2D, f: Frame, xr: V2, yr: V2, xLabel: string, yLabel: string, xs = 0, ys = 0, xfmt?: (x: number) => string, yfmt?: (y: number) => string, avoid?: { x: number; y: number; r?: number }[]) {
   const nice = (span: number, n: number) => {
     if (!(span > 0) || !(n > 0)) return span > 0 ? span : 1;
@@ -566,17 +640,22 @@ export function graphAxes(g: CanvasRenderingContext2D, f: Frame, xr: V2, yr: V2,
     const tickX = f.box.l - 4;
     const tickRoom = Math.max(6, tickX - titleRight);
     let lastX = '', lastPx = -Infinity;
+    const xDrawn: number[] = [];
+    const drawXTick = (x: number, force = false) => {
+      const lab = xfmt ? xfmt(x) : tickLabel(x, sx), px = f.X(x);
+      if (!lab || lab === lastX && !force) return;
+      const onMarkX = (avoid ?? []).some((mk) => Math.hypot((mk.x ?? px) - px, (mk.y ?? (f.box.b + 9)) - (f.box.b + 9)) < (mk.r ?? 10));
+      if (!force && (Math.abs(px - lastPx) < 26 || onMarkX)) return;
+      withAnchor({ kind: 'line', x: px, y: f.box.t, x2: px, y2: f.box.b }, () => {
+        text(g, lab, px, f.box.b + 9, col.muted(), 'center', 10);
+      });
+      lastX = lab; lastPx = px; xDrawn.push(x);
+    };
     forTicks(Math.ceil(xr[0] / sx) * sx, xr[1], sx, (x) => {
       g.strokeStyle = col.grid(); g.beginPath(); g.moveTo(f.X(x), f.box.t); g.lineTo(f.X(x), f.box.b); g.stroke();
-      const lab = xfmt ? xfmt(x) : tickLabel(x, sx), px = f.X(x);
-      const onMarkX = (avoid ?? []).some((mk) => Math.hypot((mk.x ?? px) - px, (mk.y ?? (f.box.b + 9)) - (f.box.b + 9)) < (mk.r ?? 10));
-      if (lab && lab !== lastX && Math.abs(px - lastPx) >= 26 && !onMarkX) {
-        withAnchor({ kind: 'line', x: px, y: f.box.t, x2: px, y2: f.box.b }, () => {
-          text(g, lab, px, f.box.b + 9, col.muted(), 'center', 10);
-        });
-        lastX = lab; lastPx = px;
-      }
+      drawXTick(x);
     });
+    for (const x of minNiceTicks(xr[0], xr[1], xDrawn, 2)) if (!xDrawn.some((u) => Math.abs(u - x) < 1e-8)) drawXTick(x, true);
     // one size for every y tick, never below 9 (BUG-61); keep 0 / 1 / 2 on a 0–2 axis, centred on the line (BUG-65)
     const yLabs: { lab: string; y: number; py: number }[] = [];
     forTicks(Math.ceil(yr[0] / sy) * sy, yr[1], sy, (y) => {
@@ -589,24 +668,32 @@ export function graphAxes(g: CanvasRenderingContext2D, f: Frame, xr: V2, yr: V2,
     const yWide = yLabs.reduce((w, t) => Math.max(w, g.measureText(t.lab).width), 0);
     const ySize = yWide <= tickRoom + 0.5 ? 10 : 9;
     let lastY = '', lastPy = Infinity;
-    for (const t of yLabs) {
+    const yDrawn: number[] = [];
+    const drawYTick = (t: { lab: string; y: number; py: number }, force = false) => {
       const onMark = (avoid ?? []).some((mk) => {
         const r = mk.r ?? 10;
         if (Math.abs(mk.y - t.py) >= r) return false;
         return mk.x === undefined || mk.x < f.box.l + r + 20;
       });
-      if (t.lab === lastY) continue;
-      if (!keepY(t.lab) && (Math.abs(t.py - lastPy) < 14 || onMark)) continue;
+      if (t.lab === lastY && !force) return;
+      if (!force && !keepY(t.lab) && (Math.abs(t.py - lastPy) < 14 || onMark)) return;
       // stay on the tick line (within ~2 px); a required tick is never dropped to dodge a nearby mark
       withAnchor({ kind: 'line', x: f.box.l, y: t.py, x2: f.box.r, y2: t.py }, () => {
         text(g, t.lab, tickX, t.py, col.muted(), 'right', ySize);
       });
-      lastY = t.lab; lastPy = t.py;
+      lastY = t.lab; lastPy = t.py; yDrawn.push(t.y);
+    };
+    for (const t of yLabs) drawYTick(t);
+    for (const y of minNiceTicks(yr[0], yr[1], yDrawn, 2)) {
+      if (yDrawn.some((u) => Math.abs(u - y) < 1e-8)) continue;
+      const lab = yfmt ? yfmt(y) : tickLabel(y, sy);
+      if (lab) drawYTick({ lab, y, py: f.Y(y) }, true);
     }
   });
   g.strokeStyle = col.strong();
   if (yr[0] < 0 && yr[1] > 0) { g.beginPath(); g.moveTo(f.box.l, f.Y(0)); g.lineTo(f.box.r, f.Y(0)); g.stroke(); }
   if (xr[0] < 0 && xr[1] > 0) { g.beginPath(); g.moveTo(f.X(0), f.box.t); g.lineTo(f.X(0), f.box.b); g.stroke(); }
+  logPlotFrame(g, f);
 }
 export function curve(g: CanvasRenderingContext2D, f: Frame, xs: ArrayLike<number>, ys: ArrayLike<number>, color: string, width = 2, dash: number[] = []) {
   const pts: { x: number; y: number }[] = [];
