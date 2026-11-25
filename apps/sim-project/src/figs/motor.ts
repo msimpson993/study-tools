@@ -136,16 +136,23 @@ function drawMotorInset(
   g.beginPath(); g.rect(4, 2, w - 8, insetH - 4); g.fill(); g.stroke();
   text(g, s.note, 12, 13, col.text(), 'left', 10);
   // keep a plot box tall enough for two y-tick numbers on a short phone inset
-  const minBox = 44;
-  let T = 30, B = 36;
+  const minBox = 56;
+  let T = 24, B = 32;
   if (insetH - T - B < minBox) {
     const room = Math.max(20, insetH - minBox);
-    T = Math.max(14, Math.round(room * 0.45));
-    B = Math.max(16, room - T);
+    T = Math.max(12, Math.round(room * 0.4));
+    B = Math.max(14, room - T);
   }
-  const fr = rangeFrame(w, insetH, [0, s.tEnd], s.yr, 78, 12, T, B);
+  let yr: [number, number] = [s.yr[0], s.yr[1]];
+  const span = yr[1] - yr[0];
+  if (span > 0 && yr[0] < 0 && yr[1] >= 0 && (yr[1] - 0) / span < 0.25) {
+    yr = [yr[0], yr[1] + span * 0.5];
+  } else if (span > 0 && yr[0] <= 0 && yr[1] > 0 && (0 - yr[0]) / span < 0.25) {
+    yr = [yr[0] - span * 0.5, yr[1]];
+  }
+  const fr = rangeFrame(w, insetH, [0, s.tEnd], yr, 70, 12, T, B);
 
-  graphAxes(g, fr, [0, s.tEnd], s.yr, 'time (s)', 'ω (rad/s)');
+  graphAxes(g, fr, [0, s.tEnd], yr, 'time (s)', insetH < 120 ? 'ω' : 'ω (rad/s)');
   g.save();
   clipBox(g, fr);
   // both loops belong on the zoomed inset; the larger one may leave the frame

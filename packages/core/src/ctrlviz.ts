@@ -110,15 +110,16 @@ export function drawStepResponse(g: CanvasRenderingContext2D, w: number, h: numb
   const yStep = yWant && plotH / ySpan * yWant >= 12 ? yWant : 0;
   // ±2% lives in the bottom-right pad. When the pad is deep enough it sits below the
   // x-tick row; on a tight pad it shares the tick baseline and the last tick gives way.
-  const padB = f.h - f.box.b;
-  // share the x-tick row; the last tick gives way so ±2% never sits on “time (s)” or on “8”
-  const bandY = f.box.b + 9;
-  if (show.band) avoid.push({ x: f.box.r - 4, y: f.box.b + 9, r: 36 });
   graphAxes(g, f, [0, tEnd], yr, s.xLabel ?? 'time (s)', s.yLabel ?? 'output', 0, yStep, undefined, undefined, avoid);
   const yf = m.yFinal;
   if (show.band && Number.isFinite(yf)) {
     g.save(); clipBox(g, f); g.fillStyle = col.ok(); g.globalAlpha = 0.14; g.fillRect(f.box.l, f.Y(yf * (1 + band)), f.box.r - f.box.l, f.Y(yf * (1 - band)) - f.Y(yf * (1 + band))); g.restore();
     const bandLab = `±${fmtN(band * 100, 0)}%`;
+    // sit in the plot at the band, so the label never fights x-ticks or “time (s)”
+    const yTop = f.Y(yf * (1 + band)), yBot = f.Y(yf * (1 - band));
+    let bandY = yTop - 7;
+    if (bandY < f.box.t + 9 || bandY > f.box.b - 12) bandY = (yTop + yBot) / 2;
+    bandY = Math.max(f.box.t + 9, Math.min(bandY, f.box.b - 12));
     withLabelRole('axis', () => { text(g, bandLab, f.box.r - 4, bandY, col.ok(), 'right', 10); });
   }
   tline(g, f, [0, ref], [tEnd, ref], col.muted(), 1, [5, 4]);
