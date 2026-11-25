@@ -171,7 +171,7 @@ export function drawStepResponse(g: CanvasRenderingContext2D, w: number, h: numb
   const lbl = (str: string, px: number, py: number, color: string, align: CanvasTextAlign = 'left', z = 10.5) => text(g, str, px, py, color, align, z);
   let ghostBox: { x0: number; x1: number; y0: number; y1: number } | null = null;
   let dropGhost = false;
-  let osBox: { x0: number; x1: number; y: number } | null = null;
+  let osBox: { x0: number; x1: number; y0: number; y1: number; y: number } | null = null;
   let trBox: { x0: number; x1: number; y0: number; y1: number } | null = null;
   let tsBox: { x0: number; x1: number; y0: number; y1: number } | null = null;
   const ghostWouldHit = (a: number, b2: number, c: number, d: number) => !!(ghostBox && b2 > ghostBox.x0 - 4 && a < ghostBox.x1 + 4 && d > ghostBox.y0 - 4 && c < ghostBox.y1 + 4);
@@ -390,7 +390,7 @@ export function drawStepResponse(g: CanvasRenderingContext2D, w: number, h: numb
     };
     const paintOsPad = (word: string, c: TextBox) => {
       paintTopPad(word, c, peakX, peakY, col.b(), paintOs);
-      osBox = { x0: c.a, x1: c.b2, y: c.y };
+      osBox = { x0: c.a, x1: c.b2, y0: c.c, y1: c.d, y: c.y };
     };
     // When Ts is closer to the peak than a stacked OS/Tp is wide, the in-plot
     // window is not robust under CI fonts. Park the label in the top pad first
@@ -440,7 +440,7 @@ export function drawStepResponse(g: CanvasRenderingContext2D, w: number, h: numb
       withAnchor({ kind: 'marker', x: peakX, y: peakY }, () => {
         withLabelRole('axis', () => { paintOs(word, c.x, c.y, col.b(), c.align, c.z); });
       });
-      osBox = { x0: c.a, x1: c.b2, y: c.y };
+      osBox = { x0: c.a, x1: c.b2, y0: c.c, y1: c.d, y: c.y };
     } else if (!osBox) {
       // required OS/Tp stays next to the peak; never park it on the curve or on another marker/ref line
       let c: TextBox | null = null;
@@ -470,7 +470,7 @@ export function drawStepResponse(g: CanvasRenderingContext2D, w: number, h: numb
         withAnchor({ kind: 'marker', x: peakX, y: peakY }, () => {
           withLabelRole('axis', () => { paintOs(word, c!.x, c!.y, col.b(), c!.align, MIN_FONT); });
         });
-        osBox = { x0: c.a, x1: c.b2, y: c.y };
+        osBox = { x0: c.a, x1: c.b2, y0: c.c, y1: c.d, y: c.y };
       }
     }
     if (!osBox) {
@@ -481,10 +481,10 @@ export function drawStepResponse(g: CanvasRenderingContext2D, w: number, h: numb
     }
   }
   // assignments to osBox / trBox inside the branches above stay narrow for CFA
-  const osPlaced = osBox as { x0: number; x1: number; y: number } | null;
+  const osPlaced = osBox as { x0: number; x1: number; y0: number; y1: number; y: number } | null;
   const trPlaced = trBox as { x0: number; x1: number; y0: number; y1: number } | null;
-  const hitsTr = (a: number, b2: number, c: number, d: number) =>
-    !!(trPlaced && b2 > trPlaced.x0 - 6 && a < trPlaced.x1 + 6 && d > trPlaced.y0 - 6 && c < trPlaced.y1 + 6);
+  const hitsTr = (a: number, b2: number, c: number, d: number, pad = 6) =>
+    !!(trPlaced && b2 > trPlaced.x0 - pad && a < trPlaced.x1 + pad && d > trPlaced.y0 - pad && c < trPlaced.y1 + pad);
   const onTickRowBox = (a: number, b2: number, c: number, d: number) => d > f.box.b - 6;
   const closerToTickBox = (a: number, b2: number, c: number, d: number, ownX: number, ownY0: number, ownY1: number) => {
     const m = typeof g.getTransform === 'function' ? g.getTransform() : { a: 1, d: 1, e: 0, f: 0 };
@@ -614,13 +614,25 @@ export function drawStepResponse(g: CanvasRenderingContext2D, w: number, h: numb
   }
   // required Ts / OS / Tr first; the stand-in legend then takes a free corner (CI fonts can be slightly wider)
   const tsPlaced = tsBox as { x0: number; x1: number; y0: number; y1: number } | null;
-  const GHOST_GAP = 8;
+  const yRefPx = f.Y(ref);
+  const hitsRefLine = (a: number, b2: number, c: number, d: number) => {
+    // local overlap e2e grows the box 2 px in height; keep the legend off the target line
+    const dy = 3;
+    return b2 > f.box.l && a < f.box.r && (c - dy) <= yRefPx && (d + dy) >= yRefPx;
+  };
   const ghostBlocked = (a: number, b2: number, c: number, d: number) => {
-    if (osPlaced && b2 > osPlaced.x0 - GHOST_GAP && a < osPlaced.x1 + GHOST_GAP && d > osPlaced.y - 16 && c < osPlaced.y + 16) return true;
-    if (tsPlaced && b2 > tsPlaced.x0 - GHOST_GAP && a < tsPlaced.x1 + GHOST_GAP && d > tsPlaced.y0 - GHOST_GAP && c < tsPlaced.y1 + GHOST_GAP) return true;
-    if (hitsTr(a, b2, c, d)) return true;
+    // match the local overlap e2e (9 % + 2 px width, 2 px height) plus a 2 px gap
+    const dx = ((b2 - a) * 0.09 + 2) / 2, dy = 1;
+    if (osPlaced && b2 > osPlaced.x0 - dx - 2 && a < osPlaced.x1 + dx + 2 && d > osPlaced.y0 - dy - 2 && c < osPlaced.y1 + dy + 2) return true;
+    if (tsPlaced && b2 > tsPlaced.x0 - dx - 2 && a < tsPlaced.x1 + dx + 2 && d > tsPlaced.y0 - dy - 2 && c < tsPlaced.y1 + dy + 2) return true;
+    if (hitsTr(a, b2, c, d, dx + 2)) return true;
     if (hitsCurve(a, b2, c, d)) return true;
-    if (hitsOtherVert(a, b2, c, d, [], GHOST_GAP)) return true;
+    if (hitsOtherVert(a, b2, c, d, [], dx + 1)) return true;
+    if (hitsRefLine(a, b2, c, d)) return true;
+    const trn = typeof g.getTransform === 'function' ? g.getTransform() : { a: 1, d: 1, e: 0, f: 0 };
+    const X0 = trn.a * (a - dx) + trn.e, X1 = trn.a * (b2 + dx) + trn.e;
+    const Y0 = trn.d * (c - dy) + trn.f, Y1 = trn.d * (d + dy) + trn.f;
+    if (labelOverlaps(labelsOn(g.canvas).filter((r) => r.role !== 'tick'), { x0: X0, x1: X1, y0: Y0, y1: Y1, role: 'axis' }, 2)) return true;
     if (show.overshoot && Number.isFinite(m.peak)) {
       const px0 = f.X(m.peakTime), py0 = f.Y(m.peak);
       const cx = Math.max(a, Math.min(px0, b2)), cy = Math.max(c, Math.min(py0, d));
@@ -630,53 +642,68 @@ export function drawStepResponse(g: CanvasRenderingContext2D, w: number, h: numb
   };
   if (s.ghost?.label) {
     const gl = s.ghost, gLab = `┄ ${gl.label}`;
-    g.font = '10px system-ui,sans-serif';
-    const gw = g.measureText(gLab).width;
-    const px = (show.overshoot && Number.isFinite(m.peak) && m.overshootPct > 0.05) ? f.X(m.peakTime) : (f.box.l + f.box.r) / 2;
-    const farFrom = (show.settling && Number.isFinite(m.settlingTime)) ? f.X(m.settlingTime) : px;
     const mk = (x: number, y: number, align: CanvasTextAlign) => ({ x, y, align });
-    const topL = mk(f.box.l + 4, Math.max(8, f.box.t - 10), 'left'), topR = mk(f.box.r - 4, Math.max(8, f.box.t - 10), 'right');
+    const tryGhost = (size: number, spots: { x: number; y: number; align: CanvasTextAlign }[]) => {
+      g.font = `${size}px system-ui,sans-serif`;
+      const width = g.measureText(gLab).width;
+      for (const sp of spots) {
+        const a = sp.align === 'right' ? sp.x - width : sp.align === 'center' ? sp.x - width / 2 : sp.x;
+        const b2 = a + width, c0 = sp.y - 6, d0 = sp.y + 6;
+        if (a < 2 || b2 > w - 2 || c0 < 2 || d0 > h - 2) continue;
+        if (ghostBlocked(a, b2, c0, d0)) continue;
+        ghostBox = { x0: a, x1: b2, y0: c0, y1: d0 };
+        withLabelRole('axis', () => { text(g, gLab, sp.x, sp.y, gl.color ?? col.muted(), sp.align, size); });
+        return true;
+      }
+      return false;
+    };
+    const yTop = Math.max(8, f.box.t - 10);
+    const topL = mk(f.box.l + 4, yTop, 'left'), topR = mk(f.box.r - 4, yTop, 'right');
     const inR = [mk(f.box.r - 4, f.box.t + 14, 'right'), mk(f.box.r - 4, f.box.t + 28, 'right')];
     const inL = [mk(f.box.l + 4, f.box.t + 14, 'left'), mk(f.box.l + 4, f.box.t + 28, 'left')];
     const midR = mk(f.box.r - 4, (f.box.t + f.box.b) / 2, 'right'), midL = mk(f.box.l + 4, (f.box.t + f.box.b) / 2, 'left');
+    const px = (show.overshoot && Number.isFinite(m.peak) && m.overshootPct > 0.05) ? f.X(m.peakTime) : (f.box.l + f.box.r) / 2;
+    const farFrom = (show.settling && Number.isFinite(m.settlingTime)) ? f.X(m.settlingTime) : px;
     const farFirst = Math.abs(topR.x - farFrom) >= Math.abs(topL.x - farFrom);
     const botR = mk(f.box.r - 4, f.box.b - 12, 'right'), botL = mk(f.box.l + 4, f.box.b - 12, 'left');
-    // tiles: only the top pad — if those fail, drop the ghost rather than park it on the curve.
-    // When the ghost vacated the top pad for Ts (dropGhost), skip those seats and use the others (BUG-83).
+    // a row above a two-line OS / Tr in the top pad, and seats to the side of those labels or at the canvas edge
+    const highYs = [16, 22, 28];
+    if (osPlaced) { const yUp = osPlaced.y0 - 8; if (yUp >= 14 && yUp <= yTop - 2) highYs.unshift(yUp); }
+    const xRight = [w - 4, f.box.r - 4], xLeft = [4, f.box.l + 4];
+    if (osPlaced) { xRight.push(osPlaced.x1 + 12); xLeft.push(osPlaced.x0 - 12); }
+    if (trPlaced) { xRight.push(trPlaced.x1 + 12); xLeft.push(trPlaced.x0 - 12); }
+    const padSpots: { x: number; y: number; align: CanvasTextAlign }[] = [];
+    for (const y of highYs) {
+      for (const x of xRight) padSpots.push(mk(x, y, 'right'));
+      for (const x of xLeft) padSpots.push(mk(x, y, 'left'));
+    }
+    for (const x of xRight) padSpots.push(mk(x, yTop, 'right'));
+    for (const x of xLeft) padSpots.push(mk(x, yTop, 'left'));
+    if (osPlaced) {
+      padSpots.push(mk(osPlaced.x1 + 12, yTop, 'left'), mk(w - 4, yTop, 'right'));
+      for (const y of highYs) padSpots.push(mk(osPlaced.x1 + 12, y, 'left'));
+    }
+    // tiles: only the default top pad — if those fail, drop the ghost rather than park it on the curve.
+    // On a full-size page, try a free top-pad row first (above or beside OS / Tr), then in-plot
+    // seats that miss the target line, so the required legend stays visible (BUG-83).
     const topSpots = farFirst ? [topR, topL] : [topL, topR];
     const restSpots = farFirst ? [...inR, midR, botR, ...inL, midL, botL] : [...inL, midL, botL, ...inR, midR, botR];
-    const spots = tile ? (dropGhost ? [] : topSpots) : (dropGhost ? restSpots : [...topSpots, ...restSpots]);
-    let placed = false;
-    for (const sp of spots) {
-      const a = sp.align === 'right' ? sp.x - gw : sp.x, b2 = a + gw, c = sp.y - 6, d = sp.y + 6;
-      if (ghostBlocked(a, b2, c, d)) continue;
-      ghostBox = { x0: a, x1: b2, y0: c, y1: d };
-      withLabelRole('axis', () => { text(g, gLab, sp.x, sp.y, gl.color ?? col.muted(), sp.align, 10); });
-      placed = true; break;
-    }
+    const spots = tile ? (dropGhost ? [] : topSpots) : [...padSpots, ...topSpots, ...restSpots];
+    let placed = tryGhost(10, spots);
     if (!placed && !tile) {
-      g.font = `${MIN_FONT}px system-ui,sans-serif`;
-      const gw9 = g.measureText(gLab).width;
       const extra = [
         midR, midL, botR, botL,
-        mk(f.box.r - 4, f.box.t + 44, 'right'), mk(f.box.l + 4, f.box.t + 44, 'left'),
-        mk(f.box.r - 4, f.box.t + (f.box.b - f.box.t) * 0.65, 'right'), mk(f.box.l + 4, f.box.t + (f.box.b - f.box.t) * 0.65, 'left'),
-        mk(f.box.r - 4, f.box.b - 24, 'right'), mk(f.box.l + 4, f.box.b - 24, 'left'),
+        mk(w - 4, f.box.t + 44, 'right'), mk(4, f.box.t + 44, 'left'),
+        mk(w - 4, f.box.t + (f.box.b - f.box.t) * 0.65, 'right'), mk(4, f.box.t + (f.box.b - f.box.t) * 0.65, 'left'),
+        mk(w - 4, f.box.b - 24, 'right'), mk(4, f.box.b - 24, 'left'),
       ];
-      for (const sp of [...spots, ...extra]) {
-        const a = sp.align === 'right' ? sp.x - gw9 : sp.x, b2 = a + gw9, c0 = sp.y - 6, d0 = sp.y + 6;
-        if (ghostBlocked(a, b2, c0, d0)) continue;
-        ghostBox = { x0: a, x1: b2, y0: c0, y1: d0 };
-        withLabelRole('axis', () => { text(g, gLab, sp.x, sp.y, gl.color ?? col.muted(), sp.align, MIN_FONT); });
-        placed = true; break;
+      const scan: { x: number; y: number; align: CanvasTextAlign }[] = [];
+      for (let y = 14; y <= f.box.b - 8; y += 6) {
+        scan.push(mk(w - 4, y, 'right'), mk(f.box.r - 4, y, 'right'), mk(4, y, 'left'), mk(f.box.l + 4, y, 'left'));
+        if (osPlaced) scan.push(mk(osPlaced.x1 + 12, y, 'left'), mk(osPlaced.x0 - 12, y, 'right'));
       }
-      // last resort on a full-size page: keep the required legend visible, even if the seat is tight (BUG-83)
-      if (!placed) {
-        const sp = botR;
-        const a = sp.x - gw9, b2 = sp.x, c0 = sp.y - 6, d0 = sp.y + 6;
-        ghostBox = { x0: a, x1: b2, y0: c0, y1: d0 };
-        withLabelRole('axis', () => { text(g, gLab, sp.x, sp.y, gl.color ?? col.muted(), sp.align, MIN_FONT); });
-      }
+      // never force a seat that hits OS / Tr / the target line; skip rather than overlap (BUG-83)
+      placed = tryGhost(MIN_FONT, [...spots, ...extra, ...scan]);
     }
   }
   if (show.ess && Number.isFinite(m.ess) && Math.abs(m.ess) > 1e-3 * Math.max(1, Math.abs(ref))) {
