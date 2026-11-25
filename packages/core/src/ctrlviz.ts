@@ -100,7 +100,11 @@ export function drawStepResponse(g: CanvasRenderingContext2D, w: number, h: numb
   const pad = (v: number | undefined, full: number, compact: number) => thumb ? Math.min(v ?? compact, compact) : (v ?? full);
   const tight = h < 260, needHead = !!(s.ghost?.label || show.overshoot);
   // slim pads: anchored OS / Tr stay by their markers, not in a reserved two-row band (BUG-51)
-  const topPad = needHead ? pad(s.pads?.t, 24, 24) : pad(s.pads?.t, 14, 8);
+  // a full-size page with a required ghost legend gets a second top-pad row so the
+  // legend can sit above the plot instead of past the y-axis or on the Tr line (BUG-89)
+  // only a narrow full-size plot with a ghost AND OS / Tr needs a second top-pad row (BUG-89)
+  const extraGhostPad = !isTileCanvas(g) && !!s.ghost?.label && w < 420 && !!(show.overshoot || show.timing);
+  const topPad = needHead ? pad(s.pads?.t, extraGhostPad ? 54 : 24, 24) : pad(s.pads?.t, 14, 8);
   const showBand = !!show.band;
   const f = rangeFrame(w, h, [0, tEnd], yr, pad(s.pads?.l, 72, 54), pad(s.pads?.r, showBand ? 32 : 14, showBand ? 24 : 10), topPad, pad(s.pads?.b, 38, 20));
   const m = stepMetrics(t, y, { ref, final: s.final, band });
@@ -620,7 +624,16 @@ export function drawStepResponse(g: CanvasRenderingContext2D, w: number, h: numb
     const dy = 3;
     return b2 > f.box.l && a < f.box.r && (c - dy) <= yRefPx && (d + dy) >= yRefPx;
   };
+  const ghostXf = typeof g.getTransform === 'function' ? g.getTransform() : { a: 1, d: 1, e: 0, f: 0 };
   const ghostBlocked = (a: number, b2: number, c: number, d: number) => {
+    // device-space canvas bounds (the figure header sits above this translated frame)
+    const X0 = ghostXf.a * a + ghostXf.e, X1 = ghostXf.a * b2 + ghostXf.e;
+    const Y0 = ghostXf.d * c + ghostXf.f, Y1 = ghostXf.d * d + ghostXf.f;
+    const cw = g.canvas.width || w, ch = g.canvas.height || h;
+    if (Y0 < 2 || Y1 > ch - 2 || X0 < 2 || X1 > cw - 2) return true;
+    // In the plot, stay right of the y-axis (BUG-89). In the header / top pad the
+    // legend may use the full canvas width.
+    if (d > f.box.t + 2 && (a < f.box.l + 2 || b2 > f.box.r + 2)) return true;
     // match the local overlap e2e (9 % + 2 px width, 2 px height) plus a 2 px gap
     const dx = ((b2 - a) * 0.09 + 2) / 2, dy = 1;
     if (osPlaced && b2 > osPlaced.x0 - dx - 2 && a < osPlaced.x1 + dx + 2 && d > osPlaced.y0 - dy - 2 && c < osPlaced.y1 + dy + 2) return true;
@@ -629,10 +642,9 @@ export function drawStepResponse(g: CanvasRenderingContext2D, w: number, h: numb
     if (hitsCurve(a, b2, c, d)) return true;
     if (hitsOtherVert(a, b2, c, d, [], dx + 1)) return true;
     if (hitsRefLine(a, b2, c, d)) return true;
-    const trn = typeof g.getTransform === 'function' ? g.getTransform() : { a: 1, d: 1, e: 0, f: 0 };
-    const X0 = trn.a * (a - dx) + trn.e, X1 = trn.a * (b2 + dx) + trn.e;
-    const Y0 = trn.d * (c - dy) + trn.f, Y1 = trn.d * (d + dy) + trn.f;
-    if (labelOverlaps(labelsOn(g.canvas).filter((r) => r.role !== 'tick'), { x0: X0, x1: X1, y0: Y0, y1: Y1, role: 'axis' }, 2)) return true;
+    const xL = ghostXf.a * (a - dx) + ghostXf.e, xR = ghostXf.a * (b2 + dx) + ghostXf.e;
+    const yT = ghostXf.d * (c - dy) + ghostXf.f, yB = ghostXf.d * (d + dy) + ghostXf.f;
+    if (labelOverlaps(labelsOn(g.canvas).filter((r) => r.role !== 'tick'), { x0: xL, x1: xR, y0: yT, y1: yB, role: 'axis' }, 2)) return true;
     if (show.overshoot && Number.isFinite(m.peak)) {
       const px0 = f.X(m.peakTime), py0 = f.Y(m.peak);
       const cx = Math.max(a, Math.min(px0, b2)), cy = Math.max(c, Math.min(py0, d));
@@ -646,10 +658,10 @@ export function drawStepResponse(g: CanvasRenderingContext2D, w: number, h: numb
     const tryGhost = (size: number, spots: { x: number; y: number; align: CanvasTextAlign }[]) => {
       g.font = `${size}px system-ui,sans-serif`;
       const width = g.measureText(gLab).width;
+      const half = Math.max(5, size * 0.55);
       for (const sp of spots) {
         const a = sp.align === 'right' ? sp.x - width : sp.align === 'center' ? sp.x - width / 2 : sp.x;
-        const b2 = a + width, c0 = sp.y - 6, d0 = sp.y + 6;
-        if (a < 2 || b2 > w - 2 || c0 < 2 || d0 > h - 2) continue;
+        const b2 = a + width, c0 = sp.y - half, d0 = sp.y + half;
         if (ghostBlocked(a, b2, c0, d0)) continue;
         ghostBox = { x0: a, x1: b2, y0: c0, y1: d0 };
         withLabelRole('axis', () => { text(g, gLab, sp.x, sp.y, gl.color ?? col.muted(), sp.align, size); });
@@ -667,9 +679,9 @@ export function drawStepResponse(g: CanvasRenderingContext2D, w: number, h: numb
     const farFirst = Math.abs(topR.x - farFrom) >= Math.abs(topL.x - farFrom);
     const botR = mk(f.box.r - 4, f.box.b - 12, 'right'), botL = mk(f.box.l + 4, f.box.b - 12, 'left');
     // a row above a two-line OS / Tr in the top pad, and seats to the side of those labels or at the canvas edge
-    const highYs = [16, 22, 28];
+    const highYs = [16, 22, 28, 32, 36, 40, 44];
     if (osPlaced) { const yUp = osPlaced.y0 - 8; if (yUp >= 14 && yUp <= yTop - 2) highYs.unshift(yUp); }
-    const xRight = [w - 4, f.box.r - 4], xLeft = [4, f.box.l + 4];
+    const xRight = [f.box.r - 4], xLeft = [f.box.l + 4];
     if (osPlaced) { xRight.push(osPlaced.x1 + 12); xLeft.push(osPlaced.x0 - 12); }
     if (trPlaced) { xRight.push(trPlaced.x1 + 12); xLeft.push(trPlaced.x0 - 12); }
     const padSpots: { x: number; y: number; align: CanvasTextAlign }[] = [];
@@ -680,26 +692,31 @@ export function drawStepResponse(g: CanvasRenderingContext2D, w: number, h: numb
     for (const x of xRight) padSpots.push(mk(x, yTop, 'right'));
     for (const x of xLeft) padSpots.push(mk(x, yTop, 'left'));
     if (osPlaced) {
-      padSpots.push(mk(osPlaced.x1 + 12, yTop, 'left'), mk(w - 4, yTop, 'right'));
+      padSpots.push(mk(osPlaced.x1 + 12, yTop, 'left'), mk(f.box.r - 4, yTop, 'right'));
       for (const y of highYs) padSpots.push(mk(osPlaced.x1 + 12, y, 'left'));
     }
     // tiles: only the default top pad — if those fail, drop the ghost rather than park it on the curve.
     // On a full-size page, try a free top-pad row first (above or beside OS / Tr), then in-plot
     // seats that miss the target line, so the required legend stays visible (BUG-83).
+    // first row of the figure's own top pad (above OS / Tr, below the wrapper header)
+    const head: { x: number; y: number; align: CanvasTextAlign }[] = [
+      mk(w - 4, 12, 'right'), mk(8, 12, 'left'), mk((f.box.l + f.box.r) / 2, 12, 'center'),
+      mk(f.box.r - 4, 12, 'right'), mk(f.box.l + 4, 12, 'left'),
+    ];
     const topSpots = farFirst ? [topR, topL] : [topL, topR];
     const restSpots = farFirst ? [...inR, midR, botR, ...inL, midL, botL] : [...inL, midL, botL, ...inR, midR, botR];
-    const spots = tile ? (dropGhost ? [] : topSpots) : [...padSpots, ...topSpots, ...restSpots];
+    const spots = tile ? (dropGhost ? [] : topSpots) : [...head, ...padSpots, ...topSpots, ...restSpots];
     let placed = tryGhost(10, spots);
     if (!placed && !tile) {
       const extra = [
         midR, midL, botR, botL,
-        mk(w - 4, f.box.t + 44, 'right'), mk(4, f.box.t + 44, 'left'),
-        mk(w - 4, f.box.t + (f.box.b - f.box.t) * 0.65, 'right'), mk(4, f.box.t + (f.box.b - f.box.t) * 0.65, 'left'),
-        mk(w - 4, f.box.b - 24, 'right'), mk(4, f.box.b - 24, 'left'),
+        mk(f.box.r - 4, f.box.t + 44, 'right'), mk(f.box.l + 4, f.box.t + 44, 'left'),
+        mk(f.box.r - 4, f.box.t + (f.box.b - f.box.t) * 0.65, 'right'), mk(f.box.l + 4, f.box.t + (f.box.b - f.box.t) * 0.65, 'left'),
+        mk(f.box.r - 4, f.box.b - 24, 'right'), mk(f.box.l + 4, f.box.b - 24, 'left'),
       ];
       const scan: { x: number; y: number; align: CanvasTextAlign }[] = [];
       for (let y = 14; y <= f.box.b - 8; y += 6) {
-        scan.push(mk(w - 4, y, 'right'), mk(f.box.r - 4, y, 'right'), mk(4, y, 'left'), mk(f.box.l + 4, y, 'left'));
+        scan.push(mk(f.box.r - 4, y, 'right'), mk(f.box.l + 4, y, 'left'));
         if (osPlaced) scan.push(mk(osPlaced.x1 + 12, y, 'left'), mk(osPlaced.x0 - 12, y, 'right'));
       }
       // never force a seat that hits OS / Tr / the target line; skip rather than overlap (BUG-83)
@@ -785,16 +802,20 @@ export function drawSPlane(g: CanvasRenderingContext2D, w: number, h: number, s:
     }
   };
   applyAspect();
-  // a side zoom box is not worth a letterboxed plane on a narrow canvas.
+  // a side zoom box is not worth a letterboxed or too-narrow plane on a small canvas.
   // On a full-size page figure the how-to-read still needs the box (Borer 3 at 320, BUG-82),
-  // so move it into a bottom band that does not cover the plane.
-  if (reserved && (vh - 2 * pad) / h < 0.58) {
-    if (!tileCanvas) {
-      const sw = Math.round(Math.max(110, Math.min(160, w * 0.42, h * 0.32)));
-      reserved = { iw: sw, ih: sw, ix: Math.max(4, w - sw - 6), iy: h - sw - 4, mode: 'bottom' };
-    } else {
-      reserved = null;
-    }
+  // so move it into a bottom band that does not cover the plane (BUG-86).
+  // Measure the side band itself, not the letterboxed plane: maxAspect can shrink vw
+  // on a short, wide canvas without the side band being too tight.
+  const bandW = reserved?.mode === 'side' ? reserved.ix - 6 : vw;
+  const sideTooTight = reserved?.mode === 'side' && ((h - 2 * pad) / h < 0.58 || (bandW - 2 * pad) / w < 0.58 || bandW < 220);
+  const bottomSw = Math.round(Math.max(110, Math.min(160, w * 0.42, h * 0.32)));
+  const canBottom = !tileCanvas && h >= bottomSw + 80;
+  if (reserved && sideTooTight && canBottom) {
+    reserved = { iw: bottomSw, ih: bottomSw, ix: Math.max(4, w - bottomSw - 6), iy: h - bottomSw - 4, mode: 'bottom' };
+    applyAspect();
+  } else if (reserved && sideTooTight && tileCanvas) {
+    reserved = null;
     applyAspect();
   } else if (!reserved && s.inset && s.clear !== false && !tileCanvas) {
     const sw = Math.round(Math.max(110, Math.min(160, w * 0.42, h * 0.32)));

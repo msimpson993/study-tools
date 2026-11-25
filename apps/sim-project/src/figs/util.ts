@@ -126,7 +126,7 @@ export function drawKeyValueTable(
     let x0 = 4;
     for (const ww of widths) { xs.push(x0); x0 += ww; }
     rows.forEach((row, i) => row.forEach((c, j) => {
-      const align: CanvasTextAlign = (j === 0 || i === 0) ? 'left' : 'right';
+      const align: CanvasTextAlign = j === 0 ? 'left' : 'right';
       const x = align === 'left' ? xs[j] + 4 : xs[j] + widths[j] - 4;
       text(g, c, x, 14 + i * rowH, i === 0 ? col.muted() : col.text(), align, size);
     }));

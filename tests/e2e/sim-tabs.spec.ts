@@ -525,5 +525,18 @@ test.describe('sim-project tabbed page', () => {
     for (const w of widths) {
       expect(w, `Disk 4 plot ${w}px at 1280 should be at least as wide as on a 390 phone (${phoneW}px)`).toBeGreaterThanOrEqual(phoneW - 8);
     }
+
+    // Engine 3 and 5: two plots plus a full-width table must not leave an empty third column (BUG-87).
+    for (const step of ['3', '5']) {
+      await open(page, 'sim-project', '#/tab/engine');
+      const sec = page.locator(`[data-testid=step-section][data-step="${step}"]`);
+      await sec.evaluate((el) => el.scrollIntoView({ block: 'start' }));
+      const plots = sec.locator('.step-figs canvas[data-fig="step"], .step-figs canvas[data-fig="bode"]');
+      await expect.poll(async () => plots.count()).toBe(2);
+      const ws = await plots.evaluateAll((cs) => cs.map((c) => (c as HTMLElement).getBoundingClientRect().width));
+      for (const w of ws) {
+        expect(w, `Engine ${step} plot ${w}px at 1280 should fill half the row, not sit next to an empty third column`).toBeGreaterThan(480);
+      }
+    }
   });
 });

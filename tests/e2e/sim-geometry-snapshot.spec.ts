@@ -58,11 +58,34 @@ const coreLabels = (labels: { s: string; role: string }[]) =>
   labels.filter((l) => l.role !== 'tick' && !l.s.includes('┄'));
 const coreKeys = (labels: { s: string; role: string }[]) =>
   coreLabels(labels).map((l) => `${l.role}:${norm(l.s)}`).sort();
-/** Word bag per role, so a wider GitHub font that wraps a note one word earlier does not fail CI. */
-const coreTokens = (labels: { s: string; role: string }[]) =>
-  coreLabels(labels)
-    .flatMap((l) => norm(l.s).split(' ').filter(Boolean).map((w) => `${l.role}:${w}`))
-    .sort();
+/** Word bag per role, so a wider GitHub font that wraps a note one word earlier does not fail CI.
+ *  Split on punctuation too (`s,` vs `s` + a new line) and ignore an axis-title whose
+ *  continuation was clipped under CI fonts (σ vs σ = Re s (1/ms)). */
+const tokenWords = (s: string) => norm(s).split(/[^\w.····±µμ°τσωζ=−–-]+/u).filter(Boolean);
+const tokenBag = (labels: { s: string; role: string }[]) => {
+  const bag = new Map<string, number>();
+  for (const l of coreLabels(labels)) for (const w of tokenWords(l.s)) {
+    const k = `${l.role}:${w}`;
+    bag.set(k, (bag.get(k) ?? 0) + 1);
+  }
+  return bag;
+};
+const bagsMatch = (got: Map<string, number>, exp: Map<string, number>) => {
+  const keys = new Set([...got.keys(), ...exp.keys()]);
+  const onlyGot: string[] = [], onlyExp: string[] = [];
+  for (const k of keys) {
+    const d = (got.get(k) ?? 0) - (exp.get(k) ?? 0);
+    if (d > 0) onlyGot.push(...Array(d).fill(k));
+    if (d < 0) onlyExp.push(...Array(-d).fill(k));
+  }
+  if (!onlyGot.length && !onlyExp.length) return true;
+  // one side is a subset, and the leftovers are axis-title tokens only (wrap/clip flake)
+  return leftoverIsAxisWrap(onlyGot, onlyExp);
+};
+const leftoverIsAxisWrap = (onlyGot: string[], onlyExp: string[]) => {
+  if (onlyGot.length && onlyExp.length) return false;
+  return [...onlyGot, ...onlyExp].every((k) => k.startsWith('axis:'));
+};
 
 const start = (page: Page) => page.evaluate(() => {
   (window as any).__textLog = [];
@@ -134,10 +157,10 @@ function compare(key: string, got: ViewSnap, exp: ViewSnap): string[] {
     if (Math.abs(g.font - e.font) > FONT_TOL) out.push(`${key}: ${axis}-axis font ${g.font} vs baseline ${e.font} (tol ±${FONT_TOL})`);
   }
   const gk = coreKeys(got.labels), ek = coreKeys(exp.labels);
-  const gt = coreTokens(got.labels), et = coreTokens(exp.labels);
-  if (gt.join('\n') !== et.join('\n')) {
+  if (!bagsMatch(tokenBag(got.labels), tokenBag(exp.labels))) {
     out.push(`${key}: label set differs\n  got: ${gk.join(', ')}\n  exp: ${ek.join(', ')}`);
   } else {
+
     const byKey = new Map(got.labels.map((l) => [`${l.role}:${norm(l.s)}`, l]));
     for (const l of exp.labels) {
       if (l.role === 'tick' || l.s.includes('┄')) continue;

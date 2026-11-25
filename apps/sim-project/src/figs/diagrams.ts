@@ -251,16 +251,27 @@ export function drawLabDiagram(g: CanvasRenderingContext2D, w: number, h: number
   };
   const boxAt = (id: Id, x: number, y: number, ww: number, hh: number, lab: string | LabCaption, also?: Id[]) => {
     const t = tone(id, opts, also), s = stroke(t);
-    const px = X(x), py = Y(y), bw = W(ww), bh = H(hh);
+    let px = X(x), py = Y(y), bw = W(ww), bh = H(hh);
     const label = pick(lab);
     g.lineWidth = s.width;
-    // one label size on every block; wrap rather than shrinking to fit
-    const sz = typeSize;
-    const lines2 = wrap(g, label, Math.max(12, bw - 8), sz);
+    // shrink to the 9 px floor if needed, then grow the box so every line stays inside (BUG-85)
+    let sz = typeSize;
+    const maxW = Math.max(12, bw - 8);
+    const measure = (size: number) => {
+      const lines = wrap(g, label, maxW, size);
+      g.font = `${size}px system-ui, sans-serif`;
+      const widest = Math.max(0, ...lines.map((ln) => g.measureText(ln).width));
+      const tall = lines.length * (size + 1) + 6;
+      return { lines, widest, tall };
+    };
+    let fit = measure(sz);
+    while (sz > 9 && (fit.tall > bh || fit.widest > maxW)) { sz -= 1; fit = measure(sz); }
+    if (fit.widest > maxW) { const extra = fit.widest - maxW; px -= extra / 2; bw += extra; }
+    if (fit.tall > bh) { const extra = fit.tall - bh; py -= extra / 2; bh += extra; }
     box(g, px, py, bw, bh, '', s.color, undefined, sz);
     const lh = sz + 1;
-    const y0 = py + bh / 2 - ((lines2.length - 1) * lh) / 2 + sz * 0.35;
-    lines2.forEach((ln, i) => text(g, ln, px + bw / 2, y0 + i * lh, col.text(), 'center', sz));
+    const y0 = py + bh / 2 - ((fit.lines.length - 1) * lh) / 2 + sz * 0.35;
+    fit.lines.forEach((ln, i) => text(g, ln, px + bw / 2, y0 + i * lh, col.text(), 'center', sz));
     if (opts.hits && typeof lab !== 'string') opts.hits.push({ id, x: px, y: py, w: bw, h: bh, tip: lab.tip });
     anchors.push({ id, x: px + bw / 2, y: py + bh + 6 });
     return { x: px, y: py, w: bw, h: bh, cx: px + bw / 2, cy: py + bh / 2, r: px + bw, b: py + bh, l: px, t: py };
@@ -292,7 +303,7 @@ export function drawLabDiagram(g: CanvasRenderingContext2D, w: number, h: number
   const rail = 42;
   if (kind === 'motor-open') {
     // Va → ⊕ → [Km/Ra] → ⊕ → [1/(Js+b)] → ω,  Kb on the feedback, T_d into the second sum
-    text(g, 'Va', X(0), Y(rail) + 3, col.text(), 'left', 11);
+    text(g, 'Va', X(0) + 8, Y(rail) - 11, col.text(), 'center', 11);
     const s1 = { x: X(10), y: Y(rail) };
     const coil = boxAt('sys2', 16, rail - 10, 20, 20, L('Km/Ra', '10 N·m/V', 'volts to torque', 'in: voltage Va. out: torque. what it does: turns volts into torque'), ['sys4']);
     const s2 = { x: X(48), y: Y(rail) };
@@ -326,7 +337,7 @@ export function drawLabDiagram(g: CanvasRenderingContext2D, w: number, h: number
   } else if (kind === 'motor-closed') {
     // 0 → ⊕ → [Ka] → ⊕ → [Km/Ra] → ⊕ → [1/(Js+b)] → ω
     //      −Kt         −Kb            −T_d
-    text(g, '0', X(0), Y(rail) + 3, col.text(), 'left', 11);
+    text(g, '0', X(0) + 8, Y(rail) - 11, col.text(), 'center', 11);
     const sR = { x: X(8), y: Y(rail) };
     const ka = boxAt('sys2', 14, rail - 10, 12, 20, L('Ka', '54', 'multiplies the speed shortfall', 'in: speed error (volts). out: amplifier voltage. what it does: multiplies the speed shortfall'));
     const sE = { x: X(34), y: Y(rail) };
