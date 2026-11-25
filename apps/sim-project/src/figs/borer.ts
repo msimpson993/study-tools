@@ -71,7 +71,7 @@ export const borerPanels = (): FigurePanel[] => [
         }
       }
       drawSPlane(g, w, h, {
-        range: 14, reCenter: -7,
+        range: 12, reCenter: -6,
         poles, zeros,
         labels: true, zetaRays: [1, 0.6],
         marks: ghosts.map((p) => ({ s: p, label: '', color: col.muted() })),
