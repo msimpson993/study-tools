@@ -152,6 +152,24 @@ const collisions = (log: L[], at: string) => {
   return out;
 };
 
+/** BUG-74: no tick-vs-tick or tick-vs-label overlap is tolerated (zero slack on the raw box, plus the local grow). */
+const tickCollisions = (log: L[], at: string) => {
+  const by = new Map<number, L[]>();
+  for (const e of latest(log)) if (!e.skipped && e.y0 !== undefined && e.s.trim()) {
+    const a = by.get(e.cv) ?? []; a.push(e); by.set(e.cv, a);
+  }
+  const out: string[] = [];
+  for (const a of by.values()) for (let i = 0; i < a.length; i++) for (let j = i + 1; j < a.length; j++) {
+    const p = a[i], q = a[j];
+    if (p.role !== 'tick' && q.role !== 'tick') continue;
+    if (p.s === q.s && Math.abs(p.x0 - q.x0) < 1 && Math.abs((p.y0 ?? 0) - (q.y0 ?? 0)) < 1) continue;
+    const P = boxOf(p), Q = boxOf(q);
+    const w = Math.min(P.x1, Q.x1) - Math.max(P.x0, Q.x0), h = Math.min(P.y1, Q.y1) - Math.max(P.y0, Q.y0);
+    if (w > 0 && h > 0) out.push(`${at} ${p.id || 'canvas'}: tick “${p.s}” (${p.role ?? '?'}) × “${q.s}” (${q.role ?? '?'})`);
+  }
+  return out;
+};
+
 /** a pixel or two of descender box past the edge is fine */
 const clipped = (log: L[], at: string) => {
   const out: string[] = [];
@@ -557,7 +575,7 @@ for (const vp of VIEWPORTS) {
         seen += tiles.length;
         const atTile = `${tab} step ${step} tile @${vp.label}`;
         const tilePlots = takenTiles.plots.filter((e) => e.where === 'tile' && e.step === step);
-        bad.push(...collisions(tiles, atTile), ...clipped(tiles, atTile), ...onCurve(tiles, tileCurves, atTile), ...onObstacle(tiles, tileObs, atTile), ...farFromAnchor(tiles, atTile));
+        bad.push(...collisions(tiles, atTile), ...tickCollisions(tiles, atTile), ...clipped(tiles, atTile), ...onCurve(tiles, tileCurves, atTile), ...onObstacle(tiles, tileObs, atTile), ...farFromAnchor(tiles, atTile));
         bad.push(...tooSmall(tiles, atTile, tab, step, null), ...unstableInInset(tiles, tileObs, atTile));
         bad.push(...missingRequired(tiles, atTile, tab, step, null, vp.labelled));
         bad.push(...tickSizeMix(tiles, atTile), ...tickAlign(tiles, atTile), ...nearerThanOthers(tiles, tileObs, atTile));
@@ -586,7 +604,7 @@ for (const vp of VIEWPORTS) {
           seen += exp.length;
           const atExp = `${tab} step ${step} expand ${fig} @${vp.label}`;
           const expPlots = takenExp.plots.filter((e) => e.where === 'expand');
-          bad.push(...collisions(exp, atExp), ...clipped(exp, atExp), ...onCurve(exp, expCurves, atExp), ...onObstacle(exp, expObs, atExp), ...farFromAnchor(exp, atExp));
+          bad.push(...collisions(exp, atExp), ...tickCollisions(exp, atExp), ...clipped(exp, atExp), ...onCurve(exp, expCurves, atExp), ...onObstacle(exp, expObs, atExp), ...farFromAnchor(exp, atExp));
           bad.push(...tooSmall(exp, atExp, tab, step, fig), ...unstableInInset(exp, expObs, atExp));
           bad.push(...missingRequired(exp, atExp, tab, step, fig, true));
           bad.push(...tickSizeMix(exp, atExp), ...tickAlign(exp, atExp), ...nearerThanOthers(exp, expObs, atExp));

@@ -102,6 +102,36 @@ export function minNiceTicks(lo: number, hi: number, already: number[], min = 2)
   if (out.length < min) add(hi);
   return out;
 }
+/** Extra tick values for a min-2 fill: nice ends first, then 0, then the raw ends. Odd mid-span values are not used (BUG-74). */
+export function min2Candidates(lo: number, hi: number, already: number[]): number[] {
+  const inRange = (v: number) => Number.isFinite(v) && v >= lo - 1e-9 && v <= hi + 1e-9;
+  const niceEnd = (v: number) => {
+    if (!Number.isFinite(v)) return v;
+    if (Math.abs(v) < 1e-12) return 0;
+    const sign = v < 0 ? -1 : 1, a = Math.abs(v);
+    const p = Math.pow(10, Math.floor(Math.log10(a)));
+    const m = a / p;
+    const cand = (m < 1.5 ? 1 : m < 3.5 ? 2 : m < 7.5 ? 5 : 10) * p * sign;
+    if (inRange(cand)) return cand;
+    const down = (m < 1.5 ? 0.5 : m < 3.5 ? 1 : m < 7.5 ? 2 : 5) * p * sign;
+    if (inRange(down)) return down;
+    return v;
+  };
+  const out: number[] = [];
+  const add = (v: number) => {
+    if (!inRange(v)) return;
+    if (already.some((u) => Math.abs(u - v) < 1e-8)) return;
+    if (out.some((u) => Math.abs(u - v) < 1e-8)) return;
+    out.push(v);
+  };
+  add(niceEnd(lo));
+  add(niceEnd(hi));
+  if (lo <= 0 && 0 <= hi) add(0);
+  add(lo);
+  add(hi);
+  // if still short, the two most separated already-nice values are the ends; caller draws what fits
+  return out;
+}
 /** Whether a tick number at (px, py) would stay on the canvas (same test text() uses). */
 export function tickOnCanvas(g: CanvasRenderingContext2D, lab: string, px: number, py: number, z: number, align: CanvasTextAlign = 'center') {
   const m = typeof g.getTransform === 'function' ? g.getTransform() : { a: 1, b: 0, c: 0, d: 1, e: 0, f: 0 };
@@ -400,10 +430,9 @@ export function text(g: CanvasRenderingContext2D, s: string, x: number, y: numbe
       rect = { x0, x1, y0, y1, role };
     }
     const list = labelsOn(cv);
-    const tickVsTickOk = simProjectStyle() && !forceTick;
-    if (axisAligned && role === 'tick' && (!simProjectStyle() || !forceTick)) {
-      const vs = tickVsTickOk ? list.filter((o) => o.role !== 'tick') : list;
-      if (labelOverlaps(vs, rect, -3)) { /* a number touching another label (within 3 px) reads as one: leave it out */ logText(g, s, f, size, x, y, base, rect, 0, true); return false; }
+    if (axisAligned && role === 'tick') {
+      // forced ticks pass the same test as ordinary ones (BUG-74): no tick-vs-tick, no tick-vs-name
+      if (labelOverlaps(list, rect, -3)) { logText(g, s, f, size, x, y, base, rect, 0, true); return false; }
     }
     else if (axisAligned && role === 'note' && !labelAnchor()) {
       // whole lines down or up, nearest first; stay inside the plot clip when one is active (else the canvas)
@@ -697,9 +726,13 @@ export function graphAxes(g: CanvasRenderingContext2D, f: Frame, xr: V2, yr: V2,
     const xDrawn: number[] = [];
     const drawXTick = (x: number, force = false) => {
       const lab = xfmt ? xfmt(x) : (force ? tickLabelFine(x, sx) : tickLabel(x, sx)), px = f.X(x);
-      if (!lab || (lab === lastX && !force)) return false;
+      if (!lab || lab === lastX) return false;
+      g.font = '10px system-ui,sans-serif';
+      const tw = g.measureText(lab).width;
+      // corner exclusion: an x-tick may not enter the y-tick column (BUG-74)
+      if (simAxes && px - tw / 2 < f.box.l + 4) return false;
       const onMarkX = (avoid ?? []).some((mk) => Math.hypot((mk.x ?? px) - px, (mk.y ?? (f.box.b + 9)) - (f.box.b + 9)) < (mk.r ?? 10));
-      if (!force && (Math.abs(px - lastPx) < 26 || onMarkX)) return false;
+      if (Math.abs(px - lastPx) < 26 || onMarkX) return false;
       if (simAxes && !tickOnCanvas(g, lab, px, f.box.b + 9, 10, 'center')) return false;
       let ok = false;
       withAnchor({ kind: 'line', x: px, y: f.box.t, x2: px, y2: f.box.b }, () => {
@@ -724,13 +757,9 @@ export function graphAxes(g: CanvasRenderingContext2D, f: Frame, xr: V2, yr: V2,
     });
     if (simAxes) {
       const xInset = (f.box.r - f.box.l) > 8 && f.sx ? 6 / f.sx : 0;
-      for (const x of minNiceTicks(xr[0] + xInset, xr[1] - xInset, xDrawn, 2)) if (!xDrawn.some((u) => Math.abs(u - x) < 1e-8)) drawXTick(x, true);
-      if (xDrawn.length < 2) {
-        const mid = (xr[0] + xr[1]) / 2, sp = (xr[1] - xr[0]) / 2;
-        for (const x of [mid + 0.7 * sp, mid - 0.7 * sp, mid + 0.45 * sp, mid - 0.45 * sp]) {
-          if (xDrawn.length >= 2) break;
-          if (!xDrawn.some((u) => Math.abs(u - x) < 1e-8)) drawXTick(x, true);
-        }
+      for (const x of min2Candidates(xr[0] + xInset, xr[1] - xInset, xDrawn)) {
+        if (xDrawn.length >= 2) break;
+        drawXTick(x, true);
       }
     }
     // one size for every y tick, never below 9 (BUG-61); keep 0 / 1 / 2 on a 0–2 axis, centred on the line (BUG-65)
@@ -752,8 +781,10 @@ export function graphAxes(g: CanvasRenderingContext2D, f: Frame, xr: V2, yr: V2,
         if (Math.abs(mk.y - t.py) >= r) return false;
         return mk.x === undefined || mk.x < f.box.l + r + 20;
       });
-      if (t.lab === lastY && !force) return false;
-      if (!force && !keepY(t.lab) && (Math.abs(t.py - lastPy) < 14 || onMark)) return false;
+      if (t.lab === lastY) return false;
+      // corner exclusion: a y-tick may not enter the x-tick row (BUG-74)
+      if (simAxes && t.py + ySize * 0.55 > f.box.b - 4) return false;
+      if (Math.abs(t.py - lastPy) < 14 || onMark) return false;
       const inside = f.box.l + 3;
       const outerOk = tickOnCanvas(g, t.lab, tickX, t.py, ySize, 'right');
       const innerOk = tickOnCanvas(g, t.lab, inside, t.py, ySize, 'left');
@@ -771,8 +802,9 @@ export function graphAxes(g: CanvasRenderingContext2D, f: Frame, xr: V2, yr: V2,
       // prefer the left pad; if that is off-canvas or sits on an axis name, sit just inside the plot.
       // never force a pad tick onto a title.
       if (outerOk && tryPaint(tickX, 'right', false)) { lastY = t.lab; lastPy = t.py; yDrawn.push(t.y); return true; }
-      if (innerOk && tryPaint(inside, 'left', false)) { lastY = t.lab; lastPy = t.py; yDrawn.push(t.y); return true; }
-      if (force && innerOk && tryPaint(inside, 'left', true)) { lastY = t.lab; lastPy = t.py; yDrawn.push(t.y); return true; }
+      // sit inside the plot only when well above the x-tick row, so the number stays a y-tick (BUG-74)
+      const clearOfXRow = t.py < f.box.b - 12;
+      if (clearOfXRow && innerOk && tryPaint(inside, 'left', false)) { lastY = t.lab; lastPy = t.py; yDrawn.push(t.y); return true; }
       return false;
     };
     if (!simAxes) {
@@ -792,18 +824,10 @@ export function graphAxes(g: CanvasRenderingContext2D, f: Frame, xr: V2, yr: V2,
     } else {
       for (const t of yLabs) drawYTick(t);
       const yInsetG = (f.box.b - f.box.t) > 8 && f.sy ? 6 / f.sy : 0;
-      for (const y of minNiceTicks(yr[0] + yInsetG, yr[1] - yInsetG, yDrawn, 2)) {
-        if (yDrawn.some((u) => Math.abs(u - y) < 1e-8)) continue;
+      for (const y of min2Candidates(yr[0] + yInsetG, yr[1] - yInsetG, yDrawn)) {
+        if (yDrawn.length >= 2) break;
         const lab = yfmt ? yfmt(y) : tickLabelFine(y, sy);
         if (lab) drawYTick({ lab, y, py: f.Y(y) }, true);
-      }
-      if (yDrawn.length < 2) {
-        const mid = (yr[0] + yr[1]) / 2, sp = (yr[1] - yr[0]) / 2;
-        for (const y of [mid + 0.7 * sp, mid - 0.7 * sp, mid + 0.45 * sp, mid - 0.45 * sp]) {
-          if (yDrawn.length >= 2) break;
-          const lab = yfmt ? yfmt(y) : tickLabelFine(y, sy);
-          if (lab && !yDrawn.some((u) => Math.abs(u - y) < 1e-8)) drawYTick({ lab, y, py: f.Y(y) }, true);
-        }
       }
     }
   });

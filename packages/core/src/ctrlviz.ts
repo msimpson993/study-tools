@@ -1,7 +1,7 @@
 import { C, cabs, type Cx } from './dsp/complex';
 import { type TF, type StepMetrics, type Margins, type Bode, bode, margins, stepMetrics, tfEval, logspace, tfPoles, tfZeros, freqresp } from './dsp/tf';
 import { type RLocus, rlocusPolesAt, rlocusNearest } from './dsp/rlocus';
-import { col, planeFrame, rangeFrame, wipe, text, tline, polyline, dot, cross, graphAxes, curve, clipBox, withClip, beginClip, endClip, heat, axes2, tickLabel, isThumb, isTileCanvas, isPortraitPhone, isLandscapePhone, logInsetFrame, logPlotFrame, forTicks, goodStep, minNiceTicks, lockReadout, tickOnCanvas, knockOutAxes2Names, withTextSplit, simProjectStyle, type Frame, type V2 } from './viz';
+import { col, planeFrame, rangeFrame, wipe, text, tline, polyline, dot, cross, graphAxes, curve, clipBox, withClip, beginClip, endClip, heat, axes2, tickLabel, isThumb, isTileCanvas, isPortraitPhone, isLandscapePhone, logInsetFrame, logPlotFrame, forTicks, goodStep, minNiceTicks, min2Candidates, lockReadout, tickOnCanvas, knockOutAxes2Names, withTextSplit, simProjectStyle, type Frame, type V2 } from './viz';
 import { withLabelRole, withAnchor, labelsOn, labelOverlaps } from './labels';
 import type { PanelPointer } from './figure';
 import * as r14 from './ctrlviz-r14';
@@ -666,9 +666,9 @@ export function drawSPlane(g: CanvasRenderingContext2D, w: number, h: number, s:
       const lab = tickLabel(x, st), px = f.X(x);
       if (!lab) return false;
       const tw = g.measureText(lab).width, y = f.box.b - 7;
-      const fits = px + tw / 2 <= f.box.r - 1 && px - tw / 2 >= f.box.l + 1;
+      const fits = px + tw / 2 <= f.box.r - 1 && px - tw / 2 >= f.box.l + 8;
       if (!fits || !tickOnCanvas(g, lab, px, y, TICK_Z, 'center')) return false;
-      if (!force && (lab === lastX || Math.abs(px - lastPx) < 26 || hitsMark(px, y, tw) || underPole(px))) return false;
+      if (lab === lastX || Math.abs(px - lastPx) < 26 || hitsMark(px, y, tw) || underPole(px)) return false;
       let ok = false;
       withAnchor({ kind: 'line', x: px, y: f.box.t, x2: px, y2: f.box.b }, () => {
         ok = text(g, lab, px, y, col.muted(), 'center', TICK_Z);
@@ -678,13 +678,9 @@ export function drawSPlane(g: CanvasRenderingContext2D, w: number, h: number, s:
     };
     forTicks(Math.ceil(xLo / st) * st, xHi, st, (x) => drawX(x));
     const xInset = (f.box.r - f.box.l) > 8 && f.sx ? 6 / f.sx : 0;
-    for (const x of minNiceTicks(xLo + xInset, xHi - xInset, xDrawn, 2)) if (!xDrawn.some((u) => Math.abs(u - x) < 1e-8)) drawX(x, true);
-    if (xDrawn.length < 2) {
-      const mid = (xLo + xHi) / 2, sp = (xHi - xLo) / 2;
-      for (const x of [mid + 0.7 * sp, mid - 0.7 * sp, mid + 0.45 * sp, mid - 0.45 * sp]) {
-        if (xDrawn.length >= 2) break;
-        if (!xDrawn.some((u) => Math.abs(u - x) < 1e-8)) drawX(x, true);
-      }
+    for (const x of min2Candidates(xLo + xInset, xHi - xInset, xDrawn)) {
+      if (xDrawn.length >= 2) break;
+      drawX(x, true);
     }
     let lastY = '', lastPy = Infinity;
     const yDrawn: number[] = [];
@@ -692,9 +688,9 @@ export function drawSPlane(g: CanvasRenderingContext2D, w: number, h: number, s:
       const lab = tickLabel(y, st), py = f.Y(y);
       if (!lab || lab === '0') return;
       const tw = g.measureText(lab).width, x = f.box.l + 3;
-      const fits = py > f.box.t + (force ? 1 : 4) && py < f.box.b - (force ? 1 : 4);
+      const fits = py > f.box.t + 4 && py < f.box.b - 10;
       if (!fits) return;
-      if (!force && (lab === lastY || Math.abs(py - lastPy) < 16 || hitsMark(x, py, tw))) return;
+      if (lab === lastY || Math.abs(py - lastPy) < 16 || hitsMark(x, py, tw)) return;
       let ok = false;
       withAnchor({ kind: 'line', x: f.box.l, y: py, x2: f.box.r, y2: py }, () => {
         ok = text(g, lab, x, py, col.muted(), 'left', TICK_Z);
@@ -703,15 +699,11 @@ export function drawSPlane(g: CanvasRenderingContext2D, w: number, h: number, s:
       lastY = lab; lastPy = py; yDrawn.push(y); return true;
     };
     forTicks(Math.ceil(yLo / st) * st, yHi, st, (y) => drawY(y));
-    const yNeed = (yLo <= 0 && 0 <= yHi) ? 3 : 2;
     const yInset = (f.box.b - f.box.t) > 8 && f.sy ? 6 / f.sy : 0;
-    for (const y of minNiceTicks(yLo + yInset, yHi - yInset, yDrawn, yNeed)) if (!yDrawn.some((u) => Math.abs(u - y) < 1e-8)) drawY(y, true);
-    if (yDrawn.length < 2) {
-      const mid = (yLo + yHi) / 2, sp = (yHi - yLo) / 2;
-      for (const y of [mid + 0.7 * sp, mid - 0.7 * sp, mid + 0.45 * sp, mid - 0.45 * sp]) {
-        if (yDrawn.length >= 2) break;
-        if (!yDrawn.some((u) => Math.abs(u - y) < 1e-8)) drawY(y, true);
-      }
+    for (const y of min2Candidates(yLo + yInset, yHi - yInset, yDrawn)) {
+      if (yDrawn.length >= 2) break;
+      if (Math.abs(y) < 1e-9) continue; // 0 is the axis itself on the s-plane
+      drawY(y, true);
     }
   });
   logPlotFrame(g, f);
@@ -1267,14 +1259,10 @@ export function drawBode(g: CanvasRenderingContext2D, w: number, h: number, s: B
     const xDrawn: number[] = [];
     const drawDecade = (d: number) => {
       const lab = decadeLab(d);
-      let px = f.X(d);
-      g.font = '10px system-ui,sans-serif';
-      const tw = g.measureText(lab).width, W = g.canvas.width || 0;
-      if (px - tw / 2 < 1) px = tw / 2 + 1;
-      if (px + tw / 2 > W - 1) px = W - 1 - tw / 2;
+      const px = f.X(d);
       if (!tickOnCanvas(g, lab, px, f.box.b + 10, 10, 'center')) return;
       let ok = false;
-      withAnchor({ kind: 'line', x: f.X(d), y: f.box.t, x2: f.X(d), y2: f.box.b }, () => {
+      withAnchor({ kind: 'line', x: px, y: f.box.t, x2: px, y2: f.box.b }, () => {
         withLabelRole('tick', () => { ok = text(g, lab, px, f.box.b + 10, col.muted(), 'center', 10); });
       });
       if (ok) xDrawn.push(d);
@@ -1284,7 +1272,8 @@ export function drawBode(g: CanvasRenderingContext2D, w: number, h: number, s: B
       if (bottom) drawDecade(d);
     });
     if (bottom && xDrawn.length < 2) {
-      for (const d of [-1, 1, -2, 2, 0, lo + 0.35 * (hi - lo), hi - 0.35 * (hi - lo)]) {
+      const ends = [Math.ceil(lo), Math.floor(hi), 0, -1, 1, -2, 2].filter((d) => d >= lo - 1e-9 && d <= hi + 1e-9);
+      for (const d of ends) {
         if (xDrawn.length >= 2) break;
         if (!xDrawn.some((u) => Math.abs(u - d) < 1e-8)) drawDecade(d);
       }
