@@ -75,7 +75,8 @@ export type LabGeomSum = { id: string; x: number; y: number; r: number };
 export type LabGeomSeg = { x1: number; y1: number; x2: number; y2: number; signal: string; hi: string[]; arrowEnd?: boolean };
 export type LabGeomTip = { x: number; y: number; signal: string };
 export type LabGeomSign = { x: number; y: number; text: string };
-export type LabGeomTerm = { x: number; y: number; label: string };
+export type LabGeomTerm = { x: number; y: number; label: string; l?: number; t?: number; w?: number; h?: number; align?: CanvasTextAlign; size?: number };
+export type LabGeomHop = { x: number; y: number; signal: string };
 export type LabGeom = {
   boxes: LabGeomBox[];
   sums: LabGeomSum[];
@@ -84,6 +85,7 @@ export type LabGeom = {
   signs: LabGeomSign[];
   terms: LabGeomTerm[];
   marks: LabGeomTerm[];
+  hops: LabGeomHop[];
   stacked: boolean;
 };
 export type WireMeta = { signal: string; hi?: string[] };
@@ -345,8 +347,9 @@ export function drawLabDiagram(g: CanvasRenderingContext2D, w: number, h: number
   const W = (ww: number) => (ww / 100) * (dw - padL - padR);
   const H = (hh: number) => (hh / 100) * (dh - padT - padB);
   const r = Math.max(8, Math.min(12, W(4)));
+  const SHAFT = 22; // visible arrow shaft outside a summer
 
-  const geom: LabGeom = { boxes: [], sums: [], segs: [], tips: [], signs: [], terms: [], marks: [], stacked };
+  const geom: LabGeom = { boxes: [], sums: [], segs: [], tips: [], signs: [], terms: [], marks: [], hops: [], stacked };
   let boxSeq = 0, sumSeq = 0;
   const sigOf = (m?: WireMeta) => m?.signal ?? 'untagged';
   const hiOf = (m?: WireMeta) => m?.hi ?? [];
@@ -382,28 +385,55 @@ export function drawLabDiagram(g: CanvasRenderingContext2D, w: number, h: number
     g.setLineDash([]);
     for (let i = 0; i < pts.length - 1; i++) recSeg(pts[i].x, pts[i].y, pts[i + 1].x, pts[i + 1].y, m, false);
   };
+  const labelBox = (label: string, x: number, y: number, align: CanvasTextAlign, size: number) => {
+    g.font = `${size}px system-ui, sans-serif`;
+    const tw = g.measureText(label).width;
+    const l = align === 'center' ? x - tw / 2 : align === 'right' ? x - tw : x;
+    return { x, y, label, l, t: y - size * 0.85, w: tw, h: size * 1.15, align, size };
+  };
   const term = (label: string, x: number, y: number, color: string, align: CanvasTextAlign, size: number) => {
     text(g, label, x, y, color, align, size);
-    geom.terms.push({ x, y, label });
+    geom.terms.push(labelBox(label, x, y, align, size));
   };
   const mark = (label: string, x: number, y: number, color: string, align: CanvasTextAlign, size: number) => {
     text(g, label, x, y, color, align, size);
-    geom.marks.push({ x, y, label });
+    geom.marks.push(labelBox(label, x, y, align, size));
   };
   const port = (label: string, x: number, y: number) => { geom.terms.push({ x, y, label }); };
   /** Upper plant box to a lower summer: corridor, then in from above — never on the summer's output side. */
-  const plantFromAbove = (box: { l: number; b: number }, sx: number, sy: number, sign: '+' | '−', color: string, m: WireMeta) => {
-    const above = sy - r - 14;
+  const plantFromAbove = (box: { l: number; b: number }, sx: number, sy: number, sign: '+' | '−', color: string, m: WireMeta, clearBelow?: number) => {
+    const above = sy - r - SHAFT;
     const laneX = Math.max(sx + r + 6, Math.min(box.l - 6, (box.l + sx + r) / 2));
-    poly([{ x: box.l, y: box.b }, { x: laneX, y: box.b }, { x: laneX, y: above }, { x: sx, y: above }], color, 1.5, [], m);
+    const dropY = Math.max(box.b, clearBelow ?? box.b);
+    if (dropY > box.b + 1) {
+      poly([{ x: box.l, y: box.b }, { x: box.l, y: dropY }, { x: laneX, y: dropY }, { x: laneX, y: above }, { x: sx, y: above }], color, 1.5, [], m);
+    } else {
+      poly([{ x: box.l, y: box.b }, { x: laneX, y: box.b }, { x: laneX, y: above }, { x: sx, y: above }], color, 1.5, [], m);
+    }
     into(sx, above, sx, sy, sign, color, r, m);
   };
   /** T_d has its own short arrow; the sign sits near the arrowhead, clear of the label. */
-  const tdArrow = (sx: number, sy: number, sign: '+' | '−', color: string, size: number, minX: number, m: WireMeta) => {
-    const ax1 = Math.max(minX, sx - r - 22);
-    term('T_d', ax1 + 2, sy - 13, col.text(), 'left', size);
-    port('T_d', ax1 + 8, sy);
-    into(ax1 + 8, sy, sx, sy, sign, color, r, m);
+  const tdArrow = (sx: number, sy: number, sign: '+' | '−', color: string, size: number, m: WireMeta) => {
+    // Fixed approach from the left (the plant link uses the top; the output uses the right).
+    const startX = sx - r - SHAFT;
+    // Label sits above the shaft, left of the summer — not on the plant's downward path.
+    term('T_d', (startX + (sx - r)) / 2, sy - Math.max(11, size + 1), col.text(), 'center', size);
+    port('T_d', startX, sy);
+    into(startX, sy, sx, sy, sign, color, r, m);
+  };
+  /** Horizontal with a downward hop so two signals may cross without sharing a stretch. */
+  const hopHoriz = (x1: number, y: number, x2: number, hopX: number, color: string, width: number, m: WireMeta) => {
+    const dir = x2 >= x1 ? 1 : -1;
+    const hr = 7;
+    const a = hopX - dir * hr, b = hopX + dir * hr;
+    poly([{ x: x1, y }, { x: a, y }], color, width, [], m);
+    g.strokeStyle = color; g.lineWidth = width; g.setLineDash([]);
+    g.beginPath();
+    if (dir > 0) g.arc(hopX, y, hr, Math.PI, 0, false);
+    else g.arc(hopX, y, hr, 0, Math.PI, true);
+    g.stroke();
+    geom.hops.push({ x: hopX, y, signal: sigOf(m) });
+    poly([{ x: b, y }, { x: x2, y }], color, width, [], m);
   };
   /** Right-hand return over the top, starting at the output — no trip below the output (no dead-end stub). */
   const overTopReturn = (outX: number, outY: number, topY: number, sx: number, sy: number, color: string, m: WireMeta) => {
@@ -412,7 +442,7 @@ export function drawLabDiagram(g: CanvasRenderingContext2D, w: number, h: number
   };
   /** Return along the bottom and up a left-hand lane, into the summer from below (Engine). */
   const bottomLeftReturn = (outX: number, outY: number, botY: number, leftX: number, sx: number, sy: number, color: string, m: WireMeta) => {
-    const below = sy + r + 14;
+    const below = sy + r + SHAFT;
     poly([{ x: outX, y: outY }, { x: outX, y: botY }, { x: leftX, y: botY }, { x: leftX, y: below }, { x: sx, y: below }], color, 1.5, [], m);
     into(sx, below, sx, sy, '−', color, r, m);
   };
@@ -506,7 +536,7 @@ export function drawLabDiagram(g: CanvasRenderingContext2D, w: number, h: number
       const cKb = colorOf('sys2');
       recSum(s1.x, s1.y, r, c1.color, c1.width);
       recSum(s2.x, s2.y, r, c2.color, c2.width);
-      const leftLane = Math.max(6, s1.x - r - 12);
+      const leftLane = Math.max(6, Math.min(s1.x - r - 12, s2.x - r - SHAFT - 8));
       const hiOm = { signal: 'omega', hi: ['feedback', 'loop', 'sign', 'step'] };
       const hiKb = { signal: 'kb-out', hi: ['sys2', 'feedback', 'loop', 'sign', 'step'] };
       port('Va', X(2), s1.y);
@@ -516,12 +546,12 @@ export function drawLabDiagram(g: CanvasRenderingContext2D, w: number, h: number
       arr(s2.x + r, s2.y, load.l, load.cy, c2.color, { signal: 'load-in', hi: ['sys1'] });
       arr(load.r, load.cy, outX, outY, cf.color, hiOm);
       const kb = boxAt('sys2', plantX, 76, plantW, boxH, L('Kb', '0.1 V·s', 'back-EMF: speed makes a voltage that fights the current', 'in: shaft speed ω. out: back-EMF voltage. what it does: the spinning motor makes a voltage that fights its own current'));
-      tdArrow(s2.x, s2.y, '−', c2.color, typeSize, leftLane + 8, { signal: 'td', hi: ['sys1'] });
+      tdArrow(s2.x, s2.y, '−', c2.color, typeSize, { signal: 'td', hi: ['sys1'] });
       // ω down the right into Kb from the right — not shared with Kb's output
       poly([{ x: outX, y: outY }, { x: outX, y: kb.cy }], cf.color, cf.width, [], hiOm);
       arr(outX, kb.cy, kb.r, kb.cy, cf.color, hiOm);
       // Kb returns on its own left-hand lane, into s1 from below with −
-      const below = s1.y + r + 14;
+      const below = s1.y + r + SHAFT;
       poly([{ x: kb.l, y: kb.cy }, { x: leftLane, y: kb.cy }, { x: leftLane, y: below }, { x: s1.x, y: below }], cKb.color, cKb.width, [], hiKb);
       into(s1.x, below, s1.x, s1.y, '−', cKb.color, r, hiKb);
     } else {
@@ -566,18 +596,16 @@ export function drawLabDiagram(g: CanvasRenderingContext2D, w: number, h: number
       const coil = boxAt('sys4', plantX, 34 - boxH / 2, plantW, boxH, L('Km/Ra', '10 N·m/V', 'volts to torque', 'in: coil voltage. out: torque. what it does: turns volts into torque'), ['sysb']);
       const sT = { x: X(16), y: Y(54) };
       const load = boxAt('sys1', plantX, 54 - boxH / 2, plantW, boxH, L('1/(Js+b)', '1/(2s + 0.5)', 'torque to speed', 'in: net torque. out: shaft speed ω. what it does: inertia and friction turn torque into speed'));
-      const outX = Math.min(dw - 14, Math.max(load.r + 14, dw - 16));
+      const outX = Math.min(dw - 28, load.r + 24);
       const outY = load.cy;
-      term('ω', outX + 3, outY + 4, col.text(), 'left', Math.max(12, typeSize));
+      term('ω', (load.r + outX) / 2, outY - Math.max(12, typeSize), col.text(), 'center', Math.max(12, typeSize));
       const cKa = colorOf('sys2'), cCoil = colorOf('sys4', ['sysb']), cLoad = colorOf('sys1');
       const cFb = colorOf('feedback', ['loop', 'sign', 'step']);
       const cKt = colorOf('sys2'), cKb = colorOf('sys3', ['sysa']);
       recSum(sR.x, sR.y, r, cKa.color, cKa.width);
       recSum(sE.x, sE.y, r, cCoil.color, cCoil.width);
       recSum(sT.x, sT.y, r, cLoad.color, cLoad.width);
-      const leftLane = Math.max(6, sR.x - r - 12);
-      const plantL = Math.min(ka.l, coil.l, load.l);
-      const midLane = Math.max(sE.x + r + 8, Math.min(plantL - 8, (sE.x + r + plantL) / 2));
+      const leftLane = Math.max(6, Math.min(sR.x - r - 12, sT.x - r - SHAFT - 8));
       const hiOm = { signal: 'omega', hi: ['feedback', 'loop', 'sign', 'step'] };
       const hiKt = { signal: 'kt-out', hi: ['sys2'] };
       const hiKb = { signal: 'kb-out', hi: ['sys3', 'sysa'] };
@@ -586,26 +614,37 @@ export function drawLabDiagram(g: CanvasRenderingContext2D, w: number, h: number
       arr(sR.x + r, sR.y, ka.l, ka.cy, cKa.color, { signal: 'ka-in', hi: ['sys2'] });
       plantFromAbove(ka, sE.x, sE.y, '+', cCoil.color, { signal: 'ka-out', hi: ['sys4', 'sysb'] });
       arr(sE.x + r, sE.y, coil.l, coil.cy, cCoil.color, { signal: 'coil-in', hi: ['sys4', 'sysb'] });
+      const plantLaneX = Math.max(sT.x + r + 6, Math.min(coil.l - 6, (coil.l + sT.x + r) / 2));
       plantFromAbove(coil, sT.x, sT.y, '+', cLoad.color, { signal: 'coil-out', hi: ['sys1'] });
       arr(sT.x + r, sT.y, load.l, load.cy, cLoad.color, { signal: 'load-in', hi: ['sys1'] });
       arr(load.r, load.cy, outX, outY, cFb.color, hiOm);
       const kt = boxAt('sys2', 8, 78, 24, boxH, L('Kt', '1 V·s', 'speed to volts', 'in: shaft speed ω. out: tachometer volts. what it does: a small generator on the shaft turns speed into volts'), undefined, { minX: leftLane + 8, maxX: X(32) });
-      const kb = boxAt('sys3', 46, 78, 32, boxH, L('Kb', '0.1 V·s', 'back-EMF: speed makes a voltage that fights the current', 'in: shaft speed ω. out: back-EMF voltage. what it does: the spinning motor makes a voltage that fights its own current'), ['sysa'], { minX: X(36), maxX: dw - 8 });
-      tdArrow(sT.x, sT.y, '−', cLoad.color, typeSize, leftLane + 8, { signal: 'td', hi: ['sys1'] });
-      // bottom bus is ω only, tapping up into Kt and Kb from below (same topology as the wide layout)
-      const botY = Math.min(h - (cap ? 28 : 10), Math.max(kb.b, kt.b) + 12);
-      const busLeft = Math.min(kt.cx, kb.cx);
-      poly([{ x: outX, y: outY }, { x: outX, y: botY }, { x: busLeft, y: botY }], cFb.color, cFb.width, [], hiOm);
-      arr(kt.cx, botY, kt.cx, kt.b, cFb.color, hiOm);
-      arr(kb.cx, botY, kb.cx, kb.b, cFb.color, hiOm);
-      // Kt output: own left-hand lane, into sR from below with −
-      const ktBelow = sR.y + r + 14;
+      const kb = boxAt('sys3', 46, 78, 32, boxH, L('Kb', '0.1 V·s', 'back-EMF: speed makes a voltage that fights the current', 'in: shaft speed ω. out: back-EMF voltage. what it does: the spinning motor makes a voltage that fights its own current'), ['sysa'], { minX: X(36), maxX: outX - 12 });
+      tdArrow(sT.x, sT.y, '−', cLoad.color, typeSize, { signal: 'td', hi: ['sys1'] });
+      // ω feeds Kb from the right (off the drop). Kt is fed from the right too, via a
+      // horizontal above the feedback boxes, so nothing runs under Kb.
+      const midFbY = (load.b + Math.min(kt.t, kb.t)) / 2;
+      const gapX = (kt.r + kb.l) / 2;
+      poly([{ x: outX, y: outY }, { x: outX, y: kb.cy }], cFb.color, cFb.width, [], hiOm);
+      arr(outX, kb.cy, kb.r, kb.cy, cFb.color, hiOm);
+      poly([{ x: outX, y: outY }, { x: outX, y: midFbY }, { x: gapX, y: midFbY }, { x: gapX, y: kt.cy }], cFb.color, cFb.width, [], hiOm);
+      arr(gapX, kt.cy, kt.r, kt.cy, cFb.color, hiOm);
+      const ktBelow = sR.y + r + SHAFT;
       poly([{ x: kt.cx, y: kt.t }, { x: kt.cx, y: kt.t - 6 }, { x: leftLane, y: kt.t - 6 }, { x: leftLane, y: ktBelow }, { x: sR.x, y: ktBelow }], cKt.color, cKt.width, [], hiKt);
       into(sR.x, ktBelow, sR.x, sR.y, '−', cKt.color, r, hiKt);
-      // Kb output: own mid corridor, into sE (Km/Ra summer) from below with −
-      const kbBelow = sE.y + r + 14;
-      poly([{ x: kb.cx, y: kb.t }, { x: kb.cx, y: kb.t - 6 }, { x: midLane, y: kb.t - 6 }, { x: midLane, y: kbBelow }, { x: sE.x, y: kbBelow }], cKb.color, cKb.width, [], hiKb);
-      into(sE.x, kbBelow, sE.x, sE.y, '−', cKb.color, r, hiKb);
+      // Kb leaves the bottom, up a riser to the right of ω, then left into sE from below.
+      // Where that join would cross the plant-link column, hop over it — no shared stretch.
+      const kbJoinY = sE.y + r + SHAFT;
+      const kbRight = Math.min(dw - 8, outX + 12);
+      const underY = Math.min(h - (cap ? 20 : 8), Math.max(kb.b, kt.b) + 16);
+      poly([
+        { x: kb.cx, y: kb.b },
+        { x: kb.cx, y: underY },
+        { x: kbRight, y: underY },
+        { x: kbRight, y: kbJoinY },
+      ], cKb.color, cKb.width, [], hiKb);
+      hopHoriz(kbRight, kbJoinY, sE.x, plantLaneX, cKb.color, cKb.width, hiKb);
+      into(sE.x, kbJoinY, sE.x, sE.y, '−', cKb.color, r, hiKb);
     } else {
     // 0 → ⊕ → [Ka] → ⊕ → [Km/Ra] → ⊕ → [1/(Js+b)] → ω
     //      −Kt         −Kb            −T_d
@@ -667,7 +706,7 @@ export function drawLabDiagram(g: CanvasRenderingContext2D, w: number, h: number
       const c1 = colorOf('sys1'), c2 = colorOf('sysg', ['series']), cf = colorOf('feedback', ['loop', 'minreal']);
       recSum(s1.x, s1.y, r, c1.color, c1.width);
       recSum(s2.x, s2.y, r, c2.color, c2.width);
-      const leftLane = Math.max(6, s1.x - r - 12);
+      const leftLane = Math.max(6, Math.min(s1.x - r - 12, s2.x - r - SHAFT - 8));
       const hiFb = { signal: 'feedback', hi: ['feedback', 'loop', 'minreal'] };
       port('R', X(2), s1.y);
       into(X(2), s1.y, s1.x, s1.y, '+', c1.color, r, { signal: 'ref', hi: ['sys1'] });
@@ -675,8 +714,8 @@ export function drawLabDiagram(g: CanvasRenderingContext2D, w: number, h: number
       plantFromAbove(gc, s2.x, s2.y, '+', c2.color, { signal: 'gc-out', hi: ['sysg', 'series'] });
       arr(s2.x + r, s2.y, gplant.l, gplant.cy, c2.color, { signal: 'plant-in', hi: ['sysg', 'series'] });
       arr(gplant.r, gplant.cy, outX, outY, cf.color, hiFb);
-      tdArrow(s2.x, s2.y, '+', c2.color, typeSize, leftLane + 8, { signal: 'td', hi: ['sysg'] });
-      const topY = Math.min(s1.y - r - 14, gc.t - 10, padT + 4);
+      tdArrow(s2.x, s2.y, '+', c2.color, typeSize, { signal: 'td', hi: ['sysg'] });
+      const topY = Math.min(s1.y - r - SHAFT, gc.t - 10, padT + 4);
       overTopReturn(outX, outY, topY, s1.x, s1.y, cf.color, hiFb);
     } else {
     term('R', X(2), Y(rail) - 11, col.text(), 'center', 11);
@@ -721,7 +760,7 @@ export function drawLabDiagram(g: CanvasRenderingContext2D, w: number, h: number
       const c1 = colorOf('Ka', ['series']), cG1 = colorOf('sysf', ['series']), cG2 = colorOf('sysg'), cf = colorOf('feedback', ['loop', 'sign', 'step']);
       recSum(s1.x, s1.y, r, c1.color, c1.width);
       recSum(s2.x, s2.y, r, cG2.color, cG2.width);
-      const leftLane = Math.max(6, s1.x - r - 12);
+      const leftLane = Math.max(6, Math.min(s1.x - r - 12, s2.x - r - SHAFT - 8));
       const hiFb = { signal: 'feedback', hi: ['feedback', 'loop', 'sign', 'step'] };
       port('R', X(2), s1.y);
       into(X(2), s1.y, s1.x, s1.y, '+', c1.color, r, { signal: 'ref', hi: ['Ka', 'series'] });
@@ -730,8 +769,8 @@ export function drawLabDiagram(g: CanvasRenderingContext2D, w: number, h: number
       plantFromAbove(g1, s2.x, s2.y, '+', cG2.color, { signal: 'g1-out', hi: ['sysg'] });
       arr(s2.x + r, s2.y, g2.l, g2.cy, cG2.color, { signal: 'g2-in', hi: ['sysg'] });
       arr(g2.r, g2.cy, outX, outY, cf.color, hiFb);
-      tdArrow(s2.x, s2.y, '−', cG2.color, typeSize, leftLane + 8, { signal: 'td', hi: ['sysg'] });
-      const topY = Math.min(s1.y - r - 14, ka.t - 10, padT + 4);
+      tdArrow(s2.x, s2.y, '−', cG2.color, typeSize, { signal: 'td', hi: ['sysg'] });
+      const topY = Math.min(s1.y - r - SHAFT, ka.t - 10, padT + 4);
       // unity gain sits on the top bar of the return, not out on a stub
       mark('1', (outX + s1.x) / 2, topY - 8, colorOf('feedback').color, 'center', 10);
       overTopReturn(outX, outY, topY, s1.x, s1.y, cf.color, hiFb);
@@ -805,9 +844,9 @@ export function drawLabDiagram(g: CanvasRenderingContext2D, w: number, h: number
       const tSz = Math.max(10, typeSize - 1);
       term('Tload', tloadX + 3, veh.cy - 7, col.text(), 'left', tSz);
       term('(drag)', tloadX + 3, veh.cy + 8, col.text(), 'left', tSz);
-      // N bus stays to the right of the feedback drop; jog off veh.cy so it doesn't share Tload's arrow
+      // N bus stays to the right of the feedback drop, and above the Tload label (BUG-102)
       const nBus = Math.min(dw - 6, Math.max(outX + 10, tloadX + W(16)));
-      const nY = veh.cy - 8;
+      const nY = veh.t + 3;
       poly([{ x: veh.r, y: nY }, { x: nBus, y: nY }, { x: nBus, y: th.cy }, { x: th.r, y: th.cy }], col.muted(), 1, [3, 3], { signal: 'N' });
       poly([{ x: nBus, y: comb.cy }, { x: comb.r, y: comb.cy }], col.muted(), 1, [3, 3], { signal: 'N' });
       term('N', nBus - 6, (th.cy + comb.cy) / 2, col.muted(), 'right', 10);

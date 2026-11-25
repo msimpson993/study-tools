@@ -189,6 +189,10 @@ function atTerm(geom: LabGeom, x: number, y: number) {
   return geom.terms.some((t) => Math.hypot(x - t.x, y - t.y) <= TERM_NEAR);
 }
 
+function atHop(geom: LabGeom, x: number, y: number) {
+  return (geom.hops ?? []).some((h) => Math.hypot(x - h.x, y - h.y) <= 8);
+}
+
 function key(x: number, y: number) {
   return `${Math.round(x * 2) / 2},${Math.round(y * 2) / 2}`;
 }
@@ -221,7 +225,7 @@ function onSegInterior(geom: LabGeom, x: number, y: number) {
 }
 
 function anchored(geom: LabGeom, x: number, y: number) {
-  return atBox(geom, x, y) || atSum(geom, x, y) || atTerm(geom, x, y) || onSegInterior(geom, x, y);
+  return atBox(geom, x, y) || atSum(geom, x, y) || atTerm(geom, x, y) || atHop(geom, x, y) || onSegInterior(geom, x, y);
 }
 
 function collinearOpposite(a: LabGeom['segs'][number], b: LabGeom['segs'][number], px: number, py: number) {
@@ -234,6 +238,132 @@ function collinearOpposite(a: LabGeom['segs'][number], b: LabGeom['segs'][number
   const dot = (ax / aL) * (bx / bL) + (ay / aL) * (by / bL);
   const cross = Math.abs(ax * by - ay * bx) / (aL * bL);
   return dot < -0.97 && cross < 0.08;
+}
+
+const SHAFT_MIN = 20;
+
+function segLen(s: LabGeom['segs'][number]) {
+  return Math.hypot(s.x2 - s.x1, s.y2 - s.y1);
+}
+
+function pointOnSeg(px: number, py: number, s: LabGeom['segs'][number], pad = 0) {
+  const dx = s.x2 - s.x1, dy = s.y2 - s.y1, L2 = dx * dx + dy * dy;
+  if (L2 < 1e-9) return Math.hypot(px - s.x1, py - s.y1) <= NEAR + pad;
+  const t = ((px - s.x1) * dx + (py - s.y1) * dy) / L2;
+  if (t < 0 || t > 1) return false;
+  return Math.hypot(px - (s.x1 + t * dx), py - (s.y1 + t * dy)) <= NEAR + pad;
+}
+
+function collinear(a: LabGeom['segs'][number], b: LabGeom['segs'][number]) {
+  const adx = a.x2 - a.x1, ady = a.y2 - a.y1, aL = Math.hypot(adx, ady);
+  const bdx = b.x2 - b.x1, bdy = b.y2 - b.y1, bL = Math.hypot(bdx, bdy);
+  if (aL < 1 || bL < 1) return false;
+  const crossDir = Math.abs(adx * bdy - ady * bdx) / (aL * bL);
+  if (crossDir > 0.08) return false;
+  const off = Math.abs((b.x1 - a.x1) * ady - (b.y1 - a.y1) * adx) / aL;
+  return off <= NEAR;
+}
+
+function overlapRange(a1: number, a2: number, b1: number, b2: number) {
+  const lo = Math.max(Math.min(a1, a2), Math.min(b1, b2));
+  const hi = Math.min(Math.max(a1, a2), Math.max(b1, b2));
+  return hi - lo;
+}
+
+function collinearOverlapLen(a: LabGeom['segs'][number], b: LabGeom['segs'][number]) {
+  if (!collinear(a, b)) return 0;
+  const adx = a.x2 - a.x1, ady = a.y2 - a.y1;
+  if (Math.abs(adx) >= Math.abs(ady)) return overlapRange(a.x1, a.x2, b.x1, b.x2);
+  return overlapRange(a.y1, a.y2, b.y1, b.y2);
+}
+
+function properIntersect(a: LabGeom['segs'][number], b: LabGeom['segs'][number]): { x: number; y: number; kind: 'cross' | 'tee' } | null {
+  const ax = a.x2 - a.x1, ay = a.y2 - a.y1;
+  const bx = b.x2 - b.x1, by = b.y2 - b.y1;
+  const den = ax * by - ay * bx;
+  const aL = Math.hypot(ax, ay), bL = Math.hypot(bx, by);
+  if (aL < 1 || bL < 1) return null;
+  if (Math.abs(den) < 1e-9) return null;
+  const sx = b.x1 - a.x1, sy = b.y1 - a.y1;
+  const t = (sx * by - sy * bx) / den;
+  const u = (sx * ay - sy * ax) / den;
+  const ep = 0.04;
+  if (t < -0.02 || t > 1.02 || u < -0.02 || u > 1.02) return null;
+  const x = a.x1 + t * ax, y = a.y1 + t * ay;
+  const tEnd = t < ep || t > 1 - ep;
+  const uEnd = u < ep || u > 1 - ep;
+  if (tEnd && uEnd) return null; // shared endpoint / junction corner
+  if (tEnd || uEnd) return { x, y, kind: 'tee' };
+  return { x, y, kind: 'cross' };
+}
+
+function shaftOutside(geom: LabGeom, seg: LabGeom['segs'][number]) {
+  // Length of the arrow that sits outside the target box or summer.
+  const tipX = seg.x2, tipY = seg.y2;
+  let cut = 0;
+  for (const s of geom.sums) {
+    const d0 = Math.hypot(seg.x1 - s.x, seg.y1 - s.y);
+    const d1 = Math.hypot(tipX - s.x, tipY - s.y);
+    if (d1 <= s.r + NEAR + 2) {
+      if (d0 <= s.r + 0.5) return 0;
+      const dx = tipX - seg.x1, dy = tipY - seg.y1, L = Math.hypot(dx, dy);
+      if (L < 1) return 0;
+      // distance from start to the summer rim along the segment
+      const ux = dx / L, uy = dy / L;
+      // start is outside: length to rim is d0 - r, but along the ray if it aims at the center-ish
+      cut = Math.max(cut, Math.max(0, L - Math.max(0, s.r + 1 - d1)));
+    }
+  }
+  for (const b of geom.boxes) {
+    const inside = (x: number, y: number) => x >= b.x - 0.5 && x <= b.x + b.w + 0.5 && y >= b.y - 0.5 && y <= b.y + b.h + 0.5;
+    if (!inside(tipX, tipY) && !atBox(geom, tipX, tipY)) continue;
+    if (inside(seg.x1, seg.y1)) return 0;
+    // trim the end that sits on/in the box; remaining length is the shaft
+    const t = trim(seg, (x, y) => x >= b.x - CAP && x <= b.x + b.w + CAP && y >= b.y - CAP && y <= b.y + b.h + CAP);
+    if (!t) return 0;
+    cut = Math.max(cut, Math.hypot(t.x2 - t.x1, t.y2 - t.y1));
+  }
+  if (cut > 0) return cut;
+  return segLen(seg);
+}
+
+function labelRects(geom: LabGeom) {
+  const out: { label: string; l: number; t: number; r: number; b: number }[] = [];
+  const add = (term: LabGeom['terms'][number]) => {
+    if (term.w == null || term.h == null || term.l == null || term.t == null || term.w < 2) return;
+    out.push({ label: term.label, l: term.l, t: term.t, r: term.l + term.w, b: term.t + term.h });
+  };
+  for (const t of geom.terms) add(t);
+  for (const m of geom.marks) add(m);
+  return out;
+}
+
+function segHitsRect(s: LabGeom['segs'][number], l: number, t: number, r: number, b: number) {
+  const inside = (x: number, y: number) => x >= l && x <= r && y >= t && y <= b;
+  if (inside(s.x1, s.y1) && inside(s.x2, s.y2)) return true;
+  const edges: [number, number, number, number][] = [
+    [l, t, r, t], [r, t, r, b], [r, b, l, b], [l, b, l, t],
+  ];
+  const cross = (ax: number, ay: number, bx: number, by: number, cx: number, cy: number, dx: number, dy: number) => {
+    const den = (bx - ax) * (dy - cy) - (by - ay) * (dx - cx);
+    if (Math.abs(den) < 1e-9) {
+      // collinear overlap with the edge
+      return false;
+    }
+    const p = ((cx - ax) * (dy - cy) - (cy - ay) * (dx - cx)) / den;
+    const q = ((cx - ax) * (by - ay) - (cy - ay) * (bx - ax)) / den;
+    return p >= 0 && p <= 1 && q >= 0 && q <= 1;
+  };
+  if (edges.some(([ax, ay, bx, by]) => cross(s.x1, s.y1, s.x2, s.y2, ax, ay, bx, by))) return true;
+  // also treat a line that runs through the box interior
+  const dx = s.x2 - s.x1, dy = s.y2 - s.y1, L2 = dx * dx + dy * dy;
+  if (L2 < 1) return inside(s.x1, s.y1);
+  for (const [px, py] of [[(l + r) / 2, (t + b) / 2], [l, (t + b) / 2], [r, (t + b) / 2], [(l + r) / 2, t], [(l + r) / 2, b]] as [number, number][]) {
+    const tt = Math.max(0, Math.min(1, ((px - s.x1) * dx + (py - s.y1) * dy) / L2));
+    const x = s.x1 + tt * dx, y = s.y1 + tt * dy;
+    if (inside(x, y)) return true;
+  }
+  return false;
 }
 
 function topologyProblems(geom: LabGeom, sys: string): string[] {
@@ -305,10 +435,19 @@ function topologyProblems(geom: LabGeom, sys: string): string[] {
   }
 
   if (sys === 'motor-closed') {
-    const lit = (id: string) => new Set(geom.segs.filter((s) => s.hi.includes(id)).map((s) => `${key(s.x1, s.y1)}|${key(s.x2, s.y2)}|${s.signal}`));
-    const a = lit('sys2'), b = lit('sys3');
-    for (const k of a) {
-      if (b.has(k)) out.push(`sys2 and sys3 share segment ${k}`);
+    const litSegs = (id: string) => geom.segs.filter((s) => s.hi.includes(id));
+    const lit = (id: string) => new Set(litSegs(id).map((s) => `${key(s.x1, s.y1)}|${key(s.x2, s.y2)}|${s.signal}`));
+    for (const [A, B] of [['sys2', 'sys3'], ['sys1', 'sys3']] as const) {
+      const a = lit(A), b = lit(B);
+      for (const k of a) {
+        if (b.has(k)) out.push(`${A} and ${B} share segment ${k}`);
+      }
+      for (const sa of litSegs(A)) {
+        for (const sb of litSegs(B)) {
+          const ol = collinearOverlapLen(sa, sb);
+          if (ol > 4) out.push(`${A} and ${B} collinear-overlap ${ol.toFixed(1)}px ${sa.signal}/${sb.signal}`);
+        }
+      }
     }
   }
 
@@ -316,6 +455,82 @@ function topologyProblems(geom: LabGeom, sys: string): string[] {
     for (const t of geom.terms) {
       const d = Math.hypot(sign.x - t.x, sign.y - t.y);
       if (d < 6) out.push(`sign ${sign.text} overlaps label ${t.label} d=${d.toFixed(1)}`);
+    }
+  }
+
+  // Collinear overlap between different signals (partial shared stretches, not just identical endpoints).
+  for (let i = 0; i < geom.segs.length; i++) {
+    for (let j = i + 1; j < geom.segs.length; j++) {
+      const a = geom.segs[i], b = geom.segs[j];
+      if (a.signal === b.signal) continue;
+      const ol = collinearOverlapLen(a, b);
+      if (ol > 4) {
+        out.push(`collinear overlap ${a.signal}/${b.signal} ${ol.toFixed(1)}px at (${a.x1.toFixed(1)},${a.y1.toFixed(1)})`);
+      }
+    }
+  }
+
+  // Wire-vs-wire crossings. Same-signal tees are junctions. Different-signal
+  // crosses or tees are allowed only at a labelled terminal or a recorded hop.
+  for (let i = 0; i < geom.segs.length; i++) {
+    for (let j = i + 1; j < geom.segs.length; j++) {
+      const a = geom.segs[i], b = geom.segs[j];
+      if (a.signal === b.signal) continue;
+      const hit = properIntersect(a, b);
+      if (!hit) continue;
+      const labelled = geom.terms.some((t) => Math.hypot(t.x - hit.x, t.y - hit.y) <= TERM_NEAR);
+      if (labelled) continue;
+      const hopped = (geom.hops ?? []).some((h) => Math.hypot(h.x - hit.x, h.y - hit.y) <= 8);
+      if (hopped) continue;
+      out.push(`wire ${a.signal} ${hit.kind} ${b.signal} at (${hit.x.toFixed(1)},${hit.y.toFixed(1)})`);
+    }
+  }
+
+  // Wire-vs-label (including dashed lines). A wire may end next to its own
+  // terminal, so ignore hits within a small cap of an endpoint that sits by that label.
+  for (const lab of labelRects(geom)) {
+    for (const seg of geom.segs) {
+      const pad = 3;
+      const nearEnd = (x: number, y: number) => {
+        const cx = (lab.l + lab.r) / 2, cy = (lab.t + lab.b) / 2;
+        return Math.hypot(x - cx, y - cy) <= TERM_NEAR || (x >= lab.l - 4 && x <= lab.r + 4 && y >= lab.t - 4 && y <= lab.b + 4);
+      };
+      // shrink the segment if an end is the label's own terminal
+      let x1 = seg.x1, y1 = seg.y1, x2 = seg.x2, y2 = seg.y2;
+      const L = Math.hypot(x2 - x1, y2 - y1);
+      if (L < 2) continue;
+      const ux = (x2 - x1) / L, uy = (y2 - y1) / L;
+      if (nearEnd(x1, y1)) { x1 += ux * 10; y1 += uy * 10; }
+      if (nearEnd(x2, y2)) { x2 -= ux * 10; y2 -= uy * 10; }
+      if ((x2 - x1) * ux + (y2 - y1) * uy <= 1) continue;
+      const own: Record<string, string[]> = {
+        omega: ['ω'], va: ['Va'], ref: ['0', 'R', 'Speed Ref', 'rpm*'],
+        feedback: ['rpm', 'Y', 'ω'], N: ['N'], tload: ['Tload', '(drag)', 'Tload (drag)'], td: ['T_d'],
+      };
+      if ((own[seg.signal] ?? []).includes(lab.label)) continue;
+      if (segHitsRect({ ...seg, x1, y1, x2, y2 }, lab.l - pad, lab.t - pad, lab.r + pad, lab.b + pad)) {
+        out.push(`wire ${seg.signal} crosses label "${lab.label}" at (${lab.l.toFixed(1)},${lab.t.toFixed(1)})`);
+      }
+    }
+  }
+
+  // Every arrow into a summer has a visible shaft of at least 20 px outside that summer.
+  for (const seg of geom.segs) {
+    if (!seg.arrowEnd) continue;
+    const tipSum = geom.sums.find((s) => {
+      const dTip = Math.hypot(seg.x2 - s.x, seg.y2 - s.y);
+      const dStart = Math.hypot(seg.x1 - s.x, seg.y1 - s.y);
+      if (dTip > s.r + NEAR + 2) return false;
+      if (dStart <= s.r + 0.5) return true; // started inside the summer — collapsed shaft
+      return dTip < dStart - 0.5; // approaching from outside
+    });
+    if (!tipSum) continue;
+    // Packed one-row ref/Va inputs stay short by design; stacked layouts and T_d
+    // always need a visible 20 px shaft (BUG-100).
+    if (!geom.stacked && seg.signal !== 'td') continue;
+    const shaft = shaftOutside(geom, seg);
+    if (shaft + 0.25 < SHAFT_MIN) {
+      out.push(`short shaft ${shaft.toFixed(1)}px ${seg.signal} → (${seg.x2.toFixed(1)},${seg.y2.toFixed(1)})`);
     }
   }
 
