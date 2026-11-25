@@ -2146,7 +2146,7 @@
   "motor/step1/plot/expand@320": {
     "plot": {
       "x0": 72,
-      "y0": 58,
+      "y0": 72,
       "x1": 260,
       "y1": 321,
       "W": 274,
@@ -2204,8 +2204,8 @@
         "role": "tick"
       },
       {
-        "s": "closed sag −0.001847 rad/s, τ = 3.693 ms,  at 0.02 s: −0.001839",
-        "size": 9.1,
+        "s": "closed sag −0.001847, τ = 3.693 ms",
+        "size": 10,
         "role": "note"
       },
       {
@@ -2214,12 +2214,12 @@
         "role": "axis"
       },
       {
-        "s": "loop gain 360.0   ratio 0.00277  ✓ under 0.02",
+        "s": "loop gain 360.0  ratio 0.00277  ✓ under 0.02",
         "size": 10,
         "role": "note"
       },
       {
-        "s": "open sag −0.6667 rad/s, τ = 1.333 s,  at 7 s: −0.6632",
+        "s": "open sag −0.6667, τ = 1.333 s",
         "size": 10,
         "role": "note"
       },
@@ -2300,7 +2300,7 @@
   "motor/step2/plot/expand@320": {
     "plot": {
       "x0": 72,
-      "y0": 58,
+      "y0": 72,
       "x1": 260,
       "y1": 321,
       "W": 274,
@@ -2363,8 +2363,8 @@
         "role": "tick"
       },
       {
-        "s": "closed sag −0.001847 rad/s, τ = 3.693 ms,  at 0.02 s: −0.001839",
-        "size": 9.1,
+        "s": "closed sag −0.001847, τ = 3.693 ms",
+        "size": 10,
         "role": "note"
       },
       {
@@ -2373,12 +2373,12 @@
         "role": "axis"
       },
       {
-        "s": "loop gain 360.0   ratio 0.00277  ✓ under 0.02",
+        "s": "loop gain 360.0  ratio 0.00277  ✓ under 0.02",
         "size": 10,
         "role": "note"
       },
       {
-        "s": "open sag −0.6667 rad/s, τ = 1.333 s,  at 7 s: −0.6632",
+        "s": "open sag −0.6667, τ = 1.333 s",
         "size": 10,
         "role": "note"
       },
@@ -2484,9 +2484,9 @@
   "motor/step3/plot/expand@320": {
     "plot": {
       "x0": 72,
-      "y0": 68,
+      "y0": 82,
       "x1": 260,
-      "y1": 170,
+      "y1": 177,
       "W": 274,
       "H": 359
     },
@@ -2582,8 +2582,8 @@
         "role": "note"
       },
       {
-        "s": "closed sag −0.001847 rad/s, τ = 3.693 ms,  at 0.02 s: −0.001839",
-        "size": 9.1,
+        "s": "closed sag −0.001847, τ = 3.693 ms",
+        "size": 10,
         "role": "note"
       },
       {
@@ -2592,7 +2592,7 @@
         "role": "axis"
       },
       {
-        "s": "loop gain 360.0   ratio 0.00277  ✓ under 0.02",
+        "s": "loop gain 360.0  ratio 0.00277  ✓ under 0.02",
         "size": 10,
         "role": "note"
       },
@@ -2602,7 +2602,7 @@
         "role": "note"
       },
       {
-        "s": "open sag −0.6667 rad/s, τ = 1.333 s,  at 7 s: −0.6632",
+        "s": "open sag −0.6667, τ = 1.333 s",
         "size": 10,
         "role": "note"
       },
@@ -2703,7 +2703,7 @@
   "motor/step4/plot/expand@320": {
     "plot": {
       "x0": 72,
-      "y0": 58,
+      "y0": 72,
       "x1": 260,
       "y1": 321,
       "W": 274,
@@ -2771,17 +2771,17 @@
         "role": "tick"
       },
       {
-        "s": "closed sag −0.000925 rad/s, τ = 1.849 ms,  at 0.02 s: −0.000925",
-        "size": 9.1,
-        "role": "note"
-      },
-      {
-        "s": "loop gain 720.0   ratio 0.00139  ✓ under 0.02",
+        "s": "closed sag −0.000925, τ = 1.849 ms",
         "size": 10,
         "role": "note"
       },
       {
-        "s": "open sag −0.6667 rad/s, τ = 1.333 s,  at 7 s: −0.6632",
+        "s": "loop gain 720.0  ratio 0.00139  ✓ under 0.02",
+        "size": 10,
+        "role": "note"
+      },
+      {
+        "s": "open sag −0.6667, τ = 1.333 s",
         "size": 10,
         "role": "note"
       },
@@ -2887,9 +2887,9 @@
   "motor/step5/plot/expand@320": {
     "plot": {
       "x0": 72,
-      "y0": 68,
+      "y0": 82,
       "x1": 260,
-      "y1": 170,
+      "y1": 177,
       "W": 274,
       "H": 359
     },
@@ -2990,8 +2990,8 @@
         "role": "note"
       },
       {
-        "s": "closed sag −0.013072 rad/s, τ = 26.144 ms,  at 0.02 s: −0.006989",
-        "size": 9,
+        "s": "closed sag −0.013072, τ = 26.144 ms",
+        "size": 10,
         "role": "note"
       },
       {
@@ -3000,7 +3000,7 @@
         "role": "axis"
       },
       {
-        "s": "loop gain 50.0   ratio 0.01961  ✓ under 0.02",
+        "s": "loop gain 50.0  ratio 0.01961  ✓ under 0.02",
         "size": 10,
         "role": "note"
       },
@@ -3010,7 +3010,7 @@
         "role": "note"
       },
       {
-        "s": "open sag −0.6667 rad/s, τ = 1.333 s,  at 7 s: −0.6632",
+        "s": "open sag −0.6667, τ = 1.333 s",
         "size": 10,
         "role": "note"
       },
@@ -3141,9 +3141,9 @@
   "motor/step6/plot/expand@320": {
     "plot": {
       "x0": 72,
-      "y0": 68,
+      "y0": 82,
       "x1": 260,
-      "y1": 170,
+      "y1": 177,
       "W": 274,
       "H": 359
     },
@@ -3239,8 +3239,8 @@
         "role": "note"
       },
       {
-        "s": "closed sag −0.001847 rad/s, τ = 7.387 ms,  at 0.02 s: −0.001724",
-        "size": 9.1,
+        "s": "closed sag −0.001847, τ = 7.387 ms",
+        "size": 10,
         "role": "note"
       },
       {
@@ -3249,7 +3249,7 @@
         "role": "axis"
       },
       {
-        "s": "loop gain 360.0   ratio 0.00277  ✓ under 0.02",
+        "s": "loop gain 360.0  ratio 0.00277  ✓ under 0.02",
         "size": 10,
         "role": "note"
       },
@@ -3259,7 +3259,7 @@
         "role": "note"
       },
       {
-        "s": "open sag −0.6667 rad/s, τ = 2.667 s,  at 7 s: −0.6184",
+        "s": "open sag −0.6667, τ = 2.667 s",
         "size": 10,
         "role": "note"
       },
@@ -8180,7 +8180,7 @@
   "motor/step1/plot/expand@390": {
     "plot": {
       "x0": 72,
-      "y0": 58,
+      "y0": 72,
       "x1": 330,
       "y1": 446,
       "W": 344,
@@ -8258,7 +8258,7 @@
         "role": "tick"
       },
       {
-        "s": "closed sag −0.001847 rad/s, τ = 3.693 ms,  at 0.02 s: −0.001839",
+        "s": "closed sag −0.001847, τ = 3.693 ms",
         "size": 10,
         "role": "note"
       },
@@ -8268,12 +8268,12 @@
         "role": "axis"
       },
       {
-        "s": "loop gain 360.0   ratio 0.00277  ✓ under 0.02",
+        "s": "loop gain 360.0  ratio 0.00277  ✓ under 0.02",
         "size": 10,
         "role": "note"
       },
       {
-        "s": "open sag −0.6667 rad/s, τ = 1.333 s,  at 7 s: −0.6632",
+        "s": "open sag −0.6667, τ = 1.333 s",
         "size": 10,
         "role": "note"
       },
@@ -8354,7 +8354,7 @@
   "motor/step2/plot/expand@390": {
     "plot": {
       "x0": 72,
-      "y0": 58,
+      "y0": 72,
       "x1": 330,
       "y1": 446,
       "W": 344,
@@ -8417,7 +8417,7 @@
         "role": "tick"
       },
       {
-        "s": "closed sag −0.001847 rad/s, τ = 3.693 ms,  at 0.02 s: −0.001839",
+        "s": "closed sag −0.001847, τ = 3.693 ms",
         "size": 10,
         "role": "note"
       },
@@ -8427,12 +8427,12 @@
         "role": "axis"
       },
       {
-        "s": "loop gain 360.0   ratio 0.00277  ✓ under 0.02",
+        "s": "loop gain 360.0  ratio 0.00277  ✓ under 0.02",
         "size": 10,
         "role": "note"
       },
       {
-        "s": "open sag −0.6667 rad/s, τ = 1.333 s,  at 7 s: −0.6632",
+        "s": "open sag −0.6667, τ = 1.333 s",
         "size": 10,
         "role": "note"
       },
@@ -8558,9 +8558,9 @@
   "motor/step3/plot/expand@390": {
     "plot": {
       "x0": 72,
-      "y0": 68,
+      "y0": 82,
       "x1": 330,
-      "y1": 235,
+      "y1": 242,
       "W": 344,
       "H": 484
     },
@@ -8706,7 +8706,7 @@
         "role": "note"
       },
       {
-        "s": "closed sag −0.001847 rad/s, τ = 3.693 ms,  at 0.02 s: −0.001839",
+        "s": "closed sag −0.001847, τ = 3.693 ms",
         "size": 10,
         "role": "note"
       },
@@ -8716,7 +8716,7 @@
         "role": "axis"
       },
       {
-        "s": "loop gain 360.0   ratio 0.00277  ✓ under 0.02",
+        "s": "loop gain 360.0  ratio 0.00277  ✓ under 0.02",
         "size": 10,
         "role": "note"
       },
@@ -8726,7 +8726,7 @@
         "role": "note"
       },
       {
-        "s": "open sag −0.6667 rad/s, τ = 1.333 s,  at 7 s: −0.6632",
+        "s": "open sag −0.6667, τ = 1.333 s",
         "size": 10,
         "role": "note"
       },
@@ -8827,7 +8827,7 @@
   "motor/step4/plot/expand@390": {
     "plot": {
       "x0": 72,
-      "y0": 58,
+      "y0": 72,
       "x1": 330,
       "y1": 446,
       "W": 344,
@@ -8895,17 +8895,17 @@
         "role": "tick"
       },
       {
-        "s": "closed sag −0.000925 rad/s, τ = 1.849 ms,  at 0.02 s: −0.000925",
+        "s": "closed sag −0.000925, τ = 1.849 ms",
         "size": 10,
         "role": "note"
       },
       {
-        "s": "loop gain 720.0   ratio 0.00139  ✓ under 0.02",
+        "s": "loop gain 720.0  ratio 0.00139  ✓ under 0.02",
         "size": 10,
         "role": "note"
       },
       {
-        "s": "open sag −0.6667 rad/s, τ = 1.333 s,  at 7 s: −0.6632",
+        "s": "open sag −0.6667, τ = 1.333 s",
         "size": 10,
         "role": "note"
       },
@@ -9031,9 +9031,9 @@
   "motor/step5/plot/expand@390": {
     "plot": {
       "x0": 72,
-      "y0": 68,
+      "y0": 82,
       "x1": 330,
-      "y1": 235,
+      "y1": 242,
       "W": 344,
       "H": 484
     },
@@ -9174,7 +9174,7 @@
         "role": "note"
       },
       {
-        "s": "closed sag −0.013072 rad/s, τ = 26.144 ms,  at 0.02 s: −0.006989",
+        "s": "closed sag −0.013072, τ = 26.144 ms",
         "size": 10,
         "role": "note"
       },
@@ -9184,7 +9184,7 @@
         "role": "axis"
       },
       {
-        "s": "loop gain 50.0   ratio 0.01961  ✓ under 0.02",
+        "s": "loop gain 50.0  ratio 0.01961  ✓ under 0.02",
         "size": 10,
         "role": "note"
       },
@@ -9194,7 +9194,7 @@
         "role": "note"
       },
       {
-        "s": "open sag −0.6667 rad/s, τ = 1.333 s,  at 7 s: −0.6632",
+        "s": "open sag −0.6667, τ = 1.333 s",
         "size": 10,
         "role": "note"
       },
@@ -9345,9 +9345,9 @@
   "motor/step6/plot/expand@390": {
     "plot": {
       "x0": 72,
-      "y0": 68,
+      "y0": 82,
       "x1": 330,
-      "y1": 235,
+      "y1": 242,
       "W": 344,
       "H": 484
     },
@@ -9493,7 +9493,7 @@
         "role": "note"
       },
       {
-        "s": "closed sag −0.001847 rad/s, τ = 7.387 ms,  at 0.02 s: −0.001724",
+        "s": "closed sag −0.001847, τ = 7.387 ms",
         "size": 10,
         "role": "note"
       },
@@ -9503,7 +9503,7 @@
         "role": "axis"
       },
       {
-        "s": "loop gain 360.0   ratio 0.00277  ✓ under 0.02",
+        "s": "loop gain 360.0  ratio 0.00277  ✓ under 0.02",
         "size": 10,
         "role": "note"
       },
@@ -9513,7 +9513,7 @@
         "role": "note"
       },
       {
-        "s": "open sag −0.6667 rad/s, τ = 2.667 s,  at 7 s: −0.6184",
+        "s": "open sag −0.6667, τ = 2.667 s",
         "size": 10,
         "role": "note"
       },
