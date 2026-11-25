@@ -195,7 +195,7 @@
       },
       {
         "s": "Stand-in, not in lab handout. Points from the handout's PID Tuner tables (pp.3–5).",
-        "size": 6.5,
+        "size": 9,
         "role": "note"
       },
       {
@@ -282,7 +282,7 @@
       },
       {
         "s": "Stand-in, not in lab handout. Points from the handout's PID Tuner tables (pp.3–5).",
-        "size": 6.5,
+        "size": 9,
         "role": "note"
       },
       {
@@ -437,6 +437,11 @@
       {
         "s": "±2%",
         "size": 10,
+        "role": "axis"
+      },
+      {
+        "s": "┄ initial handout gains",
+        "size": 9,
         "role": "axis"
       },
       {
@@ -596,6 +601,11 @@
         "role": "note"
       },
       {
+        "s": "handout)",
+        "size": 9,
+        "role": "note"
+      },
+      {
         "s": "I",
         "size": 11,
         "role": "note"
@@ -603,6 +613,11 @@
       {
         "s": "I",
         "size": 11,
+        "role": "note"
+      },
+      {
+        "s": "margin  ·  GM gain margin",
+        "size": 9,
         "role": "note"
       },
       {
@@ -656,8 +671,8 @@
         "role": "note"
       },
       {
-        "s": "Stand-in engine and emulated tuner (not in lab handout)",
-        "size": 8.8,
+        "s": "Stand-in engine and emulated tuner (not in lab",
+        "size": 9,
         "role": "note"
       },
       {
@@ -671,8 +686,8 @@
         "role": "note"
       },
       {
-        "s": "Tr rise  ·  Ts settling  ·  OS overshoot  ·  PM phase margin  ·  GM gain margin",
-        "size": 7.2,
+        "s": "Tr rise  ·  Ts settling  ·  OS overshoot  ·  PM phase",
+        "size": 9,
         "role": "note"
       },
       {
@@ -909,6 +924,11 @@
       {
         "s": "±2%",
         "size": 10,
+        "role": "axis"
+      },
+      {
+        "s": "┄ slower handout gains",
+        "size": 9,
         "role": "axis"
       },
       {
@@ -1339,6 +1359,11 @@
         "role": "note"
       },
       {
+        "s": "handout)",
+        "size": 9,
+        "role": "note"
+      },
+      {
         "s": "I",
         "size": 11,
         "role": "note"
@@ -1346,6 +1371,11 @@
       {
         "s": "I",
         "size": 11,
+        "role": "note"
+      },
+      {
+        "s": "margin  ·  GM gain margin",
+        "size": 9,
         "role": "note"
       },
       {
@@ -1399,8 +1429,8 @@
         "role": "note"
       },
       {
-        "s": "Stand-in engine and emulated tuner (not in lab handout)",
-        "size": 8.8,
+        "s": "Stand-in engine and emulated tuner (not in lab",
+        "size": 9,
         "role": "note"
       },
       {
@@ -1414,8 +1444,8 @@
         "role": "note"
       },
       {
-        "s": "Tr rise  ·  Ts settling  ·  OS overshoot  ·  PM phase margin  ·  GM gain margin",
-        "size": 7.2,
+        "s": "Tr rise  ·  Ts settling  ·  OS overshoot  ·  PM phase",
+        "size": 9,
         "role": "note"
       },
       {
@@ -1445,7 +1475,7 @@
       "x0": 72,
       "y0": 48,
       "x1": 229,
-      "y1": 288,
+      "y1": 262,
       "W": 241,
       "H": 336
     },
@@ -1460,6 +1490,11 @@
       }
     },
     "labels": [
+      {
+        "s": "(not in lab handout). The handout's scope (p.6) is the",
+        "size": 9,
+        "role": "note"
+      },
       {
         "s": "0",
         "size": 10,
@@ -1506,8 +1541,8 @@
         "role": "tick"
       },
       {
-        "s": "Linear stand-in, not the nonlinear Simulink engine (not in lab handout). The handout's scope (p.6) is the real check.",
-        "size": 6.5,
+        "s": "Linear stand-in, not the nonlinear Simulink engine",
+        "size": 9,
         "role": "note"
       },
       {
@@ -1518,6 +1553,11 @@
       {
         "s": "reaches 2980 at t₀ + 1.80 s",
         "size": 10,
+        "role": "note"
+      },
+      {
+        "s": "real check.",
+        "size": 9,
         "role": "note"
       },
       {
@@ -2512,24 +2552,34 @@
   },
   "borer/step3/splane/page@320": {
     "plot": {
-      "x0": 18,
+      "x0": 46.92,
       "y0": 18,
-      "x1": 223,
-      "y1": 247,
+      "x1": 194.07,
+      "y1": 127,
       "W": 241,
       "H": 265
     },
     "axes": {
       "x": {
-        "ticks": 3,
+        "ticks": 6,
         "font": 9
       },
       "y": {
-        "ticks": 3,
+        "ticks": 4,
         "font": 9
       }
     },
     "labels": [
+      {
+        "s": "−0.2",
+        "size": 9,
+        "role": "tick"
+      },
+      {
+        "s": "−1.5",
+        "size": 9,
+        "role": "tick"
+      },
       {
         "s": "−10",
         "size": 10,
@@ -2544,6 +2594,16 @@
         "s": "−2",
         "size": 10,
         "role": "axis"
+      },
+      {
+        "s": "−2",
+        "size": 10,
+        "role": "axis"
+      },
+      {
+        "s": "−2",
+        "size": 9,
+        "role": "tick"
       },
       {
         "s": "−5",
@@ -2561,7 +2621,12 @@
         "role": "tick"
       },
       {
-        "s": "10",
+        "s": "0.2",
+        "size": 9,
+        "role": "tick"
+      },
+      {
+        "s": "5",
         "size": 9,
         "role": "tick"
       },
@@ -2579,6 +2644,11 @@
         "s": "unstable",
         "size": 10,
         "role": "axis"
+      },
+      {
+        "s": "zoom",
+        "size": 9,
+        "role": "note"
       },
       {
         "s": "ζ 0.6",
@@ -3167,6 +3237,11 @@
         "role": "axis"
       },
       {
+        "s": "┄ stand-in (coil dropped)",
+        "size": 9,
+        "role": "axis"
+      },
+      {
         "s": "0",
         "size": 10,
         "role": "tick"
@@ -3284,7 +3359,7 @@
         "role": "tick"
       },
       {
-        "s": "ceiling Ka = 4080; Ka = 80 is 1/51 of the ceiling.\nω = 141.4 rad/s",
+        "s": "ceiling Ka = 4080; Ka = 80 is 1/51\nof the ceiling. ω = 141.4 rad/s",
         "size": 10,
         "role": "axis"
       },
@@ -3500,6 +3575,11 @@
         "role": "axis"
       },
       {
+        "s": "┄ stand-in (coil dropped)",
+        "size": 9,
+        "role": "axis"
+      },
+      {
         "s": "0",
         "size": 10,
         "role": "tick"
@@ -3602,7 +3682,7 @@
         "role": "tick"
       },
       {
-        "s": "ceiling Ka = 4080; Ka = 3981 is 0.98 of the ceiling.\nω = 141.4 rad/s",
+        "s": "ceiling Ka = 4080; Ka = 3981 is 0.98\nof the ceiling. ω = 141.4 rad/s",
         "size": 10,
         "role": "axis"
       },
@@ -3874,7 +3954,7 @@
       },
       {
         "s": "Stand-in, not in lab handout. Points from the handout's PID Tuner tables (pp.3–5).",
-        "size": 7.8,
+        "size": 9,
         "role": "note"
       },
       {
@@ -3976,7 +4056,7 @@
       },
       {
         "s": "Stand-in, not in lab handout. Points from the handout's PID Tuner tables (pp.3–5).",
-        "size": 7.8,
+        "size": 9,
         "role": "note"
       },
       {
@@ -4340,6 +4420,11 @@
         "role": "note"
       },
       {
+        "s": "margin",
+        "size": 9,
+        "role": "note"
+      },
+      {
         "s": "OS %",
         "size": 11,
         "role": "note"
@@ -4391,7 +4476,7 @@
       },
       {
         "s": "Stand-in engine and emulated tuner (not in lab handout)",
-        "size": 10,
+        "size": 9,
         "role": "note"
       },
       {
@@ -4405,8 +4490,8 @@
         "role": "note"
       },
       {
-        "s": "Tr rise  ·  Ts settling  ·  OS overshoot  ·  PM phase margin  ·  GM gain margin",
-        "size": 8.5,
+        "s": "Tr rise  ·  Ts settling  ·  OS overshoot  ·  PM phase margin  ·  GM gain",
+        "size": 9,
         "role": "note"
       },
       {
@@ -5188,6 +5273,11 @@
         "role": "note"
       },
       {
+        "s": "margin",
+        "size": 9,
+        "role": "note"
+      },
+      {
         "s": "OS %",
         "size": 11,
         "role": "note"
@@ -5239,7 +5329,7 @@
       },
       {
         "s": "Stand-in engine and emulated tuner (not in lab handout)",
-        "size": 10,
+        "size": 9,
         "role": "note"
       },
       {
@@ -5253,8 +5343,8 @@
         "role": "note"
       },
       {
-        "s": "Tr rise  ·  Ts settling  ·  OS overshoot  ·  PM phase margin  ·  GM gain margin",
-        "size": 8.5,
+        "s": "Tr rise  ·  Ts settling  ·  OS overshoot  ·  PM phase margin  ·  GM gain",
+        "size": 9,
         "role": "note"
       },
       {
@@ -5284,7 +5374,7 @@
       "x0": 72,
       "y0": 48,
       "x1": 294,
-      "y1": 304,
+      "y1": 290,
       "W": 306,
       "H": 352
     },
@@ -5345,8 +5435,13 @@
         "role": "tick"
       },
       {
-        "s": "Linear stand-in, not the nonlinear Simulink engine (not in lab handout). The handout's scope (p.6) is the real check.",
-        "size": 6.5,
+        "s": "handout). The handout's scope (p.6) is the real check.",
+        "size": 9,
+        "role": "note"
+      },
+      {
+        "s": "Linear stand-in, not the nonlinear Simulink engine (not in lab",
+        "size": 9,
         "role": "note"
       },
       {
@@ -7353,7 +7448,7 @@
         "role": "tick"
       },
       {
-        "s": "ceiling Ka = 4080; Ka = 80 is 1/51 of the ceiling.\nω = 141.4 rad/s",
+        "s": "ceiling Ka = 4080; Ka = 80 is 1/51\nof the ceiling. ω = 141.4 rad/s",
         "size": 10,
         "role": "axis"
       },
@@ -7751,7 +7846,7 @@
         "role": "tick"
       },
       {
-        "s": "ceiling Ka = 4080; Ka = 3981 is 0.98 of the ceiling.\nω = 141.4 rad/s",
+        "s": "ceiling Ka = 4080; Ka = 3981 is 0.98\nof the ceiling. ω = 141.4 rad/s",
         "size": 10,
         "role": "axis"
       },
@@ -8550,7 +8645,7 @@
       },
       {
         "s": "Stand-in engine and emulated tuner (not in lab handout)",
-        "size": 10,
+        "size": 9,
         "role": "note"
       },
       {
@@ -8560,7 +8655,7 @@
       },
       {
         "s": "Tr rise  ·  Ts settling  ·  OS overshoot  ·  PM phase margin  ·  GM gain margin",
-        "size": 10,
+        "size": 9,
         "role": "note"
       },
       {
@@ -9413,7 +9508,7 @@
       },
       {
         "s": "Stand-in engine and emulated tuner (not in lab handout)",
-        "size": 10,
+        "size": 9,
         "role": "note"
       },
       {
@@ -9423,7 +9518,7 @@
       },
       {
         "s": "Tr rise  ·  Ts settling  ·  OS overshoot  ·  PM phase margin  ·  GM gain margin",
-        "size": 10,
+        "size": 9,
         "role": "note"
       },
       {
@@ -9448,7 +9543,7 @@
       "x0": 72,
       "y0": 48,
       "x1": 700,
-      "y1": 208,
+      "y1": 206,
       "W": 712,
       "H": 256
     },
@@ -11702,7 +11797,7 @@
         "role": "tick"
       },
       {
-        "s": "ceiling Ka = 4080; Ka = 80 is 1/51 of the ceiling.\nω = 141.4 rad/s",
+        "s": "ceiling Ka = 4080; Ka = 80 is 1/51\nof the ceiling. ω = 141.4 rad/s",
         "size": 10,
         "role": "axis"
       },
@@ -12150,7 +12245,7 @@
         "role": "tick"
       },
       {
-        "s": "ceiling Ka = 4080; Ka = 3981 is 0.98 of the ceiling.\nω = 141.4 rad/s",
+        "s": "ceiling Ka = 4080; Ka = 3981 is 0.98\nof the ceiling. ω = 141.4 rad/s",
         "size": 10,
         "role": "axis"
       },
@@ -12964,7 +13059,7 @@
       },
       {
         "s": "Stand-in engine and emulated tuner (not in lab handout)",
-        "size": 10,
+        "size": 9,
         "role": "note"
       },
       {
@@ -12974,7 +13069,7 @@
       },
       {
         "s": "Tr rise  ·  Ts settling  ·  OS overshoot  ·  PM phase margin  ·  GM gain margin",
-        "size": 10,
+        "size": 9,
         "role": "note"
       },
       {
@@ -13847,7 +13942,7 @@
       },
       {
         "s": "Stand-in engine and emulated tuner (not in lab handout)",
-        "size": 10,
+        "size": 9,
         "role": "note"
       },
       {
@@ -13857,7 +13952,7 @@
       },
       {
         "s": "Tr rise  ·  Ts settling  ·  OS overshoot  ·  PM phase margin  ·  GM gain margin",
-        "size": 10,
+        "size": 9,
         "role": "note"
       },
       {
@@ -13882,7 +13977,7 @@
       "x0": 72,
       "y0": 48,
       "x1": 774,
-      "y1": 400,
+      "y1": 398,
       "W": 786,
       "H": 448
     },
@@ -16481,7 +16576,7 @@
         "role": "tick"
       },
       {
-        "s": "ceiling Ka = 4080; Ka = 80 is 1/51 of the ceiling.\nω = 141.4 rad/s",
+        "s": "ceiling Ka = 4080; Ka = 80 is 1/51\nof the ceiling. ω = 141.4 rad/s",
         "size": 10,
         "role": "axis"
       },
@@ -16969,7 +17064,7 @@
         "role": "tick"
       },
       {
-        "s": "ceiling Ka = 4080; Ka = 3981 is 0.98 of the ceiling.\nω = 141.4 rad/s",
+        "s": "ceiling Ka = 4080; Ka = 3981 is 0.98\nof the ceiling. ω = 141.4 rad/s",
         "size": 10,
         "role": "axis"
       },
@@ -17402,9 +17497,9 @@
     "plot": {
       "x0": 72,
       "y0": 16,
-      "x1": 533,
+      "x1": 342,
       "y1": 223,
-      "W": 545,
+      "W": 354,
       "H": 448
     },
     "axes": {
@@ -17539,14 +17634,14 @@
     "plot": {
       "x0": 72,
       "y0": 58,
-      "x1": 513,
+      "x1": 322,
       "y1": 410,
-      "W": 545,
+      "W": 354,
       "H": 448
     },
     "axes": {
       "x": {
-        "ticks": 9,
+        "ticks": 5,
         "font": 10
       },
       "y": {
@@ -17586,17 +17681,7 @@
         "role": "tick"
       },
       {
-        "s": "1",
-        "size": 10,
-        "role": "tick"
-      },
-      {
         "s": "2",
-        "size": 10,
-        "role": "tick"
-      },
-      {
-        "s": "3",
         "size": 10,
         "role": "tick"
       },
@@ -17606,17 +17691,7 @@
         "role": "tick"
       },
       {
-        "s": "5",
-        "size": 10,
-        "role": "tick"
-      },
-      {
         "s": "6",
-        "size": 10,
-        "role": "tick"
-      },
-      {
-        "s": "7",
         "size": 10,
         "role": "tick"
       },
@@ -17627,7 +17702,7 @@
       },
       {
         "s": "OS 7.4%\nTp 0.93 s",
-        "size": 10.5,
+        "size": 9,
         "role": "axis"
       },
       {
@@ -17783,7 +17858,7 @@
       },
       {
         "s": "Stand-in engine and emulated tuner (not in lab handout)",
-        "size": 10,
+        "size": 9,
         "role": "note"
       },
       {
@@ -17793,7 +17868,7 @@
       },
       {
         "s": "Tr rise  ·  Ts settling  ·  OS overshoot  ·  PM phase margin  ·  GM gain margin",
-        "size": 10,
+        "size": 9,
         "role": "note"
       },
       {
@@ -17817,14 +17892,14 @@
     "plot": {
       "x0": 72,
       "y0": 16,
-      "x1": 241,
+      "x1": 522,
       "y1": 223,
-      "W": 253,
+      "W": 534,
       "H": 448
     },
     "axes": {
       "x": {
-        "ticks": 6,
+        "ticks": 10,
         "font": 10
       },
       "y": {
@@ -17879,12 +17954,32 @@
         "role": "tick"
       },
       {
+        "s": "0.1",
+        "size": 10,
+        "role": "tick"
+      },
+      {
+        "s": "0.1",
+        "size": 10,
+        "role": "tick"
+      },
+      {
         "s": "1",
         "size": 10,
         "role": "tick"
       },
       {
         "s": "1",
+        "size": 10,
+        "role": "tick"
+      },
+      {
+        "s": "10",
+        "size": 10,
+        "role": "tick"
+      },
+      {
+        "s": "10",
         "size": 10,
         "role": "tick"
       },
@@ -17934,14 +18029,14 @@
     "plot": {
       "x0": 72,
       "y0": 58,
-      "x1": 221,
+      "x1": 502,
       "y1": 410,
-      "W": 253,
+      "W": 534,
       "H": 448
     },
     "axes": {
       "x": {
-        "ticks": 2,
+        "ticks": 9,
         "font": 10
       },
       "y": {
@@ -17976,13 +18071,48 @@
         "role": "tick"
       },
       {
+        "s": "1",
+        "size": 10,
+        "role": "tick"
+      },
+      {
+        "s": "2",
+        "size": 10,
+        "role": "tick"
+      },
+      {
+        "s": "3",
+        "size": 10,
+        "role": "tick"
+      },
+      {
+        "s": "4",
+        "size": 10,
+        "role": "tick"
+      },
+      {
         "s": "5",
         "size": 10,
         "role": "tick"
       },
       {
-        "s": "OS 0.4%\nTp 4.91 s",
-        "size": 9,
+        "s": "6",
+        "size": 10,
+        "role": "tick"
+      },
+      {
+        "s": "7",
+        "size": 10,
+        "role": "tick"
+      },
+      {
+        "s": "8",
+        "size": 10,
+        "role": "tick"
+      },
+      {
+        "s": "OS 0.4%  Tp 4.91 s",
+        "size": 10.5,
         "role": "axis"
       },
       {
@@ -18006,14 +18136,14 @@
     "plot": {
       "x0": 72,
       "y0": 58,
-      "x1": 221,
+      "x1": 502,
       "y1": 410,
-      "W": 253,
+      "W": 534,
       "H": 448
     },
     "axes": {
       "x": {
-        "ticks": 2,
+        "ticks": 9,
         "font": 10
       },
       "y": {
@@ -18024,6 +18154,11 @@
     "labels": [
       {
         "s": "±2%",
+        "size": 10,
+        "role": "axis"
+      },
+      {
+        "s": "┄ slower handout gains",
         "size": 10,
         "role": "axis"
       },
@@ -18048,13 +18183,48 @@
         "role": "tick"
       },
       {
+        "s": "1",
+        "size": 10,
+        "role": "tick"
+      },
+      {
+        "s": "2",
+        "size": 10,
+        "role": "tick"
+      },
+      {
+        "s": "3",
+        "size": 10,
+        "role": "tick"
+      },
+      {
+        "s": "4",
+        "size": 10,
+        "role": "tick"
+      },
+      {
         "s": "5",
         "size": 10,
         "role": "tick"
       },
       {
-        "s": "OS 0.4%\nTp 4.88 s",
-        "size": 9,
+        "s": "6",
+        "size": 10,
+        "role": "tick"
+      },
+      {
+        "s": "7",
+        "size": 10,
+        "role": "tick"
+      },
+      {
+        "s": "8",
+        "size": 10,
+        "role": "tick"
+      },
+      {
+        "s": "OS 0.4%  Tp 4.88 s",
+        "size": 10.5,
         "role": "axis"
       },
       {
@@ -18069,7 +18239,7 @@
       },
       {
         "s": "Tr 2.06 s",
-        "size": 9,
+        "size": 10.5,
         "role": "axis"
       },
       {
@@ -18083,14 +18253,14 @@
     "plot": {
       "x0": 72,
       "y0": 10,
-      "x1": 241,
+      "x1": 522,
       "y1": 408,
-      "W": 253,
+      "W": 534,
       "H": 448
     },
     "axes": {
       "x": {
-        "ticks": 5,
+        "ticks": 9,
         "font": 10
       },
       "y": {
@@ -18130,7 +18300,17 @@
         "role": "tick"
       },
       {
+        "s": "1",
+        "size": 10,
+        "role": "tick"
+      },
+      {
         "s": "2",
+        "size": 10,
+        "role": "tick"
+      },
+      {
+        "s": "3",
         "size": 10,
         "role": "tick"
       },
@@ -18140,7 +18320,17 @@
         "role": "tick"
       },
       {
+        "s": "5",
+        "size": 10,
+        "role": "tick"
+      },
+      {
         "s": "6",
+        "size": 10,
+        "role": "tick"
+      },
+      {
+        "s": "7",
         "size": 10,
         "role": "tick"
       },
@@ -18175,9 +18365,9 @@
     "plot": {
       "x0": 72,
       "y0": 16,
-      "x1": 533,
+      "x1": 342,
       "y1": 223,
-      "W": 545,
+      "W": 354,
       "H": 448
     },
     "axes": {
@@ -18312,14 +18502,14 @@
     "plot": {
       "x0": 72,
       "y0": 58,
-      "x1": 513,
+      "x1": 322,
       "y1": 410,
-      "W": 545,
+      "W": 354,
       "H": 448
     },
     "axes": {
       "x": {
-        "ticks": 9,
+        "ticks": 5,
         "font": 10
       },
       "y": {
@@ -18359,17 +18549,7 @@
         "role": "tick"
       },
       {
-        "s": "1",
-        "size": 10,
-        "role": "tick"
-      },
-      {
         "s": "2",
-        "size": 10,
-        "role": "tick"
-      },
-      {
-        "s": "3",
         "size": 10,
         "role": "tick"
       },
@@ -18379,17 +18559,7 @@
         "role": "tick"
       },
       {
-        "s": "5",
-        "size": 10,
-        "role": "tick"
-      },
-      {
         "s": "6",
-        "size": 10,
-        "role": "tick"
-      },
-      {
-        "s": "7",
         "size": 10,
         "role": "tick"
       },
@@ -18410,7 +18580,7 @@
       },
       {
         "s": "Tr 1.09 s",
-        "size": 10.5,
+        "size": 9,
         "role": "axis"
       },
       {
@@ -18551,7 +18721,7 @@
       },
       {
         "s": "Stand-in engine and emulated tuner (not in lab handout)",
-        "size": 10,
+        "size": 9,
         "role": "note"
       },
       {
@@ -18561,7 +18731,7 @@
       },
       {
         "s": "Tr rise  ·  Ts settling  ·  OS overshoot  ·  PM phase margin  ·  GM gain margin",
-        "size": 10,
+        "size": 9,
         "role": "note"
       },
       {
@@ -18585,9 +18755,9 @@
     "plot": {
       "x0": 72,
       "y0": 48,
-      "x1": 533,
-      "y1": 400,
-      "W": 545,
+      "x1": 1106,
+      "y1": 398,
+      "W": 1118,
       "H": 448
     },
     "axes": {
@@ -18677,9 +18847,9 @@
     "plot": {
       "x0": 72,
       "y0": 58,
-      "x1": 531,
+      "x1": 1104,
       "y1": 410,
-      "W": 545,
+      "W": 1118,
       "H": 448
     },
     "axes": {
@@ -18789,9 +18959,9 @@
     "plot": {
       "x0": 72,
       "y0": 58,
-      "x1": 531,
+      "x1": 1104,
       "y1": 410,
-      "W": 545,
+      "W": 1118,
       "H": 448
     },
     "axes": {
@@ -18916,9 +19086,9 @@
     "plot": {
       "x0": 72,
       "y0": 68,
-      "x1": 531,
+      "x1": 1104,
       "y1": 265,
-      "W": 545,
+      "W": 1118,
       "H": 448
     },
     "axes": {
@@ -19113,9 +19283,9 @@
     "plot": {
       "x0": 72,
       "y0": 58,
-      "x1": 531,
+      "x1": 1104,
       "y1": 410,
-      "W": 545,
+      "W": 1118,
       "H": 448
     },
     "axes": {
@@ -19240,9 +19410,9 @@
     "plot": {
       "x0": 72,
       "y0": 68,
-      "x1": 531,
+      "x1": 1104,
       "y1": 265,
-      "W": 545,
+      "W": 1118,
       "H": 448
     },
     "axes": {
@@ -19432,9 +19602,9 @@
     "plot": {
       "x0": 72,
       "y0": 68,
-      "x1": 531,
+      "x1": 1104,
       "y1": 265,
-      "W": 545,
+      "W": 1118,
       "H": 448
     },
     "axes": {
@@ -19903,9 +20073,9 @@
     "plot": {
       "x0": 72,
       "y0": 58,
-      "x1": 513,
+      "x1": 1086,
       "y1": 410,
-      "W": 545,
+      "W": 1118,
       "H": 448
     },
     "axes": {
@@ -20349,9 +20519,9 @@
     "plot": {
       "x0": 72,
       "y0": 48,
-      "x1": 531,
+      "x1": 1104,
       "y1": 410,
-      "W": 545,
+      "W": 1118,
       "H": 448
     },
     "axes": {
@@ -20446,9 +20616,9 @@
     "plot": {
       "x0": 72,
       "y0": 34,
-      "x1": 531,
+      "x1": 1104,
       "y1": 416,
-      "W": 545,
+      "W": 1118,
       "H": 448
     },
     "axes": {
@@ -20702,9 +20872,9 @@
     "plot": {
       "x0": 72,
       "y0": 58,
-      "x1": 513,
+      "x1": 1086,
       "y1": 410,
-      "W": 545,
+      "W": 1118,
       "H": 448
     },
     "axes": {
@@ -20819,9 +20989,9 @@
     "plot": {
       "x0": 72,
       "y0": 58,
-      "x1": 513,
+      "x1": 1086,
       "y1": 410,
-      "W": 545,
+      "W": 1118,
       "H": 448
     },
     "axes": {
@@ -20916,7 +21086,7 @@
         "role": "axis"
       },
       {
-        "s": "OS 17.1%\nTp 0.18 s",
+        "s": "OS 17.1%  Tp 0.18 s",
         "size": 10.5,
         "role": "axis"
       },
@@ -21180,7 +21350,7 @@
         "role": "tick"
       },
       {
-        "s": "ceiling Ka = 4080; Ka = 80 is 1/51 of the ceiling.\nω = 141.4 rad/s",
+        "s": "ceiling Ka = 4080; Ka = 80 is 1/51\nof the ceiling. ω = 141.4 rad/s",
         "size": 10,
         "role": "axis"
       },
@@ -21215,14 +21385,14 @@
     "plot": {
       "x0": 72,
       "y0": 34,
-      "x1": 239,
+      "x1": 520,
       "y1": 416,
-      "W": 253,
+      "W": 534,
       "H": 448
     },
     "axes": {
       "x": {
-        "ticks": 2,
+        "ticks": 9,
         "font": 10
       },
       "y": {
@@ -21257,7 +21427,42 @@
         "role": "tick"
       },
       {
+        "s": "10",
+        "size": 10,
+        "role": "tick"
+      },
+      {
+        "s": "20",
+        "size": 10,
+        "role": "tick"
+      },
+      {
+        "s": "30",
+        "size": 10,
+        "role": "tick"
+      },
+      {
+        "s": "40",
+        "size": 10,
+        "role": "tick"
+      },
+      {
         "s": "50",
+        "size": 10,
+        "role": "tick"
+      },
+      {
+        "s": "60",
+        "size": 10,
+        "role": "tick"
+      },
+      {
+        "s": "70",
+        "size": 10,
+        "role": "tick"
+      },
+      {
+        "s": "80",
         "size": 10,
         "role": "tick"
       },
@@ -21287,14 +21492,14 @@
     "plot": {
       "x0": 72,
       "y0": 48,
-      "x1": 239,
+      "x1": 520,
       "y1": 410,
-      "W": 253,
+      "W": 534,
       "H": 448
     },
     "axes": {
       "x": {
-        "ticks": 5,
+        "ticks": 11,
         "font": 10
       },
       "y": {
@@ -21339,7 +21544,22 @@
         "role": "tick"
       },
       {
-        "s": "0.5",
+        "s": "0.2",
+        "size": 10,
+        "role": "tick"
+      },
+      {
+        "s": "0.4",
+        "size": 10,
+        "role": "tick"
+      },
+      {
+        "s": "0.6",
+        "size": 10,
+        "role": "tick"
+      },
+      {
+        "s": "0.8",
         "size": 10,
         "role": "tick"
       },
@@ -21349,7 +21569,22 @@
         "role": "tick"
       },
       {
-        "s": "1.5",
+        "s": "1.2",
+        "size": 10,
+        "role": "tick"
+      },
+      {
+        "s": "1.4",
+        "size": 10,
+        "role": "tick"
+      },
+      {
+        "s": "1.6",
+        "size": 10,
+        "role": "tick"
+      },
+      {
+        "s": "1.8",
         "size": 10,
         "role": "tick"
       },
@@ -21603,7 +21838,7 @@
         "role": "tick"
       },
       {
-        "s": "ceiling Ka = 4080; Ka = 3981 is 0.98 of the ceiling.\nω = 141.4 rad/s",
+        "s": "ceiling Ka = 4080; Ka = 3981 is 0.98\nof the ceiling. ω = 141.4 rad/s",
         "size": 10,
         "role": "axis"
       },
@@ -22036,9 +22271,9 @@
     "plot": {
       "x0": 72,
       "y0": 16,
-      "x1": 831,
+      "x1": 309,
       "y1": 223,
-      "W": 843,
+      "W": 321,
       "H": 448
     },
     "axes": {
@@ -22173,14 +22408,14 @@
     "plot": {
       "x0": 72,
       "y0": 58,
-      "x1": 811,
+      "x1": 289,
       "y1": 410,
-      "W": 843,
+      "W": 321,
       "H": 448
     },
     "axes": {
       "x": {
-        "ticks": 9,
+        "ticks": 5,
         "font": 10
       },
       "y": {
@@ -22220,17 +22455,7 @@
         "role": "tick"
       },
       {
-        "s": "1",
-        "size": 10,
-        "role": "tick"
-      },
-      {
         "s": "2",
-        "size": 10,
-        "role": "tick"
-      },
-      {
-        "s": "3",
         "size": 10,
         "role": "tick"
       },
@@ -22240,17 +22465,7 @@
         "role": "tick"
       },
       {
-        "s": "5",
-        "size": 10,
-        "role": "tick"
-      },
-      {
         "s": "6",
-        "size": 10,
-        "role": "tick"
-      },
-      {
-        "s": "7",
         "size": 10,
         "role": "tick"
       },
@@ -22260,8 +22475,8 @@
         "role": "tick"
       },
       {
-        "s": "OS 7.4%  Tp 0.93 s",
-        "size": 10.5,
+        "s": "OS 7.4%\nTp 0.93 s",
+        "size": 9,
         "role": "axis"
       },
       {
@@ -22417,7 +22632,7 @@
       },
       {
         "s": "Stand-in engine and emulated tuner (not in lab handout)",
-        "size": 10,
+        "size": 9,
         "role": "note"
       },
       {
@@ -22427,7 +22642,7 @@
       },
       {
         "s": "Tr rise  ·  Ts settling  ·  OS overshoot  ·  PM phase margin  ·  GM gain margin",
-        "size": 10,
+        "size": 9,
         "role": "note"
       },
       {
@@ -22864,9 +23079,9 @@
     "plot": {
       "x0": 72,
       "y0": 16,
-      "x1": 831,
+      "x1": 309,
       "y1": 223,
-      "W": 843,
+      "W": 321,
       "H": 448
     },
     "axes": {
@@ -23001,14 +23216,14 @@
     "plot": {
       "x0": 72,
       "y0": 58,
-      "x1": 811,
+      "x1": 289,
       "y1": 410,
-      "W": 843,
+      "W": 321,
       "H": 448
     },
     "axes": {
       "x": {
-        "ticks": 9,
+        "ticks": 5,
         "font": 10
       },
       "y": {
@@ -23048,17 +23263,7 @@
         "role": "tick"
       },
       {
-        "s": "1",
-        "size": 10,
-        "role": "tick"
-      },
-      {
         "s": "2",
-        "size": 10,
-        "role": "tick"
-      },
-      {
-        "s": "3",
         "size": 10,
         "role": "tick"
       },
@@ -23068,17 +23273,7 @@
         "role": "tick"
       },
       {
-        "s": "5",
-        "size": 10,
-        "role": "tick"
-      },
-      {
         "s": "6",
-        "size": 10,
-        "role": "tick"
-      },
-      {
-        "s": "7",
         "size": 10,
         "role": "tick"
       },
@@ -23099,7 +23294,7 @@
       },
       {
         "s": "Tr 1.09 s",
-        "size": 10.5,
+        "size": 9,
         "role": "axis"
       },
       {
@@ -23240,7 +23435,7 @@
       },
       {
         "s": "Stand-in engine and emulated tuner (not in lab handout)",
-        "size": 10,
+        "size": 9,
         "role": "note"
       },
       {
@@ -23250,7 +23445,7 @@
       },
       {
         "s": "Tr rise  ·  Ts settling  ·  OS overshoot  ·  PM phase margin  ·  GM gain margin",
-        "size": 10,
+        "size": 9,
         "role": "note"
       },
       {
@@ -23274,9 +23469,9 @@
     "plot": {
       "x0": 72,
       "y0": 48,
-      "x1": 831,
-      "y1": 400,
-      "W": 843,
+      "x1": 1124,
+      "y1": 398,
+      "W": 1136,
       "H": 448
     },
     "axes": {
@@ -23366,9 +23561,9 @@
     "plot": {
       "x0": 72,
       "y0": 58,
-      "x1": 829,
+      "x1": 1122,
       "y1": 410,
-      "W": 843,
+      "W": 1136,
       "H": 448
     },
     "axes": {
@@ -23478,9 +23673,9 @@
     "plot": {
       "x0": 72,
       "y0": 58,
-      "x1": 829,
+      "x1": 1122,
       "y1": 410,
-      "W": 843,
+      "W": 1136,
       "H": 448
     },
     "axes": {
@@ -23605,9 +23800,9 @@
     "plot": {
       "x0": 72,
       "y0": 68,
-      "x1": 829,
+      "x1": 1122,
       "y1": 265,
-      "W": 843,
+      "W": 1136,
       "H": 448
     },
     "axes": {
@@ -23802,9 +23997,9 @@
     "plot": {
       "x0": 72,
       "y0": 58,
-      "x1": 829,
+      "x1": 1122,
       "y1": 410,
-      "W": 843,
+      "W": 1136,
       "H": 448
     },
     "axes": {
@@ -23929,9 +24124,9 @@
     "plot": {
       "x0": 72,
       "y0": 68,
-      "x1": 829,
+      "x1": 1122,
       "y1": 265,
-      "W": 843,
+      "W": 1136,
       "H": 448
     },
     "axes": {
@@ -24121,9 +24316,9 @@
     "plot": {
       "x0": 72,
       "y0": 68,
-      "x1": 829,
+      "x1": 1122,
       "y1": 265,
-      "W": 843,
+      "W": 1136,
       "H": 448
     },
     "axes": {
@@ -24597,9 +24792,9 @@
     "plot": {
       "x0": 72,
       "y0": 58,
-      "x1": 811,
+      "x1": 1104,
       "y1": 410,
-      "W": 843,
+      "W": 1136,
       "H": 448
     },
     "axes": {
@@ -25043,9 +25238,9 @@
     "plot": {
       "x0": 72,
       "y0": 48,
-      "x1": 829,
+      "x1": 1122,
       "y1": 410,
-      "W": 843,
+      "W": 1136,
       "H": 448
     },
     "axes": {
@@ -25140,9 +25335,9 @@
     "plot": {
       "x0": 72,
       "y0": 34,
-      "x1": 829,
+      "x1": 1122,
       "y1": 416,
-      "W": 843,
+      "W": 1136,
       "H": 448
     },
     "axes": {
@@ -25396,9 +25591,9 @@
     "plot": {
       "x0": 72,
       "y0": 58,
-      "x1": 811,
+      "x1": 1104,
       "y1": 410,
-      "W": 843,
+      "W": 1136,
       "H": 448
     },
     "axes": {
@@ -25513,9 +25708,9 @@
     "plot": {
       "x0": 72,
       "y0": 58,
-      "x1": 811,
+      "x1": 1104,
       "y1": 410,
-      "W": 843,
+      "W": 1136,
       "H": 448
     },
     "axes": {
@@ -25874,7 +26069,7 @@
         "role": "tick"
       },
       {
-        "s": "ceiling Ka = 4080; Ka = 80 is 1/51 of the ceiling.\nω = 141.4 rad/s",
+        "s": "ceiling Ka = 4080; Ka = 80 is 1/51\nof the ceiling. ω = 141.4 rad/s",
         "size": 10,
         "role": "axis"
       },
@@ -25909,14 +26104,14 @@
     "plot": {
       "x0": 72,
       "y0": 34,
-      "x1": 388,
+      "x1": 817,
       "y1": 416,
-      "W": 402,
+      "W": 831,
       "H": 448
     },
     "axes": {
       "x": {
-        "ticks": 5,
+        "ticks": 9,
         "font": 10
       },
       "y": {
@@ -25951,7 +26146,17 @@
         "role": "tick"
       },
       {
+        "s": "10",
+        "size": 10,
+        "role": "tick"
+      },
+      {
         "s": "20",
+        "size": 10,
+        "role": "tick"
+      },
+      {
+        "s": "30",
         "size": 10,
         "role": "tick"
       },
@@ -25961,7 +26166,17 @@
         "role": "tick"
       },
       {
+        "s": "50",
+        "size": 10,
+        "role": "tick"
+      },
+      {
         "s": "60",
+        "size": 10,
+        "role": "tick"
+      },
+      {
+        "s": "70",
         "size": 10,
         "role": "tick"
       },
@@ -25996,14 +26211,14 @@
     "plot": {
       "x0": 72,
       "y0": 48,
-      "x1": 388,
+      "x1": 817,
       "y1": 410,
-      "W": 402,
+      "W": 831,
       "H": 448
     },
     "axes": {
       "x": {
-        "ticks": 5,
+        "ticks": 11,
         "font": 10
       },
       "y": {
@@ -26048,7 +26263,22 @@
         "role": "tick"
       },
       {
-        "s": "0.5",
+        "s": "0.2",
+        "size": 10,
+        "role": "tick"
+      },
+      {
+        "s": "0.4",
+        "size": 10,
+        "role": "tick"
+      },
+      {
+        "s": "0.6",
+        "size": 10,
+        "role": "tick"
+      },
+      {
+        "s": "0.8",
         "size": 10,
         "role": "tick"
       },
@@ -26058,7 +26288,22 @@
         "role": "tick"
       },
       {
-        "s": "1.5",
+        "s": "1.2",
+        "size": 10,
+        "role": "tick"
+      },
+      {
+        "s": "1.4",
+        "size": 10,
+        "role": "tick"
+      },
+      {
+        "s": "1.6",
+        "size": 10,
+        "role": "tick"
+      },
+      {
+        "s": "1.8",
         "size": 10,
         "role": "tick"
       },
@@ -26312,7 +26557,7 @@
         "role": "tick"
       },
       {
-        "s": "ceiling Ka = 4080; Ka = 3981 is 0.98 of the ceiling.\nω = 141.4 rad/s",
+        "s": "ceiling Ka = 4080; Ka = 3981 is 0.98\nof the ceiling. ω = 141.4 rad/s",
         "size": 10,
         "role": "axis"
       },
