@@ -418,6 +418,13 @@ export function drawStepResponse(g: CanvasRenderingContext2D, w: number, h: numb
   const trPlaced = trBox as { x0: number; x1: number; y0: number; y1: number } | null;
   const hitsTr = (a: number, b2: number, c: number, d: number) =>
     !!(trPlaced && b2 > trPlaced.x0 - 6 && a < trPlaced.x1 + 6 && d > trPlaced.y0 - 6 && c < trPlaced.y1 + 6);
+  const onTickRowBox = (a: number, b2: number, c: number, d: number) => d > f.box.b - 6;
+  const closerToTickBox = (a: number, b2: number, c: number, d: number, ownX: number, ownY0: number, ownY1: number) => {
+    const cx = (a + b2) / 2, cy = (c + d) / 2;
+    const dOwn = Math.abs(cx - ownX) + (cy < Math.min(ownY0, ownY1) ? Math.min(ownY0, ownY1) - cy : cy > Math.max(ownY0, ownY1) ? cy - Math.max(ownY0, ownY1) : 0);
+    return labelsOn(g.canvas).some((r) => r.role === 'tick' && r.x0 !== undefined && r.y0 !== undefined
+      && Math.hypot(cx - (r.x0 + r.x1) / 2, cy - (r.y0 + r.y1) / 2) + 0.01 < dOwn + 4);
+  };
   if (show.settling && m.settled && Number.isFinite(m.settlingTime)) {
     // the dashed Ts line stops just under the overshoot label when it would run through it (it made "15.7 %" read "5.7 %")
     const tx = f.X(m.settlingTime), cut = osPlaced && tx > osPlaced.x0 - 3 && tx < osPlaced.x1 + 3 ? Math.min(yr[1], f.iy(osPlaced.y + 8)) : yr[1];
@@ -448,6 +455,7 @@ export function drawStepResponse(g: CanvasRenderingContext2D, w: number, h: numb
           if (hitsCurve(c.a, c.b2, c.c, c.d)) continue;
           if (hitsOtherVert(c.a, c.b2, c.c, c.d, [lineX])) continue;
           if (hitsPlaced(c.a, c.b2, c.c, c.d)) continue;
+          if (onTickRowBox(c.a, c.b2, c.c, c.d) || closerToTickBox(c.a, c.b2, c.c, c.d, lineX, yLo, yHi)) continue;
           tsPick = c; break;
         }
         if (tsPick) break;
@@ -472,6 +480,7 @@ export function drawStepResponse(g: CanvasRenderingContext2D, w: number, h: numb
           if (hitsOtherVert(c.a, c.b2, c.c, c.d, [lineX])) continue;
           if (hitsCurve(c.a, c.b2, c.c, c.d)) continue;
           if (hitsPlaced(c.a, c.b2, c.c, c.d)) continue;
+          if (onTickRowBox(c.a, c.b2, c.c, c.d) || closerToTickBox(c.a, c.b2, c.c, c.d, lineX, yLo, yHi)) continue;
           tsPick = c; break;
         }
       }
@@ -495,13 +504,10 @@ export function drawStepResponse(g: CanvasRenderingContext2D, w: number, h: numb
           if (hitsOtherVert(c.a, c.b2, c.c, c.d, [lineX])) continue;
           if (hitsCurve(c.a, c.b2, c.c, c.d)) continue;
           if (hitsPlaced(c.a, c.b2, c.c, c.d)) continue;
+          if (onTickRowBox(c.a, c.b2, c.c, c.d) || closerToTickBox(c.a, c.b2, c.c, c.d, lineX, yLo, yHi)) continue;
           tsPick = c; break;
         }
-        if (!tsPick) {
-          const okPark = (c: TextBox) => c.a >= 2 && c.b2 <= w - 2 && c.c >= 2 && c.d <= f.h - 1
-            && !hitsOtherVert(c.a, c.b2, c.c, c.d, [lineX]) && !hitsCurve(c.a, c.b2, c.c, c.d) && !hitsPlaced(c.a, c.b2, c.c, c.d);
-          tsPick = cands.find(okPark) ?? cands.find((c) => !hitsOtherVert(c.a, c.b2, c.c, c.d, [lineX]) && !hitsCurve(c.a, c.b2, c.c, c.d)) ?? null;
-        }
+        // do not park on the tick row just to keep a label; the top pad is the last resort (BUG-76 / 77)
       }
       if (!tsPick) {
         // guaranteed last-resort slot in the top pad, with a leader to the Ts mark (BUG-76)
@@ -526,6 +532,7 @@ export function drawStepResponse(g: CanvasRenderingContext2D, w: number, h: numb
   const ghostBlocked = (a: number, b2: number, c: number, d: number) => {
     if (osPlaced && b2 > osPlaced.x0 - 4 && a < osPlaced.x1 + 4 && d > osPlaced.y - 10 && c < osPlaced.y + 10) return true;
     if (tsPlaced && b2 > tsPlaced.x0 - GHOST_GAP && a < tsPlaced.x1 + GHOST_GAP && d > tsPlaced.y0 - GHOST_GAP && c < tsPlaced.y1 + GHOST_GAP) return true;
+    if (hitsTr(a, b2, c, d)) return true;
     if (hitsCurve(a, b2, c, d)) return true;
     if (hitsOtherVert(a, b2, c, d)) return true;
     if (show.overshoot && Number.isFinite(m.peak)) {
@@ -692,24 +699,27 @@ export function drawSPlane(g: CanvasRenderingContext2D, w: number, h: number, s:
     const underPole = (px: number) => realPx.some((mx) => Math.abs(mx - px) < 16);
     const xLo = f.ix(f.box.l), xHi = f.ix(f.box.r), yLo = f.iy(f.box.b), yHi = f.iy(f.box.t);
     const xDrawn: number[] = [];
+    let cornerTaken = false;
     const drawX = (x: number, force = false) => {
       const lab = tickLabel(x, st), px = f.X(x);
       if (!lab) return false;
       const tw = g.measureText(lab).width, y = f.box.b - 7;
-      const fits = px + tw / 2 <= f.box.r - 1 && px - tw / 2 >= f.box.l + 8;
+      const fits = px + tw / 2 <= f.box.r - 1 && px - tw / 2 >= f.box.l + 1;
+      const inCorner = px - tw / 2 < f.box.l + 8;
       if (!fits || !tickOnCanvas(g, lab, px, y, TICK_Z, 'center')) return false;
+      if (inCorner && cornerTaken) return false;
       if (lab === lastX || Math.abs(px - lastPx) < 26 || hitsMark(px, y, tw) || underPole(px)) return false;
       let ok = false;
       withAnchor({ kind: 'line', x: px, y: f.box.t, x2: px, y2: f.box.b }, () => {
         ok = text(g, lab, px, y, col.muted(), 'center', TICK_Z);
       });
       if (!ok) return false;
+      if (inCorner) cornerTaken = true;
       lastX = lab; lastPx = px; xDrawn.push(x); return true;
     };
     forTicks(Math.ceil(xLo / st) * st, xHi, st, (x) => drawX(x));
-    const xInset = (f.box.r - f.box.l) > 8 && f.sx ? 6 / f.sx : 0;
-    for (const x of min2Candidates(xLo + xInset, xHi - xInset, xDrawn)) {
-      if (xDrawn.length >= 2) break;
+    for (const x of min2Candidates(xLo, xHi, xDrawn)) {
+      if (xDrawn.length >= 2 && Math.abs(x) > 1e-9) continue;
       drawX(x, true);
     }
     let lastY = '', lastPy = Infinity;
@@ -718,21 +728,22 @@ export function drawSPlane(g: CanvasRenderingContext2D, w: number, h: number, s:
       const lab = tickLabel(y, st), py = f.Y(y);
       if (!lab || lab === '0') return;
       const tw = g.measureText(lab).width, x = f.box.l + 3;
-      const fits = py > f.box.t + 4 && py < f.box.b - 10;
-      if (!fits) return;
+      const inCorner = py + TICK_Z * 0.55 > f.box.b - 10;
+      const fits = py > f.box.t + 4 && py < f.box.b - 4;
+      if (!fits || (inCorner && cornerTaken)) return;
       if (lab === lastY || Math.abs(py - lastPy) < 16 || hitsMark(x, py, tw)) return;
       let ok = false;
       withAnchor({ kind: 'line', x: f.box.l, y: py, x2: f.box.r, y2: py }, () => {
         ok = text(g, lab, x, py, col.muted(), 'left', TICK_Z);
       });
       if (!ok) return false;
+      if (inCorner) cornerTaken = true;
       lastY = lab; lastPy = py; yDrawn.push(y); return true;
     };
     forTicks(Math.ceil(yLo / st) * st, yHi, st, (y) => drawY(y));
-    const yInset = (f.box.b - f.box.t) > 8 && f.sy ? 6 / f.sy : 0;
-    for (const y of min2Candidates(yLo + yInset, yHi - yInset, yDrawn)) {
-      if (yDrawn.length >= 2) break;
+    for (const y of min2Candidates(yLo, yHi, yDrawn)) {
       if (Math.abs(y) < 1e-9) continue; // 0 is the axis itself on the s-plane
+      if (yDrawn.length >= 2) continue;
       drawY(y, true);
     }
   });

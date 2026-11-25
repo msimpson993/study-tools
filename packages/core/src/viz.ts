@@ -723,22 +723,32 @@ export function graphAxes(g: CanvasRenderingContext2D, f: Frame, xr: V2, yr: V2,
     const tickRoom = Math.max(6, tickX - titleRight);
     let lastX = '', lastPx = -Infinity;
     const simAxes = simProjectStyle();
+    let cornerTaken = false;
     const xDrawn: number[] = [];
     const drawXTick = (x: number, force = false) => {
-      const lab = xfmt ? xfmt(x) : (force ? tickLabelFine(x, sx) : tickLabel(x, sx)), px = f.X(x);
+      const lab = xfmt ? xfmt(x) : (force ? tickLabelFine(x, sx) : tickLabel(x, sx));
       if (!lab || lab === lastX) return false;
       g.font = '10px system-ui,sans-serif';
       const tw = g.measureText(lab).width;
-      // corner exclusion: an x-tick may not enter the y-tick column (BUG-74)
-      if (simAxes && px - tw / 2 < f.box.l + 4) return false;
+      let px = f.X(x);
+      const inCorner = simAxes && px - tw / 2 < f.box.l + 4;
+      // at most one tick in the corner where the axes meet (BUG-74); 0 may sit there if it is first
+      if (inCorner && cornerTaken) return false;
       const onMarkX = (avoid ?? []).some((mk) => Math.hypot((mk.x ?? px) - px, (mk.y ?? (f.box.b + 9)) - (f.box.b + 9)) < (mk.r ?? 10));
       if (Math.abs(px - lastPx) < 26 || onMarkX) return false;
-      if (simAxes && !tickOnCanvas(g, lab, px, f.box.b + 9, 10, 'center')) return false;
+      if (simAxes && !tickOnCanvas(g, lab, px, f.box.b + 9, 10, 'center')) {
+        const W = g.canvas.width || 0;
+        const nudged = Math.min(W - 1 - tw / 2, Math.max(tw / 2 + 1, px));
+        if (Math.abs(nudged - px) < 0.5 || Math.abs(nudged - lastPx) < 26) return false;
+        if (!tickOnCanvas(g, lab, nudged, f.box.b + 9, 10, 'center')) return false;
+        px = nudged;
+      }
       let ok = false;
-      withAnchor({ kind: 'line', x: px, y: f.box.t, x2: px, y2: f.box.b }, () => {
+      withAnchor({ kind: 'line', x: f.X(x), y: f.box.t, x2: f.X(x), y2: f.box.b }, () => {
         ok = text(g, lab, px, f.box.b + 9, col.muted(), 'center', 10);
       });
       if (!ok) return false;
+      if (inCorner) cornerTaken = true;
       lastX = lab; lastPx = px; xDrawn.push(x); return true;
     };
     forTicks(Math.ceil(xr[0] / sx) * sx, xr[1], sx, (x) => {
@@ -757,8 +767,8 @@ export function graphAxes(g: CanvasRenderingContext2D, f: Frame, xr: V2, yr: V2,
     });
     if (simAxes) {
       const xInset = (f.box.r - f.box.l) > 8 && f.sx ? 6 / f.sx : 0;
-      for (const x of min2Candidates(xr[0] + xInset, xr[1] - xInset, xDrawn)) {
-        if (xDrawn.length >= 2) break;
+      for (const x of min2Candidates(xr[0], xr[1], xDrawn)) {
+        if (xDrawn.length >= 2 && Math.abs(x) > 1e-9) continue;
         drawXTick(x, true);
       }
     }
@@ -782,8 +792,8 @@ export function graphAxes(g: CanvasRenderingContext2D, f: Frame, xr: V2, yr: V2,
         return mk.x === undefined || mk.x < f.box.l + r + 20;
       });
       if (t.lab === lastY) return false;
-      // corner exclusion: a y-tick may not enter the x-tick row (BUG-74)
-      if (simAxes && t.py + ySize * 0.55 > f.box.b - 4) return false;
+      const inCornerY = simAxes && t.py + ySize * 0.55 > f.box.b - 4;
+      if (inCornerY && cornerTaken) return false;
       if (Math.abs(t.py - lastPy) < 14 || onMark) return false;
       const inside = f.box.l + 3;
       const outerOk = tickOnCanvas(g, t.lab, tickX, t.py, ySize, 'right');
@@ -801,10 +811,15 @@ export function graphAxes(g: CanvasRenderingContext2D, f: Frame, xr: V2, yr: V2,
       };
       // prefer the left pad; if that is off-canvas or sits on an axis name, sit just inside the plot.
       // never force a pad tick onto a title.
-      if (outerOk && tryPaint(tickX, 'right', false)) { lastY = t.lab; lastPy = t.py; yDrawn.push(t.y); return true; }
+      if (outerOk && tryPaint(tickX, 'right', false)) {
+        if (inCornerY) cornerTaken = true;
+        lastY = t.lab; lastPy = t.py; yDrawn.push(t.y); return true;
+      }
       // sit inside the plot only when well above the x-tick row, so the number stays a y-tick (BUG-74)
       const clearOfXRow = t.py < f.box.b - 12;
-      if (clearOfXRow && innerOk && tryPaint(inside, 'left', false)) { lastY = t.lab; lastPy = t.py; yDrawn.push(t.y); return true; }
+      if (clearOfXRow && innerOk && tryPaint(inside, 'left', false)) {
+        lastY = t.lab; lastPy = t.py; yDrawn.push(t.y); return true;
+      }
       return false;
     };
     if (!simAxes) {
@@ -824,8 +839,8 @@ export function graphAxes(g: CanvasRenderingContext2D, f: Frame, xr: V2, yr: V2,
     } else {
       for (const t of yLabs) drawYTick(t);
       const yInsetG = (f.box.b - f.box.t) > 8 && f.sy ? 6 / f.sy : 0;
-      for (const y of min2Candidates(yr[0] + yInsetG, yr[1] - yInsetG, yDrawn)) {
-        if (yDrawn.length >= 2) break;
+      for (const y of min2Candidates(yr[0], yr[1], yDrawn)) {
+        if (yDrawn.length >= 2 && Math.abs(y) > 1e-9) continue;
         const lab = yfmt ? yfmt(y) : tickLabelFine(y, sy);
         if (lab) drawYTick({ lab, y, py: f.Y(y) }, true);
       }
