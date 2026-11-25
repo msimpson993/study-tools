@@ -101,26 +101,24 @@ export function drawStepResponse(g: CanvasRenderingContext2D, w: number, h: numb
   const tight = h < 260, needHead = !!(s.ghost?.label || show.overshoot);
   // slim pads: anchored OS / Tr stay by their markers, not in a reserved two-row band (BUG-51)
   const topPad = needHead ? pad(s.pads?.t, 24, 24) : pad(s.pads?.t, 14, 8);
-  const f = rangeFrame(w, h, [0, tEnd], yr, pad(s.pads?.l, 72, 54), pad(s.pads?.r, 14, 10), topPad, pad(s.pads?.b, 38, 20));
+  const showBand = !!show.band;
+  const f = rangeFrame(w, h, [0, tEnd], yr, pad(s.pads?.l, 72, 54), pad(s.pads?.r, showBand ? 32 : 14, showBand ? 24 : 10), topPad, pad(s.pads?.b, 38, 20));
   const m = stepMetrics(t, y, { ref, final: s.final, band });
   const avoid = (show.overshoot && Number.isFinite(m.peak) && m.overshootPct > 0.05)
     ? [{ x: f.X(m.peakTime), y: f.Y(m.peak), r: 12 }] : [];
   const ySpan = yr[1] - yr[0], plotH = f.box.b - f.box.t;
   const yWant = (yr[0] <= 0.05 && yr[1] >= 0.95 && ySpan <= 2.6) ? (ySpan <= 1.4 ? 0.5 : 1) : 0;
   const yStep = yWant && plotH / ySpan * yWant >= 12 ? yWant : 0;
-  // ±2% lives in the bottom-right pad. When the pad is deep enough it sits below the
-  // x-tick row; on a tight pad it shares the tick baseline and the last tick gives way.
+  // ±2% sits in the right pad, level with the settling band.
   graphAxes(g, f, [0, tEnd], yr, s.xLabel ?? 'time (s)', s.yLabel ?? 'output', 0, yStep, undefined, undefined, avoid);
   const yf = m.yFinal;
   if (show.band && Number.isFinite(yf)) {
     g.save(); clipBox(g, f); g.fillStyle = col.ok(); g.globalAlpha = 0.14; g.fillRect(f.box.l, f.Y(yf * (1 + band)), f.box.r - f.box.l, f.Y(yf * (1 - band)) - f.Y(yf * (1 + band))); g.restore();
     const bandLab = `±${fmtN(band * 100, 0)}%`;
-    // sit in the plot at the band, so the label never fights x-ticks or “time (s)”
+    // in the right pad, level with the band, so it misses x-ticks, “time (s)”, Ts, and the curve
     const yTop = f.Y(yf * (1 + band)), yBot = f.Y(yf * (1 - band));
-    let bandY = yTop - 7;
-    if (bandY < f.box.t + 9 || bandY > f.box.b - 12) bandY = (yTop + yBot) / 2;
-    bandY = Math.max(f.box.t + 9, Math.min(bandY, f.box.b - 12));
-    withLabelRole('axis', () => { text(g, bandLab, f.box.r - 4, bandY, col.ok(), 'right', 10); });
+    const bandY = Math.max(f.box.t + 8, Math.min((yTop + yBot) / 2, f.box.b - 8));
+    withLabelRole('axis', () => { text(g, bandLab, f.w - 3, bandY, col.ok(), 'right', 10); });
   }
   tline(g, f, [0, ref], [tEnd, ref], col.muted(), 1, [5, 4]);
   if (s.ghost) curve(g, f, Array.from(s.ghost.t), Array.from(s.ghost.y), s.ghost.color ?? col.muted(), 2, [6, 4]);
