@@ -72,8 +72,21 @@ export function normalizeSys(sys: string): LabSys {
 
 export type LabGeomBox = { id: string; x: number; y: number; w: number; h: number };
 export type LabGeomSum = { id: string; x: number; y: number; r: number };
-export type LabGeomSeg = { x1: number; y1: number; x2: number; y2: number };
-export type LabGeom = { boxes: LabGeomBox[]; sums: LabGeomSum[]; segs: LabGeomSeg[]; stacked: boolean };
+export type LabGeomSeg = { x1: number; y1: number; x2: number; y2: number; signal: string; hi: string[]; arrowEnd?: boolean };
+export type LabGeomTip = { x: number; y: number; signal: string };
+export type LabGeomSign = { x: number; y: number; text: string };
+export type LabGeomTerm = { x: number; y: number; label: string };
+export type LabGeom = {
+  boxes: LabGeomBox[];
+  sums: LabGeomSum[];
+  segs: LabGeomSeg[];
+  tips: LabGeomTip[];
+  signs: LabGeomSign[];
+  terms: LabGeomTerm[];
+  marks: LabGeomTerm[];
+  stacked: boolean;
+};
+export type WireMeta = { signal: string; hi?: string[] };
 
 function measureAt(g: CanvasRenderingContext2D | null | undefined, s: string, size = 9): number {
   if (g) {
@@ -333,16 +346,25 @@ export function drawLabDiagram(g: CanvasRenderingContext2D, w: number, h: number
   const H = (hh: number) => (hh / 100) * (dh - padT - padB);
   const r = Math.max(8, Math.min(12, W(4)));
 
-  const geom: LabGeom = { boxes: [], sums: [], segs: [], stacked };
+  const geom: LabGeom = { boxes: [], sums: [], segs: [], tips: [], signs: [], terms: [], marks: [], stacked };
   let boxSeq = 0, sumSeq = 0;
-  const arr = (x1: number, y1: number, x2: number, y2: number, color: string) => {
-    geom.segs.push({ x1, y1, x2, y2 });
+  const sigOf = (m?: WireMeta) => m?.signal ?? 'untagged';
+  const hiOf = (m?: WireMeta) => m?.hi ?? [];
+  const recSeg = (x1: number, y1: number, x2: number, y2: number, m?: WireMeta, arrowEnd = false) => {
+    geom.segs.push({ x1, y1, x2, y2, signal: sigOf(m), hi: hiOf(m), arrowEnd });
+    if (arrowEnd) geom.tips.push({ x: x2, y: y2, signal: sigOf(m) });
+  };
+  const arr = (x1: number, y1: number, x2: number, y2: number, color: string, m?: WireMeta) => {
+    recSeg(x1, y1, x2, y2, m, true);
     arrow(g, x1, y1, x2, y2, color);
   };
-  const into = (x1: number, y1: number, x2: number, y2: number, sign: '+' | '−', color: string, rr: number) => {
+  const into = (x1: number, y1: number, x2: number, y2: number, sign: '+' | '−', color: string, rr: number, m?: WireMeta) => {
     const ang = Math.atan2(y2 - y1, x2 - x1);
     const ex = x2 - Math.cos(ang) * (rr + 1), ey = y2 - Math.sin(ang) * (rr + 1);
-    geom.segs.push({ x1, y1, x2: ex, y2: ey });
+    recSeg(x1, y1, ex, ey, m, true);
+    const mx = x2 - Math.cos(ang) * (rr + 10), my = y2 - Math.sin(ang) * (rr + 10);
+    const px = -Math.sin(ang) * 9, py = Math.cos(ang) * 9;
+    geom.signs.push({ x: mx + px, y: my + py, text: sign });
     intoSum(g, x1, y1, x2, y2, sign, color, rr);
   };
   const recSum = (x: number, y: number, rr: number, color: string, width = 1.5, id?: string) => {
@@ -351,30 +373,48 @@ export function drawLabDiagram(g: CanvasRenderingContext2D, w: number, h: number
     sum(g, x, y, rr, color, width);
     return sid;
   };
-  const poly = (pts: { x: number; y: number }[], color: string, width = 1.5, dash: number[] = []) => {
+  const poly = (pts: { x: number; y: number }[], color: string, width = 1.5, dash: number[] = [], m?: WireMeta) => {
     if (pts.length < 2) return;
     g.strokeStyle = color; g.lineWidth = width; g.setLineDash(dash);
     g.beginPath(); g.moveTo(pts[0].x, pts[0].y);
     for (let i = 1; i < pts.length; i++) g.lineTo(pts[i].x, pts[i].y);
     g.stroke();
     g.setLineDash([]);
-    for (let i = 0; i < pts.length - 1; i++) geom.segs.push({ x1: pts[i].x, y1: pts[i].y, x2: pts[i + 1].x, y2: pts[i + 1].y });
+    for (let i = 0; i < pts.length - 1; i++) recSeg(pts[i].x, pts[i].y, pts[i + 1].x, pts[i + 1].y, m, false);
   };
-  /** Plant box to a lower summer: out the bottom-left, down a corridor, in from the right. Never a diagonal across a corner. */
-  const dropBoxToSum = (box: { l: number; b: number }, sx: number, sy: number, sign: '+' | '−', color: string, laneX: number) => {
-    poly([{ x: box.l, y: box.b }, { x: laneX, y: box.b }, { x: laneX, y: sy }], color);
-    into(laneX, sy, sx, sy, sign, color, r);
+  const term = (label: string, x: number, y: number, color: string, align: CanvasTextAlign, size: number) => {
+    text(g, label, x, y, color, align, size);
+    geom.terms.push({ x, y, label });
+  };
+  const mark = (label: string, x: number, y: number, color: string, align: CanvasTextAlign, size: number) => {
+    text(g, label, x, y, color, align, size);
+    geom.marks.push({ x, y, label });
+  };
+  const port = (label: string, x: number, y: number) => { geom.terms.push({ x, y, label }); };
+  /** Upper plant box to a lower summer: corridor, then in from above — never on the summer's output side. */
+  const plantFromAbove = (box: { l: number; b: number }, sx: number, sy: number, sign: '+' | '−', color: string, m: WireMeta) => {
+    const above = sy - r - 14;
+    const laneX = Math.max(sx + r + 6, Math.min(box.l - 6, (box.l + sx + r) / 2));
+    poly([{ x: box.l, y: box.b }, { x: laneX, y: box.b }, { x: laneX, y: above }, { x: sx, y: above }], color, 1.5, [], m);
+    into(sx, above, sx, sy, sign, color, r, m);
   };
   /** T_d has its own short arrow; the sign sits near the arrowhead, clear of the label. */
-  const tdArrow = (sx: number, sy: number, sign: '+' | '−', color: string, size: number, minX: number) => {
+  const tdArrow = (sx: number, sy: number, sign: '+' | '−', color: string, size: number, minX: number, m: WireMeta) => {
     const ax1 = Math.max(minX, sx - r - 22);
-    text(g, 'T_d', ax1 + 2, sy - 13, col.text(), 'left', size);
-    into(ax1 + 8, sy, sx, sy, sign, color, r);
+    term('T_d', ax1 + 2, sy - 13, col.text(), 'left', size);
+    port('T_d', ax1 + 8, sy);
+    into(ax1 + 8, sy, sx, sy, sign, color, r, m);
   };
-  /** Feedback up a right-hand lane, over the top, down into the summer from above. */
-  const rightReturn = (outX: number, outY: number, topY: number, botY: number, sx: number, sy: number, color: string) => {
-    poly([{ x: outX, y: outY }, { x: outX, y: botY }, { x: outX, y: topY }, { x: sx, y: topY }], color);
-    into(sx, topY, sx, sy, '−', color, r);
+  /** Right-hand return over the top, starting at the output — no trip below the output (no dead-end stub). */
+  const overTopReturn = (outX: number, outY: number, topY: number, sx: number, sy: number, color: string, m: WireMeta) => {
+    poly([{ x: outX, y: outY }, { x: outX, y: topY }, { x: sx, y: topY }], color, 1.5, [], m);
+    into(sx, topY, sx, sy, '−', color, r, m);
+  };
+  /** Return along the bottom and up a left-hand lane, into the summer from below (Engine). */
+  const bottomLeftReturn = (outX: number, outY: number, botY: number, leftX: number, sx: number, sy: number, color: string, m: WireMeta) => {
+    const below = sy + r + 14;
+    poly([{ x: outX, y: outY }, { x: outX, y: botY }, { x: leftX, y: botY }, { x: leftX, y: below }, { x: sx, y: below }], color, 1.5, [], m);
+    into(sx, below, sx, sy, '−', color, r, m);
   };
 
   const anchors: { id: string; x: number; y: number }[] = [];
@@ -437,7 +477,7 @@ export function drawLabDiagram(g: CanvasRenderingContext2D, w: number, h: number
       x = Math.max(tw + 2, Math.min(s1.x - r - 4, pi.l - 4));
       align = 'right';
     }
-    text(g, lab, x, y, col.text(), align, size);
+    term(lab, x, y, col.text(), align, size);
   };
 
   const CAPTION: Record<string, string> = {
@@ -455,55 +495,64 @@ export function drawLabDiagram(g: CanvasRenderingContext2D, w: number, h: number
       const boxH = 12;
       const plantX = 28, plantW = 48;
       const s1 = { x: X(16), y: Y(20) };
-      text(g, 'Va', X(2) + 4, s1.y - 11, col.text(), 'center', typeSize);
+      term('Va', X(2) + 4, s1.y - 11, col.text(), 'center', typeSize);
       const coil = boxAt('sys2', plantX, 20 - boxH / 2, plantW, boxH, L('Km/Ra', '10 N·m/V', 'volts to torque', 'in: voltage Va. out: torque. what it does: turns volts into torque'), ['sys4']);
       const s2 = { x: X(16), y: Y(48) };
       const load = boxAt('sys1', plantX, 48 - boxH / 2, plantW, boxH, L('1/(Js+b)', '1/(2s + 0.5)', 'torque to speed', 'in: net torque. out: shaft speed ω. what it does: inertia and friction turn torque into speed'));
       const outX = Math.min(dw - 14, Math.max(load.r + 14, dw - 16));
       const outY = load.cy;
-      text(g, 'ω', outX + 3, outY + 4, col.text(), 'left', Math.max(12, typeSize));
+      term('ω', outX + 3, outY + 4, col.text(), 'left', Math.max(12, typeSize));
       const c1 = colorOf('sys2', ['sys4']), c2 = colorOf('sys1'), cf = colorOf('feedback', ['loop', 'sign', 'step']);
+      const cKb = colorOf('sys2');
       recSum(s1.x, s1.y, r, c1.color, c1.width);
       recSum(s2.x, s2.y, r, c2.color, c2.width);
-      const lanePlant = Math.max(s1.x + r + 8, Math.min(coil.l - 8, (s1.x + r + coil.l) / 2));
-      into(X(2), s1.y, s1.x, s1.y, '+', c1.color, r);
-      arr(s1.x + r, s1.y, coil.l, coil.cy, c1.color);
-      dropBoxToSum(coil, s2.x, s2.y, '+', c2.color, lanePlant);
-      arr(s2.x + r, s2.y, load.l, load.cy, c2.color);
-      arr(load.r, load.cy, outX, outY, cf.color);
+      const leftLane = Math.max(6, s1.x - r - 12);
+      const hiOm = { signal: 'omega', hi: ['feedback', 'loop', 'sign', 'step'] };
+      const hiKb = { signal: 'kb-out', hi: ['sys2', 'feedback', 'loop', 'sign', 'step'] };
+      port('Va', X(2), s1.y);
+      into(X(2), s1.y, s1.x, s1.y, '+', c1.color, r, { signal: 'va', hi: ['sys2', 'sys4'] });
+      arr(s1.x + r, s1.y, coil.l, coil.cy, c1.color, { signal: 'coil-in', hi: ['sys2', 'sys4'] });
+      plantFromAbove(coil, s2.x, s2.y, '+', c2.color, { signal: 'plant', hi: ['sys1'] });
+      arr(s2.x + r, s2.y, load.l, load.cy, c2.color, { signal: 'load-in', hi: ['sys1'] });
+      arr(load.r, load.cy, outX, outY, cf.color, hiOm);
       const kb = boxAt('sys2', plantX, 76, plantW, boxH, L('Kb', '0.1 V·s', 'back-EMF: speed makes a voltage that fights the current', 'in: shaft speed ω. out: back-EMF voltage. what it does: the spinning motor makes a voltage that fights its own current'));
-      tdArrow(s2.x, s2.y, '−', c2.color, typeSize, 6);
-      const topY = Math.min(s1.y - r - 14, coil.t - 10, padT + 4);
-      const botY = Math.min(h - (cap ? 28 : 10), Math.max(kb.b + 10, Y(96)));
-      // through Kb, then a right-hand return over the top into s1 — never up the summer column
-      poly([{ x: outX, y: outY }, { x: outX, y: kb.cy }, { x: kb.r, y: kb.cy }], cf.color, cf.width);
-      poly([{ x: kb.cx, y: kb.b }, { x: kb.cx, y: botY }, { x: outX, y: botY }, { x: outX, y: topY }, { x: s1.x, y: topY }], cf.color, cf.width);
-      into(s1.x, topY, s1.x, s1.y, '−', cf.color, r);
+      tdArrow(s2.x, s2.y, '−', c2.color, typeSize, leftLane + 8, { signal: 'td', hi: ['sys1'] });
+      // ω down the right into Kb from the right — not shared with Kb's output
+      poly([{ x: outX, y: outY }, { x: outX, y: kb.cy }], cf.color, cf.width, [], hiOm);
+      arr(outX, kb.cy, kb.r, kb.cy, cf.color, hiOm);
+      // Kb returns on its own left-hand lane, into s1 from below with −
+      const below = s1.y + r + 14;
+      poly([{ x: kb.l, y: kb.cy }, { x: leftLane, y: kb.cy }, { x: leftLane, y: below }, { x: s1.x, y: below }], cKb.color, cKb.width, [], hiKb);
+      into(s1.x, below, s1.x, s1.y, '−', cKb.color, r, hiKb);
     } else {
     // Va → ⊕ → [Km/Ra] → ⊕ → [1/(Js+b)] → ω,  Kb on the feedback, T_d into the second sum
-    text(g, 'Va', X(0) + 8, Y(rail) - 11, col.text(), 'center', 11);
+    term('Va', X(0) + 8, Y(rail) - 11, col.text(), 'center', 11);
     const s1 = { x: X(10), y: Y(rail) };
     const coil = boxAt('sys2', 16, rail - 10, 20, 20, L('Km/Ra', '10 N·m/V', 'volts to torque', 'in: voltage Va. out: torque. what it does: turns volts into torque'), ['sys4']);
     const s2 = { x: X(48), y: Y(rail) };
     const load = boxAt('sys1', 54, rail - 10, 24, 20, L('1/(Js+b)', '1/(2s + 0.5)', 'torque to speed', 'in: net torque. out: shaft speed ω. what it does: inertia and friction turn torque into speed'));
     const outX = X(92), outY = Y(rail);
-    text(g, 'ω', outX + 8, outY + 4, col.text(), 'left', 12);
+    term('ω', outX + 8, outY + 4, col.text(), 'left', 12);
     const c1 = colorOf('sys2', ['sys4']), c2 = colorOf('sys1'), cf = colorOf('feedback', ['loop', 'sign', 'step']);
+    const hiOm = { signal: 'omega', hi: ['feedback', 'loop', 'sign', 'step'] };
+    const hiKb = { signal: 'kb-out', hi: ['sys2', 'feedback', 'loop', 'sign', 'step'] };
     recSum( s1.x, s1.y, r, c1.color, c1.width);
     recSum( s2.x, s2.y, r, c2.color, c2.width);
-    into( X(4), Y(rail), s1.x, s1.y, '+', c1.color, r);
-    arr( s1.x + r, s1.y, coil.l, coil.cy, c1.color);
-    into( coil.r, coil.cy, s2.x, s2.y, '+', c2.color, r);
-    arr( s2.x + r, s2.y, load.l, load.cy, c2.color);
-    arr( load.r, load.cy, outX, outY, cf.color);
+    port('Va', X(4), Y(rail));
+    into( X(4), Y(rail), s1.x, s1.y, '+', c1.color, r, { signal: 'va', hi: ['sys2', 'sys4'] });
+    arr( s1.x + r, s1.y, coil.l, coil.cy, c1.color, { signal: 'coil-in', hi: ['sys2', 'sys4'] });
+    into( coil.r, coil.cy, s2.x, s2.y, '+', c2.color, r, { signal: 'plant', hi: ['sys1'] });
+    arr( s2.x + r, s2.y, load.l, load.cy, c2.color, { signal: 'load-in', hi: ['sys1'] });
+    arr( load.r, load.cy, outX, outY, cf.color, hiOm);
     // T_d from above into sum2, minus
-    text(g, 'T_d', s2.x, Y(8), col.text(), 'center', 11);
-    into( s2.x, Y(14), s2.x, s2.y, '−', c2.color, r);
-    // feedback under, through Kb, into sum1 minus
+    term('T_d', s2.x, Y(8), col.text(), 'center', 11);
+    port('T_d', s2.x, Y(14));
+    into( s2.x, Y(14), s2.x, s2.y, '−', c2.color, r, { signal: 'td', hi: ['sys1'] });
+    // feedback under, through Kb, into sum1 minus — ω into Kb, Kb output is its own signal
     const kb = boxAt('sys2', 28, 74, 36, 20, L('Kb', '0.1 V·s', 'back-EMF: speed makes a voltage that fights the current', 'in: shaft speed ω. out: back-EMF voltage. what it does: the spinning motor makes a voltage that fights its own current'));
-    poly([{ x: outX, y: outY }, { x: outX, y: kb.cy }, { x: kb.r, y: kb.cy }], cf.color, cf.width);
-    poly([{ x: kb.l, y: kb.cy }, { x: s1.x, y: kb.cy }], cf.color, cf.width);
-    into(s1.x, kb.cy, s1.x, s1.y, '−', cf.color, r);
+    poly([{ x: outX, y: outY }, { x: outX, y: kb.cy }, { x: kb.r, y: kb.cy }], cf.color, cf.width, [], hiOm);
+    poly([{ x: kb.l, y: kb.cy }, { x: s1.x, y: kb.cy }], cf.color, cf.width, [], hiKb);
+    into(s1.x, kb.cy, s1.x, s1.y, '−', cf.color, r, hiKb);
     }
   } else if (kind === 'motor-closed') {
     if (stacked) {
@@ -511,7 +560,7 @@ export function drawLabDiagram(g: CanvasRenderingContext2D, w: number, h: number
       const boxH = 10;
       const plantX = 30, plantW = 46;
       const sR = { x: X(16), y: Y(14) };
-      text(g, '0', X(2) + 4, sR.y - 11, col.text(), 'center', typeSize);
+      term('0', X(2) + 4, sR.y - 11, col.text(), 'center', typeSize);
       const ka = boxAt('sys2', plantX, 14 - boxH / 2, plantW, boxH, L('Ka', '54', 'multiplies the speed shortfall', 'in: speed error (volts). out: amplifier voltage. what it does: multiplies the speed shortfall'));
       const sE = { x: X(16), y: Y(34) };
       const coil = boxAt('sys4', plantX, 34 - boxH / 2, plantW, boxH, L('Km/Ra', '10 N·m/V', 'volts to torque', 'in: coil voltage. out: torque. what it does: turns volts into torque'), ['sysb']);
@@ -519,41 +568,48 @@ export function drawLabDiagram(g: CanvasRenderingContext2D, w: number, h: number
       const load = boxAt('sys1', plantX, 54 - boxH / 2, plantW, boxH, L('1/(Js+b)', '1/(2s + 0.5)', 'torque to speed', 'in: net torque. out: shaft speed ω. what it does: inertia and friction turn torque into speed'));
       const outX = Math.min(dw - 14, Math.max(load.r + 14, dw - 16));
       const outY = load.cy;
-      text(g, 'ω', outX + 3, outY + 4, col.text(), 'left', Math.max(12, typeSize));
+      term('ω', outX + 3, outY + 4, col.text(), 'left', Math.max(12, typeSize));
       const cKa = colorOf('sys2'), cCoil = colorOf('sys4', ['sysb']), cLoad = colorOf('sys1');
-      const cFb = colorOf('feedback', ['loop', 'sign', 'step', 'sysa']);
+      const cFb = colorOf('feedback', ['loop', 'sign', 'step']);
       const cKt = colorOf('sys2'), cKb = colorOf('sys3', ['sysa']);
       recSum(sR.x, sR.y, r, cKa.color, cKa.width);
       recSum(sE.x, sE.y, r, cCoil.color, cCoil.width);
       recSum(sT.x, sT.y, r, cLoad.color, cLoad.width);
+      const leftLane = Math.max(6, sR.x - r - 12);
       const plantL = Math.min(ka.l, coil.l, load.l);
-      const laneFb = sE.x + r + 6;
-      const lanePlant = Math.max(laneFb + 8, plantL - 8);
-      into(X(2), sR.y, sR.x, sR.y, '+', cKa.color, r);
-      arr(sR.x + r, sR.y, ka.l, ka.cy, cKa.color);
-      dropBoxToSum(ka, sE.x, sE.y, '+', cCoil.color, lanePlant);
-      arr(sE.x + r, sE.y, coil.l, coil.cy, cCoil.color);
-      dropBoxToSum(coil, sT.x, sT.y, '+', cLoad.color, lanePlant);
-      arr(sT.x + r, sT.y, load.l, load.cy, cLoad.color);
-      arr(load.r, load.cy, outX, outY, cFb.color);
-      const kt = boxAt('sys2', 8, 78, 26, boxH, L('Kt', '1 V·s', 'speed to volts', 'in: shaft speed ω. out: tachometer volts. what it does: a small generator on the shaft turns speed into volts'), undefined, { minX: 2, maxX: laneFb - 6 });
-      const kb = boxAt('sys3', 46, 78, 34, boxH, L('Kb', '0.1 V·s', 'back-EMF: speed makes a voltage that fights the current', 'in: shaft speed ω. out: back-EMF voltage. what it does: the spinning motor makes a voltage that fights its own current'), ['sysa'], { minX: laneFb + 6, maxX: dw - 8 });
-      const leftLane = Math.max(6, Math.min(sR.x - r - 12, kt.l - 6));
-      tdArrow(sT.x, sT.y, '−', cLoad.color, typeSize, leftLane + 8);
-      const botY = Math.min(h - (cap ? 28 : 10), Math.max(kb.b + 10, kt.b + 10, Y(96)));
-      // ω down the right; Kt and Kb take separate returns so Kb visibly reaches the Km/Ra summer
-      poly([{ x: outX, y: outY }, { x: outX, y: botY }], cFb.color, cFb.width);
-      poly([{ x: outX, y: kb.cy }, { x: kb.r, y: kb.cy }], cFb.color, cFb.width);
-      poly([{ x: outX, y: botY }, { x: kt.cx, y: botY }, { x: kt.cx, y: kt.b }], cKt.color, cKt.width);
-      poly([{ x: kb.cx, y: kb.b }, { x: kb.cx, y: botY }, { x: laneFb, y: botY }, { x: laneFb, y: sE.y + r + 10 }, { x: sE.x, y: sE.y + r + 10 }], cKb.color, cKb.width);
-      into(sE.x, sE.y + r + 10, sE.x, sE.y, '−', cKb.color, r);
-      // leave Kt from above so the left-hand lane never runs through the box
-      poly([{ x: kt.cx, y: kt.t }, { x: kt.cx, y: kt.t - 6 }, { x: leftLane, y: kt.t - 6 }, { x: leftLane, y: sR.y + r + 10 }, { x: sR.x, y: sR.y + r + 10 }], cKt.color, cKt.width);
-      into(sR.x, sR.y + r + 10, sR.x, sR.y, '−', cKt.color, r);
+      const midLane = Math.max(sE.x + r + 8, Math.min(plantL - 8, (sE.x + r + plantL) / 2));
+      const hiOm = { signal: 'omega', hi: ['feedback', 'loop', 'sign', 'step'] };
+      const hiKt = { signal: 'kt-out', hi: ['sys2'] };
+      const hiKb = { signal: 'kb-out', hi: ['sys3', 'sysa'] };
+      port('0', X(2), sR.y);
+      into(X(2), sR.y, sR.x, sR.y, '+', cKa.color, r, { signal: 'ref', hi: ['sys2'] });
+      arr(sR.x + r, sR.y, ka.l, ka.cy, cKa.color, { signal: 'ka-in', hi: ['sys2'] });
+      plantFromAbove(ka, sE.x, sE.y, '+', cCoil.color, { signal: 'ka-out', hi: ['sys4', 'sysb'] });
+      arr(sE.x + r, sE.y, coil.l, coil.cy, cCoil.color, { signal: 'coil-in', hi: ['sys4', 'sysb'] });
+      plantFromAbove(coil, sT.x, sT.y, '+', cLoad.color, { signal: 'coil-out', hi: ['sys1'] });
+      arr(sT.x + r, sT.y, load.l, load.cy, cLoad.color, { signal: 'load-in', hi: ['sys1'] });
+      arr(load.r, load.cy, outX, outY, cFb.color, hiOm);
+      const kt = boxAt('sys2', 8, 78, 24, boxH, L('Kt', '1 V·s', 'speed to volts', 'in: shaft speed ω. out: tachometer volts. what it does: a small generator on the shaft turns speed into volts'), undefined, { minX: leftLane + 8, maxX: X(32) });
+      const kb = boxAt('sys3', 46, 78, 32, boxH, L('Kb', '0.1 V·s', 'back-EMF: speed makes a voltage that fights the current', 'in: shaft speed ω. out: back-EMF voltage. what it does: the spinning motor makes a voltage that fights its own current'), ['sysa'], { minX: X(36), maxX: dw - 8 });
+      tdArrow(sT.x, sT.y, '−', cLoad.color, typeSize, leftLane + 8, { signal: 'td', hi: ['sys1'] });
+      // bottom bus is ω only, tapping up into Kt and Kb from below (same topology as the wide layout)
+      const botY = Math.min(h - (cap ? 28 : 10), Math.max(kb.b, kt.b) + 12);
+      const busLeft = Math.min(kt.cx, kb.cx);
+      poly([{ x: outX, y: outY }, { x: outX, y: botY }, { x: busLeft, y: botY }], cFb.color, cFb.width, [], hiOm);
+      arr(kt.cx, botY, kt.cx, kt.b, cFb.color, hiOm);
+      arr(kb.cx, botY, kb.cx, kb.b, cFb.color, hiOm);
+      // Kt output: own left-hand lane, into sR from below with −
+      const ktBelow = sR.y + r + 14;
+      poly([{ x: kt.cx, y: kt.t }, { x: kt.cx, y: kt.t - 6 }, { x: leftLane, y: kt.t - 6 }, { x: leftLane, y: ktBelow }, { x: sR.x, y: ktBelow }], cKt.color, cKt.width, [], hiKt);
+      into(sR.x, ktBelow, sR.x, sR.y, '−', cKt.color, r, hiKt);
+      // Kb output: own mid corridor, into sE (Km/Ra summer) from below with −
+      const kbBelow = sE.y + r + 14;
+      poly([{ x: kb.cx, y: kb.t }, { x: kb.cx, y: kb.t - 6 }, { x: midLane, y: kb.t - 6 }, { x: midLane, y: kbBelow }, { x: sE.x, y: kbBelow }], cKb.color, cKb.width, [], hiKb);
+      into(sE.x, kbBelow, sE.x, sE.y, '−', cKb.color, r, hiKb);
     } else {
     // 0 → ⊕ → [Ka] → ⊕ → [Km/Ra] → ⊕ → [1/(Js+b)] → ω
     //      −Kt         −Kb            −T_d
-    text(g, '0', X(0) + 8, Y(rail) - 11, col.text(), 'center', 11);
+    term('0', X(0) + 8, Y(rail) - 11, col.text(), 'center', 11);
     const sR = { x: X(8), y: Y(rail) };
     const ka = boxAt('sys2', 14, rail - 10, 12, 20, L('Ka', '54', 'multiplies the speed shortfall', 'in: speed error (volts). out: amplifier voltage. what it does: multiplies the speed shortfall'));
     const sE = { x: X(34), y: Y(rail) };
@@ -561,33 +617,39 @@ export function drawLabDiagram(g: CanvasRenderingContext2D, w: number, h: number
     const sT = { x: X(64), y: Y(rail) };
     const load = boxAt('sys1', 70, rail - 10, 18, 20, L('1/(Js+b)', '1/(2s + 0.5)', 'torque to speed', 'in: net torque. out: shaft speed ω. what it does: inertia and friction turn torque into speed'));
     const outX = X(96), outY = Y(rail);
-    text(g, 'ω', outX + 4, outY + 4, col.text(), 'left', 12);
+    term('ω', outX + 4, outY + 4, col.text(), 'left', 12);
     const cKa = colorOf('sys2'), cCoil = colorOf('sys4', ['sysb']), cLoad = colorOf('sys1');
     const cFb = colorOf('feedback', ['loop', 'sign', 'step', 'sysa']);
+    const hiOm = { signal: 'omega', hi: ['feedback', 'loop', 'sign', 'step'] };
+    const hiKt = { signal: 'kt-out', hi: ['sys2'] };
+    const hiKb = { signal: 'kb-out', hi: ['sys3', 'sysa'] };
     recSum( sR.x, sR.y, r, cKa.color, cKa.width);
     recSum( sE.x, sE.y, r, cCoil.color, cCoil.width);
     recSum( sT.x, sT.y, r, cLoad.color, cLoad.width);
-    into( X(2), Y(rail), sR.x, sR.y, '+', cKa.color, r);
-    arr( sR.x + r, sR.y, ka.l, ka.cy, cKa.color);
-    into( ka.r, ka.cy, sE.x, sE.y, '+', cCoil.color, r);
-    arr( sE.x + r, sE.y, coil.l, coil.cy, cCoil.color);
-    into( coil.r, coil.cy, sT.x, sT.y, '+', cLoad.color, r);
-    arr( sT.x + r, sT.y, load.l, load.cy, cLoad.color);
-    arr( load.r, load.cy, outX, outY, cFb.color);
-    text(g, 'T_d', sT.x, Y(8), col.text(), 'center', 11);
-    into( sT.x, Y(14), sT.x, sT.y, '−', cLoad.color, r);
+    port('0', X(2), Y(rail));
+    into( X(2), Y(rail), sR.x, sR.y, '+', cKa.color, r, { signal: 'ref', hi: ['sys2'] });
+    arr( sR.x + r, sR.y, ka.l, ka.cy, cKa.color, { signal: 'ka-in', hi: ['sys2'] });
+    into( ka.r, ka.cy, sE.x, sE.y, '+', cCoil.color, r, { signal: 'ka-out', hi: ['sys4', 'sysb'] });
+    arr( sE.x + r, sE.y, coil.l, coil.cy, cCoil.color, { signal: 'coil-in', hi: ['sys4', 'sysb'] });
+    into( coil.r, coil.cy, sT.x, sT.y, '+', cLoad.color, r, { signal: 'coil-out', hi: ['sys1'] });
+    arr( sT.x + r, sT.y, load.l, load.cy, cLoad.color, { signal: 'load-in', hi: ['sys1'] });
+    arr( load.r, load.cy, outX, outY, cFb.color, hiOm);
+    term('T_d', sT.x, Y(8), col.text(), 'center', 11);
+    port('T_d', sT.x, Y(14));
+    into( sT.x, Y(14), sT.x, sT.y, '−', cLoad.color, r, { signal: 'td', hi: ['sys1'] });
     // two feedback boxes on the return: Kt under the first sum, Kb under the middle
     const kt = boxAt('sys2', 10, 72, 12, 16, L('Kt', '1 V·s', 'speed to volts', 'in: shaft speed ω. out: tachometer volts. what it does: a small generator on the shaft turns speed into volts'));
     const kb = boxAt('sys3', 36, 72, 12, 16, L('Kb', '0.1 V·s', 'back-EMF: speed makes a voltage that fights the current', 'in: shaft speed ω. out: back-EMF voltage. what it does: the spinning motor makes a voltage that fights its own current'), ['sysa']);
     const fy = Y(92);
-    poly([{ x: outX, y: outY }, { x: outX, y: fy }, { x: sR.x, y: fy }], cFb.color, cFb.width);
+    poly([{ x: outX, y: outY }, { x: outX, y: fy }, { x: Math.min(kt.cx, kb.cx), y: fy }], cFb.color, cFb.width, [], hiOm);
     const ktTop = kt.t - 6, kbTop = kb.t - 6;
-    poly([{ x: kt.cx, y: fy }, { x: kt.cx, y: kt.b }], colorOf('sys2').color);
-    poly([{ x: kt.cx, y: kt.t }, { x: kt.cx, y: ktTop }, { x: sR.x, y: ktTop }, { x: sR.x, y: sR.y + r + 1 }], colorOf('sys2').color);
-    into(sR.x, ktTop, sR.x, sR.y, '−', colorOf('sys2').color, r);
-    poly([{ x: kb.cx, y: fy }, { x: kb.cx, y: kb.b }], colorOf('sys3', ['sysa']).color);
-    poly([{ x: kb.cx, y: kb.t }, { x: kb.cx, y: kbTop }, { x: sE.x, y: kbTop }, { x: sE.x, y: sE.y + r + 1 }], colorOf('sys3', ['sysa']).color);
-    into(sE.x, kbTop, sE.x, sE.y, '−', colorOf('sys3', ['sysa']).color, r);
+    // input taps are ω (same geometry); outputs are their own signals
+    poly([{ x: kt.cx, y: fy }, { x: kt.cx, y: kt.b }], cFb.color, 1.5, [], hiOm);
+    poly([{ x: kt.cx, y: kt.t }, { x: kt.cx, y: ktTop }, { x: sR.x, y: ktTop }, { x: sR.x, y: sR.y + r + 1 }], colorOf('sys2').color, 1.5, [], hiKt);
+    into(sR.x, ktTop, sR.x, sR.y, '−', colorOf('sys2').color, r, hiKt);
+    poly([{ x: kb.cx, y: fy }, { x: kb.cx, y: kb.b }], cFb.color, 1.5, [], hiOm);
+    poly([{ x: kb.cx, y: kb.t }, { x: kb.cx, y: kbTop }, { x: sE.x, y: kbTop }, { x: sE.x, y: sE.y + r + 1 }], colorOf('sys3', ['sysa']).color, 1.5, [], hiKb);
+    into(sE.x, kbTop, sE.x, sE.y, '−', colorOf('sys3', ['sysa']).color, r, hiKb);
     }
   } else if (kind === 'borer') {
     if (stacked) {
@@ -595,48 +657,52 @@ export function drawLabDiagram(g: CanvasRenderingContext2D, w: number, h: number
       const boxH = 14;
       const plantX = 28, plantW = 50;
       const s1 = { x: X(16), y: Y(16) };
-      text(g, 'R', X(2) + 4, s1.y - 11, col.text(), 'center', typeSize);
+      term('R', X(2) + 4, s1.y - 11, col.text(), 'center', typeSize);
       const gc = boxAt('sys1', plantX, 16 - boxH / 2, plantW, boxH, L('K + 11s', 'K = 20 or 100', 'push on the error now, plus 11 × how fast it is changing', 'in: position error. out: steering effort. what it does: push on the error now, plus 11 × how fast it is changing'));
       const s2 = { x: X(16), y: Y(48) };
       const gplant = boxAt('sysg', plantX, 48 - boxH / 2, plantW, boxH, L('1/(s(s+1))', '1/(s(s+1))', 'effort to position', 'in: effort plus the rock T_d. out: cutter position Y. what it does: turns steering effort into position along the planned line'));
       const outX = Math.min(dw - 14, Math.max(gplant.r + 14, dw - 16));
       const outY = gplant.cy;
-      text(g, 'Y', outX + 3, outY + 4, col.text(), 'left', Math.max(12, typeSize));
+      term('Y', outX + 3, outY + 4, col.text(), 'left', Math.max(12, typeSize));
       const c1 = colorOf('sys1'), c2 = colorOf('sysg', ['series']), cf = colorOf('feedback', ['loop', 'minreal']);
       recSum(s1.x, s1.y, r, c1.color, c1.width);
       recSum(s2.x, s2.y, r, c2.color, c2.width);
-      const lanePlant = Math.max(s1.x + r + 8, Math.min(gc.l - 8, (s1.x + r + gc.l) / 2));
-      into(X(2), s1.y, s1.x, s1.y, '+', c1.color, r);
-      arr(s1.x + r, s1.y, gc.l, gc.cy, c1.color);
-      dropBoxToSum(gc, s2.x, s2.y, '+', c2.color, lanePlant);
-      arr(s2.x + r, s2.y, gplant.l, gplant.cy, c2.color);
-      arr(gplant.r, gplant.cy, outX, outY, cf.color);
-      tdArrow(s2.x, s2.y, '+', c2.color, typeSize, 6);
+      const leftLane = Math.max(6, s1.x - r - 12);
+      const hiFb = { signal: 'feedback', hi: ['feedback', 'loop', 'minreal'] };
+      port('R', X(2), s1.y);
+      into(X(2), s1.y, s1.x, s1.y, '+', c1.color, r, { signal: 'ref', hi: ['sys1'] });
+      arr(s1.x + r, s1.y, gc.l, gc.cy, c1.color, { signal: 'gc-in', hi: ['sys1'] });
+      plantFromAbove(gc, s2.x, s2.y, '+', c2.color, { signal: 'gc-out', hi: ['sysg', 'series'] });
+      arr(s2.x + r, s2.y, gplant.l, gplant.cy, c2.color, { signal: 'plant-in', hi: ['sysg', 'series'] });
+      arr(gplant.r, gplant.cy, outX, outY, cf.color, hiFb);
+      tdArrow(s2.x, s2.y, '+', c2.color, typeSize, leftLane + 8, { signal: 'td', hi: ['sysg'] });
       const topY = Math.min(s1.y - r - 14, gc.t - 10, padT + 4);
-      const botY = Math.min(h - (cap ? 28 : 10), Y(96));
-      rightReturn(outX, outY, topY, botY, s1.x, s1.y, cf.color);
+      overTopReturn(outX, outY, topY, s1.x, s1.y, cf.color, hiFb);
     } else {
-    text(g, 'R', X(2), Y(rail) - 11, col.text(), 'center', 11);
+    term('R', X(2), Y(rail) - 11, col.text(), 'center', 11);
     const s1 = { x: X(10), y: Y(rail) };
     const gc = boxAt('sys1', 16, rail - 10, 22, 20, L('K + 11s', 'K = 20 or 100', 'push on the error now, plus 11 × how fast it is changing', 'in: position error. out: steering effort. what it does: push on the error now, plus 11 × how fast it is changing'));
     const s2 = { x: X(50), y: Y(rail) };
     const gplant = boxAt('sysg', 56, rail - 10, 24, 20, L('1/(s(s+1))', '1/(s(s+1))', 'effort to position', 'in: effort plus the rock T_d. out: cutter position Y. what it does: turns steering effort into position along the planned line'));
     const outX = X(94), outY = Y(rail);
-    text(g, 'Y', outX + 6, outY + 4, col.text(), 'left', 12);
+    term('Y', outX + 6, outY + 4, col.text(), 'left', 12);
     const c1 = colorOf('sys1'), c2 = colorOf('sysg', ['series']), cf = colorOf('feedback', ['loop', 'minreal']);
+    const hiFb = { signal: 'feedback', hi: ['feedback', 'loop', 'minreal'] };
     recSum( s1.x, s1.y, r, c1.color, c1.width);
     recSum( s2.x, s2.y, r, c2.color, c2.width);
-    into( X(4), Y(rail), s1.x, s1.y, '+', c1.color, r);
-    arr( s1.x + r, s1.y, gc.l, gc.cy, c1.color);
-    into( gc.r, gc.cy, s2.x, s2.y, '+', c2.color, r);
-    arr( s2.x + r, s2.y, gplant.l, gplant.cy, c2.color);
-    arr( gplant.r, gplant.cy, outX, outY, cf.color);
-    text(g, 'T_d', s2.x, Y(8), col.text(), 'center', 11);
-    into( s2.x, Y(14), s2.x, s2.y, '+', c2.color, r);
+    port('R', X(4), Y(rail));
+    into( X(4), Y(rail), s1.x, s1.y, '+', c1.color, r, { signal: 'ref', hi: ['sys1'] });
+    arr( s1.x + r, s1.y, gc.l, gc.cy, c1.color, { signal: 'gc-in', hi: ['sys1'] });
+    into( gc.r, gc.cy, s2.x, s2.y, '+', c2.color, r, { signal: 'gc-out', hi: ['sysg', 'series'] });
+    arr( s2.x + r, s2.y, gplant.l, gplant.cy, c2.color, { signal: 'plant-in', hi: ['sysg', 'series'] });
+    arr( gplant.r, gplant.cy, outX, outY, cf.color, hiFb);
+    term('T_d', s2.x, Y(8), col.text(), 'center', 11);
+    port('T_d', s2.x, Y(14));
+    into( s2.x, Y(14), s2.x, s2.y, '+', c2.color, r, { signal: 'td', hi: ['sysg'] });
     const fy = Y(88);
     g.strokeStyle = cf.color; g.lineWidth = cf.width; g.setLineDash([]);
-    poly([{ x: outX, y: outY }, { x: outX, y: fy }, { x: s1.x, y: fy }, { x: s1.x, y: s1.y + r + 1 }], cf.color, cf.width);
-    into( s1.x, fy, s1.x, s1.y, '−', cf.color, r);
+    poly([{ x: outX, y: outY }, { x: outX, y: fy }, { x: s1.x, y: fy }, { x: s1.x, y: s1.y + r + 1 }], cf.color, cf.width, [], hiFb);
+    into( s1.x, fy, s1.x, s1.y, '−', cf.color, r, hiFb);
     }
   } else if (kind === 'disk') {
     if (stacked) {
@@ -644,55 +710,60 @@ export function drawLabDiagram(g: CanvasRenderingContext2D, w: number, h: number
       const boxH = 11;
       const plantX = 28, plantW = 50;
       const s1 = { x: X(16), y: Y(12) };
-      text(g, 'R', X(2) + 4, s1.y - 11, col.text(), 'center', typeSize);
+      term('R', X(2) + 4, s1.y - 11, col.text(), 'center', typeSize);
       const ka = boxAt('Ka', plantX, 12 - boxH / 2, plantW, boxH, L('Ka', '10 or 80', 'volts per unit error', 'in: position error. out: amplifier voltage. what it does: volts per unit error'), ['series']);
       const g1 = boxAt('sysf', plantX, 32 - boxH / 2, plantW, boxH, L('G₁ = 5000/(s+1000)', '5000/(s+1000)', 'volts to force, builds in 1 ms', 'in: voltage. out: force. what it does: the coil turns volts into force; current builds in about 1 ms'), ['series']);
       const s2 = { x: X(16), y: Y(54) };
       const g2 = boxAt('sysg', plantX, 54 - boxH / 2, plantW, boxH, L('G₂ = 1/(s(s+20))', '1/(s(s+20))', 'force to position', 'in: net force (coil minus shock). out: head position Y. what it does: the arm turns force into position'));
       const outX = Math.min(dw - 14, Math.max(g2.r + 14, dw - 16));
       const outY = g2.cy;
-      text(g, 'Y', outX + 3, outY + 4, col.text(), 'left', Math.max(12, typeSize));
+      term('Y', outX + 3, outY + 4, col.text(), 'left', Math.max(12, typeSize));
       const c1 = colorOf('Ka', ['series']), cG1 = colorOf('sysf', ['series']), cG2 = colorOf('sysg'), cf = colorOf('feedback', ['loop', 'sign', 'step']);
       recSum(s1.x, s1.y, r, c1.color, c1.width);
       recSum(s2.x, s2.y, r, cG2.color, cG2.width);
-      const lanePlant = Math.max(s1.x + r + 8, Math.min(g1.l - 8, (s1.x + r + g1.l) / 2));
-      into(X(2), s1.y, s1.x, s1.y, '+', c1.color, r);
-      arr(s1.x + r, s1.y, ka.l, ka.cy, c1.color);
-      arr(ka.cx, ka.b, g1.cx, g1.t, cG1.color);
-      dropBoxToSum(g1, s2.x, s2.y, '+', cG2.color, lanePlant);
-      arr(s2.x + r, s2.y, g2.l, g2.cy, cG2.color);
-      arr(g2.r, g2.cy, outX, outY, cf.color);
-      tdArrow(s2.x, s2.y, '−', cG2.color, typeSize, 6);
+      const leftLane = Math.max(6, s1.x - r - 12);
+      const hiFb = { signal: 'feedback', hi: ['feedback', 'loop', 'sign', 'step'] };
+      port('R', X(2), s1.y);
+      into(X(2), s1.y, s1.x, s1.y, '+', c1.color, r, { signal: 'ref', hi: ['Ka', 'series'] });
+      arr(s1.x + r, s1.y, ka.l, ka.cy, c1.color, { signal: 'ka-in', hi: ['Ka', 'series'] });
+      arr(ka.cx, ka.b, g1.cx, g1.t, cG1.color, { signal: 'g1-in', hi: ['sysf', 'series'] });
+      plantFromAbove(g1, s2.x, s2.y, '+', cG2.color, { signal: 'g1-out', hi: ['sysg'] });
+      arr(s2.x + r, s2.y, g2.l, g2.cy, cG2.color, { signal: 'g2-in', hi: ['sysg'] });
+      arr(g2.r, g2.cy, outX, outY, cf.color, hiFb);
+      tdArrow(s2.x, s2.y, '−', cG2.color, typeSize, leftLane + 8, { signal: 'td', hi: ['sysg'] });
       const topY = Math.min(s1.y - r - 14, ka.t - 10, padT + 4);
-      const botY = Math.min(h - (cap ? 28 : 10), Y(96));
-      text(g, '1', outX + 8, (outY + botY) / 2, colorOf('feedback').color, 'left', 10);
-      rightReturn(outX, outY, topY, botY, s1.x, s1.y, cf.color);
+      // unity gain sits on the top bar of the return, not out on a stub
+      mark('1', (outX + s1.x) / 2, topY - 8, colorOf('feedback').color, 'center', 10);
+      overTopReturn(outX, outY, topY, s1.x, s1.y, cf.color, hiFb);
     } else {
-    text(g, 'R', X(2), Y(rail) - 11, col.text(), 'center', 11);
+    term('R', X(2), Y(rail) - 11, col.text(), 'center', 11);
     const s1 = { x: X(8), y: Y(rail) };
     const ka = boxAt('Ka', 14, rail - 10, 10, 20, L('Ka', '10 or 80', 'volts per unit error', 'in: position error. out: amplifier voltage. what it does: volts per unit error'), ['series']);
     const g1 = boxAt('sysf', 28, rail - 10, 24, 20, L('G₁ = 5000/(s+1000)', '5000/(s+1000)', 'volts to force, builds in 1 ms', 'in: voltage. out: force. what it does: the coil turns volts into force; current builds in about 1 ms'), ['series']);
     const s2 = { x: X(60), y: Y(rail) };
     const g2 = boxAt('sysg', 66, rail - 10, 22, 20, L('G₂ = 1/(s(s+20))', '1/(s(s+20))', 'force to position', 'in: net force (coil minus shock). out: head position Y. what it does: the arm turns force into position'));
     const outX = X(96), outY = Y(rail);
-    text(g, 'Y', outX + 4, outY + 4, col.text(), 'left', 12);
+    term('Y', outX + 4, outY + 4, col.text(), 'left', 12);
     const c1 = colorOf('Ka', ['series']), cG1 = colorOf('sysf', ['series']), cG2 = colorOf('sysg'), cf = colorOf('feedback', ['loop', 'sign', 'step']);
+    const hiFb = { signal: 'feedback', hi: ['feedback', 'loop', 'sign', 'step'] };
     recSum( s1.x, s1.y, r, c1.color, c1.width);
     recSum( s2.x, s2.y, r, cG2.color, cG2.width);
-    into( X(2), Y(rail), s1.x, s1.y, '+', c1.color, r);
-    arr( s1.x + r, s1.y, ka.l, ka.cy, c1.color);
-    arr( ka.r, ka.cy, g1.l, g1.cy, cG1.color);
-    into( g1.r, g1.cy, s2.x, s2.y, '+', cG2.color, r);
-    arr( s2.x + r, s2.y, g2.l, g2.cy, cG2.color);
-    arr( g2.r, g2.cy, outX, outY, cf.color);
-    text(g, 'T_d', s2.x, Y(8), col.text(), 'center', 11);
-    into( s2.x, Y(14), s2.x, s2.y, '−', cG2.color, r);
+    port('R', X(2), Y(rail));
+    into( X(2), Y(rail), s1.x, s1.y, '+', c1.color, r, { signal: 'ref', hi: ['Ka', 'series'] });
+    arr( s1.x + r, s1.y, ka.l, ka.cy, c1.color, { signal: 'ka-in', hi: ['Ka', 'series'] });
+    arr( ka.r, ka.cy, g1.l, g1.cy, cG1.color, { signal: 'g1-in', hi: ['sysf', 'series'] });
+    into( g1.r, g1.cy, s2.x, s2.y, '+', cG2.color, r, { signal: 'g1-out', hi: ['sysg'] });
+    arr( s2.x + r, s2.y, g2.l, g2.cy, cG2.color, { signal: 'g2-in', hi: ['sysg'] });
+    arr( g2.r, g2.cy, outX, outY, cf.color, hiFb);
+    term('T_d', s2.x, Y(8), col.text(), 'center', 11);
+    port('T_d', s2.x, Y(14));
+    into( s2.x, Y(14), s2.x, s2.y, '−', cG2.color, r, { signal: 'td', hi: ['sysg'] });
     // unit sensor on the return
     const fy = Y(88);
-    text(g, '1', X(8) - 14, fy - 6, colorOf('feedback').color, 'center', 10);
+    mark('1', X(8) - 14, fy - 6, colorOf('feedback').color, 'center', 10);
     g.strokeStyle = cf.color; g.lineWidth = cf.width; g.setLineDash([]);
-    poly([{ x: outX, y: outY }, { x: outX, y: fy }, { x: s1.x, y: fy }, { x: s1.x, y: s1.y + r + 1 }], cf.color, cf.width);
-    into( s1.x, fy, s1.x, s1.y, '−', cf.color, r);
+    poly([{ x: outX, y: outY }, { x: outX, y: fy }, { x: s1.x, y: fy }, { x: s1.x, y: s1.y + r + 1 }], cf.color, cf.width, [], hiFb);
+    into( s1.x, fy, s1.x, s1.y, '−', cf.color, r, hiFb);
     }
   } else if (opts.words) {
     // engine (handout p.1): wide canvas keeps one row; on a phone, stack the plant
@@ -704,39 +775,45 @@ export function drawLabDiagram(g: CanvasRenderingContext2D, w: number, h: number
       // leave a right margin for Tload, N, and the rpm label
       const plantX = 18, plantW = 52;
       const s1 = { x: X(14), y: Y(7.5) };
-      const pi = boxAt('PI', 22, 7.5 - boxH / 2, 58, boxH, L('PI', 'P + I', 'error now + so far', 'in: speed error. out: throttle command. what it does: P and I make a throttle from the error now and the error so far'), undefined, { maxX: dw - 24 });
+      const leftLane = Math.max(6, s1.x - r - 12);
+      const pi = boxAt('PI', 22, 7.5 - boxH / 2, 58, boxH, L('PI', 'P + I', 'error now + so far', 'in: speed error. out: throttle command. what it does: P and I make a throttle from the error now and the error so far'), undefined, { minX: s1.x + r + 4, maxX: dw - 24 });
       placeSpeedRef(s1, pi, typeSize);
       const th = boxAt('throttle', plantX, 22.5 - boxH / 2, plantW, boxH, L('Throttle & Manifold', 'nonlinear', 'throttle → air', 'in: throttle command and engine speed N. out: air charge. what it does: throttle angle and speed to air charge'));
       const del = boxAt('delay', plantX, 37.5 - boxH / 2, plantW, boxH, L('Induction delay', 'e^{−0.015s}', 'air arrives late', 'in: air charge. out: delayed air charge. what it does: air takes time to reach the cylinders'));
       const comb = boxAt('combustion', plantX, 52.5 - boxH / 2, plantW, boxH, L('Combustion', 'nonlinear', 'air → torque', 'in: delayed air charge and engine speed N. out: combustion torque. what it does: air charge to torque'));
       const veh = boxAt('vehicle', plantX, 67.5 - boxH / 2, plantW, boxH, L('Vehicle Dynamics', 'Teng, Tload', 'torque − load → speed', "in: combustion torque Teng and load Tload. out: engine speed (rad/s). what it does: torque minus load spins the engine"));
       const rpm = boxAt('rpm', plantX, 82.5 - boxH / 2, plantW, boxH, L('30/π', '30/π', 'rad/s to rpm', 'in: rad/s. out: rpm. what it does: converts shaft speed to rpm'));
-      const outX = Math.min(dw - 14, Math.max(rpm.r + 14, pi.r + 10, th.r + 10, del.r + 10, comb.r + 10, veh.r + 10));
+      // feedback drops just past rpm, not past the (wider) PI — keeps it off the N bus
+      const outX = Math.min(dw - 24, rpm.r + 14);
       const outY = rpm.cy;
-      text(g, 'rpm', outX + 3, outY + 4, col.text(), 'left', typeSize);
+      term('rpm', outX + 3, outY + 4, col.text(), 'left', typeSize);
       recSum(s1.x, s1.y, r, c.color, c.width);
-      into(X(2), s1.y, s1.x, s1.y, '+', col.text(), r);
-      arr(s1.x + r, s1.y, pi.l, pi.cy, c.color);
-      arr(pi.cx, pi.b, th.cx, th.t, c.color);
-      arr(th.cx, th.b, del.cx, del.t, c.color);
-      arr(del.cx, del.b, comb.cx, comb.t, c.color);
-      arr(comb.cx, comb.b, veh.cx, veh.t, c.color);
-      arr(veh.cx, veh.b, rpm.cx, rpm.t, c.color);
-      arr(rpm.r, rpm.cy, outX, outY, cf.color);
+      const hiFwd = { signal: 'forward', hi: ['PI'] };
+      const hiFb = { signal: 'feedback', hi: ['feedback'] };
+      port('Speed Ref', X(2), s1.y);
+      into(X(2), s1.y, s1.x, s1.y, '+', col.text(), r, { signal: 'ref', hi: ['PI'] });
+      arr(s1.x + r, s1.y, pi.l, pi.cy, c.color, hiFwd);
+      arr(pi.cx, pi.b, th.cx, th.t, c.color, hiFwd);
+      arr(th.cx, th.b, del.cx, del.t, c.color, hiFwd);
+      arr(del.cx, del.b, comb.cx, comb.t, c.color, hiFwd);
+      arr(comb.cx, comb.b, veh.cx, veh.t, c.color, hiFwd);
+      arr(veh.cx, veh.b, rpm.cx, rpm.t, c.color, hiFwd);
+      arr(rpm.r, rpm.cy, outX, outY, cf.color, hiFb);
       // Tload arrives from the right; label sits to the right of the arrow, not over the box
       const tloadX = veh.r + Math.max(12, W(4));
-      arr(tloadX, veh.cy, veh.r, veh.cy, cd.color);
+      arr(tloadX, veh.cy, veh.r, veh.cy, cd.color, { signal: 'tload', hi: ['vehicle'] });
       const tSz = Math.max(10, typeSize - 1);
-      text(g, 'Tload', tloadX + 3, veh.cy - 7, col.text(), 'left', tSz);
-      text(g, '(drag)', tloadX + 3, veh.cy + 8, col.text(), 'left', tSz);
-      // N (shaft speed) from Vehicle Dynamics back to the two blocks that need it
-      const nBus = Math.min(dw - 6, Math.max(outX + 8, tloadX + W(16)));
-      poly([{ x: veh.r, y: veh.cy }, { x: nBus, y: veh.cy }, { x: nBus, y: th.cy }, { x: th.r, y: th.cy }], col.muted(), 1, [3, 3]);
-      poly([{ x: nBus, y: comb.cy }, { x: comb.r, y: comb.cy }], col.muted(), 1, [3, 3]);
-      text(g, 'N', nBus - 6, (th.cy + comb.cy) / 2, col.muted(), 'right', 10);
-      const topY = Math.min(s1.y - r - 14, pi.t - 10, padT + 4);
-      const botY = Math.min(Y(96), h - 10);
-      rightReturn(outX, outY, topY, botY, s1.x, s1.y, cf.color);
+      term('Tload', tloadX + 3, veh.cy - 7, col.text(), 'left', tSz);
+      term('(drag)', tloadX + 3, veh.cy + 8, col.text(), 'left', tSz);
+      // N bus stays to the right of the feedback drop; jog off veh.cy so it doesn't share Tload's arrow
+      const nBus = Math.min(dw - 6, Math.max(outX + 10, tloadX + W(16)));
+      const nY = veh.cy - 8;
+      poly([{ x: veh.r, y: nY }, { x: nBus, y: nY }, { x: nBus, y: th.cy }, { x: th.r, y: th.cy }], col.muted(), 1, [3, 3], { signal: 'N' });
+      poly([{ x: nBus, y: comb.cy }, { x: comb.r, y: comb.cy }], col.muted(), 1, [3, 3], { signal: 'N' });
+      term('N', nBus - 6, (th.cy + comb.cy) / 2, col.muted(), 'right', 10);
+      // bottom-and-up-the-left return (2075cdb style): short jog just below rpm, up the left into the summer from below
+      const botY = Math.min(h - (cap ? 28 : 10), rpm.b + 12);
+      bottomLeftReturn(outX, outY, botY, leftLane, s1.x, s1.y, cf.color, hiFb);
     } else {
       const r1 = 40;
       const boxH = 26;
@@ -749,52 +826,58 @@ export function drawLabDiagram(g: CanvasRenderingContext2D, w: number, h: number
       const veh = boxAt('vehicle', 75, r1 - boxH / 2, 14, boxH, L('Vehicle Dynamics', 'Teng, Tload', 'torque − load → speed', "in: combustion torque Teng and load Tload. out: engine speed (rad/s). what it does: torque minus load spins the engine"));
       const rpm = boxAt('rpm', 91, r1 - boxH / 2, 6, boxH, L('30/π', '30/π', 'rad/s to rpm', 'in: rad/s. out: rpm. what it does: converts shaft speed to rpm'));
       const outX = rpm.r + 12, outY = rpm.cy;
-      text(g, 'rpm', outX + 2, outY + 4, col.text(), 'left', 10);
+      term('rpm', outX + 2, outY + 4, col.text(), 'left', 10);
       recSum( s1.x, s1.y, r, c.color, c.width);
-      into( X(1), Y(r1), s1.x, s1.y, '+', col.text(), r);
-      arr( s1.x + r, s1.y, pi.l, pi.cy, c.color);
-      arr( pi.r, pi.cy, th.l, th.cy, c.color);
-      arr( th.r, th.cy, del.l, del.cy, c.color);
+      const hiFwd = { signal: 'forward', hi: ['PI'] };
+      const hiFb = { signal: 'feedback', hi: ['feedback'] };
+      port('Speed Ref', X(1), Y(r1));
+      into( X(1), Y(r1), s1.x, s1.y, '+', col.text(), r, { signal: 'ref', hi: ['PI'] });
+      arr( s1.x + r, s1.y, pi.l, pi.cy, c.color, hiFwd);
+      arr( pi.r, pi.cy, th.l, th.cy, c.color, hiFwd);
+      arr( th.r, th.cy, del.l, del.cy, c.color, hiFwd);
       // stay on one rail: the extra canvas width (fig-wide) gives each box room to wrap
-      arr( del.r, del.cy, comb.l, comb.cy, c.color);
-      arr( comb.r, comb.cy, veh.l, veh.cy, c.color);
-      arr( veh.r, veh.cy, rpm.l, rpm.cy, c.color);
-      arr( rpm.r, rpm.cy, outX, outY, cf.color);
-      text(g, 'Tload (drag)', veh.cx, veh.t - 12, col.text(), 'center', 9);
-      arr( veh.cx, veh.t - 8, veh.cx, veh.t, cd.color);
+      arr( del.r, del.cy, comb.l, comb.cy, c.color, hiFwd);
+      arr( comb.r, comb.cy, veh.l, veh.cy, c.color, hiFwd);
+      arr( veh.r, veh.cy, rpm.l, rpm.cy, c.color, hiFwd);
+      arr( rpm.r, rpm.cy, outX, outY, cf.color, hiFb);
+      term('Tload (drag)', veh.cx, veh.t - 12, col.text(), 'center', 9);
+      arr( veh.cx, veh.t - 8, veh.cx, veh.t, cd.color, { signal: 'tload', hi: ['vehicle'] });
       g.strokeStyle = col.muted(); g.lineWidth = 1; g.setLineDash([3, 3]);
       const ny = Y(14);
-      poly([{ x: rpm.cx, y: rpm.t }, { x: rpm.cx, y: ny }, { x: th.cx, y: ny }, { x: th.cx, y: th.t }], col.muted(), 1, [3, 3]);
-      poly([{ x: comb.cx, y: ny }, { x: comb.cx, y: comb.t }], col.muted(), 1, [3, 3]);
-      text(g, 'N', (th.cx + comb.cx) / 2, ny - 4, col.muted(), 'center', 8);
+      poly([{ x: rpm.cx, y: rpm.t }, { x: rpm.cx, y: ny }, { x: th.cx, y: ny }, { x: th.cx, y: th.t }], col.muted(), 1, [3, 3], { signal: 'N' });
+      poly([{ x: comb.cx, y: ny }, { x: comb.cx, y: comb.t }], col.muted(), 1, [3, 3], { signal: 'N' });
+      term('N', (th.cx + comb.cx) / 2, ny - 4, col.muted(), 'center', 8);
       g.setLineDash([]);
       const fy = Y(92);
       g.strokeStyle = cf.color; g.lineWidth = cf.width; g.setLineDash([]);
-      poly([{ x: outX, y: outY }, { x: outX, y: fy }, { x: s1.x, y: fy }, { x: s1.x, y: s1.y + r + 1 }], cf.color, cf.width);
-      into( s1.x, fy, s1.x, s1.y, '−', col.text(), r);
+      poly([{ x: outX, y: outY }, { x: outX, y: fy }, { x: s1.x, y: fy }, { x: s1.x, y: s1.y + r + 1 }], cf.color, cf.width, [], hiFb);
+      into( s1.x, fy, s1.x, s1.y, '−', col.text(), r, hiFb);
     }
   } else {
     // engine (script stepper: a compact four-box path)
-    text(g, 'rpm*', X(0), Y(rail) + 3, col.text(), 'left', 11);
+    term('rpm*', X(0), Y(rail) + 3, col.text(), 'left', 11);
     const s1 = { x: X(8), y: Y(rail) };
     const pi = boxAt('PI', 14, rail - 10, 10, 20, 'PI');
     const th = boxAt('throttle', 28, rail - 10, 22, 20, 'throttle & manifold');
     const del = boxAt('delay', 54, rail - 10, 16, 20, 'e^{−0.015s}');
     const veh = boxAt('vehicle', 74, rail - 10, 16, 20, 'vehicle dynamics');
     const outX = X(96), outY = Y(rail);
-    text(g, 'rpm', outX + 2, outY + 4, col.text(), 'left', 11);
+    term('rpm', outX + 2, outY + 4, col.text(), 'left', 11);
     const c = colorOf('PI'), cf = colorOf('feedback');
+    const hiFwd = { signal: 'forward', hi: ['PI'] };
+    const hiFb = { signal: 'feedback', hi: ['feedback'] };
     recSum( s1.x, s1.y, r, c.color, c.width);
-    into( X(2), Y(rail), s1.x, s1.y, '+', c.color, r);
-    arr( s1.x + r, s1.y, pi.l, pi.cy, c.color);
-    arr( pi.r, pi.cy, th.l, th.cy, c.color);
-    arr( th.r, th.cy, del.l, del.cy, c.color);
-    arr( del.r, del.cy, veh.l, veh.cy, c.color);
-    arr( veh.r, veh.cy, outX, outY, cf.color);
+    port('rpm*', X(2), Y(rail));
+    into( X(2), Y(rail), s1.x, s1.y, '+', c.color, r, { signal: 'ref', hi: ['PI'] });
+    arr( s1.x + r, s1.y, pi.l, pi.cy, c.color, hiFwd);
+    arr( pi.r, pi.cy, th.l, th.cy, c.color, hiFwd);
+    arr( th.r, th.cy, del.l, del.cy, c.color, hiFwd);
+    arr( del.r, del.cy, veh.l, veh.cy, c.color, hiFwd);
+    arr( veh.r, veh.cy, outX, outY, cf.color, hiFb);
     const fy = Y(88);
     g.strokeStyle = cf.color; g.lineWidth = cf.width; g.setLineDash([]);
-    poly([{ x: outX, y: outY }, { x: outX, y: fy }, { x: s1.x, y: fy }, { x: s1.x, y: s1.y + r + 1 }], cf.color, cf.width);
-    into( s1.x, fy, s1.x, s1.y, '−', cf.color, r);
+    poly([{ x: outX, y: outY }, { x: outX, y: fy }, { x: s1.x, y: fy }, { x: s1.x, y: s1.y + r + 1 }], cf.color, cf.width, [], hiFb);
+    into( s1.x, fy, s1.x, s1.y, '−', cf.color, r, hiFb);
   }
 
   if (script && tags.length) {
