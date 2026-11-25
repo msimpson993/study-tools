@@ -279,7 +279,7 @@ export function drawStepResponse(g: CanvasRenderingContext2D, w: number, h: numb
             if (!ignoreGhost && ghostWouldHit(I.a, I.b2, I.c, I.d)) continue;
             const cx = Math.max(I.a, Math.min(peakX, I.b2)), cy = Math.max(I.c, Math.min(peakY, I.d));
             if (Math.hypot(cx - peakX, cy - peakY) < 8) continue;
-            if (I.c < yRef + 3 && I.d > yRef - 3) continue;
+            if (I.c < yRef + 8 && I.d > yRef - 8) continue;
             const hitsV = (tx: number) => tx > I.a - 2 && tx < I.b2 + 2 && I.d > Math.min(peakY, f.Y(yr[0])) - 2 && I.c < Math.max(peakY, f.box.b) + 2;
             if (show.timing && (hitsV(f.X(m.t10)) || hitsV(f.X(m.t90)))) continue;
             if (hitsOtherVert(I.a, I.b2, I.c, I.d, [peakX])) continue;
@@ -308,7 +308,7 @@ export function drawStepResponse(g: CanvasRenderingContext2D, w: number, h: numb
         if (!osFits(cand.a, cand.b2, cand.c, cand.d)) continue;
         const cx = Math.max(I.a, Math.min(peakX, I.b2)), cy = Math.max(I.c, Math.min(peakY, I.d));
         if (Math.hypot(cx - peakX, cy - peakY) < 8) continue;
-        if (I.c < yRef + 3 && I.d > yRef - 3) continue;
+        if (I.c < yRef + 8 && I.d > yRef - 8) continue;
         if (hitsCurve(cand.a, cand.b2, cand.c, cand.d)) continue;
         c = cand; break;
       }
@@ -323,7 +323,7 @@ export function drawStepResponse(g: CanvasRenderingContext2D, w: number, h: numb
           if (!osFits(cand.a, cand.b2, cand.c, cand.d)) return false;
           const cx = Math.max(I.a, Math.min(peakX, I.b2)), cy = Math.max(I.c, Math.min(peakY, I.d));
           if (Math.hypot(cx - peakX, cy - peakY) < 8) return false;
-          if (I.c < yRef + 3 && I.d > yRef - 3) return false;
+          if (I.c < yRef + 8 && I.d > yRef - 8) return false;
           if (hitsOtherVert(I.a, I.b2, I.c, I.d, [peakX])) return false;
           if (hitsCurve(cand.a, cand.b2, cand.c, cand.d)) return false;
           return true;
@@ -1203,7 +1203,31 @@ export function drawBode(g: CanvasRenderingContext2D, w: number, h: number, s: B
   const fm = rangeFrame(w, hTop, [lo, hi], mr, 72, 12, 8, 6), fp = rangeFrame(w, hBot, [lo, hi], pr, 72, 12, 6, 38);
   const decade = (f: Frame, yr: V2, ystep: number, ylab: string, bottom: boolean) => {
     g.lineWidth = 1; g.setLineDash([]);
-    forTicks(Math.ceil(lo), hi, 1, (d) => { g.strokeStyle = col.grid(); g.beginPath(); g.moveTo(f.X(d), f.box.t); g.lineTo(f.X(d), f.box.b); g.stroke(); if (bottom) withLabelRole('tick', () => text(g, d === 0 ? '1' : d === 1 ? '10' : d === -1 ? '0.1' : `10^${d}`, f.X(d), f.box.b + 10, col.muted(), 'center', 10)); });
+    const decadeLab = (d: number) => d === 0 ? '1' : d === 1 ? '10' : d === -1 ? '0.1' : `10^${d}`;
+    const xDrawn: number[] = [];
+    const drawDecade = (d: number) => {
+      const lab = decadeLab(d);
+      let px = f.X(d);
+      g.font = '10px system-ui,sans-serif';
+      const tw = g.measureText(lab).width, W = g.canvas.width || 0;
+      if (px - tw / 2 < 1) px = tw / 2 + 1;
+      if (px + tw / 2 > W - 1) px = W - 1 - tw / 2;
+      if (!tickOnCanvas(g, lab, px, f.box.b + 10, 10, 'center')) return;
+      withAnchor({ kind: 'line', x: f.X(d), y: f.box.t, x2: f.X(d), y2: f.box.b }, () => {
+        withLabelRole('tick', () => text(g, lab, px, f.box.b + 10, col.muted(), 'center', 10));
+      });
+      xDrawn.push(d);
+    };
+    forTicks(Math.ceil(lo), hi, 1, (d) => {
+      g.strokeStyle = col.grid(); g.beginPath(); g.moveTo(f.X(d), f.box.t); g.lineTo(f.X(d), f.box.b); g.stroke();
+      if (bottom) drawDecade(d);
+    });
+    if (bottom && xDrawn.length < 2) {
+      for (const d of [-1, 1, -2, 2, 0, lo + 0.35 * (hi - lo), hi - 0.35 * (hi - lo)]) {
+        if (xDrawn.length >= 2) break;
+        if (!xDrawn.some((u) => Math.abs(u - d) < 1e-8)) drawDecade(d);
+      }
+    }
     forTicks(Math.ceil(yr[0] / ystep) * ystep, yr[1], ystep, (y) => { g.strokeStyle = col.grid(); g.beginPath(); g.moveTo(f.box.l, f.Y(y)); g.lineTo(f.box.r, f.Y(y)); g.stroke(); withLabelRole('tick', () => text(g, String(y), f.box.l - 4, f.Y(y), col.muted(), 'right', 10)); });
     g.save(); g.translate(10, (f.box.t + f.box.b) / 2); g.rotate(-Math.PI / 2); text(g, ylab, 0, 0, col.text(), 'center', 11); g.restore();
   };

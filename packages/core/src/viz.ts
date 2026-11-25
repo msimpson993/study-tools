@@ -600,6 +600,11 @@ export function tickLabel(v: number, step: number): string {
   const dec = Math.max(0, Math.min(8, Math.ceil(-Math.log10(Math.abs(step) || 1) - 1e-12)));
   return String(+v.toFixed(dec)).replace('-', '−');
 }
+/** Format a tick so a small end-value is not rounded to "0" against a coarse axis step. */
+export function tickLabelFine(v: number, step: number): string {
+  const fine = Math.min(Math.abs(step) || 1, Math.abs(v) || Math.abs(step) || 1);
+  return tickLabel(v, fine);
+}
 /** Test hook: plot box in device px, plus the data range, when window.__plotLog is an array. */
 export function logPlotFrame(g: CanvasRenderingContext2D, f: Frame) {
   const log = (globalThis as unknown as { __plotLog?: unknown[] }).__plotLog; if (!Array.isArray(log)) return;
@@ -657,7 +662,7 @@ export function graphAxes(g: CanvasRenderingContext2D, f: Frame, xr: V2, yr: V2,
     let lastX = '', lastPx = -Infinity;
     const xDrawn: number[] = [];
     const drawXTick = (x: number, force = false) => {
-      const lab = xfmt ? xfmt(x) : tickLabel(x, sx), px = f.X(x);
+      const lab = xfmt ? xfmt(x) : (force ? tickLabelFine(x, sx) : tickLabel(x, sx)), px = f.X(x);
       if (!lab || (lab === lastX && !force)) return false;
       const onMarkX = (avoid ?? []).some((mk) => Math.hypot((mk.x ?? px) - px, (mk.y ?? (f.box.b + 9)) - (f.box.b + 9)) < (mk.r ?? 10));
       if (!force && (Math.abs(px - lastPx) < 26 || onMarkX)) return false;
@@ -712,14 +717,14 @@ export function graphAxes(g: CanvasRenderingContext2D, f: Frame, xr: V2, yr: V2,
     const yInsetG = (f.box.b - f.box.t) > 8 && f.sy ? 6 / f.sy : 0;
     for (const y of minNiceTicks(yr[0] + yInsetG, yr[1] - yInsetG, yDrawn, 2)) {
       if (yDrawn.some((u) => Math.abs(u - y) < 1e-8)) continue;
-      const lab = yfmt ? yfmt(y) : tickLabel(y, sy);
+      const lab = yfmt ? yfmt(y) : tickLabelFine(y, sy);
       if (lab) drawYTick({ lab, y, py: f.Y(y) }, true);
     }
     if (yDrawn.length < 2) {
       const mid = (yr[0] + yr[1]) / 2, sp = (yr[1] - yr[0]) / 2;
       for (const y of [mid + 0.7 * sp, mid - 0.7 * sp, mid + 0.45 * sp, mid - 0.45 * sp]) {
         if (yDrawn.length >= 2) break;
-        const lab = yfmt ? yfmt(y) : tickLabel(y, sy);
+        const lab = yfmt ? yfmt(y) : tickLabelFine(y, sy);
         if (lab && !yDrawn.some((u) => Math.abs(u - y) < 1e-8)) drawYTick({ lab, y, py: f.Y(y) }, true);
       }
     }
