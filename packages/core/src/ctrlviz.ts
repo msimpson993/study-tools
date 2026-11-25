@@ -929,7 +929,7 @@ export function drawSPlane(g: CanvasRenderingContext2D, w: number, h: number, s:
         const rawEdge = edgeDist(c, X, Yp);
         const grownEdge = edgeDist(inflateBox(c), X, Yp);
         // crosses are logged at r = 7; the local e2e grows the box like inflateBox. Stay ≤ 16 from the raw box (BUG-64).
-        if (rawEdge > 16 || grownEdge < 7) continue;
+        if (rawEdge > 16 || grownEdge < 7.5) continue;
         if (c.a < 1 || c.b2 > vw - 1 || c.c < 1 || c.d > vh - 1) continue;
         if (!staysLHP(c) || !nearerPole(c)) continue;
         if (inflate && (onSigma(I.a, I.b2, I.c, I.d) || onJw(I.a, I.b2, I.c, I.d))) continue;
