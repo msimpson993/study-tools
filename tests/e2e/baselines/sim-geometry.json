@@ -745,7 +745,7 @@
         "role": "tick"
       },
       {
-        "s": "OS 7.4%  Tp 0.93 s",
+        "s": "OS 7.4%\nTp 0.93 s",
         "size": 10.5,
         "role": "axis"
       },
@@ -3455,7 +3455,7 @@
         "role": "tick"
       },
       {
-        "s": "OS 9.2%  Tp 0.37 s",
+        "s": "OS 9.2%\nTp 0.37 s",
         "size": 10.5,
         "role": "axis"
       },
@@ -3696,7 +3696,7 @@
         "role": "tick"
       },
       {
-        "s": "OS 22%  Tp 0.24 s",
+        "s": "OS 22%\nTp 0.24 s",
         "size": 10.5,
         "role": "axis"
       },
@@ -4898,8 +4898,8 @@
         "role": "axis"
       },
       {
-        "s": "OS 17.1%  Tp 0.18 s",
-        "size": 9,
+        "s": "OS 17.1%\nTp 0.18 s",
+        "size": 10.5,
         "role": "axis"
       },
       {
@@ -5099,8 +5099,8 @@
         "role": "axis"
       },
       {
-        "s": "OS 17.1%  Tp 0.18 s",
-        "size": 9,
+        "s": "OS 17.1%\nTp 0.18 s",
+        "size": 10.5,
         "role": "axis"
       },
       {
@@ -5675,6 +5675,11 @@
         "role": "axis"
       },
       {
+        "s": "┄ stand-in (coil dropped)",
+        "size": 10,
+        "role": "axis"
+      },
+      {
         "s": "0",
         "size": 10,
         "role": "tick"
@@ -5720,7 +5725,7 @@
         "role": "axis"
       },
       {
-        "s": "OS 98.6%  Tp 0.02 s",
+        "s": "OS 98.6%\nTp 0.02 s",
         "size": 10.5,
         "role": "axis"
       },
@@ -7161,7 +7166,7 @@
         "role": "tick"
       },
       {
-        "s": "OS 0.4%  Tp 4.88 s",
+        "s": "OS 0.4%\nTp 4.88 s",
         "size": 10.5,
         "role": "axis"
       },
@@ -7420,7 +7425,7 @@
         "role": "tick"
       },
       {
-        "s": "OS 0.4%  Tp 4.91 s",
+        "s": "OS 0.4%\nTp 4.91 s",
         "size": 10.5,
         "role": "axis"
       },
@@ -9709,7 +9714,7 @@
         "role": "tick"
       },
       {
-        "s": "OS 9.2%  Tp 0.37 s",
+        "s": "OS 9.2%\nTp 0.37 s",
         "size": 10.5,
         "role": "axis"
       },
@@ -10206,7 +10211,7 @@
         "role": "tick"
       },
       {
-        "s": "OS 3.9%  Tp 0.48 s",
+        "s": "OS 3.9%\nTp 0.48 s",
         "size": 10.5,
         "role": "axis"
       },
@@ -12064,7 +12069,7 @@
         "role": "axis"
       },
       {
-        "s": "OS 98.6%  Tp 0.02 s",
+        "s": "OS 98.6%\nTp 0.02 s",
         "size": 10.5,
         "role": "axis"
       },
@@ -13073,7 +13078,7 @@
         "role": "tick"
       },
       {
-        "s": "OS 7.4%  Tp 0.93 s",
+        "s": "OS 7.4%\nTp 0.93 s",
         "size": 10.5,
         "role": "axis"
       },
@@ -13570,7 +13575,7 @@
         "role": "tick"
       },
       {
-        "s": "OS 0.4%  Tp 4.88 s",
+        "s": "OS 0.4%\nTp 4.88 s",
         "size": 10.5,
         "role": "axis"
       },
@@ -13809,7 +13814,7 @@
         "role": "tick"
       },
       {
-        "s": "OS 0.4%  Tp 4.91 s",
+        "s": "OS 0.4%\nTp 4.91 s",
         "size": 10.5,
         "role": "axis"
       },
@@ -15968,7 +15973,7 @@
         "role": "tick"
       },
       {
-        "s": "OS 9.2%  Tp 0.37 s",
+        "s": "OS 9.2%\nTp 0.37 s",
         "size": 10.5,
         "role": "axis"
       },
@@ -16234,7 +16239,7 @@
         "role": "tick"
       },
       {
-        "s": "OS 22%  Tp 0.24 s",
+        "s": "OS 22%\nTp 0.24 s",
         "size": 10.5,
         "role": "axis"
       },
@@ -16470,7 +16475,7 @@
         "role": "tick"
       },
       {
-        "s": "OS 3.9%  Tp 0.48 s",
+        "s": "OS 3.9%\nTp 0.48 s",
         "size": 10.5,
         "role": "axis"
       },
@@ -17546,7 +17551,7 @@
         "role": "axis"
       },
       {
-        "s": "OS 17.1%  Tp 0.18 s",
+        "s": "OS 17.1%\nTp 0.18 s",
         "size": 10.5,
         "role": "axis"
       },
@@ -17792,7 +17797,7 @@
         "role": "axis"
       },
       {
-        "s": "OS 17.1%  Tp 0.18 s",
+        "s": "OS 17.1%\nTp 0.18 s",
         "size": 10.5,
         "role": "axis"
       },
@@ -18463,7 +18468,7 @@
         "role": "axis"
       },
       {
-        "s": "OS 98.6%  Tp 0.02 s",
+        "s": "OS 98.6%\nTp 0.02 s",
         "size": 10.5,
         "role": "axis"
       },
