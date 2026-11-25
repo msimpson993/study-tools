@@ -187,6 +187,11 @@ export function drawStepResponse(g: CanvasRenderingContext2D, w: number, h: numb
     const yTop = padTop + half;
     if (Math.abs(yTop - yDefault) > 1 && yTop + half < f.h - 1) sits.push(yTop);
     if (!sits.length && yTop - half >= 1) sits.push(yTop);
+    const yOff = typeof g.getTransform === 'function' ? g.getTransform().f : 0;
+    if (yOff > 12) {
+      const yHead = 2 - yOff + half + 16; // in the figure header, under the readout
+      if (yHead + half < padTop + 1) sits.push(yHead);
+    }
     const xals: [number, CanvasTextAlign][] = [
       [markX, 'center'], [markX, 'left'], [markX, 'right'],
       [markX + tw * 0.45, 'center'], [markX - tw * 0.45, 'center'],
@@ -210,7 +215,7 @@ export function drawStepResponse(g: CanvasRenderingContext2D, w: number, h: numb
     const onCv = (c: TextBox, pad = 2) => {
       const x0 = m.a * c.a + m.e, x1 = m.a * c.b2 + m.e, y0 = m.d * c.c + m.f, y1 = m.d * c.d + m.f;
       const cw = g.canvas.width || w, ch = g.canvas.height || h;
-      if (c.d > f.box.t + 1 || x0 < 1 || x1 > cw - 1 || y0 < 1 || y1 > ch - 1) return false;
+      if (x0 < 1 || x1 > cw - 1 || y0 < 1 || y1 > ch - 1) return false;
       return !labelOverlaps(labelsOn(g.canvas), { x0, x1, y0, y1, role: 'axis' }, pad);
     };
     return all.find((c) => onCv(c, 2)) ?? all.find((c) => onCv(c, 0)) ?? null;
@@ -314,13 +319,21 @@ export function drawStepResponse(g: CanvasRenderingContext2D, w: number, h: numb
         trPick = c; break;
       }
     }
-    if (!trPick && !(show.overshoot || show.settling)) {
-      const pad = findTopPad(trLab, midX);
-      if (pad) {
-        paintTopPad(trLab, pad, midX, barY, col.e(), (word, x, y, color, align, z) => { lbl(word, x, y, color, align, z); });
-        trBox = { x0: pad.a, x1: pad.b2, y0: pad.c, y1: pad.d };
+    if (!trPick) {
+      g.font = `${MIN_FONT}px system-ui,sans-serif`;
+      const tw = g.measureText(trLab).width, th = MIN_FONT + 3;
+      for (const yy of [barY - 10, barY - 16, barY - 22, barY - 4]) {
+        if (trPick) break;
+        for (const [xx, al] of [[midX, 'center'], [x1Bar + 4, 'left'], [x0Bar - 4, 'right'], [midX + tw * 0.4, 'center']] as [number, CanvasTextAlign][]) {
+          const c = textBox(xx, yy, tw, th, al, MIN_FONT);
+          if (c.d > f.box.b - 6 || c.c < f.box.t + 2) continue;
+          if (c.a < f.box.l + 2 || c.b2 > f.box.r - 2) continue;
+          if (!besideBar(c)) continue;
+          trPick = c; break;
+        }
       }
-    } else if (trPick) {
+    }
+    if (trPick) {
       trBox = { x0: trPick.a, x1: trPick.b2, y0: trPick.c, y1: trPick.d };
       withAnchor({ kind: 'bar', x: x0Bar, y: barY, x2: x1Bar, y2: barY }, () => {
         withLabelRole('axis', () => { lbl(trLab, trPick!.x, trPick!.y, col.e(), trPick!.align, trPick!.z); });
