@@ -117,7 +117,16 @@ function drawMotorInset(
   g.lineWidth = 1;
   g.beginPath(); g.rect(4, 2, w - 8, insetH - 4); g.fill(); g.stroke();
   text(g, s.note, 12, 13, col.text(), 'left', 10);
-  const fr = rangeFrame(w, insetH, [0, s.tEnd], s.yr, 78, 12, 30, 36);
+  // keep a plot box tall enough for two y-tick numbers on a short phone inset
+  const minBox = 44;
+  let T = 30, B = 36;
+  if (insetH - T - B < minBox) {
+    const room = Math.max(20, insetH - minBox);
+    T = Math.max(14, Math.round(room * 0.45));
+    B = Math.max(16, room - T);
+  }
+  const fr = rangeFrame(w, insetH, [0, s.tEnd], s.yr, 78, 12, T, B);
+
   graphAxes(g, fr, [0, s.tEnd], s.yr, 'time (s)', 'ω (rad/s)');
   g.save();
   clipBox(g, fr);
