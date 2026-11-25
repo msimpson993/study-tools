@@ -34,7 +34,8 @@ export const motorPanels = (): FigurePanel[] => [
       const show = { ess: true };
       const essLabel = Math.abs(Math.abs(n.wcInf) - 0.002) < 3.5e-4 ? "handout’s −0.002" : `final sag ${f(n.wcInf, 5)}`;
       const yLabel = 'ω (rad/s per N·m)';
-      const head = isThumb(g) ? 0 : 44;
+      const narrow = w < 420;
+      const head = isThumb(g) ? 0 : (narrow ? 58 : 44);
       const inner = Math.max(0, h - head);
       let insetH = layout.inset
         ? Math.round(Math.min(inner * 0.55, Math.max(w < 500 ? 80 : 96, inner * (w < 500 ? 0.48 : 0.36))))
@@ -66,12 +67,18 @@ export const motorPanels = (): FigurePanel[] => [
       }
       g.restore();
       const ratio = n.ratio, ok = ratio < 0.02;
-      const read = [
+      // on a narrow expand, drop the "at t = …" tails so each header line stays
+      // one line in the band and cannot wrap down onto the curve (CI fonts).
+      const read = narrow ? [
+        `open sag ${f(n.woInf, 4)}, τ = ${f(n.tauOpen, 3)} s`,
+        `closed sag ${f(n.wcInf, 6)}, τ = ${f(n.tauClosed * 1000, 3)} ms`,
+        `loop gain ${f(n.loopFric / n.dOpen, 1)}  ratio ${f(ratio, 5)}  ${ok ? '✓ under 0.02' : '✗ over 0.02'}`,
+      ] : [
         `open sag ${f(n.woInf, 4)} rad/s, τ = ${f(n.tauOpen, 3)} s,  at 7 s: ${f(n.wo(7), 4)}`,
         `closed sag ${f(n.wcInf, 6)} rad/s, τ = ${f(n.tauClosed * 1000, 3)} ms,  at 0.02 s: ${f(n.wc(0.02), 6)}`,
         `loop gain ${f(n.loopFric / n.dOpen, 1)}   ratio ${f(ratio, 5)}  ${ok ? '✓ under 0.02' : '✗ over 0.02'}`,
       ];
-      read.forEach((line, i) => text(g, line, 8, 12 + i * 12, i === 2 ? (ok ? col.ok() : col.bad()) : col.text(), 'left', 10, 'middle', 9));
+      read.forEach((line, i) => text(g, line, 8, 12 + i * (narrow ? 15 : 12), i === 2 ? (ok ? col.ok() : col.bad()) : col.text(), 'left', 10, 'middle', 9));
     },
   },
 ];
