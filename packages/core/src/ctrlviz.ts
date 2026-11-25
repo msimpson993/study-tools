@@ -850,7 +850,7 @@ export function drawSPlane(g: CanvasRenderingContext2D, w: number, h: number, s:
   const hitsOtherMark = (X0: number, Y0: number, a: number, b2: number, c: number, d: number) => allMarks.some((mk) => {
     if (Math.hypot(mk.X - X0, mk.Y - Y0) < 4) return false; // the anchor itself
     const cx = Math.max(a, Math.min(mk.X, b2)), cy = Math.max(c, Math.min(mk.Y, d));
-    return Math.hypot(cx - mk.X, cy - mk.Y) < 10;
+    return Math.hypot(cx - mk.X, cy - mk.Y) < 7; // matches the logged cross radius (and the local e2e grow is applied by the caller via inflateBox)
   });
   const tile = isTileCanvas(g);
   endClip(g);
@@ -901,14 +901,15 @@ export function drawSPlane(g: CanvasRenderingContext2D, w: number, h: number, s:
       for (const mk of others) {
         if (Math.abs(mk.Y - Yp) < 16 || Math.abs(mk.X - X) > tw0 + 16) continue;
         const midY = (Yp + mk.Y) / 2;
-        for (const sx of [0, -6, -10, -14, 6, 10]) for (const al of (['center', 'right', 'left'] as CanvasTextAlign[]))
+        for (const sx of [0, -2, -4, -6, -8, -10, -14, 2, 4, 6, 10]) for (const al of (['center', 'right', 'left'] as CanvasTextAlign[]))
           out.push(textBox(X + sx, midY, tw0, th0, al, sz, nLines));
       }
       // a tight grid of centres in the left half-plane, 10–16 px (edge) from the ×
       for (let i = 0; i < 16; i++) {
         const ang = (i * Math.PI) / 8, ca = Math.cos(ang), sa = Math.sin(ang);
-        for (const dist of [12, 14, 16, 18, 20]) {
+        for (const dist of [12, 14, 15, 16, 18, 20]) {
           out.push(textBox(X + ca * dist, Yp + sa * dist, tw0, th0, 'center', sz, nLines));
+          out.push(textBox(X + ca * dist - 4, Yp + sa * dist, tw0, th0, 'center', sz, nLines));
         }
       }
       return out;
@@ -924,7 +925,10 @@ export function drawSPlane(g: CanvasRenderingContext2D, w: number, h: number, s:
         if (!staysLHP(c) || !nearerPole(c)) continue;
         if (inflate && (onSigma(I.a, I.b2, I.c, I.d) || onJw(I.a, I.b2, I.c, I.d))) continue;
         if (hitsTaken(I.a, I.b2, I.c, I.d)) continue;
-        if (hitsOtherMark(X, Yp, I.a, I.b2, I.c, I.d)) continue;
+        {
+          const G = inflateBox(c);
+          if (hitsOtherMark(X, Yp, G.a, G.b2, G.c, G.d)) continue;
+        }
         if (tightRay ? rayHitsBox(c) : onRay(c.a, c.b2, c.c, c.d)) continue;
         return c;
       }
