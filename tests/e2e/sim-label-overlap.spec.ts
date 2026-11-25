@@ -283,9 +283,17 @@ const tickSizeMix = (log: L[], at: string) => {
     if (small.length) out.push(`${at} ${g[0].id || 'canvas'}: tick “${small[0].s}” is ${small[0].size!.toFixed(1)} px (min 9)`);
     else if (sizes.length > 1) out.push(`${at} ${g[0].id || 'canvas'}: mixed tick sizes ${sizes.join(' / ')} px on the ${axis} axis (“${g.map((e) => e.s).join('”, “')}”)`);
   };
+  const groups = (labs: L[], key: (e: L) => string) => {
+    const m = new Map<string, L[]>();
+    for (const e of labs) { const k = key(e); const a = m.get(k) ?? []; a.push(e); m.set(k, a); }
+    return [...m.values()];
+  };
+  // one axis = one plot box (a canvas may host a main plot and an inset, each with its own size)
+  const boxY = (e: L) => `${Math.round(e.anchor!.x / 2) * 2}:${Math.round((e.anchor!.x2 ?? e.anchor!.x) / 2) * 2}`;
+  const boxX = (e: L) => `${Math.round(e.anchor!.y / 2) * 2}:${Math.round((e.anchor!.y2 ?? e.anchor!.y) / 2) * 2}`;
   for (const labs of by.values()) {
-    check(labs.filter(horiz), 'y');
-    check(labs.filter(vert), 'x');
+    for (const g of groups(labs.filter(horiz), boxY)) check(g, 'y');
+    for (const g of groups(labs.filter(vert), boxX)) check(g, 'x');
   }
   return out;
 };

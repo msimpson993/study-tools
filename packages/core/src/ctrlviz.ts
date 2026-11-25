@@ -1,7 +1,7 @@
 import { C, cabs, type Cx } from './dsp/complex';
 import { type TF, type StepMetrics, type Margins, type Bode, bode, margins, stepMetrics, tfEval, logspace, tfPoles, tfZeros, freqresp } from './dsp/tf';
 import { type RLocus, rlocusPolesAt, rlocusNearest } from './dsp/rlocus';
-import { col, planeFrame, rangeFrame, wipe, text, tline, polyline, dot, cross, graphAxes, curve, clipBox, withClip, beginClip, endClip, heat, axes2, tickLabel, isThumb, isTileCanvas, isPortraitPhone, isLandscapePhone, logInsetFrame, forTicks, goodStep, fillPlotBehind, knockOutAxes2Names, type Frame, type V2 } from './viz';
+import { col, planeFrame, rangeFrame, wipe, text, tline, polyline, dot, cross, graphAxes, curve, clipBox, withClip, beginClip, endClip, heat, axes2, tickLabel, isThumb, isTileCanvas, isPortraitPhone, isLandscapePhone, logInsetFrame, forTicks, goodStep, fillPlotBehind, knockOutAxes2Names, withTextSplit, type Frame, type V2 } from './viz';
 import { withLabelRole, withAnchor, labelsOn } from './labels';
 import type { PanelPointer } from './figure';
 
@@ -24,11 +24,12 @@ const fmtN = (v: number, d = 2) => (Number.isFinite(v) ? String(+v.toFixed(d)).r
 const fmtC = (z: Cx) => (Math.abs(z.im) < 1e-9 ? fmtN(z.re) : `${fmtN(z.re)}${z.im < 0 ? '−' : '+'}j${fmtN(Math.abs(z.im))}`);
 const ANCHOR_GAP = 12;
 const MIN_FONT = 9;
-type TextBox = { x: number; y: number; align: CanvasTextAlign; a: number; b2: number; c: number; d: number; z: number };
-const textBox = (x: number, y: number, tw: number, th: number, align: CanvasTextAlign, z: number): TextBox => {
+type TextBox = { x: number; y: number; align: CanvasTextAlign; a: number; b2: number; c: number; d: number; z: number; lines?: number };
+const textBox = (x: number, y: number, tw: number, th: number, align: CanvasTextAlign, z: number, lines = 1): TextBox => {
   const a = align === 'left' ? x : align === 'right' ? x - tw : x - tw / 2;
-  // match text()'s default middle baseline (logText extents ±0.55·size)
-  return { x, y, align, a, b2: a + tw, c: y - z * 0.55, d: y + z * 0.55, z };
+  // match text()'s default middle baseline (logText extents ±0.55·size, plus line gap for stacks)
+  const half = ((Math.max(1, lines) - 1) / 2) * z * 1.15 + z * 0.55;
+  return { x, y, align, a, b2: a + tw, c: y - half, d: y + half, z, lines };
 };
 /** Grow a box the same way the local overlap e2e does (9% + 2 px width, 2 px height). */
 const inflateBox = (b: TextBox): TextBox => {
@@ -41,11 +42,12 @@ const edgeDist = (b: TextBox, X: number, Y: number) => {
   return Math.hypot(cx - X, cy - Y);
 };
 /** Candidate boxes whose closest edge stays about `gap` px from (X, Y), around the clock. */
-const aroundMarker = (X: number, Y: number, tw: number, th: number, z: number, preferRight = true, gap = ANCHOR_GAP): TextBox[] => {
+const aroundMarker = (X: number, Y: number, tw: number, th: number, z: number, preferRight = true, gap = ANCHOR_GAP, lines = 1): TextBox[] => {
   const out: TextBox[] = [];
+  const lift = gap + (lines > 1 ? z * 1.15 : z * 0.55);
   const cardinal: TextBox[] = preferRight
-    ? [textBox(X + gap, Y, tw, th, 'left', z), textBox(X - gap, Y, tw, th, 'right', z), textBox(X, Y - gap - z * 0.55, tw, th, 'center', z), textBox(X, Y + gap + z * 0.55, tw, th, 'center', z)]
-    : [textBox(X - gap, Y, tw, th, 'right', z), textBox(X + gap, Y, tw, th, 'left', z), textBox(X, Y - gap - z * 0.55, tw, th, 'center', z), textBox(X, Y + gap + z * 0.55, tw, th, 'center', z)];
+    ? [textBox(X + gap, Y, tw, th, 'left', z, lines), textBox(X - gap, Y, tw, th, 'right', z, lines), textBox(X, Y - lift, tw, th, 'center', z, lines), textBox(X, Y + lift, tw, th, 'center', z, lines)]
+    : [textBox(X - gap, Y, tw, th, 'right', z, lines), textBox(X + gap, Y, tw, th, 'left', z, lines), textBox(X, Y - lift, tw, th, 'center', z, lines), textBox(X, Y + lift, tw, th, 'center', z, lines)];
   for (const b of cardinal) if (edgeDist(b, X, Y) <= 15.5 && edgeDist(b, X, Y) >= 8) out.push(b);
   const start = preferRight ? 0 : Math.PI;
   for (let i = 0; i < 16; i++) {
@@ -53,12 +55,12 @@ const aroundMarker = (X: number, Y: number, tw: number, th: number, z: number, p
     const ca = Math.cos(ang), sa = Math.sin(ang);
     const align: CanvasTextAlign = ca > 0.35 ? 'left' : ca < -0.35 ? 'right' : 'center';
     let x = X + ca * (gap + 8), y = Y + sa * (gap + 8);
-    let box = textBox(x, y, tw, th, align, z);
+    let box = textBox(x, y, tw, th, align, z, lines);
     for (let k = 0; k < 8; k++) {
       const d = edgeDist(box, X, Y), adj = gap - d;
       if (Math.abs(adj) < 0.4) break;
       x += ca * adj; y += sa * adj;
-      box = textBox(x, y, tw, th, align, z);
+      box = textBox(x, y, tw, th, align, z, lines);
     }
     if (edgeDist(box, X, Y) <= 15.5 && edgeDist(box, X, Y) >= 8) out.push(box);
   }
@@ -703,7 +705,17 @@ export function drawSPlane(g: CanvasRenderingContext2D, w: number, h: number, s:
         return out;
       };
       const ks = [0.45, 0.52, 0.6, 0.68, 0.75, 0.38, 0.82, 0.3, 0.9, 0.22, 0.15, 0.95, 0.12, 0.08];
-      const nearMark = (X: number, Y: number, lim: number) => marksZ.some((p) => Math.hypot(X - f.X(p.re), Y - f.Y(p.im)) < lim);
+      const onThisRayPt = (X: number, Y: number) => {
+        const n = Math.max(8, Math.ceil(Math.hypot(ax1 - ax0, ay1 - ay0) / 4));
+        for (let k = 0; k <= n; k++) { const u = k / n; if (Math.hypot(X - (ax0 + (ax1 - ax0) * u), Y - (ay0 + (ay1 - ay0) * u)) < 10) return true; }
+        return false;
+      };
+      // skip only marks that are not the pole this ray names — otherwise mid-ray ζ labels are never tried (BUG-64 / ζ 0.49)
+      const nearMark = (X: number, Y: number, lim: number) => marksZ.some((p) => {
+        const px = f.X(p.re), py = f.Y(p.im);
+        if (onThisRayPt(px, py)) return false;
+        return Math.hypot(X - px, Y - py) < lim;
+      });
       const walk = (zsz: number, relax: boolean, raw: boolean, skipNear: number, relaxTaken = false) => {
         g.font = `${zsz}px system-ui,sans-serif`;
         for (const k of ks) {
@@ -847,63 +859,75 @@ export function drawSPlane(g: CanvasRenderingContext2D, w: number, h: number, s:
       const dOwn = Math.hypot(mx - X, my - Yp);
       return others.every((mk) => Math.hypot(mx - mk.X, my - mk.Y) >= dOwn + 4);
     };
+    const foldCut = lab.indexOf(' (');
+    const stack = foldCut > 0;
+    const nLines = stack ? 2 : 1;
     let pick: TextBox | null = null;
-    const poleSpots = (sz: number, tw0: number, th0: number): TextBox[] => {
+    const measure = (sz: number) => {
+      g.font = `${sz}px system-ui,sans-serif`;
+      if (!stack) return g.measureText(lab).width;
+      return Math.max(g.measureText(lab.slice(0, foldCut)).width, g.measureText(lab.slice(foldCut + 1)).width);
+    };
+    const poleSpots = (sz: number, tw0: number): TextBox[] => {
       const out: TextBox[] = [];
-      // LHP: 'right' alignment extends the value left of the ×, clear of ζ rays that rise toward the origin
-      for (const gap of [14, 12]) for (const al of (['right', 'left', 'center'] as CanvasTextAlign[])) {
-        out.push(textBox(X, Yp - gap - sz * 0.55, tw0, th0, al, sz));
-        out.push(textBox(X, Yp + gap + sz * 0.55, tw0, th0, al, sz));
+      const th0 = nLines === 2 ? sz * 2.25 : sz + 4;
+      for (const gap of [12, 14, 16, 20, 24, 10, 28]) {
+        const lift = gap + (nLines === 2 ? sz * 1.15 : sz * 0.55);
+        for (const al of (['center', 'right', 'left'] as CanvasTextAlign[])) {
+          out.push(textBox(X, Yp - lift, tw0, th0, al, sz, nLines));
+          out.push(textBox(X, Yp + lift, tw0, th0, al, sz, nLines));
+        }
+        // keep the box centre near the × so a wide value is not read as the neighbour (BUG-64)
+        out.push(textBox(X, Yp - gap, tw0, th0, 'center', sz, nLines));
+        out.push(textBox(X, Yp + gap, tw0, th0, 'center', sz, nLines));
+        out.push(textBox(X - gap, Yp, tw0, th0, 'right', sz, nLines));
+        out.push(textBox(X + gap, Yp, tw0, th0, 'left', sz, nLines));
+        const q = gap * 0.72;
+        out.push(textBox(X - q, Yp - q, tw0, th0, 'right', sz, nLines));
+        out.push(textBox(X + q, Yp - q, tw0, th0, 'left', sz, nLines));
+        out.push(textBox(X - q, Yp + q, tw0, th0, 'right', sz, nLines));
+        out.push(textBox(X + q, Yp + q, tw0, th0, 'left', sz, nLines));
       }
       return out;
     };
-    for (const z of [10, MIN_FONT]) {
-      g.font = `${z}px system-ui,sans-serif`;
-      const tw = g.measureText(lab).width, th = z + 4;
-      const explicit: TextBox[] = poleSpots(z, tw, th);
-      const cands = aroundMarker(X, Yp, tw, th, z, preferRight);
-      const ranked = [...explicit, ...cands];
+    const tryList = (ranked: TextBox[], inflate: boolean): TextBox | null => {
       for (const c of ranked) {
-        const I = inflateBox(c);
+        const I = inflate ? inflateBox(c) : c;
         if (c.a < 1 || c.b2 > vw - 1 || c.c < 1 || c.d > vh - 1) continue;
         if (!staysLHP(c) || !nearerPole(c)) continue;
-        if (onSigma(I.a, I.b2, I.c, I.d) || onJw(I.a, I.b2, I.c, I.d) || hitsTaken(I.a, I.b2, I.c, I.d)) continue;
+        if (inflate && (onSigma(I.a, I.b2, I.c, I.d) || onJw(I.a, I.b2, I.c, I.d))) continue;
+        if (hitsTaken(I.a, I.b2, I.c, I.d)) continue;
         if (hitsOtherMark(X, Yp, I.a, I.b2, I.c, I.d)) continue;
         if (onRay(c.a, c.b2, c.c, c.d)) continue;
-        pick = c; break;
+        return c;
       }
+      return null;
+    };
+    for (const z of [10, MIN_FONT]) {
+      const tw = measure(z), th = nLines === 2 ? z * 2.25 : z + 4;
+      pick = tryList([...poleSpots(z, tw), ...aroundMarker(X, Yp, tw, th, z, preferRight, ANCHOR_GAP, nLines)], true);
       if (pick) break;
     }
     // only Disk 5's long pole value may hide on a tile (BUG-55 / 57)
     const mayHide = tile && /−0\.23.*j139\.73/.test(lab);
     if (!pick && !mayHide) {
-      // expanded (and every other tile) must keep the value beside the ×
-      g.font = `${MIN_FONT}px system-ui,sans-serif`;
-      const tw = g.measureText(lab).width, th = MIN_FONT + 4;
-      const explicit = poleSpots(MIN_FONT, tw, th);
-      const raw = [...explicit, ...aroundMarker(X, Yp, tw, th, MIN_FONT, preferRight), ...aroundMarker(X, Yp, tw, th, MIN_FONT, preferRight, 14), ...aroundMarker(X, Yp, tw, th, MIN_FONT, !preferRight)];
-      const inClip = (c: TextBox) => c.a >= 1 && c.b2 <= vw - 1 && c.c >= 1 && c.d <= vh - 1;
-      for (const c of raw) {
-        const I = inflateBox(c);
-        if (!inClip(c) || !staysLHP(c) || !nearerPole(c)) continue;
-        if (hitsOtherMark(X, Yp, I.a, I.b2, I.c, I.d) || hitsTaken(I.a, I.b2, I.c, I.d)) continue;
-        if (onRay(c.a, c.b2, c.c, c.d)) continue;
-        pick = c; break;
-      }
-      if (!pick) {
-        // last try: uninflated mark clearance, still off every ζ ray (required values may not sit on a dashed line)
-        for (const c of raw) {
-          if (!inClip(c) || !staysLHP(c)) continue;
-          if (hitsOtherMark(X, Yp, c.a, c.b2, c.c, c.d)) continue;
-          if (onRay(c.a, c.b2, c.c, c.d)) continue;
-          pick = c; break;
-        }
-      }
+      const tw = measure(MIN_FONT), th = nLines === 2 ? MIN_FONT * 2.25 : MIN_FONT + 4;
+      const raw = [...poleSpots(MIN_FONT, tw), ...aroundMarker(X, Yp, tw, th, MIN_FONT, preferRight, ANCHOR_GAP, nLines), ...aroundMarker(X, Yp, tw, th, MIN_FONT, preferRight, 14, nLines), ...aroundMarker(X, Yp, tw, th, MIN_FONT, !preferRight, ANCHOR_GAP, nLines)];
+      // nearest legal centre first — never drop the nearer-mark rule (BUG-64)
+      raw.sort((a, b) => {
+        const da = Math.hypot((a.a + a.b2) / 2 - X, (a.c + a.d) / 2 - Yp);
+        const db = Math.hypot((b.a + b.b2) / 2 - X, (b.c + b.d) / 2 - Yp);
+        return da - db;
+      });
+      pick = tryList(raw, true) ?? tryList(raw, false);
     }
     if (!pick) continue;
-    withAnchor({ kind: 'marker', x: X, y: Yp }, () => {
-      withLabelRole('axis', () => { text(g, lab, pick!.x, pick!.y, col.b(), pick!.align, pick!.z); });
-    });
+    const paint = () => {
+      withAnchor({ kind: 'marker', x: X, y: Yp }, () => {
+        withLabelRole('axis', () => { text(g, lab, pick!.x, pick!.y, col.b(), pick!.align, pick!.z); });
+      });
+    };
+    if (stack) withTextSplit(' (', paint); else paint();
     taken.push({ x0: pick.a, x1: pick.b2, y0: pick.c, y1: pick.d });
   }
   for (const zn of zetaNames) zn();

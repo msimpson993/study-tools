@@ -49,29 +49,53 @@ export function fillPlotBehind(g: CanvasRenderingContext2D, x0: number, y0: numb
   g.save(); g.fillStyle = cssVar('--plot-bg'); g.fillRect(a, c, b - a, d - c); g.restore();
 }
 
-/** Caption-named readout: never shrink below 9 px; wrap onto a second line if the row will not fit (BUG-60 rest). */
+/** Prefer a sentence or '; ' cut, then a fitting space, so a caption-named readout stays on short lines (BUG-60 rest). */
+const wrapReadout = (g: CanvasRenderingContext2D, s: string, room: number, z: number): string[] => {
+  g.font = `${z}px system-ui,sans-serif`;
+  const fits = (t: string) => g.measureText(t).width <= room;
+  const cutLine = (t: string): string[] => {
+    if (room <= 8 || fits(t)) return [t];
+    const marks: number[] = [];
+    const sent = t.indexOf('.  ');
+    if (sent > 0) marks.push(sent + 1);
+    const semi = t.indexOf('; ');
+    if (semi > 0) marks.push(semi + 1);
+    const spaces = [...t.matchAll(/ /g)].map((q) => q.index as number);
+    const under = [...marks, ...spaces].filter((i) => i > 0 && fits(t.slice(0, i).trim()));
+    const at = under.length ? under[under.length - 1] : (spaces[0] ?? -1);
+    if (at <= 0) return [t];
+    return [t.slice(0, at).trim(), t.slice(at).replace(/^;\s*/, '').trim()].filter(Boolean);
+  };
+  const out: string[] = [];
+  for (const line of cutLine(s)) out.push(...cutLine(line));
+  return out.length ? out : [s];
+};
+
+/** Caption-named readout: never shrink below 9 px; wrap if the row will not fit; do not slide into the plot (BUG-60 rest). */
 export function textReadout(g: CanvasRenderingContext2D, s: string, x: number, y: number, color: string, align: CanvasTextAlign = 'left', size = 10, maxW?: number) {
   const z = Math.max(9, size);
-  const m = typeof g.getTransform === 'function' ? g.getTransform() : { a: 1, e: 0 };
+  const m = typeof g.getTransform === 'function' ? g.getTransform() : { a: 1, e: 0, f: 0, d: 1 };
   const k = m.a > 0 ? m.a : 1, W = (g.canvas?.width || 400) / k, ox = -(m.e || 0) / k;
   const room = maxW ?? (align === 'right' ? x - ox - 4 : ox + W - x - 4);
-  g.font = `${z}px system-ui,sans-serif`;
-  let lines = [s];
-  if (room > 8 && g.measureText(s).width > room) {
-    const semi = s.indexOf('; ');
-    const cutAt = (at: number) => { lines = [s.slice(0, at).trim(), s.slice(at).replace(/^;\s*/, '').trim()]; };
-    if (semi > 0 && g.measureText(s.slice(0, semi + 1)).width <= room) cutAt(semi + 1);
-    else {
-      const mid = Math.floor(s.length * (room / Math.max(g.measureText(s).width, 1)));
-      const spaces = [...s.matchAll(/ /g)].map((q) => q.index as number);
-      const cut = spaces.filter((i) => g.measureText(s.slice(0, i)).width <= room).pop()
-        ?? spaces.reduce((best, i) => Math.abs(i - mid) < Math.abs(best - mid) ? i : best, spaces[0] ?? -1);
-      if (cut > 0) cutAt(cut);
-    }
-  }
+  const lines = wrapReadout(g, s, room, z);
   const n = lines.length, gap = z * 1.15;
-  const y0 = y - ((n - 1) / 2) * gap;
-  for (let i = 0; i < n; i++) text(g, lines[i], x, y0 + i * gap, color, align, z, 'middle', 9);
+  // keep the block on the canvas (and in a header band when one is reserved)
+  let y0 = y - ((n - 1) / 2) * gap;
+  const top = y0 - z * 0.55, bot = y0 + (n - 1) * gap + z * 0.55;
+  const oy = -(('f' in m ? m.f : 0) || 0) / (m.d > 0 ? m.d : 1);
+  const H = (g.canvas?.height || 400) / (m.d > 0 ? m.d : 1);
+  if (top < oy + 2) y0 += (oy + 2) - top;
+  else if (bot > oy + H - 2) y0 -= bot - (oy + H - 2);
+  withLabelRole('axis', () => {
+    for (let i = 0; i < n; i++) text(g, lines[i], x, y0 + i * gap, color, align, z, 'middle', 9);
+  });
+}
+
+/** Force the next text() calls to split at this substring (e.g. " (" for a stacked "−6 (double)"). */
+let textSplitAt: string | null = null;
+export function withTextSplit<T>(at: string | null, fn: () => T): T {
+  const old = textSplitAt; textSplitAt = at;
+  try { return fn(); } finally { textSplitAt = old; }
 }
 
 /** Device-pixel axis-aligned clip, for the label-collision tests and for fitText. */
@@ -147,7 +171,11 @@ export function fitText(g: CanvasRenderingContext2D, s: string, x: number, align
     z = Math.max(floor, Math.max(size * 0.72, size * Math.max(room, 1) / w));
     if (floor > 0) z = Math.max(z, floor);
     g.font = font(z); w = g.measureText(s).width;
-    if (w > hi - lo) { // still wider than the whole panel: two lines, split at the space nearest the middle
+    const hint = textSplitAt && s.includes(textSplitAt) ? s.indexOf(textSplitAt) : -1;
+    if (hint > 0) {
+      lines = [s.slice(0, hint), s.slice(hint).trimStart()];
+      w = Math.max(...lines.map((l) => g.measureText(l).width));
+    } else if (w > hi - lo) { // still wider than the whole panel: two lines, split at the space nearest the middle
       const sp = [...s.matchAll(/ /g)].map((q) => q.index as number); const mid = s.length / 2;
       const cut = sp.length ? sp.reduce((p, q) => (Math.abs(q - mid) < Math.abs(p - mid) ? q : p)) : -1;
       if (cut > 0) { lines = [s.slice(0, cut), s.slice(cut + 1)]; w = Math.max(...lines.map((l) => g.measureText(l).width)); }

@@ -168,7 +168,7 @@ export const sensPanels = (): FigurePanel[] => [
       const mag = ws.map((ww) => borerS(K, { re: 0, im: ww }).mag);
       const approx = ws.map((ww) => ww / K);
       const xr: [number, number] = [-1, 3], yr: [number, number] = [-3, 0.3];
-      const head = isThumb(g) ? 10 : 36;
+      const head = isThumb(g) ? 10 : 46;
       const fr = rangeFrame(w, h, xr, yr, 72, 12, head, 30);
       graphAxes(g, fr, xr, yr, 'ω (rad/s)', '|S|', 1, 1, fmtPow10, fmtPow10);
       curve(g, fr, ws.map(Math.log10), mag.map((m) => Math.log10(Math.max(m, 1e-6))), col.a(), 2);
