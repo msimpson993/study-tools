@@ -685,7 +685,9 @@ export function drawSPlane(g: CanvasRenderingContext2D, w: number, h: number, s:
         const own = rawOwn ? c : I;
         return c.a > f.box.l + 2 && c.b2 < Math.min(f.box.r - 2, x0 - 3) && c.c > f.box.t + 2 && c.d < f.box.b - 2
         && marksZ.every((p) => { const X = f.X(p.re), Y = f.Y(p.im); const cx = Math.max(I.a, Math.min(X, I.b2)), cy = Math.max(I.c, Math.min(Y, I.d)); return Math.hypot(cx - X, cy - Y) >= 7; })
-        && (relaxTaken || taken.every((t) => I.b2 < t.x0 - 2 || I.a > t.x1 + 2 || I.d < t.y0 - 2 || I.c > t.y1 + 2))
+        && taken.every((t) => relaxTaken
+          ? (I.b2 < t.x0 - 1 || I.a > t.x1 + 1 || I.d < t.y0 - 1 || I.c > t.y1 + 1)
+          : (I.b2 < t.x0 - 2 || I.a > t.x1 + 2 || I.d < t.y0 - 2 || I.c > t.y1 + 2))
         && !rayHits(own, th, rawOwn ? 2 : 3) && (relaxOther || !otherRay(I))
         && nearerOwn(c) && offReal(c);
       };
