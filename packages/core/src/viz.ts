@@ -350,7 +350,7 @@ export function withSimProjectStyle<T>(fn: () => T): T {
 }
 export function simProjectStyle(): boolean {
   if (simProjectStyleDepth > 0) return true;
-  return typeof document !== 'undefined' && document.documentElement.dataset.simProject === '1';
+  return typeof document !== 'undefined' && document.documentElement?.dataset?.simProject === '1';
 }
 /** @deprecated use simProjectStyle(); kept as an alias for existing call sites. */
 export function isSimProjectCanvas(_g?: CanvasRenderingContext2D): boolean {
