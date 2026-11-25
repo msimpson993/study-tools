@@ -814,11 +814,13 @@ export function drawSPlane(g: CanvasRenderingContext2D, w: number, h: number, s:
     return false;
   }));
   const rayHitsBox = (b: TextBox) => zr.some((t2) => [1, -1].some((sg) => {
-    const I = inflateBox(b);
+    // match the e2e: grown box (inflateBox) plus half the dashed-stroke width, so a value just under the real axis is rejected
+    const I = inflateBox(b), pad = 1.5;
+    const a = I.a - pad, b2 = I.b2 + pad, c = I.c - pad, d = I.d + pad;
     const ax = x0, ay = y0, bx = f.X(-Math.cos(t2) * R), by = f.Y(sg * Math.sin(t2) * R);
-    if (Math.max(ax, bx) < I.a || Math.min(ax, bx) > I.b2 || Math.max(ay, by) < I.c || Math.min(ay, by) > I.d) return false;
+    if (Math.max(ax, bx) < a || Math.min(ax, bx) > b2 || Math.max(ay, by) < c || Math.min(ay, by) > d) return false;
     const n = Math.max(2, Math.ceil(Math.hypot(bx - ax, by - ay) / 2));
-    for (let k = 0; k <= n; k++) { const u = k / n, Xr = ax + (bx - ax) * u, Yr = ay + (by - ay) * u; if (Xr > I.a && Xr < I.b2 && Yr > I.c && Yr < I.d) return true; }
+    for (let k = 0; k <= n; k++) { const u = k / n, Xr = ax + (bx - ax) * u, Yr = ay + (by - ay) * u; if (Xr > a && Xr < b2 && Yr > c && Yr < d) return true; }
     return false;
   }));
   g.font = '11px system-ui, sans-serif';
@@ -918,13 +920,13 @@ export function drawSPlane(g: CanvasRenderingContext2D, w: number, h: number, s:
       }
       return out;
     };
-    const tryList = (ranked: TextBox[], inflate: boolean, tightRay = false): TextBox | null => {
+    const tryList = (ranked: TextBox[], inflate: boolean): TextBox | null => {
       for (const c of ranked) {
         const I = inflate ? inflateBox(c) : c;
         const rawEdge = edgeDist(c, X, Yp);
         const grownEdge = edgeDist(inflateBox(c), X, Yp);
         // crosses are logged at r = 7; the local e2e grows the box like inflateBox. Stay ≤ 16 from the raw box (BUG-64).
-        if (rawEdge > 16 || grownEdge < 8) continue;
+        if (rawEdge > 16 || grownEdge < 7) continue;
         if (c.a < 1 || c.b2 > vw - 1 || c.c < 1 || c.d > vh - 1) continue;
         if (!staysLHP(c) || !nearerPole(c)) continue;
         if (inflate && (onSigma(I.a, I.b2, I.c, I.d) || onJw(I.a, I.b2, I.c, I.d))) continue;
@@ -932,9 +934,19 @@ export function drawSPlane(g: CanvasRenderingContext2D, w: number, h: number, s:
         {
           const G = inflateBox(c);
           if (hitsOtherMark(X, Yp, G.a, G.b2, G.c, G.d)) continue;
-          if (cv && labelsOn(cv).some((r) => r && G.b2 > r.x0 && G.a < r.x1 && G.d > r.y0 && G.c < r.y1)) continue;
+          const m = typeof g.getTransform === 'function' ? g.getTransform() : { a: 1, b: 0, c: 0, d: 1, e: 0, f: 0 };
+          const dev = (x: number, y: number) => ({ x: m.a * x + m.c * y + m.e, y: m.b * x + m.d * y + m.f });
+          const p0 = dev(G.a, G.c), p1 = dev(G.b2, G.d);
+          const dx0 = Math.min(p0.x, p1.x), dx1 = Math.max(p0.x, p1.x), dy0 = Math.min(p0.y, p1.y), dy1 = Math.max(p0.y, p1.y);
+          const P = dev(X, Yp);
+          if (cv && labelsOn(cv).some((r) => {
+            if (!r) return false;
+            // the 12 px pad recorded around this × itself is not a tick
+            if (r.role === 'axis' && r.x0 <= P.x && P.x <= r.x1 && r.y0 <= P.y && P.y <= r.y1) return false;
+            return dx1 > r.x0 && dx0 < r.x1 && dy1 > r.y0 && dy0 < r.y1;
+          })) continue;
         }
-        if (tightRay ? rayHitsBox(c) : onRay(c.a, c.b2, c.c, c.d)) continue;
+        if (rayHitsBox(c) || onRay(c.a, c.b2, c.c, c.d)) continue;
         return c;
       }
       return null;
@@ -961,7 +973,7 @@ export function drawSPlane(g: CanvasRenderingContext2D, w: number, h: number, s:
         const db = Math.hypot((b.a + b.b2) / 2 - X, (b.c + b.d) / 2 - Yp);
         return da - db;
       });
-      pick = tryList(raw, true) ?? tryList(raw, false) ?? tryList(raw, false, true);
+      pick = tryList(raw, true) ?? tryList(raw, false);
     }
     if (!pick && !mayHide && stack) {
       const tw = measure(MIN_FONT), th = MIN_FONT * 2.25;
@@ -969,7 +981,7 @@ export function drawSPlane(g: CanvasRenderingContext2D, w: number, h: number, s:
       for (let sx = -20; sx <= 8; sx++) for (let sy of [-22, -21, -20, -19, -18, -17, -16, 16, 17, 18, 19, 20, 21, 22])
         for (const al of (['center', 'left', 'right'] as CanvasTextAlign[]))
           dense.push(textBox(X + sx, Yp + sy, tw, th, al, MIN_FONT, nLines));
-      pick = tryList(byEdge(dense), false, true);
+      pick = tryList(byEdge(dense), false);
     }
     if (!pick) continue;
     const paint = () => {
