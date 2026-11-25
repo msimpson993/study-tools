@@ -233,7 +233,7 @@ const onObstacle = (labels: L[], marks: O[], at: string) => {
       if (!a || o.kind !== 'line' || !o.pts || !o.pts.length) return false;
       const xs = [a.x, a.x2].filter((x): x is number => x !== undefined);
       if (!xs.length) return false;
-      return o.pts.every((pt) => xs.some((x) => Math.abs(pt.x - x) < 3.5));
+      return o.pts.every((pt) => xs.some((x) => Math.abs(pt.x - x) < 8));
     };
     const hit = obs.filter((o) => o.cv === lab.cv && !ownLine(o)).find((o) => hitsObstacle(lab, o));
     if (hit) {

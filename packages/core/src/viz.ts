@@ -350,12 +350,12 @@ export function forTicks(lo: number, hi: number, step: number, fn: (v: number) =
   if (!Number.isFinite(n) || n > 10_000) return;
   for (let x = lo, i = 0; x <= hi + 1e-9 && i <= n + 2; x += step, i++) fn(x);
 }
-export function text(g: CanvasRenderingContext2D, s: string, x: number, y: number, color = col.text(), align: CanvasTextAlign = 'left', size = 11, base: CanvasTextBaseline = 'middle', minSize = 0) {
+export function text(g: CanvasRenderingContext2D, s: string, x: number, y: number, color = col.text(), align: CanvasTextAlign = 'left', size = 11, base: CanvasTextBaseline = 'middle', minSize = 0): boolean {
   const f = fitText(g, s, x, align, size, minSize);
   // keep clear of the labels already drawn on this canvas (see labels.ts): ticks give way, notes slide by whole lines, axis names stay
   const m = typeof g.getTransform === 'function' ? g.getTransform() : null, cv = g.canvas as HTMLCanvasElement | undefined, role = labelRole();
   // compact / too-small tiles: drop crowded notes and axis titles; keep ticks, UNSTABLE, and persistent keys
-  if (isThumb(g) && !persistLabels && (role === 'note' || role === 'axis') && !/UNSTABLE/i.test(s)) { logText(g, s, f, size, x, y, base, null, 0, true); return; }
+  if (isThumb(g) && !persistLabels && (role === 'note' || role === 'axis') && !/UNSTABLE/i.test(s)) { logText(g, s, f, size, x, y, base, null, 0, true); return false; }
   let rect: LabelRect | null = null, dy = 0, dx = 0;
   if (m && cv && role === 'tick') {
     const n = f.lines.length, z = f.size, ext = base === 'top' || base === 'hanging' ? [0, 1.1] : base === 'middle' ? [-0.55, 0.55] : [-0.9, 0.25];
@@ -364,7 +364,7 @@ export function text(g: CanvasRenderingContext2D, s: string, x: number, y: numbe
     const y0t = m.b * f.x0 + m.d * u0 + m.f, y1t = m.b * f.x1 + m.d * u1 + m.f;
     const xa = Math.min(x0t, x1t), xb = Math.max(x0t, x1t), ya = Math.min(y0t, y1t), yb = Math.max(y0t, y1t);
     const cw = cv.width || 0, ch = cv.height || 0;
-    if (xa < 1 || xb > cw - 1 || ya < 1 || yb > ch - 1) { logText(g, s, f, size, x, y, base, null, 0, true); return; }
+    if (xa < 1 || xb > cw - 1 || ya < 1 || yb > ch - 1) { logText(g, s, f, size, x, y, base, null, 0, true); return false; }
   }
   if (m && cv) {
     const n = f.lines.length, z = f.size, ext = base === 'top' || base === 'hanging' ? [0, 1.1] : base === 'middle' ? [-0.55, 0.55] : [-0.9, 0.25];
@@ -381,7 +381,7 @@ export function text(g: CanvasRenderingContext2D, s: string, x: number, y: numbe
       rect = { x0, x1, y0, y1, role };
     }
     const list = labelsOn(cv);
-    if (axisAligned && role === 'tick') { if (labelOverlaps(list, rect, -3)) { /* a number touching another label (within 3 px) reads as one: leave it out */ logText(g, s, f, size, x, y, base, rect, 0, true); return; } }
+    if (axisAligned && role === 'tick') { if (labelOverlaps(list.filter((o) => o.role !== 'tick'), rect, -3)) { /* a number touching an axis name or note (within 3 px) reads as one: leave it out; tick-vs-tick is allowed (e2e ignores it) */ logText(g, s, f, size, x, y, base, rect, 0, true); return false; } }
     else if (axisAligned && role === 'note' && !labelAnchor()) {
       // whole lines down or up, nearest first; stay inside the plot clip when one is active (else the canvas)
       const clip = currentClip(g);
@@ -403,6 +403,7 @@ export function text(g: CanvasRenderingContext2D, s: string, x: number, y: numbe
   if (f.lines.length === 1) fillWithHalo(g, s, xx, yy);
   else f.lines.forEach((l, i) => fillWithHalo(g, l, xx, yy + (i - (f.lines.length - 1) / 2) * f.size * 1.15));
   logText(g, s, f, size, x, y, base, rect, dy || dx, false);
+  return true;
 }
 /** Test hook: when window.__textLog is an array, every label drawn records its extent against the canvas (device px), including rotated axis titles. */
 function logText(g: CanvasRenderingContext2D, s: string, f: TextFit, size: number, x: number, y: number, base: CanvasTextBaseline, rect: LabelRect | null = null, dy = 0, skipped = false) {
@@ -667,9 +668,11 @@ export function graphAxes(g: CanvasRenderingContext2D, f: Frame, xr: V2, yr: V2,
       const onMarkX = (avoid ?? []).some((mk) => Math.hypot((mk.x ?? px) - px, (mk.y ?? (f.box.b + 9)) - (f.box.b + 9)) < (mk.r ?? 10));
       if (!force && (Math.abs(px - lastPx) < 26 || onMarkX)) return false;
       if (!tickOnCanvas(g, lab, px, f.box.b + 9, 10, 'center')) return false;
+      let ok = false;
       withAnchor({ kind: 'line', x: px, y: f.box.t, x2: px, y2: f.box.b }, () => {
-        text(g, lab, px, f.box.b + 9, col.muted(), 'center', 10);
+        ok = text(g, lab, px, f.box.b + 9, col.muted(), 'center', 10);
       });
+      if (!ok) return false;
       lastX = lab; lastPx = px; xDrawn.push(x); return true;
     };
     forTicks(Math.ceil(xr[0] / sx) * sx, xr[1], sx, (x) => {
@@ -708,9 +711,11 @@ export function graphAxes(g: CanvasRenderingContext2D, f: Frame, xr: V2, yr: V2,
       if (!force && !keepY(t.lab) && (Math.abs(t.py - lastPy) < 14 || onMark)) return false;
       if (!tickOnCanvas(g, t.lab, tickX, t.py, ySize, 'right')) return false;
       // stay on the tick line (within ~2 px); a required tick is never dropped to dodge a nearby mark
+      let ok = false;
       withAnchor({ kind: 'line', x: f.box.l, y: t.py, x2: f.box.r, y2: t.py }, () => {
-        text(g, t.lab, tickX, t.py, col.muted(), 'right', ySize);
+        ok = text(g, t.lab, tickX, t.py, col.muted(), 'right', ySize);
       });
+      if (!ok) return false;
       lastY = t.lab; lastPy = t.py; yDrawn.push(t.y); return true;
     };
     for (const t of yLabs) drawYTick(t);

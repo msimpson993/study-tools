@@ -614,9 +614,11 @@ export function drawSPlane(g: CanvasRenderingContext2D, w: number, h: number, s:
       const fits = px + tw / 2 <= f.box.r - 1 && px - tw / 2 >= f.box.l + 1;
       if (!fits || !tickOnCanvas(g, lab, px, y, TICK_Z, 'center')) return false;
       if (!force && (lab === lastX || Math.abs(px - lastPx) < 26 || hitsMark(px, y, tw) || underPole(px))) return false;
+      let ok = false;
       withAnchor({ kind: 'line', x: px, y: f.box.t, x2: px, y2: f.box.b }, () => {
-        text(g, lab, px, y, col.muted(), 'center', TICK_Z);
+        ok = text(g, lab, px, y, col.muted(), 'center', TICK_Z);
       });
+      if (!ok) return false;
       lastX = lab; lastPx = px; xDrawn.push(x); return true;
     };
     forTicks(Math.ceil(xLo / st) * st, xHi, st, (x) => drawX(x));
@@ -638,10 +640,12 @@ export function drawSPlane(g: CanvasRenderingContext2D, w: number, h: number, s:
       const fits = py > f.box.t + (force ? 1 : 4) && py < f.box.b - (force ? 1 : 4);
       if (!fits) return;
       if (!force && (lab === lastY || Math.abs(py - lastPy) < 16 || hitsMark(x, py, tw))) return;
+      let ok = false;
       withAnchor({ kind: 'line', x: f.box.l, y: py, x2: f.box.r, y2: py }, () => {
-        text(g, lab, x, py, col.muted(), 'left', TICK_Z);
+        ok = text(g, lab, x, py, col.muted(), 'left', TICK_Z);
       });
-      lastY = lab; lastPy = py; yDrawn.push(y);
+      if (!ok) return false;
+      lastY = lab; lastPy = py; yDrawn.push(y); return true;
     };
     forTicks(Math.ceil(yLo / st) * st, yHi, st, (y) => drawY(y));
     const yNeed = (yLo <= 0 && 0 <= yHi) ? 3 : 2;
@@ -1213,10 +1217,11 @@ export function drawBode(g: CanvasRenderingContext2D, w: number, h: number, s: B
       if (px - tw / 2 < 1) px = tw / 2 + 1;
       if (px + tw / 2 > W - 1) px = W - 1 - tw / 2;
       if (!tickOnCanvas(g, lab, px, f.box.b + 10, 10, 'center')) return;
+      let ok = false;
       withAnchor({ kind: 'line', x: f.X(d), y: f.box.t, x2: f.X(d), y2: f.box.b }, () => {
-        withLabelRole('tick', () => text(g, lab, px, f.box.b + 10, col.muted(), 'center', 10));
+        withLabelRole('tick', () => { ok = text(g, lab, px, f.box.b + 10, col.muted(), 'center', 10); });
       });
-      xDrawn.push(d);
+      if (ok) xDrawn.push(d);
     };
     forTicks(Math.ceil(lo), hi, 1, (d) => {
       g.strokeStyle = col.grid(); g.beginPath(); g.moveTo(f.X(d), f.box.t); g.lineTo(f.X(d), f.box.b); g.stroke();
