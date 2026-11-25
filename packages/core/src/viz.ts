@@ -721,7 +721,7 @@ export function graphAxes(g: CanvasRenderingContext2D, f: Frame, xr: V2, yr: V2,
     }
     return st;
   };
-  const sx = fitStep(xr[1] - xr[0], f.box.r - f.box.l, xs || nice(xr[1] - xr[0], 6), 28);
+  const sx = fitStep(xr[1] - xr[0], f.box.r - f.box.l, xs || nice(xr[1] - xr[0], 6), simProjectStyle() ? 40 : 28);
   const sy = fitStep(yr[1] - yr[0], f.box.b - f.box.t, ys || nice(yr[1] - yr[0], 4), 22);
   g.lineWidth = 1; g.setLineDash([]);
   // the axis names first, so tick numbers that would sit on them give way
@@ -753,7 +753,7 @@ export function graphAxes(g: CanvasRenderingContext2D, f: Frame, xr: V2, yr: V2,
       // at most one tick in the corner where the axes meet (BUG-74); 0 may sit there if it is first
       if (inCorner && cornerTaken) return false;
       const onMarkX = (avoid ?? []).some((mk) => Math.hypot((mk.x ?? px) - px, (mk.y ?? (f.box.b + 9)) - (f.box.b + 9)) < (mk.r ?? 10));
-      const minGap = simAxes ? Math.max(26, lastTw / 2 + tw / 2 + 3) : 26;
+      const minGap = simAxes ? Math.max(26, lastTw / 2 + tw / 2 + 10) : 26;
       if (Math.abs(px - lastPx) < minGap || onMarkX) return false;
       if (simAxes && !tickOnCanvas(g, lab, px, f.box.b + 9, 10, 'center')) {
         const W = g.canvas.width || 0;
@@ -871,6 +871,12 @@ export function graphAxes(g: CanvasRenderingContext2D, f: Frame, xr: V2, yr: V2,
       if (clearOfXRow && innerOk && tryPaint(inside, 'left', false)) return accept(t.py);
       // a 0 on the x-axis may sit just inside the plot at the same y (still on its line)
       if (t.lab === '0' && innerOk && tryPaint(inside, 'left', false)) return accept(t.py);
+      // last resort, still on the line: a little further into the plot so the y-title is clear
+      if (force) {
+        const xIn = f.box.l + 10;
+        if (t.py > f.box.t + 3 && t.py < f.box.b - 3 && tickOnCanvas(g, t.lab, xIn, t.py, ySize, 'left') && tryPaintAt(xIn, 'left', t.py))
+          return accept(t.py);
+      }
       return false;
     };
     if (!simAxes) {

@@ -111,9 +111,9 @@ export function drawStepResponse(g: CanvasRenderingContext2D, w: number, h: numb
   // ±2% lives in the bottom-right pad. When the pad is deep enough it sits below the
   // x-tick row; on a tight pad it shares the tick baseline and the last tick gives way.
   const padB = f.h - f.box.b;
-  // box.b+26 sat on "time (s)" at h-5 when the bottom pad is 38; sit between the tick row and the name
-  const bandY = padB >= 34 ? f.box.b + 18 : f.box.b + 9;
-  if (show.band && bandY <= f.box.b + 12) avoid.push({ x: f.box.r - 4, y: f.box.b + 9, r: 30 });
+  // share the x-tick row; the last tick gives way so ±2% never sits on “time (s)” or on “8”
+  const bandY = f.box.b + 9;
+  if (show.band) avoid.push({ x: f.box.r - 4, y: f.box.b + 9, r: 36 });
   graphAxes(g, f, [0, tEnd], yr, s.xLabel ?? 'time (s)', s.yLabel ?? 'output', 0, yStep, undefined, undefined, avoid);
   const yf = m.yFinal;
   if (show.band && Number.isFinite(yf)) {
@@ -736,11 +736,21 @@ export function drawSPlane(g: CanvasRenderingContext2D, w: number, h: number, s:
       vw = reserved.ix - 6;
     }
   }
-  if (s.maxAspect && s.maxAspect > 0 && vw > 2 * pad && h > 2 * pad) {
-    const cap = tileCanvas ? Math.max(s.maxAspect, 1.8) : s.maxAspect;
-    const iw = vw - 2 * pad, ih = h - 2 * pad;
-    if (iw / ih > cap) { const nw = cap * ih + 2 * pad; ox += (vw - nw) / 2; vw = nw; }
-    else if (ih / iw > cap) { vh = cap * iw + 2 * pad; oy = (h - vh) / 2; }
+  const applyAspect = () => {
+    vw = w - (reserved ? (w - (reserved.ix - 6)) : 0);
+    vh = h; ox = 0; oy = 0;
+    if (s.maxAspect && s.maxAspect > 0 && vw > 2 * pad && h > 2 * pad) {
+      const cap = tileCanvas ? Math.max(s.maxAspect, 1.8) : s.maxAspect;
+      const iw = vw - 2 * pad, ih = h - 2 * pad;
+      if (iw / ih > cap) { const nw = cap * ih + 2 * pad; ox += (vw - nw) / 2; vw = nw; }
+      else if (ih / iw > cap) { vh = cap * iw + 2 * pad; oy = (h - vh) / 2; }
+    }
+  };
+  applyAspect();
+  // a side zoom box is not worth a letterboxed plane on a narrow canvas
+  if (reserved && (vh - 2 * pad) / h < 0.58) {
+    reserved = null;
+    applyAspect();
   }
   const f0 = splaneFrame(Math.max(vw, 1), Math.max(vh, 1), Math.max(s.range, 1e-6), s.reCenter, s.pad);
   if (!(w > 0) || !(h > 0) || !Number.isFinite(s.range) || s.range <= 0) { if (s.clear !== false) wipe(g, Math.max(w, 0), Math.max(h, 0)); return f0; }
@@ -1287,8 +1297,15 @@ export function drawSPlane(g: CanvasRenderingContext2D, w: number, h: number, s:
           const a = shadeR - 6 - tw, c = y - MIN_FONT * 0.55, d = y + MIN_FONT * 0.55;
           if (c >= f.box.t + 1 && d <= f.box.b - 1 && !blocked(a, shadeR - 6, c, d)) { yPut = y; break; }
         }
-        if (yPut === null) yPut = f.box.t + 14;
-        withLabelRole('axis', () => { text(g, word, shadeR - 6, yPut, col.bad(), 'right', MIN_FONT); });
+        if (yPut === null) {
+          for (const y of [f.box.t + 8, f.box.t + 36, f.box.b - 24, f.box.b - 8, (f.box.t + f.box.b) / 2 + 12]) {
+            const a = shadeR - 6 - tw, c = y - MIN_FONT * 0.55, d = y + MIN_FONT * 0.55;
+            if (c >= f.box.t + 1 && d <= f.box.b - 1 && !blocked(a, shadeR - 6, c, d) && !onRay(a, shadeR - 6, c, d)) { yPut = y; break; }
+          }
+        }
+        if (yPut !== null) {
+          withLabelRole('axis', () => { text(g, word, shadeR - 6, yPut, col.bad(), 'right', MIN_FONT); });
+        }
       }
     }
     }
