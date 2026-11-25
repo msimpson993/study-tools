@@ -745,8 +745,8 @@
         "role": "tick"
       },
       {
-        "s": "OS 7.4%\nTp 0.93 s",
-        "size": 10.5,
+        "s": "OS 7.4%  Tp 0.93 s",
+        "size": 9,
         "role": "axis"
       },
       {
@@ -1162,11 +1162,6 @@
         "role": "axis"
       },
       {
-        "s": "┄ slower handout gains",
-        "size": 10,
-        "role": "axis"
-      },
-      {
         "s": "0",
         "size": 10,
         "role": "tick"
@@ -1207,8 +1202,8 @@
         "role": "tick"
       },
       {
-        "s": "OS 0.4%\nTp 4.88 s",
-        "size": 10.5,
+        "s": "OS 0.4%  Tp 4.88 s",
+        "size": 9,
         "role": "axis"
       },
       {
@@ -1446,8 +1441,8 @@
         "role": "tick"
       },
       {
-        "s": "OS 0.4%\nTp 4.91 s",
-        "size": 10.5,
+        "s": "OS 0.4%  Tp 4.91 s",
+        "size": 9,
         "role": "axis"
       },
       {
@@ -4898,8 +4893,8 @@
         "role": "axis"
       },
       {
-        "s": "OS 17.1%\nTp 0.18 s",
-        "size": 10.5,
+        "s": "OS 17.1%  Tp 0.18 s",
+        "size": 9,
         "role": "axis"
       },
       {
@@ -5099,8 +5094,8 @@
         "role": "axis"
       },
       {
-        "s": "OS 17.1%\nTp 0.18 s",
-        "size": 10.5,
+        "s": "OS 17.1%  Tp 0.18 s",
+        "size": 9,
         "role": "axis"
       },
       {
@@ -6684,8 +6679,8 @@
         "role": "tick"
       },
       {
-        "s": "OS 7.4%\nTp 0.93 s",
-        "size": 10.5,
+        "s": "OS 7.4%  Tp 0.93 s",
+        "size": 9,
         "role": "axis"
       },
       {
@@ -11222,7 +11217,7 @@
         "role": "axis"
       },
       {
-        "s": "OS 17.1%\nTp 0.18 s",
+        "s": "OS 17.1%  Tp 0.18 s",
         "size": 9,
         "role": "axis"
       },
@@ -11413,7 +11408,7 @@
         "role": "axis"
       },
       {
-        "s": "OS 17.1%\nTp 0.18 s",
+        "s": "OS 17.1%  Tp 0.18 s",
         "size": 9,
         "role": "axis"
       },
