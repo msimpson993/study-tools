@@ -271,16 +271,17 @@ export function drawStepResponse(g: CanvasRenderingContext2D, w: number, h: numb
     const tryOs = (ignoreGhost: boolean) => {
       g.font = '10.5px system-ui,sans-serif';
       const fullWide = ((g.measureText(osFull).width * 0.09 + 2) / 2) > 3;
-      const words = (tight || w < 420 || fullWide ? [osShort, osStack, osFull] : [osFull, osShort, osStack]);
+      const words = (!tile && (tight || w < 500) ? [osStack, osShort, osFull] : (tight || w < 420 || fullWide ? [osShort, osStack, osFull] : [osFull, osShort, osStack]));
       for (const word of words) {
         const nLines = word.includes('\n') ? 2 : 1;
         for (const z of [10.5, 10, MIN_FONT]) {
           g.font = `${z}px system-ui,sans-serif`;
           const parts = word.split('\n'), tw = Math.max(...parts.map((l) => g.measureText(l).width)), th = z + 3;
           const above: TextBox[] = [];
-          for (const gap of [10, 12, 14, 16]) for (const al of ['center', 'right', 'left'] as CanvasTextAlign[])
+          for (const gap of [8, 10, 12, 14, 16]) for (const al of ['center', 'right', 'left'] as CanvasTextAlign[])
             above.push(textBox(peakX, peakY - gap - ((nLines - 1) / 2) * z * 1.15 - z * 0.55, tw, th, al, z, nLines));
-          for (const c of [...above, ...aroundMarker(peakX, peakY, tw, th, z, true, ANCHOR_GAP, nLines)]) {
+          const sides = [...aroundMarker(peakX, peakY, tw, th, z, true, ANCHOR_GAP, nLines), ...aroundMarker(peakX, peakY, tw, th, z, false, ANCHOR_GAP, nLines), ...aroundMarker(peakX, peakY, tw, th, z, true, 14, nLines), ...aroundMarker(peakX, peakY, tw, th, z, false, 8, nLines)];
+          for (const c of [...above, ...sides]) {
             const I = inflateBox(c);
             if (!osFits(c.a, c.b2, c.c, c.d)) continue;
             if (!ignoreGhost && ghostWouldHit(I.a, I.b2, I.c, I.d)) continue;
@@ -298,7 +299,7 @@ export function drawStepResponse(g: CanvasRenderingContext2D, w: number, h: numb
       return null;
     };
     let osHit = tryOs(false);
-    if (!osHit && s.ghost?.label && tile) { dropGhost = true; ghostBox = null; osHit = tryOs(true); }
+    if (!osHit && s.ghost?.label) { dropGhost = true; ghostBox = null; osHit = tryOs(true); }
     if (osHit) {
       const { word, c } = osHit;
       withAnchor({ kind: 'marker', x: peakX, y: peakY }, () => {
@@ -319,14 +320,14 @@ export function drawStepResponse(g: CanvasRenderingContext2D, w: number, h: numb
         if (hitsCurve(cand.a, cand.b2, cand.c, cand.d)) return false;
         return true;
       };
-      for (const item of [osShort, osStack]) {
+      for (const item of [osStack, osShort]) {
         const nLines = item.includes('\n') ? 2 : 1;
         g.font = `${MIN_FONT}px system-ui,sans-serif`;
         const parts = item.split('\n'), tw = Math.max(...parts.map((l) => g.measureText(l).width)), th = MIN_FONT + 3;
         const above: TextBox[] = [];
-        for (const gap of [10, 12, 14, 16]) for (const al of ['center', 'right', 'left'] as CanvasTextAlign[])
+        for (const gap of [8, 10, 12, 14, 16]) for (const al of ['center', 'right', 'left'] as CanvasTextAlign[])
           above.push(textBox(peakX, peakY - gap - ((nLines - 1) / 2) * MIN_FONT * 1.15 - MIN_FONT * 0.55, tw, th, al, MIN_FONT, nLines));
-        const pool = [...above, ...aroundMarker(peakX, peakY, tw, th, MIN_FONT, true, ANCHOR_GAP, nLines), ...aroundMarker(peakX, peakY, tw, th, MIN_FONT, false, ANCHOR_GAP, nLines), ...aroundMarker(peakX, peakY, tw, th, MIN_FONT, true, 14, nLines), ...aroundMarker(peakX, peakY, tw, th, MIN_FONT, false, 14, nLines)];
+        const pool = [...above, ...aroundMarker(peakX, peakY, tw, th, MIN_FONT, true, ANCHOR_GAP, nLines), ...aroundMarker(peakX, peakY, tw, th, MIN_FONT, false, ANCHOR_GAP, nLines), ...aroundMarker(peakX, peakY, tw, th, MIN_FONT, true, 14, nLines), ...aroundMarker(peakX, peakY, tw, th, MIN_FONT, false, 14, nLines), ...aroundMarker(peakX, peakY, tw, th, MIN_FONT, true, 8, nLines), ...aroundMarker(peakX, peakY, tw, th, MIN_FONT, false, 8, nLines)];
         const hit = pool.find(okish);
         if (hit) { c = hit; word = item; break; }
       }
