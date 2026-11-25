@@ -271,7 +271,7 @@ export function drawStepResponse(g: CanvasRenderingContext2D, w: number, h: numb
           g.font = `${z}px system-ui,sans-serif`;
           const tw = g.measureText(word).width, th = z + 3;
           const above: TextBox[] = [];
-          for (const gap of [12, 16]) for (const al of ['center', 'right', 'left'] as CanvasTextAlign[])
+          for (const gap of [12, 16, 22, 28, 36]) for (const al of ['center', 'right', 'left'] as CanvasTextAlign[])
             above.push(textBox(peakX, peakY - gap - z * 0.55, tw, th, al, z));
           for (const c of [...above, ...aroundMarker(peakX, peakY, tw, th, z, true)]) {
             const I = inflateBox(c);
@@ -309,13 +309,14 @@ export function drawStepResponse(g: CanvasRenderingContext2D, w: number, h: numb
         const cx = Math.max(I.a, Math.min(peakX, I.b2)), cy = Math.max(I.c, Math.min(peakY, I.d));
         if (Math.hypot(cx - peakX, cy - peakY) < 8) continue;
         if (I.c < yRef + 8 && I.d > yRef - 8) continue;
+        if (hitsOtherVert(I.a, I.b2, I.c, I.d, [peakX])) continue;
         if (hitsCurve(cand.a, cand.b2, cand.c, cand.d)) continue;
         c = cand; break;
       }
       if (!c) {
         const z = MIN_FONT;
         const above: TextBox[] = [];
-        for (const gap of [12, 16]) for (const al of ['center', 'right', 'left'] as CanvasTextAlign[])
+        for (const gap of [12, 16, 22, 28, 36]) for (const al of ['center', 'right', 'left'] as CanvasTextAlign[])
           above.push(textBox(peakX, peakY - gap - z * 0.55, tw, th, al, z));
         const pool = [...above, ...aroundMarker(peakX, peakY, tw, th, z, true), ...aroundMarker(peakX, peakY, tw, th, z, false)];
         const okish = (cand: TextBox) => {

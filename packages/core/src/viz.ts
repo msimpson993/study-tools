@@ -333,11 +333,16 @@ export function isThumb(g: CanvasRenderingContext2D): boolean {
   const r = box.getBoundingClientRect();
   return r.width < TILE_MIN_W || r.height < TILE_MIN_H;
 }
-let persistLabels = 0;
+let persistLabels = 0, forceTick = 0;
 /** Draw labels even on a compact tile (short keys that still fit). */
 export function withPersistentLabels<T>(fn: () => T): T {
   persistLabels++;
   try { return fn(); } finally { persistLabels--; }
+}
+/** Draw a tick even if it touches an axis name, used when we must keep a second labelled tick. */
+export function withForcedTick<T>(fn: () => T): T {
+  forceTick++;
+  try { return fn(); } finally { forceTick--; }
 }
 /** A usable, finite, strictly positive increment for a tick / grid loop. */
 export function goodStep(step: number): boolean {
@@ -381,7 +386,7 @@ export function text(g: CanvasRenderingContext2D, s: string, x: number, y: numbe
       rect = { x0, x1, y0, y1, role };
     }
     const list = labelsOn(cv);
-    if (axisAligned && role === 'tick') { if (labelOverlaps(list.filter((o) => o.role !== 'tick'), rect, -3)) { /* a number touching an axis name or note (within 3 px) reads as one: leave it out; tick-vs-tick is allowed (e2e ignores it) */ logText(g, s, f, size, x, y, base, rect, 0, true); return false; } }
+    if (axisAligned && role === 'tick' && !forceTick) { if (labelOverlaps(list.filter((o) => o.role !== 'tick'), rect, -3)) { /* a number touching an axis name or note (within 3 px) reads as one: leave it out; tick-vs-tick is allowed (e2e ignores it) */ logText(g, s, f, size, x, y, base, rect, 0, true); return false; } }
     else if (axisAligned && role === 'note' && !labelAnchor()) {
       // whole lines down or up, nearest first; stay inside the plot clip when one is active (else the canvas)
       const clip = currentClip(g);
@@ -679,15 +684,17 @@ export function graphAxes(g: CanvasRenderingContext2D, f: Frame, xr: V2, yr: V2,
       g.strokeStyle = col.grid(); g.beginPath(); g.moveTo(f.X(x), f.box.t); g.lineTo(f.X(x), f.box.b); g.stroke();
       drawXTick(x);
     });
-    const xInset = (f.box.r - f.box.l) > 8 && f.sx ? 6 / f.sx : 0;
-    for (const x of minNiceTicks(xr[0] + xInset, xr[1] - xInset, xDrawn, 2)) if (!xDrawn.some((u) => Math.abs(u - x) < 1e-8)) drawXTick(x, true);
-    if (xDrawn.length < 2) {
-      const mid = (xr[0] + xr[1]) / 2, sp = (xr[1] - xr[0]) / 2;
-      for (const x of [mid + 0.7 * sp, mid - 0.7 * sp, mid + 0.45 * sp, mid - 0.45 * sp]) {
-        if (xDrawn.length >= 2) break;
-        if (!xDrawn.some((u) => Math.abs(u - x) < 1e-8)) drawXTick(x, true);
+    withForcedTick(() => {
+      const xInset = (f.box.r - f.box.l) > 8 && f.sx ? 6 / f.sx : 0;
+      for (const x of minNiceTicks(xr[0] + xInset, xr[1] - xInset, xDrawn, 2)) if (!xDrawn.some((u) => Math.abs(u - x) < 1e-8)) drawXTick(x, true);
+      if (xDrawn.length < 2) {
+        const mid = (xr[0] + xr[1]) / 2, sp = (xr[1] - xr[0]) / 2;
+        for (const x of [mid + 0.7 * sp, mid - 0.7 * sp, mid + 0.45 * sp, mid - 0.45 * sp]) {
+          if (xDrawn.length >= 2) break;
+          if (!xDrawn.some((u) => Math.abs(u - x) < 1e-8)) drawXTick(x, true);
+        }
       }
-    }
+    });
     // one size for every y tick, never below 9 (BUG-61); keep 0 / 1 / 2 on a 0–2 axis, centred on the line (BUG-65)
     const yLabs: { lab: string; y: number; py: number }[] = [];
     forTicks(Math.ceil(yr[0] / sy) * sy, yr[1], sy, (y) => {
@@ -719,20 +726,22 @@ export function graphAxes(g: CanvasRenderingContext2D, f: Frame, xr: V2, yr: V2,
       lastY = t.lab; lastPy = t.py; yDrawn.push(t.y); return true;
     };
     for (const t of yLabs) drawYTick(t);
-    const yInsetG = (f.box.b - f.box.t) > 8 && f.sy ? 6 / f.sy : 0;
-    for (const y of minNiceTicks(yr[0] + yInsetG, yr[1] - yInsetG, yDrawn, 2)) {
-      if (yDrawn.some((u) => Math.abs(u - y) < 1e-8)) continue;
-      const lab = yfmt ? yfmt(y) : tickLabelFine(y, sy);
-      if (lab) drawYTick({ lab, y, py: f.Y(y) }, true);
-    }
-    if (yDrawn.length < 2) {
-      const mid = (yr[0] + yr[1]) / 2, sp = (yr[1] - yr[0]) / 2;
-      for (const y of [mid + 0.7 * sp, mid - 0.7 * sp, mid + 0.45 * sp, mid - 0.45 * sp]) {
-        if (yDrawn.length >= 2) break;
+    withForcedTick(() => {
+      const yInsetG = (f.box.b - f.box.t) > 8 && f.sy ? 6 / f.sy : 0;
+      for (const y of minNiceTicks(yr[0] + yInsetG, yr[1] - yInsetG, yDrawn, 2)) {
+        if (yDrawn.some((u) => Math.abs(u - y) < 1e-8)) continue;
         const lab = yfmt ? yfmt(y) : tickLabelFine(y, sy);
-        if (lab && !yDrawn.some((u) => Math.abs(u - y) < 1e-8)) drawYTick({ lab, y, py: f.Y(y) }, true);
+        if (lab) drawYTick({ lab, y, py: f.Y(y) }, true);
       }
-    }
+      if (yDrawn.length < 2) {
+        const mid = (yr[0] + yr[1]) / 2, sp = (yr[1] - yr[0]) / 2;
+        for (const y of [mid + 0.7 * sp, mid - 0.7 * sp, mid + 0.45 * sp, mid - 0.45 * sp]) {
+          if (yDrawn.length >= 2) break;
+          const lab = yfmt ? yfmt(y) : tickLabelFine(y, sy);
+          if (lab && !yDrawn.some((u) => Math.abs(u - y) < 1e-8)) drawYTick({ lab, y, py: f.Y(y) }, true);
+        }
+      }
+    });
   });
   g.strokeStyle = col.strong();
   if (yr[0] < 0 && yr[1] > 0) { g.beginPath(); g.moveTo(f.box.l, f.Y(0)); g.lineTo(f.box.r, f.Y(0)); g.stroke(); }
