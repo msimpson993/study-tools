@@ -407,7 +407,7 @@ export function drawStepResponse(g: CanvasRenderingContext2D, w: number, h: numb
         const trMid = trPlaced ? (trPlaced.x0 + trPlaced.x1) / 2 : lineX - 80;
         const tpX = (show.overshoot && Number.isFinite(m.peakTime)) ? f.X(m.peakTime) : lineX + 80;
         const goRight = Math.abs(tpX - (lineX + 8)) >= Math.abs(tpX - (lineX - 8)) && trMid <= lineX;
-        const ysPark = [yLo - 10, yLo - 18, yLo - 4, yLo - 26, (yLo + (osPlaced ? osPlaced.y : yHi)) / 2];
+        const ysPark = [yLo - 10, yLo - 18, yLo - 26, yLo - 4, yLo - 34];
         const xsPark: [number, CanvasTextAlign][] = goRight
           ? [[lineX + 8, 'left'], [lineX + 16, 'left'], [lineX + 24, 'left'], [lineX - 8, 'right'], [lineX - 16, 'right']]
           : [[lineX - 8, 'right'], [lineX - 16, 'right'], [lineX - 24, 'right'], [lineX + 8, 'left'], [lineX + 16, 'left']];
@@ -423,8 +423,9 @@ export function drawStepResponse(g: CanvasRenderingContext2D, w: number, h: numb
           tsPick = c; break;
         }
         if (!tsPick) {
-          const open = cands.find((c) => c.a >= 2 && c.b2 <= w - 2 && c.c >= 2 && c.d <= f.h - 1 && !hitsOtherVert(c.a, c.b2, c.c, c.d, [lineX]) && !hitsPlaced(c.a, c.b2, c.c, c.d));
-          tsPick = open ?? cands.find((c) => !hitsOtherVert(c.a, c.b2, c.c, c.d, [lineX]) && !hitsPlaced(c.a, c.b2, c.c, c.d)) ?? cands.find((c) => !hitsOtherVert(c.a, c.b2, c.c, c.d, [lineX])) ?? cands[0];
+          const okPark = (c: TextBox) => c.a >= 2 && c.b2 <= w - 2 && c.c >= 2 && c.d <= f.h - 1
+            && !hitsOtherVert(c.a, c.b2, c.c, c.d, [lineX]) && !hitsCurve(c.a, c.b2, c.c, c.d) && !hitsPlaced(c.a, c.b2, c.c, c.d);
+          tsPick = cands.find(okPark) ?? cands.find((c) => !hitsOtherVert(c.a, c.b2, c.c, c.d, [lineX]) && !hitsCurve(c.a, c.b2, c.c, c.d)) ?? null;
         }
       }
       if (tsPick) {
@@ -635,8 +636,16 @@ export function drawSPlane(g: CanvasRenderingContext2D, w: number, h: number, s:
       lastY = lab; lastPy = py; yDrawn.push(y);
     };
     forTicks(Math.ceil(yLo / st) * st, yHi, st, (y) => drawY(y));
-    const yNeed = (yLo <= 0 && 0 <= yHi) ? Math.max(3, 2 + (yDrawn.includes(0) ? 0 : 1)) : 2;
-    for (const y of minNiceTicks(yLo, yHi, yDrawn, yNeed)) if (!yDrawn.some((u) => Math.abs(u - y) < 1e-8)) drawY(y, true);
+    const yNeed = (yLo <= 0 && 0 <= yHi) ? 3 : 2;
+    const yInset = (f.box.b - f.box.t) > 8 && f.sy ? 6 / f.sy : 0;
+    for (const y of minNiceTicks(yLo + yInset, yHi - yInset, yDrawn, yNeed)) if (!yDrawn.some((u) => Math.abs(u - y) < 1e-8)) drawY(y, true);
+    if (yDrawn.length < 2) {
+      const mid = (yLo + yHi) / 2, sp = (yHi - yLo) / 2;
+      for (const y of [mid + 0.7 * sp, mid - 0.7 * sp, mid + 0.45 * sp, mid - 0.45 * sp]) {
+        if (yDrawn.length >= 2) break;
+        if (!yDrawn.some((u) => Math.abs(u - y) < 1e-8)) drawY(y, true);
+      }
+    }
   });
   logPlotFrame(g, f);
   // "unstable" is unanchored: placed after pole and ζ labels, and dropped on a tile if it will not fit.

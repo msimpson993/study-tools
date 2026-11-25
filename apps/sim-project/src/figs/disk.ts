@@ -83,11 +83,11 @@ export const diskPanels = (): FigurePanel[] => [
       const rays = [...new Set(armZ.map((z) => Math.abs(z) < 0.005 ? null : Number(z.toPrecision(2))).filter((z): z is number => z != null))];
       const thumb = isThumb(g);
       const tile = !thumb && isTileCanvas(g);
-      const topBand = thumb ? 0 : (tile ? 24 : 28), botBand = thumb ? 0 : (tile ? 24 : 30);
+      const topBand = thumb ? 0 : (tile ? 22 : 28), botBand = thumb ? 0 : (tile ? 22 : 30);
       wipe(g, w, h);
       g.save(); g.translate(0, topBand);
       drawSPlane(g, w, h - topBand - botBand, {
-        range, reCenter: -range * 0.4, poles: arm, zeros: [], labels: true, zetaRays: rays.length ? rays : undefined, pad: tile ? 8 : 12, maxAspect: 1.35,
+        range, reCenter: -range * 0.4, poles: arm, zeros: [], labels: true, zetaRays: rays.length ? rays : undefined, pad: 12, maxAspect: 1.35,
       });
       g.restore();
       textReadout(g, `coil pole at ${f(coil.re, 1)}  (off scale)`, 8, 12, col.muted(), 'left', 10);
@@ -96,9 +96,9 @@ export const diskPanels = (): FigurePanel[] => [
       const ofCeil = ratio >= 10 ? `1/${f(ratio, 0)}` : f(1 / ratio, 2);
       const msg = Ka >= ceil ? 'UNSTABLE'
         : tile
-          ? `ceiling Ka = 4080; Ka = ${f(Ka, 0)} is ${ofCeil}.  ω = ${f(diskOscW, 1)} rad/s`
+          ? `ceiling Ka = 4080; Ka = ${f(Ka, 0)} is ${ofCeil}, ω = ${f(diskOscW, 1)} rad/s`
           : `ceiling Ka = 4080; Ka = ${f(Ka, 0)} is ${ofCeil} of the ceiling.  ω = ${f(diskOscW, 1)} rad/s`;
-      textReadout(g, msg, 8, h - (botBand > 24 ? 14 : 10), Ka >= ceil ? col.bad() : col.text(), 'left', 10);
+      textReadout(g, msg, 8, h - (botBand >= 28 ? 14 : botBand >= 22 ? 11 : 10), Ka >= ceil ? col.bad() : col.text(), 'left', 10);
     },
   },
 ];
