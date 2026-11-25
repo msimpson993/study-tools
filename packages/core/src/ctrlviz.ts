@@ -322,16 +322,13 @@ export function drawStepResponse(g: CanvasRenderingContext2D, w: number, h: numb
     if (!trPick) {
       g.font = `${MIN_FONT}px system-ui,sans-serif`;
       const tw = g.measureText(trLab).width, th = MIN_FONT + 3;
-      const belowTicks = f.box.b + 22;
-      for (const yy of [barY - 10, barY - 16, barY - 22, barY - 4, belowTicks]) {
+      for (const yy of [barY - 12, barY - 18, barY - 8, barY - 24]) {
         if (trPick) break;
-        for (const [xx, al] of [[midX, 'center'], [x1Bar + 4, 'left'], [x0Bar - 4, 'right'], [midX + tw * 0.4, 'center']] as [number, CanvasTextAlign][]) {
+        for (const [xx, al] of [[x1Bar + 8, 'left'], [x1Bar + 16, 'left'], [midX, 'center'], [x0Bar - 8, 'right']] as [number, CanvasTextAlign][]) {
           const c = textBox(xx, yy, tw, th, al, MIN_FONT);
-          const inTickRow = c.c < f.box.b + 16 && c.d > f.box.b - 6;
-          if (inTickRow || c.c < 2 || c.d > f.h - 1) continue;
+          if (c.d > f.box.b - 6 || c.c < f.box.t + 2 || c.d > f.h - 1) continue;
           if (c.a < f.box.l + 2 || c.b2 > f.box.r - 2) continue;
-          if (!besideBar(c) && yy !== belowTicks) continue;
-          if (yy !== belowTicks && (c.c < f.box.t + 2)) continue;
+          if (c.a > x1Bar + 48 || c.b2 < x0Bar - 8) continue;
           if (hitsCurve(c.a, c.b2, c.c, c.d)) continue;
           if (hitsOtherVert(c.a, c.b2, c.c, c.d, [x0Bar, x1Bar])) continue;
           trPick = c; break;
@@ -556,7 +553,7 @@ export function drawStepResponse(g: CanvasRenderingContext2D, w: number, h: numb
         // do not park on the tick row just to keep a label; the top pad is the last resort (BUG-76 / 77)
       }
       if (tsPick && closerToTickBox(tsPick.a, tsPick.b2, tsPick.c, tsPick.d, lineX, yLo, yHi)) tsPick = null;
-      if (tsPick && tile && h < 220) tsPick = null; // short tiles: pad / header first (BUG-76)
+      if (tsPick && h < 220) tsPick = null; // short canvases: pad / header first (BUG-76)
       if (!tsPick) {
         // guaranteed last-resort slot in the top pad, with a leader to the Ts mark (BUG-76)
         let pad = findTopPad(tsLab, lineX);
