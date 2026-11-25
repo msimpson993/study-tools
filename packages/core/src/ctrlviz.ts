@@ -99,7 +99,7 @@ export function drawStepResponse(g: CanvasRenderingContext2D, w: number, h: numb
   const tight = h < 260, needHead = !!(s.ghost?.label || show.overshoot);
   // slim pads: anchored OS / Tr stay by their markers, not in a reserved two-row band (BUG-51)
   const topPad = needHead ? pad(s.pads?.t, 24, 24) : pad(s.pads?.t, 14, 8);
-  const f = rangeFrame(w, h, [0, tEnd], yr, pad(s.pads?.l, 72, 32), pad(s.pads?.r, 14, 10), topPad, pad(s.pads?.b, 38, 20));
+  const f = rangeFrame(w, h, [0, tEnd], yr, pad(s.pads?.l, 72, 54), pad(s.pads?.r, 14, 10), topPad, pad(s.pads?.b, 38, 20));
   const m = stepMetrics(t, y, { ref, final: s.final, band });
   const avoid = (show.overshoot && Number.isFinite(m.peak) && m.overshootPct > 0.05)
     ? [{ x: f.X(m.peakTime), y: f.Y(m.peak), r: 12 }] : [];
@@ -330,6 +330,11 @@ export function drawStepResponse(g: CanvasRenderingContext2D, w: number, h: numb
           return true;
         };
         c = pool.find(okish) ?? null;
+      }
+      if (!c) {
+        // required OS/Tp must stay by the peak (within ~16 px); prefer a clear side
+        const near = aroundMarker(peakX, peakY, tw, th, MIN_FONT, true, 12).filter((cand) => osFits(cand.a, cand.b2, cand.c, cand.d) && !hitsOtherVert(inflateBox(cand).a, inflateBox(cand).b2, inflateBox(cand).c, inflateBox(cand).d, [peakX]));
+        c = near[0] ?? aroundMarker(peakX, peakY, tw, th, MIN_FONT, true, 12).find((cand) => osFits(cand.a, cand.b2, cand.c, cand.d)) ?? null;
       }
       if (c) {
         withAnchor({ kind: 'marker', x: peakX, y: peakY }, () => {

@@ -716,12 +716,19 @@ export function graphAxes(g: CanvasRenderingContext2D, f: Frame, xr: V2, yr: V2,
       });
       if (t.lab === lastY && !force) return false;
       if (!force && !keepY(t.lab) && (Math.abs(t.py - lastPy) < 14 || onMark)) return false;
-      if (!tickOnCanvas(g, t.lab, tickX, t.py, ySize, 'right')) return false;
+      const inside = f.box.l + 3;
+      const useInside = !tickOnCanvas(g, t.lab, tickX, t.py, ySize, 'right') && tickOnCanvas(g, t.lab, inside, t.py, ySize, 'left');
+      if (!useInside && !tickOnCanvas(g, t.lab, tickX, t.py, ySize, 'right')) return false;
+      const xLab = useInside ? inside : tickX, al: CanvasTextAlign = useInside ? 'left' : 'right';
       // stay on the tick line (within ~2 px); a required tick is never dropped to dodge a nearby mark
       let ok = false;
-      withAnchor({ kind: 'line', x: f.box.l, y: t.py, x2: f.box.r, y2: t.py }, () => {
-        ok = text(g, t.lab, tickX, t.py, col.muted(), 'right', ySize);
-      });
+      const paint = () => {
+        withAnchor({ kind: 'line', x: f.box.l, y: t.py, x2: f.box.r, y2: t.py }, () => {
+          ok = text(g, t.lab, xLab, t.py, col.muted(), al, ySize);
+        });
+      };
+      paint();
+      if (!ok && force) withForcedTick(paint);
       if (!ok) return false;
       lastY = t.lab; lastPy = t.py; yDrawn.push(t.y); return true;
     };
