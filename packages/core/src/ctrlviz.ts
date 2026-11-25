@@ -920,6 +920,9 @@ export function drawSPlane(g: CanvasRenderingContext2D, w: number, h: number, s:
       }
       return out;
     };
+    const xf = typeof g.getTransform === 'function' ? g.getTransform() : { a: 1, b: 0, c: 0, d: 1, e: 0, f: 0 };
+    const dev = (x: number, y: number) => ({ x: xf.a * x + xf.c * y + xf.e, y: xf.b * x + xf.d * y + xf.f });
+    const markDevs = [...(s.poles ?? []), ...(s.zeros ?? [])].map((z) => dev(f.X(z.re), f.Y(z.im)));
     const tryList = (ranked: TextBox[], inflate: boolean): TextBox | null => {
       for (const c of ranked) {
         const I = inflate ? inflateBox(c) : c;
@@ -934,15 +937,12 @@ export function drawSPlane(g: CanvasRenderingContext2D, w: number, h: number, s:
         {
           const G = inflateBox(c);
           if (hitsOtherMark(X, Yp, G.a, G.b2, G.c, G.d)) continue;
-          const m = typeof g.getTransform === 'function' ? g.getTransform() : { a: 1, b: 0, c: 0, d: 1, e: 0, f: 0 };
-          const dev = (x: number, y: number) => ({ x: m.a * x + m.c * y + m.e, y: m.b * x + m.d * y + m.f });
           const p0 = dev(G.a, G.c), p1 = dev(G.b2, G.d);
           const dx0 = Math.min(p0.x, p1.x), dx1 = Math.max(p0.x, p1.x), dy0 = Math.min(p0.y, p1.y), dy1 = Math.max(p0.y, p1.y);
-          const P = dev(X, Yp);
           if (cv && labelsOn(cv).some((r) => {
             if (!r) return false;
-            // the 12 px pad recorded around this × itself is not a tick
-            if (r.role === 'axis' && r.x0 <= P.x && P.x <= r.x1 && r.y0 <= P.y && P.y <= r.y1) return false;
+            // 12 px pads around poles and zeros are not ticks; hitsOtherMark already keeps the e2e radius
+            if (r.role === 'axis' && markDevs.some((p) => r.x0 <= p.x && p.x <= r.x1 && r.y0 <= p.y && p.y <= r.y1)) return false;
             return dx1 > r.x0 && dx0 < r.x1 && dy1 > r.y0 && dy0 < r.y1;
           })) continue;
         }
@@ -978,7 +978,7 @@ export function drawSPlane(g: CanvasRenderingContext2D, w: number, h: number, s:
     if (!pick && !mayHide && stack) {
       const tw = measure(MIN_FONT), th = MIN_FONT * 2.25;
       const dense: TextBox[] = [];
-      for (let sx = -20; sx <= 8; sx++) for (let sy of [-22, -21, -20, -19, -18, -17, -16, 16, 17, 18, 19, 20, 21, 22])
+      for (let sx = -28; sx <= 8; sx++) for (let sy of [-22, -21, -20, -19, -18, -17, -16, 16, 17, 18, 19, 20, 21, 22])
         for (const al of (['center', 'left', 'right'] as CanvasTextAlign[]))
           dense.push(textBox(X + sx, Yp + sy, tw, th, al, MIN_FONT, nLines));
       pick = tryList(byEdge(dense), false);
