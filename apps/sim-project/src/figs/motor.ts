@@ -35,7 +35,7 @@ export const motorPanels = (): FigurePanel[] => [
       const essLabel = Math.abs(Math.abs(n.wcInf) - 0.002) < 3.5e-4 ? "handout’s −0.002" : `final sag ${f(n.wcInf, 5)}`;
       const yLabel = 'ω (rad/s per N·m)';
       const narrow = w < 420;
-      const head = isThumb(g) ? 0 : (narrow ? 58 : 44);
+      const head = isThumb(g) ? 0 : (narrow ? 78 : 44);
       const inner = Math.max(0, h - head);
       let insetH = layout.inset
         ? Math.round(Math.min(inner * 0.55, Math.max(w < 500 ? 80 : 96, inner * (w < 500 ? 0.48 : 0.36))))
@@ -67,18 +67,29 @@ export const motorPanels = (): FigurePanel[] => [
       }
       g.restore();
       const ratio = n.ratio, ok = ratio < 0.02;
-      // on a narrow expand, drop the "at t = …" tails so each header line stays
-      // one line in the band and cannot wrap down onto the curve (CI fonts).
-      const read = narrow ? [
-        `open sag ${f(n.woInf, 4)}, τ = ${f(n.tauOpen, 3)} s`,
-        `closed sag ${f(n.wcInf, 6)}, τ = ${f(n.tauClosed * 1000, 3)} ms`,
-        `loop gain ${f(n.loopFric / n.dOpen, 1)}  ratio ${f(ratio, 5)}  ${ok ? '✓ under 0.02' : '✗ over 0.02'}`,
-      ] : [
-        `open sag ${f(n.woInf, 4)} rad/s, τ = ${f(n.tauOpen, 3)} s,  at 7 s: ${f(n.wo(7), 4)}`,
-        `closed sag ${f(n.wcInf, 6)} rad/s, τ = ${f(n.tauClosed * 1000, 3)} ms,  at 0.02 s: ${f(n.wc(0.02), 6)}`,
-        `loop gain ${f(n.loopFric / n.dOpen, 1)}   ratio ${f(ratio, 5)}  ${ok ? '✓ under 0.02' : '✗ over 0.02'}`,
-      ];
-      read.forEach((line, i) => text(g, line, 8, 12 + i * (narrow ? 15 : 12), i === 2 ? (ok ? col.ok() : col.bad()) : col.text(), 'left', 10, 'middle', 9));
+      // Look-for quotes the "at 7 s" / "at 0.02 s" values; keep them. On a narrow
+      // expand shorten the words and wrap a line rather than drop a quoted value (BUG-75).
+      const openFull = `open sag ${f(n.woInf, 4)} rad/s, τ = ${f(n.tauOpen, 3)} s,  at 7 s: ${f(n.wo(7), 4)}`;
+      const closedFull = `closed sag ${f(n.wcInf, 6)} rad/s, τ = ${f(n.tauClosed * 1000, 3)} ms,  at 0.02 s: ${f(n.wc(0.02), 6)}`;
+      const openShort = `open sag ${f(n.woInf, 4)}, τ = ${f(n.tauOpen, 3)} s, ${f(n.wo(7), 4)} at 7 s`;
+      const closedShort = `closed sag ${f(n.wcInf, 6)}, τ = ${f(n.tauClosed * 1000, 3)} ms, ${f(n.wc(0.02), 6)} at 0.02 s`;
+      const gain = `loop gain ${f(n.loopFric / n.dOpen, 1)}   ratio ${f(ratio, 5)}  ${ok ? '✓ under 0.02' : '✗ over 0.02'}`;
+      const maxW = Math.max(40, w - 16);
+      const fit = (s: string, z = 10) => { g.font = `${z}px system-ui,sans-serif`; return g.measureText(s).width <= maxW; };
+      const wrap2 = (s: string): string[] => {
+        // keep the quoted tail ("… at 7 s" / "… at 0.02 s") on its own line when the full line is wide
+        const at = s.lastIndexOf(', ');
+        if (at > 0) {
+          const a = s.slice(0, at), b = s.slice(at + 2).replace(/^at /, '');
+          if (fit(a) && fit(b)) return [a, b];
+        }
+        return [s];
+      };
+      const openL = !narrow || fit(openFull) ? [openFull] : fit(openShort) ? [openShort] : wrap2(openShort);
+      const closedL = !narrow || fit(closedFull) ? [closedFull] : fit(closedShort) ? [closedShort] : wrap2(closedShort);
+      const read = [...openL, ...closedL, gain];
+      const lines = read.length, lh = lines > 3 ? 13 : (narrow ? 15 : 12);
+      read.forEach((line, i) => text(g, line, 8, 11 + i * lh, i === read.length - 1 ? (ok ? col.ok() : col.bad()) : col.text(), 'left', 10, 'middle', 9));
     },
   },
 ];

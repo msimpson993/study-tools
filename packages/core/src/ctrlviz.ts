@@ -175,6 +175,37 @@ export function drawStepResponse(g: CanvasRenderingContext2D, w: number, h: numb
   let trBox: { x0: number; x1: number; y0: number; y1: number } | null = null;
   let tsBox: { x0: number; x1: number; y0: number; y1: number } | null = null;
   const ghostWouldHit = (a: number, b2: number, c: number, d: number) => !!(ghostBox && b2 > ghostBox.x0 - 4 && a < ghostBox.x1 + 4 && d > ghostBox.y0 - 4 && c < ghostBox.y1 + 4);
+  const findTopPad = (word: string, markX: number): TextBox | null => {
+    const nLines = word.includes('\n') ? 2 : 1;
+    g.font = `${MIN_FONT}px system-ui,sans-serif`;
+    const parts = word.split('\n'), tw = Math.max(...parts.map((l) => g.measureText(l).width)), th = MIN_FONT + 3;
+    const half = ((nLines - 1) / 2) * MIN_FONT * 1.15 + MIN_FONT * 0.55;
+    const padTop = 2, padBot = f.box.t - 2;
+    let ySit = padBot - half;
+    if (padBot - padTop < 2 * half) ySit = padTop + half;
+    if (ySit - half < 1 || ySit + half > f.h - 1) return null;
+    const cands: TextBox[] = [];
+    for (const [x, al] of [
+      [markX, 'center'], [markX, 'left'], [markX, 'right'],
+      [markX + tw * 0.45, 'center'], [markX - tw * 0.45, 'center'],
+      [markX + tw * 0.9, 'center'], [markX - tw * 0.9, 'center'],
+      [markX + tw * 1.2, 'left'], [markX - tw * 1.2, 'right'],
+      [f.box.l + tw / 2 + 8, 'left'], [f.box.r - tw / 2 - 8, 'right'],
+    ] as [number, CanvasTextAlign][]) cands.push(textBox(x, ySit, tw, th, al, MIN_FONT, nLines));
+    return cands.find((c) => osFits(c.a, c.b2, c.c, c.d) && !ghostWouldHit(c.a, c.b2, c.c, c.d)) ?? null;
+  };
+  const paintTopPad = (word: string, c: TextBox, markX: number, markY: number, color: string, paint: (word: string, x: number, y: number, color: string, align: CanvasTextAlign, z: number) => void) => {
+    const lx = Math.max(c.a + 3, Math.min(c.b2 - 3, markX));
+    const ly = c.d + 0.5;
+    const gap = 6, dx = markX - lx, dy = markY - ly, len = Math.hypot(dx, dy) || 1;
+    g.save();
+    g.strokeStyle = color; g.lineWidth = 1; g.setLineDash([]);
+    g.beginPath(); g.moveTo(lx, ly); g.lineTo(markX - (dx / len) * gap, markY - (dy / len) * gap); g.stroke();
+    g.restore();
+    withAnchor({ kind: 'line', x: lx, y: ly, x2: markX, y2: markY }, () => {
+      withLabelRole('axis', () => { paint(word, c.x, c.y, color, c.align, MIN_FONT); });
+    });
+  };
   if (show.timing && Number.isFinite(m.riseTime)) {
     const y10 = yf * 0.1, y90 = yf * 0.9;
     const barAt = f.Y(yr[0]) - 14;
@@ -183,12 +214,20 @@ export function drawStepResponse(g: CanvasRenderingContext2D, w: number, h: numb
     const trLab = `Tr ${fmtN(m.riseTime)} s`;
     const midX = (f.X(m.t10) + f.X(m.t90)) / 2, barY = f.Y(yr[0]) - 14, yRef = f.Y(ref);
     const x0Bar = f.X(m.t10), x1Bar = f.X(m.t90);
+    const hitsOriginTick = (c: TextBox) => c.a < f.box.l + 18 && c.d > f.box.b - 6;
+    const onTickRow = (c: TextBox) => c.d > f.box.b - 6;
+    const besideBar = (c: TextBox) => c.a < x1Bar + 18 && c.b2 > x0Bar - 18;
+    const closerToTick = (c: TextBox) => {
+      const cx = (c.a + c.b2) / 2, cy = (c.c + c.d) / 2;
+      const dBar = Math.abs(cy - barY) + (cx < x0Bar ? x0Bar - cx : cx > x1Bar ? cx - x1Bar : 0);
+      return labelsOn(g.canvas).some((r) => r.role === 'tick' && r.x0 !== undefined && r.y0 !== undefined
+        && Math.hypot(cx - (r.x0 + r.x1) / 2, cy - (r.y0 + r.y1) / 2) + 0.01 < dBar + 4);
+    };
     let trPick: TextBox | null = null;
     for (const z of [10.5, 10, MIN_FONT]) {
       g.font = `${z}px system-ui,sans-serif`;
       const tw = g.measureText(trLab).width, th = z + 3;
       const padYOf = (c: TextBox) => Math.abs(((c.c + c.d) / 2) - barY) <= 24 ? 12 : 0;
-      const hitsOriginTick = (c: TextBox) => c.a < f.box.l + 18 && c.d > f.box.b - 6;
       const nearTs = !!(Number.isFinite(m.settlingTime) && show.settling && f.X(m.settlingTime) - x1Bar < tw + 16);
       const leftBar = midX < f.box.l + (f.box.r - f.box.l) * 0.28;
       const spots: TextBox[] = leftBar && !nearTs
@@ -225,7 +264,7 @@ export function drawStepResponse(g: CanvasRenderingContext2D, w: number, h: numb
         if (c.c < yRef + 6 && c.d > yRef - 6) continue;
         if (hitsCurve(c.a, c.b2, c.c, c.d)) continue;
         if (hitsOtherVert(c.a, c.b2, c.c, c.d, [x0Bar, x1Bar])) continue;
-        if (hitsOriginTick(c)) continue;
+        if (hitsOriginTick(c) || onTickRow(c) || !besideBar(c) || closerToTick(c)) continue;
         trPick = c; break;
       }
       if (trPick) break;
@@ -245,14 +284,20 @@ export function drawStepResponse(g: CanvasRenderingContext2D, w: number, h: numb
       for (const yy of ys) for (const [xx, al] of xs) {
         const c = textBox(xx, yy, tw, th, al, MIN_FONT);
         if (c.a < f.box.l + 2 || c.b2 > f.box.r - 2) continue;
-        if (c.d > f.box.b + 4) continue;
+        if (onTickRow(c) || !besideBar(c) || closerToTick(c)) continue;
         if (hitsOtherVert(c.a, c.b2, c.c, c.d, [x0Bar, x1Bar])) continue;
         if (hitsCurve(c.a, c.b2, c.c, c.d)) continue;
-        if (c.a < f.box.l + 18 && c.d > f.box.b - 6) continue;
+        if (hitsOriginTick(c)) continue;
         trPick = c; break;
       }
     }
-    if (trPick) {
+    if (!trPick) {
+      const pad = findTopPad(trLab, midX);
+      if (pad) {
+        paintTopPad(trLab, pad, midX, barY, col.e(), (word, x, y, color, align, z) => { lbl(word, x, y, color, align, z); });
+        trBox = { x0: pad.a, x1: pad.b2, y0: pad.c, y1: pad.d };
+      }
+    } else {
       trBox = { x0: trPick.a, x1: trPick.b2, y0: trPick.c, y1: trPick.d };
       withAnchor({ kind: 'bar', x: x0Bar, y: barY, x2: x1Bar, y2: barY }, () => {
         withLabelRole('axis', () => { lbl(trLab, trPick!.x, trPick!.y, col.e(), trPick!.align, trPick!.z); });
@@ -271,38 +316,14 @@ export function drawStepResponse(g: CanvasRenderingContext2D, w: number, h: numb
       else lbl(word, x, y, color, align, z);
     };
     const findOsPad = (): { word: string; c: TextBox } | null => {
-      const padTop = 2, padBot = f.box.t - 2;
-      if (padBot - padTop < MIN_FONT) return null;
       for (const item of [osStack, osShort]) {
-        const nLines = item.includes('\n') ? 2 : 1;
-        g.font = `${MIN_FONT}px system-ui,sans-serif`;
-        const parts = item.split('\n'), tw = Math.max(...parts.map((l) => g.measureText(l).width)), th = MIN_FONT + 3;
-        const half = ((nLines - 1) / 2) * MIN_FONT * 1.15 + MIN_FONT * 0.55;
-        if (padBot - padTop < 2 * half) continue;
-        const ySit = padBot - half;
-        const cands: TextBox[] = [];
-        for (const [x, al] of [
-          [peakX, 'center'], [peakX, 'left'], [peakX, 'right'],
-          [peakX + tw * 0.45, 'center'], [peakX - tw * 0.45, 'center'],
-          [peakX + tw * 0.9, 'center'], [peakX - tw * 0.9, 'center'],
-          [peakX + tw * 1.2, 'left'], [peakX - tw * 1.2, 'right'],
-        ] as [number, CanvasTextAlign][]) cands.push(textBox(x, ySit, tw, th, al, MIN_FONT, nLines));
-        const hit = cands.find((c) => c.d <= f.box.t + 1 && osFits(c.a, c.b2, c.c, c.d) && !ghostWouldHit(c.a, c.b2, c.c, c.d));
+        const hit = findTopPad(item, peakX);
         if (hit) return { word: item, c: hit };
       }
       return null;
     };
     const paintOsPad = (word: string, c: TextBox) => {
-      const lx = Math.max(c.a + 3, Math.min(c.b2 - 3, peakX));
-      const ly = c.d + 0.5;
-      const gap = 6, dx = peakX - lx, dy = peakY - ly, len = Math.hypot(dx, dy) || 1;
-      g.save();
-      g.strokeStyle = col.b(); g.lineWidth = 1; g.setLineDash([]);
-      g.beginPath(); g.moveTo(lx, ly); g.lineTo(peakX - (dx / len) * gap, peakY - (dy / len) * gap); g.stroke();
-      g.restore();
-      withAnchor({ kind: 'line', x: lx, y: ly, x2: peakX, y2: peakY }, () => {
-        withLabelRole('axis', () => { paintOs(word, c.x, c.y, col.b(), c.align, MIN_FONT); });
-      });
+      paintTopPad(word, c, peakX, peakY, col.b(), paintOs);
       osBox = { x0: c.a, x1: c.b2, y: c.y };
     };
     // When Ts is closer to the peak than a stacked OS/Tp is wide, the in-plot
@@ -482,7 +503,16 @@ export function drawStepResponse(g: CanvasRenderingContext2D, w: number, h: numb
           tsPick = cands.find(okPark) ?? cands.find((c) => !hitsOtherVert(c.a, c.b2, c.c, c.d, [lineX]) && !hitsCurve(c.a, c.b2, c.c, c.d)) ?? null;
         }
       }
-      if (tsPick) {
+      if (!tsPick) {
+        // guaranteed last-resort slot in the top pad, with a leader to the Ts mark (BUG-76)
+        let pad = findTopPad(tsLab, lineX);
+        if (!pad && s.ghost?.label) { dropGhost = true; ghostBox = null; pad = findTopPad(tsLab, lineX); }
+        if (pad) {
+          const markY = Number.isFinite(yf) ? f.Y(yf) : (yHi + yLo) / 2;
+          paintTopPad(tsLab, pad, lineX, markY, col.c(), (word, x, y, color, align, z) => { lbl(word, x, y, color, align, z); });
+          tsBox = { x0: pad.a, x1: pad.b2, y0: pad.c, y1: pad.d };
+        }
+      } else {
         withAnchor({ kind: 'line', x: lineX, y: yLo, x2: lineX, y2: yHi }, () => {
           withLabelRole('axis', () => { lbl(tsLab, tsPick!.x, tsPick!.y, col.c(), tsPick!.align, tsPick!.z); });
         });

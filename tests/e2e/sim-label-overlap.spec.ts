@@ -361,7 +361,7 @@ const boxDistSeg = (e: L, x1: number, y1: number, x2: number, y2: number) => {
 /** A pole / ζ label must be ≥ 4 px closer (by its centre) to its own mark than to any other ×, ○, or other ray (BUG-64). Ticks are not in this check. */
 const nearerThanOthers = (log: L[], marks: O[], at: string) => {
   const out: string[] = [];
-  const labs = latest(log).filter((e) => !e.skipped && e.role === 'axis' && e.anchor && (e.anchor.kind === 'marker' || e.anchor.kind === 'ray') && e.y0 !== undefined && e.s.trim());
+  const labs = latest(log).filter((e) => !e.skipped && e.role === 'axis' && e.anchor && (e.anchor.kind === 'marker' || e.anchor.kind === 'ray' || e.anchor.kind === 'bar' || e.anchor.kind === 'line') && e.y0 !== undefined && e.s.trim());
   const markers = latest(marks).filter((o) => o.kind === 'marker' && o.x !== undefined && o.y !== undefined);
   const centre = (e: L) => ({ x: (e.x0 + e.x1) / 2, y: ((e.y0 ?? 0) + (e.y1 ?? 0)) / 2 });
   const distPt = (e: L, x: number, y: number) => { const c = centre(e); return Math.hypot(c.x - x, c.y - y); };
@@ -372,8 +372,8 @@ const nearerThanOthers = (log: L[], marks: O[], at: string) => {
     for (let k = 0; k <= n; k++) { const u = k / n; best = Math.min(best, Math.hypot(c.x - (x1 + (x2 - x1) * u), c.y - (y1 + (y2 - y1) * u))); }
     return best;
   };
-  const dOwnOf = (lab: L) => lab.anchor!.kind === 'ray' && lab.anchor!.x2 !== undefined
-    ? distSeg(lab, lab.anchor!.x, lab.anchor!.y, lab.anchor!.x2, lab.anchor!.y2!)
+  const dOwnOf = (lab: L) => lab.anchor!.x2 !== undefined
+    ? distSeg(lab, lab.anchor!.x, lab.anchor!.y, lab.anchor!.x2, lab.anchor!.y2 ?? lab.anchor!.y)
     : distPt(lab, lab.anchor!.x, lab.anchor!.y);
   for (const lab of labs) {
     const dOwn = dOwnOf(lab);
@@ -395,6 +395,14 @@ const nearerThanOthers = (log: L[], marks: O[], at: string) => {
       const d = distPt(lab, mk.x!, mk.y!);
       if (d + 0.01 < dOwn + 4)
         out.push(`${at} ${lab.id || 'canvas'}: “${lab.s}” is ${d.toFixed(1)} px from another mark, only ${dOwn.toFixed(1)} from its own ${lab.anchor!.kind} (need ≥ 4 px closer)`);
+    }
+    // axis ticks are competing marks for a bar / line label (BUG-77: Tr must not sit on a tick)
+    if (lab.anchor!.kind === 'bar' || lab.anchor!.kind === 'line') {
+      for (const tk of latest(log).filter((e) => !e.skipped && e.role === 'tick' && e.cv === lab.cv && e.y0 !== undefined && e.s.trim())) {
+        const d = distPt(lab, (tk.x0 + tk.x1) / 2, ((tk.y0 ?? 0) + (tk.y1 ?? 0)) / 2);
+        if (d + 0.01 < dOwn + 4)
+          out.push(`${at} ${lab.id || 'canvas'}: “${lab.s}” is ${d.toFixed(1)} px from tick “${tk.s}”, only ${dOwn.toFixed(1)} from its own ${lab.anchor!.kind} (need ≥ 4 px closer)`);
+      }
     }
     if (lab.anchor!.kind !== 'ray') continue;
     for (const other of labs) {
