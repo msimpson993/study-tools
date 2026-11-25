@@ -221,8 +221,8 @@ export function drawStepResponse(g: CanvasRenderingContext2D, w: number, h: numb
     return all.find((c) => onCv(c, 2)) ?? all.find((c) => onCv(c, 0)) ?? null;
   };
   const paintTopPad = (word: string, c: TextBox, markX: number, markY: number, color: string, paint: (word: string, x: number, y: number, color: string, align: CanvasTextAlign, z: number) => void) => {
-    const lx = Math.max(c.a + 3, Math.min(c.b2 - 3, markX));
-    const ly = c.d + 0.5;
+    // start at the label's bottom centre so the box is on its leader (BUG-76 / 77 nearer-mark)
+    const lx = (c.a + c.b2) / 2, ly = c.d + 0.5;
     const gap = 6, dx = markX - lx, dy = markY - ly, len = Math.hypot(dx, dy) || 1;
     g.save();
     g.strokeStyle = color; g.lineWidth = 1; g.setLineDash([]);
@@ -322,20 +322,48 @@ export function drawStepResponse(g: CanvasRenderingContext2D, w: number, h: numb
     if (!trPick) {
       g.font = `${MIN_FONT}px system-ui,sans-serif`;
       const tw = g.measureText(trLab).width, th = MIN_FONT + 3;
-      for (const yy of [barY - 12, barY - 18, barY - 8, barY - 24]) {
-        if (trPick) break;
-        for (const [xx, al] of [[x1Bar + 8, 'left'], [x1Bar + 16, 'left'], [midX, 'center'], [x0Bar - 8, 'right']] as [number, CanvasTextAlign][]) {
-          const c = textBox(xx, yy, tw, th, al, MIN_FONT);
-          if (c.d > f.box.b - 6 || c.c < f.box.t + 2 || c.d > f.h - 1) continue;
-          if (c.a < f.box.l + 2 || c.b2 > f.box.r - 2) continue;
-          if (c.a > x1Bar + 48 || c.b2 < x0Bar - 8) continue;
-          if (hitsCurve(c.a, c.b2, c.c, c.d)) continue;
-          if (hitsOtherVert(c.a, c.b2, c.c, c.d, [x0Bar, x1Bar])) continue;
-          trPick = c; break;
+      const nearBar = (c: TextBox) => {
+        const cx = (c.a + c.b2) / 2, cy = (c.c + c.d) / 2;
+        const dx = cx < x0Bar ? x0Bar - cx : cx > x1Bar ? cx - x1Bar : 0;
+        return Math.hypot(dx, cy - barY) <= 22;
+      };
+      const okTr = (c: TextBox, requireNear: boolean) => {
+        if (c.d > f.box.b - 6 || c.c < f.box.t + 2 || c.d > f.h - 1) return false;
+        if (c.a < f.box.l + 2 || c.b2 > f.box.r - 2) return false;
+        if (requireNear && !nearBar(c)) return false;
+        if (hitsCurve(c.a, c.b2, c.c, c.d)) return false;
+        if (hitsOtherVert(c.a, c.b2, c.c, c.d, [x0Bar, x1Bar])) return false;
+        if (hitsPlaced(c.a, c.b2, c.c, c.d)) return false;
+        return true;
+      };
+      const ring: [number, CanvasTextAlign, number][] = [];
+      for (const yy of [barY - 12, barY - 16, barY - 8, barY - 20]) {
+        ring.push([x1Bar + 6, 'left', yy], [x1Bar + 12, 'left', yy], [midX, 'center', yy], [x0Bar - 6, 'right', yy]);
+      }
+      for (const [xx, al, yy] of ring) {
+        const c = textBox(xx, yy, tw, th, al, MIN_FONT);
+        if (okTr(c, true)) { trPick = c; break; }
+      }
+      if (trPick) {
+        trBox = { x0: trPick.a, x1: trPick.b2, y0: trPick.c, y1: trPick.d };
+        withAnchor({ kind: 'bar', x: x0Bar, y: barY, x2: x1Bar, y2: barY }, () => {
+          withLabelRole('axis', () => { lbl(trLab, trPick!.x, trPick!.y, col.e(), trPick!.align, trPick!.z); });
+        });
+      } else {
+        // required Tr: a nearby free seat with a leader to the bar, same mechanism as OS/Ts (BUG-76 / 77)
+        let pad = findTopPad(trLab, midX);
+        if (!pad) {
+          for (const [xx, al, yy] of ring) {
+            const c = textBox(xx, yy, tw, th, al, MIN_FONT);
+            if (okTr(c, false)) { pad = c; break; }
+          }
+        }
+        if (pad) {
+          paintTopPad(trLab, pad, midX, barY, col.e(), (word, x, y, color, align, z) => { lbl(word, x, y, color, align, z); });
+          trBox = { x0: pad.a, x1: pad.b2, y0: pad.c, y1: pad.d };
         }
       }
-    }
-    if (trPick) {
+    } else {
       trBox = { x0: trPick.a, x1: trPick.b2, y0: trPick.c, y1: trPick.d };
       withAnchor({ kind: 'bar', x: x0Bar, y: barY, x2: x1Bar, y2: barY }, () => {
         withLabelRole('axis', () => { lbl(trLab, trPick!.x, trPick!.y, col.e(), trPick!.align, trPick!.z); });
