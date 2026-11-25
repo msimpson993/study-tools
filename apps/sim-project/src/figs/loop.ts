@@ -1,7 +1,7 @@
 /** Figure `loop`: a static block diagram per machine, with plain-word / symbol / value labels and box tooltips. */
 import { mountFigure, col, text, type FigurePanel, type FigureDef, type FigureMountOpts } from '@study/core';
 import type { ControlSet } from '@study/core';
-import { drawLabDiagram, type BoxHit, type LabelWords } from './diagrams';
+import { drawLabDiagram, labDiagramHeight, type BoxHit, type LabelWords } from './diagrams';
 import { applyTabLocalControls } from './tablocal';
 
 const WORDS: LabelWords[] = ['plain words', 'symbols', 'values'];
@@ -15,12 +15,8 @@ export function loopFigure(host: HTMLElement, def: FigureDef, controls: ControlS
 
   applyTabLocalControls('loop', host, controls);
   const machine = String(controls.values.machine ?? 'motor-open');
-  // Engine on a phone is a vertical stack, so the canvas has to be taller than it is wide.
-  const heightFor = (m: string, width = 800) => {
-    if (m !== 'engine') return 300;
-    if (width < 560) return 600;
-    return 440;
-  };
+  // On a phone the plant stacks, so the canvas has to be taller than a one-row layout.
+  const heightFor = (m: string, width = 800) => labDiagramHeight(m, width);
   const panels: FigurePanel[] = [{
     id: 'diagram',
     title: 'Block diagram',

@@ -539,4 +539,113 @@ test.describe('sim-project tabbed page', () => {
       }
     }
   });
+
+
+  test('setup and Block-this-line diagrams fit their container with no sideways scroll (BUG-90, BUG-92)', async ({ page }) => {
+    await page.addInitScript(() => { (window as any).__textLog = []; (window as any).__textCanvases = []; });
+    const widths = [320, 390, 923, 1280, 1920] as const;
+    const needed: Record<string, { out: RegExp; disturb: RegExp; blocks: RegExp[] }> = {
+      engine: { out: /\brpm\b/, disturb: /Tload/, blocks: [/throttle → air|Throttle/, /error now \+ so far|^PI$/] },
+      motor: { out: /(?:^|\s)ω(?:\s|$)/, disturb: /T_d/, blocks: [/volts to torque|Km\/Ra/, /torque to speed|1\/\(Js\+b\)/] },
+      borer: { out: /(?:^|\s)Y(?:\s|$)/, disturb: /T_d/, blocks: [/push on the error|K \+ 11s/, /effort to position|1\/\(s\(s\+1\)\)/] },
+      disk: { out: /(?:^|\s)Y(?:\s|$)/, disturb: /T_d/, blocks: [/volts per unit error|\bKa\b/, /volts to force|G₁/, /force to position|G₂/] },
+    };
+    for (const width of widths) {
+      await page.setViewportSize({ width, height: width >= 1280 ? 900 : 844 });
+      for (const tab of ['engine', 'motor', 'borer', 'disk'] as const) {
+        await open(page, 'sim-project', `#/tab/${tab}`);
+        const setup = page.locator('canvas[data-fig=diagram]').first();
+        await expect.poll(async () => setup.count()).toBeGreaterThan(0);
+        await setup.evaluate((el) => el.scrollIntoView({ block: 'center' }));
+        const fit = await setup.evaluate((c) => {
+          const fig = (c.closest('.fig') || c.parentElement) as HTMLElement;
+          const cr = c.getBoundingClientRect(), fr = fig.getBoundingClientRect();
+          return {
+            canvas: cr.width, frame: fr.width,
+            figScroll: fig.scrollWidth, figClient: fig.clientWidth,
+            canScroll: (c as HTMLElement).scrollWidth, canClient: (c as HTMLElement).clientWidth,
+            page: document.documentElement.scrollWidth, view: window.innerWidth,
+          };
+        });
+        expect(fit.canvas, `${tab} setup diagram canvas ${fit.canvas}px should not exceed its frame ${fit.frame}px at ${width}`).toBeLessThanOrEqual(fit.frame + 1);
+        expect(fit.figScroll, `${tab} setup figure scrollWidth ${fit.figScroll} should not exceed clientWidth ${fit.figClient} at ${width}`).toBeLessThanOrEqual(fit.figClient + 1);
+        expect(fit.canScroll, `${tab} setup canvas scrollWidth ${fit.canScroll} should not exceed clientWidth ${fit.canClient} at ${width}`).toBeLessThanOrEqual(fit.canClient + 1);
+        expect(fit.page, `${tab} page should not overflow horizontally at ${width}`).toBeLessThanOrEqual(fit.view + 1);
+
+        const blob = await setup.evaluate((c) => {
+          const w = window as any;
+          const cvs: HTMLCanvasElement[] = w.__textCanvases ?? [];
+          const cv = cvs.indexOf(c as HTMLCanvasElement);
+          const log = (w.__textLog ?? []) as { s: string; skipped?: boolean; id: string; gen: number; cv: number }[];
+          let gen = -1;
+          for (const e of log) if (e.cv === cv && e.id === 'diagram') gen = e.gen;
+          return log.filter((e) => !e.skipped && e.s.trim() && e.cv === cv && e.id === 'diagram' && e.gen === gen).map((e) => e.s).join(' ');
+        });
+        const req = needed[tab];
+        expect(req.out.test(blob), `${tab} setup at ${width} should show the output (${req.out}): ${blob}`).toBe(true);
+        expect(req.disturb.test(blob), `${tab} setup at ${width} should show the disturbance (${req.disturb}): ${blob}`).toBe(true);
+        for (const re of req.blocks) {
+          expect(re.test(blob), `${tab} setup at ${width} should show block ${re}: ${blob}`).toBe(true);
+        }
+      }
+      for (const tab of ['motor', 'borer', 'disk'] as const) {
+        await open(page, 'sim-project', `#/tab/${tab}`);
+        const diag = page.locator('canvas[data-fig=diag]').first();
+        await expect.poll(async () => diag.count()).toBeGreaterThan(0);
+        await diag.evaluate((el) => el.scrollIntoView({ block: 'center' }));
+        const fit = await diag.evaluate((c) => {
+          const fig = (c.closest('.fig') || c.parentElement) as HTMLElement;
+          const cr = c.getBoundingClientRect(), fr = fig.getBoundingClientRect();
+          return {
+            canvas: cr.width, frame: fr.width,
+            figScroll: fig.scrollWidth, figClient: fig.clientWidth,
+            canScroll: (c as HTMLElement).scrollWidth, canClient: (c as HTMLElement).clientWidth,
+          };
+        });
+        expect(fit.canvas, `${tab} Block-this-line canvas ${fit.canvas}px should not exceed its frame ${fit.frame}px at ${width}`).toBeLessThanOrEqual(fit.frame + 1);
+        expect(fit.figScroll, `${tab} Block-this-line figure scrollWidth ${fit.figScroll} should not exceed clientWidth ${fit.figClient} at ${width}`).toBeLessThanOrEqual(fit.figClient + 1);
+        expect(fit.canScroll, `${tab} Block-this-line canvas scrollWidth ${fit.canScroll} should not exceed clientWidth ${fit.canClient} at ${width}`).toBeLessThanOrEqual(fit.canClient + 1);
+      }
+    }
+  });
+
+  test('a two-panel plot stays at least phone-wide and inside its figure frame (BUG-91)', async ({ page }) => {
+    await page.addInitScript(() => { (window as any).__plotLog = []; (window as any).__textLog = []; });
+    const widths = [1000, 1100, 1280, 1920] as const;
+    for (const width of widths) {
+      await page.setViewportSize({ width, height: 900 });
+      await open(page, 'sim-project', '#/tab/engine');
+      const sec = page.locator('[data-testid=step-section][data-step="4"]');
+      await sec.evaluate((el) => el.scrollIntoView({ block: 'start' }));
+      const plots = sec.locator('.step-figs canvas[data-fig="step"], .step-figs canvas[data-fig="bode"], .step-figs canvas[data-fig="speed"], .step-figs canvas[data-fig="throttle"]');
+      await expect.poll(async () => plots.count()).toBe(4);
+      const boxes = await plots.evaluateAll((cs) => cs.map((c) => {
+        const canvas = c as HTMLElement;
+        const fig = (canvas.closest('.fig') || canvas.parentElement) as HTMLElement;
+        const cr = canvas.getBoundingClientRect(), fr = fig.getBoundingClientRect();
+        return {
+          id: canvas.getAttribute('data-fig') || '',
+          cw: cr.width, ch: cr.height,
+          cl: cr.left, cr: cr.right, ct: cr.top, cb: cr.bottom,
+          fl: fr.left, fr: fr.right, ft: fr.top, fb: fr.bottom,
+        };
+      }));
+      for (const b of boxes) {
+        expect(b.cw, `Engine 4 ${b.id} at ${width} is ${b.cw}px, below phone width (~300)`).toBeGreaterThanOrEqual(300);
+        expect(b.cl, `Engine 4 ${b.id} left ${b.cl} spills past frame ${b.fl} at ${width}`).toBeGreaterThanOrEqual(b.fl - 1);
+        expect(b.cr, `Engine 4 ${b.id} right ${b.cr} spills past frame ${b.fr} at ${width}`).toBeLessThanOrEqual(b.fr + 1);
+        expect(b.ct, `Engine 4 ${b.id} top ${b.ct} spills past frame ${b.ft} at ${width}`).toBeGreaterThanOrEqual(b.ft - 1);
+        expect(b.cb, `Engine 4 ${b.id} bottom ${b.cb} spills past frame ${b.fb} at ${width}`).toBeLessThanOrEqual(b.fb + 2);
+      }
+      const labels: string[] = await page.evaluate(() => {
+        const log = ((window as any).__textLog ?? []) as { s: string; skipped?: boolean; id: string; gen: number; cv: number; step?: string }[];
+        const last = new Map<string, number>();
+        for (const e of log) last.set(`${e.cv}:${e.id}`, e.gen);
+        return log.filter((e) => !e.skipped && e.s.trim() && last.get(`${e.cv}:${e.id}`) === e.gen && e.id === 'bode' && e.step === '4').map((e) => e.s);
+      });
+      expect(labels.some((t) => /GM\s+18(\.9)?\s*dB/.test(t)), `Engine 4 Bode at ${width} should show the full GM readout, got: ${labels.join(' | ')}`).toBe(true);
+      expect(labels.some((t) => /PM\s+69\.4°.+0\.64/.test(t)), `Engine 4 Bode at ${width} should show the full PM readout, got: ${labels.join(' | ')}`).toBe(true);
+    }
+  });
+
 });

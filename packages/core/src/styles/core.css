@@ -565,20 +565,16 @@ html.layout-tabs .tab-body .fig:has(canvas[data-fig="diagram"]) canvas,
 html.layout-tabs .tab-body .fig:has(canvas[data-fig="diag"]) canvas,
 html.layout-tabs .tab-body .fig:has(canvas[data-fig="code"]) canvas,
 html.layout-tabs .tab-body .fig:has(canvas[data-fig="frac"]) canvas{height:min(44vh,22rem)}
-/* On a narrow phone the diagram keeps a readable min-width and scrolls sideways (BUG-85). */
-html.layout-tabs .fig:has(canvas[data-fig="diagram"]),
-html.layout-tabs .fig:has(canvas[data-fig="diag"]),
-.step-section .fig:has(canvas[data-fig="diagram"]),
-.step-section .fig:has(canvas[data-fig="diag"]){overflow-x:auto;-webkit-overflow-scrolling:touch}
+/* Diagrams draw to the figure width: no sideways scroll, no 600 px min-width (BUG-90, BUG-92). */
 html.layout-tabs .fig:has(canvas[data-fig="diagram"]) canvas,
 html.layout-tabs .fig:has(canvas[data-fig="diag"]) canvas,
 .step-section .fig:has(canvas[data-fig="diagram"]) canvas,
-.step-section .fig:has(canvas[data-fig="diag"]) canvas{min-width:600px;width:max(100%,600px)}
+.step-section .fig:has(canvas[data-fig="diag"]) canvas{width:100%;max-width:100%}
 html.layout-tabs .tab-sec-figs .pair2.one,
 html.layout-tabs .tab-body .viz-embed .pair2.one{grid-template-columns:1fr;max-width:72rem}
 @media (min-width:1000px){
   html.layout-tabs .tab-sec-figs .pair2:not(.one),
-  html.layout-tabs .tab-body .viz-embed .pair2:not(.one){grid-template-columns:repeat(2,minmax(306px,1fr))}
+  html.layout-tabs .tab-body .viz-embed:not(.step-host) .pair2:not(.one){grid-template-columns:repeat(2,minmax(306px,1fr))}
 }
 
 /* ---- section (c) step sections: heading, prose, full-size figures, then controls ---- */
@@ -608,7 +604,11 @@ html.layout-tabs .tab-body > h2,html.layout-tabs .tab-sec-setup > h2,html.layout
 @media (min-width:1000px){
   /* two-figure steps stay abreast from 1000 px (breakpoint unchanged). */
   .step-figs.n-2,.step-figs.n-3,.step-figs.n-4{grid-template-columns:repeat(2,minmax(0,1fr))}
-  /* a single-panel figure keeps the full frame; two-panel figures sit abreast only when each plot would stay at least as wide as on a 390 px phone (BUG-81). */
+}
+/* A two-panel figure sits abreast only when this figure is wide enough for two phone-wide plots;
+   otherwise the panels stack so a plot is never narrower than ~306 px or spilled out of its frame (BUG-91). */
+.step-section .step-host{container-type:inline-size;container-name:stepfig}
+@container stepfig (min-width:650px){
   .step-section .pair2:not(.one){grid-template-columns:repeat(2,minmax(306px,1fr))}
 }
 .step-section .fig{background:var(--panel);border:1px solid var(--border);border-radius:12px;padding:.35rem .45rem .5rem;min-width:0}

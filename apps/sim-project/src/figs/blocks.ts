@@ -1,7 +1,7 @@
 /** Figure `blocks`: step through a handout script, lighting the block each line builds. */
 import { figureOf, col, text, wipe, type FigurePanel } from '@study/core';
 import { wrap, num, str, type V } from './util';
-import { SCRIPTS, drawLabDiagram } from './diagrams';
+import { SCRIPTS, drawLabDiagram, labDiagramHeight } from './diagrams';
 
 export const blocksPanels = (/* c, def */): FigurePanel[] => [
   {
@@ -47,6 +47,11 @@ export const blocksPanels = (/* c, def */): FigurePanel[] => [
         : id.startsWith('borer') ? 'borer'
         : id.startsWith('disk') ? 'disk'
         : 'engine';
+      const need = labDiagramHeight(sys, w);
+      if (Math.abs((g.canvas.clientHeight || h) - need) > 8) {
+        g.canvas.style.height = `${need}px`;
+        return;
+      }
       drawLabDiagram(g, w, h, { sys, highlight: hi, built });
       if (hi === 'sign') text(g, 'then flip the sign (load slows the output)', 8, h - 8, col.muted(), 'left', 9);
     },

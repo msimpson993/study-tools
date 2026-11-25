@@ -70,6 +70,18 @@ export function normalizeSys(sys: string): LabSys {
   return 'engine';
 }
 
+/** Canvas height so a stacked (phone) or one-row (wide) diagram fits without sideways scroll. */
+export function labDiagramHeight(sys: string, width: number): number {
+  const kind = normalizeSys(sys);
+  if (width < 560) {
+    if (kind === 'engine') return 600;
+    if (kind === 'motor-closed') return 540;
+    return 480;
+  }
+  if (kind === 'engine') return 440;
+  return 300;
+}
+
 /** Structural parts — used by tests and by the renderer. */
 export interface LabBlockParts {
   sys: LabSys;
@@ -231,7 +243,7 @@ export function drawLabDiagram(g: CanvasRenderingContext2D, w: number, h: number
   const dw = w - sideW, dh = h - botH;
 
   const cap = !!opts.words && !script;
-  const padL = dw < 200 ? 8 : 16, padR = dw < 200 ? 20 : 36, padT = dh < 140 ? 8 : 14, padB = (dh < 140 ? 10 : 18) + (cap ? 16 : 0);
+  const padL = dw < 200 ? 8 : 16, padR = dw < 200 ? 20 : 36, padT = dh < 140 ? 8 : 14, padB = (dh < 140 ? 10 : 18) + (cap ? 30 : 0);
   const X = (x: number) => padL + (x / 100) * (dw - padL - padR);
   const Y = (y: number) => padT + (y / 100) * (dh - padT - padB);
   const W = (ww: number) => (ww / 100) * (dw - padL - padR);
@@ -268,6 +280,11 @@ export function drawLabDiagram(g: CanvasRenderingContext2D, w: number, h: number
     while (sz > 9 && (fit.tall > bh || fit.widest > maxW)) { sz -= 1; fit = measure(sz); }
     if (fit.widest > maxW) { const extra = fit.widest - maxW; px -= extra / 2; bw += extra; }
     if (fit.tall > bh) { const extra = fit.tall - bh; py -= extra / 2; bh += extra; }
+    const maxR = w - 2, maxB = h - 2;
+    if (px < 2) { bw -= 2 - px; px = 2; }
+    if (px + bw > maxR) { px = Math.max(2, maxR - bw); if (px + bw > maxR) bw = Math.max(12, maxR - px); }
+    if (py < 2) { bh -= 2 - py; py = 2; }
+    if (py + bh > maxB) { py = Math.max(2, maxB - bh); if (py + bh > maxB) bh = Math.max(12, maxB - py); }
     box(g, px, py, bw, bh, '', s.color, undefined, sz);
     const lh = sz + 1;
     const y0 = py + bh / 2 - ((fit.lines.length - 1) * lh) / 2 + sz * 0.35;
@@ -301,7 +318,43 @@ export function drawLabDiagram(g: CanvasRenderingContext2D, w: number, h: number
   };
 
   const rail = 42;
+  const narrow = dw < 560;
   if (kind === 'motor-open') {
+    if (narrow) {
+      typeSize = dw < 300 ? 11 : 12;
+      const boxH = 12;
+      const plantX = 22, plantW = 50;
+      const s1 = { x: X(14), y: Y(18) };
+      text(g, 'Va', X(2) + 4, s1.y - 11, col.text(), 'center', typeSize);
+      const coil = boxAt('sys2', plantX, 18 - boxH / 2, plantW, boxH, L('Km/Ra', '10 N·m/V', 'volts to torque', 'in: voltage Va. out: torque. what it does: turns volts into torque'), ['sys4']);
+      const s2 = { x: X(14), y: Y(46) };
+      const load = boxAt('sys1', plantX, 46 - boxH / 2, plantW, boxH, L('1/(Js+b)', '1/(2s + 0.5)', 'torque to speed', 'in: net torque. out: shaft speed ω. what it does: inertia and friction turn torque into speed'));
+      const outX = load.r + Math.max(10, W(4)), outY = load.cy;
+      text(g, 'ω', outX + 3, outY + 4, col.text(), 'left', Math.max(12, typeSize));
+      const c1 = colorOf('sys2', ['sys4']), c2 = colorOf('sys1'), cf = colorOf('feedback', ['loop', 'sign', 'step']);
+      sum(g, s1.x, s1.y, r, c1.color, c1.width);
+      sum(g, s2.x, s2.y, r, c2.color, c2.width);
+      intoSum(g, X(2), s1.y, s1.x, s1.y, '+', c1.color, r);
+      arrow(g, s1.x + r, s1.y, coil.l, coil.cy, c1.color);
+      intoSum(g, coil.cx, coil.b, s2.x, s2.y, '+', c2.color, r);
+      arrow(g, s2.x + r, s2.y, load.l, load.cy, c2.color);
+      arrow(g, load.r, load.cy, outX, outY, cf.color);
+      text(g, 'T_d', Math.max(typeSize, s2.x - r - 14), s2.y - r - 12, col.text(), 'center', typeSize);
+      intoSum(g, s2.x, Y(32), s2.x, s2.y, '−', c2.color, r);
+      const kb = boxAt('sys2', plantX, 74, plantW, boxH, L('Kb', '0.1 V·s', 'back-EMF: speed makes a voltage that fights the current', 'in: shaft speed ω. out: back-EMF voltage. what it does: the spinning motor makes a voltage that fights its own current'));
+      g.strokeStyle = cf.color; g.lineWidth = cf.width; g.setLineDash([]);
+      g.beginPath();
+      g.moveTo(outX, outY);
+      g.lineTo(outX, kb.cy);
+      g.lineTo(kb.r, kb.cy);
+      g.stroke();
+      g.beginPath();
+      g.moveTo(kb.l, kb.cy);
+      g.lineTo(s1.x, kb.cy);
+      g.lineTo(s1.x, s1.y + r + 1);
+      g.stroke();
+      intoSum(g, s1.x, kb.cy, s1.x, s1.y, '−', cf.color, r);
+    } else {
     // Va → ⊕ → [Km/Ra] → ⊕ → [1/(Js+b)] → ω,  Kb on the feedback, T_d into the second sum
     text(g, 'Va', X(0) + 8, Y(rail) - 11, col.text(), 'center', 11);
     const s1 = { x: X(10), y: Y(rail) };
@@ -334,7 +387,51 @@ export function drawLabDiagram(g: CanvasRenderingContext2D, w: number, h: number
     g.lineTo(s1.x, kb.cy);
     g.stroke();
     intoSum(g, s1.x, kb.cy, s1.x, s1.y, '−', cf.color, r);
+    }
   } else if (kind === 'motor-closed') {
+    if (narrow) {
+      typeSize = dw < 300 ? 11 : 12;
+      const boxH = 10;
+      const plantX = 24, plantW = 48;
+      const sR = { x: X(14), y: Y(12) };
+      text(g, '0', X(2) + 4, sR.y - 11, col.text(), 'center', typeSize);
+      const ka = boxAt('sys2', plantX, 12 - boxH / 2, plantW, boxH, L('Ka', '54', 'multiplies the speed shortfall', 'in: speed error (volts). out: amplifier voltage. what it does: multiplies the speed shortfall'));
+      const sE = { x: X(14), y: Y(32) };
+      const coil = boxAt('sys4', plantX, 32 - boxH / 2, plantW, boxH, L('Km/Ra', '10 N·m/V', 'volts to torque', 'in: coil voltage. out: torque. what it does: turns volts into torque'), ['sysb']);
+      const sT = { x: X(14), y: Y(52) };
+      const load = boxAt('sys1', plantX, 52 - boxH / 2, plantW, boxH, L('1/(Js+b)', '1/(2s + 0.5)', 'torque to speed', 'in: net torque. out: shaft speed ω. what it does: inertia and friction turn torque into speed'));
+      const outX = load.r + Math.max(10, W(4)), outY = load.cy;
+      text(g, 'ω', outX + 3, outY + 4, col.text(), 'left', Math.max(12, typeSize));
+      const cKa = colorOf('sys2'), cCoil = colorOf('sys4', ['sysb']), cLoad = colorOf('sys1');
+      const cFb = colorOf('feedback', ['loop', 'sign', 'step', 'sysa']);
+      sum(g, sR.x, sR.y, r, cKa.color, cKa.width);
+      sum(g, sE.x, sE.y, r, cCoil.color, cCoil.width);
+      sum(g, sT.x, sT.y, r, cLoad.color, cLoad.width);
+      intoSum(g, X(2), sR.y, sR.x, sR.y, '+', cKa.color, r);
+      arrow(g, sR.x + r, sR.y, ka.l, ka.cy, cKa.color);
+      intoSum(g, ka.cx, ka.b, sE.x, sE.y, '+', cCoil.color, r);
+      arrow(g, sE.x + r, sE.y, coil.l, coil.cy, cCoil.color);
+      intoSum(g, coil.cx, coil.b, sT.x, sT.y, '+', cLoad.color, r);
+      arrow(g, sT.x + r, sT.y, load.l, load.cy, cLoad.color);
+      arrow(g, load.r, load.cy, outX, outY, cFb.color);
+      text(g, 'T_d', Math.max(typeSize, sT.x - r - 14), sT.y - r - 12, col.text(), 'center', typeSize);
+      intoSum(g, sT.x, Y(42), sT.x, sT.y, '−', cLoad.color, r);
+      const kt = boxAt('sys2', 8, 76, 28, 10, L('Kt', '1 V·s', 'speed to volts', 'in: shaft speed ω. out: tachometer volts. what it does: a small generator on the shaft turns speed into volts'));
+      const kb = boxAt('sys3', 48, 76, 36, 10, L('Kb', '0.1 V·s', 'back-EMF: speed makes a voltage that fights the current', 'in: shaft speed ω. out: back-EMF voltage. what it does: the spinning motor makes a voltage that fights its own current'), ['sysa']);
+      const fy = Math.min(Y(94), h - 10);
+      g.strokeStyle = cFb.color; g.lineWidth = cFb.width; g.setLineDash([]);
+      g.beginPath();
+      g.moveTo(outX, outY);
+      g.lineTo(outX, fy);
+      g.lineTo(sR.x, fy);
+      g.stroke();
+      g.beginPath(); g.moveTo(kt.cx, fy); g.lineTo(kt.cx, kt.b); g.stroke();
+      g.beginPath(); g.moveTo(kt.cx, kt.t); g.lineTo(sR.x, kt.t); g.lineTo(sR.x, sR.y + r + 1); g.stroke();
+      intoSum(g, sR.x, kt.t, sR.x, sR.y, '−', colorOf('sys2').color, r);
+      g.beginPath(); g.moveTo(kb.cx, fy); g.lineTo(kb.cx, kb.b); g.stroke();
+      g.beginPath(); g.moveTo(kb.cx, kb.t); g.lineTo(sE.x, kb.t); g.lineTo(sE.x, sE.y + r + 1); g.stroke();
+      intoSum(g, sE.x, kb.t, sE.x, sE.y, '−', colorOf('sys3', ['sysa']).color, r);
+    } else {
     // 0 → ⊕ → [Ka] → ⊕ → [Km/Ra] → ⊕ → [1/(Js+b)] → ω
     //      −Kt         −Kb            −T_d
     text(g, '0', X(0) + 8, Y(rail) - 11, col.text(), 'center', 11);
@@ -378,7 +475,34 @@ export function drawLabDiagram(g: CanvasRenderingContext2D, w: number, h: number
     g.beginPath(); g.moveTo(kb.cx, fy); g.lineTo(kb.cx, kb.b); g.stroke();
     g.beginPath(); g.moveTo(kb.cx, kb.t); g.lineTo(sE.x, kb.t); g.lineTo(sE.x, sE.y + r + 1); g.stroke();
     intoSum(g, sE.x, kb.t, sE.x, sE.y, '−', colorOf('sys3', ['sysa']).color, r);
+    }
   } else if (kind === 'borer') {
+    if (narrow) {
+      typeSize = dw < 300 ? 11 : 12;
+      const boxH = 14;
+      const plantX = 22, plantW = 54;
+      const s1 = { x: X(14), y: Y(16) };
+      text(g, 'R', X(2) + 4, s1.y - 11, col.text(), 'center', typeSize);
+      const gc = boxAt('sys1', plantX, 16 - boxH / 2, plantW, boxH, L('K + 11s', 'K = 20 or 100', 'push on the error now, plus 11 × how fast it is changing', 'in: position error. out: steering effort. what it does: push on the error now, plus 11 × how fast it is changing'));
+      const s2 = { x: X(14), y: Y(48) };
+      const gplant = boxAt('sysg', plantX, 48 - boxH / 2, plantW, boxH, L('1/(s(s+1))', '1/(s(s+1))', 'effort to position', 'in: effort plus the rock T_d. out: cutter position Y. what it does: turns steering effort into position along the planned line'));
+      const outX = gplant.r + Math.max(10, W(4)), outY = gplant.cy;
+      text(g, 'Y', outX + 3, outY + 4, col.text(), 'left', Math.max(12, typeSize));
+      const c1 = colorOf('sys1'), c2 = colorOf('sysg', ['series']), cf = colorOf('feedback', ['loop', 'minreal']);
+      sum(g, s1.x, s1.y, r, c1.color, c1.width);
+      sum(g, s2.x, s2.y, r, c2.color, c2.width);
+      intoSum(g, X(2), s1.y, s1.x, s1.y, '+', c1.color, r);
+      arrow(g, s1.x + r, s1.y, gc.l, gc.cy, c1.color);
+      intoSum(g, gc.cx, gc.b, s2.x, s2.y, '+', c2.color, r);
+      arrow(g, s2.x + r, s2.y, gplant.l, gplant.cy, c2.color);
+      arrow(g, gplant.r, gplant.cy, outX, outY, cf.color);
+      text(g, 'T_d', Math.max(typeSize, s2.x - r - 14), s2.y - r - 12, col.text(), 'center', typeSize);
+      intoSum(g, s2.x, Y(34), s2.x, s2.y, '+', c2.color, r);
+      const fy = Math.min(Y(88), h - 10);
+      g.strokeStyle = cf.color; g.lineWidth = cf.width; g.setLineDash([]);
+      g.beginPath(); g.moveTo(outX, outY); g.lineTo(outX, fy); g.lineTo(s1.x, fy); g.lineTo(s1.x, s1.y + r + 1); g.stroke();
+      intoSum(g, s1.x, fy, s1.x, s1.y, '−', cf.color, r);
+    } else {
     text(g, 'R', X(2), Y(rail) - 11, col.text(), 'center', 11);
     const s1 = { x: X(10), y: Y(rail) };
     const gc = boxAt('sys1', 16, rail - 10, 22, 20, L('K + 11s', 'K = 20 or 100', 'push on the error now, plus 11 × how fast it is changing', 'in: position error. out: steering effort. what it does: push on the error now, plus 11 × how fast it is changing'));
@@ -400,7 +524,37 @@ export function drawLabDiagram(g: CanvasRenderingContext2D, w: number, h: number
     g.strokeStyle = cf.color; g.lineWidth = cf.width; g.setLineDash([]);
     g.beginPath(); g.moveTo(outX, outY); g.lineTo(outX, fy); g.lineTo(s1.x, fy); g.lineTo(s1.x, s1.y + r + 1); g.stroke();
     intoSum(g, s1.x, fy, s1.x, s1.y, '−', cf.color, r);
+    }
   } else if (kind === 'disk') {
+    if (narrow) {
+      typeSize = dw < 300 ? 11 : 12;
+      const boxH = 11;
+      const plantX = 22, plantW = 54;
+      const s1 = { x: X(14), y: Y(12) };
+      text(g, 'R', X(2) + 4, s1.y - 11, col.text(), 'center', typeSize);
+      const ka = boxAt('Ka', plantX, 12 - boxH / 2, plantW, boxH, L('Ka', '10 or 80', 'volts per unit error', 'in: position error. out: amplifier voltage. what it does: volts per unit error'), ['series']);
+      const g1 = boxAt('sysf', plantX, 32 - boxH / 2, plantW, boxH, L('G₁ = 5000/(s+1000)', '5000/(s+1000)', 'volts to force, builds in 1 ms', 'in: voltage. out: force. what it does: the coil turns volts into force; current builds in about 1 ms'), ['series']);
+      const s2 = { x: X(14), y: Y(54) };
+      const g2 = boxAt('sysg', plantX, 54 - boxH / 2, plantW, boxH, L('G₂ = 1/(s(s+20))', '1/(s(s+20))', 'force to position', 'in: net force (coil minus shock). out: head position Y. what it does: the arm turns force into position'));
+      const outX = g2.r + Math.max(10, W(4)), outY = g2.cy;
+      text(g, 'Y', outX + 3, outY + 4, col.text(), 'left', Math.max(12, typeSize));
+      const c1 = colorOf('Ka', ['series']), cG1 = colorOf('sysf', ['series']), cG2 = colorOf('sysg'), cf = colorOf('feedback', ['loop', 'sign', 'step']);
+      sum(g, s1.x, s1.y, r, c1.color, c1.width);
+      sum(g, s2.x, s2.y, r, cG2.color, cG2.width);
+      intoSum(g, X(2), s1.y, s1.x, s1.y, '+', c1.color, r);
+      arrow(g, s1.x + r, s1.y, ka.l, ka.cy, c1.color);
+      arrow(g, ka.cx, ka.b, g1.cx, g1.t, cG1.color);
+      intoSum(g, g1.cx, g1.b, s2.x, s2.y, '+', cG2.color, r);
+      arrow(g, s2.x + r, s2.y, g2.l, g2.cy, cG2.color);
+      arrow(g, g2.r, g2.cy, outX, outY, cf.color);
+      text(g, 'T_d', Math.max(typeSize, s2.x - r - 14), s2.y - r - 12, col.text(), 'center', typeSize);
+      intoSum(g, s2.x, Y(42), s2.x, s2.y, '−', cG2.color, r);
+      const fy = Math.min(Y(88), h - 10);
+      text(g, '1', Math.max(8, s1.x - 16), fy - 6, colorOf('feedback').color, 'center', 10);
+      g.strokeStyle = cf.color; g.lineWidth = cf.width; g.setLineDash([]);
+      g.beginPath(); g.moveTo(outX, outY); g.lineTo(outX, fy); g.lineTo(s1.x, fy); g.lineTo(s1.x, s1.y + r + 1); g.stroke();
+      intoSum(g, s1.x, fy, s1.x, s1.y, '−', cf.color, r);
+    } else {
     text(g, 'R', X(2), Y(rail) - 11, col.text(), 'center', 11);
     const s1 = { x: X(8), y: Y(rail) };
     const ka = boxAt('Ka', 14, rail - 10, 10, 20, L('Ka', '10 or 80', 'volts per unit error', 'in: position error. out: amplifier voltage. what it does: volts per unit error'), ['series']);
@@ -426,6 +580,7 @@ export function drawLabDiagram(g: CanvasRenderingContext2D, w: number, h: number
     g.strokeStyle = cf.color; g.lineWidth = cf.width; g.setLineDash([]);
     g.beginPath(); g.moveTo(outX, outY); g.lineTo(outX, fy); g.lineTo(s1.x, fy); g.lineTo(s1.x, s1.y + r + 1); g.stroke();
     intoSum(g, s1.x, fy, s1.x, s1.y, '−', cf.color, r);
+    }
   } else if (opts.words) {
     // engine (handout p.1): wide canvas keeps one row; on a phone, stack the plant
     // so labels stay readable instead of stretching into skinny tall boxes.
@@ -561,6 +716,9 @@ export function drawLabDiagram(g: CanvasRenderingContext2D, w: number, h: number
 
   if (cap) {
     const msg = CAPTION[kind];
-    if (msg) text(g, msg, padL, h - 6, col.muted(), 'left', 10);
+    if (msg) {
+      const lines = wrap(g, msg, Math.max(40, w - padL - 8), 10);
+      lines.forEach((ln, i) => text(g, ln, padL, h - 4 - (lines.length - 1 - i) * 12, col.muted(), 'left', 10));
+    }
   }
 }
