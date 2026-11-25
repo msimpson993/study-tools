@@ -869,46 +869,77 @@ export function drawSPlane(g: CanvasRenderingContext2D, w: number, h: number, s:
     const xLo = f.ix(f.box.l), xHi = f.ix(f.box.r), yLo = f.iy(f.box.b), yHi = f.iy(f.box.t);
     const xDrawn: number[] = [];
     let cornerTaken = false;
-    const drawX = (x: number, force = false) => {
-      const lab = tickLabel(x, st), px = f.X(x);
-      if (!lab) return false;
-      const tw = g.measureText(lab).width, y = f.box.b - 7;
-      const fits = px + tw / 2 <= f.box.r - 1 && px - tw / 2 >= f.box.l + 1;
-      const inCorner = px - tw / 2 < f.box.l + 8;
-      if (!fits || !tickOnCanvas(g, lab, px, y, TICK_Z, 'center')) return false;
-      if (inCorner && cornerTaken) return false;
-      if (lab === lastX || Math.abs(px - lastPx) < 26 || hitsMark(px, y, tw) || underPole(px)) return false;
+    const xTickY = f.box.b - 7;
+    const need0 = xLo <= 0 && 0 <= xHi;
+    const zeroPx = f.X(0);
+    const zeroLab = need0 ? tickLabel(0, st) : '';
+    // Extra clearance around 0 so a wider CI font on a neighbour such as “−5” cannot cover it.
+    const zeroTw = zeroLab ? g.measureText(zeroLab).width : 0;
+    const neighTw = g.measureText('−5').width;
+    const zeroClear = Math.max(32, zeroTw / 2 + neighTw / 2 + 10);
+    const paintX = (x: number, px: number, lab: string, al: CanvasTextAlign) => {
       let ok = false;
-      withAnchor({ kind: 'line', x: px, y: f.box.t, x2: px, y2: f.box.b }, () => {
-        ok = text(g, lab, px, y, col.muted(), 'center', TICK_Z);
+      withAnchor({ kind: 'line', x: f.X(x), y: f.box.t, x2: f.X(x), y2: f.box.b }, () => {
+        ok = text(g, lab, px, xTickY, col.muted(), al, TICK_Z);
       });
       if (!ok) return false;
-      if (inCorner) cornerTaken = true;
       lastX = lab; lastPx = px; xDrawn.push(x); return true;
     };
-    forTicks(Math.ceil(xLo / st) * st, xHi, st, (x) => drawX(x));
+    const place0 = () => {
+      if (!need0 || !zeroLab || xDrawn.some((u) => Math.abs(u) < 1e-8)) return xDrawn.some((u) => Math.abs(u) < 1e-8);
+      const tries: [number, CanvasTextAlign][] = [
+        [zeroPx, 'center'],
+        [Math.min(zeroPx, f.box.r - 1), 'right'],
+        [Math.max(zeroPx, f.box.l + 1), 'left'],
+        [zeroPx, 'left'],
+        [zeroPx, 'right'],
+      ];
+      for (const [px, al] of tries) {
+        if (!tickOnCanvas(g, zeroLab, px, xTickY, TICK_Z, al)) continue;
+        if (paintX(0, px, zeroLab, al)) return true;
+      }
+      return false;
+    };
+    const drawX = (x: number) => {
+      const lab = tickLabel(x, st), px = f.X(x);
+      if (!lab) return false;
+      if (Math.abs(x) < 1e-8) return place0();
+      // 0 always wins: drop a neighbouring tick rather than let it take 0's seat
+      if (need0 && Math.abs(px - zeroPx) < zeroClear) return false;
+      const tw = g.measureText(lab).width;
+      const fits = px + tw / 2 <= f.box.r - 1 && px - tw / 2 >= f.box.l + 1;
+      const inCorner = px - tw / 2 < f.box.l + 8;
+      if (!fits || !tickOnCanvas(g, lab, px, xTickY, TICK_Z, 'center')) return false;
+      if (inCorner && cornerTaken) return false;
+      if (lab === lastX || Math.abs(px - lastPx) < 26 || hitsMark(px, xTickY, tw) || underPole(px)) return false;
+      if (!paintX(x, px, lab, 'center')) return false;
+      if (inCorner) cornerTaken = true;
+      return true;
+    };
+    // Draw 0 first so a close neighbour cannot claim the seat (CI fonts, BUG-86).
+    if (need0) place0();
+    forTicks(Math.ceil(xLo / st) * st, xHi, st, (x) => { if (Math.abs(x) > 1e-8) drawX(x); });
     for (const x of min2Candidates(xLo, xHi, xDrawn)) {
       if (xDrawn.length >= 2 && Math.abs(x) > 1e-9) continue;
-      drawX(x, true);
+      drawX(x);
     }
-    if (xDrawn.length < 2 || (xLo <= 0 && 0 <= xHi && !xDrawn.some((u) => Math.abs(u) < 1e-8))) {
-      const need0 = xLo <= 0 && 0 <= xHi && !xDrawn.some((u) => Math.abs(u) < 1e-8);
-      const extras = need0 ? [0, ...min2Candidates(xLo, xHi, xDrawn)] : min2Candidates(xLo, xHi, xDrawn);
+    if (xDrawn.length < 2 || (need0 && !xDrawn.some((u) => Math.abs(u) < 1e-8))) {
+      if (need0) place0();
+      const extras = min2Candidates(xLo, xHi, xDrawn);
       for (const x of extras) {
-        if (xDrawn.length >= 2 && Math.abs(x) > 1e-9) continue;
+        if (xDrawn.length >= 2) continue;
+        if (Math.abs(x) < 1e-8) continue;
         const lab = tickLabel(x, st);
         if (!lab || xDrawn.some((u) => Math.abs(u - x) < 1e-8)) continue;
-        let px = f.X(x), y = f.box.b - 7;
+        let px = f.X(x);
+        if (need0 && Math.abs(px - zeroPx) < zeroClear) continue;
         if (underPole(px)) px += (px < (f.box.l + f.box.r) / 2 ? 16 : -16);
+        if (need0 && Math.abs(px - zeroPx) < zeroClear) continue;
         const al: CanvasTextAlign = (px > f.box.r - 12 ? 'right' : px < f.box.l + 12 ? 'left' : 'center');
         if (al === 'right') px = Math.min(px, f.box.r - 1);
         if (al === 'left') px = Math.max(px, f.box.l + 1);
-        if (Math.abs(px - lastPx) < 16 || !tickOnCanvas(g, lab, px, y, TICK_Z, al)) continue;
-        let ok = false;
-        withAnchor({ kind: 'line', x: f.X(x), y: f.box.t, x2: f.X(x), y2: f.box.b }, () => {
-          ok = text(g, lab, px, y, col.muted(), al, TICK_Z);
-        });
-        if (ok) { lastX = lab; lastPx = px; xDrawn.push(x); }
+        if (Math.abs(px - lastPx) < 16 || !tickOnCanvas(g, lab, px, xTickY, TICK_Z, al)) continue;
+        paintX(x, px, lab, al);
       }
     }
     let lastY = '', lastPy = Infinity;
