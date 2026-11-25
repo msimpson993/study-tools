@@ -175,7 +175,8 @@ export const sensPanels = (): FigurePanel[] => [
       curve(g, fr, ws.map(Math.log10), approx.map((m) => Math.log10(Math.max(m, 1e-6))), col.muted(), 1.6, [6, 4]);
       tline(g, fr, [Math.log10(w0), yr[0]], [Math.log10(w0), yr[1]], col.e(), 1.2, [4, 3]);
       const S = borerS(K, { re: 0, im: w0 }).mag;
-      textReadout(g, `|S| = ${f(S, 4)} at ω = ${f(w0, 2)}.  A 10 % change in the machine at this rate changes the loop by ${f(10 * S, 2)} %.`, fr.box.l, 14, col.text(), 'left', 10);
+      // not named in a caption: may wrap, shrink to 9 px, or drop on a tile if it will not stay above the plot
+      if (!isThumb(g)) textReadout(g, `|S| = ${f(S, 4)} at ω = ${f(w0, 2)}.  A 10 % change in the machine at this rate changes the loop by ${f(10 * S, 2)} %.`, 8, 14, col.text(), 'left', 10, undefined, fr.box.t - 2);
     },
   },
 ];

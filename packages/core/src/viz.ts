@@ -93,20 +93,29 @@ const wrapReadout = (g: CanvasRenderingContext2D, s: string, room: number, z: nu
 
 /** Caption-named readout: never shrink below 9 px; wrap if the row will not fit; do not slide into the plot (BUG-60 rest).
  *  Wrapped lines use a line height of at least 1.2× the font size and are logged as one block so the lines cannot collide with each other. */
-export function textReadout(g: CanvasRenderingContext2D, s: string, x: number, y: number, color: string, align: CanvasTextAlign = 'left', size = 10, maxW?: number) {
-  const z = Math.max(9, size);
+export function textReadout(g: CanvasRenderingContext2D, s: string, x: number, y: number, color: string, align: CanvasTextAlign = 'left', size = 10, maxW?: number, maxBot?: number) {
   const m = typeof g.getTransform === 'function' ? g.getTransform() : { a: 1, b: 0, c: 0, d: 1, e: 0, f: 0 };
   const k = m.a > 0 ? m.a : 1, W = (g.canvas?.width || 400) / k, ox = -(m.e || 0) / k;
   const lo = ox + 2, hi = ox + W - 2;
   const room = maxW ?? (align === 'right' || align === 'end' ? x - lo : hi - x);
-  const lines = wrapReadout(g, s, Math.max(8, room), z);
-  const n = lines.length, gap = z * 1.2;
-  let y0 = y - ((n - 1) / 2) * gap;
-  const top = y0 - z * 0.55, bot = y0 + (n - 1) * gap + z * 0.55;
   const oy = -(m.f || 0) / (m.d > 0 ? m.d : 1);
   const H = (g.canvas?.height || 400) / (m.d > 0 ? m.d : 1);
-  if (top < oy + 2) y0 += (oy + 2) - top;
-  else if (bot > oy + H - 2) y0 -= bot - (oy + H - 2);
+  const cap = maxBot ?? (oy + H - 2);
+  const layout = (z: number) => {
+    const lines = wrapReadout(g, s, Math.max(8, room), z);
+    const n = lines.length, gap = z * 1.2;
+    let y0 = y - ((n - 1) / 2) * gap;
+    const top = y0 - z * 0.55, bot = y0 + (n - 1) * gap + z * 0.55;
+    if (top < oy + 2) y0 += (oy + 2) - top;
+    else if (bot > cap) y0 -= bot - cap;
+    const yTop = y0 - z * 0.55, yBot = y0 + (n - 1) * gap + z * 0.55;
+    return { z, lines, n, gap, y0, yTop, yBot, fits: yTop >= oy + 1 && yBot <= cap + 0.5 };
+  };
+  // required readouts stay at >= 9 px; an optional note (one with a maxBot cap) may shrink to 9 or be dropped if it still will not fit
+  let plan = layout(Math.max(9, size));
+  if (!plan.fits && maxBot != null) plan = layout(9);
+  if (!plan.fits && maxBot != null) return;
+  const { z, lines, n, gap, y0, yTop, yBot } = plan;
   withLabelRole('axis', () => {
     // phone / tiny tiles stay bare (same rule as text() for axis labels)
     if (isThumb(g) && !persistLabels) {
@@ -117,7 +126,6 @@ export function textReadout(g: CanvasRenderingContext2D, s: string, x: number, y
     g.font = `${z}px system-ui,sans-serif`;
     const tw = Math.max(...lines.map((l) => g.measureText(l).width));
     const a0 = align === 'right' || align === 'end' ? x - tw : align === 'center' ? x - tw / 2 : x;
-    const yTop = y0 - z * 0.55, yBot = y0 + (n - 1) * gap + z * 0.55;
     const cv = g.canvas as HTMLCanvasElement | undefined;
     const rect: LabelRect = {
       x0: m.a * a0 + m.e, x1: m.a * (a0 + tw) + m.e,
