@@ -111,7 +111,8 @@ export function drawStepResponse(g: CanvasRenderingContext2D, w: number, h: numb
   // ±2% lives in the bottom-right pad. When the pad is deep enough it sits below the
   // x-tick row; on a tight pad it shares the tick baseline and the last tick gives way.
   const padB = f.h - f.box.b;
-  const bandY = padB >= 34 ? f.box.b + 26 : f.box.b + 9;
+  // box.b+26 sat on "time (s)" at h-5 when the bottom pad is 38; sit between the tick row and the name
+  const bandY = padB >= 34 ? f.box.b + 18 : f.box.b + 9;
   if (show.band && bandY <= f.box.b + 12) avoid.push({ x: f.box.r - 4, y: f.box.b + 9, r: 30 });
   graphAxes(g, f, [0, tEnd], yr, s.xLabel ?? 'time (s)', s.yLabel ?? 'output', 0, yStep, undefined, undefined, avoid);
   const yf = m.yFinal;
@@ -848,10 +849,19 @@ export function drawSPlane(g: CanvasRenderingContext2D, w: number, h: number, s:
         lastY = lab; lastPy = py; yDrawn.push(y); return true;
       };
       if (tryAt(py0)) return true;
-      if (force || py0 > f.box.b - 20) {
-        for (const dy of [-6, -10, -14, -18, -22]) {
-          if (tryAt(py0 + dy)) return true;
-        }
+      // stay on the grid line (tickAlign ≤ 2 px): try a little inward, not up or down
+      if (force) {
+        const x2 = f.box.l + 3 + Math.ceil(tw) + 4;
+        const tryX = (x: number) => {
+          if (x + tw > f.box.r - 2) return false;
+          let ok = false;
+          withAnchor({ kind: 'line', x: f.box.l, y: py0, x2: f.box.r, y2: py0 }, () => {
+            ok = text(g, lab, x, py0, col.muted(), 'left', TICK_Z);
+          });
+          if (!ok) return false;
+          lastY = lab; lastPy = py0; yDrawn.push(y); return true;
+        };
+        if (tryX(x2)) return true;
       }
       return false;
     };

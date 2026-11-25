@@ -168,6 +168,11 @@ const wrapReadout = (g: CanvasRenderingContext2D, s: string, room: number, z: nu
     if (cur) lines.push(cur);
     return lines;
   };
+  if (s.includes('\n')) {
+    const out: string[] = [];
+    for (const line of s.split('\n')) out.push(...wrapReadout(g, line, room, z));
+    return out.length ? out : [s];
+  }
   if (fits(s)) return [s];
   const parts: string[] = [];
   let rest = s;
@@ -734,7 +739,7 @@ export function graphAxes(g: CanvasRenderingContext2D, f: Frame, xr: V2, yr: V2,
   withLabelRole('tick', () => {
     const tickX = f.box.l - 4;
     const tickRoom = Math.max(6, tickX - titleRight);
-    let lastX = '', lastPx = -Infinity;
+    let lastX = '', lastPx = -Infinity, lastTw = 0;
     const simAxes = simProjectStyle();
     let cornerTaken = false;
     const xDrawn: number[] = [];
@@ -748,7 +753,8 @@ export function graphAxes(g: CanvasRenderingContext2D, f: Frame, xr: V2, yr: V2,
       // at most one tick in the corner where the axes meet (BUG-74); 0 may sit there if it is first
       if (inCorner && cornerTaken) return false;
       const onMarkX = (avoid ?? []).some((mk) => Math.hypot((mk.x ?? px) - px, (mk.y ?? (f.box.b + 9)) - (f.box.b + 9)) < (mk.r ?? 10));
-      if (Math.abs(px - lastPx) < 26 || onMarkX) return false;
+      const minGap = simAxes ? Math.max(26, lastTw / 2 + tw / 2 + 3) : 26;
+      if (Math.abs(px - lastPx) < minGap || onMarkX) return false;
       if (simAxes && !tickOnCanvas(g, lab, px, f.box.b + 9, 10, 'center')) {
         const W = g.canvas.width || 0;
         const nudged = Math.min(W - 1 - tw / 2, Math.max(tw / 2 + 1, px));
@@ -762,7 +768,7 @@ export function graphAxes(g: CanvasRenderingContext2D, f: Frame, xr: V2, yr: V2,
       });
       if (!ok) return false;
       if (inCorner) cornerTaken = true;
-      lastX = lab; lastPx = px; xDrawn.push(x); return true;
+      lastX = lab; lastPx = px; lastTw = tw; xDrawn.push(x); return true;
     };
     const xPix = f.box.r - f.box.l;
     // two centre-aligned ticks need ≥ 26 px each; below that, only the two end values (BUG-74)
@@ -837,7 +843,8 @@ export function graphAxes(g: CanvasRenderingContext2D, f: Frame, xr: V2, yr: V2,
       });
       if (t.lab === lastY) return false;
       const inCornerY = simAxes && t.py + ySize * 0.55 > f.box.b - 4;
-      if (inCornerY && cornerTaken) return false;
+      // 0 on the x-axis may share the origin corner; other ticks still give way
+      if (inCornerY && cornerTaken && t.lab !== '0') return false;
       if (Math.abs(t.py - lastPy) < 14) return false;
       if (!force && onMark) return false;
       const inside = f.box.l + 3;
@@ -862,22 +869,8 @@ export function graphAxes(g: CanvasRenderingContext2D, f: Frame, xr: V2, yr: V2,
       // sit inside the plot only when well above the x-tick row, so the number stays a y-tick (BUG-74)
       const clearOfXRow = t.py < f.box.b - 12;
       if (clearOfXRow && innerOk && tryPaint(inside, 'left', false)) return accept(t.py);
-      // a top-of-plot "1" often sits on the y-axis name; nudge it down so min-2 can still hold
-      for (const dy of [6, 10, 14]) {
-        const py = t.py + dy;
-        if (Math.abs(py - lastPy) < 14 || py > f.box.b - 12) break;
-        if (tickOnCanvas(g, t.lab, tickX, py, ySize, 'right') && tryPaintAt(tickX, 'right', py)) return accept(py);
-        if (clearOfXRow && tickOnCanvas(g, t.lab, inside, py, ySize, 'left') && tryPaintAt(inside, 'left', py)) return accept(py);
-      }
-      // a bottom-of-plot tick that lost the corner or the x-tick row can still sit just above it
-      if (t.py > f.box.b - 24) {
-        for (const dy of [-6, -10, -14, -18, -22]) {
-          const py = t.py + dy;
-          if (py < f.box.t + 4 || Math.abs(py - lastPy) < 14) continue;
-          if (tickOnCanvas(g, t.lab, tickX, py, ySize, 'right') && tryPaintAt(tickX, 'right', py)) return accept(py);
-          if (tickOnCanvas(g, t.lab, inside, py, ySize, 'left') && tryPaintAt(inside, 'left', py)) return accept(py);
-        }
-      }
+      // a 0 on the x-axis may sit just inside the plot at the same y (still on its line)
+      if (t.lab === '0' && innerOk && tryPaint(inside, 'left', false)) return accept(t.py);
       return false;
     };
     if (!simAxes) {
@@ -907,11 +900,7 @@ export function graphAxes(g: CanvasRenderingContext2D, f: Frame, xr: V2, yr: V2,
         const far = Math.abs(yr[1] - already) >= Math.abs(already - yr[0]) ? yr[1] : yr[0];
         const lab = yfmt ? yfmt(far) : tickLabelFine(far, sy);
         if (lab && !yDrawn.some((u) => Math.abs(u - far) < 1e-8)) {
-          const pys = [f.Y(far), f.box.t + 16, (f.box.t + f.box.b) / 2, f.Y(far) + 12, f.Y(far) + 20];
-          for (const py of pys) {
-            if (py < f.box.t + 4 || py > f.box.b - 12 || Math.abs(py - lastPy) < 14) continue;
-            if (drawYTick({ lab, y: far, py }, true)) break;
-          }
+          drawYTick({ lab, y: far, py: f.Y(far) }, true);
         }
       }
     }

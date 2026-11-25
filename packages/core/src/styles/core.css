@@ -632,3 +632,18 @@ html.layout-tabs .tab-body > h2,html.layout-tabs .tab-sec-setup > h2,html.layout
   .step-section .pair2{grid-template-columns:1fr}
   .step-section .fig canvas{height:min(70vh,16rem);min-height:10rem}
 }
+
+/* s-plane panels stay close to square so the plot is not a letterboxed strip on a tall canvas */
+.step-section .fig:has(canvas[data-fig="splane"]) canvas{
+  height:auto;
+  aspect-ratio:1 / 1.1;
+  max-height:min(52vh,28rem);
+  min-height:min(12rem,70vw);
+}
+@media (max-width:699.98px){
+  .step-section .fig:has(canvas[data-fig="splane"]) canvas{max-height:min(48vh,22rem)}
+}
+@media (orientation:landscape) and (max-height:500px){
+  .step-section .fig:has(canvas[data-fig="splane"]) canvas{max-height:min(70vh,16rem);min-height:10rem}
+}
+

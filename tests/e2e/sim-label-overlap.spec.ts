@@ -519,7 +519,7 @@ const minTicks = (log: L[], plots: P[], at: string) => {
   return out;
 };
 
-/** On tiles, the plot box is at least ~60% of the tile height (BUG-69). */
+/** The s-plane plot box is at least ~60% of the canvas height (BUG-69). */
 const plotAreaFraction = (plots: P[], at: string) => {
   const out: string[] = [];
   const by = new Map<number, P[]>();
@@ -531,12 +531,12 @@ const plotAreaFraction = (plots: P[], at: string) => {
     const pl = group.reduce((b, p) => (p.y1 - p.y0 > b.y1 - b.y0 ? p : b));
     const frac = (pl.y1 - pl.y0) / pl.H;
     if (frac < 0.58)
-      out.push(`${at} ${pl.id || 'canvas'}: plot is ${(frac * 100).toFixed(1)}% of the tile height (min ~60%)`);
+      out.push(`${at} ${pl.id || 'canvas'}: plot is ${(frac * 100).toFixed(1)}% of the canvas height (min ~60%)`);
   }
   return out;
 };
 
-/** Caption-named header readouts on labelled tiles take at most 2 lines (BUG-69). */
+/** Caption-named header readouts take at most 2 lines (BUG-69). */
 const headerTwoLines = (log: L[], at: string) => {
   const out: string[] = [];
   const header = /^(ceiling\s+Ka|coil pole at|Ka\s*=|K\s*=|OS\s|error\s|offset\s|ζ\s*=|ω\s*=|P\s*=|open sag|closed sag|loop gain)/;
