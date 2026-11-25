@@ -667,6 +667,19 @@ export function tickLabelFine(v: number, step: number): string {
   const fine = Math.min(Math.abs(step) || 1, Math.abs(v) || Math.abs(step) || 1);
   return tickLabel(v, fine);
 }
+/** Compact power-of-ten form (10³, 10⁻²) when a tight axis cannot hold the long tick. */
+export function compactTickLabel(lab: string): string {
+  const n = Number(lab.replace(/−/g, '-'));
+  if (!Number.isFinite(n) || n === 0) return lab;
+  const sign = n < 0 ? '−' : '';
+  const a = Math.abs(n);
+  const exp = Math.round(Math.log10(a));
+  if (exp !== 0 && Math.abs(exp) >= 2 && Math.abs(a - 10 ** exp) <= 1e-9 * Math.max(1, a)) {
+    const map: Record<string, string> = { '-': '⁻', '0': '⁰', '1': '¹', '2': '²', '3': '³', '4': '⁴', '5': '⁵', '6': '⁶', '7': '⁷', '8': '⁸', '9': '⁹' };
+    return `${sign}10${[...String(exp)].map((ch) => map[ch] ?? ch).join('')}`;
+  }
+  return lab;
+}
 /** Test hook: plot box in device px, plus the data range, when window.__plotLog is an array. */
 export function logPlotFrame(g: CanvasRenderingContext2D, f: Frame) {
   const log = (globalThis as unknown as { __plotLog?: unknown[] }).__plotLog; if (!Array.isArray(log)) return;
@@ -751,9 +764,12 @@ export function graphAxes(g: CanvasRenderingContext2D, f: Frame, xr: V2, yr: V2,
       if (inCorner) cornerTaken = true;
       lastX = lab; lastPx = px; xDrawn.push(x); return true;
     };
+    const xPix = f.box.r - f.box.l;
+    // two centre-aligned ticks need ≥ 26 px each; below that, only the two end values (BUG-74)
+    const tightX = simAxes && xPix < 56;
     forTicks(Math.ceil(xr[0] / sx) * sx, xr[1], sx, (x) => {
       g.strokeStyle = col.grid(); g.beginPath(); g.moveTo(f.X(x), f.box.t); g.lineTo(f.X(x), f.box.b); g.stroke();
-      if (simAxes) drawXTick(x);
+      if (simAxes) { if (!tightX) drawXTick(x); }
       else {
         const lab = xfmt ? xfmt(x) : tickLabel(x, sx), px = f.X(x);
         const onMarkX = (avoid ?? []).some((mk) => Math.hypot((mk.x ?? px) - px, (mk.y ?? (f.box.b + 9)) - (f.box.b + 9)) < (mk.r ?? 10));
@@ -766,25 +782,38 @@ export function graphAxes(g: CanvasRenderingContext2D, f: Frame, xr: V2, yr: V2,
       }
     });
     if (simAxes) {
-      const xInset = (f.box.r - f.box.l) > 8 && f.sx ? 6 / f.sx : 0;
-      for (const x of min2Candidates(xr[0], xr[1], xDrawn)) {
-        if (xDrawn.length >= 2 && Math.abs(x) > 1e-9) continue;
-        drawXTick(x, true);
+      if (!tightX) {
+        for (const x of min2Candidates(xr[0], xr[1], xDrawn)) {
+          if (xDrawn.length >= 2 && Math.abs(x) > 1e-9) continue;
+          drawXTick(x, true);
+        }
       }
       if (xDrawn.length < 2) {
-        const far = Math.abs(xr[1] - (xDrawn[0] ?? xr[0])) >= Math.abs((xDrawn[0] ?? xr[1]) - xr[0]) ? xr[1] : xr[0];
-        const lab = xfmt ? xfmt(far) : tickLabelFine(far, sx);
-        if (lab && !xDrawn.some((u) => Math.abs(u - far) < 1e-8)) {
-          const al: CanvasTextAlign = f.X(far) > (f.box.l + f.box.r) / 2 ? 'right' : 'left';
-          const px = al === 'right' ? Math.min(f.X(far), (g.canvas.width || 0) - 2) : Math.max(f.X(far), 2);
-          if (Math.abs(px - lastPx) >= 16 && tickOnCanvas(g, lab, px, f.box.b + 9, 10, al)) {
-            let ok = false;
-            withAnchor({ kind: 'line', x: f.X(far), y: f.box.t, x2: f.X(far), y2: f.box.b }, () => {
-              ok = text(g, lab, px, f.box.b + 9, col.muted(), al, 10);
-            });
-            if (ok) { lastX = lab; lastPx = px; xDrawn.push(far); }
+        const W = g.canvas.width || 0;
+        const endVals = [xr[0], xr[1]].filter((x, i, a) => a.findIndex((u) => Math.abs(u - x) < 1e-8) === i);
+        const fullLab = (x: number) => xfmt ? xfmt(x) : tickLabelFine(x, sx);
+        const placeEndX = (x: number, lab: string, z: number) => {
+          if (!lab || lab === lastX || xDrawn.some((u) => Math.abs(u - x) < 1e-8)) return false;
+          g.font = `${z}px system-ui,sans-serif`;
+          const al: CanvasTextAlign = f.X(x) >= (f.box.l + f.box.r) / 2 ? 'right' : 'left';
+          const px = al === 'right' ? Math.min(f.X(x), W - 2) : Math.max(f.X(x), 2);
+          if (Math.abs(px - lastPx) < 8 || !tickOnCanvas(g, lab, px, f.box.b + 9, z, al)) return false;
+          let ok = false;
+          withAnchor({ kind: 'line', x: f.X(x), y: f.box.t, x2: f.X(x), y2: f.box.b }, () => {
+            ok = text(g, lab, px, f.box.b + 9, col.muted(), al, z);
+          });
+          if (!ok) return false;
+          lastX = lab; lastPx = px; xDrawn.push(x); return true;
+        };
+        const tryEnds = (labOf: (x: number) => string, z: number) => {
+          for (const x of endVals) {
+            if (xDrawn.length >= 2) break;
+            placeEndX(x, labOf(x), z);
           }
-        }
+        };
+        tryEnds(fullLab, 10);
+        if (xDrawn.length < 2) tryEnds(fullLab, 9);
+        if (xDrawn.length < 2) tryEnds((x) => compactTickLabel(fullLab(x)), 9);
       }
     }
     // one size for every y tick, never below 9 (BUG-61); keep 0 / 1 / 2 on a 0–2 axis, centred on the line (BUG-65)
@@ -804,12 +833,13 @@ export function graphAxes(g: CanvasRenderingContext2D, f: Frame, xr: V2, yr: V2,
       const onMark = (avoid ?? []).some((mk) => {
         const r = mk.r ?? 10;
         if (Math.abs(mk.y - t.py) >= r) return false;
-        return mk.x === undefined || mk.x < f.box.l + r + 20;
+        return mk.x === undefined || mk.x < f.box.l + 10;
       });
       if (t.lab === lastY) return false;
       const inCornerY = simAxes && t.py + ySize * 0.55 > f.box.b - 4;
       if (inCornerY && cornerTaken) return false;
-      if (Math.abs(t.py - lastPy) < 14 || onMark) return false;
+      if (Math.abs(t.py - lastPy) < 14) return false;
+      if (!force && onMark) return false;
       const inside = f.box.l + 3;
       const outerOk = tickOnCanvas(g, t.lab, tickX, t.py, ySize, 'right');
       const innerOk = tickOnCanvas(g, t.lab, inside, t.py, ySize, 'left');
@@ -839,6 +869,15 @@ export function graphAxes(g: CanvasRenderingContext2D, f: Frame, xr: V2, yr: V2,
         if (tickOnCanvas(g, t.lab, tickX, py, ySize, 'right') && tryPaintAt(tickX, 'right', py)) return accept(py);
         if (clearOfXRow && tickOnCanvas(g, t.lab, inside, py, ySize, 'left') && tryPaintAt(inside, 'left', py)) return accept(py);
       }
+      // a bottom-of-plot tick that lost the corner or the x-tick row can still sit just above it
+      if (t.py > f.box.b - 24) {
+        for (const dy of [-6, -10, -14, -18, -22]) {
+          const py = t.py + dy;
+          if (py < f.box.t + 4 || Math.abs(py - lastPy) < 14) continue;
+          if (tickOnCanvas(g, t.lab, tickX, py, ySize, 'right') && tryPaintAt(tickX, 'right', py)) return accept(py);
+          if (tickOnCanvas(g, t.lab, inside, py, ySize, 'left') && tryPaintAt(inside, 'left', py)) return accept(py);
+        }
+      }
       return false;
     };
     if (!simAxes) {
@@ -846,7 +885,7 @@ export function graphAxes(g: CanvasRenderingContext2D, f: Frame, xr: V2, yr: V2,
         const onMark = (avoid ?? []).some((mk) => {
           const r = mk.r ?? 10;
           if (Math.abs(mk.y - t.py) >= r) return false;
-          return mk.x === undefined || mk.x < f.box.l + r + 20;
+          return mk.x === undefined || mk.x < f.box.l + 10;
         });
         if (t.lab === lastY) continue;
         if (!keepY(t.lab) && (Math.abs(t.py - lastPy) < 14 || onMark)) continue;

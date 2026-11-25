@@ -136,9 +136,9 @@ export function drawStepResponse(g: CanvasRenderingContext2D, w: number, h: numb
     vertSegs.push({ x: f.X(m.peakTime), y0: f.Y(m.peak), y1: footY });
   if (show.settling && Number.isFinite(m.settlingTime))
     vertSegs.push({ x: f.X(m.settlingTime), y0: f.Y(yr[1]), y1: footY });
-  const hitsOtherVert = (a: number, b2: number, c: number, d: number, own: number[] = []) =>
+  const hitsOtherVert = (a: number, b2: number, c: number, d: number, own: number[] = [], pad = 2) =>
     vertSegs.some((s) => own.some((o) => Math.abs(s.x - o) < 1.5) ? false
-      : (s.x > a - 2 && s.x < b2 + 2 && d > Math.min(s.y0, s.y1) - 2 && c < Math.max(s.y0, s.y1) + 2));
+      : (s.x > a - pad && s.x < b2 + pad && d > Math.min(s.y0, s.y1) - pad && c < Math.max(s.y0, s.y1) + pad));
   const hitsPlaced = (a: number, b2: number, c: number, d: number) =>
     labelOverlaps(labelsOn(g.canvas), { x0: a, x1: b2, y0: c, y1: d, role: 'axis' }, 1.5);
   const hitsCurve = (x0: number, x1: number, y0: number, y1: number) => {
@@ -166,7 +166,7 @@ export function drawStepResponse(g: CanvasRenderingContext2D, w: number, h: numb
     if (x0 < 2 || x1 > cw - 2 || y0 < 2 || y1 > ch - 2) return false;
     // below the header, stay in the plot; the header itself may use the full canvas width
     if (d > f.box.t + 2 && (a <= f.box.l + 2 || b2 >= f.box.r - 2)) return false;
-    return labelsOn(g.canvas).every((r) => !r || x1 < r.x0 - 4 || x0 > r.x1 + 4 || y1 < r.y0 - 4 || y0 > r.y1 + 4);
+    return labelsOn(g.canvas).every((r) => !r || x1 < r.x0 - 8 || x0 > r.x1 + 8 || y1 < r.y0 - 8 || y0 > r.y1 + 8);
   };
   const lbl = (str: string, px: number, py: number, color: string, align: CanvasTextAlign = 'left', z = 10.5) => text(g, str, px, py, color, align, z);
   let ghostBox: { x0: number; x1: number; y0: number; y1: number } | null = null;
@@ -218,7 +218,7 @@ export function drawStepResponse(g: CanvasRenderingContext2D, w: number, h: numb
       if (x0 < 1 || x1 > cw - 1 || y0 < 1 || y1 > ch - 1) return false;
       return !labelOverlaps(labelsOn(g.canvas), { x0, x1, y0, y1, role: 'axis' }, pad);
     };
-    return all.find((c) => onCv(c, 2)) ?? all.find((c) => onCv(c, 0)) ?? null;
+    return all.find((c) => onCv(c, 8)) ?? all.find((c) => onCv(c, 4)) ?? null;
   };
   const paintTopPad = (word: string, c: TextBox, markX: number, markY: number, color: string, paint: (word: string, x: number, y: number, color: string, align: CanvasTextAlign, z: number) => void) => {
     // start at the label's bottom centre so the box is on its leader (BUG-76 / 77 nearer-mark)
@@ -291,7 +291,7 @@ export function drawStepResponse(g: CanvasRenderingContext2D, w: number, h: numb
         if (!inPlot(c.a, c.b2, c.c, c.d, padYOf(c))) continue;
         if (c.c < yRef + 6 && c.d > yRef - 6) continue;
         if (hitsCurve(c.a, c.b2, c.c, c.d)) continue;
-        if (hitsOtherVert(c.a, c.b2, c.c, c.d, [x0Bar, x1Bar])) continue;
+        if (hitsOtherVert(c.a, c.b2, c.c, c.d)) continue;
         if (hitsOriginTick(c) || onTickRow(c) || !besideBar(c) || closerToTick(c)) continue;
         trPick = c; break;
       }
@@ -313,7 +313,7 @@ export function drawStepResponse(g: CanvasRenderingContext2D, w: number, h: numb
         const c = textBox(xx, yy, tw, th, al, MIN_FONT);
         if (c.a < f.box.l + 2 || c.b2 > f.box.r - 2) continue;
         if (onTickRow(c) || !besideBar(c) || closerToTick(c)) continue;
-        if (hitsOtherVert(c.a, c.b2, c.c, c.d, [x0Bar, x1Bar])) continue;
+        if (hitsOtherVert(c.a, c.b2, c.c, c.d)) continue;
         if (hitsCurve(c.a, c.b2, c.c, c.d)) continue;
         if (hitsOriginTick(c)) continue;
         trPick = c; break;
@@ -332,7 +332,7 @@ export function drawStepResponse(g: CanvasRenderingContext2D, w: number, h: numb
         if (c.a < f.box.l + 2 || c.b2 > f.box.r - 2) return false;
         if (requireNear && !nearBar(c)) return false;
         if (hitsCurve(c.a, c.b2, c.c, c.d)) return false;
-        if (hitsOtherVert(c.a, c.b2, c.c, c.d, [x0Bar, x1Bar])) return false;
+        if (hitsOtherVert(c.a, c.b2, c.c, c.d)) return false;
         if (hitsPlaced(c.a, c.b2, c.c, c.d)) return false;
         return true;
       };
@@ -616,11 +616,11 @@ export function drawStepResponse(g: CanvasRenderingContext2D, w: number, h: numb
   const tsPlaced = tsBox as { x0: number; x1: number; y0: number; y1: number } | null;
   const GHOST_GAP = 8;
   const ghostBlocked = (a: number, b2: number, c: number, d: number) => {
-    if (osPlaced && b2 > osPlaced.x0 - 4 && a < osPlaced.x1 + 4 && d > osPlaced.y - 10 && c < osPlaced.y + 10) return true;
+    if (osPlaced && b2 > osPlaced.x0 - GHOST_GAP && a < osPlaced.x1 + GHOST_GAP && d > osPlaced.y - 16 && c < osPlaced.y + 16) return true;
     if (tsPlaced && b2 > tsPlaced.x0 - GHOST_GAP && a < tsPlaced.x1 + GHOST_GAP && d > tsPlaced.y0 - GHOST_GAP && c < tsPlaced.y1 + GHOST_GAP) return true;
     if (hitsTr(a, b2, c, d)) return true;
     if (hitsCurve(a, b2, c, d)) return true;
-    if (hitsOtherVert(a, b2, c, d)) return true;
+    if (hitsOtherVert(a, b2, c, d, [], GHOST_GAP)) return true;
     if (show.overshoot && Number.isFinite(m.peak)) {
       const px0 = f.X(m.peakTime), py0 = f.Y(m.peak);
       const cx = Math.max(a, Math.min(px0, b2)), cy = Math.max(c, Math.min(py0, d));
@@ -831,20 +831,29 @@ export function drawSPlane(g: CanvasRenderingContext2D, w: number, h: number, s:
     let lastY = '', lastPy = Infinity;
     const yDrawn: number[] = [];
     const drawY = (y: number, force = false) => {
-      const lab = tickLabel(y, st), py = f.Y(y);
-      if (!lab || lab === '0') return;
+      const lab = tickLabel(y, st), py0 = f.Y(y);
+      if (!lab || lab === '0') return false;
       const tw = g.measureText(lab).width, x = f.box.l + 3;
-      const inCorner = py + TICK_Z * 0.55 > f.box.b - 10;
-      const fits = py > f.box.t + 4 && py < f.box.b - 4;
-      if (!fits || (inCorner && cornerTaken)) return;
-      if (lab === lastY || Math.abs(py - lastPy) < 16 || hitsMark(x, py, tw)) return;
-      let ok = false;
-      withAnchor({ kind: 'line', x: f.box.l, y: py, x2: f.box.r, y2: py }, () => {
-        ok = text(g, lab, x, py, col.muted(), 'left', TICK_Z);
-      });
-      if (!ok) return false;
-      if (inCorner) cornerTaken = true;
-      lastY = lab; lastPy = py; yDrawn.push(y); return true;
+      const tryAt = (py: number) => {
+        const inCorner = py + TICK_Z * 0.55 > f.box.b - 10;
+        const fits = py > f.box.t + 4 && py < f.box.b - 4;
+        if (!fits || (inCorner && cornerTaken && !force)) return false;
+        if (lab === lastY || Math.abs(py - lastPy) < 16 || hitsMark(x, py, tw)) return false;
+        let ok = false;
+        withAnchor({ kind: 'line', x: f.box.l, y: py0, x2: f.box.r, y2: py0 }, () => {
+          ok = text(g, lab, x, py, col.muted(), 'left', TICK_Z);
+        });
+        if (!ok) return false;
+        if (inCorner) cornerTaken = true;
+        lastY = lab; lastPy = py; yDrawn.push(y); return true;
+      };
+      if (tryAt(py0)) return true;
+      if (force || py0 > f.box.b - 20) {
+        for (const dy of [-6, -10, -14, -18, -22]) {
+          if (tryAt(py0 + dy)) return true;
+        }
+      }
+      return false;
     };
     forTicks(Math.ceil(yLo / st) * st, yHi, st, (y) => drawY(y));
     for (const y of min2Candidates(yLo, yHi, yDrawn)) {
@@ -1181,7 +1190,8 @@ export function drawSPlane(g: CanvasRenderingContext2D, w: number, h: number, s:
             if (!r) return false;
             // 12 px pads around poles and zeros are not ticks; hitsOtherMark already keeps the e2e radius
             if (r.role === 'axis' && markDevs.some((p) => r.x0 <= p.x && p.x <= r.x1 && r.y0 <= p.y && p.y <= r.y1)) return false;
-            return dx1 > r.x0 && dx0 < r.x1 && dy1 > r.y0 && dy0 < r.y1;
+            const pad = r.role === 'tick' ? 3 : 0;
+            return dx1 > r.x0 - pad && dx0 < r.x1 + pad && dy1 > r.y0 - pad && dy0 < r.y1 + pad;
           })) continue;
         }
         if (rayHitsBox(c) || onRay(c.a, c.b2, c.c, c.d)) continue;
