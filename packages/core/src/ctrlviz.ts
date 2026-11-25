@@ -205,14 +205,15 @@ export function drawStepResponse(g: CanvasRenderingContext2D, w: number, h: numb
         return hit;
       }
     }
-    // guaranteed seat: first on-canvas pad box, even if it grazes another label
+    // guaranteed seat: first on-canvas pad box that still clears labels already drawn
     const m = typeof g.getTransform === 'function' ? g.getTransform() : { a: 1, d: 1, e: 0, f: 0 };
-    const onCv = (c: TextBox) => {
+    const onCv = (c: TextBox, pad = 2) => {
       const x0 = m.a * c.a + m.e, x1 = m.a * c.b2 + m.e, y0 = m.d * c.c + m.f, y1 = m.d * c.d + m.f;
       const cw = g.canvas.width || w, ch = g.canvas.height || h;
-      return c.d <= f.box.t + 1 && x0 >= 1 && x1 <= cw - 1 && y0 >= 1 && y1 <= ch - 1;
+      if (c.d > f.box.t + 1 || x0 < 1 || x1 > cw - 1 || y0 < 1 || y1 > ch - 1) return false;
+      return !labelOverlaps(labelsOn(g.canvas), { x0, x1, y0, y1, role: 'axis' }, pad);
     };
-    return all.find(onCv) ?? null;
+    return all.find((c) => onCv(c, 2)) ?? all.find((c) => onCv(c, 0)) ?? null;
   };
   const paintTopPad = (word: string, c: TextBox, markX: number, markY: number, color: string, paint: (word: string, x: number, y: number, color: string, align: CanvasTextAlign, z: number) => void) => {
     const lx = Math.max(c.a + 3, Math.min(c.b2 - 3, markX));
@@ -536,6 +537,7 @@ export function drawStepResponse(g: CanvasRenderingContext2D, w: number, h: numb
         }
         // do not park on the tick row just to keep a label; the top pad is the last resort (BUG-76 / 77)
       }
+      if (tsPick && closerToTickBox(tsPick.a, tsPick.b2, tsPick.c, tsPick.d, lineX, yLo, yHi)) tsPick = null;
       if (!tsPick) {
         // guaranteed last-resort slot in the top pad, with a leader to the Ts mark (BUG-76)
         let pad = findTopPad(tsLab, lineX);
