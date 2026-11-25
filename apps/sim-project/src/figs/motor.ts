@@ -71,7 +71,7 @@ export const motorPanels = (): FigurePanel[] => [
         `closed sag ${f(n.wcInf, 6)} rad/s, τ = ${f(n.tauClosed * 1000, 3)} ms,  at 0.02 s: ${f(n.wc(0.02), 6)}`,
         `loop gain ${f(n.loopFric / n.dOpen, 1)}   ratio ${f(ratio, 5)}  ${ok ? '✓ under 0.02' : '✗ over 0.02'}`,
       ];
-      read.forEach((line, i) => text(g, line, 8, 12 + i * 12, i === 2 ? (ok ? col.ok() : col.bad()) : col.text(), 'left', 10));
+      read.forEach((line, i) => text(g, line, 8, 12 + i * 12, i === 2 ? (ok ? col.ok() : col.bad()) : col.text(), 'left', 10, 'middle', 9));
     },
   },
 ];

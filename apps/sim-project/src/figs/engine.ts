@@ -1,5 +1,5 @@
 /** Figures `pi` and `tuner`: stand-in engine, P/I split, emulated PID Tuner. */
-import { figureOf, drawStepResponse, col, text, textReadout, wipe, rangeFrame, graphAxes, curve, tline, withPersistentLabels, PLOT_HEAD, type FigurePanel } from '@study/core';
+import { figureOf, drawStepResponse, col, text, textReadout, wipe, rangeFrame, graphAxes, curve, tline, withPersistentLabels, PLOT_HEAD, isTileCanvas, type FigurePanel } from '@study/core';
 import { ENGINE, DESIGNS, type DesignName } from '../model/params';
 import { engineMargins, enginePError, engineStep, simEngine, tuner, metrics, engineLoopJw, firstCrossing } from '../model/plants';
 import { f, lin, num, on, str, fmtPow10, drawKeyValueTable, isThumb, type V } from './util';
@@ -22,7 +22,13 @@ export const piPanels = (): FigurePanel[] => [
       const err = I === 0 ? enginePError(P) : 0;
       const head = isThumb(g) ? 0 : PLOT_HEAD;
       wipe(g, w, h);
-      if (head) textReadout(g, I === 0 ? `P only: settles at ${f(1 - err, 3)}, error ${f(err, 3)} = 1/(1 + P·Kₑ)` : `OS ${f(m.os, 2)} %  Ts ${f(m.ts, 3)} s  (I > 0 ⇒ zero steady error)`, 8, 14, col.text(), 'left', 10);
+      if (head) {
+        const tile = isTileCanvas(g);
+        const line = I === 0
+          ? (tile ? `error ${f(err, 3)} = 1/(1 + P·Kₑ)` : `P only: settles at ${f(1 - err, 3)}, error ${f(err, 3)} = 1/(1 + P·Kₑ)`)
+          : (tile ? `OS ${f(m.os, 2)} %  Ts ${f(m.ts, 3)} s` : `OS ${f(m.os, 2)} %  Ts ${f(m.ts, 3)} s  (I > 0 ⇒ zero steady error)`);
+        textReadout(g, line, 8, 14, col.text(), 'left', 10);
+      }
       g.save(); g.translate(0, head);
       drawStepResponse(g, w, h - head, { t: r.t, y: r.y, final: 1, ref: 1, tEnd: 8, show: { overshoot: true, band: true, settling: true, ess: I === 0 }, color: col.a() });
       g.restore();
@@ -151,7 +157,7 @@ export const tunerPanels = (): FigurePanel[] => [
       const hit = nearDesign(resp, rob);
       const ghost = hit ? engineStep(DESIGNS[hit].P, DESIGNS[hit].I, 14, 1e-3) : undefined;
       wipe(g, w, h);
-      if (!thumb) textReadout(g, `${piLine}  OS ${f(r.m.os, 2)} %  Ts ${f(r.m.ts, 3)} s`, 8, 14, col.text(), 'left', 10);
+      if (!thumb) textReadout(g, isTileCanvas(g) ? `OS ${f(r.m.os, 2)} %  Ts ${f(r.m.ts, 3)} s${clamped ? '  (P clamped)' : ''}` : `${piLine}  OS ${f(r.m.os, 2)} %  Ts ${f(r.m.ts, 3)} s`, 8, 14, col.text(), 'left', 10);
       g.save(); g.translate(0, head);
       drawStepResponse(g, w, h - head, {
         t: r.t, y: r.y, final: 1, ref: 1, tEnd: 8, show: { overshoot: true, band: true, settling: true, timing: true },
