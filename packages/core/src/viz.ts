@@ -307,6 +307,12 @@ export function fitText(g: CanvasRenderingContext2D, s: string, x: number, align
   [a0, a1] = span(w, x);
   return { size: z, x, lines, x0: a0, x1: a1 };
 }
+/** Simulation Project canvases only. Other tutors keep the pre-round-15 graphAxes tick loop. */
+export function isSimProjectCanvas(g?: CanvasRenderingContext2D): boolean {
+  const cv = g?.canvas as HTMLCanvasElement | undefined;
+  if (cv && typeof cv.closest === 'function' && cv.closest('[data-testid=step-card]')) return true;
+  return typeof document !== 'undefined' && document.documentElement.classList.contains('layout-tabs');
+}
 /** The canvas is a compact tile, not the expanded overlay or a full-size fig box. */
 export function isTileCanvas(g: CanvasRenderingContext2D): boolean {
   const cv = g.canvas as HTMLCanvasElement | undefined;
@@ -666,26 +672,36 @@ export function graphAxes(g: CanvasRenderingContext2D, f: Frame, xr: V2, yr: V2,
     const tickX = f.box.l - 4;
     const tickRoom = Math.max(6, tickX - titleRight);
     let lastX = '', lastPx = -Infinity;
+    const simAxes = isSimProjectCanvas(g);
     const xDrawn: number[] = [];
     const drawXTick = (x: number, force = false) => {
       const lab = xfmt ? xfmt(x) : (force ? tickLabelFine(x, sx) : tickLabel(x, sx)), px = f.X(x);
       if (!lab || (lab === lastX && !force)) return false;
       const onMarkX = (avoid ?? []).some((mk) => Math.hypot((mk.x ?? px) - px, (mk.y ?? (f.box.b + 9)) - (f.box.b + 9)) < (mk.r ?? 10));
       if (!force && (Math.abs(px - lastPx) < 26 || onMarkX)) return false;
-      if (!tickOnCanvas(g, lab, px, f.box.b + 9, 10, 'center')) return false;
+      if (simAxes && !tickOnCanvas(g, lab, px, f.box.b + 9, 10, 'center')) return false;
       let ok = false;
       withAnchor({ kind: 'line', x: px, y: f.box.t, x2: px, y2: f.box.b }, () => {
         ok = text(g, lab, px, f.box.b + 9, col.muted(), 'center', 10);
       });
-      // a min-2 fallback still yields to an axis title; never stamp a number on the name
       if (!ok) return false;
       lastX = lab; lastPx = px; xDrawn.push(x); return true;
     };
     forTicks(Math.ceil(xr[0] / sx) * sx, xr[1], sx, (x) => {
       g.strokeStyle = col.grid(); g.beginPath(); g.moveTo(f.X(x), f.box.t); g.lineTo(f.X(x), f.box.b); g.stroke();
-      drawXTick(x);
+      if (simAxes) drawXTick(x);
+      else {
+        const lab = xfmt ? xfmt(x) : tickLabel(x, sx), px = f.X(x);
+        const onMarkX = (avoid ?? []).some((mk) => Math.hypot((mk.x ?? px) - px, (mk.y ?? (f.box.b + 9)) - (f.box.b + 9)) < (mk.r ?? 10));
+        if (lab && lab !== lastX && Math.abs(px - lastPx) >= 26 && !onMarkX) {
+          withAnchor({ kind: 'line', x: px, y: f.box.t, x2: px, y2: f.box.b }, () => {
+            text(g, lab, px, f.box.b + 9, col.muted(), 'center', 10);
+          });
+          lastX = lab; lastPx = px;
+        }
+      }
     });
-    {
+    if (simAxes) {
       const xInset = (f.box.r - f.box.l) > 8 && f.sx ? 6 / f.sx : 0;
       for (const x of minNiceTicks(xr[0] + xInset, xr[1] - xInset, xDrawn, 2)) if (!xDrawn.some((u) => Math.abs(u - x) < 1e-8)) drawXTick(x, true);
       if (xDrawn.length < 2) {
@@ -732,14 +748,28 @@ export function graphAxes(g: CanvasRenderingContext2D, f: Frame, xr: V2, yr: V2,
         return ok;
       };
       // prefer the left pad; if that is off-canvas or sits on an axis name, sit just inside the plot.
-      // never force a pad tick onto a title (linear-systems ROC y-names, etc.).
+      // never force a pad tick onto a title.
       if (outerOk && tryPaint(tickX, 'right', false)) { lastY = t.lab; lastPy = t.py; yDrawn.push(t.y); return true; }
       if (innerOk && tryPaint(inside, 'left', false)) { lastY = t.lab; lastPy = t.py; yDrawn.push(t.y); return true; }
       if (force && innerOk && tryPaint(inside, 'left', true)) { lastY = t.lab; lastPy = t.py; yDrawn.push(t.y); return true; }
       return false;
     };
-    for (const t of yLabs) drawYTick(t);
-    {
+    if (!simAxes) {
+      for (const t of yLabs) {
+        const onMark = (avoid ?? []).some((mk) => {
+          const r = mk.r ?? 10;
+          if (Math.abs(mk.y - t.py) >= r) return false;
+          return mk.x === undefined || mk.x < f.box.l + r + 20;
+        });
+        if (t.lab === lastY) continue;
+        if (!keepY(t.lab) && (Math.abs(t.py - lastPy) < 14 || onMark)) continue;
+        withAnchor({ kind: 'line', x: f.box.l, y: t.py, x2: f.box.r, y2: t.py }, () => {
+          text(g, t.lab, tickX, t.py, col.muted(), 'right', ySize);
+        });
+        lastY = t.lab; lastPy = t.py;
+      }
+    } else {
+      for (const t of yLabs) drawYTick(t);
       const yInsetG = (f.box.b - f.box.t) > 8 && f.sy ? 6 / f.sy : 0;
       for (const y of minNiceTicks(yr[0] + yInsetG, yr[1] - yInsetG, yDrawn, 2)) {
         if (yDrawn.some((u) => Math.abs(u - y) < 1e-8)) continue;
