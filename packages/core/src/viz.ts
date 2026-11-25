@@ -170,7 +170,8 @@ export function fitText(g: CanvasRenderingContext2D, s: string, x: number, align
     w = Math.max(...lines.map((l) => g.measureText(l).width));
   }
   const room = (() => { const [a0, a1] = span(w, x); return w - Math.max(0, lo - a0) - Math.max(0, a1 - hi); })();
-  // ticks never shrink or slide (BUG-61 / 65): one size, kept on their tick. Notes may shrink, but not below minSize (BUG-60 rest).
+  // ticks never shrink (BUG-61 / 65): one size, kept on their tick. They may nudge horizontally
+  // so a last x-number does not run off the canvas. Notes may shrink, but not below minSize (BUG-60 rest).
   if (role !== 'tick' && w > room + 0.5 && Number.isFinite(W)) {
     const floor = Math.max(0, minSize);
     z = Math.max(floor, Math.max(size * 0.72, size * Math.max(room, 1) / w));
@@ -183,10 +184,7 @@ export function fitText(g: CanvasRenderingContext2D, s: string, x: number, align
     }
   }
   let [a0, a1] = span(w, x);
-  if (role !== 'tick') {
-    if (a0 < lo) { x += lo - a0; } else if (a1 > hi) { x -= a1 - hi; }
-    [a0, a1] = span(w, x);
-  }
+  if (a0 < lo) { x += lo - a0; } else if (a1 > hi) { x -= a1 - hi; }
   [a0, a1] = span(w, x);
   return { size: z, x, lines, x0: a0, x1: a1 };
 }
