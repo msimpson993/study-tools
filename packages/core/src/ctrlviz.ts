@@ -262,24 +262,31 @@ export function drawStepResponse(g: CanvasRenderingContext2D, w: number, h: numb
     tline(g, f, [m.peakTime, m.peak], [m.peakTime, tpFoot], col.b(), 1, [2, 3]); dot(g, f, [m.peakTime, m.peak], col.b(), 4);
     const osFull = lockReadout(`${fmtN(m.overshootPct, 1)}% overshoot  (Tp ${fmtN(m.peakTime)} s)`);
     const osShort = lockReadout(`OS ${fmtN(m.overshootPct, 1)}%  Tp ${fmtN(m.peakTime)} s`);
+    const osStack = `${lockReadout(`OS ${fmtN(m.overshootPct, 1)}%`)}\n${lockReadout(`Tp ${fmtN(m.peakTime)} s`)}`;
     const peakX = f.X(m.peakTime), peakY = f.Y(m.peak), yRef = f.Y(ref);
+    const paintOs = (word: string, x: number, y: number, color: string, align: CanvasTextAlign, z: number) => {
+      if (word.includes('\n')) withTextSplit('\n', () => { lbl(word, x, y, color, align, z); });
+      else lbl(word, x, y, color, align, z);
+    };
     const tryOs = (ignoreGhost: boolean) => {
       g.font = '10.5px system-ui,sans-serif';
       const fullWide = ((g.measureText(osFull).width * 0.09 + 2) / 2) > 3;
-      for (const word of (tight || w < 420 || fullWide ? [osShort, osFull] : [osFull, osShort])) {
+      const words = (tight || w < 420 || fullWide ? [osShort, osStack, osFull] : [osFull, osShort, osStack]);
+      for (const word of words) {
+        const nLines = word.includes('\n') ? 2 : 1;
         for (const z of [10.5, 10, MIN_FONT]) {
           g.font = `${z}px system-ui,sans-serif`;
-          const tw = g.measureText(word).width, th = z + 3;
+          const parts = word.split('\n'), tw = Math.max(...parts.map((l) => g.measureText(l).width)), th = z + 3;
           const above: TextBox[] = [];
-          for (const gap of [12, 16]) for (const al of ['center', 'right', 'left'] as CanvasTextAlign[])
-            above.push(textBox(peakX, peakY - gap - z * 0.55, tw, th, al, z));
-          for (const c of [...above, ...aroundMarker(peakX, peakY, tw, th, z, true)]) {
+          for (const gap of [10, 12, 14, 16]) for (const al of ['center', 'right', 'left'] as CanvasTextAlign[])
+            above.push(textBox(peakX, peakY - gap - ((nLines - 1) / 2) * z * 1.15 - z * 0.55, tw, th, al, z, nLines));
+          for (const c of [...above, ...aroundMarker(peakX, peakY, tw, th, z, true, ANCHOR_GAP, nLines)]) {
             const I = inflateBox(c);
             if (!osFits(c.a, c.b2, c.c, c.d)) continue;
             if (!ignoreGhost && ghostWouldHit(I.a, I.b2, I.c, I.d)) continue;
             const cx = Math.max(I.a, Math.min(peakX, I.b2)), cy = Math.max(I.c, Math.min(peakY, I.d));
             if (Math.hypot(cx - peakX, cy - peakY) < 8) continue;
-            if (I.c < yRef + 8 && I.d > yRef - 8) continue;
+            if (I.c < yRef + 10 && I.d > yRef - 10) continue;
             const hitsV = (tx: number) => tx > I.a - 2 && tx < I.b2 + 2 && I.d > Math.min(peakY, f.Y(yr[0])) - 2 && I.c < Math.max(peakY, f.box.b) + 2;
             if (show.timing && (hitsV(f.X(m.t10)) || hitsV(f.X(m.t90)))) continue;
             if (hitsOtherVert(I.a, I.b2, I.c, I.d, [peakX])) continue;
@@ -295,50 +302,37 @@ export function drawStepResponse(g: CanvasRenderingContext2D, w: number, h: numb
     if (osHit) {
       const { word, c } = osHit;
       withAnchor({ kind: 'marker', x: peakX, y: peakY }, () => {
-        withLabelRole('axis', () => { lbl(word, c.x, c.y, col.b(), c.align, c.z); });
+        withLabelRole('axis', () => { paintOs(word, c.x, c.y, col.b(), c.align, c.z); });
       });
       osBox = { x0: c.a, x1: c.b2, y: c.y };
     } else {
-      // required OS/Tp stays next to the peak on tiles and expanded views; still skip the curve and the reference line
+      // required OS/Tp stays next to the peak; never park it on the curve or on another marker/ref line
       let c: TextBox | null = null;
-      g.font = `${MIN_FONT}px system-ui,sans-serif`;
-      const tw = g.measureText(osShort).width, th = MIN_FONT + 3;
-      for (const cand of aroundMarker(peakX, peakY, tw, th, MIN_FONT, true)) {
+      let word = osShort;
+      const okish = (cand: TextBox) => {
         const I = inflateBox(cand);
-        if (!osFits(cand.a, cand.b2, cand.c, cand.d)) continue;
+        if (!osFits(cand.a, cand.b2, cand.c, cand.d)) return false;
         const cx = Math.max(I.a, Math.min(peakX, I.b2)), cy = Math.max(I.c, Math.min(peakY, I.d));
-        if (Math.hypot(cx - peakX, cy - peakY) < 8) continue;
-        if (I.c < yRef + 8 && I.d > yRef - 8) continue;
-        if (hitsOtherVert(I.a, I.b2, I.c, I.d, [peakX])) continue;
-        if (hitsCurve(cand.a, cand.b2, cand.c, cand.d)) continue;
-        c = cand; break;
-      }
-      if (!c) {
-        const z = MIN_FONT;
+        if (Math.hypot(cx - peakX, cy - peakY) < 8) return false;
+        if (I.c < yRef + 10 && I.d > yRef - 10) return false;
+        if (hitsOtherVert(I.a, I.b2, I.c, I.d, [peakX])) return false;
+        if (hitsCurve(cand.a, cand.b2, cand.c, cand.d)) return false;
+        return true;
+      };
+      for (const item of [osShort, osStack]) {
+        const nLines = item.includes('\n') ? 2 : 1;
+        g.font = `${MIN_FONT}px system-ui,sans-serif`;
+        const parts = item.split('\n'), tw = Math.max(...parts.map((l) => g.measureText(l).width)), th = MIN_FONT + 3;
         const above: TextBox[] = [];
-        for (const gap of [12, 16]) for (const al of ['center', 'right', 'left'] as CanvasTextAlign[])
-          above.push(textBox(peakX, peakY - gap - z * 0.55, tw, th, al, z));
-        const pool = [...above, ...aroundMarker(peakX, peakY, tw, th, z, true), ...aroundMarker(peakX, peakY, tw, th, z, false)];
-        const okish = (cand: TextBox) => {
-          const I = inflateBox(cand);
-          if (!osFits(cand.a, cand.b2, cand.c, cand.d)) return false;
-          const cx = Math.max(I.a, Math.min(peakX, I.b2)), cy = Math.max(I.c, Math.min(peakY, I.d));
-          if (Math.hypot(cx - peakX, cy - peakY) < 8) return false;
-          if (I.c < yRef + 8 && I.d > yRef - 8) return false;
-          if (hitsOtherVert(I.a, I.b2, I.c, I.d, [peakX])) return false;
-          if (hitsCurve(cand.a, cand.b2, cand.c, cand.d)) return false;
-          return true;
-        };
-        c = pool.find(okish) ?? null;
-      }
-      if (!c) {
-        // required OS/Tp must stay by the peak (within ~16 px); prefer a clear side
-        const near = aroundMarker(peakX, peakY, tw, th, MIN_FONT, true, 12).filter((cand) => osFits(cand.a, cand.b2, cand.c, cand.d) && !hitsOtherVert(inflateBox(cand).a, inflateBox(cand).b2, inflateBox(cand).c, inflateBox(cand).d, [peakX]));
-        c = near[0] ?? aroundMarker(peakX, peakY, tw, th, MIN_FONT, true, 12).find((cand) => osFits(cand.a, cand.b2, cand.c, cand.d)) ?? null;
+        for (const gap of [10, 12, 14, 16]) for (const al of ['center', 'right', 'left'] as CanvasTextAlign[])
+          above.push(textBox(peakX, peakY - gap - ((nLines - 1) / 2) * MIN_FONT * 1.15 - MIN_FONT * 0.55, tw, th, al, MIN_FONT, nLines));
+        const pool = [...above, ...aroundMarker(peakX, peakY, tw, th, MIN_FONT, true, ANCHOR_GAP, nLines), ...aroundMarker(peakX, peakY, tw, th, MIN_FONT, false, ANCHOR_GAP, nLines), ...aroundMarker(peakX, peakY, tw, th, MIN_FONT, true, 14, nLines), ...aroundMarker(peakX, peakY, tw, th, MIN_FONT, false, 14, nLines)];
+        const hit = pool.find(okish);
+        if (hit) { c = hit; word = item; break; }
       }
       if (c) {
         withAnchor({ kind: 'marker', x: peakX, y: peakY }, () => {
-          withLabelRole('axis', () => { lbl(osShort, c!.x, c!.y, col.b(), c!.align, MIN_FONT); });
+          withLabelRole('axis', () => { paintOs(word, c!.x, c!.y, col.b(), c!.align, MIN_FONT); });
         });
         osBox = { x0: c.a, x1: c.b2, y: c.y };
       }
