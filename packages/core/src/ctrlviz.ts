@@ -218,8 +218,10 @@ export function drawStepResponse(g: CanvasRenderingContext2D, w: number, h: numb
     const onTickRow = (c: TextBox) => c.d > f.box.b - 6;
     const besideBar = (c: TextBox) => c.a < x1Bar + 18 && c.b2 > x0Bar - 18;
     const closerToTick = (c: TextBox) => {
-      const cx = (c.a + c.b2) / 2, cy = (c.c + c.d) / 2;
-      const dBar = Math.abs(cy - barY) + (cx < x0Bar ? x0Bar - cx : cx > x1Bar ? cx - x1Bar : 0);
+      const m = typeof g.getTransform === 'function' ? g.getTransform() : { a: 1, d: 1, e: 0, f: 0 };
+      const X = (x: number) => m.a * x + m.e, Y = (y: number) => m.d * y + m.f;
+      const cx = X((c.a + c.b2) / 2), cy = Y((c.c + c.d) / 2);
+      const dBar = Math.abs(cy - Y(barY)) + (cx < X(x0Bar) ? X(x0Bar) - cx : cx > X(x1Bar) ? cx - X(x1Bar) : 0);
       return labelsOn(g.canvas).some((r) => r.role === 'tick' && r.x0 !== undefined && r.y0 !== undefined
         && Math.hypot(cx - (r.x0 + r.x1) / 2, cy - (r.y0 + r.y1) / 2) + 0.01 < dBar + 4);
     };
@@ -407,7 +409,8 @@ export function drawStepResponse(g: CanvasRenderingContext2D, w: number, h: numb
         osBox = { x0: c.a, x1: c.b2, y: c.y };
       }
     }
-    if (!osBox && !tile) {
+    if (!osBox) {
+      // tiles included: a 923 step tile can be ~217×163, too tight for in-plot OS (BUG-76)
       let pad = findOsPad();
       if (!pad && s.ghost?.label) { dropGhost = true; ghostBox = null; pad = findOsPad(); }
       if (pad) paintOsPad(pad.word, pad.c);
@@ -420,8 +423,12 @@ export function drawStepResponse(g: CanvasRenderingContext2D, w: number, h: numb
     !!(trPlaced && b2 > trPlaced.x0 - 6 && a < trPlaced.x1 + 6 && d > trPlaced.y0 - 6 && c < trPlaced.y1 + 6);
   const onTickRowBox = (a: number, b2: number, c: number, d: number) => d > f.box.b - 6;
   const closerToTickBox = (a: number, b2: number, c: number, d: number, ownX: number, ownY0: number, ownY1: number) => {
-    const cx = (a + b2) / 2, cy = (c + d) / 2;
-    const dOwn = Math.abs(cx - ownX) + (cy < Math.min(ownY0, ownY1) ? Math.min(ownY0, ownY1) - cy : cy > Math.max(ownY0, ownY1) ? cy - Math.max(ownY0, ownY1) : 0);
+    const m = typeof g.getTransform === 'function' ? g.getTransform() : { a: 1, d: 1, e: 0, f: 0 };
+    const X = (x: number) => m.a * x + m.e, Y = (y: number) => m.d * y + m.f;
+    const cx = X((a + b2) / 2), cy = Y((c + d) / 2);
+    const ox = X(ownX), y0 = Y(ownY0), y1 = Y(ownY1);
+    const lo = Math.min(y0, y1), hi = Math.max(y0, y1);
+    const dOwn = Math.abs(cx - ox) + (cy < lo ? lo - cy : cy > hi ? cy - hi : 0);
     return labelsOn(g.canvas).some((r) => r.role === 'tick' && r.x0 !== undefined && r.y0 !== undefined
       && Math.hypot(cx - (r.x0 + r.x1) / 2, cy - (r.y0 + r.y1) / 2) + 0.01 < dOwn + 4);
   };

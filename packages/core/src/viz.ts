@@ -799,26 +799,30 @@ export function graphAxes(g: CanvasRenderingContext2D, f: Frame, xr: V2, yr: V2,
       const outerOk = tickOnCanvas(g, t.lab, tickX, t.py, ySize, 'right');
       const innerOk = tickOnCanvas(g, t.lab, inside, t.py, ySize, 'left');
       if (!outerOk && !innerOk) return false;
-      const tryPaint = (xLab: number, al: CanvasTextAlign, forced: boolean) => {
+      const tryPaintAt = (xLab: number, al: CanvasTextAlign, py: number) => {
         let ok = false;
-        const paint = () => {
-          withAnchor({ kind: 'line', x: f.box.l, y: t.py, x2: f.box.r, y2: t.py }, () => {
-            ok = text(g, t.lab, xLab, t.py, col.muted(), al, ySize);
-          });
-        };
-        if (forced) withForcedTick(paint); else paint();
+        withAnchor({ kind: 'line', x: f.box.l, y: t.py, x2: f.box.r, y2: t.py }, () => {
+          ok = text(g, t.lab, xLab, py, col.muted(), al, ySize);
+        });
         return ok;
       };
+      const tryPaint = (xLab: number, al: CanvasTextAlign, _forced: boolean) => tryPaintAt(xLab, al, t.py);
       // prefer the left pad; if that is off-canvas or sits on an axis name, sit just inside the plot.
       // never force a pad tick onto a title.
+      const accept = (py: number) => { lastY = t.lab; lastPy = py; yDrawn.push(t.y); return true; };
       if (outerOk && tryPaint(tickX, 'right', false)) {
         if (inCornerY) cornerTaken = true;
-        lastY = t.lab; lastPy = t.py; yDrawn.push(t.y); return true;
+        return accept(t.py);
       }
       // sit inside the plot only when well above the x-tick row, so the number stays a y-tick (BUG-74)
       const clearOfXRow = t.py < f.box.b - 12;
-      if (clearOfXRow && innerOk && tryPaint(inside, 'left', false)) {
-        lastY = t.lab; lastPy = t.py; yDrawn.push(t.y); return true;
+      if (clearOfXRow && innerOk && tryPaint(inside, 'left', false)) return accept(t.py);
+      // a top-of-plot "1" often sits on the y-axis name; nudge it down so min-2 can still hold
+      for (const dy of [6, 10, 14]) {
+        const py = t.py + dy;
+        if (Math.abs(py - lastPy) < 14 || py > f.box.b - 12) break;
+        if (tickOnCanvas(g, t.lab, tickX, py, ySize, 'right') && tryPaintAt(tickX, 'right', py)) return accept(py);
+        if (clearOfXRow && tickOnCanvas(g, t.lab, inside, py, ySize, 'left') && tryPaintAt(inside, 'left', py)) return accept(py);
       }
       return false;
     };
