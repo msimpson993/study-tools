@@ -738,7 +738,7 @@ export function drawSPlane(g: CanvasRenderingContext2D, w: number, h: number, s:
         let best: TextBox | null = null;
         for (const k of ks) {
           const q = Math.min(s.range * k, R), X = f.X(-Math.cos(th) * q), Y = f.Y(Math.sin(th) * q);
-          if (X >= x0 - 4 || nearMark(X, Y, 14)) continue;
+          if (X >= x0 - 4) continue; // the named pole sits on this ray; still try a perpendicular offset (ζ 0.49)
           for (const off of [need, need + 4, need + 8, 14, 18]) {
             for (const sg of [1, -1]) {
               const px = X + nx * off * sg, py = Y + ny * off * sg;
@@ -808,6 +808,14 @@ export function drawSPlane(g: CanvasRenderingContext2D, w: number, h: number, s:
     if (Math.max(ax, bx) < a || Math.min(ax, bx) > b2 || Math.max(ay, by) < c || Math.min(ay, by) > d) return false;
     const n = Math.max(2, Math.ceil(Math.hypot(bx - ax, by - ay) / 2));
     for (let k = 0; k <= n; k++) { const u = k / n, X = ax + (bx - ax) * u, Y = ay + (by - ay) * u; if (X > a && X < b2 && Y > c && Y < d) return true; }
+    return false;
+  }));
+  const rayHitsBox = (b: TextBox) => zr.some((t2) => [1, -1].some((sg) => {
+    const I = inflateBox(b);
+    const ax = x0, ay = y0, bx = f.X(-Math.cos(t2) * R), by = f.Y(sg * Math.sin(t2) * R);
+    if (Math.max(ax, bx) < I.a || Math.min(ax, bx) > I.b2 || Math.max(ay, by) < I.c || Math.min(ay, by) > I.d) return false;
+    const n = Math.max(2, Math.ceil(Math.hypot(bx - ax, by - ay) / 2));
+    for (let k = 0; k <= n; k++) { const u = k / n, Xr = ax + (bx - ax) * u, Yr = ay + (by - ay) * u; if (Xr > I.a && Xr < I.b2 && Yr > I.c && Yr < I.d) return true; }
     return false;
   }));
   g.font = '11px system-ui, sans-serif';
@@ -896,9 +904,16 @@ export function drawSPlane(g: CanvasRenderingContext2D, w: number, h: number, s:
         for (const sx of [0, -6, -10, -14, 6, 10]) for (const al of (['center', 'right', 'left'] as CanvasTextAlign[]))
           out.push(textBox(X + sx, midY, tw0, th0, al, sz, nLines));
       }
+      // a tight grid of centres in the left half-plane, 10–16 px (edge) from the ×
+      for (let i = 0; i < 16; i++) {
+        const ang = (i * Math.PI) / 8, ca = Math.cos(ang), sa = Math.sin(ang);
+        for (const dist of [12, 14, 16, 18, 20]) {
+          out.push(textBox(X + ca * dist, Yp + sa * dist, tw0, th0, 'center', sz, nLines));
+        }
+      }
       return out;
     };
-    const tryList = (ranked: TextBox[], inflate: boolean): TextBox | null => {
+    const tryList = (ranked: TextBox[], inflate: boolean, tightRay = false): TextBox | null => {
       for (const c of ranked) {
         const I = inflate ? inflateBox(c) : c;
         const rawEdge = edgeDist(c, X, Yp);
@@ -910,7 +925,7 @@ export function drawSPlane(g: CanvasRenderingContext2D, w: number, h: number, s:
         if (inflate && (onSigma(I.a, I.b2, I.c, I.d) || onJw(I.a, I.b2, I.c, I.d))) continue;
         if (hitsTaken(I.a, I.b2, I.c, I.d)) continue;
         if (hitsOtherMark(X, Yp, I.a, I.b2, I.c, I.d)) continue;
-        if (onRay(c.a, c.b2, c.c, c.d)) continue;
+        if (tightRay ? rayHitsBox(c) : onRay(c.a, c.b2, c.c, c.d)) continue;
         return c;
       }
       return null;
@@ -937,7 +952,7 @@ export function drawSPlane(g: CanvasRenderingContext2D, w: number, h: number, s:
         const db = Math.hypot((b.a + b.b2) / 2 - X, (b.c + b.d) / 2 - Yp);
         return da - db;
       });
-      pick = tryList(raw, true) ?? tryList(raw, false);
+      pick = tryList(raw, true) ?? tryList(raw, false) ?? tryList(raw, false, true);
     }
     if (!pick) continue;
     const paint = () => {
