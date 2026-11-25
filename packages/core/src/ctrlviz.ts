@@ -684,8 +684,8 @@ export function drawSPlane(g: CanvasRenderingContext2D, w: number, h: number, s:
         const I = inflateBox(c);
         const own = rawOwn ? c : I;
         return c.a > f.box.l + 2 && c.b2 < Math.min(f.box.r - 2, x0 - 3) && c.c > f.box.t + 2 && c.d < f.box.b - 2
-        && marksZ.every((p) => { const X = f.X(p.re), Y = f.Y(p.im); const cx = Math.max(I.a, Math.min(X, I.b2)), cy = Math.max(I.c, Math.min(Y, I.d)); return Math.hypot(cx - X, cy - Y) >= 8; })
-        && (relaxTaken || taken.every((t) => I.b2 < t.x0 - 4 || I.a > t.x1 + 4 || I.d < t.y0 - 4 || I.c > t.y1 + 4))
+        && marksZ.every((p) => { const X = f.X(p.re), Y = f.Y(p.im); const cx = Math.max(I.a, Math.min(X, I.b2)), cy = Math.max(I.c, Math.min(Y, I.d)); return Math.hypot(cx - X, cy - Y) >= 7; })
+        && (relaxTaken || taken.every((t) => I.b2 < t.x0 - 2 || I.a > t.x1 + 2 || I.d < t.y0 - 2 || I.c > t.y1 + 2))
         && !rayHits(own, th, rawOwn ? 2 : 3) && (relaxOther || !otherRay(I))
         && nearerOwn(c) && offReal(c);
       };
@@ -696,7 +696,7 @@ export function drawSPlane(g: CanvasRenderingContext2D, w: number, h: number, s:
         const twz = g.measureText(name).width, thz = zsz + 3;
         // axis-aligned box on a diagonal ray needs a larger perpendicular offset than the half-height (BUG-54)
         const need = (twz / 2) * Math.abs(nx) + (zsz * 0.55) * Math.abs(ny) + 3;
-        const offs = [Math.max(zsz * 0.55 + 7, Math.min(need, 16)), Math.max(zsz * 0.55 + 7, need), need + 4];
+        const offs = [Math.max(zsz * 0.55 + 7, Math.min(need, 16)), Math.max(zsz * 0.55 + 7, need), need + 4, need + 8, 10, 14, 20];
         const out: TextBox[] = [];
         for (const off of offs) for (const sg of [1, -1]) {
           const px = X + nx * off * sg, py = Y + ny * off * sg;
@@ -704,7 +704,7 @@ export function drawSPlane(g: CanvasRenderingContext2D, w: number, h: number, s:
         }
         return out;
       };
-      const ks = [0.45, 0.52, 0.6, 0.68, 0.75, 0.38, 0.82, 0.3, 0.9, 0.22, 0.15, 0.95, 0.12, 0.08];
+      const ks = [0.45, 0.52, 0.6, 0.68, 0.75, 0.38, 0.82, 0.3, 0.88, 0.9, 0.92, 0.22, 0.15, 0.95, 0.98, 0.12, 0.08];
       const onThisRayPt = (X: number, Y: number) => {
         const n = Math.max(8, Math.ceil(Math.hypot(ax1 - ax0, ay1 - ay0) / 4));
         for (let k = 0; k <= n; k++) { const u = k / n; if (Math.hypot(X - (ax0 + (ax1 - ax0) * u), Y - (ay0 + (ay1 - ay0) * u)) < 10) return true; }
@@ -730,6 +730,7 @@ export function drawSPlane(g: CanvasRenderingContext2D, w: number, h: number, s:
       if (!pick) pick = walk(MIN_FONT, true, false, 14);
       if (!pick) pick = walk(MIN_FONT, true, true, 12);
       if (!pick) pick = walk(MIN_FONT, true, true, 8);
+      if (!pick) pick = walk(MIN_FONT, true, true, 0, true);
       // required ζ names stay on tiles and expanded views (BUG-54 / 55 / 56), still off the stroke
       if (!pick) {
         g.font = `${MIN_FONT}px system-ui,sans-serif`;
@@ -739,12 +740,12 @@ export function drawSPlane(g: CanvasRenderingContext2D, w: number, h: number, s:
         for (const k of ks) {
           const q = Math.min(s.range * k, R), X = f.X(-Math.cos(th) * q), Y = f.Y(Math.sin(th) * q);
           if (X >= x0 - 4) continue; // the named pole sits on this ray; still try a perpendicular offset (ζ 0.49)
-          for (const off of [need, need + 4, need + 8, 14, 18]) {
+          for (const off of [need, need + 4, need + 8, 10, 14, 18, 22]) {
             for (const sg of [1, -1]) {
               const px = X + nx * off * sg, py = Y + ny * off * sg;
               for (const al of ['center', 'left', 'right'] as CanvasTextAlign[]) {
                 const c = textBox(px, py, twz, MIN_FONT + 3, al, MIN_FONT);
-                if (ok(c, true, true)) { pick = c; break; }
+                if (ok(c, true, true, true)) { pick = c; break; }
                 if (!best && c.a > f.box.l + 1 && c.b2 < Math.min(f.box.r - 1, x0 - 1) && c.c > f.box.t + 1 && c.d < f.box.b - 1
                     && !rayHits(inflateBox(c), th, 3) && !otherRay(inflateBox(c))
                     && taken.every((t) => c.b2 < t.x0 - 3 || c.a > t.x1 + 3 || c.d < t.y0 - 3 || c.c > t.y1 + 3)
