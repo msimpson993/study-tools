@@ -9,6 +9,7 @@ import { fileURLToPath } from 'node:url';
  * Records the plot-area rect, tick count and font size per axis, and the set of drawn label names
  * with font sizes. Compared to a committed baseline with tolerances: ±3 px rects, exact label sets
  * and tick counts, ±0.5 px font. Regenerate with `npm run geometry:update` after a deliberate layout change.
+ * This baseline was generated under CI-like conditions (`CI=1`, bundled Chromium) so CI fonts match.
  */
 
 interface L {
