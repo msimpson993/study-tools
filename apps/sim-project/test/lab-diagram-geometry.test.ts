@@ -4,22 +4,42 @@ import { drawLabDiagram, labDiagramFitsHorizontal, labDiagramHeight, type LabGeo
 vi.stubGlobal('getComputedStyle', () => ({ getPropertyValue: () => '#888' }));
 vi.stubGlobal('document', { documentElement: {} });
 
+function fontSize(font: string) {
+  const m = /(\d+(?:\.\d+)?)px/.exec(font);
+  return m ? Number(m[1]) : 11;
+}
+
 function record(w = 720, h = 360) {
   const texts: string[] = [];
+  const canvas = { width: w, height: h };
   const state: any = { font: '11px system-ui', fillStyle: '', strokeStyle: '', lineWidth: 1, globalAlpha: 1, textAlign: 'left', textBaseline: 'alphabetic' };
   const g: any = new Proxy(state, {
     get(o, k: string) {
-      if (k === 'canvas') return { width: w, height: h };
+      if (k === 'canvas') return canvas;
       if (k === 'getTransform') return () => ({ a: 1, b: 0, c: 0, d: 1, e: 0, f: 0 });
-      if (k === 'measureText') return (s: string) => ({ width: String(s).length * 6 });
-      if (k === 'fillText') return (s: string) => { texts.push(String(s)); };
+      // ~0.65 em is closer to system-ui than 6 px/char, so the shared placer
+      // sees the same T_d vs plant-sign collision that happens on a real canvas.
+      if (k === 'measureText') return (s: string) => ({ width: String(s).length * fontSize(o.font) * 0.65 });
+      if (k === 'fillText' || k === 'strokeText') return (s: string) => { if (k === 'fillText') texts.push(String(s)); };
       if (k === 'save' || k === 'restore') return () => {};
       if (k in o) return o[k];
       return () => ({ addColorStop() {} });
     },
     set(o, k, v) { o[k] = v; return true; },
   });
-  return { g: g as CanvasRenderingContext2D, texts, w, h };
+  return { g: g as CanvasRenderingContext2D, texts, canvas, w, h };
+}
+
+type DrawnLabel = { s: string; x0: number; x1: number; y0: number; y1: number; skipped?: boolean };
+
+function beginTextLog() {
+  const log: DrawnLabel[] = [];
+  (globalThis as unknown as { __textLog?: DrawnLabel[] }).__textLog = log;
+  return log;
+}
+
+function finalLabels(log: DrawnLabel[]) {
+  return log.filter((e) => !e.skipped && e.s !== '+' && e.s !== '−' && e.s !== '-');
 }
 
 const SYSTEMS = ['motor-open', 'motor-closed', 'borer', 'disk', 'engine'] as const;
@@ -366,7 +386,7 @@ function segHitsRect(s: LabGeom['segs'][number], l: number, t: number, r: number
   return false;
 }
 
-function topologyProblems(geom: LabGeom, sys: string): string[] {
+function topologyProblems(geom: LabGeom, sys: string, drawn: DrawnLabel[] = []): string[] {
   const out: string[] = [];
   for (const seg of geom.segs) {
     if (!seg.signal || seg.signal === 'untagged') {
@@ -471,7 +491,8 @@ function topologyProblems(geom: LabGeom, sys: string): string[] {
   }
 
   // Wire-vs-wire crossings. Same-signal tees are junctions. Different-signal
-  // crosses or tees are allowed only at a labelled terminal or a recorded hop.
+  // crosses or tees are allowed only at a labelled terminal — a hop does not
+  // excuse a crossing (BUG-104).
   for (let i = 0; i < geom.segs.length; i++) {
     for (let j = i + 1; j < geom.segs.length; j++) {
       const a = geom.segs[i], b = geom.segs[j];
@@ -480,38 +501,87 @@ function topologyProblems(geom: LabGeom, sys: string): string[] {
       if (!hit) continue;
       const labelled = geom.terms.some((t) => Math.hypot(t.x - hit.x, t.y - hit.y) <= TERM_NEAR);
       if (labelled) continue;
-      const hopped = (geom.hops ?? []).some((h) => Math.hypot(h.x - hit.x, h.y - hit.y) <= 8);
-      if (hopped) continue;
       out.push(`wire ${a.signal} ${hit.kind} ${b.signal} at (${hit.x.toFixed(1)},${hit.y.toFixed(1)})`);
     }
   }
 
-  // Wire-vs-label (including dashed lines). A wire may end next to its own
-  // terminal, so ignore hits within a small cap of an endpoint that sits by that label.
-  for (const lab of labelRects(geom)) {
+  // Final drawn label boxes (after the shared text() placer), not the intended
+  // labelBox recorded before a nudge (BUG-103). Signs (+/−) are excluded; they
+  // sit beside arrowheads by design.
+  // Only named terminals / marks (not the Σ in a summer, not box copy). Match the
+  // recorded name to the final drawn box from the placer.
+  const named = new Set([...geom.terms, ...geom.marks].map((t) => t.label).filter((s) => s && s !== 'Σ'));
+  const labs = finalLabels(drawn)
+    .filter((e) => named.has(e.s) && e.s !== 'Σ')
+    .map((e) => ({ label: e.s, l: e.x0, t: e.y0, r: e.x1, b: e.y1 }))
+    .filter((lab) => !geom.sums.some((s) => {
+      const cx = (lab.l + lab.r) / 2, cy = (lab.t + lab.b) / 2;
+      return Math.hypot(cx - s.x, cy - s.y) <= s.r;
+    }));
+  const own: Record<string, string[]> = {
+    omega: ['ω'], va: ['Va'], ref: ['0', 'R', 'Speed Ref', 'rpm*'],
+    feedback: ['rpm', 'Y', 'ω', '1'], N: ['N'], tload: ['Tload', '(drag)', 'Tload (drag)'],
+  };
+  const overlapLen = (seg: LabGeom['segs'][number], l: number, t: number, r: number, b: number) => {
+    const L = Math.hypot(seg.x2 - seg.x1, seg.y2 - seg.y1);
+    if (L < 1) return 0;
+    const ux = (seg.x2 - seg.x1) / L, uy = (seg.y2 - seg.y1) / L;
+    const n = Math.max(8, Math.ceil(L));
+    let hits = 0;
+    for (let i = 0; i <= n; i++) {
+      const x = seg.x1 + ux * L * (i / n), y = seg.y1 + uy * L * (i / n);
+      if (x >= l && x <= r && y >= t && y <= b) hits++;
+    }
+    return hits * (L / n);
+  };
+  // Wire-vs-label (including dashed lines). A short end-cap next to a label is
+  // allowed (the wire may terminate at its name). A shaft or mid-run through a
+  // label is not, except for mid-bus names (N, unity 1) on their own non-arrow run.
+  for (const lab of labs) {
+    const pad = 2;
+    const l = lab.l - pad, t = lab.t - pad, r = lab.r + pad, b = lab.b + pad;
     for (const seg of geom.segs) {
-      const pad = 3;
-      const nearEnd = (x: number, y: number) => {
-        const cx = (lab.l + lab.r) / 2, cy = (lab.t + lab.b) / 2;
-        return Math.hypot(x - cx, y - cy) <= TERM_NEAR || (x >= lab.l - 4 && x <= lab.r + 4 && y >= lab.t - 4 && y <= lab.b + 4);
-      };
-      // shrink the segment if an end is the label's own terminal
-      let x1 = seg.x1, y1 = seg.y1, x2 = seg.x2, y2 = seg.y2;
-      const L = Math.hypot(x2 - x1, y2 - y1);
-      if (L < 2) continue;
-      const ux = (x2 - x1) / L, uy = (y2 - y1) / L;
-      if (nearEnd(x1, y1)) { x1 += ux * 10; y1 += uy * 10; }
-      if (nearEnd(x2, y2)) { x2 -= ux * 10; y2 -= uy * 10; }
-      if ((x2 - x1) * ux + (y2 - y1) * uy <= 1) continue;
-      const own: Record<string, string[]> = {
-        omega: ['ω'], va: ['Va'], ref: ['0', 'R', 'Speed Ref', 'rpm*'],
-        feedback: ['rpm', 'Y', 'ω'], N: ['N'], tload: ['Tload', '(drag)', 'Tload (drag)'], td: ['T_d'],
-      };
-      if ((own[seg.signal] ?? []).includes(lab.label)) continue;
-      if (segHitsRect({ ...seg, x1, y1, x2, y2 }, lab.l - pad, lab.t - pad, lab.r + pad, lab.b + pad)) {
-        out.push(`wire ${seg.signal} crosses label "${lab.label}" at (${lab.l.toFixed(1)},${lab.t.toFixed(1)})`);
+      const midBus = !seg.arrowEnd && (own[seg.signal] ?? []).includes(lab.label);
+      if (midBus) continue;
+      const ol = overlapLen(seg, l, t, r, b);
+      if (ol <= 0.5) continue;
+      const cx = (lab.l + lab.r) / 2, cy = (lab.t + lab.b) / 2;
+      const inBox = (x: number, y: number) => x >= l && x <= r && y >= t && y <= b;
+      const nearStart = Math.hypot(seg.x1 - cx, seg.y1 - cy) <= TERM_NEAR || inBox(seg.x1, seg.y1);
+      const nearTip = Math.hypot(seg.x2 - cx, seg.y2 - cy) <= 8 || inBox(seg.x2, seg.y2);
+      const intoSummer = !!seg.arrowEnd && geom.sums.some((s) => Math.hypot(seg.x2 - s.x, seg.y2 - s.y) <= s.r + NEAR + 2);
+      // Output names (ω, Y, rpm) may sit at either end of their stub. Input names
+      // (Va, 0, rpm*) may sit at the tail. A label on a shaft or arrowhead into a
+      // summer (T_d on 6da2858) is not an end-cap.
+      if (!intoSummer && (nearStart || nearTip)) continue;
+      if (intoSummer && nearStart && !nearTip) continue;
+      out.push(`wire ${seg.signal} crosses label "${lab.label}" at (${lab.l.toFixed(1)},${lab.t.toFixed(1)})`);
+    }
+    // Arrowhead (7 px triangle) must not sit on a label. The tip itself has to
+    // enter the label box — labels beside an output stub stay clear.
+    const HEAD = 7;
+    for (const tip of geom.tips) {
+      const inside = tip.x >= lab.l - 1 && tip.x <= lab.r + 1 && tip.y >= lab.t - 1 && tip.y <= lab.b + 1;
+      const along = geom.segs.find((s) => s.arrowEnd && Math.hypot(s.x2 - tip.x, s.y2 - tip.y) < 0.5);
+      let headHits = inside;
+      if (!headHits && along) {
+        const L = Math.hypot(along.x2 - along.x1, along.y2 - along.y1) || 1;
+        const ux = (along.x2 - along.x1) / L, uy = (along.y2 - along.y1) / L;
+        // sample the triangle's spine from the tip back HEAD px
+        for (let d = 0; d <= HEAD; d += 1.5) {
+          const x = tip.x - ux * d, y = tip.y - uy * d;
+          if (x >= lab.l && x <= lab.r && y >= lab.t && y <= lab.b) { headHits = true; break; }
+        }
+      }
+      if (headHits) {
+        out.push(`arrowhead ${tip.signal} covers label "${lab.label}" at (${tip.x.toFixed(1)},${tip.y.toFixed(1)})`);
       }
     }
+  }
+
+  // A recorded hop is a crossing that was papered over. None are allowed (BUG-104).
+  for (const h of geom.hops ?? []) {
+    out.push(`hop of ${h.signal} at (${h.x.toFixed(1)},${h.y.toFixed(1)})`);
   }
 
   // Every arrow into a summer has a visible shaft of at least 20 px outside that summer.
@@ -570,12 +640,13 @@ describe('lab diagrams: topology of every signal at 320, 390, 923 and 1280', () 
 
   it.each(cases)('$sys words=$words $layout @ $w', ({ sys, words, layout, w, h }) => {
     const rec = record(w, h);
+    const log = beginTextLog();
     const geom = drawLabDiagram(rec.g, w, h, { sys, words, layout });
     if (layout) expect(geom.stacked).toBe(layout === 'stack');
     expect(geom.boxes.length).toBeGreaterThan(0);
     expect(geom.sums.length).toBeGreaterThan(0);
     expect(geom.segs.length).toBeGreaterThan(0);
-    const problems = topologyProblems(geom, sys);
+    const problems = topologyProblems(geom, sys, log);
     expect(problems, problems.join('\n')).toEqual([]);
   });
 });
