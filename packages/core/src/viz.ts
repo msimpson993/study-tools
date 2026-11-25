@@ -164,18 +164,19 @@ export function fitText(g: CanvasRenderingContext2D, s: string, x: number, align
   g.font = font(size); let w = g.measureText(s).width, z = size, lines = [s];
   if (m && (Math.abs(m.b) > 1e-9 || Math.abs(m.c) > 1e-9)) { const [r0, r1] = span(w, x); return { size, x, lines, x0: r0, x1: r1 }; } // rotated (axis titles): leave as drawn
   const role = labelRole();
+  const hint = textSplitAt && s.includes(textSplitAt) ? s.indexOf(textSplitAt) : -1;
+  if (hint > 0) {
+    lines = [s.slice(0, hint), s.slice(hint).trimStart()];
+    w = Math.max(...lines.map((l) => g.measureText(l).width));
+  }
   const room = (() => { const [a0, a1] = span(w, x); return w - Math.max(0, lo - a0) - Math.max(0, a1 - hi); })();
   // ticks never shrink or slide (BUG-61 / 65): one size, kept on their tick. Notes may shrink, but not below minSize (BUG-60 rest).
   if (role !== 'tick' && w > room + 0.5 && Number.isFinite(W)) {
     const floor = Math.max(0, minSize);
     z = Math.max(floor, Math.max(size * 0.72, size * Math.max(room, 1) / w));
     if (floor > 0) z = Math.max(z, floor);
-    g.font = font(z); w = g.measureText(s).width;
-    const hint = textSplitAt && s.includes(textSplitAt) ? s.indexOf(textSplitAt) : -1;
-    if (hint > 0) {
-      lines = [s.slice(0, hint), s.slice(hint).trimStart()];
-      w = Math.max(...lines.map((l) => g.measureText(l).width));
-    } else if (w > hi - lo) { // still wider than the whole panel: two lines, split at the space nearest the middle
+    g.font = font(z); w = Math.max(...lines.map((l) => g.measureText(l).width));
+    if (w > hi - lo && lines.length === 1) { // still wider than the whole panel: two lines, split at the space nearest the middle
       const sp = [...s.matchAll(/ /g)].map((q) => q.index as number); const mid = s.length / 2;
       const cut = sp.length ? sp.reduce((p, q) => (Math.abs(q - mid) < Math.abs(p - mid) ? q : p)) : -1;
       if (cut > 0) { lines = [s.slice(0, cut), s.slice(cut + 1)]; w = Math.max(...lines.map((l) => g.measureText(l).width)); }

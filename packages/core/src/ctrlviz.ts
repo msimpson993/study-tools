@@ -903,9 +903,14 @@ export function drawSPlane(g: CanvasRenderingContext2D, w: number, h: number, s:
       }
       return null;
     };
+    const byEdge = (list: TextBox[]) => list.slice().sort((a, b) => {
+      const da = Math.hypot(Math.max(a.a, Math.min(X, a.b2)) - X, Math.max(a.c, Math.min(Yp, a.d)) - Yp);
+      const db = Math.hypot(Math.max(b.a, Math.min(X, b.b2)) - X, Math.max(b.c, Math.min(Yp, b.d)) - Yp);
+      return da - db;
+    });
     for (const z of [10, MIN_FONT]) {
       const tw = measure(z), th = nLines === 2 ? z * 2.25 : z + 4;
-      pick = tryList([...poleSpots(z, tw), ...aroundMarker(X, Yp, tw, th, z, preferRight, ANCHOR_GAP, nLines)], true);
+      pick = tryList(byEdge([...poleSpots(z, tw), ...aroundMarker(X, Yp, tw, th, z, preferRight, ANCHOR_GAP, nLines)]), true);
       if (pick) break;
     }
     // only Disk 5's long pole value may hide on a tile (BUG-55 / 57)
