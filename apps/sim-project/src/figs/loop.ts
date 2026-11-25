@@ -16,7 +16,7 @@ export function loopFigure(host: HTMLElement, def: FigureDef, controls: ControlS
   applyTabLocalControls('loop', host, controls);
   const machine = String(controls.values.machine ?? 'motor-open');
   // On a phone the plant stacks, so the canvas has to be taller than a one-row layout.
-  const heightFor = (m: string, width = 800) => labDiagramHeight(m, width);
+  const heightFor = (m: string, width = 800, words?: LabelWords) => labDiagramHeight(m, width, words);
   const panels: FigurePanel[] = [{
     id: 'diagram',
     title: 'Block diagram',
@@ -76,7 +76,8 @@ export function loopFigure(host: HTMLElement, def: FigureDef, controls: ControlS
     layout?.classList.toggle('fig-wide', m === 'engine');
     const cv = host.querySelector<HTMLCanvasElement>('canvas[data-fig="diagram"]');
     const width = cv?.clientWidth || host.clientWidth || 800;
-    if (cv) cv.style.height = `${heightFor(m, width)}px`;
+    const words = asWords(String(controls.values.words ?? 'plain words'));
+    if (cv) cv.style.height = `${heightFor(m, width, words)}px`;
   };
   applySize();
   const ro = new ResizeObserver(() => { applySize(); requestAnimationFrame(() => api?.redraw()); });
