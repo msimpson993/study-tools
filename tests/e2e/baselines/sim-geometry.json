@@ -1204,7 +1204,7 @@
       },
       {
         "s": "┄ final handout gains",
-        "size": 9,
+        "size": 10,
         "role": "axis"
       },
       {
@@ -3238,7 +3238,7 @@
       },
       {
         "s": "┄ stand-in (coil dropped)",
-        "size": 9,
+        "size": 10,
         "role": "axis"
       },
       {
@@ -3576,7 +3576,7 @@
       },
       {
         "s": "┄ stand-in (coil dropped)",
-        "size": 9,
+        "size": 10,
         "role": "axis"
       },
       {
@@ -4767,7 +4767,7 @@
       },
       {
         "s": "┄ slower handout gains",
-        "size": 9,
+        "size": 10,
         "role": "axis"
       },
       {
