@@ -889,13 +889,22 @@ export function drawSPlane(g: CanvasRenderingContext2D, w: number, h: number, s:
         out.push(textBox(X - q, Yp + q, tw0, th0, 'right', sz, nLines));
         out.push(textBox(X + q, Yp + q, tw0, th0, 'left', sz, nLines));
       }
+      // park in the gap between this × and the nearest mark above or below (a double real pole under a complex pair)
+      for (const mk of others) {
+        if (Math.abs(mk.Y - Yp) < 16 || Math.abs(mk.X - X) > tw0 + 16) continue;
+        const midY = (Yp + mk.Y) / 2;
+        for (const sx of [0, -6, -10, -14, 6, 10]) for (const al of (['center', 'right', 'left'] as CanvasTextAlign[]))
+          out.push(textBox(X + sx, midY, tw0, th0, al, sz, nLines));
+      }
       return out;
     };
     const tryList = (ranked: TextBox[], inflate: boolean): TextBox | null => {
       for (const c of ranked) {
         const I = inflate ? inflateBox(c) : c;
-        const edge = edgeDist(c, X, Yp);
-        if (edge < 8 || edge > 16) continue; // off the ×, but still read as its label (BUG-64)
+        const rawEdge = edgeDist(c, X, Yp);
+        const grownEdge = edgeDist(inflateBox(c), X, Yp);
+        // crosses are logged at r = 7; the local e2e grows the box like inflateBox. Stay ≤ 16 from the raw box (BUG-64).
+        if (rawEdge > 16 || grownEdge < 7) continue;
         if (c.a < 1 || c.b2 > vw - 1 || c.c < 1 || c.d > vh - 1) continue;
         if (!staysLHP(c) || !nearerPole(c)) continue;
         if (inflate && (onSigma(I.a, I.b2, I.c, I.d) || onJw(I.a, I.b2, I.c, I.d))) continue;
@@ -911,7 +920,8 @@ export function drawSPlane(g: CanvasRenderingContext2D, w: number, h: number, s:
       const db = Math.hypot(Math.max(b.a, Math.min(X, b.b2)) - X, Math.max(b.c, Math.min(Yp, b.d)) - Yp);
       return da - db;
     });
-    for (const z of [10, MIN_FONT]) {
+    const sizes = stack ? [MIN_FONT, 10] : [10, MIN_FONT];
+    for (const z of sizes) {
       const tw = measure(z), th = nLines === 2 ? z * 2.25 : z + 4;
       pick = tryList(byEdge([...poleSpots(z, tw), ...aroundMarker(X, Yp, tw, th, z, preferRight, ANCHOR_GAP, nLines)]), true);
       if (pick) break;
