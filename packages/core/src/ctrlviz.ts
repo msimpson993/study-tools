@@ -2,7 +2,7 @@ import { C, cabs, type Cx } from './dsp/complex';
 import { type TF, type StepMetrics, type Margins, type Bode, bode, margins, stepMetrics, tfEval, logspace, tfPoles, tfZeros, freqresp } from './dsp/tf';
 import { type RLocus, rlocusPolesAt, rlocusNearest } from './dsp/rlocus';
 import { col, planeFrame, rangeFrame, wipe, text, tline, polyline, dot, cross, graphAxes, curve, clipBox, withClip, beginClip, endClip, heat, axes2, tickLabel, isThumb, isTileCanvas, isPortraitPhone, isLandscapePhone, logInsetFrame, logPlotFrame, forTicks, goodStep, minNiceTicks, lockReadout, knockOutAxes2Names, withTextSplit, type Frame, type V2 } from './viz';
-import { withLabelRole, withAnchor, labelsOn } from './labels';
+import { withLabelRole, withAnchor, labelsOn, labelOverlaps } from './labels';
 import type { PanelPointer } from './figure';
 
 /**
@@ -137,6 +137,8 @@ export function drawStepResponse(g: CanvasRenderingContext2D, w: number, h: numb
   const hitsOtherVert = (a: number, b2: number, c: number, d: number, own: number[] = []) =>
     vertSegs.some((s) => own.some((o) => Math.abs(s.x - o) < 1.5) ? false
       : (s.x > a - 2 && s.x < b2 + 2 && d > Math.min(s.y0, s.y1) - 2 && c < Math.max(s.y0, s.y1) + 2));
+  const hitsPlaced = (a: number, b2: number, c: number, d: number) =>
+    labelOverlaps(labelsOn(g.canvas), { x0: a, x1: b2, y0: c, y1: d, role: 'axis' }, 1.5);
   const hitsCurve = (x0: number, x1: number, y0: number, y1: number) => {
     // match the local overlap e2e (9%+2 px width, 2 px height) plus the stroke half-width
     const dx = ((x1 - x0) * 0.09 + 2) / 2, dy = 1;
@@ -370,6 +372,7 @@ export function drawStepResponse(g: CanvasRenderingContext2D, w: number, h: numb
           if (hitsTr(c.a, c.b2, c.c, c.d)) continue;
           if (hitsCurve(c.a, c.b2, c.c, c.d)) continue;
           if (hitsOtherVert(c.a, c.b2, c.c, c.d, [lineX])) continue;
+          if (hitsPlaced(c.a, c.b2, c.c, c.d)) continue;
           tsPick = c; break;
         }
         if (tsPick) break;
@@ -393,6 +396,7 @@ export function drawStepResponse(g: CanvasRenderingContext2D, w: number, h: numb
           if (hitsTr(c.a, c.b2, c.c, c.d)) continue;
           if (hitsOtherVert(c.a, c.b2, c.c, c.d, [lineX])) continue;
           if (hitsCurve(c.a, c.b2, c.c, c.d)) continue;
+          if (hitsPlaced(c.a, c.b2, c.c, c.d)) continue;
           tsPick = c; break;
         }
       }
@@ -403,7 +407,7 @@ export function drawStepResponse(g: CanvasRenderingContext2D, w: number, h: numb
         const trMid = trPlaced ? (trPlaced.x0 + trPlaced.x1) / 2 : lineX - 80;
         const tpX = (show.overshoot && Number.isFinite(m.peakTime)) ? f.X(m.peakTime) : lineX + 80;
         const goRight = Math.abs(tpX - (lineX + 8)) >= Math.abs(tpX - (lineX - 8)) && trMid <= lineX;
-        const ysPark = [yLo - 10, yLo - 18, yLo - 4, yLo + 10, (yLo + (osPlaced ? osPlaced.y : yHi)) / 2];
+        const ysPark = [yLo - 10, yLo - 18, yLo - 4, yLo - 26, (yLo + (osPlaced ? osPlaced.y : yHi)) / 2];
         const xsPark: [number, CanvasTextAlign][] = goRight
           ? [[lineX + 8, 'left'], [lineX + 16, 'left'], [lineX + 24, 'left'], [lineX - 8, 'right'], [lineX - 16, 'right']]
           : [[lineX - 8, 'right'], [lineX - 16, 'right'], [lineX - 24, 'right'], [lineX + 8, 'left'], [lineX + 16, 'left']];
@@ -415,11 +419,12 @@ export function drawStepResponse(g: CanvasRenderingContext2D, w: number, h: numb
           if (hitsTr(c.a, c.b2, c.c, c.d)) continue;
           if (hitsOtherVert(c.a, c.b2, c.c, c.d, [lineX])) continue;
           if (hitsCurve(c.a, c.b2, c.c, c.d)) continue;
+          if (hitsPlaced(c.a, c.b2, c.c, c.d)) continue;
           tsPick = c; break;
         }
         if (!tsPick) {
-          const open = cands.find((c) => c.a >= 2 && c.b2 <= w - 2 && c.c >= 2 && c.d <= f.h - 1 && !hitsOtherVert(c.a, c.b2, c.c, c.d, [lineX]));
-          tsPick = open ?? cands.find((c) => !hitsOtherVert(c.a, c.b2, c.c, c.d, [lineX])) ?? cands[0];
+          const open = cands.find((c) => c.a >= 2 && c.b2 <= w - 2 && c.c >= 2 && c.d <= f.h - 1 && !hitsOtherVert(c.a, c.b2, c.c, c.d, [lineX]) && !hitsPlaced(c.a, c.b2, c.c, c.d));
+          tsPick = open ?? cands.find((c) => !hitsOtherVert(c.a, c.b2, c.c, c.d, [lineX]) && !hitsPlaced(c.a, c.b2, c.c, c.d)) ?? cands.find((c) => !hitsOtherVert(c.a, c.b2, c.c, c.d, [lineX])) ?? cands[0];
         }
       }
       if (tsPick) {
@@ -621,7 +626,7 @@ export function drawSPlane(g: CanvasRenderingContext2D, w: number, h: number, s:
       const lab = tickLabel(y, st), py = f.Y(y);
       if (!lab || lab === '0') return;
       const tw = g.measureText(lab).width, x = f.box.l + 3;
-      const fits = py > f.box.t + 4 && py < f.box.b - 4;
+      const fits = py > f.box.t + (force ? 1 : 4) && py < f.box.b - (force ? 1 : 4);
       if (!fits) return;
       if (!force && (lab === lastY || Math.abs(py - lastPy) < 16 || hitsMark(x, py, tw))) return;
       withAnchor({ kind: 'line', x: f.box.l, y: py, x2: f.box.r, y2: py }, () => {
@@ -630,7 +635,8 @@ export function drawSPlane(g: CanvasRenderingContext2D, w: number, h: number, s:
       lastY = lab; lastPy = py; yDrawn.push(y);
     };
     forTicks(Math.ceil(yLo / st) * st, yHi, st, (y) => drawY(y));
-    for (const y of minNiceTicks(yLo, yHi, yDrawn, 2)) if (!yDrawn.some((u) => Math.abs(u - y) < 1e-8)) drawY(y, true);
+    const yNeed = (yLo <= 0 && 0 <= yHi) ? Math.max(3, 2 + (yDrawn.includes(0) ? 0 : 1)) : 2;
+    for (const y of minNiceTicks(yLo, yHi, yDrawn, yNeed)) if (!yDrawn.some((u) => Math.abs(u - y) < 1e-8)) drawY(y, true);
   });
   logPlotFrame(g, f);
   // "unstable" is unanchored: placed after pole and ζ labels, and dropped on a tile if it will not fit.

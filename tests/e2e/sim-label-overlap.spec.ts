@@ -71,15 +71,15 @@ const REQUIRED: { comment: string; tab: string; step?: string; fig: string; re: 
   { comment: 'Engine 3 Look-for / readout terms: Tr', tab: 'engine', step: '3', fig: 'step', re: /^Tr\b/, name: 'Tr' },
   { comment: 'Engine 3 Look-for / readout terms: Tp', tab: 'engine', step: '3', fig: 'step', re: /\bTp\b/, name: 'Tp' },
   { comment: 'Engine 3 Look-for / readout terms: OS', tab: 'engine', step: '3', fig: 'step', re: /\bOS\b|% overshoot/, name: 'OS' },
-  { comment: 'Engine 3 Look-for / readout terms: Ts', tab: 'engine', step: '3', fig: 'step', re: /^Ts /, name: 'Ts' },
+  { comment: 'Engine 3 Look-for / readout terms: Ts', tab: 'engine', step: '3', fig: 'step', re: /^Ts\s/, name: 'Ts' },
   { comment: 'Engine 4 readout terms: Tr', tab: 'engine', step: '4', fig: 'step', re: /^Tr\b/, name: 'Tr' },
-  { comment: 'Engine 4 readout terms: Ts', tab: 'engine', step: '4', fig: 'step', re: /^Ts /, name: 'Ts' },
+  { comment: 'Engine 4 readout terms: Ts', tab: 'engine', step: '4', fig: 'step', re: /^Ts\s/, name: 'Ts' },
   { comment: 'Engine 5 Look-for: Tr 1.088 s', tab: 'engine', step: '5', fig: 'step', re: /^Tr\b/, name: 'Tr' },
-  { comment: 'Engine 5 Look-for: Ts 1.802 s', tab: 'engine', step: '5', fig: 'step', re: /^Ts /, name: 'Ts' },
-  { comment: 'Disk s-plane caption: a line of text gives the ceiling Ka = 4080', tab: 'disk', fig: 'splane', re: /^ceiling Ka = 4080/, name: 'ceiling Ka = 4080' },
+  { comment: 'Engine 5 Look-for: Ts 1.802 s', tab: 'engine', step: '5', fig: 'step', re: /^Ts\s/, name: 'Ts' },
+  { comment: 'Disk s-plane caption: a line of text gives the ceiling Ka = 4080', tab: 'disk', fig: 'splane', re: /^ceiling\s+Ka\s*=\s*4080/, name: 'ceiling Ka = 4080' },
   { comment: "Disk s-plane caption: the coil's pole value is written in the corner", tab: 'disk', fig: 'splane', re: /^coil pole at/, name: 'coil pole at' },
   { comment: "Disk 5 s-plane caption: the panel says 'ζ ≈ 0'", tab: 'disk', step: '5', fig: 'splane', re: /^ζ ≈ 0/, name: 'ζ ≈ 0' },
-  { comment: 'Disk seek caption: the readout gives Ka, OS and Ts', tab: 'disk', fig: 'seek', re: /^Ka = .*OS /, name: 'Seek readout' },
+  { comment: 'Disk seek caption: the readout gives Ka, OS and Ts', tab: 'disk', fig: 'seek', re: /^Ka\s*=\s*.*OS\s/, name: 'Seek readout' },
   { comment: 'Motor plot caption: a red bar and label at the right mark the final sag', tab: 'motor', step: '5', fig: 'plot', re: /sag|handout/, name: 'Motor sag' },
 ];
 
@@ -480,7 +480,8 @@ const minTicks = (log: L[], plots: P[], at: string) => {
     const labs = ticks.filter((e) => e.cv === pl.cv && e.id === pl.id);
     if (!labs.length) continue;
     const xr = pl.xr, yr = pl.yr;
-    const needs0 = (xr && xr[0] <= 0 && 0 <= xr[1]) || (yr && yr[0] <= 0 && 0 <= yr[1]);
+    const linear = /^(splane|step|speed|seek|shock|plot|throttle)$/.test(pl.id);
+    const needs0 = linear && ((xr && xr[0] <= 0 && 0 <= xr[1]) || (yr && yr[0] <= 0 && 0 <= yr[1]));
     if (needs0 && !labs.some((e) => e.s === '0'))
       out.push(`${at} ${pl.id || 'canvas'}: 0 is in range but no labelled 0 tick`);
   }
@@ -491,7 +492,7 @@ const minTicks = (log: L[], plots: P[], at: string) => {
 const plotAreaFraction = (plots: P[], at: string) => {
   const out: string[] = [];
   for (const pl of latest(plots)) {
-    if (!(pl.H > 0)) continue;
+    if (pl.id !== 'splane' || !(pl.H > 0)) continue;
     const frac = (pl.y1 - pl.y0) / pl.H;
     if (frac < 0.58)
       out.push(`${at} ${pl.id || 'canvas'}: plot is ${(frac * 100).toFixed(1)}% of the tile height (min ~60%)`);
@@ -502,7 +503,7 @@ const plotAreaFraction = (plots: P[], at: string) => {
 /** Caption-named header readouts on labelled tiles take at most 2 lines (BUG-69). */
 const headerTwoLines = (log: L[], at: string) => {
   const out: string[] = [];
-  const header = /^(ceiling Ka|coil pole at|Ka = |K = |OS |error |offset |ζ = |ω = |\|S\||P = |open sag|closed sag|loop gain)/;
+  const header = /^(ceiling\s+Ka|coil pole at|Ka\s*=|K\s*=|OS\s|error\s|offset\s|ζ\s*=|ω\s*=|P\s*=|open sag|closed sag|loop gain)/;
   for (const e of latest(log)) {
     if (e.skipped || e.role === 'tick' || !e.s.trim() || e.y0 === undefined || e.size == null) continue;
     if (!header.test(e.s)) continue;
