@@ -1,7 +1,7 @@
 import { C, cabs, type Cx } from './dsp/complex';
 import { type TF, type StepMetrics, type Margins, type Bode, bode, margins, stepMetrics, tfEval, logspace, tfPoles, tfZeros, freqresp } from './dsp/tf';
 import { type RLocus, rlocusPolesAt, rlocusNearest } from './dsp/rlocus';
-import { col, planeFrame, rangeFrame, wipe, text, tline, polyline, dot, cross, graphAxes, curve, clipBox, withClip, beginClip, endClip, heat, axes2, tickLabel, isThumb, isTileCanvas, isPortraitPhone, isLandscapePhone, logInsetFrame, forTicks, goodStep, fillPlotBehind, knockOutAxes2Names, withTextSplit, type Frame, type V2 } from './viz';
+import { col, planeFrame, rangeFrame, wipe, text, tline, polyline, dot, cross, graphAxes, curve, clipBox, withClip, beginClip, endClip, heat, axes2, tickLabel, isThumb, isTileCanvas, isPortraitPhone, isLandscapePhone, logInsetFrame, logPlotFrame, forTicks, goodStep, minNiceTicks, lockReadout, knockOutAxes2Names, withTextSplit, type Frame, type V2 } from './viz';
 import { withLabelRole, withAnchor, labelsOn } from './labels';
 import type { PanelPointer } from './figure';
 
@@ -174,7 +174,7 @@ export function drawStepResponse(g: CanvasRenderingContext2D, w: number, h: numb
   if (show.timing && Number.isFinite(m.riseTime)) {
     const y10 = yf * 0.1, y90 = yf * 0.9;
     const barAt = f.Y(yr[0]) - 14;
-    tline(g, f, [m.t10, y10], [m.t10, f.iy(barAt - 2)], col.e(), 1, [2, 3], false); tline(g, f, [m.t90, y90], [m.t90, f.iy(barAt - 2)], col.e(), 1, [2, 3], false);
+    tline(g, f, [m.t10, y10], [m.t10, f.iy(barAt - 2)], col.e(), 1, [2, 3]); tline(g, f, [m.t90, y90], [m.t90, f.iy(barAt - 2)], col.e(), 1, [2, 3]);
     g.strokeStyle = col.e(); g.lineWidth = 2; g.beginPath(); g.moveTo(f.X(m.t10), barAt); g.lineTo(f.X(m.t90), barAt); g.stroke();
     const trLab = `Tr ${fmtN(m.riseTime)} s`;
     const midX = (f.X(m.t10) + f.X(m.t90)) / 2, barY = f.Y(yr[0]) - 14, yRef = f.Y(ref);
@@ -257,9 +257,9 @@ export function drawStepResponse(g: CanvasRenderingContext2D, w: number, h: numb
   }
   if (show.overshoot && Number.isFinite(m.peak) && m.overshootPct > 0.05) {
     const tpFoot = (show.timing && Number.isFinite(m.riseTime)) ? f.iy(f.Y(yr[0]) - 18) : yr[0];
-    tline(g, f, [m.peakTime, m.peak], [m.peakTime, tpFoot], col.b(), 1, [2, 3], false); dot(g, f, [m.peakTime, m.peak], col.b(), 4);
-    const osFull = `${fmtN(m.overshootPct, 1)}% overshoot  (Tp ${fmtN(m.peakTime)} s)`;
-    const osShort = `OS ${fmtN(m.overshootPct, 1)}%  Tp ${fmtN(m.peakTime)} s`;
+    tline(g, f, [m.peakTime, m.peak], [m.peakTime, tpFoot], col.b(), 1, [2, 3]); dot(g, f, [m.peakTime, m.peak], col.b(), 4);
+    const osFull = lockReadout(`${fmtN(m.overshootPct, 1)}% overshoot  (Tp ${fmtN(m.peakTime)} s)`);
+    const osShort = lockReadout(`OS ${fmtN(m.overshootPct, 1)}%  Tp ${fmtN(m.peakTime)} s`);
     const peakX = f.X(m.peakTime), peakY = f.Y(m.peak), yRef = f.Y(ref);
     const tryOs = (ignoreGhost: boolean) => {
       g.font = '10.5px system-ui,sans-serif';
@@ -322,6 +322,7 @@ export function drawStepResponse(g: CanvasRenderingContext2D, w: number, h: numb
           const cx = Math.max(I.a, Math.min(peakX, I.b2)), cy = Math.max(I.c, Math.min(peakY, I.d));
           if (Math.hypot(cx - peakX, cy - peakY) < 8) return false;
           if (I.c < yRef + 3 && I.d > yRef - 3) return false;
+          if (hitsOtherVert(I.a, I.b2, I.c, I.d, [peakX])) return false;
           if (hitsCurve(cand.a, cand.b2, cand.c, cand.d)) return false;
           return true;
         };
@@ -344,9 +345,9 @@ export function drawStepResponse(g: CanvasRenderingContext2D, w: number, h: numb
     // the dashed Ts line stops just under the overshoot label when it would run through it (it made "15.7 %" read "5.7 %")
     const tx = f.X(m.settlingTime), cut = osPlaced && tx > osPlaced.x0 - 3 && tx < osPlaced.x1 + 3 ? Math.min(yr[1], f.iy(osPlaced.y + 8)) : yr[1];
     const tsFoot = (show.timing && Number.isFinite(m.riseTime)) ? f.iy(f.Y(yr[0]) - 18) : yr[0];
-    tline(g, f, [m.settlingTime, tsFoot], [m.settlingTime, cut], col.c(), 1.5, [5, 4], false);
+    tline(g, f, [m.settlingTime, tsFoot], [m.settlingTime, cut], col.c(), 1.5, [5, 4]);
     {
-      const tsLab = s.settlingLabel ?? `Ts ${fmtN(m.settlingTime)} s`;
+      const tsLab = lockReadout(s.settlingLabel ?? `Ts ${fmtN(m.settlingTime)} s`);
       const lineX = f.X(m.settlingTime), yRef = f.Y(ref);
       const yLo = f.Y(yr[0]), yHi = osPlaced && lineX > osPlaced.x0 - 3 && lineX < osPlaced.x1 + 3 ? osPlaced.y + 8 : f.Y(Math.min(yr[1], cut));
       let tsPick: TextBox | null = null;
@@ -396,22 +397,30 @@ export function drawStepResponse(g: CanvasRenderingContext2D, w: number, h: numb
         }
       }
       if (!tsPick) {
-        // required Ts must stay (BUG-62): park under the bar, on the side away from Tr, at 9 px
+        // required Ts must stay (BUG-62): park under the bar, on the side away from Tr and Tp, at 9 px (BUG-70)
         g.font = `${MIN_FONT}px system-ui,sans-serif`;
         const tw = g.measureText(tsLab).width, th = MIN_FONT + 3;
         const trMid = trPlaced ? (trPlaced.x0 + trPlaced.x1) / 2 : lineX - 80;
-        const goRight = trMid <= lineX;
-        const cands = goRight
-          ? [textBox(lineX + 8, yLo - 10, tw, th, 'left', MIN_FONT), textBox(lineX + 16, yLo - 10, tw, th, 'left', MIN_FONT), textBox(lineX - 8, yLo - 10, tw, th, 'right', MIN_FONT)]
-          : [textBox(lineX - 8, yLo - 10, tw, th, 'right', MIN_FONT), textBox(lineX - 16, yLo - 10, tw, th, 'right', MIN_FONT), textBox(lineX + 8, yLo - 10, tw, th, 'left', MIN_FONT)];
+        const tpX = (show.overshoot && Number.isFinite(m.peakTime)) ? f.X(m.peakTime) : lineX + 80;
+        const goRight = Math.abs(tpX - (lineX + 8)) >= Math.abs(tpX - (lineX - 8)) && trMid <= lineX;
+        const ysPark = [yLo - 10, yLo - 18, yLo - 4, yLo + 10, (yLo + (osPlaced ? osPlaced.y : yHi)) / 2];
+        const xsPark: [number, CanvasTextAlign][] = goRight
+          ? [[lineX + 8, 'left'], [lineX + 16, 'left'], [lineX + 24, 'left'], [lineX - 8, 'right'], [lineX - 16, 'right']]
+          : [[lineX - 8, 'right'], [lineX - 16, 'right'], [lineX - 24, 'right'], [lineX + 8, 'left'], [lineX + 16, 'left']];
+        const cands: TextBox[] = [];
+        for (const yy of ysPark) for (const [x, al] of xsPark) cands.push(textBox(x, yy, tw, th, al, MIN_FONT));
         for (const c of cands) {
           if (c.a < 2 || c.b2 > w - 2 || c.d > f.h - 1 || c.c < 2) continue;
           if (osPlaced && c.b2 > osPlaced.x0 - 4 && c.a < osPlaced.x1 + 4 && c.d > osPlaced.y - 10 && c.c < osPlaced.y + 10) continue;
           if (hitsTr(c.a, c.b2, c.c, c.d)) continue;
+          if (hitsOtherVert(c.a, c.b2, c.c, c.d, [lineX])) continue;
           if (hitsCurve(c.a, c.b2, c.c, c.d)) continue;
           tsPick = c; break;
         }
-        if (!tsPick) tsPick = cands[0];
+        if (!tsPick) {
+          const open = cands.find((c) => c.a >= 2 && c.b2 <= w - 2 && c.c >= 2 && c.d <= f.h - 1 && !hitsOtherVert(c.a, c.b2, c.c, c.d, [lineX]));
+          tsPick = open ?? cands.find((c) => !hitsOtherVert(c.a, c.b2, c.c, c.d, [lineX])) ?? cands[0];
+        }
       }
       if (tsPick) {
         withAnchor({ kind: 'line', x: lineX, y: yLo, x2: lineX, y2: yHi }, () => {
@@ -480,7 +489,7 @@ export function drawStepResponse(g: CanvasRenderingContext2D, w: number, h: numb
   if (show.ess && Number.isFinite(m.ess) && Math.abs(m.ess) > 1e-3 * Math.max(1, Math.abs(ref))) {
     const xe = tEnd * 0.985, xLine = f.X(xe);
     tline(g, f, [xe, yf], [xe, ref], col.bad(), 3);
-    const essText = s.essLabel ?? `final sag ${fmtN(m.ess, 3)}`;
+    const essText = lockReadout(s.essLabel ?? `final sag ${fmtN(m.ess, 3)}`);
     // sit just above the final-value line, to the left of the red sag marker, or
     // below the line when a nearby reference / zero line or the response curve
     // would strike through the label (Motor steps 3/5/6 at a narrow width, sag ≈ 0).
@@ -500,7 +509,7 @@ export function drawStepResponse(g: CanvasRenderingContext2D, w: number, h: numb
     const cands = [ySag + 18, ySag - 18, ySag + 28, ySag - 28, ySag + 38, ySag - 38, f.box.t + 12, f.box.b - 16];
     const essY = cands.find((yy) => yy > f.box.t + 6 && yy < f.box.b - 6 && !hits(yy))
       ?? Math.max(8, f.box.t - 10);
-    withLabelRole('axis', () => { lbl(essText, xLab, essY, col.bad(), 'right'); });
+    withLabelRole('axis', () => { text(g, essText, xLab, essY, col.bad(), 'right', 10.5, 'middle', 9); });
   }
   return m;
 }
@@ -590,32 +599,40 @@ export function drawSPlane(g: CanvasRenderingContext2D, w: number, h: number, s:
     let lastX = '', lastPx = -Infinity;
     const realPx = (s.poles ?? []).filter((p) => Math.abs(p.im) < 1e-6).map((p) => f.X(p.re));
     const underPole = (px: number) => realPx.some((mx) => Math.abs(mx - px) < 16);
-    forTicks(Math.ceil(f.ix(f.box.l) / st) * st, f.ix(f.box.r), st, (x) => {
+    const xLo = f.ix(f.box.l), xHi = f.ix(f.box.r), yLo = f.iy(f.box.b), yHi = f.iy(f.box.t);
+    const xDrawn: number[] = [];
+    const drawX = (x: number, force = false) => {
       const lab = tickLabel(x, st), px = f.X(x);
       if (!lab) return;
       const tw = g.measureText(lab).width, y = f.box.b - 7;
-      if (lab !== lastX && px + tw / 2 <= f.box.r - 1 && px - tw / 2 >= f.box.l + 1 && Math.abs(px - lastPx) >= 26 && !hitsMark(px, y, tw) && !underPole(px)) {
-        fillPlotBehind(g, px - tw / 2, y - TICK_Z * 0.55, px + tw / 2, y + TICK_Z * 0.55, 2);
-        withAnchor({ kind: 'line', x: px, y: f.box.t, x2: px, y2: f.box.b }, () => {
-          text(g, lab, px, y, col.muted(), 'center', TICK_Z);
-        });
-        lastX = lab; lastPx = px;
-      }
-    });
+      const fits = px + tw / 2 <= f.box.r - 1 && px - tw / 2 >= f.box.l + 1;
+      if (!lab || !fits) return;
+      if (!force && (lab === lastX || Math.abs(px - lastPx) < 26 || hitsMark(px, y, tw) || underPole(px))) return;
+      withAnchor({ kind: 'line', x: px, y: f.box.t, x2: px, y2: f.box.b }, () => {
+        text(g, lab, px, y, col.muted(), 'center', TICK_Z);
+      });
+      lastX = lab; lastPx = px; xDrawn.push(x);
+    };
+    forTicks(Math.ceil(xLo / st) * st, xHi, st, (x) => drawX(x));
+    for (const x of minNiceTicks(xLo, xHi, xDrawn, 2)) if (!xDrawn.some((u) => Math.abs(u - x) < 1e-8)) drawX(x, true);
     let lastY = '', lastPy = Infinity;
-    forTicks(Math.ceil(f.iy(f.box.b) / st) * st, f.iy(f.box.t), st, (y) => {
+    const yDrawn: number[] = [];
+    const drawY = (y: number, force = false) => {
       const lab = tickLabel(y, st), py = f.Y(y);
       if (!lab || lab === '0') return;
       const tw = g.measureText(lab).width, x = f.box.l + 3;
-      if (lab !== lastY && py > f.box.t + 4 && py < f.box.b - 4 && Math.abs(py - lastPy) >= 16 && !hitsMark(x, py, tw)) {
-        fillPlotBehind(g, x, py - TICK_Z * 0.55, x + tw, py + TICK_Z * 0.55, 2);
-        withAnchor({ kind: 'line', x: f.box.l, y: py, x2: f.box.r, y2: py }, () => {
-          text(g, lab, x, py, col.muted(), 'left', TICK_Z);
-        });
-        lastY = lab; lastPy = py;
-      }
-    });
+      const fits = py > f.box.t + 4 && py < f.box.b - 4;
+      if (!fits) return;
+      if (!force && (lab === lastY || Math.abs(py - lastPy) < 16 || hitsMark(x, py, tw))) return;
+      withAnchor({ kind: 'line', x: f.box.l, y: py, x2: f.box.r, y2: py }, () => {
+        text(g, lab, x, py, col.muted(), 'left', TICK_Z);
+      });
+      lastY = lab; lastPy = py; yDrawn.push(y);
+    };
+    forTicks(Math.ceil(yLo / st) * st, yHi, st, (y) => drawY(y));
+    for (const y of minNiceTicks(yLo, yHi, yDrawn, 2)) if (!yDrawn.some((u) => Math.abs(u - y) < 1e-8)) drawY(y, true);
   });
+  logPlotFrame(g, f);
   // "unstable" is unanchored: placed after pole and ζ labels, and dropped on a tile if it will not fit.
   // allowed region
   if (s.region) {
