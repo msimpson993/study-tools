@@ -102,6 +102,21 @@ export function minNiceTicks(lo: number, hi: number, already: number[], min = 2)
   if (out.length < min) add(hi);
   return out;
 }
+/** Whether a tick number at (px, py) would stay on the canvas (same test text() uses). */
+export function tickOnCanvas(g: CanvasRenderingContext2D, lab: string, px: number, py: number, z: number, align: CanvasTextAlign = 'center') {
+  const m = typeof g.getTransform === 'function' ? g.getTransform() : { a: 1, b: 0, c: 0, d: 1, e: 0, f: 0 };
+  g.font = `${z}px system-ui,sans-serif`;
+  const tw = g.measureText(lab).width;
+  const a0 = align === 'right' || align === 'end' ? px - tw : align === 'center' ? px - tw / 2 : px;
+  const a1 = a0 + tw, u0 = py - z * 0.55, u1 = py + z * 0.55;
+  const x0 = m.a * a0 + m.c * u0 + m.e, x1 = m.a * a1 + m.c * u1 + m.e;
+  const y0 = m.b * a0 + m.d * u0 + m.f, y1 = m.b * a1 + m.d * u1 + m.f;
+  const xa = Math.min(x0, x1), xb = Math.max(x0, x1), ya = Math.min(y0, y1), yb = Math.max(y0, y1);
+  const cw = g.canvas.width || 0, ch = g.canvas.height || 0;
+  return xa >= 1 && xb <= cw - 1 && ya >= 1 && yb <= ch - 1;
+}
+
+
 
 /** Wrap a readout to a measured pixel width (never an estimated character count). Prefer a sentence or '; ' cut, then a greedy word wrap. */
 const wrapReadout = (g: CanvasRenderingContext2D, s: string, room: number, z: number): string[] => {
@@ -643,19 +658,28 @@ export function graphAxes(g: CanvasRenderingContext2D, f: Frame, xr: V2, yr: V2,
     const xDrawn: number[] = [];
     const drawXTick = (x: number, force = false) => {
       const lab = xfmt ? xfmt(x) : tickLabel(x, sx), px = f.X(x);
-      if (!lab || lab === lastX && !force) return;
+      if (!lab || (lab === lastX && !force)) return false;
       const onMarkX = (avoid ?? []).some((mk) => Math.hypot((mk.x ?? px) - px, (mk.y ?? (f.box.b + 9)) - (f.box.b + 9)) < (mk.r ?? 10));
-      if (!force && (Math.abs(px - lastPx) < 26 || onMarkX)) return;
+      if (!force && (Math.abs(px - lastPx) < 26 || onMarkX)) return false;
+      if (!tickOnCanvas(g, lab, px, f.box.b + 9, 10, 'center')) return false;
       withAnchor({ kind: 'line', x: px, y: f.box.t, x2: px, y2: f.box.b }, () => {
         text(g, lab, px, f.box.b + 9, col.muted(), 'center', 10);
       });
-      lastX = lab; lastPx = px; xDrawn.push(x);
+      lastX = lab; lastPx = px; xDrawn.push(x); return true;
     };
     forTicks(Math.ceil(xr[0] / sx) * sx, xr[1], sx, (x) => {
       g.strokeStyle = col.grid(); g.beginPath(); g.moveTo(f.X(x), f.box.t); g.lineTo(f.X(x), f.box.b); g.stroke();
       drawXTick(x);
     });
-    for (const x of minNiceTicks(xr[0], xr[1], xDrawn, 2)) if (!xDrawn.some((u) => Math.abs(u - x) < 1e-8)) drawXTick(x, true);
+    const xInset = (f.box.r - f.box.l) > 8 && f.sx ? 6 / f.sx : 0;
+    for (const x of minNiceTicks(xr[0] + xInset, xr[1] - xInset, xDrawn, 2)) if (!xDrawn.some((u) => Math.abs(u - x) < 1e-8)) drawXTick(x, true);
+    if (xDrawn.length < 2) {
+      const mid = (xr[0] + xr[1]) / 2, sp = (xr[1] - xr[0]) / 2;
+      for (const x of [mid + 0.7 * sp, mid - 0.7 * sp, mid + 0.45 * sp, mid - 0.45 * sp]) {
+        if (xDrawn.length >= 2) break;
+        if (!xDrawn.some((u) => Math.abs(u - x) < 1e-8)) drawXTick(x, true);
+      }
+    }
     // one size for every y tick, never below 9 (BUG-61); keep 0 / 1 / 2 on a 0–2 axis, centred on the line (BUG-65)
     const yLabs: { lab: string; y: number; py: number }[] = [];
     forTicks(Math.ceil(yr[0] / sy) * sy, yr[1], sy, (y) => {
@@ -675,19 +699,29 @@ export function graphAxes(g: CanvasRenderingContext2D, f: Frame, xr: V2, yr: V2,
         if (Math.abs(mk.y - t.py) >= r) return false;
         return mk.x === undefined || mk.x < f.box.l + r + 20;
       });
-      if (t.lab === lastY && !force) return;
-      if (!force && !keepY(t.lab) && (Math.abs(t.py - lastPy) < 14 || onMark)) return;
+      if (t.lab === lastY && !force) return false;
+      if (!force && !keepY(t.lab) && (Math.abs(t.py - lastPy) < 14 || onMark)) return false;
+      if (!tickOnCanvas(g, t.lab, tickX, t.py, ySize, 'right')) return false;
       // stay on the tick line (within ~2 px); a required tick is never dropped to dodge a nearby mark
       withAnchor({ kind: 'line', x: f.box.l, y: t.py, x2: f.box.r, y2: t.py }, () => {
         text(g, t.lab, tickX, t.py, col.muted(), 'right', ySize);
       });
-      lastY = t.lab; lastPy = t.py; yDrawn.push(t.y);
+      lastY = t.lab; lastPy = t.py; yDrawn.push(t.y); return true;
     };
     for (const t of yLabs) drawYTick(t);
-    for (const y of minNiceTicks(yr[0], yr[1], yDrawn, 2)) {
+    const yInsetG = (f.box.b - f.box.t) > 8 && f.sy ? 6 / f.sy : 0;
+    for (const y of minNiceTicks(yr[0] + yInsetG, yr[1] - yInsetG, yDrawn, 2)) {
       if (yDrawn.some((u) => Math.abs(u - y) < 1e-8)) continue;
       const lab = yfmt ? yfmt(y) : tickLabel(y, sy);
       if (lab) drawYTick({ lab, y, py: f.Y(y) }, true);
+    }
+    if (yDrawn.length < 2) {
+      const mid = (yr[0] + yr[1]) / 2, sp = (yr[1] - yr[0]) / 2;
+      for (const y of [mid + 0.7 * sp, mid - 0.7 * sp, mid + 0.45 * sp, mid - 0.45 * sp]) {
+        if (yDrawn.length >= 2) break;
+        const lab = yfmt ? yfmt(y) : tickLabel(y, sy);
+        if (lab && !yDrawn.some((u) => Math.abs(u - y) < 1e-8)) drawYTick({ lab, y, py: f.Y(y) }, true);
+      }
     }
   });
   g.strokeStyle = col.strong();

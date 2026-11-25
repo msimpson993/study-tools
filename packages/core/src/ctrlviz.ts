@@ -1,7 +1,7 @@
 import { C, cabs, type Cx } from './dsp/complex';
 import { type TF, type StepMetrics, type Margins, type Bode, bode, margins, stepMetrics, tfEval, logspace, tfPoles, tfZeros, freqresp } from './dsp/tf';
 import { type RLocus, rlocusPolesAt, rlocusNearest } from './dsp/rlocus';
-import { col, planeFrame, rangeFrame, wipe, text, tline, polyline, dot, cross, graphAxes, curve, clipBox, withClip, beginClip, endClip, heat, axes2, tickLabel, isThumb, isTileCanvas, isPortraitPhone, isLandscapePhone, logInsetFrame, logPlotFrame, forTicks, goodStep, minNiceTicks, lockReadout, knockOutAxes2Names, withTextSplit, type Frame, type V2 } from './viz';
+import { col, planeFrame, rangeFrame, wipe, text, tline, polyline, dot, cross, graphAxes, curve, clipBox, withClip, beginClip, endClip, heat, axes2, tickLabel, isThumb, isTileCanvas, isPortraitPhone, isLandscapePhone, logInsetFrame, logPlotFrame, forTicks, goodStep, minNiceTicks, lockReadout, tickOnCanvas, knockOutAxes2Names, withTextSplit, type Frame, type V2 } from './viz';
 import { withLabelRole, withAnchor, labelsOn, labelOverlaps } from './labels';
 import type { PanelPointer } from './figure';
 
@@ -609,18 +609,26 @@ export function drawSPlane(g: CanvasRenderingContext2D, w: number, h: number, s:
     const xDrawn: number[] = [];
     const drawX = (x: number, force = false) => {
       const lab = tickLabel(x, st), px = f.X(x);
-      if (!lab) return;
+      if (!lab) return false;
       const tw = g.measureText(lab).width, y = f.box.b - 7;
       const fits = px + tw / 2 <= f.box.r - 1 && px - tw / 2 >= f.box.l + 1;
-      if (!lab || !fits) return;
-      if (!force && (lab === lastX || Math.abs(px - lastPx) < 26 || hitsMark(px, y, tw) || underPole(px))) return;
+      if (!fits || !tickOnCanvas(g, lab, px, y, TICK_Z, 'center')) return false;
+      if (!force && (lab === lastX || Math.abs(px - lastPx) < 26 || hitsMark(px, y, tw) || underPole(px))) return false;
       withAnchor({ kind: 'line', x: px, y: f.box.t, x2: px, y2: f.box.b }, () => {
         text(g, lab, px, y, col.muted(), 'center', TICK_Z);
       });
-      lastX = lab; lastPx = px; xDrawn.push(x);
+      lastX = lab; lastPx = px; xDrawn.push(x); return true;
     };
     forTicks(Math.ceil(xLo / st) * st, xHi, st, (x) => drawX(x));
-    for (const x of minNiceTicks(xLo, xHi, xDrawn, 2)) if (!xDrawn.some((u) => Math.abs(u - x) < 1e-8)) drawX(x, true);
+    const xInset = (f.box.r - f.box.l) > 8 && f.sx ? 6 / f.sx : 0;
+    for (const x of minNiceTicks(xLo + xInset, xHi - xInset, xDrawn, 2)) if (!xDrawn.some((u) => Math.abs(u - x) < 1e-8)) drawX(x, true);
+    if (xDrawn.length < 2) {
+      const mid = (xLo + xHi) / 2, sp = (xHi - xLo) / 2;
+      for (const x of [mid + 0.7 * sp, mid - 0.7 * sp, mid + 0.45 * sp, mid - 0.45 * sp]) {
+        if (xDrawn.length >= 2) break;
+        if (!xDrawn.some((u) => Math.abs(u - x) < 1e-8)) drawX(x, true);
+      }
+    }
     let lastY = '', lastPy = Infinity;
     const yDrawn: number[] = [];
     const drawY = (y: number, force = false) => {

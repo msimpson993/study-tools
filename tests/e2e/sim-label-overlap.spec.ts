@@ -228,7 +228,14 @@ const onObstacle = (labels: L[], marks: O[], at: string) => {
   const obs = latest(marks);
   for (const lab of labs) {
     if (curveAllowed(lab, at)) continue;
-    const hit = obs.filter((o) => o.cv === lab.cv).find((o) => hitsObstacle(lab, o));
+    const ownLine = (o: O) => {
+      const a = lab.anchor;
+      if (!a || o.kind !== 'line' || !o.pts || !o.pts.length) return false;
+      const xs = [a.x, a.x2].filter((x): x is number => x !== undefined);
+      if (!xs.length) return false;
+      return o.pts.every((pt) => xs.some((x) => Math.abs(pt.x - x) < 3.5));
+    };
+    const hit = obs.filter((o) => o.cv === lab.cv && !ownLine(o)).find((o) => hitsObstacle(lab, o));
     if (hit) {
       const what = hit.kind === 'marker' ? 'marker' : hit.kind === 'inset' ? 'inset frame' : 'dashed or target line';
       out.push(`${at} ${lab.id || 'canvas'}: “${lab.s}” sits on a ${what}`);
@@ -491,8 +498,13 @@ const minTicks = (log: L[], plots: P[], at: string) => {
 /** On tiles, the plot box is at least ~60% of the tile height (BUG-69). */
 const plotAreaFraction = (plots: P[], at: string) => {
   const out: string[] = [];
+  const by = new Map<number, P[]>();
   for (const pl of latest(plots)) {
     if (pl.id !== 'splane' || !(pl.H > 0)) continue;
+    const a = by.get(pl.cv) ?? []; a.push(pl); by.set(pl.cv, a);
+  }
+  for (const group of by.values()) {
+    const pl = group.reduce((b, p) => (p.y1 - p.y0 > b.y1 - b.y0 ? p : b));
     const frac = (pl.y1 - pl.y0) / pl.H;
     if (frac < 0.58)
       out.push(`${at} ${pl.id || 'canvas'}: plot is ${(frac * 100).toFixed(1)}% of the tile height (min ~60%)`);
