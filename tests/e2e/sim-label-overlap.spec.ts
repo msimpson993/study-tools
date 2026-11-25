@@ -32,6 +32,11 @@ interface O {
   pts?: { x: number; y: number }[]; width?: number; x?: number; y?: number; r?: number;
   W: number; H: number; cv: number; id: string; gen: number; where?: string; step?: string;
 }
+interface P {
+  x0: number; y0: number; x1: number; y1: number; W: number; H: number;
+  cv: number; id: string; gen: number; where?: string; step?: string;
+  xr?: [number, number]; yr?: [number, number];
+}
 
 /** Intentional label-vs-label overlaps the check may see and should ignore. Tick-vs-tick and exact duplicate (outline) pairs are skipped in code, not here. */
 const ALLOWLIST: { comment: string; match: (p: L, q: L, at: string) => boolean }[] = [
@@ -75,6 +80,7 @@ const REQUIRED: { comment: string; tab: string; step?: string; fig: string; re: 
   { comment: "Disk s-plane caption: the coil's pole value is written in the corner", tab: 'disk', fig: 'splane', re: /^coil pole at/, name: 'coil pole at' },
   { comment: "Disk 5 s-plane caption: the panel says 'ζ ≈ 0'", tab: 'disk', step: '5', fig: 'splane', re: /^ζ ≈ 0/, name: 'ζ ≈ 0' },
   { comment: 'Disk seek caption: the readout gives Ka, OS and Ts', tab: 'disk', fig: 'seek', re: /^Ka = .*OS /, name: 'Seek readout' },
+  { comment: 'Motor plot caption: a red bar and label at the right mark the final sag', tab: 'motor', step: '5', fig: 'plot', re: /sag|handout/, name: 'Motor sag' },
 ];
 
 
@@ -93,17 +99,18 @@ const start = (page: Page) => page.evaluate(() => {
   (window as any).__textCanvases = [];
   (window as any).__curveLog = [];
   (window as any).__obstacleLog = [];
+  (window as any).__plotLog = [];
 });
 const redraw = (page: Page) => page.evaluate(() => window.dispatchEvent(new Event('study-theme')));
 const take = (page: Page) => page.evaluate(() => {
-  const w = window as any, cvs: HTMLCanvasElement[] = w.__textCanvases, l = w.__textLog ?? [], c = w.__curveLog ?? [], o = w.__obstacleLog ?? [];
-  w.__textLog = []; w.__curveLog = []; w.__obstacleLog = [];
+  const w = window as any, cvs: HTMLCanvasElement[] = w.__textCanvases, l = w.__textLog ?? [], c = w.__curveLog ?? [], o = w.__obstacleLog ?? [], p = w.__plotLog ?? [];
+  w.__textLog = []; w.__curveLog = []; w.__obstacleLog = []; w.__plotLog = [];
   const live = (e: { cv: number; W: number; H: number }) => {
     const cv = cvs[e.cv];
     return cv && cv.isConnected && cv.width === e.W && cv.height === e.H && cv.getBoundingClientRect().width > 0;
   };
-  return { labels: (l as L[]).filter(live), curves: (c as C[]).filter(live), obstacles: (o as O[]).filter(live) };
-}) as Promise<{ labels: L[]; curves: C[]; obstacles: O[] }>;
+  return { labels: (l as L[]).filter(live), curves: (c as C[]).filter(live), obstacles: (o as O[]).filter(live), plots: (p as P[]).filter(live) };
+}) as Promise<{ labels: L[]; curves: C[]; obstacles: O[]; plots: P[] }>;
 
 const allowed = (p: L, q: L, at: string) => ALLOWLIST.some((a) => a.match(p, q, at));
 const curveAllowed = (lab: L, at: string) => CURVE_ALLOWLIST.some((a) => a.match(lab, at));
@@ -435,6 +442,77 @@ const unstableInInset = (labels: L[], marks: O[], at: string) => {
   return out;
 };
 
+/** Phone tiles stay bare of axis names such as σ and jω (BUG-67). */
+const bareAxisNames = (log: L[], at: string) => {
+  const out: string[] = [];
+  for (const e of latest(log)) {
+    if (e.skipped || !e.s.trim()) continue;
+    if (/^(σ|jω)\b|σ \(1\/s\)|jω \(rad/.test(e.s))
+      out.push(`${at} ${e.id || 'canvas'}: axis name “${e.s}” drawn on a bare tile`);
+  }
+  return out;
+};
+
+/** Every axis that shows numbers has at least 2 labelled ticks, plus 0 when 0 is in range (BUG-68). */
+const minTicks = (log: L[], plots: P[], at: string) => {
+  const out: string[] = [];
+  const ticks = latest(log).filter((e) => !e.skipped && e.role === 'tick' && e.y0 !== undefined && e.s.trim());
+  const horiz = (e: L) => !!(e.anchor && Math.abs(e.anchor.y - (e.anchor.y2 ?? e.anchor.y)) < 1 && Math.abs((e.anchor.x2 ?? e.anchor.x) - e.anchor.x) > 4);
+  const vert = (e: L) => !!(e.anchor && Math.abs(e.anchor.x - (e.anchor.x2 ?? e.anchor.x)) < 1 && Math.abs((e.anchor.y2 ?? e.anchor.y) - e.anchor.y) > 4);
+  const byCv = new Map<number, L[]>();
+  for (const e of ticks) { const a = byCv.get(e.cv) ?? []; a.push(e); byCv.set(e.cv, a); }
+  const boxY = (e: L) => `${Math.round(e.anchor!.x / 2) * 2}:${Math.round((e.anchor!.x2 ?? e.anchor!.x) / 2) * 2}`;
+  const boxX = (e: L) => `${Math.round(e.anchor!.y / 2) * 2}:${Math.round((e.anchor!.y2 ?? e.anchor!.y) / 2) * 2}`;
+  const groups = (labs: L[], key: (e: L) => string) => {
+    const m = new Map<string, L[]>();
+    for (const e of labs) { const k = key(e); const a = m.get(k) ?? []; a.push(e); m.set(k, a); }
+    return [...m.values()];
+  };
+  const check = (g: L[], axis: string) => {
+    if (!g.length) return;
+    if (g.length < 2) out.push(`${at} ${g[0].id || 'canvas'}: ${axis}-axis has ${g.length} labelled tick${g.length === 1 ? '' : 's'} (“${g.map((e) => e.s).join('”, “')}”; min 2)`);
+  };
+  for (const labs of byCv.values()) {
+    for (const g of groups(labs.filter(horiz), boxY)) check(g, 'y');
+    for (const g of groups(labs.filter(vert), boxX)) check(g, 'x');
+  }
+  for (const pl of latest(plots)) {
+    const labs = ticks.filter((e) => e.cv === pl.cv && e.id === pl.id);
+    if (!labs.length) continue;
+    const xr = pl.xr, yr = pl.yr;
+    const needs0 = (xr && xr[0] <= 0 && 0 <= xr[1]) || (yr && yr[0] <= 0 && 0 <= yr[1]);
+    if (needs0 && !labs.some((e) => e.s === '0'))
+      out.push(`${at} ${pl.id || 'canvas'}: 0 is in range but no labelled 0 tick`);
+  }
+  return out;
+};
+
+/** On tiles, the plot box is at least ~60% of the tile height (BUG-69). */
+const plotAreaFraction = (plots: P[], at: string) => {
+  const out: string[] = [];
+  for (const pl of latest(plots)) {
+    if (!(pl.H > 0)) continue;
+    const frac = (pl.y1 - pl.y0) / pl.H;
+    if (frac < 0.58)
+      out.push(`${at} ${pl.id || 'canvas'}: plot is ${(frac * 100).toFixed(1)}% of the tile height (min ~60%)`);
+  }
+  return out;
+};
+
+/** Caption-named header readouts on labelled tiles take at most 2 lines (BUG-69). */
+const headerTwoLines = (log: L[], at: string) => {
+  const out: string[] = [];
+  const header = /^(ceiling Ka|coil pole at|Ka = |K = |OS |error |offset |ζ = |ω = |\|S\||P = |open sag|closed sag|loop gain)/;
+  for (const e of latest(log)) {
+    if (e.skipped || e.role === 'tick' || !e.s.trim() || e.y0 === undefined || e.size == null) continue;
+    if (!header.test(e.s)) continue;
+    const span = (e.y1 ?? e.y0) - e.y0;
+    if (span > e.size * 2.45 + 1)
+      out.push(`${at} ${e.id || 'canvas'}: “${e.s}” is ${span.toFixed(1)} px tall at ${e.size.toFixed(1)} px (more than 2 lines)`);
+  }
+  return out;
+};
+
 async function waitTiles(page: Page, card: ReturnType<Page['locator']>) {
   await card.evaluate((el) => el.scrollIntoView({ block: 'start' }));
   await expect.poll(async () => card.locator('.step-thumbs canvas[data-fig], .tile-frame canvas[data-fig]').count(), { timeout: 12_000 }).toBeGreaterThan(0);
@@ -444,7 +522,7 @@ async function waitTiles(page: Page, card: ReturnType<Page['locator']>) {
 for (const vp of VIEWPORTS) {
   test(`sim-project @${vp.label}: step-card tiles and expanded views keep labels apart, on the clip, off curves and markers, near their anchors, complete, and at least 9 px`, async ({ page }) => {
     test.setTimeout(420_000);
-    await page.addInitScript(() => { (window as any).__textLog = []; (window as any).__textCanvases = []; (window as any).__curveLog = []; (window as any).__obstacleLog = []; });
+    await page.addInitScript(() => { (window as any).__textLog = []; (window as any).__textCanvases = []; (window as any).__curveLog = []; (window as any).__obstacleLog = []; (window as any).__plotLog = []; });
     await page.setViewportSize({ width: vp.w, height: vp.h });
     const bad: string[] = [];
     let seen = 0;
@@ -465,10 +543,14 @@ for (const vp of VIEWPORTS) {
         const tileObs = takenTiles.obstacles.filter((e) => e.where === 'tile' && e.step === step);
         seen += tiles.length;
         const atTile = `${tab} step ${step} tile @${vp.label}`;
+        const tilePlots = takenTiles.plots.filter((e) => e.where === 'tile' && e.step === step);
         bad.push(...collisions(tiles, atTile), ...clipped(tiles, atTile), ...onCurve(tiles, tileCurves, atTile), ...onObstacle(tiles, tileObs, atTile), ...farFromAnchor(tiles, atTile));
         bad.push(...tooSmall(tiles, atTile, tab, step, null), ...unstableInInset(tiles, tileObs, atTile));
         bad.push(...missingRequired(tiles, atTile, tab, step, null, vp.labelled));
         bad.push(...tickSizeMix(tiles, atTile), ...tickAlign(tiles, atTile), ...nearerThanOthers(tiles, tileObs, atTile));
+        bad.push(...minTicks(tiles, tilePlots, atTile), ...plotAreaFraction(tilePlots, atTile));
+        if (!vp.labelled) bad.push(...bareAxisNames(tiles, atTile));
+        else bad.push(...headerTwoLines(tiles, atTile));
 
         const thumbs = card.locator('.step-thumbs canvas[data-fig]');
         const tcount = await thumbs.count();
@@ -490,10 +572,12 @@ for (const vp of VIEWPORTS) {
           const expObs = takenExp.obstacles.filter((e) => e.where === 'expand');
           seen += exp.length;
           const atExp = `${tab} step ${step} expand ${fig} @${vp.label}`;
+          const expPlots = takenExp.plots.filter((e) => e.where === 'expand');
           bad.push(...collisions(exp, atExp), ...clipped(exp, atExp), ...onCurve(exp, expCurves, atExp), ...onObstacle(exp, expObs, atExp), ...farFromAnchor(exp, atExp));
           bad.push(...tooSmall(exp, atExp, tab, step, fig), ...unstableInInset(exp, expObs, atExp));
           bad.push(...missingRequired(exp, atExp, tab, step, fig, true));
           bad.push(...tickSizeMix(exp, atExp), ...tickAlign(exp, atExp), ...nearerThanOthers(exp, expObs, atExp));
+          bad.push(...minTicks(exp, expPlots, atExp));
           await overlay.locator('[data-testid=fig-close]').click();
           await expect(overlay).toHaveCount(0, { timeout: 8_000 });
         }
