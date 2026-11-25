@@ -113,7 +113,7 @@ Each step below gives its explanation first, then its plots with their readouts,
    - **The settings:** response time 1.5 s raises the crossover to 1.33 rad/s, and robustness 0.72 raises the margin to 72°.
    - **Result:** 0 % overshoot, 1.81 s settling, P = 0.0014551, I = 0.0043791 (the handout's table).
    - **For contrast (not in lab handout):** **aggressive (own)**, robustness 0.4, gives 28 % overshoot.
-   - **Look for:** with **final (1.5 s, 0.72)** set, the step curve rises to 1 without going over and settles at about 1.80 s (the readouts, shown when the step plot or the Parameters table is opened: Ts 1.802 s, Tr 1.088 s; the handout's table: 1.81 s and 1.09 s). The PM bar reads 72.0° at 1.33 rad/s and the GM bar 32.7 dB (handout: 32.8 dB).
+   - **Look for:** with **final (1.5 s, 0.72)** set, the step curve rises to 1 without going over and settles at about 1.80 s (the step plot's readout and the Parameters table under the tuner plot: Ts 1.802 s, Tr 1.088 s; the handout's table: 1.81 s and 1.09 s). The PM bar reads 72.0° at 1.33 rad/s and the GM bar 32.7 dB (handout: 32.8 dB).
 
 ```figure:tuner preset=final panels=step,bode,table
 ```

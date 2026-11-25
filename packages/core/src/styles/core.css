@@ -550,11 +550,26 @@ html.layout-tabs .tab-summary,html.layout-tabs .tab-sec-text{max-width:90ch}
 html.layout-tabs .tab-body > .viz-embed,html.layout-tabs .tab-body > .pop-figs,
 html.layout-tabs .tab-body > table,html.layout-tabs .tab-body > .st-eq,
 html.layout-tabs .tab-body > .step-cards,html.layout-tabs .tab-body > .step-sections,html.layout-tabs .tab-sec-figs{max-width:none}
-.tab-sec-setup.has-figs{display:block}
-@media (min-width:1200px){
-  .tab-sec-setup.has-figs{display:grid;grid-template-columns:minmax(0,90ch) minmax(20rem,1fr);gap:1.1rem 1.5rem;align-items:start}
-  .tab-sec-setup.has-figs > h2{grid-column:1/-1}
-  .tab-sec-figs .fig-layout,.tab-sec-figs .viz-slot .fig-layout{grid-template-columns:minmax(0,1fr)}
+/* Setup and other non-step figures are regular full-size figures: text, then the plot, then controls. */
+.tab-sec-setup.has-figs{display:grid;grid-template-columns:1fr;gap:.8rem;align-items:start}
+.tab-sec-setup.has-figs > h2{grid-column:1/-1}
+.tab-sec-figs .fig-layout,.tab-sec-figs .viz-slot .fig-layout,
+html.layout-tabs .tab-body .viz-embed .fig-layout,html.layout-tabs .pop-figs .fig-layout{grid-template-columns:minmax(0,1fr)}
+html.layout-tabs .fig canvas{cursor:default}
+html.layout-tabs .st-xp{display:none}
+html.layout-tabs .tab-sec-figs .fig canvas,
+html.layout-tabs .tab-body > .viz-embed .fig canvas,
+html.layout-tabs .pop-figs .fig canvas{display:block;width:100%;height:min(52vh,28rem);background:var(--plot-bg);border-radius:8px}
+html.layout-tabs .tab-sec-figs .fig:has(canvas[data-fig="diagram"]) canvas,
+html.layout-tabs .tab-body .fig:has(canvas[data-fig="diagram"]) canvas,
+html.layout-tabs .tab-body .fig:has(canvas[data-fig="diag"]) canvas,
+html.layout-tabs .tab-body .fig:has(canvas[data-fig="code"]) canvas,
+html.layout-tabs .tab-body .fig:has(canvas[data-fig="frac"]) canvas{height:min(44vh,22rem)}
+html.layout-tabs .tab-sec-figs .pair2.one,
+html.layout-tabs .tab-body .viz-embed .pair2.one{grid-template-columns:1fr;max-width:72rem}
+@media (min-width:1000px){
+  html.layout-tabs .tab-sec-figs .pair2:not(.one),
+  html.layout-tabs .tab-body .viz-embed .pair2:not(.one){grid-template-columns:repeat(auto-fit,minmax(306px,1fr))}
 }
 
 /* ---- section (c) step sections: heading, prose, full-size figures, then controls ---- */
@@ -580,9 +595,12 @@ html.layout-tabs .tab-body > h2,html.layout-tabs .tab-sec-setup > h2,html.layout
 .step-host .fig-look,.step-section .fig-stage-head,.step-section .fig-axes,.step-section .fig-anim{display:none}
 .step-section .fig-layout,.step-section .viz-slot .fig-layout{grid-template-columns:1fr;gap:.55rem}
 .step-section .pair2{display:grid;grid-template-columns:1fr;gap:.7rem}
+.step-section .pair2.one{max-width:72rem}
 @media (min-width:1000px){
+  /* two-figure steps stay abreast from 1000 px (breakpoint unchanged). */
   .step-figs.n-2,.step-figs.n-3,.step-figs.n-4{grid-template-columns:repeat(2,minmax(0,1fr))}
-  .step-section .pair2{grid-template-columns:1fr 1fr}
+  /* a single-panel figure keeps the full frame; two-panel figures sit abreast only when each plot would stay at least as wide as on a 390 px phone (BUG-81). */
+  .step-section .pair2:not(.one){grid-template-columns:repeat(auto-fit,minmax(306px,1fr))}
 }
 .step-section .fig{background:var(--panel);border:1px solid var(--border);border-radius:12px;padding:.35rem .45rem .5rem;min-width:0}
 .step-section .fig h4{font:650 .8rem/1.25 system-ui,sans-serif;margin:0 0 .25rem}

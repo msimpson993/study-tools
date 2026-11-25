@@ -104,7 +104,7 @@ Only new or changed figures are here. Everything else is unchanged from `/worksp
 
 ## How the tabs reference figures
 
-On the four problem tabs, each section (c) step is a regular page section: the step text, then its live figures drawn once at full size (two abreast on a wide window, stacked on a phone), then that step's controls under the plots. There are no tiles or a tap-to-expand overlay for the plots.
+On the four problem tabs, each section (c) step is a regular page section: the step text, then its live figures drawn once at full size (two abreast from 1000 px when a step has two figures, stacked on a phone), then that step's controls under the plots. A single-plot figure uses the full frame, capped at 72 rem. The setup block diagram and the handout-script figures are the same kind of full-size figure. There are no tiles or a tap-to-expand overlay for the plots.
 
 Each step in (c) and each row in (d) names a figure by its figures.yaml id and a preset id, e.g. "**Live figure:** `motor`, preset `open`". Suggested embedding (Manager's call, since the one-off layout has no dives): a fenced block with the preset as an argument, ```` ```figure:motor preset=open``` ````, rendering the figure with that preset applied. One figure per step is enough. If a step names two presets ("`k20` then `k100`"), embed the figure once with the first and let the reader click the second.
 

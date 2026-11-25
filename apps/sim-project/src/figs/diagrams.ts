@@ -368,7 +368,7 @@ export function drawLabDiagram(g: CanvasRenderingContext2D, w: number, h: number
     g.beginPath(); g.moveTo(kb.cx, kb.t); g.lineTo(sE.x, kb.t); g.lineTo(sE.x, sE.y + r + 1); g.stroke();
     intoSum(g, sE.x, kb.t, sE.x, sE.y, '−', colorOf('sys3', ['sysa']).color, r);
   } else if (kind === 'borer') {
-    text(g, 'R', X(0), Y(rail) + 3, col.text(), 'left', 11);
+    text(g, 'R', X(2), Y(rail) - 11, col.text(), 'center', 11);
     const s1 = { x: X(10), y: Y(rail) };
     const gc = boxAt('sys1', 16, rail - 10, 22, 20, L('K + 11s', 'K = 20 or 100', 'push on the error now, plus 11 × how fast it is changing', 'in: position error. out: steering effort. what it does: push on the error now, plus 11 × how fast it is changing'));
     const s2 = { x: X(50), y: Y(rail) };
@@ -390,7 +390,7 @@ export function drawLabDiagram(g: CanvasRenderingContext2D, w: number, h: number
     g.beginPath(); g.moveTo(outX, outY); g.lineTo(outX, fy); g.lineTo(s1.x, fy); g.lineTo(s1.x, s1.y + r + 1); g.stroke();
     intoSum(g, s1.x, fy, s1.x, s1.y, '−', cf.color, r);
   } else if (kind === 'disk') {
-    text(g, 'R', X(0), Y(rail) + 3, col.text(), 'left', 11);
+    text(g, 'R', X(2), Y(rail) - 11, col.text(), 'center', 11);
     const s1 = { x: X(8), y: Y(rail) };
     const ka = boxAt('Ka', 14, rail - 10, 10, 20, L('Ka', '10 or 80', 'volts per unit error', 'in: position error. out: amplifier voltage. what it does: volts per unit error'), ['series']);
     const g1 = boxAt('sysf', 28, rail - 10, 24, 20, L('G₁ = 5000/(s+1000)', '5000/(s+1000)', 'volts to force, builds in 1 ms', 'in: voltage. out: force. what it does: the coil turns volts into force; current builds in about 1 ms'), ['series']);

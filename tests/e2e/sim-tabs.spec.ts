@@ -461,4 +461,69 @@ test.describe('sim-project tabbed page', () => {
     });
     expect(phone.stacked, `engine step 1 should stack at 390 (n=${phone.n})`).toBe(true);
   });
+
+  test('non-step figures are full-size, with no Expand button or tap-to-expand label (BUG-79)', async ({ page }) => {
+    await page.setViewportSize({ width: 1280, height: 900 });
+    for (const tab of ['engine', 'motor', 'borer', 'disk'] as const) {
+      await open(page, 'sim-project', `#/tab/${tab}`);
+      const setup = page.getByTestId('tab-setup');
+      await expect(setup, `${tab} setup`).toBeVisible();
+      await expect.poll(async () => setup.locator('canvas[data-fig=diagram]').count()).toBeGreaterThan(0);
+      await expect(setup.locator('.st-xp'), `${tab} setup should have no Expand button`).toHaveCount(0);
+      const aria = await setup.locator('canvas[data-fig=diagram]').first().getAttribute('aria-label');
+      expect(aria, `${tab} setup aria-label`).toBeTruthy();
+      expect(aria!, `${tab} setup aria-label should be the plain figure title`).not.toMatch(/tap to expand/i);
+    }
+    for (const tab of ['motor', 'borer', 'disk'] as const) {
+      await open(page, 'sim-project', `#/tab/${tab}`);
+      const host = page.locator('.tab-body .viz-embed, .tab-body .pop-figs .viz-embed').filter({ has: page.locator('canvas[data-fig=code], canvas[data-fig=diag], canvas[data-fig=frac]') }).first();
+      await host.evaluate((el) => el.scrollIntoView({ block: 'center' }));
+      await expect.poll(async () => host.locator('canvas').count()).toBeGreaterThan(0);
+      await expect(page.locator('.tab-body .st-xp'), `${tab} handout-script figures should have no Expand button`).toHaveCount(0);
+      const labels = await page.locator('.tab-body canvas[data-fig=code], .tab-body canvas[data-fig=diag], .tab-body canvas[data-fig=frac]').evaluateAll((cs) => cs.map((c) => c.getAttribute('aria-label') || ''));
+      expect(labels.length, `${tab} should mount the handout-script panels`).toBeGreaterThan(0);
+      for (const a of labels) expect(a, `${tab} ${a}`).not.toMatch(/tap to expand/i);
+    }
+  });
+
+  test('the setup block diagram uses the full figure width, not a 300 px tile (BUG-80)', async ({ page }) => {
+    await page.setViewportSize({ width: 1280, height: 900 });
+    await open(page, 'sim-project', '#/tab/disk');
+    const setup = page.getByTestId('tab-setup');
+    await expect.poll(async () => setup.locator('canvas[data-fig=diagram]').count()).toBeGreaterThan(0);
+    const w = await setup.locator('canvas[data-fig=diagram]').first().evaluate((c) => (c as HTMLElement).getBoundingClientRect().width);
+    expect(w, `disk setup diagram should be a full-size figure, not a ~300 px tile (got ${w})`).toBeGreaterThan(500);
+  });
+
+  test('a single-plot figure fills the frame, and two-figure plots stay at least as wide as on a phone (BUG-81)', async ({ page }) => {
+    await page.setViewportSize({ width: 390, height: 844 });
+    await open(page, 'sim-project', '#/tab/disk');
+    const disk4 = page.locator('[data-testid=step-section][data-step="4"]');
+    await disk4.evaluate((el) => el.scrollIntoView({ block: 'start' }));
+    await expect.poll(async () => disk4.locator('.step-figs canvas[data-fig]').count()).toBeGreaterThan(0);
+    const phoneW = await disk4.locator('.step-figs canvas[data-fig]').first().evaluate((c) => (c as HTMLElement).getBoundingClientRect().width);
+
+    await page.setViewportSize({ width: 1280, height: 900 });
+    await open(page, 'sim-project', '#/tab/motor');
+    const motor1 = page.getByTestId('step-section').first();
+    await motor1.evaluate((el) => el.scrollIntoView({ block: 'start' }));
+    await expect.poll(async () => motor1.locator('.step-figs canvas[data-fig]').count()).toBeGreaterThan(0);
+    const single = await motor1.evaluate((el) => {
+      const canvas = el.querySelector('.step-figs canvas[data-fig]') as HTMLElement | null;
+      const host = el.querySelector('.step-host, .step-figs') as HTMLElement | null;
+      if (!canvas || !host) return { cw: 0, hw: 0 };
+      return { cw: canvas.getBoundingClientRect().width, hw: host.getBoundingClientRect().width };
+    });
+    expect(single.cw, `Motor 1 plot should use the frame, not half of it (plot ${single.cw} in frame ${single.hw})`).toBeGreaterThan(700);
+    expect(single.cw, 'Motor 1 should not leave half the frame empty').toBeGreaterThan(single.hw * 0.7);
+
+    await open(page, 'sim-project', '#/tab/disk');
+    const disk4d = page.locator('[data-testid=step-section][data-step="4"]');
+    await disk4d.evaluate((el) => el.scrollIntoView({ block: 'start' }));
+    await expect.poll(async () => disk4d.locator('.step-figs canvas[data-fig]').count()).toBeGreaterThan(0);
+    const widths = await disk4d.locator('.step-figs canvas[data-fig]').evaluateAll((cs) => cs.map((c) => (c as HTMLElement).getBoundingClientRect().width));
+    for (const w of widths) {
+      expect(w, `Disk 4 plot ${w}px at 1280 should be at least as wide as on a 390 phone (${phoneW}px)`).toBeGreaterThanOrEqual(phoneW - 8);
+    }
+  });
 });

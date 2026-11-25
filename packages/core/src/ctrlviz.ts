@@ -628,7 +628,7 @@ export function drawStepResponse(g: CanvasRenderingContext2D, w: number, h: numb
     }
     return false;
   };
-  if (s.ghost?.label && !dropGhost) {
+  if (s.ghost?.label) {
     const gl = s.ghost, gLab = `┄ ${gl.label}`;
     g.font = '10px system-ui,sans-serif';
     const gw = g.measureText(gLab).width;
@@ -640,10 +640,12 @@ export function drawStepResponse(g: CanvasRenderingContext2D, w: number, h: numb
     const inL = [mk(f.box.l + 4, f.box.t + 14, 'left'), mk(f.box.l + 4, f.box.t + 28, 'left')];
     const midR = mk(f.box.r - 4, (f.box.t + f.box.b) / 2, 'right'), midL = mk(f.box.l + 4, (f.box.t + f.box.b) / 2, 'left');
     const farFirst = Math.abs(topR.x - farFrom) >= Math.abs(topL.x - farFrom);
-    // tiles: only the top pad — if those fail, drop the ghost rather than park it on the curve
-    const spots = tile
-      ? (farFirst ? [topR, topL] : [topL, topR])
-      : (farFirst ? [topR, topL, ...inR, midR, ...inL, midL] : [topL, topR, ...inL, midL, ...inR, midR]);
+    const botR = mk(f.box.r - 4, f.box.b - 12, 'right'), botL = mk(f.box.l + 4, f.box.b - 12, 'left');
+    // tiles: only the top pad — if those fail, drop the ghost rather than park it on the curve.
+    // When the ghost vacated the top pad for Ts (dropGhost), skip those seats and use the others (BUG-83).
+    const topSpots = farFirst ? [topR, topL] : [topL, topR];
+    const restSpots = farFirst ? [...inR, midR, botR, ...inL, midL, botL] : [...inL, midL, botL, ...inR, midR, botR];
+    const spots = tile ? (dropGhost ? [] : topSpots) : (dropGhost ? restSpots : [...topSpots, ...restSpots]);
     let placed = false;
     for (const sp of spots) {
       const a = sp.align === 'right' ? sp.x - gw : sp.x, b2 = a + gw, c = sp.y - 6, d = sp.y + 6;
@@ -656,9 +658,10 @@ export function drawStepResponse(g: CanvasRenderingContext2D, w: number, h: numb
       g.font = `${MIN_FONT}px system-ui,sans-serif`;
       const gw9 = g.measureText(gLab).width;
       const extra = [
-        midR, midL,
+        midR, midL, botR, botL,
         mk(f.box.r - 4, f.box.t + 44, 'right'), mk(f.box.l + 4, f.box.t + 44, 'left'),
         mk(f.box.r - 4, f.box.t + (f.box.b - f.box.t) * 0.65, 'right'), mk(f.box.l + 4, f.box.t + (f.box.b - f.box.t) * 0.65, 'left'),
+        mk(f.box.r - 4, f.box.b - 24, 'right'), mk(f.box.l + 4, f.box.b - 24, 'left'),
       ];
       for (const sp of [...spots, ...extra]) {
         const a = sp.align === 'right' ? sp.x - gw9 : sp.x, b2 = a + gw9, c0 = sp.y - 6, d0 = sp.y + 6;
@@ -666,6 +669,13 @@ export function drawStepResponse(g: CanvasRenderingContext2D, w: number, h: numb
         ghostBox = { x0: a, x1: b2, y0: c0, y1: d0 };
         withLabelRole('axis', () => { text(g, gLab, sp.x, sp.y, gl.color ?? col.muted(), sp.align, MIN_FONT); });
         placed = true; break;
+      }
+      // last resort on a full-size page: keep the required legend visible, even if the seat is tight (BUG-83)
+      if (!placed) {
+        const sp = botR;
+        const a = sp.x - gw9, b2 = sp.x, c0 = sp.y - 6, d0 = sp.y + 6;
+        ghostBox = { x0: a, x1: b2, y0: c0, y1: d0 };
+        withLabelRole('axis', () => { text(g, gLab, sp.x, sp.y, gl.color ?? col.muted(), sp.align, MIN_FONT); });
       }
     }
   }
@@ -726,30 +736,45 @@ export function drawSPlane(g: CanvasRenderingContext2D, w: number, h: number, s:
   const tileCanvas = isTileCanvas(g);
   const pad = s.pad ?? (tileCanvas ? 12 : 18);
   let vw = w, vh = h, ox = 0, oy = 0;
-  let reserved: { ix: number; iy: number; iw: number; ih: number } | null = null;
+  let reserved: { ix: number; iy: number; iw: number; ih: number; mode: 'side' | 'bottom' } | null = null;
   // leave a side band for the zoom inset so a mid-size tile can show it without covering the main plane
   if (s.inset && s.clear !== false) {
     const sw = Math.round(Math.max(110, Math.min(200, h - 16, w * 0.36)));
     if (sw >= 110 && w >= sw + 130 && h >= sw + 8) {
-      reserved = { iw: sw, ih: sw, ix: w - sw - 4, iy: Math.max(4, Math.min(h - sw - 4, (h - sw) / 2)) };
+      reserved = { iw: sw, ih: sw, ix: w - sw - 4, iy: Math.max(4, Math.min(h - sw - 4, (h - sw) / 2)), mode: 'side' };
       vw = reserved.ix - 6;
     }
   }
   const applyAspect = () => {
-    vw = w - (reserved ? (w - (reserved.ix - 6)) : 0);
-    vh = h; ox = 0; oy = 0;
-    if (s.maxAspect && s.maxAspect > 0 && vw > 2 * pad && h > 2 * pad) {
+    if (reserved?.mode === 'bottom') { vw = w; vh = Math.max(1, reserved.iy - 6); }
+    else { vw = w - (reserved ? (w - (reserved.ix - 6)) : 0); vh = h; }
+    ox = 0; oy = 0;
+    const boxH = reserved?.mode === 'bottom' ? vh : h;
+    if (s.maxAspect && s.maxAspect > 0 && vw > 2 * pad && boxH > 2 * pad) {
       const cap = tileCanvas ? Math.max(s.maxAspect, 1.8) : s.maxAspect;
-      const iw = vw - 2 * pad, ih = h - 2 * pad;
+      const iw = vw - 2 * pad, ih = boxH - 2 * pad;
       if (iw / ih > cap) { const nw = cap * ih + 2 * pad; ox += (vw - nw) / 2; vw = nw; }
-      else if (ih / iw > cap) { vh = cap * iw + 2 * pad; oy = (h - vh) / 2; }
+      else if (ih / iw > cap) { vh = cap * iw + 2 * pad; oy = (boxH - vh) / 2; }
     }
   };
   applyAspect();
-  // a side zoom box is not worth a letterboxed plane on a narrow canvas
+  // a side zoom box is not worth a letterboxed plane on a narrow canvas.
+  // On a full-size page figure the how-to-read still needs the box (Borer 3 at 320, BUG-82),
+  // so move it into a bottom band that does not cover the plane.
   if (reserved && (vh - 2 * pad) / h < 0.58) {
-    reserved = null;
+    if (!tileCanvas) {
+      const sw = Math.round(Math.max(110, Math.min(160, w * 0.42, h * 0.32)));
+      reserved = { iw: sw, ih: sw, ix: Math.max(4, w - sw - 6), iy: h - sw - 4, mode: 'bottom' };
+    } else {
+      reserved = null;
+    }
     applyAspect();
+  } else if (!reserved && s.inset && s.clear !== false && !tileCanvas) {
+    const sw = Math.round(Math.max(110, Math.min(160, w * 0.42, h * 0.32)));
+    if (h >= sw + 80) {
+      reserved = { iw: sw, ih: sw, ix: Math.max(4, w - sw - 6), iy: h - sw - 4, mode: 'bottom' };
+      applyAspect();
+    }
   }
   const f0 = splaneFrame(Math.max(vw, 1), Math.max(vh, 1), Math.max(s.range, 1e-6), s.reCenter, s.pad);
   if (!(w > 0) || !(h > 0) || !Number.isFinite(s.range) || s.range <= 0) { if (s.clear !== false) wipe(g, Math.max(w, 0), Math.max(h, 0)); return f0; }
@@ -1325,7 +1350,10 @@ export function drawSPlane(g: CanvasRenderingContext2D, w: number, h: number, s:
       const right = w - (ox + vw), left = ox;
       if (right >= iw + 10) { ix = ox + vw + 6; iy = Math.max(4, Math.min(h - ih - 4, oy + (vh - ih) / 2)); }
       else if (left >= iw + 10) { ix = 8; iy = Math.max(4, Math.min(h - ih - 4, oy + (vh - ih) / 2)); }
-      else { ix = -1; iy = -1; iw = 0; ih = 0; } // no side room: hide the inset on this tile (BUG-44)
+      else if (!tileCanvas) {
+        const sw = Math.round(Math.max(110, Math.min(160, w * 0.42, h * 0.32)));
+        ix = Math.max(4, w - sw - 6); iy = h - sw - 4; iw = sw; ih = sw;
+      } else { ix = -1; iy = -1; iw = 0; ih = 0; } // no side room: hide the inset on this tile (BUG-44)
     }
     if (ix >= 0 && iy >= 0 && ix + iw <= w - 2 && iy + ih <= h - 2 && iw >= 110 && ih >= 110) {
       g.save();

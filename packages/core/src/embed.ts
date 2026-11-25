@@ -82,7 +82,8 @@ export function embedFigureSlots(root: HTMLElement, content: AppContent, hooks: 
     const d = slot.dataset.look
       ? { ...def, lookFor: slot.dataset.look }
       : (stepSuppliesLookFor(slot) ? { ...def, lookFor: undefined } : def);
-    const stop = mounter(slot, d, controlsForSlot(def, slot));
+    const onSimProject = typeof document !== 'undefined' && document.documentElement?.dataset?.simProject === '1';
+    const stop = mounter(slot, d, controlsForSlot(def, slot), onSimProject ? { expandable: false, flatControls: true } : undefined);
     if (typeof stop === 'function') stops.push(stop);
   });
   root.querySelectorAll<HTMLElement>('.pic-slot[data-pic]').forEach((slot) => {

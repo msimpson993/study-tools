@@ -2,7 +2,7 @@
 import { figureOf, drawStepResponse, col, text, textReadout, wipe, rangeFrame, graphAxes, curve, tline, withPersistentLabels, PLOT_HEAD, isTileCanvas, type FigurePanel } from '@study/core';
 import { ENGINE, DESIGNS, type DesignName } from '../model/params';
 import { engineMargins, enginePError, engineStep, simEngine, tuner, metrics, engineLoopJw, firstCrossing } from '../model/plants';
-import { f, lin, num, on, str, fmtPow10, drawKeyValueTable, isThumb, type V } from './util';
+import { f, lin, num, on, str, fmtPow10, drawKeyValueTable, isThumb, wrap, type V } from './util';
 import { drawEngine, drawTunerSliders } from './scenes';
 
 const nearDesign = (resp: number, rob: number): DesignName | null => {
@@ -137,7 +137,8 @@ export const tunerPanels = (): FigurePanel[] => [
         wipe(g, w, h);
         if (!thumb) text(g, piLine, 8, 14, col.text(), 'left', 10);
         const cap = 'Linear stand-in, not the nonlinear Simulink engine (not in lab handout). The handout\'s scope (p.6) is the real check.';
-        const capBand = thumb ? 0 : 18;
+        const capLines = thumb ? [] : wrap(g, cap, Math.max(24, w - 16), 9);
+        const capBand = capLines.length ? capLines.length * 12 + 8 : 0;
         g.save(); g.translate(0, head);
         const fr = rangeFrame(w, h - head - capBand, [0, tEnd], [1500, 3500], 72, 12, 14, 30);
         graphAxes(g, fr, [0, tEnd], [1500, 3500], 'time (s)', 'rpm', 5, 500);
@@ -150,7 +151,7 @@ export const tunerPanels = (): FigurePanel[] => [
         }
         g.restore();
         if (!thumb && Number.isFinite(tHit)) text(g, `reaches 2980 at t₀ + ${f(tHit, 2)} s`, 8, 28, col.text(), 'left', 10);
-        if (!thumb) text(g, cap, 8, h - 8, col.muted(), 'left', 9);
+        if (!thumb) capLines.forEach((ln, i) => text(g, ln, 8, h - capBand + 8 + i * 12, col.muted(), 'left', 9));
         return;
       }
       const r = engineStep(P, I, 14, 1e-3);

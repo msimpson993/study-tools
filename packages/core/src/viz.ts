@@ -405,6 +405,8 @@ export function forTicks(lo: number, hi: number, step: number, fn: (v: number) =
   for (let x = lo, i = 0; x <= hi + 1e-9 && i <= n + 2; x += step, i++) fn(x);
 }
 export function text(g: CanvasRenderingContext2D, s: string, x: number, y: number, color = col.text(), align: CanvasTextAlign = 'left', size = 11, base: CanvasTextBaseline = 'middle', minSize = 0): boolean {
+  // Simulation Project notes stay at least 9 px (BUG-84). Control Systems and Linear Systems are unchanged.
+  if (simProjectStyle()) { size = Math.max(9, size); minSize = Math.max(9, minSize); }
   const f = fitText(g, s, x, align, size, minSize);
   // keep clear of the labels already drawn on this canvas (see labels.ts): ticks give way, notes slide by whole lines, axis names stay
   const m = typeof g.getTransform === 'function' ? g.getTransform() : null, cv = g.canvas as HTMLCanvasElement | undefined, role = labelRole();

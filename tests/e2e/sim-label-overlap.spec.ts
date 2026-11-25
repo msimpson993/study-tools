@@ -77,6 +77,8 @@ const REQUIRED: { comment: string; tab: string; step?: string; fig: string; re: 
   { comment: "Disk 5 s-plane caption: the panel says 'ζ ≈ 0'", tab: 'disk', step: '5', fig: 'splane', re: /^ζ ≈ 0/, name: 'ζ ≈ 0' },
   { comment: 'Disk seek caption: the readout gives Ka, OS and Ts', tab: 'disk', fig: 'seek', re: /^Ka\s*=\s*.*OS\s/, name: 'Seek readout' },
   { comment: 'Motor plot caption: a red bar and label at the right mark the final sag', tab: 'motor', step: '5', fig: 'plot', re: /sag|handout/, name: 'Motor sag' },
+  { comment: 'Borer 3 how-to-read: the zoom box when the zero is close to a pole (BUG-82)', tab: 'borer', step: '3', fig: 'splane', re: /^zoom$/i, name: 'zoom' },
+  { comment: 'Engine 3: the initial handout gains legend stays on the step plot (BUG-83)', tab: 'engine', step: '3', fig: 'step', re: /initial handout gains/, name: 'initial handout gains' },
 ];
 
 
@@ -428,14 +430,15 @@ const missingRequired = (labels: L[], at: string, tab: string, step: string, fig
   return out;
 };
 
-/** Font size is never below the 9 px floor (BUG-60). */
-const tooSmall = (log: L[], at: string, tab: string, step: string, fig: string | null) => {
+/** Font size is never below the 9 px floor (BUG-60). At 320 and 390 every note is also ≥ 9 px (BUG-84). */
+const tooSmall = (log: L[], at: string, tab: string, step: string, fig: string | null, allNotes = false) => {
   const out: string[] = [];
   for (const e of latest(log)) {
     if (e.skipped || !e.s.trim() || e.size === undefined) continue;
     if (e.size >= 9 - 0.01) continue;
     if (e.role === 'tick') { out.push(`${at} ${e.id || 'canvas'}: tick “${e.s}” is ${e.size.toFixed(1)} px (min 9)`); continue; }
-    // the 9 px floor is for caption-referenced required labels (BUG-60 rest), not every fitted note
+    if (allNotes) { out.push(`${at} ${e.id || 'canvas'}: “${e.s}” is ${e.size.toFixed(1)} px (min 9)`); continue; }
+    // at wider viewports the 9 px floor is for caption-referenced required labels (BUG-60 rest)
     const needed = REQUIRED.some((req) => {
       if (req.tab !== tab) return false;
       if (req.step && req.step !== step) return false;
@@ -511,19 +514,31 @@ const minTicks = (log: L[], plots: P[], at: string) => {
   return out;
 };
 
-/** The s-plane plot box is at least ~60% of the canvas height (BUG-69). */
-const plotAreaFraction = (plots: P[], at: string) => {
+/** The s-plane plot box is at least ~60% of the canvas height (BUG-69).
+ *  When a zoom inset is reserved, measure against the plane's own band, not the whole canvas (BUG-82). */
+const plotAreaFraction = (plots: P[], insets: O[], at: string) => {
   const out: string[] = [];
   const by = new Map<number, P[]>();
   for (const pl of latest(plots)) {
     if (pl.id !== 'splane' || !(pl.H > 0)) continue;
     const a = by.get(pl.cv) ?? []; a.push(pl); by.set(pl.cv, a);
   }
+  const insetOf = (cv: number, id: string) => latest(insets).filter((o) => o.kind === 'inset' && o.cv === cv && o.id === id);
   for (const group of by.values()) {
     const pl = group.reduce((b, p) => (p.y1 - p.y0 > b.y1 - b.y0 ? p : b));
-    const frac = (pl.y1 - pl.y0) / pl.H;
+    const ins = insetOf(pl.cv, pl.id);
+    let denom = pl.H;
+    if (ins.length) {
+      const hIns = Math.max(0, ...ins.map((o) => {
+        if (!o.pts || o.pts.length < 2) return 0;
+        const ys = o.pts.map((pt) => pt.y);
+        return Math.max(...ys) - Math.min(...ys);
+      }));
+      denom = Math.max(1, pl.H - hIns);
+    }
+    const frac = (pl.y1 - pl.y0) / denom;
     if (frac < 0.58)
-      out.push(`${at} ${pl.id || 'canvas'}: plot is ${(frac * 100).toFixed(1)}% of the canvas height (min ~60%)`);
+      out.push(`${at} ${pl.id || 'canvas'}: plot is ${(frac * 100).toFixed(1)}% of the ${ins.length ? 'plane band' : 'canvas height'} (min ~60%)`);
   }
   return out;
 };
@@ -574,10 +589,10 @@ for (const vp of VIEWPORTS) {
         seen += labs.length;
         const at = `${tab} step ${step} @${vp.label}`;
         bad.push(...collisions(labs, at), ...tickCollisions(labs, at), ...clipped(labs, at), ...onCurve(labs, curves, at), ...onObstacle(labs, obs, at), ...farFromAnchor(labs, at));
-        bad.push(...tooSmall(labs, at, tab, step, null), ...unstableInInset(labs, obs, at));
+        bad.push(...tooSmall(labs, at, tab, step, null, vp.label === '320' || vp.label === '390'), ...unstableInInset(labs, obs, at));
         bad.push(...missingRequired(labs, at, tab, step, null, true));
         bad.push(...tickSizeMix(labs, at), ...tickAlign(labs, at), ...nearerThanOthers(labs, obs, at));
-        bad.push(...minTicks(labs, plots, at), ...plotAreaFraction(plots, at));
+        bad.push(...minTicks(labs, plots, at), ...plotAreaFraction(plots, obs, at));
         bad.push(...headerTwoLines(labs, at));
       }
     }

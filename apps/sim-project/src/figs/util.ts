@@ -33,13 +33,8 @@ export function wrap(g: CanvasRenderingContext2D, s: string, maxW: number, size 
   const out: string[] = [];
   let line = '';
   const flushChunk = (word: string) => {
-    if (g.measureText(word).width <= maxW) { line = word; return; }
-    let chunk = '';
-    for (const ch of word) {
-      const try0 = chunk + ch;
-      if (chunk && g.measureText(try0).width > maxW) { out.push(chunk); chunk = ch; } else chunk = try0;
-    }
-    line = chunk;
+    // never break a word mid-character (BUG-80); a too-wide word sits on its own line
+    line = word;
   };
   for (const word of s.split(' ')) {
     const t = line ? `${line} ${word}` : word;
@@ -100,15 +95,18 @@ export function drawKeyValueTable(
   g: CanvasRenderingContext2D, w: number, h: number, rows: string[][],
   opts?: { footer?: string; key?: string },
 ): void {
-  const footerH = (opts?.footer ? 16 : 0) + (opts?.key ? 16 : 0);
   const cols = rows[0]?.length ?? 0;
   if (!cols) return;
   const headers = rows[0];
   const body = rows.slice(1);
-  const footerY0 = h - 6;
-  let fy = footerY0;
-  if (opts?.footer) { text(g, opts.footer, 6, fy, col.muted(), 'left', 10); fy -= 15; }
-  if (opts?.key) text(g, opts.key, 6, fy, col.muted(), 'left', 10);
+  const footerSize = 9;
+  const keyLines = opts?.key ? wrap(g, opts.key, Math.max(24, w - 12), footerSize) : [];
+  const footLines = opts?.footer ? wrap(g, opts.footer, Math.max(24, w - 12), footerSize) : [];
+  const footerH = (keyLines.length + footLines.length) * 12 + (keyLines.length || footLines.length ? 6 : 0);
+  let fy = h - 8 - (footLines.length ? (footLines.length - 1) * 12 : 0);
+  footLines.forEach((ln, i) => text(g, ln, 6, fy + i * 12, col.muted(), 'left', footerSize));
+  fy = h - 8 - footerH + 8;
+  keyLines.forEach((ln, i) => text(g, ln, 6, fy + i * 12, col.muted(), 'left', footerSize));
   const availH = h - footerH - 6;
   const padX = 8;
   const minSize = 11;
