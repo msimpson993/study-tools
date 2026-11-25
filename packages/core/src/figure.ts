@@ -65,8 +65,10 @@ const axesCaption = (p: { x?: string; y?: FigurePanel['y'] }, v?: Record<string,
 export interface FigureMountOpts {
   intro?: { panels?: string[] };
   flatControls?: boolean;
-  /** Mount only these panel ids (step cards). Unlike `intro`, the controls rail stays. */
+  /** Mount only these panel ids (step sections). Unlike `intro`, the controls rail stays. */
   panels?: string[];
+  /** When false, the inline plot is already full size and is not tappable to expand (the Parameters table may still open). Default true. */
+  expandable?: boolean;
 }
 let scrollLocks = 0;
 function lockPageScroll(on: boolean): void {
@@ -118,7 +120,8 @@ export function mountFigure(host: HTMLElement, def: FigureDef, panels0: FigurePa
     stage.append(h('div', { class: 'fig-anim' }, btn, h('span', null, reduce ? 'Reduced motion: stepping instead of animating. ' : '', intro ? '' : `Scrub with the “${cd.label}” slider.`)));
   }
   stage.append(overlay);
-  const stepCard = host.closest('.step-card') as HTMLElement | null;
+  const stepCard = host.closest('.step-section, .step-card') as HTMLElement | null;
+  const allowExpandDefault = opts.expandable !== false;
   function placeOverlay() {
     const dest = stepCard ?? stage;
     if (overlay.parentElement !== dest) dest.append(overlay);
@@ -126,7 +129,7 @@ export function mountFigure(host: HTMLElement, def: FigureDef, panels0: FigurePa
   overlay.addEventListener('click', (e) => {
     if (e.target === overlay) api.close();
   });
-  const cardText = stepCard?.querySelector('.step-card-text')?.textContent ?? '';
+  const cardText = stepCard?.querySelector('.step-prose, .step-card-text')?.textContent ?? '';
   const rail = controls.render('Controls', { flat: !!opts.flatControls, panels: want, cardText });
   const layout = h('div', { class: `fig-layout${intro ? ' fig-intro' : ''}` }, stage, intro ? null : rail);
   host.append(layout);
@@ -138,17 +141,18 @@ export function mountFigure(host: HTMLElement, def: FigureDef, panels0: FigurePa
   const byId = (id: string) => panels.find((p) => p.id === id)!;
 
   for (const p of panels) {
-    const cv = h('canvas', { 'aria-label': `${p.title}. Tap to expand.`, dataset: { fig: p.id } });
+    const canExpand = allowExpandDefault || p.id === 'table';
+    const cv = h('canvas', { 'aria-label': canExpand ? `${p.title}. Tap to expand.` : p.title, dataset: { fig: p.id } });
     const ph = p.height ?? def.height; if (ph) cv.style.height = `${ph}px`;
     canvases.set(p.id, cv);
     const open = () => api.open([p.id]);
     const wasDrag = p.pointer ? wirePointer(cv, p.pointer) : () => false;
-    cv.addEventListener('click', () => { if (!wasDrag()) open(); });
+    if (canExpand) cv.addEventListener('click', () => { if (!wasDrag()) open(); });
     const cap = axesCaption(p, controls.values);
     const axesEl = cap ? h('div', { class: 'fig-axes' }, cap) : null;
     inline.append(h('div', { class: 'fig', dataset: { figId: def.id, panel: p.id, testid: 'fig-tile' } },
       h('h4', null, p.title),
-      h('button', { class: 'st-xp', 'aria-label': `Expand ${p.title}`, title: 'Expand', dataset: { expand: p.id }, onclick: open }, '⤢'),
+      canExpand ? h('button', { class: 'st-xp', 'aria-label': `Expand ${p.title}`, title: 'Expand', dataset: { expand: p.id }, onclick: open }, '⤢') : null,
       cv, axesEl));
     redrawers.push(() => {
       const f = fitCanvas(cv);
@@ -163,7 +167,7 @@ export function mountFigure(host: HTMLElement, def: FigureDef, panels0: FigurePa
   const placeRail = () => {
     if (intro) return;
     const landscapeShort = window.matchMedia('(orientation: landscape) and (max-height: 500px)').matches;
-    const inCard = !!host.closest('.step-card');
+    const inCard = !!host.closest('.step-section, .step-card');
     const phoneTabs = document.documentElement.classList.contains('layout-tabs')
       && window.matchMedia('(max-width: 700px)').matches
       && !landscapeShort;
