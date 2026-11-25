@@ -586,11 +586,12 @@ html.layout-tabs .tab-body > h2,html.layout-tabs .tab-sec-setup > h2,html.layout
 .step-section .fig{background:var(--panel);border:1px solid var(--border);border-radius:12px;padding:.35rem .45rem .5rem;min-width:0}
 .step-section .fig h4{font:650 .8rem/1.25 system-ui,sans-serif;margin:0 0 .25rem}
 .step-section .fig canvas{display:block;width:100%;height:min(52vh,28rem);background:var(--plot-bg);border-radius:8px}
+.step-section .fig:has(canvas[data-fig="table"]) canvas{height:230px;min-height:10rem;background:var(--panel)}
 .step-section .fig:has(canvas[data-fig="scene"]) canvas{height:min(36vh,18rem)}
 .step-section .fig:has(canvas[data-fig="diagram"]) canvas,
 .step-section .fig:has(canvas[data-fig="diag"]) canvas{height:min(44vh,22rem)}
 .step-section .st-xp{display:none}
-.step-section .fig:has(canvas[data-fig="table"]){display:none}
+.step-section .fig:has(canvas[data-fig="table"]){grid-column:1/-1}
 .step-controls{display:flex;flex-wrap:wrap;align-items:flex-start;gap:.7rem 1.1rem;margin:.15rem 0 .4rem;min-width:0}
 .step-controls .st-ctl{flex:1 1 16rem;display:grid;grid-template-columns:1fr 1fr;gap:.2rem .7rem;min-width:0}
 .step-controls .st-ctl > h4,.step-controls .st-ctl > .st-presets,.step-controls .st-ctl > .actions{grid-column:1/-1}
@@ -622,6 +623,7 @@ html.layout-tabs .tab-body > h2,html.layout-tabs .tab-sec-setup > h2,html.layout
   .step-figs,.step-figs.n-2,.step-figs.n-3,.step-figs.n-4{grid-template-columns:1fr}
   .step-section .pair2{grid-template-columns:1fr}
   .step-section .fig canvas{height:min(48vh,22rem);min-height:12rem}
+  .step-section .fig:has(canvas[data-fig="table"]) canvas{height:230px;min-height:10rem}
   .step-section .fig:has(canvas[data-fig="scene"]) canvas{height:min(32vh,14rem);min-height:9rem}
   .step-head h3{font-size:1.02rem}
   .step-controls .st-ctl{grid-template-columns:1fr}

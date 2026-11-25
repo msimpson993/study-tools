@@ -42,7 +42,7 @@ shock:  Y/T_d = −G₂/(1 + Ka·G₁·G₂)       (the handout prints it withou
 
 ## (c) What's going on
 
-On a phone, or wherever a plot is drawn very small, the plots on each step card start as small tiles that show only the curves, the marks drawn on them (lines, shaded bands, crosses) and tick numbers; on wider screens the tiles also show their readouts, labels and axis names. Tap a plot to open it full size with its readout, labels and axis names. The Look-for lines and the Try-it table quote that full-size view.
+Each step below gives its explanation first, then its plots with their readouts, labels and axis names, then the controls that change them.
 
 1. **The head always lands on the track.**
    - **Why:** the arm's 1/s means any leftover error would keep the arm moving, so the loop can only come to rest at zero error.

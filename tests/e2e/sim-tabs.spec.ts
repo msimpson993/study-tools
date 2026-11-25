@@ -409,6 +409,27 @@ test.describe('sim-project tabbed page', () => {
     await expect(btn).toHaveText(/disk head, Ka = 80/);
   });
 
+
+  test("the tuner's Parameters table sits under the tuner plot, with no button", async ({ page }) => {
+    await page.setViewportSize({ width: 1280, height: 900 });
+    await open(page, 'sim-project', '#/tab/engine');
+    const sec = page.locator('[data-testid=step-section][data-step="3"]');
+    await sec.evaluate((el) => el.scrollIntoView({ block: 'start' }));
+    await expect.poll(async () => sec.locator('canvas[data-fig=step]').count()).toBeGreaterThan(0);
+    const table = sec.locator('.fig:has(canvas[data-fig=table])');
+    await expect(table, 'the full Parameters table should be visible under the tuner plot').toBeVisible();
+    await expect(sec.getByTestId('param-chip')).toHaveCount(0);
+    await expect(sec.getByRole('button', { name: /^Parameters$/ })).toHaveCount(0);
+    const under = await sec.evaluate(() => {
+      const step = document.querySelector('[data-testid=step-section][data-step="3"] canvas[data-fig=step]') as HTMLElement | null;
+      const tab = document.querySelector('[data-testid=step-section][data-step="3"] .fig:has(canvas[data-fig=table])') as HTMLElement | null;
+      if (!step || !tab) return { ok: false };
+      const a = step.getBoundingClientRect(), b = tab.getBoundingClientRect();
+      return { ok: b.top >= a.bottom - 8, stepBottom: a.bottom, tableTop: b.top };
+    });
+    expect(under.ok, `table should sit under the step plot (stepBottom=${under.stepBottom}, tableTop=${under.tableTop})`).toBe(true);
+  });
+
   test('two figures on a desktop step sit abreast, and stack on a phone', async ({ page }) => {
     await page.setViewportSize({ width: 1280, height: 900 });
     await open(page, 'sim-project', '#/tab/engine');

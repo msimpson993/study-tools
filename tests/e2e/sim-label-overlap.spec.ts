@@ -48,19 +48,17 @@ const CURVE_ALLOWLIST: { comment: string; match: (lab: L, at: string) => boolean
 ];
 
 /**
- * Labels the card text, Look-for, or How to read this tells the reader to see.
- * Required on every expanded view, and on labelled tiles (923 and up) except
- * allowTileHide (Disk 5's long pole value). Phone tiles are bare, so
- * required-on-tile is not asserted at 320, 390, or 844×390. Optional extras
- * such as "unstable" stay expand-only.
+ * Labels the step text, Look-for, or How to read this tells the reader to see.
+ * Required on every full-size step figure at all six review viewports. Required
+ * pole values are never hidden, including Disk 5's −0.23+j139.73.
  */
 const REQUIRED: { comment: string; tab: string; step?: string; fig: string; re: RegExp; name: string; expandOnly?: boolean; allowTileHide?: boolean }[] = [
   // figures.yaml howToRead, borer / disk s-plane: "The lightly shaded region labelled 'unstable'"
-  { comment: "Borer s-plane how-to-read: labelled 'unstable'", tab: 'borer', fig: 'splane', re: /unstable/i, name: 'unstable', expandOnly: true },
-  { comment: "Disk s-plane how-to-read: labelled 'unstable'", tab: 'disk', fig: 'splane', re: /unstable/i, name: 'unstable', expandOnly: true },
+  { comment: "Borer s-plane how-to-read: labelled 'unstable'", tab: 'borer', fig: 'splane', re: /unstable/i, name: 'unstable' },
+  { comment: "Disk s-plane how-to-read: labelled 'unstable'", tab: 'disk', fig: 'splane', re: /unstable/i, name: 'unstable' },
   { comment: 'Disk 3 Look-for: pole labelled −9.8 + j17.43', tab: 'disk', step: '3', fig: 'splane', re: /−9\.8\s*\+?\s*j17\.43/, name: '−9.8+j17.43' },
   { comment: 'Disk 3 how-to-read: ray labelled with ζ to 2 s.f.', tab: 'disk', step: '3', fig: 'splane', re: /ζ\s*0\.49/, name: 'ζ 0.49' },
-  { comment: 'Disk 5 Look-for: pole labelled −0.23 + j139.73', tab: 'disk', step: '5', fig: 'splane', re: /−0\.23\s*\+?\s*j139\.73/, name: '−0.23+j139.73', allowTileHide: true },
+  { comment: 'Disk 5 Look-for: pole labelled −0.23 + j139.73', tab: 'disk', step: '5', fig: 'splane', re: /−0\.23\s*\+?\s*j139\.73/, name: '−0.23+j139.73' },
   { comment: 'Borer 1: double pole value −6 (double)', tab: 'borer', step: '1', fig: 'splane', re: /−6\s*\(double\)/, name: '−6 (double)' },
   { comment: 'Borer 1 / 3 how-to-read: ζ = 0.6 rays labelled', tab: 'borer', fig: 'splane', re: /ζ\s*0\.6/, name: 'ζ 0.6' },
   { comment: 'Borer 1 / 3 how-to-read: ζ = 1 ray labelled', tab: 'borer', fig: 'splane', re: /ζ\s*1\b/, name: 'ζ 1' },
@@ -417,18 +415,14 @@ const nearerThanOthers = (log: L[], marks: O[], at: string) => {
 
 const missingRequired = (labels: L[], at: string, tab: string, step: string, fig: string | null, check: boolean) => {
   if (!check) return [];
-  const isTile = fig === null;
   const labs = latest(labels).filter((e) => !e.skipped && e.s.trim() && e.role !== 'tick');
   const out: string[] = [];
   for (const req of REQUIRED) {
     if (req.tab !== tab) continue;
     if (req.step && req.step !== step) continue;
     if (fig !== null && req.fig !== fig) continue;
-    if (req.expandOnly && isTile) continue;
-    if (req.allowTileHide && isTile) continue;
-    // a tile check has fig=null and must find the label on the matching fig's canvas
     const pool = fig !== null ? labs : labs.filter((e) => e.id === req.fig);
-    if (fig === null && !pool.length && !labs.some((e) => e.id === req.fig)) continue; // that fig is not on this tile view
+    if (fig === null && !pool.length && !labs.some((e) => e.id === req.fig)) continue; // that fig is not on this step
     if (!pool.some((e) => req.re.test(e.s))) out.push(`${at}: missing required label “${req.name}” (${req.comment})`);
   }
   return out;
@@ -437,7 +431,6 @@ const missingRequired = (labels: L[], at: string, tab: string, step: string, fig
 /** Font size is never below the 9 px floor (BUG-60). */
 const tooSmall = (log: L[], at: string, tab: string, step: string, fig: string | null) => {
   const out: string[] = [];
-  const isTile = fig === null;
   for (const e of latest(log)) {
     if (e.skipped || !e.s.trim() || e.size === undefined) continue;
     if (e.size >= 9 - 0.01) continue;
@@ -447,8 +440,7 @@ const tooSmall = (log: L[], at: string, tab: string, step: string, fig: string |
       if (req.tab !== tab) return false;
       if (req.step && req.step !== step) return false;
       if (fig !== null && req.fig !== fig) return false;
-      if (isTile && req.fig !== e.id) return false;
-      if (req.expandOnly && isTile) return false;
+      if (fig === null && req.fig !== e.id) return false;
       return req.re.test(e.s);
     });
     if (needed) out.push(`${at} ${e.id || 'canvas'}: “${e.s}” is ${e.size.toFixed(1)} px (min 9)`);

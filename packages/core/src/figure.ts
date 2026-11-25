@@ -141,7 +141,7 @@ export function mountFigure(host: HTMLElement, def: FigureDef, panels0: FigurePa
   const byId = (id: string) => panels.find((p) => p.id === id)!;
 
   for (const p of panels) {
-    const canExpand = allowExpandDefault || p.id === 'table';
+    const canExpand = allowExpandDefault;
     const cv = h('canvas', { 'aria-label': canExpand ? `${p.title}. Tap to expand.` : p.title, dataset: { fig: p.id } });
     const ph = p.height ?? def.height; if (ph) cv.style.height = `${ph}px`;
     canvases.set(p.id, cv);

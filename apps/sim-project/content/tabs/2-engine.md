@@ -53,14 +53,14 @@ G(s) ≈ 311 · 3.42² · e^(−0.015s) / (s² + 6.40s + 11.70)      throttle �
 
 ## (c) What's going on
 
-On a phone, or wherever a plot is drawn very small, the plots on each step card start as small tiles that show only the curves, marker lines, shaded bands and tick numbers; on wider screens the tiles also show their readouts, labels and axis names. The tuner's table is behind the Parameters button. Tap a plot to open it full size with its readout, labels and axis names. The Look-for lines and the Try-it table quote that full-size view.
+Each step below gives its explanation first, then its plots with their readouts, labels and axis names, then the controls that change them.
 
 1. **Why PI and not just P: a speed needs a held push.**
    - **Why:** the engine settles where torque balances drag, so holding a speed needs the throttle held open. P pushes only while there is an error, so with P alone a leftover error has to hold the throttle open.
    - **Number (not in lab handout):** on the stand-in, the initial design's P alone stops 43 % short.
    - **What I adds:** I adds up the error, so it keeps pushing until the error is zero. That is the "zero steady-state error" goal.
    - **Look for:** with **P only (initial P)** set:
-     - the speed levels off at 0.568 instead of 1. The readout (open the plot full size) writes the error as 0.432 = 1/(1 + P·Kₑ), where Kₑ is the engine's steady gain, 311 rpm per unit throttle;
+     - the speed levels off at 0.568 instead of 1. The readout writes the error as 0.432 = 1/(1 + P·Kₑ), where Kₑ is the engine's steady gain, 311 rpm per unit throttle;
      - in the throttle plot the I part stays at zero, so the P part has to hold the throttle open, and only a leftover error can keep it there;
      - click **initial design**: the I part grows until it carries the throttle, and the error is gone.
 
@@ -87,7 +87,7 @@ On a phone, or wherever a plot is drawn very small, the plots on each step card 
    - **The starting point:** at P = I = 1 the loop is *unstable* (its swings grow instead of dying out): phase margin −46.6° and gain margin −19.9 dB, both past the edge (the tuner reports "Closed-loop stability: Undefined").
    - **Readout terms:** OS is the overshoot, Ts the settling time (2 % band), *Tr the rise time*: how long the speed takes to go from 10 % to 90 % of the way to the new target, and *Tp the peak time*: when the overshoot peaks.
    - **Look for:** with **initial (0.678 s, 0.6)** set:
-     - the emulation's step readout (open the step plot full size, or see the Parameters button) shows about 7.4 % overshoot and 1.96 s settling; the handout's table says 7.5 % and 1.96 s;
+     - the emulation's step readout (and the table under the tuner plot) shows about 7.4 % overshoot and 1.96 s settling; the handout's table says 7.5 % and 1.96 s;
      - the *Bode plot* (the loop's gain in dB on top and its phase below, against wiggle rate) has a PM bar reading 60.0° at 2.95 rad/s (handout: 59.9°) and a GM bar reading 25.4 dB.
 
 ```figure:tuner preset=initial panels=step,bode,table
@@ -98,7 +98,7 @@ On a phone, or wherever a plot is drawn very small, the plots on each step card 
    - **The lag budget (not in lab handout):** a 60° margin allows 180° − 60° = 120° of total lag. The engine lags only 21° at 0.645 rad/s, so the controller would have to lag 120° − 21° = 99°.
    - **Why that's impossible:** a PI controller can lag at most 90° (pure I, P = 0). So the tuner returns P = 0, and the margin comes out at 180° − 90° − 21° ≈ 69.4° instead (the handout's table: 69.3°).
    - **Result:** 0.401 % overshoot, but 3.45 s.
-   - **Look for:** with **slower (3.1 s, 0.6)** set, the readout (open the step plot full size) shows P = 0 "(P clamped)" and the step creeps up with almost no overshoot. The PM bar reads 69.4° at about 0.64 rad/s (handout: 69.3° at 0.645), more than the 60° the slider asked for.
+   - **Look for:** with **slower (3.1 s, 0.6)** set, the step plot's readout shows P = 0 "(P clamped)" and the step creeps up with almost no overshoot. The PM bar reads 69.4° at about 0.64 rad/s (handout: 69.3° at 0.645), more than the 60° the slider asked for.
 
 ```figure:tuner preset=slower panels=step,bode
 ```

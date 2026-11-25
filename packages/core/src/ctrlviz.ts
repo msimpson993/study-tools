@@ -1229,8 +1229,8 @@ export function drawSPlane(g: CanvasRenderingContext2D, w: number, h: number, s:
       pick = tryList(byEdge([...poleSpots(z, tw), ...aroundMarker(X, Yp, tw, th, z, preferRight, ANCHOR_GAP, nLines)]), true);
       if (pick) break;
     }
-    // only Disk 5's long pole value may hide on a tile (BUG-55 / 57)
-    const mayHide = tile && /−0\.23.*j139\.73/.test(lab);
+    // required pole values are never hidden at full size; tiles no longer exist
+    const mayHide = false;
     if (!pick && !mayHide) {
       const tw = measure(MIN_FONT), th = nLines === 2 ? MIN_FONT * 2.25 : MIN_FONT + 4;
       const raw = [...poleSpots(MIN_FONT, tw), ...aroundMarker(X, Yp, tw, th, MIN_FONT, preferRight, ANCHOR_GAP, nLines), ...aroundMarker(X, Yp, tw, th, MIN_FONT, preferRight, 14, nLines), ...aroundMarker(X, Yp, tw, th, MIN_FONT, !preferRight, ANCHOR_GAP, nLines)];
@@ -1250,7 +1250,13 @@ export function drawSPlane(g: CanvasRenderingContext2D, w: number, h: number, s:
           dense.push(textBox(X + sx, Yp + sy, tw, th, al, MIN_FONT, nLines));
       pick = tryList(byEdge(dense), false);
     }
-    if (!pick) continue;
+    if (!pick) {
+      // last resort: still write the value beside the mark so it is never silently dropped
+      const tw = measure(MIN_FONT), th = nLines === 2 ? MIN_FONT * 2.25 : MIN_FONT + 4;
+      pick = textBox(X + 10, Yp - 12, tw, th, 'left', MIN_FONT, nLines);
+      const w = globalThis as unknown as { __forcedPoleLabels?: string[] };
+      (w.__forcedPoleLabels ||= []).push(lab);
+    }
     const paint = () => {
       withAnchor({ kind: 'marker', x: X, y: Yp }, () => {
         withLabelRole('axis', () => { text(g, lab, pick!.x, pick!.y, col.b(), pick!.align, pick!.z); });

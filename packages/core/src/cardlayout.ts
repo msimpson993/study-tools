@@ -220,36 +220,8 @@ export function applyCardLayout(art: HTMLElement, content: AppContent, hooks: Fi
       }
     };
     syncPreset();
-    controls.onChange(() => { syncPreset(); placeTableChip(host.closest('.step-section') as HTMLElement); });
+    controls.onChange(() => { syncPreset(); });
     return { stop: typeof stop === 'function' ? stop : () => {}, host, controls, pendingRestore: saved || undefined };
-  };
-
-  const placeTableChip = (secEl: HTMLElement | null) => {
-    if (!secEl) return;
-    const bar = secEl.querySelector('.step-controls') as HTMLElement | null;
-    if (!bar) return;
-    let chip = bar.querySelector<HTMLButtonElement>('.param-chip');
-    const tableFig = [...secEl.querySelectorAll<HTMLElement>('.fig')].find((fig) => {
-      const cv = fig.querySelector('canvas') as HTMLCanvasElement | null;
-      return (cv?.dataset.fig ?? fig.dataset.panel) === 'table';
-    });
-    if (!tableFig) { chip?.remove(); return; }
-    tableFig.hidden = true;
-    const cv = tableFig.querySelector('canvas') as HTMLCanvasElement | null;
-    const summary = cv?.dataset.summary || '';
-    if (!chip) {
-      chip = h('button', { type: 'button', class: 'param-chip', dataset: { testid: 'param-chip' } }) as HTMLButtonElement;
-      chip.addEventListener('click', () => {
-        const xp = tableFig.querySelector<HTMLButtonElement>('.st-xp');
-        if (xp) xp.click();
-        else cv?.click();
-      });
-    }
-    chip.replaceChildren();
-    chip.append(h('b', null, 'Parameters'));
-    if (summary) chip.append(document.createTextNode(`  ${summary}`));
-    chip.append(h('span', { class: 'hint' }, 'View'));
-    if (chip.parentElement !== bar) bar.append(chip);
   };
 
   const placeControls = (step: Step, secEl: HTMLElement) => {
@@ -266,7 +238,6 @@ export function applyCardLayout(art: HTMLElement, content: AppContent, hooks: Fi
         if (play.parentElement !== bar) bar.prepend(play);
       }
     }
-    placeTableChip(secEl);
   };
 
   const paintHow = (secEl: HTMLElement, figs: FigRef[]) => {
@@ -279,7 +250,7 @@ export function applyCardLayout(art: HTMLElement, content: AppContent, hooks: Fi
       const mounted = f.panels?.length
         ? f.panels
         : [...secEl.querySelectorAll<HTMLElement>(`.fig[data-fig-id="${f.id}"]`)].map((el) => el.dataset.panel || '').filter(Boolean);
-      bits.push(...howToReadBlocks(def?.howToRead, mounted.filter((id) => id !== 'table')));
+      bits.push(...howToReadBlocks(def?.howToRead, mounted));
     }
     how.hidden = !bits.length;
     body.innerHTML = bits.map((s) => `<p>${s}</p>`).join('');
