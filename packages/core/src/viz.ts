@@ -677,6 +677,7 @@ export function graphAxes(g: CanvasRenderingContext2D, f: Frame, xr: V2, yr: V2,
       withAnchor({ kind: 'line', x: px, y: f.box.t, x2: px, y2: f.box.b }, () => {
         ok = text(g, lab, px, f.box.b + 9, col.muted(), 'center', 10);
       });
+      // a min-2 fallback still yields to an axis title; never stamp a number on the name
       if (!ok) return false;
       lastX = lab; lastPx = px; xDrawn.push(x); return true;
     };
@@ -684,7 +685,7 @@ export function graphAxes(g: CanvasRenderingContext2D, f: Frame, xr: V2, yr: V2,
       g.strokeStyle = col.grid(); g.beginPath(); g.moveTo(f.X(x), f.box.t); g.lineTo(f.X(x), f.box.b); g.stroke();
       drawXTick(x);
     });
-    withForcedTick(() => {
+    {
       const xInset = (f.box.r - f.box.l) > 8 && f.sx ? 6 / f.sx : 0;
       for (const x of minNiceTicks(xr[0] + xInset, xr[1] - xInset, xDrawn, 2)) if (!xDrawn.some((u) => Math.abs(u - x) < 1e-8)) drawXTick(x, true);
       if (xDrawn.length < 2) {
@@ -694,7 +695,7 @@ export function graphAxes(g: CanvasRenderingContext2D, f: Frame, xr: V2, yr: V2,
           if (!xDrawn.some((u) => Math.abs(u - x) < 1e-8)) drawXTick(x, true);
         }
       }
-    });
+    }
     // one size for every y tick, never below 9 (BUG-61); keep 0 / 1 / 2 on a 0–2 axis, centred on the line (BUG-65)
     const yLabs: { lab: string; y: number; py: number }[] = [];
     forTicks(Math.ceil(yr[0] / sy) * sy, yr[1], sy, (y) => {
@@ -717,23 +718,28 @@ export function graphAxes(g: CanvasRenderingContext2D, f: Frame, xr: V2, yr: V2,
       if (t.lab === lastY && !force) return false;
       if (!force && !keepY(t.lab) && (Math.abs(t.py - lastPy) < 14 || onMark)) return false;
       const inside = f.box.l + 3;
-      const useInside = !tickOnCanvas(g, t.lab, tickX, t.py, ySize, 'right') && tickOnCanvas(g, t.lab, inside, t.py, ySize, 'left');
-      if (!useInside && !tickOnCanvas(g, t.lab, tickX, t.py, ySize, 'right')) return false;
-      const xLab = useInside ? inside : tickX, al: CanvasTextAlign = useInside ? 'left' : 'right';
-      // stay on the tick line (within ~2 px); a required tick is never dropped to dodge a nearby mark
-      let ok = false;
-      const paint = () => {
-        withAnchor({ kind: 'line', x: f.box.l, y: t.py, x2: f.box.r, y2: t.py }, () => {
-          ok = text(g, t.lab, xLab, t.py, col.muted(), al, ySize);
-        });
+      const outerOk = tickOnCanvas(g, t.lab, tickX, t.py, ySize, 'right');
+      const innerOk = tickOnCanvas(g, t.lab, inside, t.py, ySize, 'left');
+      if (!outerOk && !innerOk) return false;
+      const tryPaint = (xLab: number, al: CanvasTextAlign, forced: boolean) => {
+        let ok = false;
+        const paint = () => {
+          withAnchor({ kind: 'line', x: f.box.l, y: t.py, x2: f.box.r, y2: t.py }, () => {
+            ok = text(g, t.lab, xLab, t.py, col.muted(), al, ySize);
+          });
+        };
+        if (forced) withForcedTick(paint); else paint();
+        return ok;
       };
-      paint();
-      if (!ok && force) withForcedTick(paint);
-      if (!ok) return false;
-      lastY = t.lab; lastPy = t.py; yDrawn.push(t.y); return true;
+      // prefer the left pad; if that is off-canvas or sits on an axis name, sit just inside the plot.
+      // never force a pad tick onto a title (linear-systems ROC y-names, etc.).
+      if (outerOk && tryPaint(tickX, 'right', false)) { lastY = t.lab; lastPy = t.py; yDrawn.push(t.y); return true; }
+      if (innerOk && tryPaint(inside, 'left', false)) { lastY = t.lab; lastPy = t.py; yDrawn.push(t.y); return true; }
+      if (force && innerOk && tryPaint(inside, 'left', true)) { lastY = t.lab; lastPy = t.py; yDrawn.push(t.y); return true; }
+      return false;
     };
     for (const t of yLabs) drawYTick(t);
-    withForcedTick(() => {
+    {
       const yInsetG = (f.box.b - f.box.t) > 8 && f.sy ? 6 / f.sy : 0;
       for (const y of minNiceTicks(yr[0] + yInsetG, yr[1] - yInsetG, yDrawn, 2)) {
         if (yDrawn.some((u) => Math.abs(u - y) < 1e-8)) continue;
@@ -748,7 +754,7 @@ export function graphAxes(g: CanvasRenderingContext2D, f: Frame, xr: V2, yr: V2,
           if (lab && !yDrawn.some((u) => Math.abs(u - y) < 1e-8)) drawYTick({ lab, y, py: f.Y(y) }, true);
         }
       }
-    });
+    }
   });
   g.strokeStyle = col.strong();
   if (yr[0] < 0 && yr[1] > 0) { g.beginPath(); g.moveTo(f.box.l, f.Y(0)); g.lineTo(f.box.r, f.Y(0)); g.stroke(); }
