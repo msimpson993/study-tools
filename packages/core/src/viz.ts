@@ -49,45 +49,86 @@ export function fillPlotBehind(g: CanvasRenderingContext2D, x0: number, y0: numb
   g.save(); g.fillStyle = cssVar('--plot-bg'); g.fillRect(a, c, b - a, d - c); g.restore();
 }
 
-/** Prefer a sentence or '; ' cut, then a fitting space, so a caption-named readout stays on short lines (BUG-60 rest). */
+/** Wrap a readout to a measured pixel width (never an estimated character count). Prefer a sentence or '; ' cut, then a greedy word wrap. */
 const wrapReadout = (g: CanvasRenderingContext2D, s: string, room: number, z: number): string[] => {
   g.font = `${z}px system-ui,sans-serif`;
-  const fits = (t: string) => g.measureText(t).width <= room;
-  const cutLine = (t: string): string[] => {
-    if (room <= 8 || fits(t)) return [t];
-    const marks: number[] = [];
-    const sent = t.indexOf('.  ');
-    if (sent > 0) marks.push(sent + 1);
-    const semi = t.indexOf('; ');
-    if (semi > 0) marks.push(semi + 1);
-    const spaces = [...t.matchAll(/ /g)].map((q) => q.index as number);
-    const under = [...marks, ...spaces].filter((i) => i > 0 && fits(t.slice(0, i).trim()));
-    const at = under.length ? under[under.length - 1] : (spaces[0] ?? -1);
-    if (at <= 0) return [t];
-    return [t.slice(0, at).trim(), t.slice(at).replace(/^;\s*/, '').trim()].filter(Boolean);
+  const width = (t: string) => g.measureText(t).width;
+  const fits = (t: string) => width(t) <= room + 0.5;
+  const wrapWords = (t: string): string[] => {
+    const src = t.trim();
+    if (!src || room <= 8 || fits(src)) return src ? [src] : [];
+    const toks = src.split(' ').filter(Boolean);
+    if (toks.length <= 1) return [src];
+    const lines: string[] = [];
+    let cur = '';
+    for (const tok of toks) {
+      const next = cur ? `${cur} ${tok}` : tok;
+      if (cur && !fits(next)) { lines.push(cur); cur = tok; }
+      else cur = next;
+    }
+    if (cur) lines.push(cur);
+    return lines;
   };
+  if (fits(s)) return [s];
+  const parts: string[] = [];
+  let rest = s;
+  while (rest) {
+    const sent = rest.indexOf('.  ');
+    const semi = rest.indexOf('; ');
+    if (sent >= 0 && (semi < 0 || sent <= semi)) {
+      parts.push(rest.slice(0, sent + 1).trim());
+      rest = rest.slice(sent + 1).trim();
+    } else if (semi >= 0) {
+      parts.push(rest.slice(0, semi).trim());
+      rest = rest.slice(semi + 1).trim();
+    } else {
+      parts.push(rest);
+      rest = '';
+    }
+  }
   const out: string[] = [];
-  for (const line of cutLine(s)) out.push(...cutLine(line));
+  for (const p of (parts.length ? parts : [s])) out.push(...wrapWords(p));
   return out.length ? out : [s];
 };
 
-/** Caption-named readout: never shrink below 9 px; wrap if the row will not fit; do not slide into the plot (BUG-60 rest). */
+/** Caption-named readout: never shrink below 9 px; wrap if the row will not fit; do not slide into the plot (BUG-60 rest).
+ *  Wrapped lines use a line height of at least 1.2× the font size and are logged as one block so the lines cannot collide with each other. */
 export function textReadout(g: CanvasRenderingContext2D, s: string, x: number, y: number, color: string, align: CanvasTextAlign = 'left', size = 10, maxW?: number) {
   const z = Math.max(9, size);
-  const m = typeof g.getTransform === 'function' ? g.getTransform() : { a: 1, e: 0, f: 0, d: 1 };
+  const m = typeof g.getTransform === 'function' ? g.getTransform() : { a: 1, b: 0, c: 0, d: 1, e: 0, f: 0 };
   const k = m.a > 0 ? m.a : 1, W = (g.canvas?.width || 400) / k, ox = -(m.e || 0) / k;
-  const room = maxW ?? (align === 'right' ? x - ox - 4 : ox + W - x - 4);
-  const lines = wrapReadout(g, s, room, z);
-  const n = lines.length, gap = z * 1.15;
-  // keep the block on the canvas (and in a header band when one is reserved)
+  const lo = ox + 2, hi = ox + W - 2;
+  const room = maxW ?? (align === 'right' || align === 'end' ? x - lo : hi - x);
+  const lines = wrapReadout(g, s, Math.max(8, room), z);
+  const n = lines.length, gap = z * 1.2;
   let y0 = y - ((n - 1) / 2) * gap;
   const top = y0 - z * 0.55, bot = y0 + (n - 1) * gap + z * 0.55;
-  const oy = -(('f' in m ? m.f : 0) || 0) / (m.d > 0 ? m.d : 1);
+  const oy = -(m.f || 0) / (m.d > 0 ? m.d : 1);
   const H = (g.canvas?.height || 400) / (m.d > 0 ? m.d : 1);
   if (top < oy + 2) y0 += (oy + 2) - top;
   else if (bot > oy + H - 2) y0 -= bot - (oy + H - 2);
   withLabelRole('axis', () => {
-    for (let i = 0; i < n; i++) text(g, lines[i], x, y0 + i * gap, color, align, z, 'middle', 9);
+    // phone / tiny tiles stay bare (same rule as text() for axis labels)
+    if (isThumb(g) && !persistLabels) {
+      const fit = { size: z, x, lines, x0: x, x1: x };
+      logText(g, s, fit, z, x, y, 'middle', null, 0, true);
+      return;
+    }
+    g.font = `${z}px system-ui,sans-serif`;
+    const tw = Math.max(...lines.map((l) => g.measureText(l).width));
+    const a0 = align === 'right' || align === 'end' ? x - tw : align === 'center' ? x - tw / 2 : x;
+    const yTop = y0 - z * 0.55, yBot = y0 + (n - 1) * gap + z * 0.55;
+    const cv = g.canvas as HTMLCanvasElement | undefined;
+    const rect: LabelRect = {
+      x0: m.a * a0 + m.e, x1: m.a * (a0 + tw) + m.e,
+      y0: (m.d > 0 ? m.d : 1) * yTop + m.f, y1: (m.d > 0 ? m.d : 1) * yBot + m.f,
+      role: 'axis',
+    };
+    if (cv) labelsOn(cv).push(rect);
+    g.fillStyle = color; g.textAlign = align; g.textBaseline = 'middle';
+    for (let i = 0; i < n; i++) g.fillText(lines[i], x, y0 + i * gap);
+    const fit = { size: z, x, lines, x0: a0, x1: a0 + tw };
+    logText(g, s, fit, z, x, y0, 'middle', rect, 0, false);
   });
 }
 
