@@ -314,13 +314,13 @@ export function drawStepResponse(g: CanvasRenderingContext2D, w: number, h: numb
         trPick = c; break;
       }
     }
-    if (!trPick) {
+    if (!trPick && !(show.overshoot || show.settling)) {
       const pad = findTopPad(trLab, midX);
       if (pad) {
         paintTopPad(trLab, pad, midX, barY, col.e(), (word, x, y, color, align, z) => { lbl(word, x, y, color, align, z); });
         trBox = { x0: pad.a, x1: pad.b2, y0: pad.c, y1: pad.d };
       }
-    } else {
+    } else if (trPick) {
       trBox = { x0: trPick.a, x1: trPick.b2, y0: trPick.c, y1: trPick.d };
       withAnchor({ kind: 'bar', x: x0Bar, y: barY, x2: x1Bar, y2: barY }, () => {
         withLabelRole('axis', () => { lbl(trLab, trPick!.x, trPick!.y, col.e(), trPick!.align, trPick!.z); });
@@ -538,6 +538,10 @@ export function drawStepResponse(g: CanvasRenderingContext2D, w: number, h: numb
         // do not park on the tick row just to keep a label; the top pad is the last resort (BUG-76 / 77)
       }
       if (tsPick && closerToTickBox(tsPick.a, tsPick.b2, tsPick.c, tsPick.d, lineX, yLo, yHi)) tsPick = null;
+      if (tsPick && tile && h < 220) {
+        const padPref = findTopPad(tsLab, lineX);
+        if (padPref) tsPick = null;
+      }
       if (!tsPick) {
         // guaranteed last-resort slot in the top pad, with a leader to the Ts mark (BUG-76)
         let pad = findTopPad(tsLab, lineX);
