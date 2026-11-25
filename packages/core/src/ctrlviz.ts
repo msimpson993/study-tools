@@ -924,7 +924,7 @@ export function drawSPlane(g: CanvasRenderingContext2D, w: number, h: number, s:
         const rawEdge = edgeDist(c, X, Yp);
         const grownEdge = edgeDist(inflateBox(c), X, Yp);
         // crosses are logged at r = 7; the local e2e grows the box like inflateBox. Stay ≤ 16 from the raw box (BUG-64).
-        if (rawEdge > 16 || grownEdge < 7) continue;
+        if (rawEdge > 16 || grownEdge < 8) continue;
         if (c.a < 1 || c.b2 > vw - 1 || c.c < 1 || c.d > vh - 1) continue;
         if (!staysLHP(c) || !nearerPole(c)) continue;
         if (inflate && (onSigma(I.a, I.b2, I.c, I.d) || onJw(I.a, I.b2, I.c, I.d))) continue;
@@ -932,6 +932,7 @@ export function drawSPlane(g: CanvasRenderingContext2D, w: number, h: number, s:
         {
           const G = inflateBox(c);
           if (hitsOtherMark(X, Yp, G.a, G.b2, G.c, G.d)) continue;
+          if (cv && labelsOn(cv).some((r) => r && G.b2 > r.x0 && G.a < r.x1 && G.d > r.y0 && G.c < r.y1)) continue;
         }
         if (tightRay ? rayHitsBox(c) : onRay(c.a, c.b2, c.c, c.d)) continue;
         return c;
