@@ -5,7 +5,8 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 /**
- * Geometry snapshot for every Simulation Project tile and expanded view at the 6 review viewports.
+ * Geometry snapshot for every Simulation Project full-size step figure at the 6 review viewports,
+ * plus every Control Systems and Linear Systems figure at the same sizes.
  * Records the plot-area rect, tick count and font size per axis, and the set of drawn label names
  * with font sizes. Compared to a committed baseline with tolerances: ±3 px rects, exact label sets
  * tick counts (±2), and font sizes (±2 px). Plot rects allow ±16 px: GitHub runner fonts still
@@ -145,8 +146,8 @@ async function waitStep(page: Page, sec: ReturnType<Page['locator']>) {
   await page.waitForTimeout(200);
 }
 
-test('sim-project geometry snapshot at the 6 review viewports', async ({ page }) => {
-  test.setTimeout(420_000);
+test('sim-project, control-systems and linear-systems geometry snapshot at the 6 review viewports', async ({ page }) => {
+  test.setTimeout(1_080_000);
   await page.addInitScript(() => {
     (window as any).__textLog = []; (window as any).__textCanvases = [];
     (window as any).__curveLog = []; (window as any).__obstacleLog = []; (window as any).__plotLog = [];
@@ -170,6 +171,32 @@ test('sim-project geometry snapshot at the 6 review viewports', async ({ page })
         const plots = taken.plots.filter((e) => e.where === 'page' && e.step === step);
         for (const id of idsOf(labs, plots)) {
           shot[`${tab}/step${step}/${id}/page@${vp.label}`] = snapOf(labs, plots, id);
+        }
+      }
+    }
+  }
+  const figIds: Record<string, string[]> = {};
+  for (const { app, prefix } of [{ app: 'control-systems', prefix: 'cs' }, { app: 'linear-systems', prefix: 'ls' }] as const) {
+    await open(page, app);
+    await page.waitForTimeout(400);
+    figIds[app] = await page.evaluate(() => ((window as any).__study?.content?.figures ?? []).map((f: { id: string }) => f.id));
+  }
+  for (const vp of VIEWPORTS) {
+    await page.setViewportSize({ width: vp.w, height: vp.h });
+    for (const { app, prefix } of [{ app: 'control-systems', prefix: 'cs' }, { app: 'linear-systems', prefix: 'ls' }] as const) {
+      for (const fid of figIds[app] ?? []) {
+        await open(page, app, `#/figure/${fid}`);
+        await page.waitForTimeout(350);
+        try { await page.getByTestId('reset').click({ timeout: 700 }); } catch { /* some figures have no reset */ }
+        await expect.poll(async () => page.locator('canvas').count(), { timeout: 12_000 }).toBeGreaterThan(0);
+        await start(page);
+        await redraw(page);
+        await page.waitForTimeout(250);
+        const taken = await take(page);
+        const labs = taken.labels.filter((e) => e.where !== 'tile');
+        const plots = taken.plots.filter((e) => e.where !== 'tile');
+        for (const id of idsOf(labs, plots)) {
+          shot[`${prefix}/${fid}/${id}@${vp.label}`] = snapOf(labs, plots, id);
         }
       }
     }
