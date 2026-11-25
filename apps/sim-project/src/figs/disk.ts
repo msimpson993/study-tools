@@ -76,7 +76,8 @@ export const diskPanels = (): FigurePanel[] => [
       const arm = poles.filter((p) => p !== coil);
       const imMax = Math.max(8, ...arm.map((p) => Math.abs(p.im)));
       const reExt = Math.max(8, ...arm.map((p) => Math.abs(p.re)));
-      const range = Math.max(18, imMax * 1.25, reExt * 1.15);
+      // zoom the arm-pole window (Disk 3) a little; keep the wide Disk 5 window so a near-jω pole does not sit on the axis name
+      const range = imMax > 40 ? Math.max(20, imMax * 1.4, reExt * 1.25) : Math.max(18, imMax * 1.25, reExt * 1.15);
       const zetaOf = (p: { re: number; im: number }) => { const wn = Math.hypot(p.re, p.im); return wn > 1e-9 ? Math.abs(p.re) / wn : 1; };
       const armZ = arm.filter((p) => Math.abs(p.im) > 0.5).map((p) => zetaOf(p));
       const rays = [...new Set(armZ.map((z) => Math.abs(z) < 0.005 ? null : Number(z.toPrecision(2))).filter((z): z is number => z != null))];
