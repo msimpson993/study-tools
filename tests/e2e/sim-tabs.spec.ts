@@ -113,7 +113,7 @@ test.describe('sim-project tabbed page', () => {
         await page.waitForTimeout(300);
         const info = await page.evaluate(() => {
           const figs = [...document.querySelectorAll<HTMLElement>('[data-testid=viz] .fig, [data-testid=viz] .fig-stage')]
-            .filter((el) => !el.closest('.step-host-bin, .step-host-parked') && el.getBoundingClientRect().height > 8);
+            .filter((el) => !el.closest('.step-section, .step-host-bin, .step-host-parked') && el.getBoundingClientRect().height > 8);
           const narrow = figs.map((el) => ({ w: Math.round(el.getBoundingClientRect().width), t: (el.querySelector('h4')?.textContent ?? el.className).slice(0, 60) })).filter((x) => x.w > 0 && x.w < 200);
           const sideBySide = [...document.querySelectorAll<HTMLElement>('.pop-figs.n2, .pop-figs.n3, .pop-figs.n4')].some((el) => {
             const cs = getComputedStyle(el);
