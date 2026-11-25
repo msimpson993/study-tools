@@ -268,6 +268,52 @@ export function drawStepResponse(g: CanvasRenderingContext2D, w: number, h: numb
       if (word.includes('\n')) withTextSplit('\n', () => { lbl(word, x, y, color, align, z); });
       else lbl(word, x, y, color, align, z);
     };
+    const findOsPad = (): { word: string; c: TextBox } | null => {
+      const padTop = 2, padBot = f.box.t - 2;
+      if (padBot - padTop < MIN_FONT) return null;
+      for (const item of [osStack, osShort]) {
+        const nLines = item.includes('\n') ? 2 : 1;
+        g.font = `${MIN_FONT}px system-ui,sans-serif`;
+        const parts = item.split('\n'), tw = Math.max(...parts.map((l) => g.measureText(l).width)), th = MIN_FONT + 3;
+        const half = ((nLines - 1) / 2) * MIN_FONT * 1.15 + MIN_FONT * 0.55;
+        if (padBot - padTop < 2 * half) continue;
+        const ySit = padBot - half;
+        const cands: TextBox[] = [];
+        for (const [x, al] of [
+          [peakX, 'center'], [peakX, 'left'], [peakX, 'right'],
+          [peakX + tw * 0.45, 'center'], [peakX - tw * 0.45, 'center'],
+          [peakX + tw * 0.9, 'center'], [peakX - tw * 0.9, 'center'],
+          [peakX + tw * 1.2, 'left'], [peakX - tw * 1.2, 'right'],
+        ] as [number, CanvasTextAlign][]) cands.push(textBox(x, ySit, tw, th, al, MIN_FONT, nLines));
+        const hit = cands.find((c) => c.d <= f.box.t + 1 && osFits(c.a, c.b2, c.c, c.d) && !ghostWouldHit(c.a, c.b2, c.c, c.d));
+        if (hit) return { word: item, c: hit };
+      }
+      return null;
+    };
+    const paintOsPad = (word: string, c: TextBox) => {
+      const lx = Math.max(c.a + 3, Math.min(c.b2 - 3, peakX));
+      const ly = c.d + 0.5;
+      const gap = 6, dx = peakX - lx, dy = peakY - ly, len = Math.hypot(dx, dy) || 1;
+      g.save();
+      g.strokeStyle = col.b(); g.lineWidth = 1; g.setLineDash([]);
+      g.beginPath(); g.moveTo(lx, ly); g.lineTo(peakX - (dx / len) * gap, peakY - (dy / len) * gap); g.stroke();
+      g.restore();
+      withAnchor({ kind: 'line', x: lx, y: ly, x2: peakX, y2: peakY }, () => {
+        withLabelRole('axis', () => { paintOs(word, c.x, c.y, col.b(), c.align, MIN_FONT); });
+      });
+      osBox = { x0: c.a, x1: c.b2, y: c.y };
+    };
+    // When Ts is closer to the peak than a stacked OS/Tp is wide, the in-plot
+    // window is not robust under CI fonts. Park the label in the top pad first
+    // and drop a leader to the peak.
+    g.font = `${MIN_FONT}px system-ui,sans-serif`;
+    const stackW = Math.max(...osStack.split('\n').map((l) => g.measureText(l).width));
+    const tsX = (show.settling && Number.isFinite(m.settlingTime)) ? f.X(m.settlingTime) : null;
+    const tightGap = tsX !== null && Math.abs(tsX - peakX) < stackW;
+    if (!tile && tightGap) {
+      const pad = findOsPad();
+      if (pad) paintOsPad(pad.word, pad.c);
+    }
     const tryOs = (ignoreGhost: boolean) => {
       g.font = '10.5px system-ui,sans-serif';
       const fullWide = ((g.measureText(osFull).width * 0.09 + 2) / 2) > 3;
@@ -290,10 +336,7 @@ export function drawStepResponse(g: CanvasRenderingContext2D, w: number, h: numb
             if (I.c < yRef + 10 && I.d > yRef - 10) continue;
             const hitsV = (tx: number) => tx > I.a - 2 && tx < I.b2 + 2 && I.d > Math.min(peakY, f.Y(yr[0])) - 2 && I.c < Math.max(peakY, f.box.b) + 2;
             if (show.timing && (hitsV(f.X(m.t10)) || hitsV(f.X(m.t90)))) continue;
-            // Ts is drawn after OS and already stops under the overshoot label, so do not
-            // let that still-to-be-cut stroke block the only room beside a close peak.
-            const settleX = (show.settling && Number.isFinite(m.settlingTime)) ? [f.X(m.settlingTime)] : [];
-            if (hitsOtherVert(I.a, I.b2, I.c, I.d, [peakX, ...settleX])) continue;
+            if (hitsOtherVert(I.a, I.b2, I.c, I.d, [peakX])) continue;
             if (hitsCurve(c.a, c.b2, c.c, c.d)) continue;
             return { word, c };
           }
@@ -301,15 +344,15 @@ export function drawStepResponse(g: CanvasRenderingContext2D, w: number, h: numb
       }
       return null;
     };
-    let osHit = tryOs(false);
-    if (!osHit && s.ghost?.label) { dropGhost = true; ghostBox = null; osHit = tryOs(true); }
+    let osHit = osBox ? null : tryOs(false);
+    if (!osHit && !osBox && s.ghost?.label) { dropGhost = true; ghostBox = null; osHit = tryOs(true); }
     if (osHit) {
       const { word, c } = osHit;
       withAnchor({ kind: 'marker', x: peakX, y: peakY }, () => {
         withLabelRole('axis', () => { paintOs(word, c.x, c.y, col.b(), c.align, c.z); });
       });
       osBox = { x0: c.a, x1: c.b2, y: c.y };
-    } else {
+    } else if (!osBox) {
       // required OS/Tp stays next to the peak; never park it on the curve or on another marker/ref line
       let c: TextBox | null = null;
       let word = osShort;
@@ -319,8 +362,7 @@ export function drawStepResponse(g: CanvasRenderingContext2D, w: number, h: numb
         const cx = Math.max(I.a, Math.min(peakX, I.b2)), cy = Math.max(I.c, Math.min(peakY, I.d));
         if (Math.hypot(cx - peakX, cy - peakY) < 8) return false;
         if (I.c < yRef + 10 && I.d > yRef - 10) return false;
-        const settleX = (show.settling && Number.isFinite(m.settlingTime)) ? [f.X(m.settlingTime)] : [];
-        if (hitsOtherVert(I.a, I.b2, I.c, I.d, [peakX, ...settleX])) return false;
+        if (hitsOtherVert(I.a, I.b2, I.c, I.d, [peakX])) return false;
         if (hitsCurve(cand.a, cand.b2, cand.c, cand.d)) return false;
         return true;
       };
@@ -341,6 +383,11 @@ export function drawStepResponse(g: CanvasRenderingContext2D, w: number, h: numb
         });
         osBox = { x0: c.a, x1: c.b2, y: c.y };
       }
+    }
+    if (!osBox && !tile) {
+      let pad = findOsPad();
+      if (!pad && s.ghost?.label) { dropGhost = true; ghostBox = null; pad = findOsPad(); }
+      if (pad) paintOsPad(pad.word, pad.c);
     }
   }
   // assignments to osBox / trBox inside the branches above stay narrow for CFA
