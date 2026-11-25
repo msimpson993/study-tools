@@ -771,6 +771,21 @@ export function graphAxes(g: CanvasRenderingContext2D, f: Frame, xr: V2, yr: V2,
         if (xDrawn.length >= 2 && Math.abs(x) > 1e-9) continue;
         drawXTick(x, true);
       }
+      if (xDrawn.length < 2) {
+        const far = Math.abs(xr[1] - (xDrawn[0] ?? xr[0])) >= Math.abs((xDrawn[0] ?? xr[1]) - xr[0]) ? xr[1] : xr[0];
+        const lab = xfmt ? xfmt(far) : tickLabelFine(far, sx);
+        if (lab && !xDrawn.some((u) => Math.abs(u - far) < 1e-8)) {
+          const al: CanvasTextAlign = f.X(far) > (f.box.l + f.box.r) / 2 ? 'right' : 'left';
+          const px = al === 'right' ? Math.min(f.X(far), (g.canvas.width || 0) - 2) : Math.max(f.X(far), 2);
+          if (Math.abs(px - lastPx) >= 16 && tickOnCanvas(g, lab, px, f.box.b + 9, 10, al)) {
+            let ok = false;
+            withAnchor({ kind: 'line', x: f.X(far), y: f.box.t, x2: f.X(far), y2: f.box.b }, () => {
+              ok = text(g, lab, px, f.box.b + 9, col.muted(), al, 10);
+            });
+            if (ok) { lastX = lab; lastPx = px; xDrawn.push(far); }
+          }
+        }
+      }
     }
     // one size for every y tick, never below 9 (BUG-61); keep 0 / 1 / 2 on a 0–2 axis, centred on the line (BUG-65)
     const yLabs: { lab: string; y: number; py: number }[] = [];
@@ -847,6 +862,18 @@ export function graphAxes(g: CanvasRenderingContext2D, f: Frame, xr: V2, yr: V2,
         if (yDrawn.length >= 2 && Math.abs(y) > 1e-9) continue;
         const lab = yfmt ? yfmt(y) : tickLabelFine(y, sy);
         if (lab) drawYTick({ lab, y, py: f.Y(y) }, true);
+      }
+      if (yDrawn.length < 2) {
+        const already = yDrawn[0] ?? yr[0];
+        const far = Math.abs(yr[1] - already) >= Math.abs(already - yr[0]) ? yr[1] : yr[0];
+        const lab = yfmt ? yfmt(far) : tickLabelFine(far, sy);
+        if (lab && !yDrawn.some((u) => Math.abs(u - far) < 1e-8)) {
+          const pys = [f.Y(far), f.box.t + 16, (f.box.t + f.box.b) / 2, f.Y(far) + 12, f.Y(far) + 20];
+          for (const py of pys) {
+            if (py < f.box.t + 4 || py > f.box.b - 12 || Math.abs(py - lastPy) < 14) continue;
+            if (drawYTick({ lab, y: far, py }, true)) break;
+          }
+        }
       }
     }
   });

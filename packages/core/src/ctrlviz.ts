@@ -181,18 +181,33 @@ export function drawStepResponse(g: CanvasRenderingContext2D, w: number, h: numb
     const parts = word.split('\n'), tw = Math.max(...parts.map((l) => g.measureText(l).width)), th = MIN_FONT + 3;
     const half = ((nLines - 1) / 2) * MIN_FONT * 1.15 + MIN_FONT * 0.55;
     const padTop = 2, padBot = f.box.t - 2;
-    let ySit = padBot - half;
-    if (padBot - padTop < 2 * half) ySit = padTop + half;
-    if (ySit - half < 1 || ySit + half > f.h - 1) return null;
-    const cands: TextBox[] = [];
-    for (const [x, al] of [
+    const sits: number[] = [];
+    const yDefault = padBot - half;
+    if (yDefault - half >= 1) sits.push(yDefault);
+    const yTop = padTop + half;
+    if (Math.abs(yTop - yDefault) > 1 && yTop + half < f.h - 1) sits.push(yTop);
+    if (!sits.length && yTop - half >= 1) sits.push(yTop);
+    const xals: [number, CanvasTextAlign][] = [
       [markX, 'center'], [markX, 'left'], [markX, 'right'],
       [markX + tw * 0.45, 'center'], [markX - tw * 0.45, 'center'],
       [markX + tw * 0.9, 'center'], [markX - tw * 0.9, 'center'],
       [markX + tw * 1.2, 'left'], [markX - tw * 1.2, 'right'],
       [f.box.l + tw / 2 + 8, 'left'], [f.box.r - tw / 2 - 8, 'right'],
-    ] as [number, CanvasTextAlign][]) cands.push(textBox(x, ySit, tw, th, al, MIN_FONT, nLines));
-    return cands.find((c) => osFits(c.a, c.b2, c.c, c.d) && !ghostWouldHit(c.a, c.b2, c.c, c.d)) ?? null;
+      [(f.box.l + f.box.r) / 2, 'center'],
+    ];
+    const ok = (c: TextBox, ignoreGhost: boolean) => c.d <= f.box.t + 1 && osFits(c.a, c.b2, c.c, c.d) && (ignoreGhost || !ghostWouldHit(c.a, c.b2, c.c, c.d));
+    for (const ignoreGhost of [false, true]) {
+      for (const ySit of sits) {
+        const cands: TextBox[] = [];
+        for (const [x, al] of xals) cands.push(textBox(x, ySit, tw, th, al, MIN_FONT, nLines));
+        const hit = cands.find((c) => ok(c, ignoreGhost));
+        if (hit) {
+          if (ignoreGhost) { dropGhost = true; ghostBox = null; }
+          return hit;
+        }
+      }
+    }
+    return null;
   };
   const paintTopPad = (word: string, c: TextBox, markX: number, markY: number, color: string, paint: (word: string, x: number, y: number, color: string, align: CanvasTextAlign, z: number) => void) => {
     const lx = Math.max(c.a + 3, Math.min(c.b2 - 3, markX));
