@@ -857,6 +857,7 @@ export function drawSPlane(g: CanvasRenderingContext2D, w: number, h: number, s:
   });
   const tile = isTileCanvas(g);
   endClip(g);
+  for (const zn of zetaNames) zn();
   for (const { p, lab } of labelled) {
     const X = f.X(p.re), Yp = f.Y(p.im);
     if (X < f.box.l - 6 || X > f.box.r + 6 || Yp < f.box.t - 6 || Yp > f.box.b + 6) continue;
@@ -978,7 +979,6 @@ export function drawSPlane(g: CanvasRenderingContext2D, w: number, h: number, s:
     if (stack) withTextSplit(' (', paint); else paint();
     taken.push({ x0: pick.a, x1: pick.b2, y0: pick.c, y1: pick.d });
   }
-  for (const zn of zetaNames) zn();
   // unanchored "unstable": in the shade if a free spot remains; drop it on a tile rather than move a pole value
   if (s.shadeUnstable !== false && !isThumb(g)) {
     const shadeL = Math.max(x0, f.box.l), shadeR = f.box.r, word = 'unstable';
