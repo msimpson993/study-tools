@@ -871,18 +871,19 @@ export function drawSPlane(g: CanvasRenderingContext2D, w: number, h: number, s:
     const poleSpots = (sz: number, tw0: number): TextBox[] => {
       const out: TextBox[] = [];
       const th0 = nLines === 2 ? sz * 2.25 : sz + 4;
-      for (const gap of [12, 14, 16, 20, 24, 10, 28]) {
-        const lift = gap + (nLines === 2 ? sz * 1.15 : sz * 0.55);
+      const half = ((nLines - 1) / 2) * sz * 1.15 + sz * 0.55;
+      // gap is the intended edge clearance from the × (8–14 keeps it off the mark and within the 16 px cap)
+      for (const gap of [8, 10, 12, 14]) {
+        const lift = half + gap;
         for (const al of (['center', 'right', 'left'] as CanvasTextAlign[])) {
           out.push(textBox(X, Yp - lift, tw0, th0, al, sz, nLines));
           out.push(textBox(X, Yp + lift, tw0, th0, al, sz, nLines));
         }
-        // keep the box centre near the × so a wide value is not read as the neighbour (BUG-64)
-        out.push(textBox(X, Yp - gap, tw0, th0, 'center', sz, nLines));
-        out.push(textBox(X, Yp + gap, tw0, th0, 'center', sz, nLines));
+        out.push(textBox(X - (tw0 / 2 + gap), Yp, tw0, th0, 'center', sz, nLines));
+        out.push(textBox(X + (tw0 / 2 + gap), Yp, tw0, th0, 'center', sz, nLines));
         out.push(textBox(X - gap, Yp, tw0, th0, 'right', sz, nLines));
         out.push(textBox(X + gap, Yp, tw0, th0, 'left', sz, nLines));
-        const q = gap * 0.72;
+        const q = (half + gap) * 0.72;
         out.push(textBox(X - q, Yp - q, tw0, th0, 'right', sz, nLines));
         out.push(textBox(X + q, Yp - q, tw0, th0, 'left', sz, nLines));
         out.push(textBox(X - q, Yp + q, tw0, th0, 'right', sz, nLines));
@@ -893,6 +894,8 @@ export function drawSPlane(g: CanvasRenderingContext2D, w: number, h: number, s:
     const tryList = (ranked: TextBox[], inflate: boolean): TextBox | null => {
       for (const c of ranked) {
         const I = inflate ? inflateBox(c) : c;
+        const edge = edgeDist(c, X, Yp);
+        if (edge < 8 || edge > 16) continue; // off the ×, but still read as its label (BUG-64)
         if (c.a < 1 || c.b2 > vw - 1 || c.c < 1 || c.d > vh - 1) continue;
         if (!staysLHP(c) || !nearerPole(c)) continue;
         if (inflate && (onSigma(I.a, I.b2, I.c, I.d) || onJw(I.a, I.b2, I.c, I.d))) continue;
