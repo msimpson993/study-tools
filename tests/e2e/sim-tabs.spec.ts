@@ -542,6 +542,8 @@ test.describe('sim-project tabbed page', () => {
 
 
   test('setup and Block-this-line diagrams fit their container with no sideways scroll (BUG-90, BUG-92)', async ({ page }) => {
+    // 5 widths × 7 page loads; 45 s is tight once other workers are busy (36 s alone).
+    test.setTimeout(120_000);
     await page.addInitScript(() => { (window as any).__textLog = []; (window as any).__textCanvases = []; });
     const widths = [320, 390, 923, 1280, 1920] as const;
     const needed: Record<string, { out: RegExp; disturb: RegExp; blocks: RegExp[] }> = {
