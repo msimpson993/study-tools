@@ -958,6 +958,14 @@ export function drawSPlane(g: CanvasRenderingContext2D, w: number, h: number, s:
       });
       pick = tryList(raw, true) ?? tryList(raw, false) ?? tryList(raw, false, true);
     }
+    if (!pick && !mayHide && stack) {
+      const tw = measure(MIN_FONT), th = MIN_FONT * 2.25;
+      const dense: TextBox[] = [];
+      for (let sx = -20; sx <= 8; sx++) for (let sy of [-22, -21, -20, -19, -18, -17, -16, 16, 17, 18, 19, 20, 21, 22])
+        for (const al of (['center', 'left', 'right'] as CanvasTextAlign[]))
+          dense.push(textBox(X + sx, Yp + sy, tw, th, al, MIN_FONT, nLines));
+      pick = tryList(byEdge(dense), false, true);
+    }
     if (!pick) continue;
     const paint = () => {
       withAnchor({ kind: 'marker', x: X, y: Yp }, () => {
