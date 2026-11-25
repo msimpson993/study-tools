@@ -2,14 +2,12 @@ import { test, expect, type Page } from '@playwright/test';
 import { open } from './helpers';
 
 /**
- * Every Simulation Project step-card tile and its expanded view, at the sizes the reviews use:
+ * Every Simulation Project full-size step figure, at the sizes the reviews use:
  * drawn text boxes (from core text()'s __textLog) must not overlap each other, must stay inside
  * their clip (the plot box when clipped, otherwise the canvas), must not sit on a drawn curve
  * (__curveLog), and must not overlap drawn markers, dashed or target lines, or inset frames
- * (__obstacleLog). Required labels named in the card text / Look-for / How to read this must be
- * present in every expanded view, and on labelled tiles (923 and up) except the
- * one allowed Disk 5 hide. Phone tiles (320, 390, 844×390) are bare, so
- * required-on-tile is not asserted there.
+ * (__obstacleLog). Required labels named in the step text / Look-for / How to read this must be
+ * present at every viewport (figures are always full-size) except the one allowed Disk 5 hide.
  * Font size stays at least 9 px. Tick numbers on an axis are one size, ≥ 9 px, and sit on their line.
  * Anchored labels must stay near their mark and be ≥ 4 px closer to it than to any other marker or ray.
  * "unstable" must not appear in an all-stable inset.
@@ -86,9 +84,9 @@ const REQUIRED: { comment: string; tab: string; step?: string; fig: string; re: 
 
 const TABS = ['engine', 'motor', 'borer', 'disk'] as const;
 const VIEWPORTS = [
-  { w: 320, h: 700, label: '320', labelled: false },
-  { w: 390, h: 844, label: '390', labelled: false },
-  { w: 844, h: 390, label: '844x390', labelled: false },
+  { w: 320, h: 700, label: '320', labelled: true },
+  { w: 390, h: 844, label: '390', labelled: true },
+  { w: 844, h: 390, label: '844x390', labelled: true },
   { w: 923, h: 1300, label: '923', labelled: true },
   { w: 1280, h: 900, label: '1280', labelled: true },
   { w: 1920, h: 1080, label: '1920', labelled: true },
@@ -552,14 +550,14 @@ const headerTwoLines = (log: L[], at: string) => {
   return out;
 };
 
-async function waitTiles(page: Page, card: ReturnType<Page['locator']>) {
-  await card.evaluate((el) => el.scrollIntoView({ block: 'start' }));
-  await expect.poll(async () => card.locator('.step-thumbs canvas[data-fig], .tile-frame canvas[data-fig]').count(), { timeout: 12_000 }).toBeGreaterThan(0);
+async function waitStep(page: Page, sec: ReturnType<Page['locator']>) {
+  await sec.evaluate((el) => el.scrollIntoView({ block: 'start' }));
+  await expect.poll(async () => sec.locator('.step-figs canvas[data-fig], .step-host canvas[data-fig]').count(), { timeout: 12_000 }).toBeGreaterThan(0);
   await page.waitForTimeout(200);
 }
 
 for (const vp of VIEWPORTS) {
-  test(`sim-project @${vp.label}: step-card tiles and expanded views keep labels apart, on the clip, off curves and markers, near their anchors, complete, and at least 9 px`, async ({ page }) => {
+  test(`sim-project @${vp.label}: full-size step figures keep labels apart, on the clip, off curves and markers, near their anchors, complete, and at least 9 px`, async ({ page }) => {
     test.setTimeout(420_000);
     await page.addInitScript(() => { (window as any).__textLog = []; (window as any).__textCanvases = []; (window as any).__curveLog = []; (window as any).__obstacleLog = []; (window as any).__plotLog = []; });
     await page.setViewportSize({ width: vp.w, height: vp.h });
@@ -568,58 +566,27 @@ for (const vp of VIEWPORTS) {
     for (const tab of TABS) {
       await open(page, 'sim-project', `#/tab/${tab}`);
       await page.waitForTimeout(300);
-      const n = await page.locator('[data-testid=step-card]').count();
+      const n = await page.locator('[data-testid=step-section]').count();
       for (let i = 0; i < n; i++) {
-        const card = page.locator('[data-testid=step-card]').nth(i);
-        const step = (await card.getAttribute('data-step')) ?? String(i + 1);
-        await waitTiles(page, card);
+        const sec = page.locator('[data-testid=step-section]').nth(i);
+        const step = (await sec.getAttribute('data-step')) ?? String(i + 1);
+        await waitStep(page, sec);
         await start(page);
         await redraw(page);
         await page.waitForTimeout(250);
-        const takenTiles = await take(page);
-        const tiles = takenTiles.labels.filter((e) => e.where === 'tile' && e.step === step);
-        const tileCurves = takenTiles.curves.filter((e) => e.where === 'tile' && e.step === step);
-        const tileObs = takenTiles.obstacles.filter((e) => e.where === 'tile' && e.step === step);
-        seen += tiles.length;
-        const atTile = `${tab} step ${step} tile @${vp.label}`;
-        const tilePlots = takenTiles.plots.filter((e) => e.where === 'tile' && e.step === step);
-        bad.push(...collisions(tiles, atTile), ...tickCollisions(tiles, atTile), ...clipped(tiles, atTile), ...onCurve(tiles, tileCurves, atTile), ...onObstacle(tiles, tileObs, atTile), ...farFromAnchor(tiles, atTile));
-        bad.push(...tooSmall(tiles, atTile, tab, step, null), ...unstableInInset(tiles, tileObs, atTile));
-        bad.push(...missingRequired(tiles, atTile, tab, step, null, vp.labelled));
-        bad.push(...tickSizeMix(tiles, atTile), ...tickAlign(tiles, atTile), ...nearerThanOthers(tiles, tileObs, atTile));
-        bad.push(...minTicks(tiles, tilePlots, atTile), ...plotAreaFraction(tilePlots, atTile));
-        if (!vp.labelled) bad.push(...bareAxisNames(tiles, atTile));
-        else bad.push(...headerTwoLines(tiles, atTile));
-
-        const thumbs = card.locator('.step-thumbs canvas[data-fig]');
-        const tcount = await thumbs.count();
-        for (let k = 0; k < tcount; k++) {
-          const thumb = thumbs.nth(k);
-          if (!(await thumb.isVisible().catch(() => false))) continue;
-          const fig = (await thumb.getAttribute('data-fig')) ?? String(k);
-          await thumb.click();
-          const overlay = card.getByTestId('fig-overlay').locator('visible=true');
-          await expect(overlay).toHaveCount(1, { timeout: 8_000 });
-          await expect(overlay.locator('canvas[data-big]')).toBeVisible();
-          await page.waitForTimeout(200);
-          await start(page);
-          await redraw(page);
-          await page.waitForTimeout(250);
-          const takenExp = await take(page);
-          const exp = takenExp.labels.filter((e) => e.where === 'expand');
-          const expCurves = takenExp.curves.filter((e) => e.where === 'expand');
-          const expObs = takenExp.obstacles.filter((e) => e.where === 'expand');
-          seen += exp.length;
-          const atExp = `${tab} step ${step} expand ${fig} @${vp.label}`;
-          const expPlots = takenExp.plots.filter((e) => e.where === 'expand');
-          bad.push(...collisions(exp, atExp), ...tickCollisions(exp, atExp), ...clipped(exp, atExp), ...onCurve(exp, expCurves, atExp), ...onObstacle(exp, expObs, atExp), ...farFromAnchor(exp, atExp));
-          bad.push(...tooSmall(exp, atExp, tab, step, fig), ...unstableInInset(exp, expObs, atExp));
-          bad.push(...missingRequired(exp, atExp, tab, step, fig, true));
-          bad.push(...tickSizeMix(exp, atExp), ...tickAlign(exp, atExp), ...nearerThanOthers(exp, expObs, atExp));
-          bad.push(...minTicks(exp, expPlots, atExp));
-          await overlay.locator('[data-testid=fig-close]').click();
-          await expect(overlay).toHaveCount(0, { timeout: 8_000 });
-        }
+        const taken = await take(page);
+        const labs = taken.labels.filter((e) => e.where === 'page' && e.step === step);
+        const curves = taken.curves.filter((e) => e.where === 'page' && e.step === step);
+        const obs = taken.obstacles.filter((e) => e.where === 'page' && e.step === step);
+        const plots = taken.plots.filter((e) => e.where === 'page' && e.step === step);
+        seen += labs.length;
+        const at = `${tab} step ${step} @${vp.label}`;
+        bad.push(...collisions(labs, at), ...tickCollisions(labs, at), ...clipped(labs, at), ...onCurve(labs, curves, at), ...onObstacle(labs, obs, at), ...farFromAnchor(labs, at));
+        bad.push(...tooSmall(labs, at, tab, step, null), ...unstableInInset(labs, obs, at));
+        bad.push(...missingRequired(labs, at, tab, step, null, true));
+        bad.push(...tickSizeMix(labs, at), ...tickAlign(labs, at), ...nearerThanOthers(labs, obs, at));
+        bad.push(...minTicks(labs, plots, at), ...plotAreaFraction(plots, at));
+        bad.push(...headerTwoLines(labs, at));
       }
     }
     const uniq = [...new Set(bad)];
@@ -627,3 +594,4 @@ for (const vp of VIEWPORTS) {
     expect(uniq, uniq.slice(0, 60).join('\n')).toEqual([]);
   });
 }
+

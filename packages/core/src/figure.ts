@@ -172,7 +172,7 @@ export function mountFigure(host: HTMLElement, def: FigureDef, panels0: FigurePa
       && window.matchMedia('(max-width: 700px)').matches
       && !landscapeShort;
     const first = inline.querySelector('.fig');
-    // Card layout owns the rail (under the plots, or in the phone sheet).
+    // The step layout owns the rail (controls sit under the plots).
     // Do not append it here: a media-query change would steal it back out of the sheet.
     if (inCard) return;
     if (phoneTabs && first) first.after(rail);

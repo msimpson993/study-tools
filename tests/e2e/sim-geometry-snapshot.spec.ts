@@ -139,9 +139,9 @@ function compare(key: string, got: ViewSnap, exp: ViewSnap): string[] {
   return out;
 }
 
-async function waitTiles(page: Page, card: ReturnType<Page['locator']>) {
-  await card.evaluate((el) => el.scrollIntoView({ block: 'start' }));
-  await expect.poll(async () => card.locator('.step-thumbs canvas[data-fig], .tile-frame canvas[data-fig]').count(), { timeout: 12_000 }).toBeGreaterThan(0);
+async function waitStep(page: Page, sec: ReturnType<Page['locator']>) {
+  await sec.evaluate((el) => el.scrollIntoView({ block: 'start' }));
+  await expect.poll(async () => sec.locator('.step-figs canvas[data-fig], .step-host canvas[data-fig]').count(), { timeout: 12_000 }).toBeGreaterThan(0);
   await page.waitForTimeout(200);
 }
 
@@ -157,40 +157,19 @@ test('sim-project geometry snapshot at the 6 review viewports', async ({ page })
     for (const tab of TABS) {
       await open(page, 'sim-project', `#/tab/${tab}`);
       await page.waitForTimeout(300);
-      const n = await page.locator('[data-testid=step-card]').count();
+      const n = await page.locator('[data-testid=step-section]').count();
       for (let i = 0; i < n; i++) {
-        const card = page.locator('[data-testid=step-card]').nth(i);
-        const step = (await card.getAttribute('data-step')) ?? String(i + 1);
-        await waitTiles(page, card);
+        const sec = page.locator('[data-testid=step-section]').nth(i);
+        const step = (await sec.getAttribute('data-step')) ?? String(i + 1);
+        await waitStep(page, sec);
         await start(page);
         await redraw(page);
         await page.waitForTimeout(250);
-        const takenTiles = await take(page);
-        const tiles = takenTiles.labels.filter((e) => e.where === 'tile' && e.step === step);
-        const tilePlots = takenTiles.plots.filter((e) => e.where === 'tile' && e.step === step);
-        for (const id of idsOf(tiles, tilePlots)) {
-          shot[`${tab}/step${step}/${id}/tile@${vp.label}`] = snapOf(tiles, tilePlots, id);
-        }
-        const thumbs = card.locator('.step-thumbs canvas[data-fig]');
-        const tcount = await thumbs.count();
-        for (let k = 0; k < tcount; k++) {
-          const thumb = thumbs.nth(k);
-          if (!(await thumb.isVisible().catch(() => false))) continue;
-          const fig = (await thumb.getAttribute('data-fig')) ?? String(k);
-          await thumb.click();
-          const overlay = card.getByTestId('fig-overlay').locator('visible=true');
-          await expect(overlay).toHaveCount(1, { timeout: 8_000 });
-          await expect(overlay.locator('canvas[data-big]')).toBeVisible();
-          await page.waitForTimeout(200);
-          await start(page);
-          await redraw(page);
-          await page.waitForTimeout(250);
-          const takenExp = await take(page);
-          const exp = takenExp.labels.filter((e) => e.where === 'expand');
-          const expPlots = takenExp.plots.filter((e) => e.where === 'expand');
-          shot[`${tab}/step${step}/${fig}/expand@${vp.label}`] = snapOf(exp, expPlots, fig);
-          await overlay.locator('[data-testid=fig-close]').click();
-          await expect(overlay).toHaveCount(0, { timeout: 8_000 });
+        const taken = await take(page);
+        const labs = taken.labels.filter((e) => e.where === 'page' && e.step === step);
+        const plots = taken.plots.filter((e) => e.where === 'page' && e.step === step);
+        for (const id of idsOf(labs, plots)) {
+          shot[`${tab}/step${step}/${id}/page@${vp.label}`] = snapOf(labs, plots, id);
         }
       }
     }

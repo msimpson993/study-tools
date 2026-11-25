@@ -7,7 +7,7 @@ import type { FigureMountOpts } from './figure';
 
 const SECTION_C = /c-what-s-going-on/;
 export interface CardLayoutOpts {
-  /** The tabbed `.frame` — widened while step cards are present. */
+  /** The tabbed `.frame` — widened while step sections are present. */
   frame?: HTMLElement;
 }
 

@@ -543,7 +543,7 @@ html.layout-tabs .pop-figs.n4>:first-child{grid-column:auto}
 /* tuner parameters table needs the full stage width so columns stay aligned */
 .pair2 .fig:has(canvas[data-fig="table"]){grid-column:1/-1}
 
-/* reading sections stay a comfortable line length; figures, tables and step cards use the wide column */
+/* reading sections stay a comfortable line length; figures, tables and step sections use the wide column */
 html.layout-tabs .tab-body > p,html.layout-tabs .tab-body > ul,html.layout-tabs .tab-body > ol,
 html.layout-tabs .tab-body > h2,html.layout-tabs .tab-body > h3,html.layout-tabs .tab-body > h4,
 html.layout-tabs .tab-summary,html.layout-tabs .tab-sec-text{max-width:90ch}
@@ -557,7 +557,7 @@ html.layout-tabs .tab-body > .step-cards,html.layout-tabs .tab-body > .step-sect
   .tab-sec-figs .fig-layout,.tab-sec-figs .viz-slot .fig-layout{grid-template-columns:minmax(0,1fr)}
 }
 
-/* ---- section (c) step cards: one viewport-tall card per step ---- */
+/* ---- section (c) step sections: heading, prose, full-size figures, then controls ---- */
 html.layout-tabs .tab-body > h2,html.layout-tabs .tab-sec-setup > h2,html.layout-tabs .tab-article h2{
   scroll-margin-top:calc(var(--tab-chrome,5.5rem) + 6px);
 }

@@ -25,6 +25,13 @@ Running example UI: each running example is introduced by its Example node on th
 Adding a shared feature: put it in `packages/core`, export from `index.ts`, add a unit test (pure parts) and a Playwright check, and document it here.
 
 
+
+## Simulation Project tabbed page
+
+`tabpage.ts` (`mountTabbedApp`) renders the one-off Simulation Project page: a tab bar, article body, and inline live figures, with no question map. Section (c) steps are laid out by `applyCardLayout` in `cardlayout.ts` as ordinary page sections (`.step-section`), not viewport-tall cards.
+
+Each step is a heading, its Why / Number / What it adds / Look-for text, an open *How to read this*, then the step's live figures drawn once at full size (two abreast from 700 px when a step has two or more, stacked on phones), then that step's controls (sliders, preset buttons, toggles, and a Parameters button when the step has a table) directly under the plots. Prose stays at a comfortable ~90ch measure; figures and tables may use the wider frame (up to 1860 px). There are no tiles, thumbnails, tap-to-expand plot overlays, two-card splits, firm snap, or a phone controls sheet. The Parameters table still opens in the existing figure overlay. Playwright: `tests/e2e/sim-tabs.spec.ts`, `tests/e2e/sim-label-overlap.spec.ts`.
+
 ## Copy reference
 
 A small copy-icon button (`copyRefButton` in `copyref.ts`, accessible name *Copy reference to this*) sits in the header of every map node or edge panel, deep dive, live figure (inline and expanded) and quiz question. It copies a compact plain-text packet to the clipboard — page title, the path of questions from the central question, what is being viewed, a `#/node/<id>` (or dive / figure / quiz) deep link, a trimmed short answer, and for figures the current control values — so Malcolm can paste it into a subject-tutor chat before asking a question. Nothing is sent anywhere; if `navigator.clipboard` is missing (for example `file://`) the button falls back to `document.execCommand('copy')` or a selectable dialog. Brief **Copied** feedback appears on the button. Opening `#/node/<id>` or `#/edge/<from>__<to>` selects that box or line on the map (the address bar is kept in sync with `replaceState` while you browse). Test ids: `copy-ref`. Unit tests: `packages/core/test/copyref.test.ts`. Playwright: `tests/e2e/copyref.spec.ts`.

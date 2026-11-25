@@ -294,8 +294,8 @@ const logCurve = (g: CanvasRenderingContext2D, pts: { x: number; y: number }[], 
   const last = pts[pts.length - 1], L = out[out.length - 1];
   const lx = m.a * last.x + m.c * last.y + m.e, ly = m.b * last.x + m.d * last.y + m.f;
   if (!L || Math.hypot(L.x - lx, L.y - ly) > 0.5) out.push({ x: lx, y: ly });
-  const card = cv.closest?.('[data-testid=step-card]') as HTMLElement | null;
-  const where = cv.closest?.('.fig-overlay') ? 'expand' : cv.closest?.('.tile-frame') ? 'tile' : 'other';
+  const card = cv.closest?.('[data-testid=step-section], [data-testid=step-card]') as HTMLElement | null;
+  const where = cv.closest?.('.fig-overlay') ? 'expand' : cv.closest?.('.tile-frame') ? 'tile' : cv.closest?.('.step-section') ? 'page' : 'other';
   log.push({ pts: out, width, W: cv.width, H: cv.height, cv: ci, id: cv.closest?.('[data-fig]')?.getAttribute('data-fig') || cv.getAttribute?.('data-figure') || cv.getAttribute?.('data-big') || cv.id || '', gen: labelGen(cv), where, step: card?.getAttribute('data-step') || '' } satisfies CurveLog);
 };
 
@@ -476,8 +476,8 @@ function logText(g: CanvasRenderingContext2D, s: string, f: TextFit, size: numbe
       if (X < x0) x0 = X; if (X > x1) x1 = X; if (Y < y0) y0 = Y; if (Y > y1) y1 = Y;
     }
   }
-  const card = cv.closest?.('[data-testid=step-card]') as HTMLElement | null;
-  const where = cv.closest?.('.fig-overlay') ? 'expand' : cv.closest?.('.tile-frame') ? 'tile' : 'other';
+  const card = cv.closest?.('[data-testid=step-section], [data-testid=step-card]') as HTMLElement | null;
+  const where = cv.closest?.('.fig-overlay') ? 'expand' : cv.closest?.('.tile-frame') ? 'tile' : cv.closest?.('.step-section') ? 'page' : 'other';
   const src = labelAnchor();
   let anchor: (LabelAnchor) | undefined;
   if (src) {
@@ -497,8 +497,8 @@ const logObstacle = (g: CanvasRenderingContext2D, rec: { kind: 'marker' | 'line'
   const cv = g.canvas as HTMLCanvasElement;
   const cvs = (globalThis as unknown as { __textCanvases?: HTMLCanvasElement[] }).__textCanvases; let ci = -1;
   if (Array.isArray(cvs)) { ci = cvs.indexOf(cv); if (ci < 0) { cvs.push(cv); ci = cvs.length - 1; } }
-  const card = cv.closest?.('[data-testid=step-card]') as HTMLElement | null;
-  const where = cv.closest?.('.fig-overlay') ? 'expand' : cv.closest?.('.tile-frame') ? 'tile' : 'other';
+  const card = cv.closest?.('[data-testid=step-section], [data-testid=step-card]') as HTMLElement | null;
+  const where = cv.closest?.('.fig-overlay') ? 'expand' : cv.closest?.('.tile-frame') ? 'tile' : cv.closest?.('.step-section') ? 'page' : 'other';
   const toDev = (p: { x: number; y: number }) => rec.device ? p : ({ x: m.a * p.x + m.c * p.y + m.e, y: m.b * p.x + m.d * p.y + m.f });
   const pts = rec.pts?.map(toDev);
   const xy = rec.x !== undefined && rec.y !== undefined ? toDev({ x: rec.x, y: rec.y }) : null;
@@ -689,8 +689,8 @@ export function logPlotFrame(g: CanvasRenderingContext2D, f: Frame) {
   const cv = g.canvas as HTMLCanvasElement;
   const cvs = (globalThis as unknown as { __textCanvases?: HTMLCanvasElement[] }).__textCanvases; let ci = -1;
   if (Array.isArray(cvs)) { ci = cvs.indexOf(cv); if (ci < 0) { cvs.push(cv); ci = cvs.length - 1; } }
-  const card = cv.closest?.('[data-testid=step-card]') as HTMLElement | null;
-  const where = cv.closest?.('.fig-overlay') ? 'expand' : cv.closest?.('.tile-frame') ? 'tile' : 'other';
+  const card = cv.closest?.('[data-testid=step-section], [data-testid=step-card]') as HTMLElement | null;
+  const where = cv.closest?.('.fig-overlay') ? 'expand' : cv.closest?.('.tile-frame') ? 'tile' : cv.closest?.('.step-section') ? 'page' : 'other';
   log.push({
     x0: Math.min(p1.x, p2.x), y0: Math.min(p1.y, p2.y), x1: Math.max(p1.x, p2.x), y1: Math.max(p1.y, p2.y),
     W: cv.width, H: cv.height, cv: ci,
