@@ -196,18 +196,23 @@ export function drawStepResponse(g: CanvasRenderingContext2D, w: number, h: numb
       [(f.box.l + f.box.r) / 2, 'center'],
     ];
     const ok = (c: TextBox, ignoreGhost: boolean) => c.d <= f.box.t + 1 && osFits(c.a, c.b2, c.c, c.d) && (ignoreGhost || !ghostWouldHit(c.a, c.b2, c.c, c.d));
+    const all: TextBox[] = [];
+    for (const ySit of sits) for (const [x, al] of xals) all.push(textBox(x, ySit, tw, th, al, MIN_FONT, nLines));
     for (const ignoreGhost of [false, true]) {
-      for (const ySit of sits) {
-        const cands: TextBox[] = [];
-        for (const [x, al] of xals) cands.push(textBox(x, ySit, tw, th, al, MIN_FONT, nLines));
-        const hit = cands.find((c) => ok(c, ignoreGhost));
-        if (hit) {
-          if (ignoreGhost) { dropGhost = true; ghostBox = null; }
-          return hit;
-        }
+      const hit = all.find((c) => ok(c, ignoreGhost));
+      if (hit) {
+        if (ignoreGhost) { dropGhost = true; ghostBox = null; }
+        return hit;
       }
     }
-    return null;
+    // guaranteed seat: first on-canvas pad box, even if it grazes another label
+    const m = typeof g.getTransform === 'function' ? g.getTransform() : { a: 1, d: 1, e: 0, f: 0 };
+    const onCv = (c: TextBox) => {
+      const x0 = m.a * c.a + m.e, x1 = m.a * c.b2 + m.e, y0 = m.d * c.c + m.f, y1 = m.d * c.d + m.f;
+      const cw = g.canvas.width || w, ch = g.canvas.height || h;
+      return c.d <= f.box.t + 1 && x0 >= 1 && x1 <= cw - 1 && y0 >= 1 && y1 <= ch - 1;
+    };
+    return all.find(onCv) ?? null;
   };
   const paintTopPad = (word: string, c: TextBox, markX: number, markY: number, color: string, paint: (word: string, x: number, y: number, color: string, align: CanvasTextAlign, z: number) => void) => {
     const lx = Math.max(c.a + 3, Math.min(c.b2 - 3, markX));
@@ -238,7 +243,7 @@ export function drawStepResponse(g: CanvasRenderingContext2D, w: number, h: numb
       const cx = X((c.a + c.b2) / 2), cy = Y((c.c + c.d) / 2);
       const dBar = Math.abs(cy - Y(barY)) + (cx < X(x0Bar) ? X(x0Bar) - cx : cx > X(x1Bar) ? cx - X(x1Bar) : 0);
       return labelsOn(g.canvas).some((r) => r.role === 'tick' && r.x0 !== undefined && r.y0 !== undefined
-        && Math.hypot(cx - (r.x0 + r.x1) / 2, cy - (r.y0 + r.y1) / 2) + 0.01 < dBar + 4);
+        && Math.hypot(cx - (r.x0 + r.x1) / 2, cy - (r.y0 + r.y1) / 2) + 0.01 < dBar + 8);
     };
     let trPick: TextBox | null = null;
     for (const z of [10.5, 10, MIN_FONT]) {
@@ -445,7 +450,7 @@ export function drawStepResponse(g: CanvasRenderingContext2D, w: number, h: numb
     const lo = Math.min(y0, y1), hi = Math.max(y0, y1);
     const dOwn = Math.abs(cx - ox) + (cy < lo ? lo - cy : cy > hi ? cy - hi : 0);
     return labelsOn(g.canvas).some((r) => r.role === 'tick' && r.x0 !== undefined && r.y0 !== undefined
-      && Math.hypot(cx - (r.x0 + r.x1) / 2, cy - (r.y0 + r.y1) / 2) + 0.01 < dOwn + 4);
+      && Math.hypot(cx - (r.x0 + r.x1) / 2, cy - (r.y0 + r.y1) / 2) + 0.01 < dOwn + 8);
   };
   if (show.settling && m.settled && Number.isFinite(m.settlingTime)) {
     // the dashed Ts line stops just under the overshoot label when it would run through it (it made "15.7 %" read "5.7 %")
@@ -743,6 +748,26 @@ export function drawSPlane(g: CanvasRenderingContext2D, w: number, h: number, s:
     for (const x of min2Candidates(xLo, xHi, xDrawn)) {
       if (xDrawn.length >= 2 && Math.abs(x) > 1e-9) continue;
       drawX(x, true);
+    }
+    if (xDrawn.length < 2 || (xLo <= 0 && 0 <= xHi && !xDrawn.some((u) => Math.abs(u) < 1e-8))) {
+      const need0 = xLo <= 0 && 0 <= xHi && !xDrawn.some((u) => Math.abs(u) < 1e-8);
+      const extras = need0 ? [0, ...min2Candidates(xLo, xHi, xDrawn)] : min2Candidates(xLo, xHi, xDrawn);
+      for (const x of extras) {
+        if (xDrawn.length >= 2 && Math.abs(x) > 1e-9) continue;
+        const lab = tickLabel(x, st);
+        if (!lab || xDrawn.some((u) => Math.abs(u - x) < 1e-8)) continue;
+        let px = f.X(x), y = f.box.b - 7;
+        if (underPole(px)) px += (px < (f.box.l + f.box.r) / 2 ? 16 : -16);
+        const al: CanvasTextAlign = (px > f.box.r - 12 ? 'right' : px < f.box.l + 12 ? 'left' : 'center');
+        if (al === 'right') px = Math.min(px, f.box.r - 1);
+        if (al === 'left') px = Math.max(px, f.box.l + 1);
+        if (Math.abs(px - lastPx) < 16 || !tickOnCanvas(g, lab, px, y, TICK_Z, al)) continue;
+        let ok = false;
+        withAnchor({ kind: 'line', x: f.X(x), y: f.box.t, x2: f.X(x), y2: f.box.b }, () => {
+          ok = text(g, lab, px, y, col.muted(), al, TICK_Z);
+        });
+        if (ok) { lastX = lab; lastPx = px; xDrawn.push(x); }
+      }
     }
     let lastY = '', lastPy = Infinity;
     const yDrawn: number[] = [];
