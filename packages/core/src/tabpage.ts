@@ -99,6 +99,7 @@ export function mountTabbedApp(content: AppContent, hooks: AppHooks = {}): void 
   const frame = h('div', { class: 'frame nosb tabbed' }, main);
   root.append(topbar, tabWrap, frame);
   document.documentElement.classList.add('layout-tabs');
+  document.documentElement.dataset.simProject = '1';
 
   function paintTabs(active?: string) {
     clear(tabBar);

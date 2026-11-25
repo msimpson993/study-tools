@@ -1,9 +1,10 @@
 import { C, cabs, type Cx } from './dsp/complex';
 import { type TF, type StepMetrics, type Margins, type Bode, bode, margins, stepMetrics, tfEval, logspace, tfPoles, tfZeros, freqresp } from './dsp/tf';
 import { type RLocus, rlocusPolesAt, rlocusNearest } from './dsp/rlocus';
-import { col, planeFrame, rangeFrame, wipe, text, tline, polyline, dot, cross, graphAxes, curve, clipBox, withClip, beginClip, endClip, heat, axes2, tickLabel, isThumb, isTileCanvas, isPortraitPhone, isLandscapePhone, logInsetFrame, logPlotFrame, forTicks, goodStep, minNiceTicks, lockReadout, tickOnCanvas, knockOutAxes2Names, withTextSplit, type Frame, type V2 } from './viz';
+import { col, planeFrame, rangeFrame, wipe, text, tline, polyline, dot, cross, graphAxes, curve, clipBox, withClip, beginClip, endClip, heat, axes2, tickLabel, isThumb, isTileCanvas, isPortraitPhone, isLandscapePhone, logInsetFrame, logPlotFrame, forTicks, goodStep, minNiceTicks, lockReadout, tickOnCanvas, knockOutAxes2Names, withTextSplit, simProjectStyle, type Frame, type V2 } from './viz';
 import { withLabelRole, withAnchor, labelsOn, labelOverlaps } from './labels';
 import type { PanelPointer } from './figure';
+import * as r14 from './ctrlviz-r14';
 
 /**
  * Control-systems pictures that sit on top of `viz.ts` and `@study/core/dsp` (tf, rlocus). Each `draw…` function paints one
@@ -86,6 +87,7 @@ export interface StepViewSpec {
 }
 /** Draw a step response. Returns the metrics used for the markers (or null when the data has fewer than 3 samples). */
 export function drawStepResponse(g: CanvasRenderingContext2D, w: number, h: number, s: StepViewSpec): StepMetrics | null {
+  if (!simProjectStyle()) return r14.drawStepResponse(g, w, h, s);
   wipe(g, w, h);
   const t = Array.from(s.t), y = Array.from(s.y), ref = s.ref ?? 1, band = s.band ?? 0.02, show = s.show ?? {};
   if (t.length < 3) return null;
@@ -597,6 +599,7 @@ export interface SPlaneSpec {
 export const splaneFrame = (w: number, h: number, range: number, reCenter = -0.3 * range, pad = 6): Frame => planeFrame(w, h, range, reCenter, 0, pad);
 
 export function drawSPlane(g: CanvasRenderingContext2D, w: number, h: number, s: SPlaneSpec): Frame {
+  if (!simProjectStyle()) return r14.drawSPlane(g, w, h, s);
   const tileCanvas = isTileCanvas(g);
   const pad = s.pad ?? (tileCanvas ? 12 : 18);
   let vw = w, vh = h, ox = 0, oy = 0;
@@ -1249,6 +1252,7 @@ export interface BodeViewSpec {
 }
 /** Magnitude (dB) over phase (°) on a shared log-ω axis. Returns the margins it drew. */
 export function drawBode(g: CanvasRenderingContext2D, w: number, h: number, s: BodeViewSpec): Margins {
+  if (!simProjectStyle()) return r14.drawBode(g, w, h, s);
   wipe(g, w, h);
   const wmin = s.wmin ?? 1e-2, wmax = s.wmax ?? 1e2, ws = logspace(wmin, wmax, s.n ?? 500), b = bode(s.L, ws), x = ws.map(Math.log10);
   const mg = margins(s.L, wmin, wmax, 3000);

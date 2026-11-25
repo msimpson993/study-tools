@@ -204,7 +204,7 @@ export function textReadout(g: CanvasRenderingContext2D, s: string, x: number, y
     };
     if (cv) labelsOn(cv).push(rect);
     g.fillStyle = color; g.textAlign = align; g.textBaseline = 'middle';
-    for (let i = 0; i < n; i++) fillWithHalo(g, lines[i], x, y0 + i * gap);
+    for (let i = 0; i < n; i++) (simProjectStyle() ? fillWithHalo(g, lines[i], x, y0 + i * gap) : g.fillText(lines[i], x, y0 + i * gap));
     const fit = { size: z, x, lines, x0: a0, x1: a0 + tw };
     logText(g, s, fit, z, x, y0, 'middle', rect, 0, false);
   });
@@ -307,11 +307,19 @@ export function fitText(g: CanvasRenderingContext2D, s: string, x: number, align
   [a0, a1] = span(w, x);
   return { size: z, x, lines, x0: a0, x1: a1 };
 }
-/** Simulation Project canvases only. Other tutors keep the pre-round-15 graphAxes tick loop. */
-export function isSimProjectCanvas(g?: CanvasRenderingContext2D): boolean {
-  const cv = g?.canvas as HTMLCanvasElement | undefined;
-  if (cv && typeof cv.closest === 'function' && cv.closest('[data-testid=step-card]')) return true;
-  return typeof document !== 'undefined' && document.documentElement.classList.contains('layout-tabs');
+/** Tick and readout rules added after 4e35f6d. Off by default so Control Systems and Linear Systems keep their round-14 look. */
+let simProjectStyleDepth = 0;
+export function withSimProjectStyle<T>(fn: () => T): T {
+  simProjectStyleDepth++;
+  try { return fn(); } finally { simProjectStyleDepth--; }
+}
+export function simProjectStyle(): boolean {
+  if (simProjectStyleDepth > 0) return true;
+  return typeof document !== 'undefined' && document.documentElement.dataset.simProject === '1';
+}
+/** @deprecated use simProjectStyle(); kept as an alias for existing call sites. */
+export function isSimProjectCanvas(_g?: CanvasRenderingContext2D): boolean {
+  return simProjectStyle();
 }
 /** The canvas is a compact tile, not the expanded overlay or a full-size fig box. */
 export function isTileCanvas(g: CanvasRenderingContext2D): boolean {
@@ -392,7 +400,11 @@ export function text(g: CanvasRenderingContext2D, s: string, x: number, y: numbe
       rect = { x0, x1, y0, y1, role };
     }
     const list = labelsOn(cv);
-    if (axisAligned && role === 'tick' && !forceTick) { if (labelOverlaps(list.filter((o) => o.role !== 'tick'), rect, -3)) { /* a number touching an axis name or note (within 3 px) reads as one: leave it out; tick-vs-tick is allowed (e2e ignores it) */ logText(g, s, f, size, x, y, base, rect, 0, true); return false; } }
+    const tickVsTickOk = simProjectStyle() && !forceTick;
+    if (axisAligned && role === 'tick' && (!simProjectStyle() || !forceTick)) {
+      const vs = tickVsTickOk ? list.filter((o) => o.role !== 'tick') : list;
+      if (labelOverlaps(vs, rect, -3)) { /* a number touching another label (within 3 px) reads as one: leave it out */ logText(g, s, f, size, x, y, base, rect, 0, true); return false; }
+    }
     else if (axisAligned && role === 'note' && !labelAnchor()) {
       // whole lines down or up, nearest first; stay inside the plot clip when one is active (else the canvas)
       const clip = currentClip(g);
@@ -411,8 +423,9 @@ export function text(g: CanvasRenderingContext2D, s: string, x: number, y: numbe
   }
   const yy = y + (m && dy ? dy / m.d : 0), xx = f.x + (m && dx ? dx / m.a : 0);
   g.fillStyle = color; g.font = `${f.size}px system-ui,sans-serif`; g.textAlign = align; g.textBaseline = base;
-  if (f.lines.length === 1) fillWithHalo(g, s, xx, yy);
-  else f.lines.forEach((l, i) => fillWithHalo(g, l, xx, yy + (i - (f.lines.length - 1) / 2) * f.size * 1.15));
+  const paint = (str: string, px: number, py: number) => simProjectStyle() ? fillWithHalo(g, str, px, py) : g.fillText(str, px, py);
+  if (f.lines.length === 1) paint(s, xx, yy);
+  else f.lines.forEach((l, i) => paint(l, xx, yy + (i - (f.lines.length - 1) / 2) * f.size * 1.15));
   logText(g, s, f, size, x, y, base, rect, dy || dx, false);
   return true;
 }
@@ -557,12 +570,20 @@ export function axes2(g: CanvasRenderingContext2D, f: Frame, xl = '', yl = '', s
   });
   void step;
 }
-/** After the grid is painted, redraw each axis name with a text halo so the grid cannot strike the glyphs (BUG-66 / 72). Phone tiles stay bare (BUG-67). */
+/** After the grid is painted, redraw each axis name. Simulation Project uses a text halo (BUG-66 / 72) and skips phone tiles (BUG-67). Other tutors keep the round-14 plot-background knock-out. */
 export function knockOutAxes2Names(g: CanvasRenderingContext2D, f: Frame, xl = '', yl = '') {
-  if (isThumb(g) && !persistLabels) return;
+  if (simProjectStyle()) {
+    if (isThumb(g) && !persistLabels) return;
+    for (const n of axes2NameLayout(g, f, xl, yl)) {
+      g.fillStyle = col.muted(); g.font = `${n.z}px system-ui,sans-serif`; g.textAlign = n.align; g.textBaseline = 'middle';
+      fillWithHalo(g, n.s, n.x, n.y);
+    }
+    return;
+  }
   for (const n of axes2NameLayout(g, f, xl, yl)) {
+    fillPlotBehind(g, n.x0, n.y0, n.x1, n.y1, 3);
     g.fillStyle = col.muted(); g.font = `${n.z}px system-ui,sans-serif`; g.textAlign = n.align; g.textBaseline = 'middle';
-    fillWithHalo(g, n.s, n.x, n.y);
+    g.fillText(n.s, n.x, n.y);
   }
 }
 /** Tick numbers on a complex-plane frame (s-plane, z-plane): small ticks on the axes every `step` (x) and `ystep` (y), numbers inside the
@@ -672,7 +693,7 @@ export function graphAxes(g: CanvasRenderingContext2D, f: Frame, xr: V2, yr: V2,
     const tickX = f.box.l - 4;
     const tickRoom = Math.max(6, tickX - titleRight);
     let lastX = '', lastPx = -Infinity;
-    const simAxes = isSimProjectCanvas(g);
+    const simAxes = simProjectStyle();
     const xDrawn: number[] = [];
     const drawXTick = (x: number, force = false) => {
       const lab = xfmt ? xfmt(x) : (force ? tickLabelFine(x, sx) : tickLabel(x, sx)), px = f.X(x);
