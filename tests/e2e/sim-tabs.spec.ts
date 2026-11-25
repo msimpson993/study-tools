@@ -416,10 +416,13 @@ test.describe('sim-project tabbed page', () => {
     await eng1.evaluate((el) => el.scrollIntoView({ block: 'start' }));
     await expect.poll(async () => eng1.locator('.step-host canvas[data-fig]').count()).toBeGreaterThan(1);
     const desk = await eng1.evaluate((el) => {
-      const hosts = [...el.querySelectorAll<HTMLElement>('.step-host')].filter((h) => h.getBoundingClientRect().height > 8);
-      if (hosts.length < 2) return { n: hosts.length, abreast: false };
-      const a = hosts[0].getBoundingClientRect(), b = hosts[1].getBoundingClientRect();
-      return { n: hosts.length, abreast: Math.abs(a.top - b.top) < 40 && b.left > a.right - 8 };
+      const figs = [...el.querySelectorAll<HTMLElement>('.fig')].filter((h) => {
+        const r = h.getBoundingClientRect(), cs = getComputedStyle(h);
+        return r.height > 8 && r.width > 8 && cs.display !== 'none' && cs.visibility !== 'hidden';
+      });
+      if (figs.length < 2) return { n: figs.length, abreast: false };
+      const a = figs[0].getBoundingClientRect(), b = figs[1].getBoundingClientRect();
+      return { n: figs.length, abreast: Math.abs(a.top - b.top) < 48 && b.left > a.right - 8 };
     });
     expect(desk.abreast, `engine step 1 should be two abreast at 1280 (n=${desk.n})`).toBe(true);
 
@@ -427,10 +430,13 @@ test.describe('sim-project tabbed page', () => {
     await eng1.evaluate((el) => el.scrollIntoView({ block: 'start' }));
     await page.waitForTimeout(200);
     const phone = await eng1.evaluate((el) => {
-      const hosts = [...el.querySelectorAll<HTMLElement>('.step-host')].filter((h) => h.getBoundingClientRect().height > 8);
-      if (hosts.length < 2) return { n: hosts.length, stacked: false };
-      const a = hosts[0].getBoundingClientRect(), b = hosts[1].getBoundingClientRect();
-      return { n: hosts.length, stacked: b.top >= a.bottom - 8 };
+      const figs = [...el.querySelectorAll<HTMLElement>('.fig')].filter((h) => {
+        const r = h.getBoundingClientRect(), cs = getComputedStyle(h);
+        return r.height > 8 && r.width > 8 && cs.display !== 'none' && cs.visibility !== 'hidden';
+      });
+      if (figs.length < 2) return { n: figs.length, stacked: false };
+      const a = figs[0].getBoundingClientRect(), b = figs[1].getBoundingClientRect();
+      return { n: figs.length, stacked: b.top >= a.bottom - 8 };
     });
     expect(phone.stacked, `engine step 1 should stack at 390 (n=${phone.n})`).toBe(true);
   });

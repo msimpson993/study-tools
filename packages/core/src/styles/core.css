@@ -582,7 +582,7 @@ html.layout-tabs .tab-body > h2,html.layout-tabs .tab-sec-setup > h2,html.layout
 .step-host{margin:0;min-width:0}
 .step-host .fig-look,.step-section .fig-stage-head,.step-section .fig-axes,.step-section .fig-anim{display:none}
 .step-section .fig-layout,.step-section .viz-slot .fig-layout{grid-template-columns:1fr;gap:.55rem}
-.step-section .pair2{display:grid;grid-template-columns:1fr;gap:.7rem}
+.step-section .pair2{display:grid;grid-template-columns:1fr 1fr;gap:.7rem}
 .step-section .fig{background:var(--panel);border:1px solid var(--border);border-radius:12px;padding:.35rem .45rem .5rem;min-width:0}
 .step-section .fig h4{font:650 .8rem/1.25 system-ui,sans-serif;margin:0 0 .25rem}
 .step-section .fig canvas{display:block;width:100%;height:min(52vh,28rem);background:var(--plot-bg);border-radius:8px}
@@ -620,6 +620,7 @@ html.layout-tabs .tab-body > h2,html.layout-tabs .tab-sec-setup > h2,html.layout
 
 @media (max-width:699.98px){
   .step-figs,.step-figs.n-2,.step-figs.n-3,.step-figs.n-4{grid-template-columns:1fr}
+  .step-section .pair2{grid-template-columns:1fr}
   .step-section .fig canvas{height:min(48vh,22rem);min-height:12rem}
   .step-section .fig:has(canvas[data-fig="scene"]) canvas{height:min(32vh,14rem);min-height:9rem}
   .step-head h3{font-size:1.02rem}
@@ -628,5 +629,6 @@ html.layout-tabs .tab-body > h2,html.layout-tabs .tab-sec-setup > h2,html.layout
 
 @media (orientation:landscape) and (max-height:500px){
   .step-figs,.step-figs.n-2,.step-figs.n-3,.step-figs.n-4{grid-template-columns:1fr}
+  .step-section .pair2{grid-template-columns:1fr}
   .step-section .fig canvas{height:min(70vh,16rem);min-height:10rem}
 }
