@@ -11,8 +11,9 @@ import { fileURLToPath } from 'node:url';
  * with font sizes. Compared to a committed baseline with tolerances: ±3 px rects, exact label sets
  * tick counts (±2), and font sizes (±2 px). Plot rects allow ±16 px: GitHub runner fonts still
  * shift a box a few pixels vs this machine even when the baseline is generated with CI=1 and
- * bundled Chromium. Non-tick label names must still match (optional ┄ stand-in notes may come
- * and go). Tick *values* are not compared, only counts, so a −1.6 vs −1.7 drift does not flake CI.
+ * bundled Chromium. Non-tick label *words* must still match (optional ┄ stand-in notes may come
+ * and go); wrap break points of the same words may differ on the runner. Tick *values* are not
+ * compared, only counts, so a −1.6 vs −1.7 drift does not flake CI.
  * Regenerate with `npm run geometry:update` after a deliberate layout change.
  * This baseline was generated under CI-like conditions (`CI=1`, bundled Chromium).
  */
@@ -53,8 +54,15 @@ const RECT_TOL = 16;
 const FONT_TOL = 2;
 const TICK_TOL = 2;
 const norm = (s: string) => s.replace(/ /g, ' ').replace(/\s+/g, ' ').trim();
+const coreLabels = (labels: { s: string; role: string }[]) =>
+  labels.filter((l) => l.role !== 'tick' && !l.s.includes('┄'));
 const coreKeys = (labels: { s: string; role: string }[]) =>
-  labels.filter((l) => l.role !== 'tick' && !l.s.includes('┄')).map((l) => `${l.role}:${norm(l.s)}`).sort();
+  coreLabels(labels).map((l) => `${l.role}:${norm(l.s)}`).sort();
+/** Word bag per role, so a wider GitHub font that wraps a note one word earlier does not fail CI. */
+const coreTokens = (labels: { s: string; role: string }[]) =>
+  coreLabels(labels)
+    .flatMap((l) => norm(l.s).split(' ').filter(Boolean).map((w) => `${l.role}:${w}`))
+    .sort();
 
 const start = (page: Page) => page.evaluate(() => {
   (window as any).__textLog = [];
@@ -126,7 +134,8 @@ function compare(key: string, got: ViewSnap, exp: ViewSnap): string[] {
     if (Math.abs(g.font - e.font) > FONT_TOL) out.push(`${key}: ${axis}-axis font ${g.font} vs baseline ${e.font} (tol ±${FONT_TOL})`);
   }
   const gk = coreKeys(got.labels), ek = coreKeys(exp.labels);
-  if (gk.join('\n') !== ek.join('\n')) {
+  const gt = coreTokens(got.labels), et = coreTokens(exp.labels);
+  if (gt.join('\n') !== et.join('\n')) {
     out.push(`${key}: label set differs\n  got: ${gk.join(', ')}\n  exp: ${ek.join(', ')}`);
   } else {
     const byKey = new Map(got.labels.map((l) => [`${l.role}:${norm(l.s)}`, l]));

@@ -97,7 +97,7 @@ export const diskPanels = (): FigurePanel[] => [
       const msg = Ka >= ceil ? 'UNSTABLE'
         : tile
           ? `ceiling Ka = 4080; Ka = ${f(Ka, 0)} is ${ofCeil}, ω = ${f(diskOscW, 1)} rad/s`
-          : `ceiling Ka = 4080; Ka = ${f(Ka, 0)} is ${ofCeil} of the ceiling.\nω = ${f(diskOscW, 1)} rad/s`;
+          : `ceiling Ka = 4080; Ka = ${f(Ka, 0)} is ${ofCeil}\nof the ceiling. ω = ${f(diskOscW, 1)} rad/s`;
       textReadout(g, msg, 8, h - (botBand >= 28 ? 14 : botBand >= 22 ? 11 : 10), Ka >= ceil ? col.bad() : col.text(), 'left', 10);
     },
   },
