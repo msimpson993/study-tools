@@ -290,7 +290,10 @@ export function drawStepResponse(g: CanvasRenderingContext2D, w: number, h: numb
             if (I.c < yRef + 10 && I.d > yRef - 10) continue;
             const hitsV = (tx: number) => tx > I.a - 2 && tx < I.b2 + 2 && I.d > Math.min(peakY, f.Y(yr[0])) - 2 && I.c < Math.max(peakY, f.box.b) + 2;
             if (show.timing && (hitsV(f.X(m.t10)) || hitsV(f.X(m.t90)))) continue;
-            if (hitsOtherVert(I.a, I.b2, I.c, I.d, [peakX])) continue;
+            // Ts is drawn after OS and already stops under the overshoot label, so do not
+            // let that still-to-be-cut stroke block the only room beside a close peak.
+            const settleX = (show.settling && Number.isFinite(m.settlingTime)) ? [f.X(m.settlingTime)] : [];
+            if (hitsOtherVert(I.a, I.b2, I.c, I.d, [peakX, ...settleX])) continue;
             if (hitsCurve(c.a, c.b2, c.c, c.d)) continue;
             return { word, c };
           }
@@ -316,7 +319,8 @@ export function drawStepResponse(g: CanvasRenderingContext2D, w: number, h: numb
         const cx = Math.max(I.a, Math.min(peakX, I.b2)), cy = Math.max(I.c, Math.min(peakY, I.d));
         if (Math.hypot(cx - peakX, cy - peakY) < 8) return false;
         if (I.c < yRef + 10 && I.d > yRef - 10) return false;
-        if (hitsOtherVert(I.a, I.b2, I.c, I.d, [peakX])) return false;
+        const settleX = (show.settling && Number.isFinite(m.settlingTime)) ? [f.X(m.settlingTime)] : [];
+        if (hitsOtherVert(I.a, I.b2, I.c, I.d, [peakX, ...settleX])) return false;
         if (hitsCurve(cand.a, cand.b2, cand.c, cand.d)) return false;
         return true;
       };
