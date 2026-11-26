@@ -30,7 +30,7 @@ function record(w = 720, h = 360) {
   return { g: g as CanvasRenderingContext2D, texts, canvas, w, h };
 }
 
-type DrawnLabel = { s: string; x0: number; x1: number; y0: number; y1: number; skipped?: boolean };
+type DrawnLabel = { s: string; x0: number; x1: number; y0: number; y1: number; skipped?: boolean; size?: number };
 
 function beginTextLog() {
   const log: DrawnLabel[] = [];
@@ -584,6 +584,86 @@ function topologyProblems(geom: LabGeom, sys: string, drawn: DrawnLabel[] = []):
     out.push(`hop of ${h.signal} at (${h.x.toFixed(1)},${h.y.toFixed(1)})`);
   }
 
+  // Box copy (final drawn, after the placer) must keep 4 px of inner padding on
+  // each side, counting the Simulation Project text halo, and arrowheads must
+  // stop clear of that ink (BUG-105). 9 px floor already comes from text().
+  const BOX_INK_PAD = 4;
+  const HEAD_LEN = 7;
+  const HEAD_BOX_CLEAR = 12;
+  const haloOf = (size: number) => Math.max(3, size * 0.3) / 2;
+  const boxCopy = finalLabels(drawn).filter((e) => {
+    if (!e.s || e.s === 'Σ' || e.s === '+' || e.s === '−' || e.s === '-') return false;
+    const cx = (e.x0 + e.x1) / 2, cy = (e.y0 + e.y1) / 2;
+    return geom.boxes.some((b) => cx >= b.x && cx <= b.x + b.w && cy >= b.y && cy <= b.y + b.h);
+  });
+  for (const b of geom.boxes) {
+    for (const e of boxCopy) {
+      const cx = (e.x0 + e.x1) / 2, cy = (e.y0 + e.y1) / 2;
+      if (cx < b.x || cx > b.x + b.w || cy < b.y || cy > b.y + b.h) continue;
+      if ((e.size ?? 11) + 0.25 < 9) {
+        out.push(`box ${b.id} text "${e.s}" is ${(e.size ?? 11).toFixed(1)}px, below 9`);
+      }
+      const h = haloOf(e.size ?? 11);
+      const l = e.x0 - h, r = e.x1 + h, t = e.y0 - h, bot = e.y1 + h;
+      const pl = l - b.x, pr = b.x + b.w - r, pt = t - b.y, pb = b.y + b.h - bot;
+      if (pl + 0.25 < BOX_INK_PAD || pr + 0.25 < BOX_INK_PAD || pt + 0.25 < BOX_INK_PAD || pb + 0.25 < BOX_INK_PAD) {
+        out.push(`box ${b.id} text "${e.s}" padding L=${pl.toFixed(1)} R=${pr.toFixed(1)} T=${pt.toFixed(1)} B=${pb.toFixed(1)}`);
+      }
+    }
+  }
+  for (const e of boxCopy) {
+    const h = haloOf(e.size ?? 11);
+    const l = e.x0 - h, r = e.x1 + h, t = e.y0 - h, bot = e.y1 + h;
+    const hits = (x: number, y: number) => x >= l && x <= r && y >= t && y <= bot;
+    for (const tip of geom.tips) {
+      const along = geom.segs.find((s) => s.arrowEnd && Math.hypot(s.x2 - tip.x, s.y2 - tip.y) < 0.5);
+      let headHits = hits(tip.x, tip.y);
+      if (!headHits && along) {
+        const L = Math.hypot(along.x2 - along.x1, along.y2 - along.y1) || 1;
+        const ux = (along.x2 - along.x1) / L, uy = (along.y2 - along.y1) / L;
+        for (let d = 0; d <= HEAD_LEN; d += 1.5) {
+          if (hits(tip.x - ux * d, tip.y - uy * d)) { headHits = true; break; }
+        }
+      }
+      if (headHits) {
+        out.push(`arrowhead ${tip.signal} covers box text "${e.s}" at (${tip.x.toFixed(1)},${tip.y.toFixed(1)})`);
+      }
+    }
+  }
+
+  // An arrowhead stays at least 12 px from any block it does not enter (BUG-106).
+  // Checked on stacked layouts, where a tight gap can make ω→Kb read as Kt→Kb.
+  // The box this shaft starts on (an outgoing stub) and the box the tip enters
+  // are exempt; packed one-row rails are not the bug.
+  const distPointRect = (x: number, y: number, b: LabGeom['boxes'][number]) => {
+    const dx = Math.max(b.x - x, 0, x - (b.x + b.w));
+    const dy = Math.max(b.y - y, 0, y - (b.y + b.h));
+    return Math.hypot(dx, dy);
+  };
+  if (geom.stacked) {
+    for (const tip of geom.tips) {
+      const along = geom.segs.find((s) => s.arrowEnd && Math.hypot(s.x2 - tip.x, s.y2 - tip.y) < 0.5);
+      const start = along ? { x: along.x1, y: along.y1 } : tip;
+      const pts = [{ x: tip.x, y: tip.y }];
+      if (along) {
+        const L = Math.hypot(along.x2 - along.x1, along.y2 - along.y1) || 1;
+        const ux = (along.x2 - along.x1) / L, uy = (along.y2 - along.y1) / L;
+        const ang = Math.atan2(uy, ux);
+        pts.push({ x: tip.x - ux * HEAD_LEN, y: tip.y - uy * HEAD_LEN });
+        pts.push({ x: tip.x - HEAD_LEN * Math.cos(ang - 0.4), y: tip.y - HEAD_LEN * Math.sin(ang - 0.4) });
+        pts.push({ x: tip.x - HEAD_LEN * Math.cos(ang + 0.4), y: tip.y - HEAD_LEN * Math.sin(ang + 0.4) });
+      }
+      for (const b of geom.boxes) {
+        if (distPointRect(tip.x, tip.y, b) <= NEAR) continue;
+        if (distPointRect(start.x, start.y, b) <= NEAR) continue;
+        const d = Math.min(...pts.map((p) => distPointRect(p.x, p.y, b)));
+        if (d + 0.25 < HEAD_BOX_CLEAR) {
+          out.push(`arrowhead ${tip.signal} within ${d.toFixed(1)}px of box ${b.id} at (${tip.x.toFixed(1)},${tip.y.toFixed(1)})`);
+        }
+      }
+    }
+  }
+
   // Every arrow into a summer has a visible shaft of at least 20 px outside that summer.
   for (const seg of geom.segs) {
     if (!seg.arrowEnd) continue;
@@ -613,9 +693,10 @@ function stackedHeight(sys: string) {
   return 520;
 }
 
-describe('lab diagrams: topology of every signal at 320, 390, 923 and 1280', () => {
+describe('lab diagrams: topology of every signal at 257, 320, 390, 923 and 1280', () => {
   const cases: { sys: typeof SYSTEMS[number]; words?: LabelWords; layout?: 'stack' | 'row'; w: number; h: number }[] = [];
-  for (const w of [320, 390, 923, 1280]) {
+  // 257 is the live canvas at a 320 viewport (93% frame + tab/fig padding).
+  for (const w of [257, 320, 390, 923, 1280]) {
     for (const sys of SYSTEMS) {
       for (const words of WORDS) {
         if (sys === 'engine' && words === undefined) {

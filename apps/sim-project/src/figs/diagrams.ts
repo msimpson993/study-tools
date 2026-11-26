@@ -456,36 +456,75 @@ export function drawLabDiagram(g: CanvasRenderingContext2D, w: number, h: number
     if (opts.words === 'plain words') return lab.plain;
     return lab.symbol;
   };
-  const boxAt = (id: Id, x: number, y: number, ww: number, hh: number, lab: string | LabCaption, also?: Id[], lim?: { minX?: number; maxX?: number }) => {
+  const boxAt = (id: Id, x: number, y: number, ww: number, hh: number, lab: string | LabCaption, also?: Id[], lim?: { minX?: number; maxX?: number; minY?: number; maxY?: number }) => {
     const t = tone(id, opts, also), s = stroke(t);
     let px = X(x), py = Y(y), bw = W(ww), bh = H(hh);
     const label = pick(lab);
     g.lineWidth = s.width;
-    // shrink to the 9 px floor if needed, then grow the box so every line stays inside (BUG-85)
+    // Shrink to the 9 px floor if needed, then grow or wrap so every line keeps
+    // 4 px of inner padding past the text halo (BUG-105). Arrowheads stop at
+    // the box edge, so that padding also keeps them clear of the letters.
+    const INK_PAD = 4;
+    const haloOf = (size: number) => Math.max(3, size * 0.3) / 2;
+    const innerPad = (size: number) => INK_PAD + haloOf(size);
     let sz = typeSize;
-    const maxW = Math.max(12, bw - 8);
-    const measure = (size: number) => {
-      const lines = wrap(g, label, maxW, size);
+    const measure = (size: number, inner: number) => {
+      const lines = wrap(g, label, Math.max(4, inner), size);
       g.font = `${size}px system-ui, sans-serif`;
       const widest = Math.max(0, ...lines.map((ln) => g.measureText(ln).width));
-      const tall = lines.length * (size + 1) + 6;
-      return { lines, widest, tall };
+      const pad = innerPad(size);
+      const lh = size + 1;
+      const tall = 2 * pad + 1.1 * size + Math.max(0, lines.length - 1) * lh;
+      return { lines, widest, tall, pad, lh };
     };
-    let fit = measure(sz);
-    while (sz > 9 && (fit.tall > bh || fit.widest > maxW)) { sz -= 1; fit = measure(sz); }
-    if (fit.widest > maxW) { const extra = fit.widest - maxW; px -= extra / 2; bw += extra; }
-    if (fit.tall > bh) { const extra = fit.tall - bh; py -= extra / 2; bh += extra; }
-    const maxR = w - 2, maxB = h - 2;
-    if (px < 2) { bw -= 2 - px; px = 2; }
-    if (px + bw > maxR) { px = Math.max(2, maxR - bw); if (px + bw > maxR) bw = Math.max(12, maxR - px); }
-    if (lim?.maxX != null && px + bw > lim.maxX) { px = Math.max(lim.minX ?? 2, lim.maxX - bw); if (px + bw > lim.maxX) bw = Math.max(12, lim.maxX - px); }
-    if (lim?.minX != null && px < lim.minX) { bw -= lim.minX - px; px = lim.minX; if (lim.maxX != null && px + bw > lim.maxX) bw = Math.max(12, lim.maxX - px); }
-    if (py < 2) { bh -= 2 - py; py = 2; }
-    if (py + bh > maxB) { py = Math.max(2, maxB - bh); if (py + bh > maxB) bh = Math.max(12, maxB - py); }
+    const clampBox = () => {
+      const maxR = w - 2, maxB = h - 2;
+      if (px < 2) { bw -= 2 - px; px = 2; }
+      if (px + bw > maxR) { px = Math.max(2, maxR - bw); if (px + bw > maxR) bw = Math.max(12, maxR - px); }
+      if (lim?.maxX != null && px + bw > lim.maxX) { px = Math.max(lim.minX ?? 2, lim.maxX - bw); if (px + bw > lim.maxX) bw = Math.max(12, lim.maxX - px); }
+      if (lim?.minX != null && px < lim.minX) { bw -= lim.minX - px; px = lim.minX; if (lim.maxX != null && px + bw > lim.maxX) bw = Math.max(12, lim.maxX - px); }
+      if (py < 2) { bh -= 2 - py; py = 2; }
+      if (lim?.minY != null && py < lim.minY) py = lim.minY;
+      if (lim?.maxY != null && py + bh > lim.maxY) { py = Math.max(lim.minY ?? 2, lim.maxY - bh); if (py + bh > lim.maxY) bh = Math.max(12, lim.maxY - py); }
+      if (py + bh > maxB) { py = Math.max(lim?.minY ?? 2, maxB - bh); if (py + bh > maxB) bh = Math.max(12, maxB - py); }
+    };
+    for (let pass = 0; pass < 6; pass++) {
+      let inner = Math.max(4, bw - 2 * innerPad(sz));
+      let fitPass = measure(sz, inner);
+      while (sz > 9 && (fitPass.tall > bh || fitPass.widest > inner)) {
+        sz -= 1;
+        inner = Math.max(4, bw - 2 * innerPad(sz));
+        fitPass = measure(sz, inner);
+      }
+      let grown = false;
+      if (fitPass.widest + 2 * fitPass.pad > bw + 0.25) {
+        const extra = fitPass.widest + 2 * fitPass.pad - bw;
+        px -= extra / 2; bw += extra; grown = true;
+      }
+      if (fitPass.tall > bh + 0.25) {
+        const extra = fitPass.tall - bh;
+        py -= extra / 2; bh += extra; grown = true;
+      }
+      const before = `${px.toFixed(2)},${py.toFixed(2)},${bw.toFixed(2)},${bh.toFixed(2)},${sz}`;
+      clampBox();
+      const after = `${px.toFixed(2)},${py.toFixed(2)},${bw.toFixed(2)},${bh.toFixed(2)},${sz}`;
+      if (after === before && !grown) break;
+    }
+    const fit = measure(sz, Math.max(4, bw - 2 * innerPad(sz)));
+    if (fit.tall > bh) {
+      py -= (fit.tall - bh) / 2;
+      bh = fit.tall;
+      clampBox();
+    }
     box(g, px, py, bw, bh, '', s.color, undefined, sz);
-    const lh = sz + 1;
-    const y0 = py + bh / 2 - ((fit.lines.length - 1) * lh) / 2 + sz * 0.35;
-    fit.lines.forEach((ln, i) => text(g, ln, px + bw / 2, y0 + i * lh, col.text(), 'center', sz));
+    const lh = fit.lh;
+    // text() uses a middle baseline, so center the line stack in the box.
+    const y0 = py + bh / 2 - ((fit.lines.length - 1) * lh) / 2;
+    fit.lines.forEach((ln, i) => {
+      withAnchor({ kind: 'marker', x: px + bw / 2, y: y0 + i * lh }, () => {
+        text(g, ln, px + bw / 2, y0 + i * lh, col.text(), 'center', sz);
+      });
+    });
     if (opts.hits && typeof lab !== 'string') opts.hits.push({ id, x: px, y: py, w: bw, h: bh, tip: lab.tip });
     anchors.push({ id, x: px + bw / 2, y: py + bh + 6 });
     const gid = `${id}#${boxSeq++}`;
@@ -617,22 +656,22 @@ export function drawLabDiagram(g: CanvasRenderingContext2D, w: number, h: number
       plantFromAbove(coil, sT.x, sT.y, '+', cLoad.color, { signal: 'coil-out', hi: ['sys1'] });
       arr(sT.x + r, sT.y, load.l, load.cy, cLoad.color, { signal: 'load-in', hi: ['sys1'] });
       arr(load.r, load.cy, outX, outY, cFb.color, hiOm);
-      const mid = (load.l + outX) / 2;
-      const kb = boxAt('sys3', 40, 78, 24, boxH, L('Kb', '0.1 V·s', 'back-EMF: speed makes a voltage that fights the current', 'in: shaft speed ω. out: back-EMF voltage. what it does: the spinning motor makes a voltage that fights its own current'), ['sysa'], { minX: Math.max(leftLane + 16, load.l), maxX: mid - 4 });
-      const kt = boxAt('sys2', 70, 78, 24, boxH, L('Kt', '1 V·s', 'speed to volts', 'in: shaft speed ω. out: tachometer volts. what it does: a small generator on the shaft turns speed into volts'), undefined, { minX: mid + 4, maxX: outX - 8 });
+      // Stack Kb above Kt, each the full width under the plant, so long
+      // plain-word labels keep 4 px padding and ω can enter both from the
+      // right — no tight gap that reads as Kt feeding Kb (BUG-106).
+      const fbMinX = Math.max(leftLane + 16, load.l);
+      const fbMaxX = outX - 8;
+      const yPct = (py: number) => 100 * (py - padT) / Math.max(1, dh - padT - padB);
+      const kb = boxAt('sys3', 50, yPct(load.b + 16), 40, boxH, L('Kb', '0.1 V·s', 'back-EMF: speed makes a voltage that fights the current', 'in: shaft speed ω. out: back-EMF voltage. what it does: the spinning motor makes a voltage that fights its own current'), ['sysa'], { minX: fbMinX, maxX: fbMaxX, minY: load.b + 12 });
+      const kt = boxAt('sys2', 50, yPct(kb.b + 16), 40, boxH, L('Kt', '1 V·s', 'speed to volts', 'in: shaft speed ω. out: tachometer volts. what it does: a small generator on the shaft turns speed into volts'), undefined, { minX: fbMinX, maxX: fbMaxX, minY: kb.b + 12 });
       tdArrow(sT.x, sT.y, '−', cLoad.color, typeSize, { signal: 'td', hi: ['sys1'] });
-      // Both feedback boxes sit on the right. ω feeds Kt from the right and Kb
-      // from the gap above them. Kt returns over the top from a riser right of ω;
-      // Kb uses a lower rail and a lane left of T_d, into sE from the left.
-      const midFbY = (load.b + Math.min(kt.t, kb.t)) / 2;
-      const gapX = (kb.r + kt.l) / 2;
+      // ω down the right into each box from the right. Kb leaves left into the
+      // electrical summer; Kt drops under itself and returns over the top.
       poly([{ x: outX, y: outY }, { x: outX, y: kt.cy }], cFb.color, cFb.width, [], hiOm);
+      arr(outX, kb.cy, kb.r, kb.cy, cFb.color, hiOm);
       arr(outX, kt.cy, kt.r, kt.cy, cFb.color, hiOm);
-      poly([{ x: outX, y: outY }, { x: outX, y: midFbY }, { x: gapX, y: midFbY }, { x: gapX, y: kb.cy }], cFb.color, cFb.width, [], hiOm);
-      arr(gapX, kb.cy, kb.r, kb.cy, cFb.color, hiOm);
       const floor = h - (cap ? 20 : 8);
-      const underYKt = Math.min(floor - 14, Math.max(kb.b, kt.b) + 10);
-      const underYKb = Math.min(floor, underYKt + 14);
+      const underYKt = Math.min(floor, kt.b + 10);
       const kbLeft = leftLane;
       const kbRight = Math.min(dw - 8, Math.max(outX + 8, kt.r + 10));
       const topY = Math.min(sR.y - r - SHAFT, ka.t - 10, padT + 4);
@@ -645,9 +684,8 @@ export function drawLabDiagram(g: CanvasRenderingContext2D, w: number, h: number
       ], cKt.color, cKt.width, [], hiKt);
       into(sR.x, topY, sR.x, sR.y, '−', cKt.color, r, hiKt);
       poly([
-        { x: kb.cx, y: kb.b },
-        { x: kb.cx, y: underYKb },
-        { x: kbLeft, y: underYKb },
+        { x: kb.l, y: kb.cy },
+        { x: kbLeft, y: kb.cy },
         { x: kbLeft, y: sE.y },
       ], cKb.color, cKb.width, [], hiKb);
       into(kbLeft, sE.y, sE.x, sE.y, '−', cKb.color, r, hiKb);
@@ -835,8 +873,11 @@ export function drawLabDiagram(g: CanvasRenderingContext2D, w: number, h: number
       recSum(s1.x, s1.y, r, c.color, c.width);
       const hiFwd = { signal: 'forward', hi: ['PI'] };
       const hiFb = { signal: 'feedback', hi: ['feedback'] };
-      port('Speed Ref', X(2), s1.y);
-      into(X(2), s1.y, s1.x, s1.y, '+', col.text(), r, { signal: 'ref', hi: ['PI'] });
+      // Start far enough left that the stacked ref shaft stays ≥ 20 px, even
+      // on the ~257 px canvas of a 320 viewport.
+      const refStart = Math.max(2, s1.x - r - 1 - SHAFT);
+      port('Speed Ref', refStart, s1.y);
+      into(refStart, s1.y, s1.x, s1.y, '+', col.text(), r, { signal: 'ref', hi: ['PI'] });
       arr(s1.x + r, s1.y, pi.l, pi.cy, c.color, hiFwd);
       arr(pi.cx, pi.b, th.cx, th.t, c.color, hiFwd);
       arr(th.cx, th.b, del.cx, del.t, c.color, hiFwd);
